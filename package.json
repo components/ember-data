@@ -5,6 +5,6 @@
   "keywords": ["ember"],
   "main": "./ember-data.js",
   "dependencies": {
-    "ember": "*"
+    "ember": "1.0.0-rc.1"
   }
 }

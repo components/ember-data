@@ -8,6 +8,6 @@
     "./ember-data.js"
   ],
   "dependencies": {
-    "ember": "~1.0.0-rc.2"
+    "ember": "1.0.0-rc.1"
   }
 }
