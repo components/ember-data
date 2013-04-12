@@ -12,6 +12,7 @@
                 "ember-data.js"
             ],
             "shim": {
+                "exports": "Ember",
                 "deps": [
                     "ember"
                 ]
