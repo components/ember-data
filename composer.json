@@ -11,6 +11,12 @@
             "scripts": [
                 "ember-data.js"
             ],
+            "files": [
+                "ember-data.min.js",
+                "ember-data.prod.js",
+                "ember-spade.js",
+                "ember-tests.js"
+            ],
             "shim": {
                 "exports": "Ember",
                 "deps": [
