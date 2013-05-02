@@ -1,13 +1,10 @@
 {
   "name": "ember-data",
   "version": "0.0.12",
-  "main": [
-    "./ember-data.js"
-  ],
   "scripts": [
-    "./ember-data.js"
+    "ember-data.js"
   ],
   "dependencies": {
-    "ember": "1.0.0-rc.2"
+    "components/ember": "1.0.0-rc.2"
   }
 }
