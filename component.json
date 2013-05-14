@@ -1,6 +1,7 @@
 {
   "name": "ember-data",
   "version": "0.0.12",
+  "main": "ember-data.js",
   "scripts": [
     "ember-data.js"
   ],
