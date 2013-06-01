@@ -5,7 +5,9 @@
   "version": "0.0.13",
   "main": "ember-data.js",
   "scripts": [
-    "ember-data.js"
+    "ember-data.js",
+    "ember-data.prod.js",
+    "ember-data.spade.js"
   ],
   "dependencies": {
     "components/ember": "1.0.0-rc.4"
