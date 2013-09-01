@@ -4,7 +4,7 @@
     "type": "component",
     "license": "MIT",
     "require": {
-        "components/ember": "1.0.0-rc4"
+        "components/ember": "1.0.0"
     },
     "extra": {
         "component": {
@@ -13,9 +13,7 @@
             ],
             "files": [
                 "ember-data.min.js",
-                "ember-data.prod.js",
-                "ember-spade.js",
-                "ember-tests.js"
+                "ember-data.prod.js"
             ],
             "shim": {
                 "exports": "Ember",
