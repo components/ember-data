@@ -7,7 +7,7 @@
   "scripts": [
     "ember-data.js",
     "ember-data.min.js",
-    "ember-data.prod.js",
+    "ember-data.prod.js"
   ],
   "dependencies": {
     "components/ember": "1.0.0"
