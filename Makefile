@@ -1,10 +1,8 @@
 VERSION=v1.0.0-beta.3
 
-default: data
-	@cd $< && git checkout master -f && git pull && git checkout $(VERSION) && bundle install && rake dist
-	@cp -f $</dist/ember-data.* .
-
-data:
-	@git clone https://github.com/emberjs/data.git $@
+default:
+	@curl -O http://builds.emberjs.com/tags/$(VERSION)/ember-data.js
+	@curl -O http://builds.emberjs.com/tags/$(VERSION)/ember-data.min.js
+	@curl -O http://builds.emberjs.com/tags/$(VERSION)/ember-data.prod.js
 
 .PHONY: default
