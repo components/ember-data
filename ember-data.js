@@ -531,7 +531,7 @@ define("activemodel-adapter/lib/system/embedded_records_mixin",
       The `attrs` property can be set on the ApplicationSerializer or a per-type
       serializer.
 
-      In the case where embedded JSON is expected while extracting a payoad (reading)
+      In the case where embedded JSON is expected while extracting a payload (reading)
       the setting is `deserialize: 'records'`, there is no need to use `ids` when
       extracting as that is the default behavior without this mixin if you are using
       the vanilla ActiveModelAdapter. Likewise, to embed JSON in the payload while
@@ -552,7 +552,7 @@ define("activemodel-adapter/lib/system/embedded_records_mixin",
       Embedded records must have a model defined to be extracted and serialized.
 
       To successfully extract and serialize embedded records the model relationships
-      must be setup correcty See the
+      must be setup correctly See the
       [defining relationships](/guides/models/defining-models/#toc_defining-relationships)
       section of the **Defining Models** guide page.
 
@@ -561,9 +561,9 @@ define("activemodel-adapter/lib/system/embedded_records_mixin",
 
       ### Example JSON payloads, Models and Serializers
 
-      **When customizing a serializer it is imporant to grok what the cusomizations
+      **When customizing a serializer it is important to grok what the customizations
       are, please read the docs for the methods this mixin provides, in case you need
-      to modify to fit your specific needs.**
+      to modify it to fit your specific needs.**
 
       For example review the docs for each method of this mixin:
 
@@ -1520,7 +1520,7 @@ define("ember-data/lib/adapters/rest_adapter",
       object outside of Ember's observer system (for example
       `document.cookie`). You can use the
       [volatile](/api/classes/Ember.ComputedProperty.html#method_volatile)
-      function to set the property into a non-chached mode causing the headers to
+      function to set the property into a non-cached mode causing the headers to
       be recomputed with every request.
 
       ```js
