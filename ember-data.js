@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.7a0424a0f4
+ * @version   1.0.0-beta.9+canary.c71e18e87e
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -2155,11 +2155,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.7a0424a0f4'
+        @default '1.0.0-beta.9+canary.c71e18e87e'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.7a0424a0f4'
+        VERSION: '1.0.0-beta.9+canary.c71e18e87e'
       });
 
       if (Ember.libraries) {
@@ -6604,13 +6604,13 @@ define("ember-data/lib/system/model/model",
         App.ModelDeleteRoute = Ember.Route.extend({
           actions: {
             softDelete: function() {
-              this.get('model').deleteRecord();
+              this.controller.get('model').deleteRecord();
             },
             confirm: function() {
-              this.get('model').save();
+              this.controller.get('model').save();
             },
             undo: function() {
-              this.get('model').rollback();
+              this.controller.get('model').rollback();
             }
           }
         });
@@ -6632,7 +6632,7 @@ define("ember-data/lib/system/model/model",
           actions: {
             delete: function() {
               var controller = this.controller;
-              this.get('model').destroyRecord().then(function() {
+              controller.get('model').destroyRecord().then(function() {
                 controller.transitionToRoute('model.index');
               });
             }
@@ -6979,7 +6979,7 @@ define("ember-data/lib/system/model/model",
         App.ModelViewRoute = Ember.Route.extend({
           actions: {
             reload: function() {
-              this.get('model').reload();
+              this.controller.get('model').reload();
             }
           }
         });
