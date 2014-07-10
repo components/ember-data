@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.5d38e4217f
+ * @version   1.0.0-beta.9+canary.4679930cf8
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -2150,11 +2150,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.5d38e4217f'
+        @default '1.0.0-beta.9+canary.4679930cf8'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.5d38e4217f'
+        VERSION: '1.0.0-beta.9+canary.4679930cf8'
       });
 
       if (Ember.libraries) {
@@ -4303,7 +4303,7 @@ define("ember-data/lib/system/adapter",
         set the `defaultSerializer` property to be the name of the custom
         serializer.
 
-        Note the `defaultSerializer` serializer has a lower priority then
+        Note the `defaultSerializer` serializer has a lower priority than
         a model specific serializer (i.e. `PostSerializer`) or the
         `application` serializer.
 
