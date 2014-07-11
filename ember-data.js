@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.4679930cf8
+ * @version   1.0.0-beta.9+canary.c766b66147
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -1059,7 +1059,7 @@ define("activemodel-adapter/lib/system/embedded_records_mixin",
     // handles embedding for `hasMany` relationship
     function updatePayloadWithEmbeddedHasMany(serializer, store, primaryType, relationship, payload, partial) {
       var embeddedSerializer = store.serializerFor(relationship.type.typeKey);
-      var primaryKey = get(serializer, 'primaryKey');
+      var embeddedPrimaryKey = get(embeddedSerializer, 'primaryKey');
       var attr = relationship.type.typeKey;
       // underscore forces the embedded records to be side loaded.
       // it is needed when main type === relationship.type
@@ -1077,7 +1077,7 @@ define("activemodel-adapter/lib/system/embedded_records_mixin",
       forEach(partial[attribute], function(data) {
         var embeddedType = store.modelFor(attr);
         updatePayloadWithEmbedded(embeddedSerializer, store, embeddedType, payload, data);
-        ids.push(data[primaryKey]);
+        ids.push(data[embeddedPrimaryKey]);
         payload[embeddedTypeKey].push(data);
       });
 
@@ -2155,11 +2155,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.4679930cf8'
+        @default '1.0.0-beta.9+canary.c766b66147'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.4679930cf8'
+        VERSION: '1.0.0-beta.9+canary.c766b66147'
       });
 
       if (Ember.libraries) {
