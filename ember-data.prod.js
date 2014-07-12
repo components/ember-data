@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.c766b66147
+ * @version   1.0.0-beta.9+canary.3e66e30787
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -2150,11 +2150,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.c766b66147'
+        @default '1.0.0-beta.9+canary.3e66e30787'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.c766b66147'
+        VERSION: '1.0.0-beta.9+canary.3e66e30787'
       });
 
       if (Ember.libraries) {
@@ -9024,7 +9024,7 @@ define("ember-data/lib/system/relationships/ext",
       */
       didDefineProperty: function(proto, key, value) {
         // Check if the value being set is a computed property.
-        if (value instanceof Ember.Descriptor) {
+        if (value instanceof Ember.ComputedProperty) {
 
           // If it is, get the metadata for the relationship. This is
           // populated by the `DS.belongsTo` helper when it is creating
