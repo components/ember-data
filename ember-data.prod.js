@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.ad9f5e610a
+ * @version   1.0.0-beta.9+canary.2b1f093e2b
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -2150,11 +2150,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.ad9f5e610a'
+        @default '1.0.0-beta.9+canary.2b1f093e2b'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.ad9f5e610a'
+        VERSION: '1.0.0-beta.9+canary.2b1f093e2b'
       });
 
       if (Ember.libraries) {
@@ -2918,7 +2918,11 @@ define("ember-data/lib/serializers/json_serializer",
 
         // if provided, use the mapping provided by `attrs` in
         // the serializer
-        key = attrs && attrs[key] || (this.keyForAttribute ? this.keyForAttribute(key) : key);
+        if (attrs && attrs[key]) {
+          key = attrs[key];
+        } else if (this.keyForAttribute) {
+          key = this.keyForAttribute(key);
+        }
 
         json[key] = value;
       },
@@ -2949,10 +2953,17 @@ define("ember-data/lib/serializers/json_serializer",
        @param {Object} relationship
       */
       serializeBelongsTo: function(record, json, relationship) {
+        var attrs = get(this, 'attrs');
         var key = relationship.key;
         var belongsTo = get(record, key);
 
-        key = this.keyForRelationship ? this.keyForRelationship(key, "belongsTo") : key;
+        // if provided, use the mapping provided by `attrs` in
+        // the serializer
+        if (attrs && attrs[key]) {
+          key = attrs[key];
+        } else if (this.keyForRelationship) {
+          key = this.keyForRelationship(key, "belongsTo");
+        }
 
         if (isNone(belongsTo)) {
           json[key] = belongsTo;
@@ -2990,8 +3001,20 @@ define("ember-data/lib/serializers/json_serializer",
        @param {Object} relationship
       */
       serializeHasMany: function(record, json, relationship) {
+        var attrs = get(this, 'attrs');
         var key = relationship.key;
-        var payloadKey = this.keyForRelationship ? this.keyForRelationship(key, "hasMany") : key;
+        var payloadKey;
+
+        // if provided, use the mapping provided by `attrs` in
+        // the serializer
+        if (attrs && attrs[key]) {
+          payloadKey = attrs[key];
+        } else if (this.keyForRelationship) {
+          payloadKey = this.keyForRelationship(key, "hasMany");
+        } else {
+          payloadKey = key;
+        }
+
         var relationshipType = RelationshipChange.determineRelationshipType(record.constructor, relationship);
 
         if (relationshipType === 'manyToNone' || relationshipType === 'manyToMany') {
