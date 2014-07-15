@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.2686138442
+ * @version   1.0.0-beta.9+canary.ad9f5e610a
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -2150,11 +2150,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.2686138442'
+        @default '1.0.0-beta.9+canary.ad9f5e610a'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.2686138442'
+        VERSION: '1.0.0-beta.9+canary.ad9f5e610a'
       });
 
       if (Ember.libraries) {
@@ -11234,7 +11234,7 @@ define("ember-data/lib/system/store",
     PromiseArray = Ember.ArrayProxy.extend(Ember.PromiseProxyMixin);
     /**
       A `PromiseObject` is an object that acts like both an `Ember.Object`
-      and a promise. When the promise is resolved the the resulting value
+      and a promise. When the promise is resolved, then the resulting value
       will be set to the `PromiseObject`'s `content` property. This makes
       it easy to create data bindings with the `PromiseObject` that will
       be updated when the promise resolves.
