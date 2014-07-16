@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.e10821315d
+ * @version   1.0.0-beta.9+canary.356b88fec8
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -714,6 +714,7 @@ define("activemodel-adapter/lib/system/embedded_records_mixin",
         var includeIds = hasSerializeIdsOption(attrs, attr);
         var includeRecords = hasSerializeRecordsOption(attrs, attr);
         var embeddedRecord = record.get(attr);
+        var key;
         if (includeIds) {
           key = this.keyForRelationship(attr, relationship.kind);
           if (!embeddedRecord) {
@@ -722,7 +723,7 @@ define("activemodel-adapter/lib/system/embedded_records_mixin",
             json[key] = get(embeddedRecord, 'id');
           }
         } else if (includeRecords) {
-          var key = this.keyForRelationship(attr);
+          key = getKeyForAttribute.call(this, attr);
           if (!embeddedRecord) {
             json[key] = null;
           } else {
@@ -2152,11 +2153,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.e10821315d'
+        @default '1.0.0-beta.9+canary.356b88fec8'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.e10821315d'
+        VERSION: '1.0.0-beta.9+canary.356b88fec8'
       });
 
       if (Ember.libraries) {
