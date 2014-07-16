@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.356b88fec8
+ * @version   1.0.0-beta.9+canary.c97d72d329
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -2153,11 +2153,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.356b88fec8'
+        @default '1.0.0-beta.9+canary.c97d72d329'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.356b88fec8'
+        VERSION: '1.0.0-beta.9+canary.c97d72d329'
       });
 
       if (Ember.libraries) {
@@ -11335,18 +11335,45 @@ define("ember-data/lib/system/store",
       return serializer;
     }
 
+    function _objectIsAlive(object) {
+      return !(get(object, "isDestroyed") || get(object, "isDestroying"));
+    }
+
+    function _guard(promise, test) {
+      var guarded = promise['finally'](function() {
+        if (!test()) {
+          guarded._subscribers.length = 0;
+        }
+      });
+
+      return guarded;
+    }
+
+    function _bind(fn) {
+      var args = Array.prototype.slice.call(arguments, 1);
+
+      return function() {
+        return fn.apply(undefined, args);
+      };
+    }
+
     function _find(adapter, store, type, id) {
       var promise = adapter.find(store, type, id);
       var serializer = serializerForAdapter(adapter, type);
       var label = "DS: Handle Adapter#find of " + type + " with id: " + id;
 
-      return Promise.cast(promise, label).then(function(adapterPayload) {
+      promise = Promise.cast(promise, label);
+      promise = _guard(promise, _bind(_objectIsAlive, store));
+
+      return promise.then(function(adapterPayload) {
                 var payload = serializer.extract(store, type, adapterPayload, id, 'find');
 
         return store.push(type, payload);
       }, function(error) {
         var record = store.getById(type, id);
-        record.notFound();
+        if (record) {
+          record.notFound();
+        }
         throw error;
       }, "DS: Extract payload of '" + type + "'");
     }
@@ -11355,8 +11382,12 @@ define("ember-data/lib/system/store",
       var promise = adapter.findMany(store, type, ids, owner);
       var serializer = serializerForAdapter(adapter, type);
       var label = "DS: Handle Adapter#findMany of " + type;
+      var guardedPromise;
 
-      return Promise.cast(promise, label).then(function(adapterPayload) {
+      promise = Promise.cast(promise, label);
+      promise = _guard(promise, _bind(_objectIsAlive, store));
+
+      return promise.then(function(adapterPayload) {
         var payload = serializer.extract(store, type, adapterPayload, null, 'findMany');
 
         
@@ -11369,7 +11400,11 @@ define("ember-data/lib/system/store",
       var serializer = serializerForAdapter(adapter, relationship.type);
       var label = "DS: Handle Adapter#findHasMany of " + record + " : " + relationship.type;
 
-      return Promise.cast(promise, label).then(function(adapterPayload) {
+      promise = Promise.cast(promise, label);
+      promise = _guard(promise, _bind(_objectIsAlive, store));
+      promise = _guard(promise, _bind(_objectIsAlive, record));
+
+      return promise.then(function(adapterPayload) {
         var payload = serializer.extract(store, relationship.type, adapterPayload, null, 'findHasMany');
 
         
@@ -11383,7 +11418,11 @@ define("ember-data/lib/system/store",
       var serializer = serializerForAdapter(adapter, relationship.type);
       var label = "DS: Handle Adapter#findBelongsTo of " + record + " : " + relationship.type;
 
-      return Promise.cast(promise, label).then(function(adapterPayload) {
+      promise = Promise.cast(promise, label);
+      promise = _guard(promise, _bind(_objectIsAlive, store));
+      promise = _guard(promise, _bind(_objectIsAlive, record));
+
+      return promise.then(function(adapterPayload) {
         var payload = serializer.extract(store, relationship.type, adapterPayload, null, 'findBelongsTo');
         var record = store.push(relationship.type, payload);
 
@@ -11397,7 +11436,10 @@ define("ember-data/lib/system/store",
       var serializer = serializerForAdapter(adapter, type);
       var label = "DS: Handle Adapter#findAll of " + type;
 
-      return Promise.cast(promise, label).then(function(adapterPayload) {
+      promise = Promise.cast(promise, label);
+      promise = _guard(promise, _bind(_objectIsAlive, store));
+
+      return promise.then(function(adapterPayload) {
         var payload = serializer.extract(store, type, adapterPayload, null, 'findAll');
 
         
@@ -11412,7 +11454,10 @@ define("ember-data/lib/system/store",
       var serializer = serializerForAdapter(adapter, type);
       var label = "DS: Handle Adapter#findQuery of " + type;
 
-      return Promise.cast(promise, label).then(function(adapterPayload) {
+      promise = Promise.cast(promise, label);
+      promise = _guard(promise, _bind(_objectIsAlive, store));
+
+      return promise.then(function(adapterPayload) {
         var payload = serializer.extract(store, type, adapterPayload, null, 'findQuery');
 
         
@@ -11428,6 +11473,10 @@ define("ember-data/lib/system/store",
       var label = "DS: Extract and notify about " + operation + " completion of " + record;
 
       
+      promise = Promise.cast(promise, label);
+      promise = _guard(promise, _bind(_objectIsAlive, store));
+      promise = _guard(promise, _bind(_objectIsAlive, record));
+
       return promise.then(function(adapterPayload) {
         var payload;
 
