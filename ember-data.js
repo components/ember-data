@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.543b7c468e
+ * @version   1.0.0-beta.9+canary.3dd24a5c5b
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -2158,11 +2158,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.543b7c468e'
+        @default '1.0.0-beta.9+canary.3dd24a5c5b'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.543b7c468e'
+        VERSION: '1.0.0-beta.9+canary.3dd24a5c5b'
       });
 
       if (Ember.libraries) {
@@ -7999,8 +7999,8 @@ define("ember-data/lib/system/record_array_manager",
         if (shouldBeInArray) {
           if (!recordArrays.has(array)) {
             array.addRecord(record);
+            recordArrays.add(array);
           }
-          recordArrays.add(array);
         } else if (!shouldBeInArray) {
           recordArrays.remove(array);
           array.removeRecord(record);
