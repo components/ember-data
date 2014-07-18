@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.75a27729a6
+ * @version   1.0.0-beta.9+canary.084f97c606
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -655,25 +655,6 @@ define("activemodel-adapter/lib/system/embedded_records_mixin",
     */
     var EmbeddedRecordsMixin = Ember.Mixin.create({
 
-      normalize: function(type, hash, prop) {
-        hash = this._super(type, hash, prop);
-        hash  = extractEmbeddedRecords(this, this.store, type, hash);
-        return hash;
-      },
-
-      keyForRelationship: function(key, type){
-        if (hasDeserializeRecordsOption(this.attrs, key)) {
-          return this._keyForAttribute(key);
-        } else {
-          return this._super(key, type) || key;
-        }
-      },
-
-      // `keyForAttribute` is optional but may be defined when extending a serializer prototype
-      _keyForAttribute: function(attr) {
-       return (this.keyForAttribute) ? this.keyForAttribute(attr) : attr;
-      },
-
       /**
         Serialize `belongsTo` relationship when it is configured as an embedded object.
 
@@ -742,7 +723,7 @@ define("activemodel-adapter/lib/system/embedded_records_mixin",
             json[key] = get(embeddedRecord, 'id');
           }
         } else if (includeRecords) {
-          key = this._keyForAttribute(attr);
+          key = getKeyForAttribute.call(this, attr);
           if (!embeddedRecord) {
             json[key] = null;
           } else {
@@ -847,7 +828,7 @@ define("activemodel-adapter/lib/system/embedded_records_mixin",
           key = this.keyForRelationship(attr, relationship.kind);
           json[key] = get(record, attr).mapBy('id');
         } else if (includeRecords) {
-          key = this._keyForAttribute(attr);
+          key = getKeyForAttribute.call(this, attr);
           json[key] = get(record, attr).map(function(embeddedRecord) {
             var serializedEmbeddedRecord = embeddedRecord.serialize({includeId: true});
             this.removeEmbeddedForeignKey(record, embeddedRecord, relationship, serializedEmbeddedRecord);
@@ -886,8 +867,134 @@ define("activemodel-adapter/lib/system/embedded_records_mixin",
             }
           }
         }
+      },
+
+      /**
+        Extract an embedded object from the payload for a single object
+        and add the object in the compound document (side-loaded) format instead.
+
+        A payload with an attribute configured for embedded records needs to be extracted:
+
+        ```js
+        {
+          "post": {
+            "id": 1
+            "title": "Rails is omakase",
+            "author": {
+              "id": 2
+              "name": "dhh"
+            }
+            "comments": []
+          }
+        }
+        ```
+
+        Ember Data is expecting a payload with a compound document (side-loaded) like:
+
+        ```js
+        {
+          "post": {
+            "id": "1"
+            "title": "Rails is omakase",
+            "author": "2"
+            "comments": []
+          },
+          "authors": [{
+            "id": "2"
+            "post": "1"
+            "name": "dhh"
+          }]
+          "comments": []
+        }
+        ```
+
+        The payload's `author` attribute represents an object with a `belongsTo` relationship.
+        The `post` attribute under `author` is the foreign key with the id for the post
+
+        @method extractSingle
+        @param {DS.Store} store
+        @param {subclass of DS.Model} primaryType
+        @param {Object} payload
+        @param {String} recordId
+        @return Object the primary response to the original request
+      */
+      extractSingle: function(store, primaryType, payload, recordId) {
+        var key = primaryType.typeKey;
+        var root = getKeyForAttribute.call(this, key);
+        var partial = payload[root];
+
+        updatePayloadWithEmbedded(this, store, primaryType, payload, partial);
+
+        return this._super(store, primaryType, payload, recordId);
+      },
+
+      /**
+        Extract embedded objects in an array when an attr is configured for embedded,
+        and add them as side-loaded objects instead.
+
+        A payload with an attr configured for embedded records needs to be extracted:
+
+        ```js
+        {
+          "post": {
+            "id": "1"
+            "title": "Rails is omakase",
+            "comments": [{
+              "id": "1",
+              "body": "Rails is unagi"
+            }, {
+              "id": "2",
+              "body": "Omakase O_o"
+            }]
+          }
+        }
+        ```
+
+        Ember Data is expecting a payload with compound document (side-loaded) like:
+
+        ```js
+        {
+          "post": {
+            "id": "1"
+            "title": "Rails is omakase",
+            "comments": ["1", "2"]
+          },
+          "comments": [{
+            "id": "1",
+            "body": "Rails is unagi"
+          }, {
+            "id": "2",
+            "body": "Omakase O_o"
+          }]
+        }
+        ```
+
+        The payload's `comments` attribute represents records in a `hasMany` relationship
+
+        @method extractArray
+        @param {DS.Store} store
+        @param {subclass of DS.Model} primaryType
+        @param {Object} payload
+        @return {Array<Object>} The primary array that was returned in response
+          to the original query.
+      */
+      extractArray: function(store, primaryType, payload) {
+        var key = primaryType.typeKey;
+        var root = getKeyForAttribute.call(this, key);
+        var partials = payload[pluralize(root)];
+
+        forEach(partials, function(partial) {
+          updatePayloadWithEmbedded(this, store, primaryType, payload, partial);
+        }, this);
+
+        return this._super(store, primaryType, payload);
       }
     });
+
+    // `keyForAttribute` is optional but may be defined when extending a serializer prototype
+    var getKeyForAttribute = function(attr) {
+     return (this.keyForAttribute) ? this.keyForAttribute(attr) : attr;
+    };
 
     // checks config for attrs option to embedded (always) - serialize and deserialize
     function hasEmbeddedAlwaysOption(attrs, attr) {
@@ -922,7 +1029,8 @@ define("activemodel-adapter/lib/system/embedded_records_mixin",
     function hasDeserializeRecordsOption(attrs, attr) {
       var alwaysEmbed = hasEmbeddedAlwaysOption(attrs, attr);
       var option = attrsOption(attrs, attr);
-      return alwaysEmbed || (option && option.deserialize === 'records');
+      var hasSerializingOption = option && (option.deserialize || option.serialize);
+      return alwaysEmbed || hasSerializingOption /* option.deserialize === 'records' */;
     }
 
     function attrsOption(attrs, attr) {
@@ -931,59 +1039,84 @@ define("activemodel-adapter/lib/system/embedded_records_mixin",
 
     // chooses a relationship kind to branch which function is used to update payload
     // does not change payload if attr is not embedded
-    function extractEmbeddedRecords(serializer, store, type, partial) {
+    function updatePayloadWithEmbedded(serializer, store, type, payload, partial) {
       var attrs = get(serializer, 'attrs');
 
       if (!attrs) {
-        return partial;
+        return;
       }
-
       type.eachRelationship(function(key, relationship) {
         if (hasDeserializeRecordsOption(attrs, key)) {
-          var embeddedType = store.modelFor(relationship.type.typeKey);
           if (relationship.kind === "hasMany") {
-            extractEmbeddedHasMany(store, key, embeddedType, partial);
+            updatePayloadWithEmbeddedHasMany(serializer, store, key, relationship, payload, partial);
           }
           if (relationship.kind === "belongsTo") {
-            extractEmbeddedBelongsTo(store, key, embeddedType, partial);
+            updatePayloadWithEmbeddedBelongsTo(serializer, store, key, relationship, payload, partial);
           }
         }
       });
-
-      return partial;
     }
 
     // handles embedding for `hasMany` relationship
-    function extractEmbeddedHasMany(store, key, embeddedType, hash) {
-      if (!hash[key]) {
-        return hash;
-      }
-
+    function updatePayloadWithEmbeddedHasMany(serializer, store, primaryType, relationship, payload, partial) {
+      var embeddedSerializer = store.serializerFor(relationship.type.typeKey);
+      var embeddedPrimaryKey = get(embeddedSerializer, 'primaryKey');
+      var attr = relationship.type.typeKey;
+      // underscore forces the embedded records to be side loaded.
+      // it is needed when main type === relationship.type
+      var embeddedTypeKey = '_' + serializer.typeForRoot(relationship.type.typeKey);
+      var expandedKey = serializer.keyForRelationship(primaryType, relationship.kind);
+      var attribute = getKeyForAttribute.call(serializer, primaryType);
       var ids = [];
 
-      var embeddedSerializer = store.serializerFor(embeddedType.typeKey);
-      forEach(hash[key], function(data) {
-        var embeddedRecord = embeddedSerializer.normalize(embeddedType, data, null);
-        store.push(embeddedType, embeddedRecord);
-        ids.push(embeddedRecord.id);
-      });
-
-      hash[key] = ids;
-      return hash;
-    }
-
-    function extractEmbeddedBelongsTo(store, key, embeddedType, hash) {
-      if (!hash[key]) {
-        return hash;
+      if (!partial[attribute]) {
+        return;
       }
 
-      var embeddedSerializer = store.serializerFor(embeddedType.typeKey);
-      var embeddedRecord = embeddedSerializer.normalize(embeddedType, hash[key], null);
-      store.push(embeddedType, embeddedRecord);
+      payload[embeddedTypeKey] = payload[embeddedTypeKey] || [];
 
-      hash[key] = embeddedRecord.id;
-      //TODO Need to add a reference to the parent later so relationship works between both `belongsTo` records
-      return hash;
+      forEach(partial[attribute], function(data) {
+        var embeddedType = store.modelFor(attr);
+        updatePayloadWithEmbedded(embeddedSerializer, store, embeddedType, payload, data);
+        ids.push(data[embeddedPrimaryKey]);
+        payload[embeddedTypeKey].push(data);
+      });
+
+      partial[expandedKey] = ids;
+      if(expandedKey !== attribute) {
+        delete partial[attribute];
+      }
+    }
+
+    // handles embedding for `belongsTo` relationship
+    function updatePayloadWithEmbeddedBelongsTo(serializer, store, primaryType, relationship, payload, partial) {
+      var attrs = serializer.get('attrs');
+
+      if (!attrs ||
+        !(hasDeserializeRecordsOption(attrs, Ember.String.camelize(primaryType)) ||
+          hasDeserializeRecordsOption(attrs, primaryType))) {
+        return;
+      }
+      var attr = relationship.type.typeKey;
+      var _serializer = store.serializerFor(relationship.type.typeKey);
+      var primaryKey = get(_serializer, 'primaryKey');
+      var embeddedTypeKey = Ember.String.pluralize(attr); // TODO don't use pluralize
+      var expandedKey = _serializer.keyForRelationship(primaryType, relationship.kind);
+      var attribute = getKeyForAttribute.call(_serializer, primaryType);
+
+      if (!partial[attribute]) {
+        return;
+      }
+      payload[embeddedTypeKey] = payload[embeddedTypeKey] || [];
+      var embeddedType = store.modelFor(relationship.type.typeKey);
+      // Recursive call for nested record
+      updatePayloadWithEmbedded(_serializer, store, embeddedType, payload, partial[attribute]);
+      partial[expandedKey] = partial[attribute].id;
+      // Need to move an embedded `belongsTo` object into a pluralized collection
+      payload[embeddedTypeKey].push(partial[attribute]);
+      // Need a reference to the parent so relationship works between both `belongsTo` records
+      partial[attribute][relationship.parentType.typeKey + '_id'] = partial.id;
+      delete partial[attribute];
     }
 
     __exports__["default"] = EmbeddedRecordsMixin;
@@ -2020,11 +2153,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.75a27729a6'
+        @default '1.0.0-beta.9+canary.084f97c606'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.75a27729a6'
+        VERSION: '1.0.0-beta.9+canary.084f97c606'
       });
 
       if (Ember.libraries) {
@@ -3207,9 +3340,7 @@ define("ember-data/lib/serializers/json_serializer",
        @param {String} key
        @return {String} normalized key
       */
-      keyForAttribute: function(key){
-        return key;
-      },
+
 
       /**
        `keyForRelationship` can be used to define a custom key when
@@ -3231,10 +3362,6 @@ define("ember-data/lib/serializers/json_serializer",
        @param {String} relationship type
        @return {String} normalized key
       */
-
-      keyForRelationship: function(key, type){
-        return key;
-      },
 
       // HELPERS
 
