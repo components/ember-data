@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.17b9405d4b
+ * @version   1.0.0-beta.9+canary.79a07a3084
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -2040,11 +2040,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.17b9405d4b'
+        @default '1.0.0-beta.9+canary.79a07a3084'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.17b9405d4b'
+        VERSION: '1.0.0-beta.9+canary.79a07a3084'
       });
 
       if (Ember.libraries) {
@@ -6986,7 +6986,12 @@ define("ember-data/lib/system/model/model",
       willDestroy: function() {
         this._super();
         this.clearRelationships();
-      }
+      },
+
+      // This is a temporary solution until we refactor DS.Model to not
+      // rely on the data property.
+      willMergeMixin: function(props) {
+              }
     });
 
     Model.reopenClass({
