@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.78ce56b236
+ * @version   1.0.0-beta.9+canary.17b9405d4b
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -2045,11 +2045,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.78ce56b236'
+        @default '1.0.0-beta.9+canary.17b9405d4b'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.78ce56b236'
+        VERSION: '1.0.0-beta.9+canary.17b9405d4b'
       });
 
       if (Ember.libraries) {
@@ -10829,6 +10829,31 @@ define("ember-data/lib/system/store",
           serializer = this.serializerFor(type);
         }
         serializer.pushPayload(this, payload);
+      },
+
+      /**
+        `normalize` converts a json payload into the normalized form that
+        [push](#method_push) expects.
+
+        Example
+
+        ```js
+        socket.on('message', function(message) {
+          var modelName = message.model;
+          var data = message.data;
+          store.push(modelName, store.normalize(modelName, data));
+        });
+        ```
+
+        @method normalize
+        @param {String} The name of the model type for this payload
+        @param {Object} payload
+        @return {Object} The normalized payload
+      */
+      normalize: function (type, payload) {
+        var serializer = this.serializerFor(type);
+        var model = this.modelFor(type);
+        return serializer.normalize(model, payload);
       },
 
       /**
