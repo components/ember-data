@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.a93503d61b
+ * @version   1.0.0-beta.9+canary.78ce56b236
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -2040,11 +2040,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.a93503d61b'
+        @default '1.0.0-beta.9+canary.78ce56b236'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.a93503d61b'
+        VERSION: '1.0.0-beta.9+canary.78ce56b236'
       });
 
       if (Ember.libraries) {
@@ -4930,7 +4930,7 @@ define("ember-data/lib/system/changes/relationship_change",
 
     // the object is a value, and not a promise
     function isValue(object) {
-      return typeof object === 'object' && (!object.then || typeof object.then !== 'function');
+      return object && typeof object === 'object' && (!object.then || typeof object.then !== 'function');
     }
 
     RelationshipChangeAdd.prototype.changeType = "add";
