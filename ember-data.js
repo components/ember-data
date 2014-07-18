@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.f83be262fe
+ * @version   1.0.0-beta.9+canary.3949f2ac18
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -2045,11 +2045,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.f83be262fe'
+        @default '1.0.0-beta.9+canary.3949f2ac18'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.f83be262fe'
+        VERSION: '1.0.0-beta.9+canary.3949f2ac18'
       });
 
       if (Ember.libraries) {
@@ -3059,10 +3059,12 @@ define("ember-data/lib/serializers/json_serializer",
         @param {DS.Store} store
         @param {subclass of DS.Model} type
         @param {Object} payload
+        @param {String or Number} id
+        @param {String} requestType
         @return {Array} array An array of deserialized objects
       */
-      extractFindAll: function(store, type, payload){
-        return this.extractArray(store, type, payload);
+      extractFindAll: function(store, type, payload, id, requestType){
+        return this.extractArray(store, type, payload, id, requestType);
       },
       /**
         `extractFindQuery` is a hook into the extract method used when a
@@ -3073,10 +3075,12 @@ define("ember-data/lib/serializers/json_serializer",
         @param {DS.Store} store
         @param {subclass of DS.Model} type
         @param {Object} payload
+        @param {String or Number} id
+        @param {String} requestType
         @return {Array} array An array of deserialized objects
       */
-      extractFindQuery: function(store, type, payload){
-        return this.extractArray(store, type, payload);
+      extractFindQuery: function(store, type, payload, id, requestType){
+        return this.extractArray(store, type, payload, id, requestType);
       },
       /**
         `extractFindMany` is a hook into the extract method used when a
@@ -3087,10 +3091,12 @@ define("ember-data/lib/serializers/json_serializer",
         @param {DS.Store} store
         @param {subclass of DS.Model} type
         @param {Object} payload
+        @param {String or Number} id
+        @param {String} requestType
         @return {Array} array An array of deserialized objects
       */
-      extractFindMany: function(store, type, payload){
-        return this.extractArray(store, type, payload);
+      extractFindMany: function(store, type, payload, id, requestType){
+        return this.extractArray(store, type, payload, id, requestType);
       },
       /**
         `extractFindHasMany` is a hook into the extract method used when a
@@ -3101,10 +3107,12 @@ define("ember-data/lib/serializers/json_serializer",
         @param {DS.Store} store
         @param {subclass of DS.Model} type
         @param {Object} payload
+        @param {String or Number} id
+        @param {String} requestType
         @return {Array} array An array of deserialized objects
       */
-      extractFindHasMany: function(store, type, payload){
-        return this.extractArray(store, type, payload);
+      extractFindHasMany: function(store, type, payload, id, requestType){
+        return this.extractArray(store, type, payload, id, requestType);
       },
 
       /**
@@ -3116,10 +3124,12 @@ define("ember-data/lib/serializers/json_serializer",
         @param {DS.Store} store
         @param {subclass of DS.Model} type
         @param {Object} payload
+        @param {String or Number} id
+        @param {String} requestType
         @return {Object} json The deserialized payload
       */
-      extractCreateRecord: function(store, type, payload) {
-        return this.extractSave(store, type, payload);
+      extractCreateRecord: function(store, type, payload, id, requestType) {
+        return this.extractSave(store, type, payload, id, requestType);
       },
       /**
         `extractUpdateRecord` is a hook into the extract method used when
@@ -3130,10 +3140,12 @@ define("ember-data/lib/serializers/json_serializer",
         @param {DS.Store} store
         @param {subclass of DS.Model} type
         @param {Object} payload
+        @param {String or Number} id
+        @param {String} requestType
         @return {Object} json The deserialized payload
       */
-      extractUpdateRecord: function(store, type, payload) {
-        return this.extractSave(store, type, payload);
+      extractUpdateRecord: function(store, type, payload, id, requestType) {
+        return this.extractSave(store, type, payload, id, requestType);
       },
       /**
         `extractDeleteRecord` is a hook into the extract method used when
@@ -3144,10 +3156,12 @@ define("ember-data/lib/serializers/json_serializer",
         @param {DS.Store} store
         @param {subclass of DS.Model} type
         @param {Object} payload
+        @param {String or Number} id
+        @param {String} requestType
         @return {Object} json The deserialized payload
       */
-      extractDeleteRecord: function(store, type, payload) {
-        return this.extractSave(store, type, payload);
+      extractDeleteRecord: function(store, type, payload, id, requestType) {
+        return this.extractSave(store, type, payload, id, requestType);
       },
 
       /**
@@ -3159,10 +3173,12 @@ define("ember-data/lib/serializers/json_serializer",
         @param {DS.Store} store
         @param {subclass of DS.Model} type
         @param {Object} payload
+        @param {String or Number} id
+        @param {String} requestType
         @return {Object} json The deserialized payload
       */
-      extractFind: function(store, type, payload) {
-        return this.extractSingle(store, type, payload);
+      extractFind: function(store, type, payload, id, requestType) {
+        return this.extractSingle(store, type, payload, id, requestType);
       },
       /**
         `extractFindBelongsTo` is a hook into the extract method used when
@@ -3173,10 +3189,12 @@ define("ember-data/lib/serializers/json_serializer",
         @param {DS.Store} store
         @param {subclass of DS.Model} type
         @param {Object} payload
+        @param {String or Number} id
+        @param {String} requestType
         @return {Object} json The deserialized payload
       */
-      extractFindBelongsTo: function(store, type, payload) {
-        return this.extractSingle(store, type, payload);
+      extractFindBelongsTo: function(store, type, payload, id, requestType) {
+        return this.extractSingle(store, type, payload, id, requestType);
       },
       /**
         `extractSave` is a hook into the extract method used when a call
@@ -3187,10 +3205,12 @@ define("ember-data/lib/serializers/json_serializer",
         @param {DS.Store} store
         @param {subclass of DS.Model} type
         @param {Object} payload
+        @param {String or Number} id
+        @param {String} requestType
         @return {Object} json The deserialized payload
       */
-      extractSave: function(store, type, payload) {
-        return this.extractSingle(store, type, payload);
+      extractSave: function(store, type, payload, id, requestType) {
+        return this.extractSingle(store, type, payload, id, requestType);
       },
 
       /**
@@ -3214,9 +3234,11 @@ define("ember-data/lib/serializers/json_serializer",
         @param {DS.Store} store
         @param {subclass of DS.Model} type
         @param {Object} payload
+        @param {String or Number} id
+        @param {String} requestType
         @return {Object} json The deserialized payload
       */
-      extractSingle: function(store, type, payload) {
+      extractSingle: function(store, type, payload, id, requestType) {
         payload = this.normalizePayload(payload);
         return this.normalize(type, payload);
       },
@@ -3241,9 +3263,11 @@ define("ember-data/lib/serializers/json_serializer",
         @param {DS.Store} store
         @param {subclass of DS.Model} type
         @param {Object} payload
+        @param {String or Number} id
+        @param {String} requestType
         @return {Array} array An array of deserialized objects
       */
-      extractArray: function(store, type, arrayPayload) {
+      extractArray: function(store, type, arrayPayload, id, requestType) {
         arrayPayload = this.normalizePayload(arrayPayload);
         var serializer = this;
         return map.call(arrayPayload, function(singlePayload) {
