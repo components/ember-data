@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.3a518eadc4
+ * @version   1.0.0-beta.9+canary.b75ec7db2a
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -2068,11 +2068,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.3a518eadc4'
+        @default '1.0.0-beta.9+canary.b75ec7db2a'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.3a518eadc4'
+        VERSION: '1.0.0-beta.9+canary.b75ec7db2a'
       });
 
       if (Ember.libraries) {
