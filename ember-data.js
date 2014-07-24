@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.a36cccdf21
+ * @version   1.0.0-beta.9+canary.9fd65e42ee
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -2154,11 +2154,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.a36cccdf21'
+        @default '1.0.0-beta.9+canary.9fd65e42ee'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.a36cccdf21'
+        VERSION: '1.0.0-beta.9+canary.9fd65e42ee'
       });
 
       if (Ember.libraries) {
@@ -8344,6 +8344,14 @@ define("ember-data/lib/system/record_arrays/adapter_populated_record_array",
     var get = Ember.get;
     var set = Ember.set;
 
+    function cloneNull(source) {
+      var clone = Object.create(null);
+      for (var key in source) {
+        clone[key] = source[key];
+      }
+      return clone;
+    }
+
     /**
       Represents an ordered list of records whose order and membership is
       determined by the adapter. For example, a query sent to the adapter
@@ -8376,7 +8384,7 @@ define("ember-data/lib/system/record_arrays/adapter_populated_record_array",
         this.setProperties({
           content: Ember.A(records),
           isLoaded: true,
-          meta: Ember.copy(meta)
+          meta: cloneNull(meta)
         });
 
         records.forEach(function(record) {
@@ -10508,7 +10516,7 @@ define("ember-data/lib/system/store",
         var idToRecord = this.typeMapFor(type).idToRecord;
         var record = idToRecord[id];
 
-        if (!record || !idToRecord.hasOwnProperty(id)) {
+        if (!record || !idToRecord[id]) {
           record = this.buildRecord(type, id);
         }
 
@@ -10992,9 +11000,9 @@ define("ember-data/lib/system/store",
         if (typeMap) { return typeMap; }
 
         typeMap = {
-          idToRecord: {},
+          idToRecord: Object.create(null),
           records: [],
-          metadata: {},
+          metadata: Object.create(null),
           type: type
         };
 
@@ -11301,7 +11309,7 @@ define("ember-data/lib/system/store",
         var typeMap = this.typeMapFor(type);
         var idToRecord = typeMap.idToRecord;
 
-        Ember.assert('The id ' + id + ' has already been used with another record of type ' + type.toString() + '.', !id || !idToRecord.hasOwnProperty(id));
+        Ember.assert('The id ' + id + ' has already been used with another record of type ' + type.toString() + '.', !id || !idToRecord[id]);
         Ember.assert("`" + Ember.inspect(type)+ "` does not appear to be an ember-data model", (typeof type._create === 'function') );
 
         // lookupFactory should really return an object that creates
