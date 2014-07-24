@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.69154e8add
+ * @version   1.0.0-beta.9+canary.5cc81509d2
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -2154,11 +2154,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.69154e8add'
+        @default '1.0.0-beta.9+canary.5cc81509d2'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.69154e8add'
+        VERSION: '1.0.0-beta.9+canary.5cc81509d2'
       });
 
       if (Ember.libraries) {
@@ -6134,6 +6134,21 @@ define("ember-data/lib/system/model/model",
       return get(get(this, 'currentState'), key);
     }).readOnly();
 
+    var _extractPivotNameCache = Object.create(null);
+    var _splitOnDotCache = Object.create(null);
+
+    function splitOnDot(name) {
+      return _splitOnDotCache[name] || (
+        _splitOnDotCache[name] = name.split('.')
+      );
+    }
+
+    function extractPivotName(name) {
+      return _extractPivotNameCache[name] || (
+        _extractPivotNameCache[name] = splitOnDot(name)[0]
+      );
+    }
+
     /**
 
       The model class that all Ember Data records descend from.
@@ -6572,7 +6587,7 @@ define("ember-data/lib/system/model/model",
         // POSSIBLE TODO: Remove this code and replace with
         // always having direct references to state objects
 
-        var pivotName = name.split('.', 1);
+        var pivotName = extractPivotName(name);
         var currentState = get(this, 'currentState');
         var state = currentState;
 
@@ -6581,8 +6596,7 @@ define("ember-data/lib/system/model/model",
           state = state.parentState;
         } while (!state.hasOwnProperty(pivotName));
 
-        var path = name.split('.');
-
+        var path = splitOnDot(name);
         var setups = [], enters = [], i, l;
 
         for (i=0, l=path.length; i<l; i++) {
