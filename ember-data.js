@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.abd1d8d5b0
+ * @version   1.0.0-beta.9+canary.47823b585f
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -2155,11 +2155,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.abd1d8d5b0'
+        @default '1.0.0-beta.9+canary.47823b585f'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.abd1d8d5b0'
+        VERSION: '1.0.0-beta.9+canary.47823b585f'
       });
 
       if (Ember.libraries) {
@@ -6128,7 +6128,7 @@ define("ember-data/lib/system/model/model",
     var set = Ember.set;
     var merge = Ember.merge;
     var Promise = Ember.RSVP.Promise;
-    var forEach = Ember.EnumerableUtils.forEach;
+    var forEach = Ember.ArrayPolyfills.forEach;
 
     var JSONSerializer;
     var retrieveFromCurrentState = Ember.computed('currentState', function(key, value) {
@@ -6767,7 +6767,7 @@ define("ember-data/lib/system/model/model",
       _preloadData: function(preload) {
         var record = this;
         //TODO(Igor) consider the polymorphic case
-        forEach(Ember.keys(preload), function(key) {
+        forEach.call(Ember.keys(preload), function(key) {
           var preloadValue = get(preload, key);
           var relationshipMeta = record.constructor.metaForProperty(key);
           if (relationshipMeta.isRelationship) {
@@ -6792,7 +6792,7 @@ define("ember-data/lib/system/model/model",
         Ember.assert("You need to pass in an array to set a hasMany property on a record", Ember.isArray(preloadValue));
         var record = this;
 
-        forEach(preloadValue, function(recordToPush) {
+        forEach.call(preloadValue, function(recordToPush) {
           recordToPush = record._convertStringOrNumberIntoRecord(recordToPush, type);
           get(record, key).pushObject(recordToPush);
         });
