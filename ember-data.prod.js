@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.df63521f3f
+ * @version   1.0.0-beta.9+canary.5d96d523ff
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -1510,6 +1510,50 @@ define("ember-data/lib/adapters/rest_adapter",
     */
     __exports__["default"] = Adapter.extend({
       defaultSerializer: '-rest',
+
+      /**
+        By default the RESTAdapter will send each find request coming from a `store.find`
+        or from accessing a relationship separately to the server. If your server supports passing
+        ids as a query string, you can set coalesceFindRequests to true to coalesce all find requests
+        within a single runloop.
+
+        For example, if you have an initial payload of
+        ```javascript
+        post: {
+          id:1,
+          comments: [1,2]
+        }
+        ```
+
+        By default calling `post.get('comments')` will trigger the following requests(assuming the
+        comments haven't been loaded before):
+
+        ```
+        GET /comments/1
+        GET /comments/2
+        ```
+
+        If you set coalesceFindRequests to `true` it will instead trigger the following request:
+
+        ```
+        GET /comments?ids[]=1&ids[]=2
+        ```
+
+        Setting coalesceFindRequests to `true` also works for `store.find` requests and `belongsTo`
+        relationships accessed within the same runloop. If you set `coalesceFindRequests: true`
+
+        ```javascript
+        store.find('comment', 1);
+        store.find('comment', 2);
+        ```
+
+        will also send a request to: `GET /comments?ids[]=1&ids[]=2`
+
+        @property coalesceFindRequests
+        @type {boolean}
+      */
+      coalesceFindRequests: false,
+
       /**
         Endpoint paths can be prefixed with a `namespace` by setting the namespace
         property on the adapter:
@@ -1627,9 +1671,12 @@ define("ember-data/lib/adapters/rest_adapter",
       },
 
       /**
-        Called by the store in order to fetch a JSON array for
-        the unloaded records in a has-many relationship that were originally
-        specified as IDs.
+        Called by the store in order to fetch several records together.
+
+        If `coalesceFindRequests` is set to `false` it will simply make a separate `find` request
+        for each record passed to it.
+
+        If `coalesceFindRequests` is set to `true` it will coalesce all the records into a single URL.
 
         For example, if the original payload looks like:
 
@@ -1662,6 +1709,9 @@ define("ember-data/lib/adapters/rest_adapter",
         @return {Promise} promise
       */
       findMany: function(store, type, ids, records) {
+        if (!this.coalesceFindRequests) {
+          return this._super(store, type, ids, records);
+        }
         return this.ajax(this.buildURL(type.typeKey, ids, records), 'GET', { data: { ids: ids } });
       },
 
@@ -2071,11 +2121,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.df63521f3f'
+        @default '1.0.0-beta.9+canary.5d96d523ff'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.df63521f3f'
+        VERSION: '1.0.0-beta.9+canary.5d96d523ff'
       });
 
       if (Ember.libraries) {
@@ -4570,29 +4620,18 @@ define("ember-data/lib/system/adapter",
       deleteRecord: Ember.required(Function),
 
       /**
-        Find multiple records at once.
+        By default the store will try to coalesce all `fetchRecord` calls within the same runloop
+        into as few requests as possible by calling groupRecordsForFindMany and passing it into a findMany call.
+        You can opt out of this behaviour by either not implementing the findMany hook or by setting
+        coalesceFindRequests to false
 
-        By default, it loops over the provided ids and calls `find` on each.
-        May be overwritten to improve performance and reduce the number of
-        server requests.
+        @property coalesceFindRequests
+        @type {boolean}
+      */
+      coalesceFindRequests: true,
 
-        Example
-
-        ```javascript
-        App.ApplicationAdapter = DS.Adapter.extend({
-          findMany: function(store, type, ids) {
-            var url = type;
-            return new Ember.RSVP.Promise(function(resolve, reject) {
-              jQuery.getJSON(url, {ids: ids}).then(function(data) {
-                Ember.run(null, resolve, data);
-              }, function(jqXHR) {
-                jqXHR.then = null; // tame jQuery's ill mannered promises
-                Ember.run(null, reject, jqXHR);
-              });
-            });
-          }
-        });
-        ```
+      /**
+        Find multiple records at once if coalesceFindRequests is true
 
         @method findMany
         @param {DS.Store} store
@@ -4601,13 +4640,6 @@ define("ember-data/lib/system/adapter",
         @param {Array} records
         @return {Promise} promise
       */
-      findMany: function(store, type, ids, records) {
-        var promises = map.call(ids, function(id) {
-          return this.find(store, type, id);
-        }, this);
-
-        return Ember.RSVP.all(promises);
-      },
 
       /**
         Organize records into groups, each of which is to be passed to separate
@@ -10192,7 +10224,7 @@ define("ember-data/lib/system/store",
       _flushPendingFetchForType: function (type, recordResolverPairs) {
         var store = this;
         var adapter = store.adapterFor(type);
-        var shouldCoalesce = !!adapter.findMany;
+        var shouldCoalesce = !!adapter.findMany && adapter.coalesceFindRequests;
         var records = Ember.A(recordResolverPairs).mapBy('record');
         var resolvers = Ember.A(recordResolverPairs).mapBy('resolver');
 
