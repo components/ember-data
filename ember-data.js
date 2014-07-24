@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.d0a86e40f8
+ * @version   1.0.0-beta.9+canary.a36cccdf21
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -2154,11 +2154,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.d0a86e40f8'
+        @default '1.0.0-beta.9+canary.a36cccdf21'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.d0a86e40f8'
+        VERSION: '1.0.0-beta.9+canary.a36cccdf21'
       });
 
       if (Ember.libraries) {
@@ -8126,7 +8126,7 @@ define("ember-data/lib/system/record_array_manager",
 
         if (shouldBeInArray) {
           if (!recordArrays.has(array)) {
-            array.addRecord(record);
+            array.pushRecord(record);
             recordArrays.add(array);
           }
         } else if (!shouldBeInArray) {
@@ -8821,7 +8821,7 @@ define("ember-data/lib/system/record_arrays/record_array",
       },
 
       /**
-        Adds a record to the `RecordArray`.
+        Adds a record to the `RecordArray` without duplicates
 
         @method addRecord
         @private
@@ -8830,6 +8830,18 @@ define("ember-data/lib/system/record_arrays/record_array",
       addRecord: function(record) {
         get(this, 'content').addObject(record);
       },
+
+      /**
+        Adds a record to the `RecordArray`, but allows duplicates
+
+        @method pushRecord
+        @private
+        @param {DS.Model} record
+      */
+      pushRecord: function(record) {
+        get(this, 'content').pushObject(record);
+      },
+
 
       /**
         Removes a record to the `RecordArray`.
