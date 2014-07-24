@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.33a08ae9a5
+ * @version   1.0.0-beta.9+canary.69154e8add
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -83,8 +83,8 @@ define("activemodel-adapter/lib/setup-container",
     __exports__["default"] = function setupActiveModelAdapter(container, application){
       var proxy = new ContainerProxy(container);
       proxy.registerDeprecations([
-        {deprecated: 'serializer:_ams',  valid: 'serializer:-active-model'},
-        {deprecated: 'adapter:_ams',     valid: 'adapter:-active-model'}
+        { deprecated: 'serializer:_ams',  valid: 'serializer:-active-model' },
+        { deprecated: 'adapter:_ams',     valid: 'adapter:-active-model' }
       ]);
 
       container.register('serializer:-active-model', ActiveModelSerializer);
@@ -137,7 +137,7 @@ define("activemodel-adapter/lib/system/active_model_adapter",
 
       The ActiveModelAdapter expects the JSON returned from your server to follow
       the REST adapter conventions substituting underscored keys for camelcased ones.
-      
+
       Unlike the DS.RESTAdapter, async relationship keys must be the singular form
       of the relationship name, followed by "_id" for DS.belongsTo relationships,
       or "_ids" for DS.hasMany relationships.
@@ -399,8 +399,8 @@ define("activemodel-adapter/lib/system/active_model_serializer",
         @param {String} kind
         @return String
       */
-      keyForRelationship: function(key, kind) {
-        key = decamelize(key);
+      keyForRelationship: function(rawKey, kind) {
+        var key = decamelize(rawKey);
         if (kind === "belongsTo") {
           return key + "_id";
         } else if (kind === "hasMany") {
@@ -438,8 +438,8 @@ define("activemodel-adapter/lib/system/active_model_serializer",
         @param relationship
       */
       serializePolymorphicType: function(record, json, relationship) {
-        var key = relationship.key,
-            belongsTo = get(record, key);
+        var key = relationship.key;
+        var belongsTo = get(record, key);
 
         if (belongsTo) {
           key = this.keyForAttribute(key);
@@ -681,9 +681,8 @@ define("activemodel-adapter/lib/system/embedded_records_mixin",
        @return {Object} the normalized hash
       **/
       normalize: function(type, hash, prop) {
-        hash = this._super(type, hash, prop);
-        hash  = extractEmbeddedRecords(this, this.store, type, hash);
-        return hash;
+        var normalizedHash = this._super(type, hash, prop);
+        return extractEmbeddedRecords(this, this.store, type, normalizedHash);
       },
 
       keyForRelationship: function(key, type){
@@ -2155,11 +2154,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.33a08ae9a5'
+        @default '1.0.0-beta.9+canary.69154e8add'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.33a08ae9a5'
+        VERSION: '1.0.0-beta.9+canary.69154e8add'
       });
 
       if (Ember.libraries) {
