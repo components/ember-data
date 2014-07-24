@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.5d96d523ff
+ * @version   1.0.0-beta.9+canary.73156c50cd
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -1935,9 +1935,16 @@ define("ember-data/lib/adapters/rest_adapter",
         var url = this.buildURL(type.typeKey, record.get('id'), record);
 
         var expandedURL = url.split('/');
-        if (expandedURL[expandedURL.length -1 ] === record.get('id')){
+        //Case when the url is of the format ...something/:id
+        var lastSegment = expandedURL[ expandedURL.length - 1 ];
+        var id = record.get('id');
+        if (lastSegment === id) {
           expandedURL[expandedURL.length - 1] = "";
+        } else if(endsWith(lastSegment, '?' + id)) {
+          //Case when the url is of the format ...something?id
+          expandedURL[expandedURL.length - 1] = lastSegment.substring(0, lastSegment.length - id.length - 1);
         }
+
         return expandedURL.join('/');
       },
 
@@ -2101,6 +2108,15 @@ define("ember-data/lib/adapters/rest_adapter",
         return hash;
       }
     });
+
+    //From http://stackoverflow.com/questions/280634/endswith-in-javascript
+    function endsWith(string, suffix){
+      if (typeof String.prototype.endsWith !== 'function') {
+        return string.indexOf(suffix, string.length - suffix.length) !== -1;
+      } else {
+        return string.endsWith(suffix);
+      }
+    }
   });
 define("ember-data/lib/core", 
   ["exports"],
@@ -2121,11 +2137,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.5d96d523ff'
+        @default '1.0.0-beta.9+canary.73156c50cd'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.5d96d523ff'
+        VERSION: '1.0.0-beta.9+canary.73156c50cd'
       });
 
       if (Ember.libraries) {
