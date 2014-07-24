@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.73156c50cd
+ * @version   1.0.0-beta.9+canary.abd1d8d5b0
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -1676,12 +1676,7 @@ define("ember-data/lib/adapters/rest_adapter",
       },
 
       /**
-        Called by the store in order to fetch several records together.
-
-        If `coalesceFindRequests` is set to `false` it will simply make a separate `find` request
-        for each record passed to it.
-
-        If `coalesceFindRequests` is set to `true` it will coalesce all the records into a single URL.
+        Called by the store in order to fetch several records together if `coalesceFindRequests` is true
 
         For example, if the original payload looks like:
 
@@ -1714,9 +1709,6 @@ define("ember-data/lib/adapters/rest_adapter",
         @return {Promise} promise
       */
       findMany: function(store, type, ids, records) {
-        if (!this.coalesceFindRequests) {
-          return this._super(store, type, ids, records);
-        }
         return this.ajax(this.buildURL(type.typeKey, ids, records), 'GET', { data: { ids: ids } });
       },
 
@@ -1888,7 +1880,7 @@ define("ember-data/lib/adapters/rest_adapter",
         if (type) { url.push(this.pathForType(type)); }
 
         //We might get passed in an array of ids from findMany
-        //in which case we want to not modify the url, as the
+        //in which case we don't want to modify the url, as the
         //ids will be passed in through a query param
         if (id && !Ember.isArray(id)) { url.push(id); }
 
@@ -1945,7 +1937,7 @@ define("ember-data/lib/adapters/rest_adapter",
         var id = record.get('id');
         if (lastSegment === id) {
           expandedURL[expandedURL.length - 1] = "";
-        } else if(endsWith(lastSegment, '?' + id)) {
+        } else if(endsWith(lastSegment, '?id=' + id)) {
           //Case when the url is of the format ...something?id
           expandedURL[expandedURL.length - 1] = lastSegment.substring(0, lastSegment.length - id.length - 1);
         }
@@ -1953,6 +1945,27 @@ define("ember-data/lib/adapters/rest_adapter",
         return expandedURL.join('/');
       },
 
+      /**
+        Organize records into groups, each of which is to be passed to separate
+        calls to `findMany`.
+
+        This implementation groups together records that have the same base URL but
+        differing ids. For example `/comments/1` and `/comments/2` will be grouped together
+        because we know findMany can coalesce them together as `/comments?ids[]=1&ids[]=2`
+
+        It also supports urls where ids are passed as a query param, such as `/comments?id=1`
+        but not those where there is more than 1 query param such as `/comments?id=2&name=David`
+        Currently only the query param of `id` is supported. If you need to support others, please
+        override this or the `_stripIDFromURL` method.
+
+        It does not group records that have differing base urls, such as for example: `/posts/1/comments/2`
+        and `/posts/2/comments/3`
+
+        @method groupRecordsForFindMany
+        @param {Array} records
+        @returns {Array}  an array of arrays of records, each of which is to be
+                          loaded separately by `findMany`.
+      */
       groupRecordsForFindMany: function (store, records) {
         var groups = Ember.MapWithDefault.create({defaultValue: function(){return [];}});
         var adapter = this;
@@ -2142,11 +2155,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.73156c50cd'
+        @default '1.0.0-beta.9+canary.abd1d8d5b0'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.73156c50cd'
+        VERSION: '1.0.0-beta.9+canary.abd1d8d5b0'
       });
 
       if (Ember.libraries) {
@@ -6736,6 +6749,21 @@ define("ember-data/lib/system/model/model",
         get(this, 'store').dataWasUpdated(this.constructor, this);
       },
 
+      /**
+        When a find request is triggered on the store, the user can optionally passed in
+        attributes and relationships to be preloaded. These are meant to behave as if they
+        came back from the server, expect the user obtained them out of band and is informing
+        the store of their existence. The most common use case is for supporting client side
+        nested URLs, such as `/posts/1/comments/2` so the user can do
+        `store.find('comment', 2, {post:1})` without having to fetch the post.
+
+        Preloaded data can be attributes and relationships passed in either as IDs or as actual
+        models.
+
+        @method _preloadData
+        @private
+        @param {Object} preload
+      */
       _preloadData: function(preload) {
         var record = this;
         //TODO(Igor) consider the polymorphic case
@@ -7481,7 +7509,8 @@ define("ember-data/lib/system/model/states",
         // EVENTS
         didSetProperty: didSetProperty,
 
-        //TODO(Igor) think this through
+        //TODO(Igor) reloading now triggers a
+        //loadingData event, though it seems fine?
         loadingData: Ember.K,
 
         propertyWasReset: function(record, name) {
@@ -7766,7 +7795,8 @@ define("ember-data/lib/system/model/states",
         // FLAGS
         isLoaded: true,
 
-        //TODO(Igor) think this through
+        //TODO(Igor) Reloading now triggers a loadingData event,
+        //but it should be ok?
         loadingData: Ember.K,
 
         // SUBSTATES
@@ -8543,7 +8573,7 @@ define("ember-data/lib/system/record_arrays/many_array",
         var store = get(this, 'store');
         var owner = get(this, 'owner');
 
-        var unloadedRecords = records.filterProperty('isEmpty', true);
+        var unloadedRecords = records.filterBy('isEmpty', true);
         store.scheduleFetchMany(unloadedRecords, owner);
       },
 
@@ -10122,6 +10152,30 @@ define("ember-data/lib/system/store",
 
         The `find` method will always resolve its promise with the same object for
         a given type and `id`.
+
+        ---
+
+        You can optionally preload specific attributes and relationships that you know of
+        by passing them as the third argument to find.
+
+        For example, if your Ember route looks like `/posts/1/comments/2` and you API route
+        for the comment also looks like `/posts/1/comments/2` if you want to fetch the comment
+        without fetching the post you can pass in the post to the `find` call:
+
+        ```javascript
+        store.find('comment', 2, {post: 1});
+        ```
+
+        If you have access to the post model you can also pass the model itself:
+
+        ```javascript
+        var myPostModel = store.find('post', 1);
+        store.find('comment', 2, {post: myPostModel});
+        ```
+
+        This way, your adapter's `find` or `buildURL` method will be able to look up the
+        relationship on the record and construct the nested URL without having to first
+        fetch the post.
 
         ---
 
