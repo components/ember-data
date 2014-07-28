@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.c045b7948d
+ * @version   1.0.0-beta.9+canary.b6e5fa2387
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -2149,11 +2149,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.c045b7948d'
+        @default '1.0.0-beta.9+canary.b6e5fa2387'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.c045b7948d'
+        VERSION: '1.0.0-beta.9+canary.b6e5fa2387'
       });
 
       if (Ember.libraries) {
@@ -2544,7 +2544,8 @@ define("ember-data/lib/serializers/json_serializer",
     var get = Ember.get;
     var set = Ember.set;
     var isNone = Ember.isNone;
-    var  map = Ember.ArrayPolyfills.map;
+    var map = Ember.ArrayPolyfills.map;
+    var merge = Ember.merge;
 
     /**
       In Ember Data a Serializer is used to serialize and deserialize
@@ -2943,6 +2944,34 @@ define("ember-data/lib/serializers/json_serializer",
         }, this);
 
         return json;
+      },
+
+      /**
+        You can use this method to customize how a serialized record is added to the complete
+        JSON hash to be sent to the server. By default the JSON Serializer does not namespace
+        the payload and just sends the raw serialized JSON object.
+        If your server expects namespaced keys, you should consider using the RESTSerializer.
+        Otherwise you can override this method to customize how the record is added to the hash.
+
+        For example, your server may expect underscored root objects.
+
+        ```js
+        App.ApplicationSerializer = DS.RESTSerializer.extend({
+          serializeIntoHash: function(data, type, record, options) {
+            var root = Ember.String.decamelize(type.typeKey);
+            data[root] = this.serialize(record, options);
+          }
+        });
+        ```
+
+        @method serializeIntoHash
+        @param {Object} hash
+        @param {subclass of DS.Model} type
+        @param {DS.Model} record
+        @param {Object} options
+      */
+      serializeIntoHash: function(hash, type, record, options) {
+        merge(hash, this.serialize(record, options));
       },
 
       /**
