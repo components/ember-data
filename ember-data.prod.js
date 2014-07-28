@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.7e8194f469
+ * @version   1.0.0-beta.9+canary.c045b7948d
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -2149,11 +2149,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.7e8194f469'
+        @default '1.0.0-beta.9+canary.c045b7948d'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.7e8194f469'
+        VERSION: '1.0.0-beta.9+canary.c045b7948d'
       });
 
       if (Ember.libraries) {
@@ -8107,7 +8107,7 @@ define("ember-data/lib/system/record_array_manager",
 
         if (shouldBeInArray) {
           if (!recordArrays.has(array)) {
-            array.addRecord(record);
+            array.pushRecord(record);
             recordArrays.add(array);
           }
         } else if (!shouldBeInArray) {
@@ -8325,6 +8325,14 @@ define("ember-data/lib/system/record_arrays/adapter_populated_record_array",
     var get = Ember.get;
     var set = Ember.set;
 
+    function cloneNull(source) {
+      var clone = Object.create(null);
+      for (var key in source) {
+        clone[key] = source[key];
+      }
+      return clone;
+    }
+
     /**
       Represents an ordered list of records whose order and membership is
       determined by the adapter. For example, a query sent to the adapter
@@ -8357,7 +8365,7 @@ define("ember-data/lib/system/record_arrays/adapter_populated_record_array",
         this.setProperties({
           content: Ember.A(records),
           isLoaded: true,
-          meta: Ember.copy(meta)
+          meta: cloneNull(meta)
         });
 
         records.forEach(function(record) {
@@ -8800,7 +8808,7 @@ define("ember-data/lib/system/record_arrays/record_array",
       },
 
       /**
-        Adds a record to the `RecordArray`.
+        Adds a record to the `RecordArray` without duplicates
 
         @method addRecord
         @private
@@ -8809,6 +8817,18 @@ define("ember-data/lib/system/record_arrays/record_array",
       addRecord: function(record) {
         get(this, 'content').addObject(record);
       },
+
+      /**
+        Adds a record to the `RecordArray`, but allows duplicates
+
+        @method pushRecord
+        @private
+        @param {DS.Model} record
+      */
+      pushRecord: function(record) {
+        get(this, 'content').pushObject(record);
+      },
+
 
       /**
         Removes a record to the `RecordArray`.
@@ -10458,7 +10478,7 @@ define("ember-data/lib/system/store",
         var idToRecord = this.typeMapFor(type).idToRecord;
         var record = idToRecord[id];
 
-        if (!record || !idToRecord.hasOwnProperty(id)) {
+        if (!record || !idToRecord[id]) {
           record = this.buildRecord(type, id);
         }
 
@@ -10933,9 +10953,9 @@ define("ember-data/lib/system/store",
         if (typeMap) { return typeMap; }
 
         typeMap = {
-          idToRecord: {},
+          idToRecord: Object.create(null),
           records: [],
-          metadata: {},
+          metadata: Object.create(null),
           type: type
         };
 
