@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.7f762ea98b
+ * @version   1.0.0-beta.9+canary.124df3392e
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -2155,11 +2155,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.7f762ea98b'
+        @default '1.0.0-beta.9+canary.124df3392e'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.7f762ea98b'
+        VERSION: '1.0.0-beta.9+canary.124df3392e'
       });
 
       if (Ember.libraries) {
@@ -2764,19 +2764,17 @@ define("ember-data/lib/serializers/json_serializer",
 
         if (attrs) {
           for (key in attrs) {
-            payloadKey = attrs[key];
-            if (payloadKey && payloadKey.key) {
-              payloadKey = payloadKey.key;
-            }
+            payloadKey = this._getMappedKey(key);
             if (!hash.hasOwnProperty(payloadKey)) { continue; }
 
-            if (typeof payloadKey === 'string') {
+            if (payloadKey !== key) {
               hash[key] = hash[payloadKey];
               delete hash[payloadKey];
             }
           }
         }
       },
+
       /**
         @method normalizeId
         @private
@@ -2788,6 +2786,33 @@ define("ember-data/lib/serializers/json_serializer",
 
         hash.id = hash[primaryKey];
         delete hash[primaryKey];
+      },
+
+      /**
+        Looks up the property key that was set by the custom `attr` mapping
+        passed to the serializer.
+
+        @method _getMappedKey
+        @private
+        @param {String} key
+        @return {String} key
+      */
+      _getMappedKey: function(key) {
+        var attrs = get(this, 'attrs');
+        var mappedKey;
+        if (attrs && attrs[key]) {
+          mappedKey = attrs[key];
+          //We need to account for both the {title: 'post_title'} and
+          //{title: {key: 'post_title'}} forms
+          if (mappedKey.key){
+            mappedKey = mappedKey.key;
+          }
+          if (typeof mappedKey === 'string'){
+            key = mappedKey;
+          }
+        }
+
+        return key;
       },
 
       // SERIALIZE
@@ -3023,13 +3048,13 @@ define("ember-data/lib/serializers/json_serializer",
 
         // if provided, use the mapping provided by `attrs` in
         // the serializer
-        if (attrs && attrs[key]) {
-          key = attrs[key];
-        } else if (this.keyForAttribute) {
-          key = this.keyForAttribute(key);
+        var payloadKey =  this._getMappedKey(key);
+
+        if (payloadKey === key && this.keyForAttribute) {
+          payloadKey = this.keyForAttribute(key);
         }
 
-        json[key] = value;
+        json[payloadKey] = value;
       },
 
       /**
@@ -3064,16 +3089,15 @@ define("ember-data/lib/serializers/json_serializer",
 
         // if provided, use the mapping provided by `attrs` in
         // the serializer
-        if (attrs && attrs[key]) {
-          key = attrs[key];
-        } else if (this.keyForRelationship) {
-          key = this.keyForRelationship(key, "belongsTo");
+        var payloadKey = this._getMappedKey(key);
+        if (payloadKey === key && this.keyForRelationship) {
+          payloadKey = this.keyForRelationship(key, "belongsTo");
         }
 
         if (isNone(belongsTo)) {
-          json[key] = belongsTo;
+          json[payloadKey] = belongsTo;
         } else {
-          json[key] = get(belongsTo, 'id');
+          json[payloadKey] = get(belongsTo, 'id');
         }
 
         if (relationship.options.polymorphic) {
@@ -3112,12 +3136,9 @@ define("ember-data/lib/serializers/json_serializer",
 
         // if provided, use the mapping provided by `attrs` in
         // the serializer
-        if (attrs && attrs[key]) {
-          payloadKey = attrs[key];
-        } else if (this.keyForRelationship) {
+        payloadKey = this._getMappedKey(key);
+        if (payloadKey === key && this.keyForRelationship) {
           payloadKey = this.keyForRelationship(key, "hasMany");
-        } else {
-          payloadKey = key;
         }
 
         var relationshipType = RelationshipChange.determineRelationshipType(record.constructor, relationship);
