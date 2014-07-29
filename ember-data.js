@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.9b1f46cd5b
+ * @version   1.0.0-beta.9+canary.2440abad78
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -1288,9 +1288,7 @@ define("ember-data/lib/adapters/fixture_adapter",
         @return {Promise} promise
       */
       deleteRecord: function(store, type, record) {
-        var fixture = this.mockJSON(store, type, record);
-
-        this.deleteLoadedFixture(type, fixture);
+        this.deleteLoadedFixture(type, record);
 
         return this.simulateRemoteCall(function() {
           // no payload in a deletion
@@ -2155,11 +2153,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.9b1f46cd5b'
+        @default '1.0.0-beta.9+canary.2440abad78'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.9b1f46cd5b'
+        VERSION: '1.0.0-beta.9+canary.2440abad78'
       });
 
       if (Ember.libraries) {
