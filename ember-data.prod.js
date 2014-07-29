@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.c85fa5b570
+ * @version   1.0.0-beta.9+canary.7f762ea98b
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -551,6 +551,7 @@ define("activemodel-adapter/lib/system/active_model_serializer",
               }
             } else {
               payloadKey = this.keyForRelationship(key, relationship.kind);
+              if (!hash.hasOwnProperty(payloadKey)) { return; }
               payload = hash[payloadKey];
             }
 
@@ -2149,11 +2150,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.c85fa5b570'
+        @default '1.0.0-beta.9+canary.7f762ea98b'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.c85fa5b570'
+        VERSION: '1.0.0-beta.9+canary.7f762ea98b'
       });
 
       if (Ember.libraries) {
@@ -2629,6 +2630,8 @@ define("ember-data/lib/serializers/json_serializer",
       */
       applyTransforms: function(type, data) {
         type.eachTransformedAttribute(function(key, type) {
+          if (!data.hasOwnProperty(key)) { return; }
+
           var transform = this.transformFor(type);
           data[key] = transform.deserialize(data[key]);
         }, this);
@@ -2718,6 +2721,7 @@ define("ember-data/lib/serializers/json_serializer",
           type.eachAttribute(function(key) {
             payloadKey = this.keyForAttribute(key);
             if (key === payloadKey) { return; }
+            if (!hash.hasOwnProperty(payloadKey)) { return; }
 
             hash[key] = hash[payloadKey];
             delete hash[payloadKey];
@@ -2736,6 +2740,7 @@ define("ember-data/lib/serializers/json_serializer",
           type.eachRelationship(function(key, relationship) {
             payloadKey = this.keyForRelationship(key, relationship.kind);
             if (key === payloadKey) { return; }
+            if (!hash.hasOwnProperty(payloadKey)) { return; }
 
             hash[key] = hash[payloadKey];
             delete hash[payloadKey];
@@ -2756,6 +2761,8 @@ define("ember-data/lib/serializers/json_serializer",
             if (payloadKey && payloadKey.key) {
               payloadKey = payloadKey.key;
             }
+            if (!hash.hasOwnProperty(payloadKey)) { continue; }
+
             if (typeof payloadKey === 'string') {
               hash[key] = hash[payloadKey];
               delete hash[payloadKey];
