@@ -3,7 +3,7 @@
  * @copyright Copyright 2011-2014 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   1.0.0-beta.9+canary.ee30253970
+ * @version   1.0.0-beta.9+canary.9b1f46cd5b
  */
 (function(global) {
 var define, requireModule, require, requirejs;
@@ -946,7 +946,7 @@ define("activemodel-adapter/lib/system/embedded_records_mixin",
     }
 
     function attrsOption(attrs, attr) {
-      return attrs && (attrs[Ember.String.camelize(attr)] || attrs[attr]);
+      return attrs && (attrs[camelize(attr)] || attrs[attr]);
     }
 
     // chooses a relationship kind to branch which function is used to update payload
@@ -2150,11 +2150,11 @@ define("ember-data/lib/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.ee30253970'
+        @default '1.0.0-beta.9+canary.9b1f46cd5b'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.ee30253970'
+        VERSION: '1.0.0-beta.9+canary.9b1f46cd5b'
       });
 
       if (Ember.libraries) {
