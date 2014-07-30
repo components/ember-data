@@ -2201,11 +2201,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.23cb327686'
+        @default '1.0.0-beta.9+canary.6d9a014842'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.23cb327686'
+        VERSION: '1.0.0-beta.9+canary.6d9a014842'
       });
 
       if (Ember.libraries) {
@@ -10357,12 +10357,7 @@ define("ember-data/system/store",
         var resolvers = Ember.A(recordResolverPairs).mapBy('resolver');
 
         function _fetchRecord(recordResolverPair) {
-          var resolver = recordResolverPair.resolver;
-          store.fetchRecord(recordResolverPair.record).then(function(record){
-            resolver.resolve(record);
-          }, function(error){
-            resolver.reject(error);
-          });
+          recordResolverPair.resolver.resolve(store.fetchRecord(recordResolverPair.record));
         }
 
         function resolveFoundRecords(records) {
