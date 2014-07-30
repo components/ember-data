@@ -2297,11 +2297,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.840f9022b3'
+        @default '1.0.0-beta.9+canary.23cb327686'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.840f9022b3'
+        VERSION: '1.0.0-beta.9+canary.23cb327686'
       });
 
       if (Ember.libraries) {
@@ -2642,6 +2642,30 @@ define("ember-data/serializers/json_serializer",
           }
         });
         ```
+
+        You can also remove attributes by setting the `serialize` key to
+        false in your mapping object.
+
+        Example
+
+        ```javascript
+        App.PersonSerializer = DS.JSONSerializer.extend({
+          attrs: {
+            admin: {serialize: false},
+            occupation: {key: 'career'}
+          }
+        });
+        ```
+
+        When serialized:
+
+        ```javascript
+        {
+          "career": "magician"
+        }
+        ```
+
+        Note that the `admin` is now not included in the payload.
 
         @property attrs
         @type {Object}
@@ -3071,6 +3095,11 @@ define("ember-data/serializers/json_serializer",
           value = transform.serialize(value);
         }
 
+        // If attrs.key.serialize is false, do not include the value in the
+        // response to the server at all.
+        if (attrs && attrs[key] && attrs[key].serialize === false) {
+          return;
+        }
         // if provided, use the mapping provided by `attrs` in
         // the serializer
         var payloadKey =  this._getMappedKey(key);
