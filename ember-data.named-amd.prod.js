@@ -2201,11 +2201,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.6d9a014842'
+        @default '1.0.0-beta.9+canary.8a86f4be2e'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.6d9a014842'
+        VERSION: '1.0.0-beta.9+canary.8a86f4be2e'
       });
 
       if (Ember.libraries) {
@@ -12281,6 +12281,9 @@ define("ember-inflector/system/inflector",
   function(__exports__) {
     "use strict";
     var BLANK_REGEX = /^\s*$/;
+    var LAST_WORD_DASHED_REGEX = /(\w+[_-])([a-z\d]+$)/;
+    var LAST_WORD_CAMELIZED_REGEX = /(\w+)([A-Z][a-z\d]*$)/;
+    var CAMELIZED_REGEX = /[A-Z][a-z\d]*$/;
 
     function loadUncountable(rules, uncountable) {
       for (var i = 0, length = uncountable.length; i < length; i++) {
@@ -12515,27 +12518,41 @@ define("ember-inflector/system/inflector",
         @param {Object} irregular
       */
       inflect: function(word, typeRules, irregular) {
-        var inflection, substitution, result, lowercase, isBlank,
-        isUncountable, isIrregular, isIrregularInverse, rule;
-
+        var inflection, substitution, result, lowercase, wordSplit,
+          firstPhrase, lastWord, isBlank, isCamelized, isUncountable, 
+          isIrregular, isIrregularInverse, rule;
+      
         isBlank = BLANK_REGEX.test(word);
+        isCamelized = CAMELIZED_REGEX.test(word);
+        firstPhrase = "";
 
         if (isBlank) {
           return word;
         }
 
         lowercase = word.toLowerCase();
+        wordSplit = LAST_WORD_DASHED_REGEX.exec(word) || LAST_WORD_CAMELIZED_REGEX.exec(word);
+        if (wordSplit){
+          firstPhrase = wordSplit[1];
+          lastWord = wordSplit[2].toLowerCase();
+        }
 
-        isUncountable = this.rules.uncountable[lowercase];
+        isUncountable = this.rules.uncountable[lowercase] || this.rules.uncountable[lastWord];
 
         if (isUncountable) {
           return word;
         }
 
-        isIrregular = irregular && irregular[lowercase];
+        isIrregular = irregular && (irregular[lowercase] || irregular[lastWord]);
 
         if (isIrregular) {
-          return isIrregular;
+          if (irregular[lowercase]){
+            return isIrregular;
+          }
+          else {
+            isIrregular = (isCamelized) ? isIrregular.capitalize() : isIrregular;
+            return firstPhrase + isIrregular;
+          }
         }
 
         for (var i = typeRules.length, min = 0; i > min; i--) {
