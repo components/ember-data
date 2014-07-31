@@ -2009,7 +2009,7 @@ define("ember-data/adapters/rest_adapter",
 
         @method groupRecordsForFindMany
         @param {Array} records
-        @returns {Array}  an array of arrays of records, each of which is to be
+        @return {Array}  an array of arrays of records, each of which is to be
                           loaded separately by `findMany`.
       */
       groupRecordsForFindMany: function (store, records) {
@@ -2201,11 +2201,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.8a86f4be2e'
+        @default '1.0.0-beta.9+canary.cd176e584b'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.8a86f4be2e'
+        VERSION: '1.0.0-beta.9+canary.cd176e584b'
       });
 
       if (Ember.libraries) {
@@ -2227,7 +2227,7 @@ define("ember-data/ember-initializer",
       @module ember-data
     */
 
-    /**
+    /*
 
       This code initializes Ember-Data onto an Ember application.
 
@@ -4702,7 +4702,7 @@ define("ember-data/system/adapter",
 
         @method groupRecordsForFindMany
         @param {Array} records
-        @returns {Array}  an array of arrays of records, each of which is to be
+        @return {Array}  an array of arrays of records, each of which is to be
                           loaded separately by `findMany`.
       */
       groupRecordsForFindMany: function (store, records) {
