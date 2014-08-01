@@ -1755,11 +1755,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.2c67dcf58b'
+        @default '1.0.0-beta.9+canary.720b8e3171'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.2c67dcf58b'
+        VERSION: '1.0.0-beta.9+canary.720b8e3171'
       });
 
       if (Ember.libraries) {
@@ -4734,14 +4734,14 @@ define("ember-data/system/changes",
     __exports__.ManyToManyChange = ManyToManyChange;
   });
 define("ember-data/system/changes/relationship_change",
-  ["ember-data/system/model","exports"],
+  ["ember-data/system/model/model","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
     /**
       @module ember-data
     */
 
-    var Model = __dependency1__.Model;
+    var Model = __dependency1__["default"];
 
     var get = Ember.get;
     var set = Ember.set;
@@ -4807,10 +4807,10 @@ define("ember-data/system/changes/relationship_change",
     var ManyToManyChange = {};
 
     RelationshipChange._createChange = function(options){
-      if (options.changeType === "add"){
+      if (options.changeType === 'add') {
         return RelationshipChangeAdd.create(options);
       }
-      if (options.changeType === "remove"){
+      if (options.changeType === 'remove') {
         return RelationshipChangeRemove.create(options);
       }
     };
@@ -4822,18 +4822,18 @@ define("ember-data/system/changes/relationship_change",
 
       var inverse = recordType.inverseFor(knownKey);
 
-      if (inverse){
+      if (inverse) {
         key = inverse.name;
         otherKind = inverse.kind;
       }
 
-      if (!inverse){
-        return knownKind === "belongsTo" ? "oneToNone" : "manyToNone";
+      if (!inverse) {
+        return knownKind === 'belongsTo' ? 'oneToNone' : 'manyToNone';
       } else {
-        if(otherKind === "belongsTo"){
-          return knownKind === "belongsTo" ? "oneToOne" : "manyToOne";
+        if (otherKind === 'belongsTo') {
+          return knownKind === 'belongsTo' ? 'oneToOne' : 'manyToOne';
         } else {
-          return knownKind === "belongsTo" ? "oneToMany" : "manyToMany";
+          return knownKind === 'belongsTo' ? 'oneToMany' : 'manyToMany';
         }
       }
 
@@ -4843,17 +4843,17 @@ define("ember-data/system/changes/relationship_change",
       // Get the type of the child based on the child's client ID
       var firstRecordType = firstRecord.constructor, changeType;
       changeType = RelationshipChange.determineRelationshipType(firstRecordType, options);
-      if (changeType === "oneToMany"){
+      if (changeType === 'oneToMany') {
         return OneToManyChange.createChange(firstRecord, secondRecord, store, options);
-      } else if (changeType === "manyToOne"){
+      } else if (changeType === 'manyToOne') {
         return OneToManyChange.createChange(secondRecord, firstRecord, store, options);
-      } else if (changeType === "oneToNone"){
+      } else if (changeType === 'oneToNone') {
         return OneToNoneChange.createChange(firstRecord, secondRecord, store, options);
-      } else if (changeType === "manyToNone"){
+      } else if (changeType === 'manyToNone') {
         return ManyToNoneChange.createChange(firstRecord, secondRecord, store, options);
-      } else if (changeType === "oneToOne"){
+      } else if (changeType === 'oneToOne') {
         return OneToOneChange.createChange(firstRecord, secondRecord, store, options);
-      } else if (changeType === "manyToMany"){
+      } else if (changeType === 'manyToMany') {
         return ManyToManyChange.createChange(firstRecord, secondRecord, store, options);
       }
     };
@@ -4861,13 +4861,13 @@ define("ember-data/system/changes/relationship_change",
     OneToNoneChange.createChange = function(childRecord, parentRecord, store, options) {
       var key = options.key;
       var change = RelationshipChange._createChange({
-          parentRecord: parentRecord,
-          childRecord: childRecord,
-          firstRecord: childRecord,
-          store: store,
-          changeType: options.changeType,
-          firstRecordName: key,
-          firstRecordKind: "belongsTo"
+        parentRecord: parentRecord,
+        childRecord: childRecord,
+        firstRecord: childRecord,
+        store: store,
+        changeType: options.changeType,
+        firstRecordName: key,
+        firstRecordKind: 'belongsTo'
       });
 
       store.addRelationshipChangeFor(childRecord, key, parentRecord, null, change);
@@ -4878,13 +4878,13 @@ define("ember-data/system/changes/relationship_change",
     ManyToNoneChange.createChange = function(childRecord, parentRecord, store, options) {
       var key = options.key;
       var change = RelationshipChange._createChange({
-          parentRecord: childRecord,
-          childRecord: parentRecord,
-          secondRecord: childRecord,
-          store: store,
-          changeType: options.changeType,
-          secondRecordName: options.key,
-          secondRecordKind: "hasMany"
+        parentRecord: childRecord,
+        childRecord: parentRecord,
+        secondRecord: childRecord,
+        store: store,
+        changeType: options.changeType,
+        secondRecordName: options.key,
+        secondRecordKind: 'hasMany'
       });
 
       store.addRelationshipChangeFor(childRecord, key, parentRecord, null, change);
@@ -4900,19 +4900,18 @@ define("ember-data/system/changes/relationship_change",
       var key = options.key;
 
       var change = RelationshipChange._createChange({
-          parentRecord: parentRecord,
-          childRecord: childRecord,
-          firstRecord: childRecord,
-          secondRecord: parentRecord,
-          firstRecordKind: "hasMany",
-          secondRecordKind: "hasMany",
-          store: store,
-          changeType: options.changeType,
-          firstRecordName:  key
+        parentRecord: parentRecord,
+        childRecord: childRecord,
+        firstRecord: childRecord,
+        secondRecord: parentRecord,
+        firstRecordKind: 'hasMany',
+        secondRecordKind: 'hasMany',
+        store: store,
+        changeType: options.changeType,
+        firstRecordName:  key
       });
 
       store.addRelationshipChangeFor(childRecord, key, parentRecord, null, change);
-
 
       return change;
     };
@@ -4932,15 +4931,15 @@ define("ember-data/system/changes/relationship_change",
               }
 
       var change = RelationshipChange._createChange({
-          parentRecord: parentRecord,
-          childRecord: childRecord,
-          firstRecord: childRecord,
-          secondRecord: parentRecord,
-          firstRecordKind: "belongsTo",
-          secondRecordKind: "belongsTo",
-          store: store,
-          changeType: options.changeType,
-          firstRecordName:  key
+        parentRecord: parentRecord,
+        childRecord: childRecord,
+        firstRecord: childRecord,
+        secondRecord: parentRecord,
+        firstRecordKind: 'belongsTo',
+        secondRecordKind: 'belongsTo',
+        store: store,
+        changeType: options.changeType,
+        firstRecordName:  key
       });
 
       store.addRelationshipChangeFor(childRecord, key, parentRecord, null, change);
@@ -4949,17 +4948,17 @@ define("ember-data/system/changes/relationship_change",
     };
 
     OneToOneChange.maintainInvariant = function(options, store, childRecord, key){
-      if (options.changeType === "add" && store.recordIsMaterialized(childRecord)) {
+      if (options.changeType === 'add' && store.recordIsMaterialized(childRecord)) {
         var oldParent = get(childRecord, key);
-        if (oldParent){
+        if (oldParent) {
           var correspondingChange = OneToOneChange.createChange(childRecord, oldParent, store, {
-              parentType: options.parentType,
-              hasManyName: options.hasManyName,
-              changeType: "remove",
-              key: options.key
-            });
+            parentType: options.parentType,
+            hasManyName: options.hasManyName,
+            changeType: 'remove',
+            key: options.key
+          });
           store.addRelationshipChangeFor(childRecord, key, options.parentRecord , null, correspondingChange);
-         correspondingChange.sync();
+          correspondingChange.sync();
         }
       }
     };
@@ -4980,15 +4979,15 @@ define("ember-data/system/changes/relationship_change",
               }
 
       var change = RelationshipChange._createChange({
-          parentRecord: parentRecord,
-          childRecord: childRecord,
-          firstRecord: childRecord,
-          secondRecord: parentRecord,
-          firstRecordKind: "belongsTo",
-          secondRecordKind: "hasMany",
-          store: store,
-          changeType: options.changeType,
-          firstRecordName:  key
+        parentRecord: parentRecord,
+        childRecord: childRecord,
+        firstRecord: childRecord,
+        secondRecord: parentRecord,
+        firstRecordKind: 'belongsTo',
+        secondRecordKind: 'hasMany',
+        store: store,
+        changeType: options.changeType,
+        firstRecordName: key
       });
 
       store.addRelationshipChangeFor(childRecord, key, parentRecord, change.getSecondRecordName(), change);
@@ -4998,15 +4997,15 @@ define("ember-data/system/changes/relationship_change",
 
 
     OneToManyChange.maintainInvariant = function(options, store, childRecord, key){
-      if (options.changeType === "add" && childRecord) {
+      if (options.changeType === 'add' && childRecord) {
         var oldParent = get(childRecord, key);
-        if (oldParent){
+        if (oldParent) {
           var correspondingChange = OneToManyChange.createChange(childRecord, oldParent, store, {
-              parentType: options.parentType,
-              hasManyName: options.hasManyName,
-              changeType: "remove",
-              key: options.key
-            });
+            parentType: options.parentType,
+            hasManyName: options.hasManyName,
+            changeType: 'remove',
+            key: options.key
+          });
           store.addRelationshipChangeFor(childRecord, key, options.parentRecord, correspondingChange.getSecondRecordName(), correspondingChange);
           correspondingChange.sync();
         }
@@ -5018,7 +5017,6 @@ define("ember-data/system/changes/relationship_change",
       @namespace DS
     */
     RelationshipChange.prototype = {
-
       getSecondRecordName: function() {
         var name = this.secondRecordName, parent;
 
@@ -5041,8 +5039,7 @@ define("ember-data/system/changes/relationship_change",
         @return {String}
       */
       getFirstRecordName: function() {
-        var name = this.firstRecordName;
-        return name;
+        return this.firstRecordName;
       },
 
       /**
@@ -5072,10 +5069,10 @@ define("ember-data/system/changes/relationship_change",
 
       coalesce: function(){
         var relationshipPairs = this.store.relationshipChangePairsFor(this.firstRecord);
-        forEach(relationshipPairs, function(pair){
-          var addedChange = pair["add"];
-          var removedChange = pair["remove"];
-          if(addedChange && removedChange) {
+        forEach(relationshipPairs, function(pair) {
+          var addedChange = pair['add'];
+          var removedChange = pair['remove'];
+          if (addedChange && removedChange) {
             addedChange.destroy();
             removedChange.destroy();
           }
@@ -5091,7 +5088,7 @@ define("ember-data/system/changes/relationship_change",
       return object && typeof object === 'object' && (!object.then || typeof object.then !== 'function');
     }
 
-    RelationshipChangeAdd.prototype.changeType = "add";
+    RelationshipChangeAdd.prototype.changeType = 'add';
     RelationshipChangeAdd.prototype.sync = function() {
       var secondRecordName = this.getSecondRecordName();
       var firstRecordName = this.getFirstRecordName();
@@ -5102,14 +5099,12 @@ define("ember-data/system/changes/relationship_change",
       //Ember.assert("You specified a belongsTo (" + belongsToName + ") on " + child.constructor + " but did not specify an inverse hasMany on " + (!hasManyName && (newParent || oldParent || this.lastParentRecord).constructor), hasManyName);
 
       if (secondRecord instanceof Model && firstRecord instanceof Model) {
-        if(this.secondRecordKind === "belongsTo"){
-          secondRecord.suspendRelationshipObservers(function(){
+        if (this.secondRecordKind === 'belongsTo') {
+          secondRecord.suspendRelationshipObservers(function() {
             set(secondRecord, secondRecordName, firstRecord);
           });
-
-         }
-         else if(this.secondRecordKind === "hasMany"){
-          secondRecord.suspendRelationshipObservers(function(){
+        } else if (this.secondRecordKind === 'hasMany') {
+          secondRecord.suspendRelationshipObservers(function() {
             var relationship = get(secondRecord, secondRecordName);
             if (isValue(relationship)) { relationship.addObject(firstRecord); }
           });
@@ -5117,13 +5112,12 @@ define("ember-data/system/changes/relationship_change",
       }
 
       if (firstRecord instanceof Model && secondRecord instanceof Model && get(firstRecord, firstRecordName) !== secondRecord) {
-        if(this.firstRecordKind === "belongsTo"){
-          firstRecord.suspendRelationshipObservers(function(){
+        if (this.firstRecordKind === 'belongsTo') {
+          firstRecord.suspendRelationshipObservers(function() {
             set(firstRecord, firstRecordName, secondRecord);
           });
-        }
-        else if(this.firstRecordKind === "hasMany"){
-          firstRecord.suspendRelationshipObservers(function(){
+        } else if (this.firstRecordKind === 'hasMany') {
+          firstRecord.suspendRelationshipObservers(function() {
             var relationship = get(firstRecord, firstRecordName);
             if (isValue(relationship)) { relationship.addObject(secondRecord); }
           });
@@ -5133,7 +5127,7 @@ define("ember-data/system/changes/relationship_change",
       this.coalesce();
     };
 
-    RelationshipChangeRemove.prototype.changeType = "remove";
+    RelationshipChangeRemove.prototype.changeType = 'remove';
     RelationshipChangeRemove.prototype.sync = function() {
       var secondRecordName = this.getSecondRecordName();
       var firstRecordName = this.getFirstRecordName();
@@ -5144,13 +5138,12 @@ define("ember-data/system/changes/relationship_change",
       //Ember.assert("You specified a belongsTo (" + belongsToName + ") on " + child.constructor + " but did not specify an inverse hasMany on " + (!hasManyName && (newParent || oldParent || this.lastParentRecord).constructor), hasManyName);
 
       if (secondRecord instanceof Model && firstRecord instanceof Model) {
-        if(this.secondRecordKind === "belongsTo"){
-          secondRecord.suspendRelationshipObservers(function(){
+        if (this.secondRecordKind === 'belongsTo') {
+          secondRecord.suspendRelationshipObservers(function() {
             set(secondRecord, secondRecordName, null);
           });
-        }
-        else if(this.secondRecordKind === "hasMany"){
-          secondRecord.suspendRelationshipObservers(function(){
+        } else if (this.secondRecordKind === 'hasMany') {
+          secondRecord.suspendRelationshipObservers(function() {
             var relationship = get(secondRecord, secondRecordName);
             if (isValue(relationship)) { relationship.removeObject(firstRecord); }
           });
@@ -5158,15 +5151,14 @@ define("ember-data/system/changes/relationship_change",
       }
 
       if (firstRecord instanceof Model && get(firstRecord, firstRecordName)) {
-        if(this.firstRecordKind === "belongsTo"){
-          firstRecord.suspendRelationshipObservers(function(){
+        if (this.firstRecordKind === 'belongsTo') {
+          firstRecord.suspendRelationshipObservers(function() {
             set(firstRecord, firstRecordName, null);
           });
-         }
-         else if(this.firstRecordKind === "hasMany"){
-           firstRecord.suspendRelationshipObservers(function(){
-             var relationship = get(firstRecord, firstRecordName);
-             if (isValue(relationship)) { relationship.removeObject(secondRecord); }
+        } else if (this.firstRecordKind === 'hasMany') {
+          firstRecord.suspendRelationshipObservers(function() {
+            var relationship = get(firstRecord, firstRecordName);
+            if (isValue(relationship)) { relationship.removeObject(secondRecord); }
           });
         }
       }
@@ -10300,9 +10292,8 @@ define("ember-data/system/store",
         @return {Promise} promise
       */
       fetchRecord: function(record) {
-        var type = record.constructor,
-            id = get(record, 'id');
-
+        var type = record.constructor;
+        var id = get(record, 'id');
         var adapter = this.adapterFor(type);
 
                 
@@ -10319,8 +10310,11 @@ define("ember-data/system/store",
         if (isNone(record)) { return null; }
         if (record._loadingPromise) { return record._loadingPromise; }
 
-        var resolver = Ember.RSVP.defer("Fetching " + type + "with id: " + record.get('id'));
-        var recordResolverPair = {record: record, resolver: resolver};
+        var resolver = Ember.RSVP.defer('Fetching ' + type + 'with id: ' + record.get('id'));
+        var recordResolverPair = {
+          record: record,
+          resolver: resolver
+        };
         var promise = resolver.promise;
 
         record.loadingData(promise);
@@ -10510,8 +10504,8 @@ define("ember-data/system/store",
         var type = this.modelFor(typeName);
         var records = Ember.A(inputRecords);
         var unloadedRecords = records.filterProperty('isEmpty', true);
-
         var manyArray = this.recordArrayManager.createManyArray(type, records);
+
         manyArray.loadingRecordsCount = unloadedRecords.length;
 
         if (unloadedRecords.length) {
@@ -11364,9 +11358,9 @@ define("ember-data/system/store",
         //TODO(Igor) What about the other side
         var changesObject = this._relationshipChanges[record.clientId];
         for (var objKey in changesObject){
-          if(changesObject.hasOwnProperty(objKey)){
+          if (changesObject.hasOwnProperty(objKey)){
             for (var changeKey in changesObject[objKey]){
-              if(changesObject[objKey].hasOwnProperty(changeKey)){
+              if (changesObject[objKey].hasOwnProperty(changeKey)){
                 toReturn.push(changesObject[objKey][changeKey]);
               }
             }
@@ -11465,8 +11459,8 @@ define("ember-data/system/store",
           return;
         }
 
-        var kind = relationship.kind,
-            value = data[key];
+        var kind = relationship.kind;
+        var value = data[key];
 
         if (value == null) {
           if (kind === 'hasMany' && record) {
@@ -11664,9 +11658,9 @@ define("ember-data/system/store",
     }
 
     function _find(adapter, store, type, id, record) {
-      var promise = adapter.find(store, type, id, record),
-          serializer = serializerForAdapter(adapter, type),
-          label = "DS: Handle Adapter#find of " + type + " with id: " + id;
+      var promise = adapter.find(store, type, id, record);
+      var serializer = serializerForAdapter(adapter, type);
+      var label = "DS: Handle Adapter#find of " + type + " with id: " + id;
 
       promise = Promise.cast(promise, label);
       promise = _guard(promise, _bind(_objectIsAlive, store));
@@ -11686,10 +11680,16 @@ define("ember-data/system/store",
 
 
     function _findMany(adapter, store, type, ids, records) {
-      var promise = adapter.findMany(store, type, ids, records),
-          serializer = serializerForAdapter(adapter, type),
-          label = "DS: Handle Adapter#findMany of " + type;
+      var promise = adapter.findMany(store, type, ids, records);
+      var serializer = serializerForAdapter(adapter, type);
+      var label = "DS: Handle Adapter#findMany of " + type;
+
+      if (promise === undefined) {
+        throw new Error('adapter.findMany returned undefined, this was very likely a mistake');
+      }
+
       var guardedPromise;
+
       promise = Promise.cast(promise, label);
       promise = _guard(promise, _bind(_objectIsAlive, store));
 
