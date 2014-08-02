@@ -1867,11 +1867,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.1e5062db7f'
+        @default '1.0.0-beta.9+canary.7dccea8dbf'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.1e5062db7f'
+        VERSION: '1.0.0-beta.9+canary.7dccea8dbf'
       });
 
       if (Ember.libraries) {
