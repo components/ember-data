@@ -1867,11 +1867,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.720b8e3171'
+        @default '1.0.0-beta.9+canary.cf2ad6e7a5'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.720b8e3171'
+        VERSION: '1.0.0-beta.9+canary.cf2ad6e7a5'
       });
 
       if (Ember.libraries) {
@@ -4927,7 +4927,6 @@ define("ember-data/system/changes/relationship_change",
       }
     };
 
-
     RelationshipChange.determineRelationshipType = function(recordType, knownSide){
       var knownKey = knownSide.key, key, otherKind;
       var knownKind = knownSide.kind;
@@ -4948,7 +4947,6 @@ define("ember-data/system/changes/relationship_change",
           return knownKind === 'belongsTo' ? 'oneToMany' : 'manyToMany';
         }
       }
-
     };
 
     RelationshipChange.createChange = function(firstRecord, secondRecord, store, options){
@@ -5107,7 +5105,6 @@ define("ember-data/system/changes/relationship_change",
       return change;
     };
 
-
     OneToManyChange.maintainInvariant = function(options, store, childRecord, key){
       if (options.changeType === 'add' && childRecord) {
         var oldParent = get(childRecord, key);
@@ -5195,9 +5192,11 @@ define("ember-data/system/changes/relationship_change",
     RelationshipChangeAdd.prototype = Ember.create(RelationshipChange.create({}));
     RelationshipChangeRemove.prototype = Ember.create(RelationshipChange.create({}));
 
-    // the object is a value, and not a promise
-    function isValue(object) {
-      return object && typeof object === 'object' && (!object.then || typeof object.then !== 'function');
+    function isSyncRelationship(record, relationshipName) {
+      var meta = Ember.meta(record);
+      var desc = meta.descs[relationshipName];
+
+      return desc && !desc._meta.options.async;
     }
 
     RelationshipChangeAdd.prototype.changeType = 'add';
@@ -5215,10 +5214,10 @@ define("ember-data/system/changes/relationship_change",
           secondRecord.suspendRelationshipObservers(function() {
             set(secondRecord, secondRecordName, firstRecord);
           });
-        } else if (this.secondRecordKind === 'hasMany') {
+        } else if (this.secondRecordKind === 'hasMany' && isSyncRelationship(secondRecord, secondRecordName)) {
           secondRecord.suspendRelationshipObservers(function() {
             var relationship = get(secondRecord, secondRecordName);
-            if (isValue(relationship)) { relationship.addObject(firstRecord); }
+            relationship.addObject(firstRecord);
           });
         }
       }
@@ -5228,14 +5227,13 @@ define("ember-data/system/changes/relationship_change",
           firstRecord.suspendRelationshipObservers(function() {
             set(firstRecord, firstRecordName, secondRecord);
           });
-        } else if (this.firstRecordKind === 'hasMany') {
+        } else if (this.firstRecordKind === 'hasMany' && isSyncRelationship(secondRecord, secondRecordName)) {
           firstRecord.suspendRelationshipObservers(function() {
             var relationship = get(firstRecord, firstRecordName);
-            if (isValue(relationship)) { relationship.addObject(secondRecord); }
+             relationship.addObject(secondRecord);
           });
         }
       }
-
       this.coalesce();
     };
 
@@ -5254,10 +5252,10 @@ define("ember-data/system/changes/relationship_change",
           secondRecord.suspendRelationshipObservers(function() {
             set(secondRecord, secondRecordName, null);
           });
-        } else if (this.secondRecordKind === 'hasMany') {
+        } else if (this.secondRecordKind === 'hasMany' && isSyncRelationship(secondRecord, secondRecordName)) {
           secondRecord.suspendRelationshipObservers(function() {
             var relationship = get(secondRecord, secondRecordName);
-            if (isValue(relationship)) { relationship.removeObject(firstRecord); }
+            relationship.removeObject(firstRecord);
           });
         }
       }
@@ -5267,10 +5265,10 @@ define("ember-data/system/changes/relationship_change",
           firstRecord.suspendRelationshipObservers(function() {
             set(firstRecord, firstRecordName, null);
           });
-        } else if (this.firstRecordKind === 'hasMany') {
+        } else if (this.firstRecordKind === 'hasMany' && isSyncRelationship(firstRecord, firstRecordName)) {
           firstRecord.suspendRelationshipObservers(function() {
             var relationship = get(firstRecord, firstRecordName);
-            if (isValue(relationship)) { relationship.removeObject(secondRecord); }
+            relationship.removeObject(secondRecord);
           });
         }
       }
