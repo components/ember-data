@@ -1872,11 +1872,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.7dccea8dbf'
+        @default '1.0.0-beta.9+canary.0deadce5c7'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.7dccea8dbf'
+        VERSION: '1.0.0-beta.9+canary.0deadce5c7'
       });
 
       if (Ember.libraries) {
@@ -4854,14 +4854,15 @@ define("ember-data/system/changes",
     __exports__.ManyToManyChange = ManyToManyChange;
   });
 define("ember-data/system/changes/relationship_change",
-  ["ember-data/system/model/model","exports"],
-  function(__dependency1__, __exports__) {
+  ["ember-data/system/model/model","ember-data/system/relationship-meta","exports"],
+  function(__dependency1__, __dependency2__, __exports__) {
     "use strict";
     /**
       @module ember-data
     */
 
     var Model = __dependency1__["default"];
+    var isSyncRelationship = __dependency2__.isSyncRelationship;
 
     var get = Ember.get;
     var set = Ember.set;
@@ -5201,13 +5202,6 @@ define("ember-data/system/changes/relationship_change",
 
     RelationshipChangeAdd.prototype = Ember.create(RelationshipChange.create({}));
     RelationshipChangeRemove.prototype = Ember.create(RelationshipChange.create({}));
-
-    function isSyncRelationship(record, relationshipName) {
-      var meta = Ember.meta(record);
-      var desc = meta.descs[relationshipName];
-
-      return desc && !desc._meta.options.async;
-    }
 
     RelationshipChangeAdd.prototype.changeType = 'add';
     RelationshipChangeAdd.prototype.sync = function() {
@@ -9057,7 +9051,14 @@ define("ember-data/system/relationship-meta",
       };
     }
 
-    __exports__.relationshipFromMeta = relationshipFromMeta;
+    __exports__.relationshipFromMeta = relationshipFromMeta;function isSyncRelationship(record, relationshipName) {
+      var meta = Ember.meta(record);
+      var desc = meta.descs[relationshipName];
+
+      return desc && !desc._meta.options.async;
+    }
+
+    __exports__.isSyncRelationship = isSyncRelationship;
   });
 define("ember-data/system/relationships",
   ["./relationships/belongs_to","./relationships/has_many","ember-data/system/relationships/ext","exports"],
@@ -9088,6 +9089,7 @@ define("ember-data/system/relationships/belongs_to",
     var RelationshipChange = __dependency3__.RelationshipChange;
     var relationshipFromMeta = __dependency4__.relationshipFromMeta;
     var typeForRelationshipMeta = __dependency4__.typeForRelationshipMeta;
+    var isSyncRelationship = __dependency4__.isSyncRelationship;
 
     /**
       @module ember-data
@@ -9246,7 +9248,7 @@ define("ember-data/system/relationships/belongs_to",
         @param key
       */
       belongsToWillChange: Ember.beforeObserver(function(record, key) {
-        if (get(record, 'isLoaded')) {
+        if (get(record, 'isLoaded') && isSyncRelationship(record, key)) {
           var oldParent = get(record, key);
 
           if (oldParent) {
