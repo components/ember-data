@@ -1867,11 +1867,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.978bcfc2ff'
+        @default '1.0.0-beta.9+canary.5df44ff655'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.978bcfc2ff'
+        VERSION: '1.0.0-beta.9+canary.5df44ff655'
       });
 
       if (Ember.libraries) {
@@ -2259,7 +2259,7 @@ define("ember-data/serializers/embedded_records_mixin",
       },
 
       keyForRelationship: function(key, type){
-        if (hasDeserializeRecordsOption(this.attrs, key)) {
+        if (this.hasDeserializeRecordsOption(key)) {
           return this.keyForAttribute(key);
         } else {
           return this._super(key, type) || key;
@@ -2318,12 +2318,12 @@ define("ember-data/serializers/embedded_records_mixin",
       serializeBelongsTo: function(record, json, relationship) {
         var attr = relationship.key;
         var attrs = this.get('attrs');
-        if (noSerializeOptionSpecified(attrs, attr)) {
+        if (this.noSerializeOptionSpecified(attr)) {
           this._super(record, json, relationship);
           return;
         }
-        var includeIds = hasSerializeIdsOption(attrs, attr);
-        var includeRecords = hasSerializeRecordsOption(attrs, attr);
+        var includeIds = this.hasSerializeIdsOption(attr);
+        var includeRecords = this.hasSerializeRecordsOption(attr);
         var embeddedRecord = record.get(attr);
         var key;
         if (includeIds) {
@@ -2428,12 +2428,12 @@ define("ember-data/serializers/embedded_records_mixin",
       serializeHasMany: function(record, json, relationship) {
         var attr = relationship.key;
         var attrs = this.get('attrs');
-        if (noSerializeOptionSpecified(attrs, attr)) {
+        if (this.noSerializeOptionSpecified(attr)) {
           this._super(record, json, relationship);
           return;
         }
-        var includeIds = hasSerializeIdsOption(attrs, attr);
-        var includeRecords = hasSerializeRecordsOption(attrs, attr);
+        var includeIds = this.hasSerializeIdsOption(attr);
+        var includeRecords = this.hasSerializeRecordsOption(attr);
         var key;
         if (includeIds) {
           key = this.keyForRelationship(attr, relationship.kind);
@@ -2478,60 +2478,56 @@ define("ember-data/serializers/embedded_records_mixin",
             }
           }
         }
+      },
+
+      // checks config for attrs option to embedded (always) - serialize and deserialize
+      hasEmbeddedAlwaysOption: function (attr) {
+        var option = this.attrsOption(attr);
+        return option && option.embedded === 'always';
+      },
+
+      // checks config for attrs option to serialize ids
+      hasSerializeRecordsOption: function(attr) {
+        var alwaysEmbed = this.hasEmbeddedAlwaysOption(attr);
+        var option = this.attrsOption(attr);
+        return alwaysEmbed || (option && (option.serialize === 'records'));
+      },
+
+      // checks config for attrs option to serialize records
+      hasSerializeIdsOption: function(attr) {
+        var option = this.attrsOption(attr);
+        return option && (option.serialize === 'ids' || option.serialize === 'id');
+      },
+
+      // checks config for attrs option to serialize records
+      noSerializeOptionSpecified: function(attr) {
+        var option = this.attrsOption(attr);
+        var serializeRecords = this.hasSerializeRecordsOption(attr);
+        var serializeIds = this.hasSerializeIdsOption(attr);
+        return !(option && (option.serialize || option.embedded));
+      },
+
+      // checks config for attrs option to deserialize records
+      // a defined option object for a resource is treated the same as
+      // `deserialize: 'records'`
+      hasDeserializeRecordsOption: function(attr) {
+        var alwaysEmbed = this.hasEmbeddedAlwaysOption(attr);
+        var option = this.attrsOption(attr);
+        return alwaysEmbed || (option && option.deserialize === 'records');
+      },
+
+      attrsOption: function(attr) {
+        var attrs = this.get('attrs');
+        return attrs && (attrs[camelize(attr)] || attrs[attr]);
       }
     });
-
-    // checks config for attrs option to embedded (always) - serialize and deserialize
-    function hasEmbeddedAlwaysOption(attrs, attr) {
-      var option = attrsOption(attrs, attr);
-      return option && option.embedded === 'always';
-    }
-
-    // checks config for attrs option to serialize ids
-    function hasSerializeRecordsOption(attrs, attr) {
-      var alwaysEmbed = hasEmbeddedAlwaysOption(attrs, attr);
-      var option = attrsOption(attrs, attr);
-      return alwaysEmbed || (option && (option.serialize === 'records'));
-    }
-
-    // checks config for attrs option to serialize records
-    function hasSerializeIdsOption(attrs, attr) {
-      var option = attrsOption(attrs, attr);
-      return option && (option.serialize === 'ids' || option.serialize === 'id');
-    }
-
-    // checks config for attrs option to serialize records
-    function noSerializeOptionSpecified(attrs, attr) {
-      var option = attrsOption(attrs, attr);
-      var serializeRecords = hasSerializeRecordsOption(attrs, attr);
-      var serializeIds = hasSerializeIdsOption(attrs, attr);
-      return !(option && (option.serialize || option.embedded));
-    }
-
-    // checks config for attrs option to deserialize records
-    // a defined option object for a resource is treated the same as
-    // `deserialize: 'records'`
-    function hasDeserializeRecordsOption(attrs, attr) {
-      var alwaysEmbed = hasEmbeddedAlwaysOption(attrs, attr);
-      var option = attrsOption(attrs, attr);
-      return alwaysEmbed || (option && option.deserialize === 'records');
-    }
-
-    function attrsOption(attrs, attr) {
-      return attrs && (attrs[camelize(attr)] || attrs[attr]);
-    }
 
     // chooses a relationship kind to branch which function is used to update payload
     // does not change payload if attr is not embedded
     function extractEmbeddedRecords(serializer, store, type, partial) {
-      var attrs = get(serializer, 'attrs');
-
-      if (!attrs) {
-        return partial;
-      }
 
       type.eachRelationship(function(key, relationship) {
-        if (hasDeserializeRecordsOption(attrs, key)) {
+        if (serializer.hasDeserializeRecordsOption(key)) {
           var embeddedType = store.modelFor(relationship.type.typeKey);
           if (relationship.kind === "hasMany") {
             extractEmbeddedHasMany(store, key, embeddedType, partial);
