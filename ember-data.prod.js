@@ -1867,11 +1867,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.44b5ca00ce'
+        @default '1.0.0-beta.9+canary.978bcfc2ff'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.44b5ca00ce'
+        VERSION: '1.0.0-beta.9+canary.978bcfc2ff'
       });
 
       if (Ember.libraries) {
@@ -10162,9 +10162,9 @@ define("ember-data/system/store",
           newly created record.
         @return {DS.Model} record
       */
-      createRecord: function(typeName, inputPropoperties) {
+      createRecord: function(typeName, inputProperties) {
         var type = this.modelFor(typeName);
-        var properties = copy(inputPropoperties) || {};
+        var properties = copy(inputProperties) || {};
 
         // If the passed properties do not include a primary key,
         // give the adapter an opportunity to generate one. Typically,
