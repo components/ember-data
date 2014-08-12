@@ -1872,11 +1872,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.6b740cf9a2'
+        @default '1.0.0-beta.9+canary.96bb5eb0f3'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.6b740cf9a2'
+        VERSION: '1.0.0-beta.9+canary.96bb5eb0f3'
       });
 
       if (Ember.libraries) {
@@ -12174,8 +12174,30 @@ define("ember-data/transforms/date",
      */
     var Transform = __dependency1__["default"];
 
-    function pad(num) {
-      return num < 10 ? "0"+num : ""+num;
+    // Date.prototype.toISOString shim
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString
+    var toISOString = Date.prototype.toISOString || function() {
+      function pad(number) {
+        if ( number < 10 ) {
+          return '0' + number;
+        }
+        return number;
+      }
+
+      return this.getUTCFullYear() +
+        '-' + pad( this.getUTCMonth() + 1 ) +
+        '-' + pad( this.getUTCDate() ) +
+        'T' + pad( this.getUTCHours() ) +
+        ':' + pad( this.getUTCMinutes() ) +
+        ':' + pad( this.getUTCSeconds() ) +
+        '.' + (this.getUTCMilliseconds() / 1000).toFixed(3).slice(2, 5) +
+        'Z';
+    };
+
+    if (Ember.SHIM_ES5) {
+      if (!Date.prototype.toISOString) {
+        Date.prototype.toISOString = toISOString;
+      }
     }
 
     __exports__["default"] = Transform.extend({
@@ -12198,44 +12220,7 @@ define("ember-data/transforms/date",
 
       serialize: function(date) {
         if (date instanceof Date) {
-          var days = [
-            "Sun",
-            "Mon",
-            "Tue",
-            "Wed",
-            "Thu",
-            "Fri",
-            "Sat"
-          ];
-          var months = [
-            "Jan",
-            "Feb",
-            "Mar",
-            "Apr",
-            "May",
-            "Jun",
-            "Jul",
-            "Aug",
-            "Sep",
-            "Oct",
-            "Nov",
-            "Dec"
-          ];
-
-          var utcYear = date.getUTCFullYear();
-          var utcMonth = date.getUTCMonth();
-          var utcDayOfMonth = date.getUTCDate();
-          var utcDay = date.getUTCDay();
-          var utcHours = date.getUTCHours();
-          var utcMinutes = date.getUTCMinutes();
-          var utcSeconds = date.getUTCSeconds();
-
-          var dayOfWeek = days[utcDay];
-          var dayOfMonth = pad(utcDayOfMonth);
-          var month = months[utcMonth];
-
-          return dayOfWeek + ", " + dayOfMonth + " " + month + " " + utcYear + " " +
-                 pad(utcHours) + ":" + pad(utcMinutes) + ":" + pad(utcSeconds) + " GMT";
+          return toISOString.call(date);
         } else {
           return null;
         }
