@@ -1574,13 +1574,42 @@ define("ember-data/adapters/rest_adapter",
       groupRecordsForFindMany: function (store, records) {
         var groups = Ember.MapWithDefault.create({defaultValue: function(){return [];}});
         var adapter = this;
+
         forEach.call(records, function(record){
           var baseUrl = adapter._stripIDFromURL(store, record);
           groups.get(baseUrl).push(record);
         });
+
+        function splitGroupToFitInUrl(group, maxUrlLength) {
+          var baseUrl = adapter._stripIDFromURL(store, group[0]);
+          var idsSize = 0;
+          var splitGroups = [[]];
+
+          forEach.call(group, function(record) {
+            var additionalLength = '&ids[]='.length + record.get('id.length');
+            if (baseUrl.length + idsSize + additionalLength >= maxUrlLength) {
+              idsSize = 0;
+              splitGroups.push([]);
+            }
+
+            idsSize += additionalLength;
+
+            var lastGroupIndex = splitGroups.length - 1;
+            splitGroups[lastGroupIndex].push(record);
+          });
+
+          return splitGroups;
+        }
+
         var groupsArray = [];
         groups.forEach(function(key, group){
-          groupsArray.push(group);
+          // http://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers
+          var maxUrlLength = 2048;
+          var splitGroups = splitGroupToFitInUrl(group, maxUrlLength);
+
+          forEach.call(splitGroups, function(splitGroup) {
+            groupsArray.push(splitGroup);
+          });
         });
 
         return groupsArray;
@@ -1760,11 +1789,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.96bb5eb0f3'
+        @default '1.0.0-beta.9+canary.0d2f4687db'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.96bb5eb0f3'
+        VERSION: '1.0.0-beta.9+canary.0d2f4687db'
       });
 
       if (Ember.libraries) {
