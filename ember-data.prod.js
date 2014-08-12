@@ -1594,7 +1594,6 @@ define("ember-data/adapters/rest_adapter",
         //We might get passed in an array of ids from findMany
         //in which case we don't want to modify the url, as the
         //ids will be passed in through a query param
-
         if (id && !Ember.isArray(id)) { url.push(id); }
 
         if (prefix) { url.unshift(prefix); }
@@ -1868,11 +1867,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.88c0a647ae'
+        @default '1.0.0-beta.9+canary.e61b020d65'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.88c0a647ae'
+        VERSION: '1.0.0-beta.9+canary.e61b020d65'
       });
 
       if (Ember.libraries) {
@@ -9781,36 +9780,14 @@ define("ember-data/system/relationships/has_many",
           var rel;
           var promiseLabel = "DS: Async hasMany " + this + " : " + key;
           var resolver = Ember.RSVP.defer(promiseLabel);
-          var records = data[key];
-
-          // If a relationship is not specified by the adapter when it
-          // provides a payload for a record, we give the adapter a
-          // chance to lazily generate a URL based on record information
-          // (via the `buildURLForHasMany` hook). In the case of newly
-          // created records, however, we assume that the relationship
-          // is empty, and just-in-time initialize the backing data to
-          // an empty array.
-          if (get(this, 'isNew')) {
-            records = [];
-            this.updateHasMany(key, records);
-          }
 
           if (link) {
-            // The relationship URL was explicitly provided in the data
-            // payload, so invoke the store's findHasMany with that.
             rel = store.findHasMany(this, link, relationshipFromMeta(store, meta), resolver);
-          } else if (records === undefined) {
-            // The relationship was not provided at all, so we'll let the
-            // adapter synthesize a URL for the relationship using
-            // information from the record.
-            rel = store.findHasMany(this, records, relationshipFromMeta(store, meta), resolver);
           } else {
-            // The payload provided the relationship as an array of IDs, so
-            // fetch those and stick them in the ManyArray.
 
-            // This is a temporary workaround for setting owner on the
-            // relationship until single source of truth lands. It only works
-            // for OneToMany at the moment.
+            //This is a temporary workaround for setting owner on the relationship
+            //until single source of truth lands. It only works for OneToMany atm
+            var records = data[key];
             var inverse = this.constructor.inverseFor(key);
             var owner = this;
             if (inverse && records) {
@@ -10705,12 +10682,7 @@ define("ember-data/system/store",
       findHasMany: function(owner, link, relationship, resolver) {
         var adapter = this.adapterFor(owner.constructor);
 
-        
-        if (link === undefined) {
-                    link = adapter.buildURLForHasMany(this, owner, relationship.key);
-        } else {
-                  }
-
+                
         var records = this.recordArrayManager.createManyArray(relationship.type, Ember.A([]));
         resolver.resolve(_findHasMany(adapter, this, owner, link, relationship));
         return records;
@@ -11629,8 +11601,8 @@ define("ember-data/system/store",
         var value = data[key];
 
         if (value == null) {
-          if (kind === 'hasMany' && record && record.cacheFor(key)) {
-            data[key] = record.get(key).toArray();
+          if (kind === 'hasMany' && record) {
+            value = data[key] = record.get(key).toArray();
           }
           return;
         }
