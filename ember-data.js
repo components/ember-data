@@ -1921,11 +1921,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.c862b3d5ea'
+        @default '1.0.0-beta.9+canary.ffe018fcb6'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.c862b3d5ea'
+        VERSION: '1.0.0-beta.9+canary.ffe018fcb6'
       });
 
       if (Ember.libraries) {
@@ -10150,7 +10150,7 @@ define("ember-data/system/store",
 
       ### Store createRecord() vs. push() vs. pushPayload() vs. update()
 
-      The store provides multiple ways to create new records object. They have
+      The store provides multiple ways to create new record objects. They have
       some subtle differences in their use which are detailed below:
 
       [createRecord](#method_createRecord) is used for creating new
