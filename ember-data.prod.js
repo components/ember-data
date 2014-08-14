@@ -1122,6 +1122,24 @@ define("ember-data/adapters/rest_adapter",
       }
       ```
 
+      Similarly, in response to a `GET` request for `/posts`, the JSON should
+      look like this:
+
+      ```js
+      {
+        "posts": [
+          {
+            "title": "I'm Running to Reform the W3C's Tag",
+            "author": "Yehuda Katz"
+          },
+          {
+            "title": "Rails is omakase",
+            "author": "D2H"
+          }
+        ]
+      }
+      ```
+
       ### Conventional Names
 
       Attribute names in your JSON payload should be the camelCased versions of
@@ -1898,11 +1916,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.b17fb9cc3d'
+        @default '1.0.0-beta.9+canary.b152ae0054'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.b17fb9cc3d'
+        VERSION: '1.0.0-beta.9+canary.b152ae0054'
       });
 
       if (Ember.libraries) {
