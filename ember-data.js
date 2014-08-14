@@ -1921,11 +1921,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.b152ae0054'
+        @default '1.0.0-beta.9+canary.c862b3d5ea'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.b152ae0054'
+        VERSION: '1.0.0-beta.9+canary.c862b3d5ea'
       });
 
       if (Ember.libraries) {
@@ -11452,7 +11452,7 @@ define("ember-data/system/store",
         properties. This makes it safe to use with a subset of record
         attributes. This method expects normalized data.
 
-        `update` is useful if you app broadcasts partial updates to
+        `update` is useful if your app broadcasts partial updates to
         records.
 
         ```js
