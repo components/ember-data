@@ -373,10 +373,12 @@ define("activemodel-adapter/system/active_model_serializer",
       serializePolymorphicType: function(record, json, relationship) {
         var key = relationship.key;
         var belongsTo = get(record, key);
+        var jsonKey = underscore(key + "_type");
 
-        if (belongsTo) {
-          key = this.keyForAttribute(key);
-          json[key + "_type"] = capitalize(belongsTo.constructor.typeKey);
+        if (Ember.isNone(belongsTo)) {
+          json[jsonKey] = null;
+        } else {
+          json[jsonKey] = capitalize(camelize(belongsTo.constructor.typeKey));
         }
       },
 
@@ -1789,11 +1791,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.0d2f4687db'
+        @default '1.0.0-beta.9+canary.b17fb9cc3d'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.0d2f4687db'
+        VERSION: '1.0.0-beta.9+canary.b17fb9cc3d'
       });
 
       if (Ember.libraries) {
@@ -2100,7 +2102,7 @@ define("ember-data/serializers/embedded_records_mixin",
 
       ### Configuring Attrs
 
-      A resource's `attrs` option may be set to use `ids`, `records` or `no` for the
+      A resource's `attrs` option may be set to use `ids`, `records` or false for the
       `serialize`  and `deserialize` settings.
 
       The `attrs` property can be set on the ApplicationSerializer or a per-type
@@ -2112,7 +2114,7 @@ define("ember-data/serializers/embedded_records_mixin",
       the vanilla EmbeddedRecordsMixin. Likewise, to embed JSON in the payload while
       serializing `serialize: 'records'` is the setting to use. There is an option of
       not embedding JSON in the serialized payload by using `serialize: 'ids'`. If you
-      do not want the relationship sent at all, you can use `serialize: 'no'`.
+      do not want the relationship sent at all, you can use `serialize: false`.
 
 
       ### EmbeddedRecordsMixin defaults
@@ -2120,7 +2122,7 @@ define("ember-data/serializers/embedded_records_mixin",
       will behave in the following way:
 
       BelongsTo: `{serialize:'id', deserialize:'id'}`
-      HasMany:   `{serialize:'no',  deserialize:'ids'}`
+      HasMany:   `{serialize:false,  deserialize:'ids'}`
 
       ### Model Relationships
 
@@ -2795,6 +2797,21 @@ define("ember-data/serializers/json_serializer",
         return key;
       },
 
+      /**
+        Check attrs.key.serialize property to inform if the `key`
+        can be serialized
+
+        @method _canSerialize
+        @private
+        @param {String} key
+        @return {boolean} true if the key can be serialized
+      */
+      _canSerialize: function(key) {
+        var attrs = get(this, 'attrs');
+
+        return !attrs || !attrs[key] || attrs[key].serialize !== false;
+      },
+
       // SERIALIZE
       /**
         Called when a record is saved in order to convert the
@@ -3017,29 +3034,25 @@ define("ember-data/serializers/json_serializer",
        @param {Object} attribute
       */
       serializeAttribute: function(record, json, key, attribute) {
-        var attrs = get(this, 'attrs');
-        var value = get(record, key);
         var type = attribute.type;
 
-        if (type) {
-          var transform = this.transformFor(type);
-          value = transform.serialize(value);
-        }
+        if (this._canSerialize(key)) {
+          var value = get(record, key);
+          if (type) {
+            var transform = this.transformFor(type);
+            value = transform.serialize(value);
+          }
 
-        // If attrs.key.serialize is false, do not include the value in the
-        // response to the server at all.
-        if (attrs && attrs[key] && attrs[key].serialize === false) {
-          return;
-        }
-        // if provided, use the mapping provided by `attrs` in
-        // the serializer
-        var payloadKey =  this._getMappedKey(key);
+          // if provided, use the mapping provided by `attrs` in
+          // the serializer
+          var payloadKey =  this._getMappedKey(key);
 
-        if (payloadKey === key && this.keyForAttribute) {
-          payloadKey = this.keyForAttribute(key);
-        }
+          if (payloadKey === key && this.keyForAttribute) {
+            payloadKey = this.keyForAttribute(key);
+          }
 
-        json[payloadKey] = value;
+          json[payloadKey] = value;
+        }
       },
 
       /**
@@ -3068,25 +3081,27 @@ define("ember-data/serializers/json_serializer",
        @param {Object} relationship
       */
       serializeBelongsTo: function(record, json, relationship) {
-        var attrs = get(this, 'attrs');
         var key = relationship.key;
-        var belongsTo = get(record, key);
 
-        // if provided, use the mapping provided by `attrs` in
-        // the serializer
-        var payloadKey = this._getMappedKey(key);
-        if (payloadKey === key && this.keyForRelationship) {
-          payloadKey = this.keyForRelationship(key, "belongsTo");
-        }
+        if (this._canSerialize(key)) {
+          var belongsTo = get(record, key);
 
-        if (isNone(belongsTo)) {
-          json[payloadKey] = belongsTo;
-        } else {
-          json[payloadKey] = get(belongsTo, 'id');
-        }
+          // if provided, use the mapping provided by `attrs` in
+          // the serializer
+          var payloadKey = this._getMappedKey(key);
+          if (payloadKey === key && this.keyForRelationship) {
+            payloadKey = this.keyForRelationship(key, "belongsTo");
+          }
 
-        if (relationship.options.polymorphic) {
-          this.serializePolymorphicType(record, json, relationship);
+          if (isNone(belongsTo)) {
+            json[payloadKey] = belongsTo;
+          } else {
+            json[payloadKey] = get(belongsTo, 'id');
+          }
+
+          if (relationship.options.polymorphic) {
+            this.serializePolymorphicType(record, json, relationship);
+          }
         }
       },
 
@@ -3115,22 +3130,24 @@ define("ember-data/serializers/json_serializer",
        @param {Object} relationship
       */
       serializeHasMany: function(record, json, relationship) {
-        var attrs = get(this, 'attrs');
         var key = relationship.key;
-        var payloadKey;
 
-        // if provided, use the mapping provided by `attrs` in
-        // the serializer
-        payloadKey = this._getMappedKey(key);
-        if (payloadKey === key && this.keyForRelationship) {
-          payloadKey = this.keyForRelationship(key, "hasMany");
-        }
+        if (this._canSerialize(key)) {
+          var payloadKey;
 
-        var relationshipType = RelationshipChange.determineRelationshipType(record.constructor, relationship);
+          // if provided, use the mapping provided by `attrs` in
+          // the serializer
+          payloadKey = this._getMappedKey(key);
+          if (payloadKey === key && this.keyForRelationship) {
+            payloadKey = this.keyForRelationship(key, "hasMany");
+          }
 
-        if (relationshipType === 'manyToNone' || relationshipType === 'manyToMany') {
-          json[payloadKey] = get(record, key).mapBy('id');
-          // TODO support for polymorphic manyToNone and manyToMany relationships
+          var relationshipType = RelationshipChange.determineRelationshipType(record.constructor, relationship);
+
+          if (relationshipType === 'manyToNone' || relationshipType === 'manyToMany') {
+            json[payloadKey] = get(record, key).mapBy('id');
+            // TODO support for polymorphic manyToNone and manyToMany relationships
+          }
         }
       },
 
@@ -3148,7 +3165,12 @@ define("ember-data/serializers/json_serializer",
             var key = relationship.key,
                 belongsTo = get(record, key);
             key = this.keyForAttribute ? this.keyForAttribute(key) : key;
-            json[key + "_type"] = belongsTo.constructor.typeKey;
+
+            if (Ember.isNone(belongsTo)) {
+              json[key + "_type"] = null;
+            } else {
+              json[key + "_type"] = belongsTo.constructor.typeKey;
+            }
           }
         });
        ```
@@ -4249,7 +4271,11 @@ define("ember-data/serializers/rest_serializer",
         var key = relationship.key;
         var belongsTo = get(record, key);
         key = this.keyForAttribute ? this.keyForAttribute(key) : key;
-        json[key + "Type"] = belongsTo.constructor.typeKey;
+        if (Ember.isNone(belongsTo)) {
+          json[key + "Type"] = null;
+        } else {
+          json[key + "Type"] = Ember.String.camelize(belongsTo.constructor.typeKey);
+        }
       }
     });
   });
