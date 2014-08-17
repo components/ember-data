@@ -1920,11 +1920,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9+canary.8c50bea2d1'
+        @default '1.0.0-beta.9+canary.205b3a2f83'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9+canary.8c50bea2d1'
+        VERSION: '1.0.0-beta.9+canary.205b3a2f83'
       });
 
       if (Ember.libraries) {
@@ -12320,8 +12320,8 @@ define("ember-data/transforms/string",
     });
   });
 define("ember-inflector",
-  ["./system","./ext/string","exports"],
-  function(__dependency1__, __dependency2__, __exports__) {
+  ["./system","./helpers","./ext/string","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
     "use strict";
     var Inflector = __dependency1__.Inflector;
     var defaultRules = __dependency1__.defaultRules;
@@ -12368,6 +12368,45 @@ define("ember-inflector/ext/string",
         return singularize(this);
       };
     }
+  });
+define("ember-inflector/helpers",
+  ["./system/string"],
+  function(__dependency1__) {
+    "use strict";
+    var singularize = __dependency1__.singularize;
+    var pluralize = __dependency1__.pluralize;
+
+    /**
+     *
+     * If you have Ember Inflector (such as if Ember Data is present),
+     * singularize a word. For example, turn "oxen" into "ox".
+     *
+     * Example:
+     *
+     * {{singularize myProperty}}
+     * {{singularize "oxen"}}
+     *
+     * @for Ember.Handlebars.helpers
+     * @method singularize
+     * @param {String|Property} word word to singularize
+    */
+    Ember.Handlebars.helper('singularize', singularize);
+
+    /**
+     *
+     * If you have Ember Inflector (such as if Ember Data is present),
+     * pluralize a word. For example, turn "ox" into "oxen".
+     *
+     * Example:
+     *
+     * {{pluralize myProperty}}
+     * {{pluralize "oxen"}}
+     *
+     * @for Ember.Handlebars.helpers
+     * @method pluralize
+     * @param {String|Property} word word to pluralize
+    */
+    Ember.Handlebars.helper('pluralize', pluralize);
   });
 define("ember-inflector/system",
   ["./system/inflector","./system/string","./system/inflections","exports"],
