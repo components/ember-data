@@ -1813,11 +1813,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.10+canary.48a832c20e'
+        @default '1.0.0-beta.10+canary.4c2780149f'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.10+canary.48a832c20e'
+        VERSION: '1.0.0-beta.10+canary.4c2780149f'
       });
 
       if (Ember.libraries) {
@@ -11387,9 +11387,14 @@ define("ember-data/system/store",
         @return {Array}
       */
       pushMany: function(type, datas) {
-        return map(datas, function(data) {
-          return this.push(type, data);
-        }, this);
+        var length = datas.length;
+        var result = new Array(length);
+
+        for (var i = 0; i < length; i++) {
+          result[i] = this.push(type, datas[i]);
+        }
+
+        return result;
       },
 
       /**
