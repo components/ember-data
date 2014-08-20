@@ -1808,11 +1808,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.10+canary.41429a777d'
+        @default '1.0.0-beta.10+canary.48a832c20e'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.10+canary.41429a777d'
+        VERSION: '1.0.0-beta.10+canary.48a832c20e'
       });
 
       if (Ember.libraries) {
@@ -11110,11 +11110,11 @@ define("ember-data/system/store",
         var factory;
 
         if (typeof key === 'string') {
-          var normalizedKey = this.container.normalize('model:' + key);
-
-          factory = this.container.lookupFactory(normalizedKey);
-          if (!factory) { throw new Ember.Error("No model was found for '" + key + "'"); }
-          factory.typeKey = this._normalizeTypeKey(normalizedKey.split(':', 2)[1]);
+          factory = this.container.lookupFactory('model:' + key);
+          if (!factory) {
+            throw new Ember.Error("No model was found for '" + key + "'");
+          }
+          factory.typeKey = factory.typeKey || this._normalizeTypeKey(key);
         } else {
           // A factory already supplied. Ensure it has a normalized key.
           factory = key;
