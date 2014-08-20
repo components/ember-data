@@ -1808,11 +1808,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.10+canary.dfb86bc1ab'
+        @default '1.0.0-beta.10+canary.41429a777d'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.10+canary.dfb86bc1ab'
+        VERSION: '1.0.0-beta.10+canary.41429a777d'
       });
 
       if (Ember.libraries) {
@@ -6825,7 +6825,7 @@ define("ember-data/system/model/model",
       /**
         When a find request is triggered on the store, the user can optionally pass in
         attributes and relationships to be preloaded. These are meant to behave as if they
-        came back from the server, expect the user obtained them out of band and is informing
+        came back from the server, except the user obtained them out of band and is informing
         the store of their existence. The most common use case is for supporting client side
         nested URLs, such as `/posts/1/comments/2` so the user can do
         `store.find('comment', 2, {post:1})` without having to fetch the post.
