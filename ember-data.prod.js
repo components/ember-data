@@ -1920,11 +1920,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.10+canary.e704d90ec6'
+        @default '1.0.0-beta.10+canary.5550209657'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.10+canary.e704d90ec6'
+        VERSION: '1.0.0-beta.10+canary.5550209657'
       });
 
       if (Ember.libraries) {
@@ -6935,7 +6935,7 @@ define("ember-data/system/model/model",
       },
 
       /**
-        When a find request is triggered on the store, the user can optionally passed in
+        When a find request is triggered on the store, the user can optionally pass in
         attributes and relationships to be preloaded. These are meant to behave as if they
         came back from the server, expect the user obtained them out of band and is informing
         the store of their existence. The most common use case is for supporting client side
@@ -10384,7 +10384,7 @@ define("ember-data/system/store",
         You can optionally preload specific attributes and relationships that you know of
         by passing them as the third argument to find.
 
-        For example, if your Ember route looks like `/posts/1/comments/2` and you API route
+        For example, if your Ember route looks like `/posts/1/comments/2` and your API route
         for the comment also looks like `/posts/1/comments/2` if you want to fetch the comment
         without fetching the post you can pass in the post to the `find` call:
 
