@@ -1921,11 +1921,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.10+canary.689b2fa05a'
+        @default '1.0.0-beta.10+canary.a206cf3892'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.10+canary.689b2fa05a'
+        VERSION: '1.0.0-beta.10+canary.a206cf3892'
       });
 
       if (Ember.libraries) {
@@ -11283,8 +11283,7 @@ define("ember-data/system/store",
         // _partial is an internal param used by `update`.
         // If passed, it means that the data should be
         // merged into the existing data, not replace it.
-
-        
+                
         var type = this.modelFor(typeName);
 
         // normalize relationship IDs into records
