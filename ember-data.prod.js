@@ -1068,16 +1068,15 @@ define("ember-data/adapters/fixture_adapter",
         var adapter = this;
 
         return new Ember.RSVP.Promise(function(resolve) {
-          var value = Ember.copy(callback.call(context), true);
           if (get(adapter, 'simulateRemoteResponse')) {
             // Schedule with setTimeout
             Ember.run.later(function() {
-              resolve(value);
+              resolve(callback.call(context));
             }, get(adapter, 'latency'));
           } else {
             // Asynchronous, but at the of the runloop with zero latency
             Ember.run.schedule('actions', null, function() {
-              resolve(value);
+              resolve(callback.call(context));
             });
           }
         }, "DS: FixtureAdapter#simulateRemoteCall");
@@ -1922,11 +1921,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.10+canary.c391a8b473'
+        @default '1.0.0-beta.10+canary.0dfed9bf35'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.10+canary.c391a8b473'
+        VERSION: '1.0.0-beta.10+canary.0dfed9bf35'
       });
 
       if (Ember.libraries) {
@@ -11284,8 +11283,7 @@ define("ember-data/system/store",
         // _partial is an internal param used by `update`.
         // If passed, it means that the data should be
         // merged into the existing data, not replace it.
-
-        
+                
         var type = this.modelFor(typeName);
 
         // normalize relationship IDs into records
