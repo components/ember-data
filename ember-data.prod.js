@@ -1921,11 +1921,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.10+canary.f0d50e3810'
+        @default '1.0.0-beta.10+canary.7db210f29a'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.10+canary.f0d50e3810'
+        VERSION: '1.0.0-beta.10+canary.7db210f29a'
       });
 
       if (Ember.libraries) {
@@ -4361,7 +4361,7 @@ define("ember-data/serializers/rest_serializer",
 
       /**
         You can use this method to customize the root keys serialized into the JSON.
-        By default the REST Serializer sends the typeKey of a model, whih is a camelized
+        By default the REST Serializer sends the typeKey of a model, which is a camelized
         version of the name.
 
         For example, your server may expect underscored root objects.
