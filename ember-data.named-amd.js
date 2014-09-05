@@ -1796,11 +1796,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.10+canary.8c1a805833'
+        @default '1.0.0-beta.10+canary.45ed92ad10'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.10+canary.8c1a805833'
+        VERSION: '1.0.0-beta.10+canary.45ed92ad10'
       });
 
       if (Ember.libraries) {
@@ -9413,14 +9413,14 @@ define("ember-data/system/relationships/relationship",
         } else if (this.inverseRecord) {
           promise = this.store._findByRecord(this.inverseRecord);
         } else {
-          promise = Ember.RSVP.resolve(null);
+          promise = Ember.RSVP.Promise.resolve(null);
         }
 
         return PromiseObject.create({
           promise: promise
         });
       } else {
-        //TODO(Igor) assert that we actually have it
+        Ember.assert("You looked up the '" + this.key + "' relationship on a '" + this.record.constructor.typeKey + "' with id " + this.record.get('id') +  " but some of the associated records were not loaded. Either make sure they are all loaded together with the parent record, or specify that the relationship is async (`DS.belongsTo({ async: true })`)", this.inverseRecord === null || !this.inverseRecord.get('isEmpty'));
         return this.inverseRecord;
       }
     };
