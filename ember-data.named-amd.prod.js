@@ -1791,11 +1791,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.10+canary.9db3c153f1'
+        @default '1.0.0-beta.10+canary.b33e288510'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.10+canary.9db3c153f1'
+        VERSION: '1.0.0-beta.10+canary.b33e288510'
       });
 
       if (Ember.libraries) {
@@ -5714,6 +5714,7 @@ define("ember-data/system/model/model",
     var merge = Ember.merge;
     var Promise = Ember.RSVP.Promise;
     var forEach = Ember.ArrayPolyfills.forEach;
+    var map = Ember.ArrayPolyfills.map;
 
     var JSONSerializer;
     var retrieveFromCurrentState = Ember.computed('currentState', function(key, value) {
@@ -6393,15 +6394,20 @@ define("ember-data/system/model/model",
       _preloadHasMany: function(key, preloadValue, type) {
                 var record = this;
 
-        forEach.call(preloadValue, function(recordToPush) {
-          recordToPush = record._convertStringOrNumberIntoRecord(recordToPush, type);
-          get(record, key).pushObject(recordToPush);
+        var recordsToSet = map.call(preloadValue, function(recordToPush) {
+          return record._convertStringOrNumberIntoRecord(recordToPush, type);
         });
+        //We use the pathway of setting the hasMany as if it came from the adapter
+        //because the user told us that they know this relationships exists already
+        this._relationships[key].updateRecordsFromAdapter(recordsToSet);
       },
 
       _preloadBelongsTo: function(key, preloadValue, type){
-        var recordToPush = this._convertStringOrNumberIntoRecord(preloadValue, type);
-        set(this, key, recordToPush);
+        var recordToSet = this._convertStringOrNumberIntoRecord(preloadValue, type);
+
+        //We use the pathway of setting the hasMany as if it came from the adapter
+        //because the user told us that they know this relationships exists already
+        this._relationships[key].setRecord(recordToSet);
       },
 
       _convertStringOrNumberIntoRecord: function(value, type) {
@@ -9304,6 +9310,7 @@ define("ember-data/system/relationships/relationship",
           promise: promise
         });
       } else {
+          
         this.manyArray.set('isLoaded', true);
         return this.manyArray;
      }
