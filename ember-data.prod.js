@@ -1903,11 +1903,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.10+canary.5cae1a79e6'
+        @default '1.0.0-beta.10+canary.513448d6d2'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.10+canary.5cae1a79e6'
+        VERSION: '1.0.0-beta.10+canary.513448d6d2'
       });
 
       if (Ember.libraries) {
@@ -9301,26 +9301,6 @@ define("ember-data/system/relationships/relationship",
         }, this);
       },
 
-      computeChanges: function(records) {
-         var members = this.members;
-
-        records = setForArray(records);
-
-        members.forEach(function(member) {
-          if (records.has(member)) return;
-          this.removeRecord(member);
-        }, this);
-
-        var hasManyArray = this.manyArray;
-
-        records.forEach(function(record, index) {
-          //Need to preserve the order of incoming records
-          if (hasManyArray.objectAt(index) === record ) return;
-          this.removeRecord(record);
-          this.addRecord(record, index);
-        }, this);
-      },
-
       removeRecords: function(records){
         var that = this;
         records.forEach(function(record){
@@ -9401,6 +9381,29 @@ define("ember-data/system/relationships/relationship",
     ManyRelationship.prototype.notifyRecordRelationshipRemoved = function(record) {
       this.record.notifyHasManyRemoved(this.key, record);
     };
+
+    ManyRelationship.prototype.computeChanges = function(records) {
+      var members = this.members;
+
+      records = setForArray(records);
+
+      members.forEach(function(member) {
+        if (records.has(member)) return;
+
+        this.removeRecord(member);
+      }, this);
+
+      var hasManyArray = this.manyArray;
+
+      records.forEach(function(record, index) {
+        //Need to preserve the order of incoming records
+        if (hasManyArray.objectAt(index) === record ) return;
+
+        this.removeRecord(record);
+        this.addRecord(record, index);
+      }, this);
+    };
+
 
     ManyRelationship.prototype.getRecords = function() {
       if (this.isAsync) {
