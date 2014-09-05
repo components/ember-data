@@ -1908,11 +1908,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.10+canary.9bd29b0c43'
+        @default '1.0.0-beta.10+canary.9db3c153f1'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.10+canary.9bd29b0c43'
+        VERSION: '1.0.0-beta.10+canary.9db3c153f1'
       });
 
       if (Ember.libraries) {
@@ -9273,14 +9273,16 @@ define("ember-data/system/relationships/has_many",
       notifyHasManyAdded: function(key, record, idx) {
         var relationship = this._relationships[key];
         var manyArray = relationship.manyArray;
-        //TODO(Igor) double check with yehuda whether this is the correct method
         manyArray.addRecord(record, idx);
+        //We need to notifyPropertyChange in the adding case because we need to make sure
+        //we fetch the newly added record in case it is unloaded
+        //TODO(Igor): Consider whether we could do this only if the record state is unloaded
+        this.notifyPropertyChange(key);
       },
 
       notifyHasManyRemoved: function(key, record) {
         var relationship = this._relationships[key];
         var manyArray = relationship.manyArray;
-        //TODO(Igor) double check with yehuda whether this is the correct method
         manyArray.removeRecord(record);
       }
     });
