@@ -1791,11 +1791,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.10+canary.5fc936d3b4'
+        @default '1.0.0-beta.10+canary.70acecc577'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.10+canary.5fc936d3b4'
+        VERSION: '1.0.0-beta.10+canary.70acecc577'
       });
 
       if (Ember.libraries) {
@@ -9261,7 +9261,6 @@ define("ember-data/system/relationships/relationship",
 
       updateRecordsFromAdapter: function(records) {
         //TODO Once we have adapter support, we need to handle updated and canonical changes
-        //TODO(Igor) Think about the ordering
         this.computeChanges(records);
       }
     };
