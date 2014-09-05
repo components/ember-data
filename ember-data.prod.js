@@ -614,8 +614,8 @@ define("activemodel-adapter/system/active_model_serializer",
     __exports__["default"] = ActiveModelSerializer;
   });
 define("ember-data",
-  ["ember-data/core","ember-data/ext/date","ember-data/system/promise_proxies","ember-data/system/store","ember-data/system/model","ember-data/system/adapter","ember-data/system/debug","ember-data/system/record_arrays","ember-data/system/record_array_manager","ember-data/adapters","ember-data/serializers/json_serializer","ember-data/serializers/rest_serializer","ember-inflector","ember-data/serializers/embedded_records_mixin","activemodel-adapter","ember-data/transforms","ember-data/system/relationships","ember-data/ember-initializer","ember-data/setup-container","ember-data/system/container_proxy","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __dependency7__, __dependency8__, __dependency9__, __dependency10__, __dependency11__, __dependency12__, __dependency13__, __dependency14__, __dependency15__, __dependency16__, __dependency17__, __dependency18__, __dependency19__, __dependency20__, __exports__) {
+  ["ember-data/core","ember-data/ext/date","ember-data/system/promise_proxies","ember-data/system/store","ember-data/system/model","ember-data/system/adapter","ember-data/system/debug","ember-data/system/record_arrays","ember-data/system/record_array_manager","ember-data/adapters","ember-data/serializers/json_serializer","ember-data/serializers/rest_serializer","ember-inflector","ember-data/serializers/embedded_records_mixin","activemodel-adapter","ember-data/transforms","ember-data/system/relationships","ember-data/ember-initializer","ember-data/setup-container","ember-data/system/container_proxy","ember-data/system/relationships/relationship","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __dependency7__, __dependency8__, __dependency9__, __dependency10__, __dependency11__, __dependency12__, __dependency13__, __dependency14__, __dependency15__, __dependency16__, __dependency17__, __dependency18__, __dependency19__, __dependency20__, __dependency21__, __exports__) {
     "use strict";
     /**
       Ember Data
@@ -663,6 +663,7 @@ define("ember-data",
     var setupContainer = __dependency19__["default"];
 
     var ContainerProxy = __dependency20__["default"];
+    var Relationship = __dependency21__.Relationship;
 
     DS.Store         = Store;
     DS.PromiseArray  = PromiseArray;
@@ -703,6 +704,8 @@ define("ember-data",
 
     DS.belongsTo = belongsTo;
     DS.hasMany   = hasMany;
+
+    DS.Relationship  = Relationship;
 
     DS.ContainerProxy = ContainerProxy;
 
@@ -1903,11 +1906,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.10+canary.ef0d3fef55'
+        @default '1.0.0-beta.10+canary.9b3af93eb2'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.10+canary.ef0d3fef55'
+        VERSION: '1.0.0-beta.10+canary.9b3af93eb2'
       });
 
       if (Ember.libraries) {
@@ -9326,6 +9329,7 @@ define("ember-data/system/relationships/relationship",
           if (this.inverseKey) {
             record._relationships[this.inverseKey].addRecord(this.record);
           }
+          this.record.updateRecordArrays();
         }
       },
 
@@ -9340,6 +9344,7 @@ define("ember-data/system/relationships/relationship",
               inverseRelationship.removeRecord(this.record);
             }
           }
+          this.record.updateRecordArrays();
         }
       },
 
