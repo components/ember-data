@@ -1908,11 +1908,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.10+canary.e9025be952'
+        @default '1.0.0-beta.10+canary.9bad66c849'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.10+canary.e9025be952'
+        VERSION: '1.0.0-beta.10+canary.9bad66c849'
       });
 
       if (Ember.libraries) {
@@ -9332,15 +9332,18 @@ define("ember-data/system/relationships/relationship",
 
         records = setForArray(records);
 
-        //TODO(Igor) add order preserving logic
-        records.forEach(function(record) {
-          if (members.has(record)) return;
-          this.addRecord(record);
-        }, this);
-
         members.forEach(function(member) {
           if (records.has(member)) return;
           this.removeRecord(member);
+        }, this);
+
+        var hasManyArray = this.manyArray;
+
+        records.forEach(function(record, index) {
+          //Need to preserve the order of incoming records
+          if (hasManyArray.objectAt(index) === record ) return;
+          this.removeRecord(record);
+          this.addRecord(record, index);
         }, this);
       },
 
@@ -9395,7 +9398,7 @@ define("ember-data/system/relationships/relationship",
       },
 
       updateRecordsFromAdapter: function(records) {
-        //TODO Keep the newlyCreated records
+        //TODO Once we have adapter support, we need to handle updated and canonical changes
         //TODO(Igor) Think about the ordering
         this.computeChanges(records);
       }
