@@ -1908,11 +1908,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.10+canary.9d3d2103d0'
+        @default '1.0.0-beta.10+canary.eebbeefbeb'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.10+canary.9d3d2103d0'
+        VERSION: '1.0.0-beta.10+canary.eebbeefbeb'
       });
 
       if (Ember.libraries) {
@@ -5838,6 +5838,7 @@ define("ember-data/system/model/model",
     var merge = Ember.merge;
     var Promise = Ember.RSVP.Promise;
     var forEach = Ember.ArrayPolyfills.forEach;
+    var map = Ember.ArrayPolyfills.map;
 
     var JSONSerializer;
     var retrieveFromCurrentState = Ember.computed('currentState', function(key, value) {
@@ -6518,15 +6519,20 @@ define("ember-data/system/model/model",
         Ember.assert("You need to pass in an array to set a hasMany property on a record", Ember.isArray(preloadValue));
         var record = this;
 
-        forEach.call(preloadValue, function(recordToPush) {
-          recordToPush = record._convertStringOrNumberIntoRecord(recordToPush, type);
-          get(record, key).pushObject(recordToPush);
+        var recordsToSet = map.call(preloadValue, function(recordToPush) {
+          return record._convertStringOrNumberIntoRecord(recordToPush, type);
         });
+        //We use the pathway of setting the hasMany as if it came from the adapter
+        //because the user told us that they know this relationships exists already
+        this._relationships[key].updateRecordsFromAdapter(recordsToSet);
       },
 
       _preloadBelongsTo: function(key, preloadValue, type){
-        var recordToPush = this._convertStringOrNumberIntoRecord(preloadValue, type);
-        set(this, key, recordToPush);
+        var recordToSet = this._convertStringOrNumberIntoRecord(preloadValue, type);
+
+        //We use the pathway of setting the hasMany as if it came from the adapter
+        //because the user told us that they know this relationships exists already
+        this._relationships[key].setRecord(recordToSet);
       },
 
       _convertStringOrNumberIntoRecord: function(value, type) {
@@ -9443,6 +9449,8 @@ define("ember-data/system/relationships/relationship",
           promise: promise
         });
       } else {
+          Ember.assert("You looked up the '" + this.key + "' relationship on a '" + this.record.constructor.typeKey + "' with id " + this.record.get('id') +  " but some of the associated records were not loaded. Either make sure they are all loaded together with the parent record, or specify that the relationship is async (`DS.hasMany({ async: true })`)", this.manyArray.isEvery('isEmpty', false));
+
         this.manyArray.set('isLoaded', true);
         return this.manyArray;
      }
