@@ -1903,11 +1903,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.10+canary.eebbeefbeb'
+        @default '1.0.0-beta.10+canary.8661149e5e'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.10+canary.eebbeefbeb'
+        VERSION: '1.0.0-beta.10+canary.8661149e5e'
       });
 
       if (Ember.libraries) {
@@ -6260,6 +6260,7 @@ define("ember-data/system/model/model",
         this._inFlightAttributes = {};
         this._relationships = {};
         var model = this;
+        //TODO Move into a getter for better perf
         this.constructor.eachRelationship(function(key, descriptor) {
             model._relationships[key] = createRelationshipFor(model, descriptor, model.store);
         });
