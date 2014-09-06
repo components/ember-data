@@ -1907,11 +1907,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.10+canary.39483b7b34'
+        @default '1.0.0-beta.10+canary.88287b4f62'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.10+canary.39483b7b34'
+        VERSION: '1.0.0-beta.10+canary.88287b4f62'
       });
 
       if (Ember.libraries) {
@@ -2573,7 +2573,12 @@ define("ember-data/serializers/embedded_records_mixin",
         if (serializer.hasDeserializeRecordsOption(key)) {
           var embeddedType = store.modelFor(relationship.type.typeKey);
           if (relationship.kind === "hasMany") {
-            extractEmbeddedHasMany(store, key, embeddedType, partial);
+            if (relationship.options.polymorphic) {
+              extractEmbeddedHasManyPolymorphic(store, key, partial);
+            }
+            else {
+              extractEmbeddedHasMany(store, key, embeddedType, partial);
+            }
           }
           if (relationship.kind === "belongsTo") {
             extractEmbeddedBelongsTo(store, key, embeddedType, partial);
@@ -2597,6 +2602,28 @@ define("ember-data/serializers/embedded_records_mixin",
         var embeddedRecord = embeddedSerializer.normalize(embeddedType, data, null);
         store.push(embeddedType, embeddedRecord);
         ids.push(embeddedRecord.id);
+      });
+
+      hash[key] = ids;
+      return hash;
+    }
+
+    function extractEmbeddedHasManyPolymorphic(store, key, hash) {
+      if (!hash[key]) {
+        return hash;
+      }
+
+      var ids = [];
+
+      forEach(hash[key], function(data) {
+        var typeKey = data.type;
+        var embeddedSerializer = store.serializerFor(typeKey);
+        var embeddedType = store.modelFor(typeKey);
+        var primaryKey = get(embeddedSerializer, 'primaryKey');
+
+        var embeddedRecord = embeddedSerializer.normalize(embeddedType, data, null);
+        store.push(embeddedType, embeddedRecord);
+        ids.push({ id: embeddedRecord[primaryKey], type: typeKey });
       });
 
       hash[key] = ids;
