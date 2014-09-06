@@ -1053,15 +1053,16 @@ define("ember-data/adapters/fixture_adapter",
         var adapter = this;
 
         return new Ember.RSVP.Promise(function(resolve) {
+          var value = Ember.copy(callback.call(context), true);
           if (get(adapter, 'simulateRemoteResponse')) {
             // Schedule with setTimeout
             Ember.run.later(function() {
-              resolve(callback.call(context));
+              resolve(value);
             }, get(adapter, 'latency'));
           } else {
             // Asynchronous, but at the of the runloop with zero latency
             Ember.run.schedule('actions', null, function() {
-              resolve(callback.call(context));
+              resolve(value);
             });
           }
         }, "DS: FixtureAdapter#simulateRemoteCall");
@@ -1906,11 +1907,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.10+canary.4b0379cec3'
+        @default '1.0.0-beta.10+canary.39483b7b34'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.10+canary.4b0379cec3'
+        VERSION: '1.0.0-beta.10+canary.39483b7b34'
       });
 
       if (Ember.libraries) {
