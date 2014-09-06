@@ -970,7 +970,8 @@ define("ember-data/adapters/rest_adapter",
       @module ember-data
     */
 
-    var Adapter = __dependency1__["default"];
+    var Adapter = __dependency1__.Adapter;
+    var InvalidError = __dependency1__.InvalidError;
     var get = Ember.get;
     var forEach = Ember.ArrayPolyfills.forEach;
 
@@ -1687,14 +1688,41 @@ define("ember-data/adapters/rest_adapter",
 
         @method ajaxError
         @param  {Object} jqXHR
+        @param  {Object} responseText
         @return {Object} jqXHR
       */
-      ajaxError: function(jqXHR) {
+      ajaxError: function(jqXHR, responseText) {
         if (jqXHR && typeof jqXHR === 'object') {
           jqXHR.then = null;
         }
 
         return jqXHR;
+      },
+
+      /**
+        Takes an ajax response, and returns the json payload.
+
+        By default this hook just returns the jsonPayload passed to it.
+        You might want to override it in two cases:
+
+        1. Your API might return useful results in the request headers.
+        If you need to access these, you can override this hook to copy them
+        from jqXHR to the payload object so they can be processed in you serializer.
+
+
+        2. Your API might return errors as successful responses with status code
+        200 and an Errors text or object. You can return a DS.InvalidError from
+        this hook and it will automatically reject the promise and put your record
+        into the invald state.
+
+        @method ajaxError
+        @param  {Object} jqXHR
+        @param  {Object} jsonPayload
+        @return {Object} jqXHR
+      */
+
+      ajaxSuccess: function(jqXHR, jsonPayload) {
+        return jsonPayload;
       },
 
       /**
@@ -1727,12 +1755,17 @@ define("ember-data/adapters/rest_adapter",
         return new Ember.RSVP.Promise(function(resolve, reject) {
           var hash = adapter.ajaxOptions(url, type, options);
 
-          hash.success = function(json) {
-            Ember.run(null, resolve, json);
+          hash.success = function(json, textStatus, jqXHR) {
+            json = adapter.ajaxSuccess(jqXHR, json);
+            if (json instanceof InvalidError) {
+              Ember.run(null, reject, json);
+            } else {
+              Ember.run(null, resolve, json);
+            }
           };
 
           hash.error = function(jqXHR, textStatus, errorThrown) {
-            Ember.run(null, reject, adapter.ajaxError(jqXHR));
+            Ember.run(null, reject, adapter.ajaxError(jqXHR, jqXHR.responseText));
           };
 
           Ember.$.ajax(hash);
@@ -1800,11 +1833,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.10+canary.88287b4f62'
+        @default '1.0.0-beta.10+canary.002bc40a19'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.10+canary.88287b4f62'
+        VERSION: '1.0.0-beta.10+canary.002bc40a19'
       });
 
       if (Ember.libraries) {
