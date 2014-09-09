@@ -150,13 +150,12 @@ define("activemodel-adapter/system",
     __exports__.ActiveModelSerializer = ActiveModelSerializer;
   });
 define("activemodel-adapter/system/active_model_adapter",
-  ["ember-data/adapters","ember-data/system/adapter","ember-inflector","activemodel-adapter/system/active_model_serializer","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
+  ["ember-data/adapters","ember-data/system/adapter","ember-inflector","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
     "use strict";
     var RESTAdapter = __dependency1__.RESTAdapter;
     var InvalidError = __dependency2__.InvalidError;
     var pluralize = __dependency3__.pluralize;
-    var ActiveModelSerializer = __dependency4__["default"];
 
     /**
       @module ember-data
@@ -615,8 +614,8 @@ define("activemodel-adapter/system/active_model_serializer",
     __exports__["default"] = ActiveModelSerializer;
   });
 define("ember-data",
-  ["ember-data/core","ember-data/ext/date","ember-data/system/store","ember-data/system/model","ember-data/system/changes","ember-data/system/adapter","ember-data/system/debug","ember-data/system/record_arrays","ember-data/system/record_array_manager","ember-data/adapters","ember-data/serializers/json_serializer","ember-data/serializers/rest_serializer","ember-inflector","ember-data/serializers/embedded_records_mixin","activemodel-adapter","ember-data/transforms","ember-data/system/relationships","ember-data/ember-initializer","ember-data/setup-container","ember-data/system/container_proxy","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __dependency7__, __dependency8__, __dependency9__, __dependency10__, __dependency11__, __dependency12__, __dependency13__, __dependency14__, __dependency15__, __dependency16__, __dependency17__, __dependency18__, __dependency19__, __dependency20__, __exports__) {
+  ["ember-data/core","ember-data/ext/date","ember-data/system/promise_proxies","ember-data/system/store","ember-data/system/model","ember-data/system/adapter","ember-data/system/debug","ember-data/system/record_arrays","ember-data/system/record_array_manager","ember-data/adapters","ember-data/serializers/json_serializer","ember-data/serializers/rest_serializer","ember-inflector","ember-data/serializers/embedded_records_mixin","activemodel-adapter","ember-data/transforms","ember-data/system/relationships","ember-data/ember-initializer","ember-data/setup-container","ember-data/system/container_proxy","ember-data/system/relationships/relationship","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __dependency7__, __dependency8__, __dependency9__, __dependency10__, __dependency11__, __dependency12__, __dependency13__, __dependency14__, __dependency15__, __dependency16__, __dependency17__, __dependency18__, __dependency19__, __dependency20__, __dependency21__, __exports__) {
     "use strict";
     /**
       Ember Data
@@ -630,21 +629,13 @@ define("ember-data",
 
     var DS = __dependency1__["default"];
 
-    var Store = __dependency3__.Store;
     var PromiseArray = __dependency3__.PromiseArray;
     var PromiseObject = __dependency3__.PromiseObject;
-    var Model = __dependency4__.Model;
-    var Errors = __dependency4__.Errors;
-    var RootState = __dependency4__.RootState;
-    var attr = __dependency4__.attr;
-    var AttributeChange = __dependency5__.AttributeChange;
-    var RelationshipChange = __dependency5__.RelationshipChange;
-    var RelationshipChangeAdd = __dependency5__.RelationshipChangeAdd;
-    var RelationshipChangeRemove = __dependency5__.RelationshipChangeRemove;
-    var OneToManyChange = __dependency5__.OneToManyChange;
-    var ManyToNoneChange = __dependency5__.ManyToNoneChange;
-    var OneToOneChange = __dependency5__.OneToOneChange;
-    var ManyToManyChange = __dependency5__.ManyToManyChange;
+    var Store = __dependency4__.Store;
+    var Model = __dependency5__.Model;
+    var Errors = __dependency5__.Errors;
+    var RootState = __dependency5__.RootState;
+    var attr = __dependency5__.attr;
     var InvalidError = __dependency6__.InvalidError;
     var Adapter = __dependency6__.Adapter;
     var DebugAdapter = __dependency7__["default"];
@@ -672,6 +663,7 @@ define("ember-data",
     var setupContainer = __dependency19__["default"];
 
     var ContainerProxy = __dependency20__["default"];
+    var Relationship = __dependency21__.Relationship;
 
     DS.Store         = Store;
     DS.PromiseArray  = PromiseArray;
@@ -681,14 +673,6 @@ define("ember-data",
     DS.RootState = RootState;
     DS.attr      = attr;
     DS.Errors    = Errors;
-
-    DS.AttributeChange       = AttributeChange;
-    DS.RelationshipChange    = RelationshipChange;
-    DS.RelationshipChangeAdd = RelationshipChangeAdd;
-    DS.OneToManyChange       = OneToManyChange;
-    DS.ManyToNoneChange      = OneToManyChange;
-    DS.OneToOneChange        = OneToOneChange;
-    DS.ManyToManyChange      = ManyToManyChange;
 
     DS.Adapter      = Adapter;
     DS.InvalidError = InvalidError;
@@ -720,6 +704,8 @@ define("ember-data",
 
     DS.belongsTo = belongsTo;
     DS.hasMany   = hasMany;
+
+    DS.Relationship  = Relationship;
 
     DS.ContainerProxy = ContainerProxy;
 
@@ -1067,15 +1053,16 @@ define("ember-data/adapters/fixture_adapter",
         var adapter = this;
 
         return new Ember.RSVP.Promise(function(resolve) {
+          var value = Ember.copy(callback.call(context), true);
           if (get(adapter, 'simulateRemoteResponse')) {
             // Schedule with setTimeout
             Ember.run.later(function() {
-              resolve(callback.call(context));
+              resolve(value);
             }, get(adapter, 'latency'));
           } else {
             // Asynchronous, but at the of the runloop with zero latency
             Ember.run.schedule('actions', null, function() {
-              resolve(callback.call(context));
+              resolve(value);
             });
           }
         }, "DS: FixtureAdapter#simulateRemoteCall");
@@ -1090,7 +1077,8 @@ define("ember-data/adapters/rest_adapter",
       @module ember-data
     */
 
-    var Adapter = __dependency1__["default"];
+    var Adapter = __dependency1__.Adapter;
+    var InvalidError = __dependency1__.InvalidError;
     var get = Ember.get;
     var forEach = Ember.ArrayPolyfills.forEach;
 
@@ -1477,7 +1465,7 @@ define("ember-data/adapters/rest_adapter",
         @param {String} url
         @return {Promise} promise
       */
-      findHasMany: function(store, record, url) {
+      findHasMany: function(store, record, url, relationship) {
         var host = get(this, 'host');
         var id   = get(record, 'id');
         var type = record.constructor.typeKey;
@@ -1516,7 +1504,7 @@ define("ember-data/adapters/rest_adapter",
         @param {String} url
         @return {Promise} promise
       */
-      findBelongsTo: function(store, record, url) {
+      findBelongsTo: function(store, record, url, relationship) {
         var id   = get(record, 'id');
         var type = record.constructor.typeKey;
 
@@ -1807,14 +1795,41 @@ define("ember-data/adapters/rest_adapter",
 
         @method ajaxError
         @param  {Object} jqXHR
+        @param  {Object} responseText
         @return {Object} jqXHR
       */
-      ajaxError: function(jqXHR) {
+      ajaxError: function(jqXHR, responseText) {
         if (jqXHR && typeof jqXHR === 'object') {
           jqXHR.then = null;
         }
 
         return jqXHR;
+      },
+
+      /**
+        Takes an ajax response, and returns the json payload.
+
+        By default this hook just returns the jsonPayload passed to it.
+        You might want to override it in two cases:
+
+        1. Your API might return useful results in the request headers.
+        If you need to access these, you can override this hook to copy them
+        from jqXHR to the payload object so they can be processed in you serializer.
+
+
+        2. Your API might return errors as successful responses with status code
+        200 and an Errors text or object. You can return a DS.InvalidError from
+        this hook and it will automatically reject the promise and put your record
+        into the invald state.
+
+        @method ajaxError
+        @param  {Object} jqXHR
+        @param  {Object} jsonPayload
+        @return {Object} jqXHR
+      */
+
+      ajaxSuccess: function(jqXHR, jsonPayload) {
+        return jsonPayload;
       },
 
       /**
@@ -1847,12 +1862,17 @@ define("ember-data/adapters/rest_adapter",
         return new Ember.RSVP.Promise(function(resolve, reject) {
           var hash = adapter.ajaxOptions(url, type, options);
 
-          hash.success = function(json) {
-            Ember.run(null, resolve, json);
+          hash.success = function(json, textStatus, jqXHR) {
+            json = adapter.ajaxSuccess(jqXHR, json);
+            if (json instanceof InvalidError) {
+              Ember.run(null, reject, json);
+            } else {
+              Ember.run(null, resolve, json);
+            }
           };
 
           hash.error = function(jqXHR, textStatus, errorThrown) {
-            Ember.run(null, reject, adapter.ajaxError(jqXHR));
+            Ember.run(null, reject, adapter.ajaxError(jqXHR, jqXHR.responseText));
           };
 
           Ember.$.ajax(hash);
@@ -1920,11 +1940,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.9'
+        @default '1.0.0-beta.10+canary.30d6bf849b'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.9'
+        VERSION: '1.0.0-beta.10+canary.30d6bf849b'
       });
 
       if (Ember.libraries) {
@@ -2193,14 +2213,12 @@ define("ember-data/serializers",
     __exports__.RESTSerializer = RESTSerializer;
   });
 define("ember-data/serializers/embedded_records_mixin",
-  ["ember-inflector","exports"],
-  function(__dependency1__, __exports__) {
+  ["exports"],
+  function(__exports__) {
     "use strict";
     var get = Ember.get;
     var forEach = Ember.EnumerableUtils.forEach;
     var camelize = Ember.String.camelize;
-
-    var pluralize = __dependency1__.pluralize;
 
     /**
       ## Using Embedded Records
@@ -2220,6 +2238,11 @@ define("ember-data/serializers/embedded_records_mixin",
         }
       })
       ```
+      Note that this use of `{embedded: 'always'}` is unrelated to
+      the `{embedded: 'always'}` that is defined as an option on `DS.attr` as part of
+      defining a model while working with the ActiveModelSerializer.  Nevertheless,
+      using `{embedded: 'always'}` as an option to DS.attr is not a valid way to setup
+      embedded records.
 
       The `attrs` option for a resource `{embedded: 'always'}` is shorthand for:
 
@@ -2253,7 +2276,11 @@ define("ember-data/serializers/embedded_records_mixin",
 
       ### Model Relationships
 
-      Embedded records must have a model defined to be extracted and serialized.
+      Embedded records must have a model defined to be extracted and serialized. Note that
+      when defining any relationships on your model such as `belongsTo` and `hasMany`, you
+      should not both specify `async:true` and also indicate through the serializer's
+      `attrs` attribute that the related model should be embedded.  If a model is
+      declared embedded, then do not use `async:true`.
 
       To successfully extract and serialize embedded records the model relationships
       must be setup correcty See the
@@ -2265,9 +2292,9 @@ define("ember-data/serializers/embedded_records_mixin",
 
       ### Example JSON payloads, Models and Serializers
 
-      **When customizing a serializer it is imporant to grok what the cusomizations
-      are, please read the docs for the methods this mixin provides, in case you need
-      to modify to fit your specific needs.**
+      **When customizing a serializer it is important to grok what the customizations
+      are. Please read the docs for the methods this mixin provides, in case you need
+      to modify it to fit your specific needs.**
 
       For example review the docs for each method of this mixin:
       * [normalize](/api/data/classes/DS.EmbeddedRecordsMixin.html#method_normalize)
@@ -2370,7 +2397,6 @@ define("ember-data/serializers/embedded_records_mixin",
       */
       serializeBelongsTo: function(record, json, relationship) {
         var attr = relationship.key;
-        var attrs = this.get('attrs');
         if (this.noSerializeOptionSpecified(attr)) {
           this._super(record, json, relationship);
           return;
@@ -2480,7 +2506,6 @@ define("ember-data/serializers/embedded_records_mixin",
       */
       serializeHasMany: function(record, json, relationship) {
         var attr = relationship.key;
-        var attrs = this.get('attrs');
         if (this.noSerializeOptionSpecified(attr)) {
           this._super(record, json, relationship);
           return;
@@ -2555,8 +2580,6 @@ define("ember-data/serializers/embedded_records_mixin",
       // checks config for attrs option to serialize records
       noSerializeOptionSpecified: function(attr) {
         var option = this.attrsOption(attr);
-        var serializeRecords = this.hasSerializeRecordsOption(attr);
-        var serializeIds = this.hasSerializeIdsOption(attr);
         return !(option && (option.serialize || option.embedded));
       },
 
@@ -2583,7 +2606,12 @@ define("ember-data/serializers/embedded_records_mixin",
         if (serializer.hasDeserializeRecordsOption(key)) {
           var embeddedType = store.modelFor(relationship.type.typeKey);
           if (relationship.kind === "hasMany") {
-            extractEmbeddedHasMany(store, key, embeddedType, partial);
+            if (relationship.options.polymorphic) {
+              extractEmbeddedHasManyPolymorphic(store, key, partial);
+            }
+            else {
+              extractEmbeddedHasMany(store, key, embeddedType, partial);
+            }
           }
           if (relationship.kind === "belongsTo") {
             extractEmbeddedBelongsTo(store, key, embeddedType, partial);
@@ -2613,6 +2641,28 @@ define("ember-data/serializers/embedded_records_mixin",
       return hash;
     }
 
+    function extractEmbeddedHasManyPolymorphic(store, key, hash) {
+      if (!hash[key]) {
+        return hash;
+      }
+
+      var ids = [];
+
+      forEach(hash[key], function(data) {
+        var typeKey = data.type;
+        var embeddedSerializer = store.serializerFor(typeKey);
+        var embeddedType = store.modelFor(typeKey);
+        var primaryKey = get(embeddedSerializer, 'primaryKey');
+
+        var embeddedRecord = embeddedSerializer.normalize(embeddedType, data, null);
+        store.push(embeddedType, embeddedRecord);
+        ids.push({ id: embeddedRecord[primaryKey], type: typeKey });
+      });
+
+      hash[key] = ids;
+      return hash;
+    }
+
     function extractEmbeddedBelongsTo(store, key, embeddedType, hash) {
       if (!hash[key]) {
         return hash;
@@ -2630,12 +2680,10 @@ define("ember-data/serializers/embedded_records_mixin",
     __exports__["default"] = EmbeddedRecordsMixin;
   });
 define("ember-data/serializers/json_serializer",
-  ["ember-data/system/changes","exports"],
-  function(__dependency1__, __exports__) {
+  ["exports"],
+  function(__exports__) {
     "use strict";
-    var RelationshipChange = __dependency1__.RelationshipChange;
     var get = Ember.get;
-    var set = Ember.set;
     var isNone = Ember.isNone;
     var map = Ember.ArrayPolyfills.map;
     var merge = Ember.merge;
@@ -2745,7 +2793,7 @@ define("ember-data/serializers/json_serializer",
        @return {Object} data The transformed data object
       */
       applyTransforms: function(type, data) {
-        type.eachTransformedAttribute(function(key, type) {
+        type.eachTransformedAttribute(function applyTransform(key, type) {
           if (!data.hasOwnProperty(key)) { return; }
 
           var transform = this.transformFor(type);
@@ -2831,7 +2879,7 @@ define("ember-data/serializers/json_serializer",
         @private
       */
       normalizeAttributes: function(type, hash) {
-        var payloadKey, key;
+        var payloadKey;
 
         if (this.keyForAttribute) {
           type.eachAttribute(function(key) {
@@ -2850,7 +2898,7 @@ define("ember-data/serializers/json_serializer",
         @private
       */
       normalizeRelationships: function(type, hash) {
-        var payloadKey, key;
+        var payloadKey;
 
         if (this.keyForRelationship) {
           type.eachRelationship(function(key, relationship) {
@@ -3269,7 +3317,7 @@ define("ember-data/serializers/json_serializer",
             payloadKey = this.keyForRelationship(key, "hasMany");
           }
 
-          var relationshipType = RelationshipChange.determineRelationshipType(record.constructor, relationship);
+          var relationshipType = record.constructor.determineRelationshipType(relationship);
 
           if (relationshipType === 'manyToNone' || relationshipType === 'manyToMany') {
             json[payloadKey] = get(record, key).mapBy('id');
@@ -3678,7 +3726,6 @@ define("ember-data/serializers/rest_serializer",
 
     var JSONSerializer = __dependency1__["default"];
     var get = Ember.get;
-    var set = Ember.set;
     var forEach = Ember.ArrayPolyfills.forEach;
     var map = Ember.ArrayPolyfills.map;
     var camelize = Ember.String.camelize;
@@ -4359,7 +4406,7 @@ define("ember-data/serializers/rest_serializer",
 
       /**
         You can use this method to customize the root keys serialized into the JSON.
-        By default the REST Serializer sends the typeKey of a model, whih is a camelized
+        By default the REST Serializer sends the typeKey of a model, which is a camelized
         version of the name.
 
         For example, your server may expect underscored root objects.
@@ -4436,8 +4483,6 @@ define("ember-data/system/adapter",
     */
 
     var get = Ember.get;
-    var set = Ember.set;
-    var map = Ember.ArrayPolyfills.map;
 
     var errorProps = [
       'description',
@@ -4894,463 +4939,6 @@ define("ember-data/system/adapter",
     __exports__.Adapter = Adapter;
     __exports__["default"] = Adapter;
   });
-define("ember-data/system/changes",
-  ["ember-data/system/changes/relationship_change","exports"],
-  function(__dependency1__, __exports__) {
-    "use strict";
-    /**
-      @module ember-data
-    */
-
-    var RelationshipChange = __dependency1__.RelationshipChange;
-    var RelationshipChangeAdd = __dependency1__.RelationshipChangeAdd;
-    var RelationshipChangeRemove = __dependency1__.RelationshipChangeRemove;
-    var OneToManyChange = __dependency1__.OneToManyChange;
-    var ManyToNoneChange = __dependency1__.ManyToNoneChange;
-    var OneToOneChange = __dependency1__.OneToOneChange;
-    var ManyToManyChange = __dependency1__.ManyToManyChange;
-
-    __exports__.RelationshipChange = RelationshipChange;
-    __exports__.RelationshipChangeAdd = RelationshipChangeAdd;
-    __exports__.RelationshipChangeRemove = RelationshipChangeRemove;
-    __exports__.OneToManyChange = OneToManyChange;
-    __exports__.ManyToNoneChange = ManyToNoneChange;
-    __exports__.OneToOneChange = OneToOneChange;
-    __exports__.ManyToManyChange = ManyToManyChange;
-  });
-define("ember-data/system/changes/relationship_change",
-  ["ember-data/system/model/model","ember-data/system/relationship-meta","exports"],
-  function(__dependency1__, __dependency2__, __exports__) {
-    "use strict";
-    /**
-      @module ember-data
-    */
-
-    var Model = __dependency1__["default"];
-    var isSyncRelationship = __dependency2__.isSyncRelationship;
-
-    var get = Ember.get;
-    var set = Ember.set;
-    var forEach = Ember.EnumerableUtils.forEach;
-
-    /**
-      @class RelationshipChange
-      @namespace DS
-      @private
-      @constructor
-    */
-    var RelationshipChange = function(options) {
-      this.parentRecord = options.parentRecord;
-      this.childRecord = options.childRecord;
-      this.firstRecord = options.firstRecord;
-      this.firstRecordKind = options.firstRecordKind;
-      this.firstRecordName = options.firstRecordName;
-      this.secondRecord = options.secondRecord;
-      this.secondRecordKind = options.secondRecordKind;
-      this.secondRecordName = options.secondRecordName;
-      this.changeType = options.changeType;
-      this.store = options.store;
-
-      this.committed = {};
-    };
-
-    /**
-      @class RelationshipChangeAdd
-      @namespace DS
-      @private
-      @constructor
-    */
-    function RelationshipChangeAdd(options){
-      RelationshipChange.call(this, options);
-    }
-
-    /**
-      @class RelationshipChangeRemove
-      @namespace DS
-      @private
-      @constructor
-    */
-    function RelationshipChangeRemove(options){
-      RelationshipChange.call(this, options);
-    }
-
-    RelationshipChange.create = function(options) {
-      return new RelationshipChange(options);
-    };
-
-    RelationshipChangeAdd.create = function(options) {
-      return new RelationshipChangeAdd(options);
-    };
-
-    RelationshipChangeRemove.create = function(options) {
-      return new RelationshipChangeRemove(options);
-    };
-
-    var OneToManyChange = {};
-    var OneToNoneChange = {};
-    var ManyToNoneChange = {};
-    var OneToOneChange = {};
-    var ManyToManyChange = {};
-
-    RelationshipChange._createChange = function(options){
-      if (options.changeType === 'add') {
-        return RelationshipChangeAdd.create(options);
-      }
-      if (options.changeType === 'remove') {
-        return RelationshipChangeRemove.create(options);
-      }
-    };
-
-    RelationshipChange.determineRelationshipType = function(recordType, knownSide){
-      var knownKey = knownSide.key, key, otherKind;
-      var knownKind = knownSide.kind;
-
-      var inverse = recordType.inverseFor(knownKey);
-
-      if (inverse) {
-        key = inverse.name;
-        otherKind = inverse.kind;
-      }
-
-      if (!inverse) {
-        return knownKind === 'belongsTo' ? 'oneToNone' : 'manyToNone';
-      } else {
-        if (otherKind === 'belongsTo') {
-          return knownKind === 'belongsTo' ? 'oneToOne' : 'manyToOne';
-        } else {
-          return knownKind === 'belongsTo' ? 'oneToMany' : 'manyToMany';
-        }
-      }
-    };
-
-    RelationshipChange.createChange = function(firstRecord, secondRecord, store, options){
-      // Get the type of the child based on the child's client ID
-      var firstRecordType = firstRecord.constructor, changeType;
-      changeType = RelationshipChange.determineRelationshipType(firstRecordType, options);
-      if (changeType === 'oneToMany') {
-        return OneToManyChange.createChange(firstRecord, secondRecord, store, options);
-      } else if (changeType === 'manyToOne') {
-        return OneToManyChange.createChange(secondRecord, firstRecord, store, options);
-      } else if (changeType === 'oneToNone') {
-        return OneToNoneChange.createChange(firstRecord, secondRecord, store, options);
-      } else if (changeType === 'manyToNone') {
-        return ManyToNoneChange.createChange(firstRecord, secondRecord, store, options);
-      } else if (changeType === 'oneToOne') {
-        return OneToOneChange.createChange(firstRecord, secondRecord, store, options);
-      } else if (changeType === 'manyToMany') {
-        return ManyToManyChange.createChange(firstRecord, secondRecord, store, options);
-      }
-    };
-
-    OneToNoneChange.createChange = function(childRecord, parentRecord, store, options) {
-      var key = options.key;
-      var change = RelationshipChange._createChange({
-        parentRecord: parentRecord,
-        childRecord: childRecord,
-        firstRecord: childRecord,
-        store: store,
-        changeType: options.changeType,
-        firstRecordName: key,
-        firstRecordKind: 'belongsTo'
-      });
-
-      store.addRelationshipChangeFor(childRecord, key, parentRecord, null, change);
-
-      return change;
-    };
-
-    ManyToNoneChange.createChange = function(childRecord, parentRecord, store, options) {
-      var key = options.key;
-      var change = RelationshipChange._createChange({
-        parentRecord: childRecord,
-        childRecord: parentRecord,
-        secondRecord: childRecord,
-        store: store,
-        changeType: options.changeType,
-        secondRecordName: options.key,
-        secondRecordKind: 'hasMany'
-      });
-
-      store.addRelationshipChangeFor(childRecord, key, parentRecord, null, change);
-      return change;
-    };
-
-
-    ManyToManyChange.createChange = function(childRecord, parentRecord, store, options) {
-      // If the name of the belongsTo side of the relationship is specified,
-      // use that
-      // If the type of the parent is specified, look it up on the child's type
-      // definition.
-      var key = options.key;
-
-      var change = RelationshipChange._createChange({
-        parentRecord: parentRecord,
-        childRecord: childRecord,
-        firstRecord: childRecord,
-        secondRecord: parentRecord,
-        firstRecordKind: 'hasMany',
-        secondRecordKind: 'hasMany',
-        store: store,
-        changeType: options.changeType,
-        firstRecordName:  key
-      });
-
-      store.addRelationshipChangeFor(childRecord, key, parentRecord, null, change);
-
-      return change;
-    };
-
-    OneToOneChange.createChange = function(childRecord, parentRecord, store, options) {
-      var key;
-
-      // If the name of the belongsTo side of the relationship is specified,
-      // use that
-      // If the type of the parent is specified, look it up on the child's type
-      // definition.
-      if (options.parentType) {
-        key = options.parentType.inverseFor(options.key).name;
-      } else if (options.key) {
-        key = options.key;
-      } else {
-              }
-
-      var change = RelationshipChange._createChange({
-        parentRecord: parentRecord,
-        childRecord: childRecord,
-        firstRecord: childRecord,
-        secondRecord: parentRecord,
-        firstRecordKind: 'belongsTo',
-        secondRecordKind: 'belongsTo',
-        store: store,
-        changeType: options.changeType,
-        firstRecordName:  key
-      });
-
-      store.addRelationshipChangeFor(childRecord, key, parentRecord, null, change);
-
-      return change;
-    };
-
-    OneToOneChange.maintainInvariant = function(options, store, childRecord, key){
-      if (options.changeType === 'add' && store.recordIsMaterialized(childRecord)) {
-        var oldParent = get(childRecord, key);
-        if (oldParent) {
-          var correspondingChange = OneToOneChange.createChange(childRecord, oldParent, store, {
-            parentType: options.parentType,
-            hasManyName: options.hasManyName,
-            changeType: 'remove',
-            key: options.key
-          });
-          store.addRelationshipChangeFor(childRecord, key, options.parentRecord , null, correspondingChange);
-          correspondingChange.sync();
-        }
-      }
-    };
-
-    OneToManyChange.createChange = function(childRecord, parentRecord, store, options) {
-      var key;
-
-      // If the name of the belongsTo side of the relationship is specified,
-      // use that
-      // If the type of the parent is specified, look it up on the child's type
-      // definition.
-      if (options.parentType) {
-        key = options.parentType.inverseFor(options.key).name;
-        OneToManyChange.maintainInvariant( options, store, childRecord, key );
-      } else if (options.key) {
-        key = options.key;
-      } else {
-              }
-
-      var change = RelationshipChange._createChange({
-        parentRecord: parentRecord,
-        childRecord: childRecord,
-        firstRecord: childRecord,
-        secondRecord: parentRecord,
-        firstRecordKind: 'belongsTo',
-        secondRecordKind: 'hasMany',
-        store: store,
-        changeType: options.changeType,
-        firstRecordName: key
-      });
-
-      store.addRelationshipChangeFor(childRecord, key, parentRecord, change.getSecondRecordName(), change);
-
-      return change;
-    };
-
-    OneToManyChange.maintainInvariant = function(options, store, childRecord, key){
-      if (options.changeType === 'add' && childRecord) {
-        var oldParent = get(childRecord, key);
-        if (oldParent) {
-          var correspondingChange = OneToManyChange.createChange(childRecord, oldParent, store, {
-            parentType: options.parentType,
-            hasManyName: options.hasManyName,
-            changeType: 'remove',
-            key: options.key
-          });
-          store.addRelationshipChangeFor(childRecord, key, options.parentRecord, correspondingChange.getSecondRecordName(), correspondingChange);
-          correspondingChange.sync();
-        }
-      }
-    };
-
-    /**
-      @class RelationshipChange
-      @namespace DS
-    */
-    RelationshipChange.prototype = {
-      getSecondRecordName: function() {
-        var name = this.secondRecordName, parent;
-
-        if (!name) {
-          parent = this.secondRecord;
-          if (!parent) { return; }
-
-          var childType = this.firstRecord.constructor;
-          var inverse = childType.inverseFor(this.firstRecordName);
-          this.secondRecordName = inverse.name;
-        }
-
-        return this.secondRecordName;
-      },
-
-      /**
-        Get the name of the relationship on the belongsTo side.
-
-        @method getFirstRecordName
-        @return {String}
-      */
-      getFirstRecordName: function() {
-        return this.firstRecordName;
-      },
-
-      /**
-        @method destroy
-        @private
-      */
-      destroy: function() {
-        var childRecord = this.childRecord;
-        var belongsToName = this.getFirstRecordName();
-        var hasManyName = this.getSecondRecordName();
-        var store = this.store;
-
-        store.removeRelationshipChangeFor(childRecord, belongsToName, this.parentRecord, hasManyName, this.changeType);
-      },
-
-      getSecondRecord: function(){
-        return this.secondRecord;
-      },
-
-      /**
-        @method getFirstRecord
-        @private
-      */
-      getFirstRecord: function() {
-        return this.firstRecord;
-      },
-
-      coalesce: function(){
-        var relationshipPairs = this.store.relationshipChangePairsFor(this.firstRecord);
-        forEach(relationshipPairs, function(pair) {
-          var addedChange = pair['add'];
-          var removedChange = pair['remove'];
-          if (addedChange && removedChange) {
-            addedChange.destroy();
-            removedChange.destroy();
-          }
-        });
-      }
-    };
-
-    RelationshipChangeAdd.prototype = Ember.create(RelationshipChange.create({}));
-    RelationshipChangeRemove.prototype = Ember.create(RelationshipChange.create({}));
-
-    RelationshipChangeAdd.prototype.changeType = 'add';
-    RelationshipChangeAdd.prototype.sync = function() {
-      var secondRecordName = this.getSecondRecordName();
-      var firstRecordName = this.getFirstRecordName();
-      var firstRecord = this.getFirstRecord();
-      var secondRecord = this.getSecondRecord();
-
-      //Ember.assert("You specified a hasMany (" + hasManyName + ") on " + (!belongsToName && (newParent || oldParent || this.lastParent).constructor) + " but did not specify an inverse belongsTo on " + child.constructor, belongsToName);
-      //Ember.assert("You specified a belongsTo (" + belongsToName + ") on " + child.constructor + " but did not specify an inverse hasMany on " + (!hasManyName && (newParent || oldParent || this.lastParentRecord).constructor), hasManyName);
-
-      if (secondRecord instanceof Model && firstRecord instanceof Model) {
-        if (this.secondRecordKind === 'belongsTo') {
-          secondRecord.suspendRelationshipObservers(function() {
-            set(secondRecord, secondRecordName, firstRecord);
-          });
-        } else if (this.secondRecordKind === 'hasMany' && isSyncRelationship(secondRecord, secondRecordName)) {
-          secondRecord.suspendRelationshipObservers(function() {
-            var relationship = get(secondRecord, secondRecordName);
-            relationship.addObject(firstRecord);
-          });
-        }
-      }
-
-      if (firstRecord instanceof Model && secondRecord instanceof Model && get(firstRecord, firstRecordName) !== secondRecord) {
-        if (this.firstRecordKind === 'belongsTo') {
-          firstRecord.suspendRelationshipObservers(function() {
-            set(firstRecord, firstRecordName, secondRecord);
-          });
-        } else if (this.firstRecordKind === 'hasMany' && isSyncRelationship(secondRecord, secondRecordName)) {
-          firstRecord.suspendRelationshipObservers(function() {
-            var relationship = get(firstRecord, firstRecordName);
-             relationship.addObject(secondRecord);
-          });
-        }
-      }
-      this.coalesce();
-    };
-
-    RelationshipChangeRemove.prototype.changeType = 'remove';
-    RelationshipChangeRemove.prototype.sync = function() {
-      var secondRecordName = this.getSecondRecordName();
-      var firstRecordName = this.getFirstRecordName();
-      var firstRecord = this.getFirstRecord();
-      var secondRecord = this.getSecondRecord();
-
-      //Ember.assert("You specified a hasMany (" + hasManyName + ") on " + (!belongsToName && (newParent || oldParent || this.lastParent).constructor) + " but did not specify an inverse belongsTo on " + child.constructor, belongsToName);
-      //Ember.assert("You specified a belongsTo (" + belongsToName + ") on " + child.constructor + " but did not specify an inverse hasMany on " + (!hasManyName && (newParent || oldParent || this.lastParentRecord).constructor), hasManyName);
-
-      if (secondRecord instanceof Model && firstRecord instanceof Model) {
-        if (this.secondRecordKind === 'belongsTo') {
-          secondRecord.suspendRelationshipObservers(function() {
-            set(secondRecord, secondRecordName, null);
-          });
-        } else if (this.secondRecordKind === 'hasMany' && isSyncRelationship(secondRecord, secondRecordName)) {
-          secondRecord.suspendRelationshipObservers(function() {
-            var relationship = get(secondRecord, secondRecordName);
-            relationship.removeObject(firstRecord);
-          });
-        }
-      }
-
-      if (firstRecord instanceof Model && get(firstRecord, firstRecordName)) {
-        if (this.firstRecordKind === 'belongsTo') {
-          firstRecord.suspendRelationshipObservers(function() {
-            set(firstRecord, firstRecordName, null);
-          });
-        } else if (this.firstRecordKind === 'hasMany' && isSyncRelationship(firstRecord, firstRecordName)) {
-          firstRecord.suspendRelationshipObservers(function() {
-            var relationship = get(firstRecord, firstRecordName);
-            relationship.removeObject(secondRecord);
-          });
-        }
-      }
-
-      this.coalesce();
-    };
-
-    __exports__.RelationshipChange = RelationshipChange;
-    __exports__.RelationshipChangeAdd = RelationshipChangeAdd;
-    __exports__.RelationshipChangeRemove = RelationshipChangeRemove;
-    __exports__.OneToManyChange = OneToManyChange;
-    __exports__.ManyToNoneChange = ManyToNoneChange;
-    __exports__.OneToOneChange = OneToOneChange;
-    __exports__.ManyToManyChange = ManyToManyChange;
-  });
 define("ember-data/system/container_proxy",
   ["exports"],
   function(__exports__) {
@@ -5391,7 +4979,7 @@ define("ember-data/system/container_proxy",
     };
 
     ContainerProxy.prototype.registerDeprecations = function(proxyPairs) {
-      var i, proxyPair, deprecated, valid, proxy;
+      var i, proxyPair, deprecated, valid;
 
       for (i = proxyPairs.length; i > 0; i--) {
         proxyPair = proxyPairs[i - 1];
@@ -6285,12 +5873,14 @@ define("ember-data/system/model/errors",
     });
   });
 define("ember-data/system/model/model",
-  ["ember-data/system/model/states","ember-data/system/model/errors","ember-data/system/store","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
+  ["ember-data/system/model/states","ember-data/system/model/errors","ember-data/system/promise_proxies","ember-data/system/relationships/relationship","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
     "use strict";
     var RootState = __dependency1__["default"];
     var Errors = __dependency2__["default"];
     var PromiseObject = __dependency3__.PromiseObject;
+    var createRelationshipFor = __dependency4__.createRelationshipFor;
+
     /**
       @module ember-data
     */
@@ -6300,6 +5890,7 @@ define("ember-data/system/model/model",
     var merge = Ember.merge;
     var Promise = Ember.RSVP.Promise;
     var forEach = Ember.ArrayPolyfills.forEach;
+    var map = Ember.ArrayPolyfills.map;
 
     var JSONSerializer;
     var retrieveFromCurrentState = Ember.computed('currentState', function(key, value) {
@@ -6732,6 +6323,12 @@ define("ember-data/system/model/model",
         this._attributes = {};
         this._inFlightAttributes = {};
         this._relationships = {};
+        var model = this;
+        //TODO Move into a getter for better perf
+        this.constructor.eachRelationship(function(key, descriptor) {
+            model._relationships[key] = createRelationshipFor(model, descriptor, model.store);
+        });
+
       },
 
       /**
@@ -6914,13 +6511,11 @@ define("ember-data/system/model/model",
       */
       clearRelationships: function() {
         this.eachRelationship(function(name, relationship) {
-          if (relationship.kind === 'belongsTo') {
-            set(this, name, null);
-          } else if (relationship.kind === 'hasMany') {
-            var hasMany = this._relationships[name];
-            if (hasMany) { // relationships are created lazily
-              hasMany.destroy();
-            }
+          var rel = this._relationships[name];
+          if (rel){
+            //TODO(Igor) figure out whether we want to clear or disconnect
+            rel.clear();
+            rel.destroy();
           }
         }, this);
       },
@@ -6935,9 +6530,9 @@ define("ember-data/system/model/model",
       },
 
       /**
-        When a find request is triggered on the store, the user can optionally passed in
+        When a find request is triggered on the store, the user can optionally pass in
         attributes and relationships to be preloaded. These are meant to behave as if they
-        came back from the server, expect the user obtained them out of band and is informing
+        came back from the server, except the user obtained them out of band and is informing
         the store of their existence. The most common use case is for supporting client side
         nested URLs, such as `/posts/1/comments/2` so the user can do
         `store.find('comment', 2, {post:1})` without having to fetch the post.
@@ -6976,15 +6571,20 @@ define("ember-data/system/model/model",
       _preloadHasMany: function(key, preloadValue, type) {
                 var record = this;
 
-        forEach.call(preloadValue, function(recordToPush) {
-          recordToPush = record._convertStringOrNumberIntoRecord(recordToPush, type);
-          get(record, key).pushObject(recordToPush);
+        var recordsToSet = map.call(preloadValue, function(recordToPush) {
+          return record._convertStringOrNumberIntoRecord(recordToPush, type);
         });
+        //We use the pathway of setting the hasMany as if it came from the adapter
+        //because the user told us that they know this relationships exists already
+        this._relationships[key].updateRecordsFromAdapter(recordsToSet);
       },
 
       _preloadBelongsTo: function(key, preloadValue, type){
-        var recordToPush = this._convertStringOrNumberIntoRecord(preloadValue, type);
-        set(this, key, recordToPush);
+        var recordToSet = this._convertStringOrNumberIntoRecord(preloadValue, type);
+
+        //We use the pathway of setting the hasMany as if it came from the adapter
+        //because the user told us that they know this relationships exists already
+        this._relationships[key].setRecord(recordToSet);
       },
 
       _convertStringOrNumberIntoRecord: function(value, type) {
@@ -7059,9 +6659,7 @@ define("ember-data/system/model/model",
 
         if (!data) { return; }
 
-        this.suspendRelationshipObservers(function() {
-          this.notifyPropertyChange('data');
-        });
+        this.notifyPropertyChange('data');
       },
 
       /**
@@ -7073,32 +6671,6 @@ define("ember-data/system/model/model",
         this.updateRecordArraysLater();
       },
 
-      dataDidChange: Ember.observer(function() {
-        this.reloadHasManys();
-      }, 'data'),
-
-      reloadHasManys: function() {
-        var relationships = get(this.constructor, 'relationshipsByName');
-        this.updateRecordArraysLater();
-        relationships.forEach(function(name, relationship) {
-          if (this._data.links && this._data.links[name]) { return; }
-          if (relationship.kind === 'hasMany') {
-            this.hasManyDidChange(relationship.key);
-          }
-        }, this);
-      },
-
-      hasManyDidChange: function(key) {
-        var hasMany = this._relationships[key];
-
-        if (hasMany) {
-          var records = this._data[key] || [];
-
-          set(hasMany, 'content', Ember.A(records));
-          set(hasMany, 'isLoaded', true);
-          hasMany.trigger('didLoad');
-        }
-      },
 
       /**
         @method updateRecordArraysLater
@@ -7126,18 +6698,9 @@ define("ember-data/system/model/model",
           this._data = data;
         }
 
-        var relationships = this._relationships;
-
-        this.eachRelationship(function(name, rel) {
-          if (data.links && data.links[name]) { return; }
-          if (rel.options.async) { relationships[name] = null; }
-        });
-
         if (data) { this.pushedData(); }
 
-        this.suspendRelationshipObservers(function() {
-          this.notifyPropertyChange('data');
-        });
+        this.notifyPropertyChange('data');
       },
 
       materializeId: function(id) {
@@ -7150,27 +6713,6 @@ define("ember-data/system/model/model",
 
       materializeAttribute: function(name, value) {
         this._data[name] = value;
-      },
-
-      /**
-        @method updateHasMany
-        @private
-        @param {String} name
-        @param {Array} records
-      */
-      updateHasMany: function(name, records) {
-        this._data[name] = records;
-        this.hasManyDidChange(name);
-      },
-
-      /**
-        @method updateBelongsTo
-        @private
-        @param {String} name
-        @param {DS.Model} record
-      */
-      updateBelongsTo: function(name, record) {
-        this._data[name] = record;
       },
 
       /**
@@ -7203,46 +6745,11 @@ define("ember-data/system/model/model",
 
         this.send('rolledBack');
 
-        this.suspendRelationshipObservers(function() {
-          this.notifyPropertyChange('data');
-        });
+        this.notifyPropertyChange('data');
       },
 
       toStringExtension: function() {
         return get(this, 'id');
-      },
-
-      /**
-        The goal of this method is to temporarily disable specific observers
-        that take action in response to application changes.
-
-        This allows the system to make changes (such as materialization and
-        rollback) that should not trigger secondary behavior (such as setting an
-        inverse relationship or marking records as dirty).
-
-        The specific implementation will likely change as Ember proper provides
-        better infrastructure for suspending groups of observers, and if Array
-        observation becomes more unified with regular observers.
-
-        @method suspendRelationshipObservers
-        @private
-        @param callback
-        @param binding
-      */
-      suspendRelationshipObservers: function(callback, binding) {
-        var observers = get(this.constructor, 'relationshipNames').belongsTo;
-        var self = this;
-
-        try {
-          this._suspendedRelationships = true;
-          Ember._suspendObservers(self, observers, null, 'belongsToDidChange', function() {
-            Ember._suspendBeforeObservers(self, observers, null, 'belongsToWillChange', function() {
-              callback.call(binding || self);
-            });
-          });
-        } finally {
-          this._suspendedRelationships = false;
-        }
       },
 
       /**
@@ -7610,18 +7117,6 @@ define("ember-data/system/model/states",
       @class RootState
     */
 
-    function hasDefinedProperties(object) {
-      // Ignore internal property defined by simulated `Ember.create`.
-      var names = Ember.keys(object);
-      var i, l, name;
-      for (i = 0, l = names.length; i < l; i++ ) {
-        name = names[i];
-        if (object.hasOwnProperty(name) && object[name]) { return true; }
-      }
-
-      return false;
-    }
-
     function didSetProperty(record, context) {
       if (context.value === context.originalValue) {
         delete record._attributes[context.name];
@@ -7696,12 +7191,8 @@ define("ember-data/system/model/states",
         loadingData: Ember.K,
 
         propertyWasReset: function(record, name) {
-          var stillDirty = false;
-
-          for (var prop in record._attributes) {
-            stillDirty = true;
-            break;
-          }
+          var length = Ember.keys(record._attributes);
+          var stillDirty = length > 0;
 
           if (!stillDirty) { record.send('rolledBack'); }
         },
@@ -7924,10 +7415,7 @@ define("ember-data/system/model/states",
 
         loadedData: function(record) {
           record.transitionTo('loaded.created.uncommitted');
-
-          record.suspendRelationshipObservers(function() {
-            record.notifyPropertyChange('data');
-          });
+          record.notifyPropertyChange('data');
         },
 
         pushedData: function(record) {
@@ -8171,6 +7659,91 @@ define("ember-data/system/model/states",
 
     __exports__["default"] = RootState;
   });
+define("ember-data/system/promise_proxies",
+  ["exports"],
+  function(__exports__) {
+    "use strict";
+    var Promise = Ember.RSVP.Promise;
+
+    /**
+      A `PromiseArray` is an object that acts like both an `Ember.Array`
+      and a promise. When the promise is resolved the resulting value
+      will be set to the `PromiseArray`'s `content` property. This makes
+      it easy to create data bindings with the `PromiseArray` that will be
+      updated when the promise resolves.
+
+      For more information see the [Ember.PromiseProxyMixin
+      documentation](/api/classes/Ember.PromiseProxyMixin.html).
+
+      Example
+
+      ```javascript
+      var promiseArray = DS.PromiseArray.create({
+        promise: $.getJSON('/some/remote/data.json')
+      });
+
+      promiseArray.get('length'); // 0
+
+      promiseArray.then(function() {
+        promiseArray.get('length'); // 100
+      });
+      ```
+
+      @class PromiseArray
+      @namespace DS
+      @extends Ember.ArrayProxy
+      @uses Ember.PromiseProxyMixin
+    */
+    var PromiseArray = Ember.ArrayProxy.extend(Ember.PromiseProxyMixin);
+
+    /**
+      A `PromiseObject` is an object that acts like both an `Ember.Object`
+      and a promise. When the promise is resolved, then the resulting value
+      will be set to the `PromiseObject`'s `content` property. This makes
+      it easy to create data bindings with the `PromiseObject` that will
+      be updated when the promise resolves.
+
+      For more information see the [Ember.PromiseProxyMixin
+      documentation](/api/classes/Ember.PromiseProxyMixin.html).
+
+      Example
+
+      ```javascript
+      var promiseObject = DS.PromiseObject.create({
+        promise: $.getJSON('/some/remote/data.json')
+      });
+
+      promiseObject.get('name'); // null
+
+      promiseObject.then(function() {
+        promiseObject.get('name'); // 'Tomster'
+      });
+      ```
+
+      @class PromiseObject
+      @namespace DS
+      @extends Ember.ObjectProxy
+      @uses Ember.PromiseProxyMixin
+    */
+    var PromiseObject = Ember.ObjectProxy.extend(Ember.PromiseProxyMixin);
+
+    var promiseObject = function(promise, label) {
+      return PromiseObject.create({
+        promise: Promise.resolve(promise, label)
+      });
+    };
+
+    var promiseArray = function(promise, label) {
+      return PromiseArray.create({
+        promise: Promise.resolve(promise, label)
+      });
+    };
+
+    __exports__.PromiseArray = PromiseArray;
+    __exports__.PromiseObject = PromiseObject;
+    __exports__.promiseArray = promiseArray;
+    __exports__.promiseObject = promiseObject;
+  });
 define("ember-data/system/record_array_manager",
   ["ember-data/system/record_arrays","exports"],
   function(__dependency1__, __exports__) {
@@ -8184,7 +7757,6 @@ define("ember-data/system/record_array_manager",
     var AdapterPopulatedRecordArray = __dependency1__.AdapterPopulatedRecordArray;
     var ManyArray = __dependency1__.ManyArray;
     var get = Ember.get;
-    var set = Ember.set;
     var forEach = Ember.EnumerableUtils.forEach;
 
     /**
@@ -8509,7 +8081,6 @@ define("ember-data/system/record_arrays/adapter_populated_record_array",
     */
 
     var get = Ember.get;
-    var set = Ember.set;
 
     function cloneNull(source) {
       var clone = Object.create(null);
@@ -8635,22 +8206,16 @@ define("ember-data/system/record_arrays/filtered_record_array",
     });
   });
 define("ember-data/system/record_arrays/many_array",
-  ["ember-data/system/record_arrays/record_array","ember-data/system/changes","exports"],
-  function(__dependency1__, __dependency2__, __exports__) {
+  ["ember-data/system/record_arrays/record_array","exports"],
+  function(__dependency1__, __exports__) {
     "use strict";
     var RecordArray = __dependency1__["default"];
-    var RelationshipChange = __dependency2__.RelationshipChange;
 
     /**
       @module ember-data
     */
 
     var get = Ember.get, set = Ember.set;
-    var map = Ember.EnumerableUtils.map;
-
-    function sync(change) {
-      change.sync();
-    }
 
     /**
       A `ManyArray` is a `RecordArray` that represents the contents of a has-many
@@ -8691,7 +8256,6 @@ define("ember-data/system/record_arrays/many_array",
     __exports__["default"] = RecordArray.extend({
       init: function() {
         this._super.apply(this, arguments);
-        this._changesToSync = Ember.OrderedSet.create();
       },
 
       /**
@@ -8721,6 +8285,16 @@ define("ember-data/system/record_arrays/many_array",
       // LOADING STATE
 
       isLoaded: false,
+
+       /**
+         The relationship which manages this array.
+
+         @property {DS.Model} owner
+         @private
+       */
+
+      relationship: null,
+
 
       /**
         Used for async `hasMany` arrays
@@ -8752,98 +8326,14 @@ define("ember-data/system/record_arrays/many_array",
         }
       },
 
-      /**
-        @method fetch
-        @private
-      */
-      fetch: function() {
-        var records = get(this, 'content');
-        var store = get(this, 'store');
-        var owner = get(this, 'owner');
-
-        var unloadedRecords = records.filterBy('isEmpty', true);
-        store.scheduleFetchMany(unloadedRecords, owner);
-      },
-
-      // Overrides Ember.Array's replace method to implement
-      replaceContent: function(index, removed, added) {
-        // Map the array of record objects into an array of  client ids.
-        added = map(added, function(record) {
-                    return record;
-        }, this);
-
-        this._super(index, removed, added);
-      },
-
-      arrangedContentDidChange: function() {
-        Ember.run.once(this, 'fetch');
-      },
-
-      arrayContentWillChange: function(index, removed, added) {
-        var owner = get(this, 'owner');
-        var name = get(this, 'name');
-
-        if (!owner._suspendedRelationships) {
-          // This code is the first half of code that continues inside
-          // of arrayContentDidChange. It gets or creates a change from
-          // the child object, adds the current owner as the old
-          // parent if this is the first time the object was removed
-          // from a ManyArray, and sets `newParent` to null.
-          //
-          // Later, if the object is added to another ManyArray,
-          // the `arrayContentDidChange` will set `newParent` on
-          // the change.
-          for (var i=index; i<index+removed; i++) {
-            var record = get(this, 'content').objectAt(i);
-
-            var change = RelationshipChange.createChange(owner, record, get(this, 'store'), {
-              parentType: owner.constructor,
-              changeType: "remove",
-              kind: "hasMany",
-              key: name
-            });
-
-            this._changesToSync.add(change);
-          }
+      replaceContent: function(idx, amt, objects){
+        var records;
+        if (amt > 0){
+          records = get(this, 'content').slice(idx, idx+amt);
+          this.get('relationship').removeRecords(records);
         }
-
-        return this._super.apply(this, arguments);
-      },
-
-      arrayContentDidChange: function(index, removed, added) {
-        this._super.apply(this, arguments);
-
-        var owner = get(this, 'owner');
-        var name = get(this, 'name');
-        var store = get(this, 'store');
-
-        if (!owner._suspendedRelationships) {
-          // This code is the second half of code that started in
-          // `arrayContentWillChange`. It gets or creates a change
-          // from the child object, and adds the current owner as
-          // the new parent.
-          for (var i=index; i<index+added; i++) {
-            var record = get(this, 'content').objectAt(i);
-
-            var change = RelationshipChange.createChange(owner, record, store, {
-              parentType: owner.constructor,
-              changeType: "add",
-              kind:"hasMany",
-              key: name
-            });
-            change.hasManyName = name;
-
-            this._changesToSync.add(change);
-          }
-
-          // We wait until the array has finished being
-          // mutated before syncing the OneToManyChanges created
-          // in arrayContentWillChange, so that the array
-          // membership test in the sync() logic operates
-          // on the final results.
-          this._changesToSync.forEach(sync);
-
-          this._changesToSync.clear();
+        if (objects){
+          this.get('relationship').addRecords(objects, idx);
         }
       },
 
@@ -8856,8 +8346,7 @@ define("ember-data/system/record_arrays/many_array",
         @return {DS.Model} record
       */
       createRecord: function(hash) {
-        var owner = get(this, 'owner');
-        var store = get(owner, 'store');
+        var store = get(this, 'store');
         var type = get(this, 'type');
         var record;
 
@@ -8870,7 +8359,7 @@ define("ember-data/system/record_arrays/many_array",
     });
   });
 define("ember-data/system/record_arrays/record_array",
-  ["ember-data/system/store","exports"],
+  ["ember-data/system/promise_proxies","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
     /**
@@ -8879,7 +8368,6 @@ define("ember-data/system/record_arrays/record_array",
 
     var PromiseArray = __dependency1__.PromiseArray;
     var get = Ember.get;
-    var set = Ember.set;
 
     /**
       A record array is an array that contains records of a certain type. The record
@@ -8999,9 +8487,17 @@ define("ember-data/system/record_arrays/record_array",
         @method addRecord
         @private
         @param {DS.Model} record
+        @param {DS.Model} an optional index to insert at
       */
-      addRecord: function(record) {
-        get(this, 'content').addObject(record);
+      addRecord: function(record, idx) {
+        var content = get(this, 'content');
+        if (idx === undefined) {
+          content.addObject(record);
+        } else {
+          if (!content.contains(record)) {
+           content.insertAt(idx, record);
+          }
+        }
       },
 
       /**
@@ -9103,14 +8599,7 @@ define("ember-data/system/relationship-meta",
       };
     }
 
-    __exports__.relationshipFromMeta = relationshipFromMeta;function isSyncRelationship(record, relationshipName) {
-      var meta = Ember.meta(record);
-      var desc = meta.descs[relationshipName];
-
-      return desc && !desc._meta.options.async;
-    }
-
-    __exports__.isSyncRelationship = isSyncRelationship;
+    __exports__.relationshipFromMeta = relationshipFromMeta;
   });
 define("ember-data/system/relationships",
   ["./relationships/belongs_to","./relationships/has_many","ember-data/system/relationships/ext","exports"],
@@ -9128,64 +8617,11 @@ define("ember-data/system/relationships",
     __exports__.hasMany = hasMany;
   });
 define("ember-data/system/relationships/belongs_to",
-  ["ember-data/system/model","ember-data/system/store","ember-data/system/changes","ember-data/system/relationship-meta","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
+  ["ember-data/system/model","exports"],
+  function(__dependency1__, __exports__) {
     "use strict";
-    var get = Ember.get;
-    var set = Ember.set;
-    var isNone = Ember.isNone;
-    var Promise = Ember.RSVP.Promise;
-
     var Model = __dependency1__.Model;
-    var PromiseObject = __dependency2__.PromiseObject;
-    var RelationshipChange = __dependency3__.RelationshipChange;
-    var relationshipFromMeta = __dependency4__.relationshipFromMeta;
-    var typeForRelationshipMeta = __dependency4__.typeForRelationshipMeta;
-    var isSyncRelationship = __dependency4__.isSyncRelationship;
 
-    /**
-      @module ember-data
-    */
-
-    function asyncBelongsTo(type, options, meta) {
-      return Ember.computed('data', function(key, value) {
-        var data = get(this, 'data');
-        var store = get(this, 'store');
-        var promiseLabel = "DS: Async belongsTo " + this + " : " + key;
-        var promise;
-
-        meta.key = key;
-
-        if (arguments.length === 2) {
-                    return value === undefined ? null : PromiseObject.create({
-            promise: Promise.cast(value, promiseLabel)
-          });
-        }
-
-        var link = data.links && data.links[key];
-        var belongsTo = data[key];
-
-        if (!isNone(belongsTo)) {
-          var inverse = this.constructor.inverseFor(key);
-          //but for now only in the oneToOne case
-          if (inverse && inverse.kind === 'belongsTo'){
-            set(belongsTo, inverse.name, this);
-          }
-          //TODO(Igor) after OR doesn't seem that will be called
-          promise = store.findById(belongsTo.constructor, belongsTo.get('id')) || Promise.cast(belongsTo, promiseLabel);
-          return PromiseObject.create({
-            promise: promise
-          });
-        } else if (link) {
-          promise = store.findBelongsTo(this, link, relationshipFromMeta(store, meta));
-          return PromiseObject.create({
-            promise: promise
-          });
-        } else {
-          return null;
-        }
-      }).meta(meta);
-    }
 
     /**
       `DS.belongsTo` is used to define One-To-One and One-To-Many
@@ -9251,32 +8687,15 @@ define("ember-data/system/relationships/belongs_to",
         key: null
       };
 
-      if (options.async) {
-        return asyncBelongsTo(type, options, meta);
-      }
-
-      return Ember.computed('data', function(key, value) {
-        var data = get(this, 'data');
-        var store = get(this, 'store');
-        var belongsTo, typeClass;
-
-        if (typeof type === 'string') {
-          typeClass = store.modelFor(type);
-        } else {
-          typeClass = type;
+      return Ember.computed(function(key, value) {
+        if (arguments.length>1) {
+          if ( value === undefined ) {
+            value = null;
+          }
+          this._relationships[key].setRecord(value);
         }
 
-        if (arguments.length === 2) {
-                    return value === undefined ? null : value;
-        }
-
-        belongsTo = data[key];
-
-        if (isNone(belongsTo)) { return null; }
-
-        store.findById(belongsTo.constructor, belongsTo.get('id'));
-
-        return belongsTo;
+        return this._relationships[key].getRecord();
       }).meta(meta);
     }
 
@@ -9288,72 +8707,26 @@ define("ember-data/system/relationships/belongs_to",
       @namespace DS
     */
     Model.reopen({
+      notifyBelongsToAdded: function(key, relationship) {
+        this.notifyPropertyChange(key);
+      },
 
-      /**
-        @method belongsToWillChange
-        @private
-        @static
-        @param record
-        @param key
-      */
-      belongsToWillChange: Ember.beforeObserver(function(record, key) {
-        if (get(record, 'isLoaded') && isSyncRelationship(record, key)) {
-          var oldParent = get(record, key);
-
-          if (oldParent) {
-            var store = get(record, 'store');
-            var change = RelationshipChange.createChange(record, oldParent, store, {
-              key: key,
-              kind: 'belongsTo',
-              changeType: 'remove'
-            });
-
-            change.sync();
-            this._changesToSync[key] = change;
-          }
-        }
-      }),
-
-      /**
-        @method belongsToDidChange
-        @private
-        @static
-        @param record
-        @param key
-      */
-      belongsToDidChange: Ember.immediateObserver(function(record, key) {
-        if (get(record, 'isLoaded')) {
-          var newParent = get(record, key);
-
-          if (newParent) {
-            var store = get(record, 'store');
-            var change = RelationshipChange.createChange(record, newParent, store, {
-              key: key,
-              kind: 'belongsTo',
-              changeType: 'add'
-            });
-
-            change.sync();
-          }
-        }
-
-        delete this._changesToSync[key];
-      })
+      notifyBelongsToRemoved: function(key) {
+        this.notifyPropertyChange(key);
+      }
     });
 
     __exports__["default"] = belongsTo;
   });
 define("ember-data/system/relationships/ext",
-  ["ember-inflector/system","ember-data/system/relationship-meta","ember-data/system/model"],
-  function(__dependency1__, __dependency2__, __dependency3__) {
+  ["ember-data/system/relationship-meta","ember-data/system/model"],
+  function(__dependency1__, __dependency2__) {
     "use strict";
-    var singularize = __dependency1__.singularize;
-    var typeForRelationshipMeta = __dependency2__.typeForRelationshipMeta;
-    var relationshipFromMeta = __dependency2__.relationshipFromMeta;
-    var Model = __dependency3__.Model;
+    var typeForRelationshipMeta = __dependency1__.typeForRelationshipMeta;
+    var relationshipFromMeta = __dependency1__.relationshipFromMeta;
+    var Model = __dependency2__.Model;
 
     var get = Ember.get;
-    var set = Ember.set;
 
     /**
       @module ember-data
@@ -9404,11 +8777,6 @@ define("ember-data/system/relationships/ext",
           // populated by the `DS.belongsTo` helper when it is creating
           // the computed property.
           var meta = value.meta();
-
-          if (meta.isRelationship && meta.kind === 'belongsTo') {
-            Ember.addObserver(proto, key, null, 'belongsToDidChange');
-            Ember.addBeforeObserver(proto, key, null, 'belongsToWillChange');
-          }
 
           meta.parentType = proto.constructor;
         }
@@ -9784,7 +9152,28 @@ define("ember-data/system/relationships/ext",
         get(this, 'relatedTypes').forEach(function(type) {
           callback.call(binding, type);
         });
+      },
+
+      determineRelationshipType: function(knownSide) {
+        var knownKey = knownSide.key;
+        var knownKind = knownSide.kind;
+        var inverse = this.inverseFor(knownKey);
+        var key, otherKind;
+
+        if (!inverse) {
+          return knownKind === 'belongsTo' ? 'oneToNone' : 'manyToNone';
+        }
+
+        key = inverse.name;
+        otherKind = inverse.kind;
+
+        if (otherKind === 'belongsTo') {
+          return knownKind === 'belongsTo' ? 'oneToOne' : 'manyToOne';
+        } else {
+          return knownKind === 'belongsTo' ? 'oneToMany' : 'manyToMany';
+        }
       }
+
     });
 
     Model.reopen({
@@ -9799,124 +9188,27 @@ define("ember-data/system/relationships/ext",
       */
       eachRelationship: function(callback, binding) {
         this.constructor.eachRelationship(callback, binding);
+      },
+
+      relationshipFor: function(name) {
+        return get(this.constructor, 'relationshipsByName').get(name);
+      },
+
+      inverseFor: function(key) {
+        return this.constructor.inverseFor(key);
       }
+
     });
   });
 define("ember-data/system/relationships/has_many",
-  ["ember-data/system/store","ember-data/system/relationship-meta","exports"],
-  function(__dependency1__, __dependency2__, __exports__) {
+  ["ember-data/system/model","exports"],
+  function(__dependency1__, __exports__) {
     "use strict";
     /**
       @module ember-data
     */
 
-    var PromiseArray = __dependency1__.PromiseArray;
-
-    var relationshipFromMeta = __dependency2__.relationshipFromMeta;
-    var typeForRelationshipMeta = __dependency2__.typeForRelationshipMeta;
-
-    var get = Ember.get;
-    var set = Ember.set;
-    var setProperties = Ember.setProperties;
-    var map = Ember.EnumerableUtils.map;
-
-    /**
-      Returns a computed property that synchronously returns a ManyArray for
-      this relationship. If not all of the records in this relationship are
-      loaded, it will raise an exception.
-    */
-
-    function syncHasMany(type, options, meta) {
-      return Ember.computed('data', function(key) {
-        return buildRelationship(this, key, options, function(store, data) {
-          // Configure the metadata for the computed property to contain
-          // the key.
-          meta.key = key;
-
-          var records = data[key];
-
-          
-          return store.findMany(this, data[key], typeForRelationshipMeta(store, meta));
-        });
-      }).meta(meta).readOnly();
-    }
-
-    /**
-      Returns a computed property that itself returns a promise that resolves to a
-      ManyArray.
-     */
-
-    function asyncHasMany(type, options, meta) {
-      return Ember.computed('data', function(key) {
-        // Configure the metadata for the computed property to contain
-        // the key.
-        meta.key = key;
-
-        var relationship = buildRelationship(this, key, options, function(store, data) {
-          var link = data.links && data.links[key];
-          var rel;
-          var promiseLabel = "DS: Async hasMany " + this + " : " + key;
-          var resolver = Ember.RSVP.defer(promiseLabel);
-
-          if (link) {
-            rel = store.findHasMany(this, link, relationshipFromMeta(store, meta), resolver);
-          } else {
-
-            //This is a temporary workaround for setting owner on the relationship
-            //until single source of truth lands. It only works for OneToMany atm
-            var records = data[key];
-            var inverse = this.constructor.inverseFor(key);
-            var owner = this;
-            if (inverse && records) {
-              if (inverse.kind === 'belongsTo'){
-                map(records, function(record){
-                  set(record, inverse.name, owner);
-                });
-              }
-            }
-
-            rel = store.findMany(owner, data[key], typeForRelationshipMeta(store, meta), resolver);
-          }
-
-          // Cache the promise so we can use it when we come back and don't
-          // need to rebuild the relationship.
-          set(rel, 'promise', resolver.promise);
-
-          return rel;
-        });
-
-        var promise = relationship.get('promise').then(function() {
-          return relationship;
-        }, null, "DS: Async hasMany records received");
-
-        return PromiseArray.create({
-          promise: promise
-        });
-      }).meta(meta).readOnly();
-    }
-
-    /*
-      Builds the ManyArray for a relationship using the provided callback,
-      but only if it had not been created previously. After building, it
-      sets some metadata on the created ManyArray, such as the record which
-      owns it and the name of the relationship.
-    */
-    function buildRelationship(record, key, options, callback) {
-      var rels = record._relationships;
-
-      if (rels[key]) { return rels[key]; }
-
-      var data = get(record, 'data');
-      var store = get(record, 'store');
-
-      var relationship = rels[key] = callback.call(record, store, data);
-
-      return setProperties(relationship, {
-        owner: record,
-        name: key,
-        isPolymorphic: options.polymorphic
-      });
-    }
+    var Model = __dependency1__.Model;
 
     /**
       `DS.hasMany` is used to define One-To-Many and Many-To-Many
@@ -10016,18 +9308,313 @@ define("ember-data/system/relationships/has_many",
         key: null
       };
 
-      if (options.async) {
-        return asyncHasMany(type, options, meta);
-      } else {
-        return syncHasMany(type, options, meta);
-      }
+      return Ember.computed(function(key) {
+        var relationship = this._relationships[key];
+        return relationship.getRecords();
+      }).meta(meta).readOnly();
     }
+
+    Model.reopen({
+      notifyHasManyAdded: function(key, record, idx) {
+        var relationship = this._relationships[key];
+        var manyArray = relationship.manyArray;
+        manyArray.addRecord(record, idx);
+        //We need to notifyPropertyChange in the adding case because we need to make sure
+        //we fetch the newly added record in case it is unloaded
+        //TODO(Igor): Consider whether we could do this only if the record state is unloaded
+        this.notifyPropertyChange(key);
+      },
+
+      notifyHasManyRemoved: function(key, record) {
+        var relationship = this._relationships[key];
+        var manyArray = relationship.manyArray;
+        manyArray.removeRecord(record);
+      }
+    });
+
 
     __exports__["default"] = hasMany;
   });
+define("ember-data/system/relationships/relationship",
+  ["ember-data/system/promise_proxies","exports"],
+  function(__dependency1__, __exports__) {
+    "use strict";
+    var PromiseArray = __dependency1__.PromiseArray;
+    var PromiseObject = __dependency1__.PromiseObject;
+
+    var Relationship = function(store, record, inverseKey, relationshipMeta) {
+      this.members = new Ember.OrderedSet();
+      this.store = store;
+      this.key = relationshipMeta.key;
+      this.inverseKey = inverseKey;
+      this.record = record;
+      this.key = relationshipMeta.key;
+      this.isAsync = relationshipMeta.options.async;
+      this.relationshipMeta = relationshipMeta;
+    };
+
+    Relationship.prototype = {
+      constructor: Relationship,
+      hasFetchedLink: false,
+
+      destroy: Ember.K,
+
+      clear: function() {
+        this.members.forEach(function(member) {
+          this.removeRecord(member);
+        }, this);
+      },
+
+      removeRecords: function(records){
+        var that = this;
+        records.forEach(function(record){
+          that.removeRecord(record);
+        });
+      },
+
+      addRecords: function(records, idx){
+        var that = this;
+        records.forEach(function(record){
+          that.addRecord(record, idx);
+          if (idx !== undefined) {
+            idx++;
+          }
+        });
+      },
+
+
+      addRecord: function(record, idx) {
+        if (!this.members.has(record)) {
+          this.members.add(record);
+          this.notifyRecordRelationshipAdded(record, idx);
+          if (this.inverseKey) {
+            record._relationships[this.inverseKey].addRecord(this.record);
+          }
+          this.record.updateRecordArrays();
+        }
+      },
+
+      removeRecord: function(record) {
+        if (this.members.has(record)) {
+          this.members.remove(record);
+          this.notifyRecordRelationshipRemoved(record);
+          if (this.inverseKey) {
+            var inverseRelationship = record._relationships[this.inverseKey];
+            //Need to check for existence, as the record might unloading at the moment
+            if (inverseRelationship) {
+              inverseRelationship.removeRecord(this.record);
+            }
+          }
+          this.record.updateRecordArrays();
+        }
+      },
+
+      updateLink: function(link) {
+        if (link !== this.link) {
+          this.link = link;
+          this.hasFetchedLink = false;
+          this.record.notifyPropertyChange(this.key);
+        }
+      },
+
+      updateRecordsFromAdapter: function(records) {
+        //TODO Once we have adapter support, we need to handle updated and canonical changes
+        this.computeChanges(records);
+      }
+    };
+
+    var ManyRelationship = function(store, record, inverseKey, relationshipMeta) {
+      this._super$constructor(store, record, inverseKey, relationshipMeta);
+      this.belongsToType = relationshipMeta.type;
+      this.manyArray = store.recordArrayManager.createManyArray(this.belongsToType, Ember.A());
+      this.manyArray.relationship = this;
+      this.isPolymorphic = relationshipMeta.options.polymorphic;
+      this.manyArray.isPolymorphic = this.isPolymorphic;
+    };
+
+    ManyRelationship.prototype = Object.create(Relationship.prototype);
+    ManyRelationship.prototype.constructor = ManyRelationship;
+    ManyRelationship.prototype._super$constructor = Relationship;
+
+    ManyRelationship.prototype.destroy = function() {
+      this.manyArray.destroy();
+    };
+
+    ManyRelationship.prototype.notifyRecordRelationshipAdded = function(record, idx) {
+            this.record.notifyHasManyAdded(this.key, record, idx);
+    };
+
+    ManyRelationship.prototype.notifyRecordRelationshipRemoved = function(record) {
+      this.record.notifyHasManyRemoved(this.key, record);
+    };
+
+    ManyRelationship.prototype.computeChanges = function(records) {
+      var members = this.members;
+
+      records = setForArray(records);
+
+      members.forEach(function(member) {
+        if (records.has(member)) return;
+
+        this.removeRecord(member);
+      }, this);
+
+      var hasManyArray = this.manyArray;
+
+      records.forEach(function(record, index) {
+        //Need to preserve the order of incoming records
+        if (hasManyArray.objectAt(index) === record ) return;
+
+        this.removeRecord(record);
+        this.addRecord(record, index);
+      }, this);
+    };
+
+
+    ManyRelationship.prototype.getRecords = function() {
+      if (this.isAsync) {
+        var self = this;
+        var promise;
+        if (this.link && !this.hasFetchedLink) {
+          promise = this.store.findHasMany(this.record, this.link, this.relationshipMeta).then(function(records){
+            self.updateRecordsFromAdapter(records);
+            self.hasFetchedLink = true;
+            //TODO(Igor) try to abstract the isLoaded part
+            self.manyArray.set('isLoaded', true);
+            return self.manyArray;
+          });
+        } else {
+          var manyArray = this.manyArray;
+          promise = this.store.findMany(manyArray.toArray()).then(function(){
+            self.manyArray.set('isLoaded', true);
+            return manyArray;
+          });
+        }
+        return PromiseArray.create({
+          promise: promise
+        });
+      } else {
+          
+        this.manyArray.set('isLoaded', true);
+        return this.manyArray;
+     }
+    };
+
+    var BelongsToRelationship = function(store, record, inverseKey, relationshipMeta) {
+      this._super$constructor(store, record, inverseKey, relationshipMeta);
+      this.members.add(record);
+      this.record = record;
+      this.key = relationshipMeta.key;
+      this.inverseKey = inverseKey;
+      this.inverseRecord = null;
+    };
+
+    BelongsToRelationship.prototype = Object.create(Relationship.prototype);
+    BelongsToRelationship.prototype.constructor = BelongsToRelationship;
+    BelongsToRelationship.prototype._super$constructor = Relationship;
+
+    BelongsToRelationship.prototype.setRecord = function(newRecord) {
+      if (newRecord) {
+        this.addRecord(newRecord);
+      } else if (this.inverseRecord) {
+        this.removeRecord(this.inverseRecord);
+      }
+    };
+
+    BelongsToRelationship.prototype._super$addRecord = Relationship.prototype.addRecord;
+    BelongsToRelationship.prototype.addRecord = function(newRecord) {
+      if (this.members.has(newRecord)){ return;}
+      var type = this.relationshipMeta.type;
+      
+      if (this.inverseRecord && this.inverseKey) {
+        this.removeRecord(this.inverseRecord);
+      }
+
+      this.inverseRecord = newRecord;
+      this._super$addRecord(newRecord);
+    };
+
+    BelongsToRelationship.prototype.notifyRecordRelationshipAdded = function(newRecord) {
+      this.record.notifyBelongsToAdded(this.key, this);
+    };
+
+    BelongsToRelationship.prototype.notifyRecordRelationshipRemoved = function(record) {
+      this.record.notifyBelongsToRemoved(this.key, this);
+    };
+
+    BelongsToRelationship.prototype._super$removeRecord = Relationship.prototype.removeRecord;
+    BelongsToRelationship.prototype.removeRecord = function(record) {
+      if (!this.members.has(record)){ return;}
+      this._super$removeRecord(record);
+      this.inverseRecord = null;
+    };
+
+    BelongsToRelationship.prototype.currentOtherSideFor = function() {
+      return this.inverseRecord;
+    };
+
+    BelongsToRelationship.prototype.getRecord = function() {
+      if (this.isAsync) {
+        var promise;
+
+        if (this.link && !this.hasFetchedLink){
+          var self = this;
+          promise = this.store.findBelongsTo(this.record, this.link, this.relationshipMeta).then(function(record){
+            self.addRecord(record);
+            self.hasFetchedLink = true;
+            return record;
+          });
+        } else if (this.inverseRecord) {
+          promise = this.store._findByRecord(this.inverseRecord);
+        } else {
+          promise = Ember.RSVP.Promise.resolve(null);
+        }
+
+        return PromiseObject.create({
+          promise: promise
+        });
+      } else {
+                return this.inverseRecord;
+      }
+    };
+
+    function setForArray(array) {
+      var set = new Ember.OrderedSet();
+
+      if (array) {
+        for (var i=0, l=array.length; i<l; i++) {
+          set.add(array[i]);
+        }
+      }
+
+      return set;
+    }
+
+    var createRelationshipFor = function(record, relationshipMeta, store){
+      var inverseKey;
+      var inverse = record.constructor.inverseFor(relationshipMeta.key);
+
+      if (inverse) {
+        inverseKey = inverse.name;
+      }
+
+      if (relationshipMeta.kind === 'hasMany'){
+        return new ManyRelationship(store, record, inverseKey, relationshipMeta);
+      }
+      else {
+        return new BelongsToRelationship(store, record, inverseKey, relationshipMeta);
+      }
+    };
+
+
+    __exports__.Relationship = Relationship;
+    __exports__.ManyRelationship = ManyRelationship;
+    __exports__.BelongsToRelationship = BelongsToRelationship;
+    __exports__.createRelationshipFor = createRelationshipFor;
+  });
 define("ember-data/system/store",
-  ["ember-data/system/adapter","ember-inflector/system/string","exports"],
-  function(__dependency1__, __dependency2__, __exports__) {
+  ["ember-data/system/adapter","ember-inflector/system/string","ember-data/system/promise_proxies","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
     "use strict";
     /*globals Ember*/
     /*jshint eqnull:true*/
@@ -10040,6 +9627,10 @@ define("ember-data/system/store",
     var Adapter = __dependency1__.Adapter;
     var singularize = __dependency2__.singularize;
 
+    var promiseArray = __dependency3__.promiseArray;
+    var promiseObject = __dependency3__.promiseObject;
+
+
     var get = Ember.get;
     var set = Ember.set;
     var once = Ember.run.once;
@@ -10049,7 +9640,7 @@ define("ember-data/system/store",
     var map = Ember.EnumerableUtils.map;
     var Promise = Ember.RSVP.Promise;
     var copy = Ember.copy;
-    var Store, PromiseObject, PromiseArray, RecordArrayManager, Model;
+    var Store, RecordArrayManager, Model;
 
     var camelize = Ember.String.camelize;
 
@@ -10170,7 +9761,6 @@ define("ember-data/system/store",
         this.recordArrayManager = RecordArrayManager.create({
           store: this
         });
-        this._relationshipChanges = {};
         this._pendingSave = [];
         //Used to keep track of all the find requests that need to be coalesced
         this._pendingFetch = Ember.Map.create();
@@ -10381,10 +9971,10 @@ define("ember-data/system/store",
 
         ---
 
-        You can optionally preload specific attributes and relationships that you know of
+        You can optionally `preload` specific attributes and relationships that you know of
         by passing them as the third argument to find.
 
-        For example, if your Ember route looks like `/posts/1/comments/2` and you API route
+        For example, if your Ember route looks like `/posts/1/comments/2` and your API route
         for the comment also looks like `/posts/1/comments/2` if you want to fetch the comment
         without fetching the post you can pass in the post to the `find` call:
 
@@ -10432,6 +10022,7 @@ define("ember-data/system/store",
         @method find
         @param {String or subclass of DS.Model} type
         @param {Object|String|Integer|null} id
+        @param {Object} preload - optional set of attributes and relationships passed in either as IDs or as actual models
         @return {Promise} promise
       */
       find: function(type, id, preload) {
@@ -10455,13 +10046,19 @@ define("ember-data/system/store",
         @private
         @param {String or subclass of DS.Model} type
         @param {String|Integer} id
+        @param {Object} preload - optional set of attributes and relationships passed in either as IDs or as actual models
         @return {Promise} promise
       */
       findById: function(typeName, id, preload) {
-        var fetchedRecord;
 
         var type = this.modelFor(typeName);
         var record = this.recordForId(type, id);
+
+        return this._findByRecord(record, preload);
+      },
+
+      _findByRecord: function(record, preload) {
+        var fetchedRecord;
 
         if (preload) {
           record._preloadData(preload);
@@ -10474,7 +10071,7 @@ define("ember-data/system/store",
           fetchedRecord = record._loadingPromise;
         }
 
-        return promiseObject(fetchedRecord || record, "DS: Store#findById " + type + " with id: " + id);
+        return promiseObject(fetchedRecord || record, "DS: Store#findByRecord " + record.typeKey + " with id: " + get(record, 'id'));
       },
 
       /**
@@ -10489,7 +10086,6 @@ define("ember-data/system/store",
       */
       findByIds: function(type, ids) {
         var store = this;
-        var promiseLabel = "DS: Store#findByIds " + type;
 
         return promiseArray(Ember.RSVP.all(map(ids, function(id) {
           return store.findById(type, id);
@@ -10558,7 +10154,6 @@ define("ember-data/system/store",
         var adapter = store.adapterFor(type);
         var shouldCoalesce = !!adapter.findMany && adapter.coalesceFindRequests;
         var records = Ember.A(recordResolverPairs).mapBy('record');
-        var resolvers = Ember.A(recordResolverPairs).mapBy('resolver');
 
         function _fetchRecord(recordResolverPair) {
           recordResolverPair.resolver.resolve(store.fetchRecord(recordResolverPair.record));
@@ -10715,28 +10310,13 @@ define("ember-data/system/store",
         @param {Resolver} resolver
         @return {DS.ManyArray} records
       */
-      findMany: function(owner, inputRecords, typeName, resolver) {
-        var type = this.modelFor(typeName);
-        var records = Ember.A(inputRecords);
-        var unloadedRecords = records.filterProperty('isEmpty', true);
-        var manyArray = this.recordArrayManager.createManyArray(type, records);
-
-        manyArray.loadingRecordsCount = unloadedRecords.length;
-
-        if (unloadedRecords.length) {
-          forEach(unloadedRecords, function(record) {
-            this.recordArrayManager.registerWaitingRecordArray(record, manyArray);
-          }, this);
-
-          resolver.resolve(this.scheduleFetchMany(unloadedRecords, owner));
-        } else {
-          if (resolver) { resolver.resolve(); }
-          manyArray.set('isLoaded', true);
-          once(manyArray, 'trigger', 'didLoad');
-        }
-
-        return manyArray;
+      findMany: function(records) {
+        var store = this;
+        return Promise.all( map(records, function(record) {
+          return store._findByRecord(record);
+        }));
       },
+
 
       /**
         If a relationship was originally populated by the adapter as a link
@@ -10756,13 +10336,11 @@ define("ember-data/system/store",
         @param {String or subclass of DS.Model} type
         @return {Promise} promise
       */
-      findHasMany: function(owner, link, relationship, resolver) {
+      findHasMany: function(owner, link, type) {
         var adapter = this.adapterFor(owner.constructor);
 
                 
-        var records = this.recordArrayManager.createManyArray(relationship.type, Ember.A([]));
-        resolver.resolve(_findHasMany(adapter, this, owner, link, relationship));
-        return records;
+        return _findHasMany(adapter, this, owner, link, type);
       },
 
       /**
@@ -11102,6 +10680,7 @@ define("ember-data/system/store",
         if (data) {
           // normalize relationship IDs into records
           data = normalizeRelationships(this, record.constructor, data, record);
+          setupRelationships(this, record, data);
 
           this.updateId(record, data);
         }
@@ -11222,11 +10801,11 @@ define("ember-data/system/store",
         var factory;
 
         if (typeof key === 'string') {
-          var normalizedKey = this.container.normalize('model:' + key);
-
-          factory = this.container.lookupFactory(normalizedKey);
-          if (!factory) { throw new Ember.Error("No model was found for '" + key + "'"); }
-          factory.typeKey = this._normalizeTypeKey(normalizedKey.split(':', 2)[1]);
+          factory = this.container.lookupFactory('model:' + key);
+          if (!factory) {
+            throw new Ember.Error("No model was found for '" + key + "'");
+          }
+          factory.typeKey = factory.typeKey || this._normalizeTypeKey(key);
         } else {
           // A factory already supplied. Ensure it has a normalized key.
           factory = key;
@@ -11304,16 +10883,28 @@ define("ember-data/system/store",
         // _partial is an internal param used by `update`.
         // If passed, it means that the data should be
         // merged into the existing data, not replace it.
-
-        
+                
         var type = this.modelFor(typeName);
 
-        // normalize relationship IDs into records
+        // If the payload contains relationships that are specified as
+        // IDs, normalizeRelationships will convert them into DS.Model instances
+        // (possibly unloaded) before we push the payload into the
+        // store.
+
         data = normalizeRelationships(this, type, data);
+
+        // Actually load the record into the store.
 
         this._load(type, data, _partial);
 
-        return this.recordForId(type, data.id);
+        var record = this.recordForId(type, data.id);
+
+        // Now that the pushed record as well as any related records
+        // are in the store, create the data structures used to track
+        // relationships.
+        setupRelationships(this, record, data);
+
+        return record;
       },
 
       /**
@@ -11446,9 +11037,14 @@ define("ember-data/system/store",
         @return {Array}
       */
       pushMany: function(type, datas) {
-        return map(datas, function(data) {
-          return this.push(type, data);
-        }, this);
+        var length = datas.length;
+        var result = new Array(length);
+
+        for (var i = 0; i < length; i++) {
+          result[i] = this.push(type, datas[i]);
+        }
+
+        return result;
       },
 
       /**
@@ -11531,59 +11127,6 @@ define("ember-data/system/store",
         typeMap.records.splice(loc, 1);
       },
 
-      // ........................
-      // . RELATIONSHIP CHANGES .
-      // ........................
-
-      addRelationshipChangeFor: function(childRecord, childKey, parentRecord, parentKey, change) {
-        var clientId = childRecord.clientId;
-        var parentClientId = parentRecord ? parentRecord : parentRecord;
-        var key = childKey + parentKey;
-        var changes = this._relationshipChanges;
-
-        if (!(clientId in changes)) {
-          changes[clientId] = {};
-        }
-        if (!(parentClientId in changes[clientId])) {
-          changes[clientId][parentClientId] = {};
-        }
-        if (!(key in changes[clientId][parentClientId])) {
-          changes[clientId][parentClientId][key] = {};
-        }
-        changes[clientId][parentClientId][key][change.changeType] = change;
-      },
-
-      removeRelationshipChangeFor: function(clientRecord, childKey, parentRecord, parentKey, type) {
-        var clientId = clientRecord.clientId;
-        var parentClientId = parentRecord ? parentRecord.clientId : parentRecord;
-        var changes = this._relationshipChanges;
-        var key = childKey + parentKey;
-
-        if (!(clientId in changes) || !(parentClientId in changes[clientId]) || !(key in changes[clientId][parentClientId])){
-          return;
-        }
-        delete changes[clientId][parentClientId][key][type];
-      },
-
-      relationshipChangePairsFor: function(record){
-        var toReturn = [];
-
-        if( !record ) { return toReturn; }
-
-        //TODO(Igor) What about the other side
-        var changesObject = this._relationshipChanges[record.clientId];
-        for (var objKey in changesObject){
-          if (changesObject.hasOwnProperty(objKey)){
-            for (var changeKey in changesObject[objKey]){
-              if (changesObject[objKey].hasOwnProperty(changeKey)){
-                toReturn.push(changesObject[objKey][changeKey]);
-              }
-            }
-          }
-        }
-        return toReturn;
-      },
-
       // ......................
       // . PER-TYPE ADAPTERS
       // ......................
@@ -11637,7 +11180,6 @@ define("ember-data/system/store",
       willDestroy: function() {
         var typeMaps = this.typeMaps;
         var keys = Ember.keys(typeMaps);
-        var store = this;
 
         var types = map(keys, byType);
 
@@ -11665,30 +11207,15 @@ define("ember-data/system/store",
       }
     });
 
+
     function normalizeRelationships(store, type, data, record) {
       type.eachRelationship(function(key, relationship) {
-        // A link (usually a URL) was already provided in
-        // normalized form
-        if (data.links && data.links[key]) {
-          if (record && relationship.options.async) { record._relationships[key] = null; }
-          return;
-        }
-
         var kind = relationship.kind;
         var value = data[key];
-
-        if (value == null) {
-          if (kind === 'hasMany' && record) {
-            value = data[key] = record.get(key).toArray();
-          }
-          return;
-        }
-
         if (kind === 'belongsTo') {
           deserializeRecordId(store, data, key, relationship, value);
         } else if (kind === 'hasMany') {
           deserializeRecordIds(store, data, key, relationship, value);
-          addUnsavedRecords(record, key, value);
         }
       });
 
@@ -11721,104 +11248,16 @@ define("ember-data/system/store",
     }
 
     function deserializeRecordIds(store, data, key, relationship, ids) {
+      if (!Ember.isArray(ids)) {
+        return;
+      }
       for (var i=0, l=ids.length; i<l; i++) {
         deserializeRecordId(store, ids, i, relationship, ids[i]);
       }
     }
 
-    // If there are any unsaved records that are in a hasMany they won't be
-    // in the payload, so add them back in manually.
-    function addUnsavedRecords(record, key, data) {
-      if(record) {
-        var unsavedRecords = uniqById(Ember.A(data), record.get(key).filterBy('isNew'));
-        Ember.A(data).pushObjects(unsavedRecords);
-      }
-    }
-
-    function uniqById(data, records) {
-      var currentIds = data.mapBy("id");
-      return records.reject(function(record) {
-        return Ember.A(currentIds).contains(record.id);
-      });
-    }
-
     // Delegation to the adapter and promise management
-    /**
-      A `PromiseArray` is an object that acts like both an `Ember.Array`
-      and a promise. When the promise is resolved the resulting value
-      will be set to the `PromiseArray`'s `content` property. This makes
-      it easy to create data bindings with the `PromiseArray` that will be
-      updated when the promise resolves.
 
-      For more information see the [Ember.PromiseProxyMixin
-      documentation](/api/classes/Ember.PromiseProxyMixin.html).
-
-      Example
-
-      ```javascript
-      var promiseArray = DS.PromiseArray.create({
-        promise: $.getJSON('/some/remote/data.json')
-      });
-
-      promiseArray.get('length'); // 0
-
-      promiseArray.then(function() {
-        promiseArray.get('length'); // 100
-      });
-      ```
-
-      @class PromiseArray
-      @namespace DS
-      @extends Ember.ArrayProxy
-      @uses Ember.PromiseProxyMixin
-    */
-    PromiseArray = Ember.ArrayProxy.extend(Ember.PromiseProxyMixin);
-    /**
-      A `PromiseObject` is an object that acts like both an `Ember.Object`
-      and a promise. When the promise is resolved, then the resulting value
-      will be set to the `PromiseObject`'s `content` property. This makes
-      it easy to create data bindings with the `PromiseObject` that will
-      be updated when the promise resolves.
-
-      For more information see the [Ember.PromiseProxyMixin
-      documentation](/api/classes/Ember.PromiseProxyMixin.html).
-
-      Example
-
-      ```javascript
-      var promiseObject = DS.PromiseObject.create({
-        promise: $.getJSON('/some/remote/data.json')
-      });
-
-      promiseObject.get('name'); // null
-
-      promiseObject.then(function() {
-        promiseObject.get('name'); // 'Tomster'
-      });
-      ```
-
-      @class PromiseObject
-      @namespace DS
-      @extends Ember.ObjectProxy
-      @uses Ember.PromiseProxyMixin
-    */
-    PromiseObject = Ember.ObjectProxy.extend(Ember.PromiseProxyMixin);
-
-    function promiseObject(promise, label) {
-      return PromiseObject.create({
-        promise: Promise.cast(promise, label)
-      });
-    }
-
-    function promiseArray(promise, label) {
-      return PromiseArray.create({
-        promise: Promise.cast(promise, label)
-      });
-    }
-
-    function isThenable(object) {
-      return object && typeof object.then === 'function';
-    }
 
     function serializerFor(container, type, defaultSerializer) {
       return container.lookup('serializer:'+type) ||
@@ -11903,8 +11342,6 @@ define("ember-data/system/store",
         throw new Error('adapter.findMany returned undefined, this was very likely a mistake');
       }
 
-      var guardedPromise;
-
       promise = Promise.cast(promise, label);
       promise = _guard(promise, _bind(_objectIsAlive, store));
 
@@ -11930,7 +11367,7 @@ define("ember-data/system/store",
 
         
         var records = store.pushMany(relationship.type, payload);
-        record.updateHasMany(relationship.key, records);
+        return records;
       }, null, "DS: Extract payload of " + record + " : hasMany " + relationship.type);
     }
 
@@ -11946,8 +11383,6 @@ define("ember-data/system/store",
       return promise.then(function(adapterPayload) {
         var payload = serializer.extract(store, relationship.type, adapterPayload, null, 'findBelongsTo');
         var record = store.push(relationship.type, payload);
-
-        record.updateBelongsTo(relationship.key, record);
         return record;
       }, null, "DS: Extract payload of " + record + " : " + relationship.type);
     }
@@ -12020,10 +11455,30 @@ define("ember-data/system/store",
       }, label);
     }
 
-    __exports__.Store = Store;
-    __exports__.PromiseArray = PromiseArray;
-    __exports__.PromiseObject = PromiseObject;
+    function setupRelationships(store, record, data) {
+      var type = record.constructor;
 
+      type.eachRelationship(function(key, descriptor) {
+        var kind = descriptor.kind;
+        var value = data[key];
+        var relationship = record._relationships[key];
+
+        if (data.links && data.links[key]) {
+          relationship.updateLink(data.links[key]);
+        }
+
+        if (kind === 'belongsTo') {
+          if (value === undefined) {
+            return;
+          }
+          relationship.setRecord(value);
+        } else if (kind === 'hasMany' && value) {
+         relationship.updateRecordsFromAdapter(value);
+        }
+      });
+    }
+
+    __exports__.Store = Store;
     __exports__["default"] = Store;
   });
 define("ember-data/transforms",
