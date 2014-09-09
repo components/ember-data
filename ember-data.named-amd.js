@@ -1833,11 +1833,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.10+canary.942bcf3ac2'
+        @default '1.0.0-beta.10+canary.a97b492a05'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.10+canary.942bcf3ac2'
+        VERSION: '1.0.0-beta.10+canary.a97b492a05'
       });
 
       if (Ember.libraries) {
@@ -6420,12 +6420,6 @@ define("ember-data/system/model/model",
         }, this);
       },
 
-      disconnectRelationships: function() {
-        this.eachRelationship(function(name, relationship) {
-          this._relationships[name].disconnect();
-        }, this);
-      },
-
       /**
         @method updateRecordArrays
         @private
@@ -7177,7 +7171,7 @@ define("ember-data/system/model/states",
         // EVENTS
         deleteRecord: function(record) {
           record.transitionTo('deleted.uncommitted');
-          record.disconnectRelationships();
+          record.clearRelationships();
         },
 
         didSetProperty: function(record, context) {
@@ -7258,7 +7252,7 @@ define("ember-data/system/model/states",
     });
 
     createdState.uncommitted.deleteRecord = function(record) {
-      record.disconnectRelationships();
+      record.clearRelationships();
       record.transitionTo('deleted.saved');
     };
 
@@ -7277,7 +7271,7 @@ define("ember-data/system/model/states",
 
     updatedState.uncommitted.deleteRecord = function(record) {
       record.transitionTo('deleted.uncommitted');
-      record.disconnectRelationships();
+      record.clearRelationships();
     };
 
     var RootState = {
@@ -7418,7 +7412,7 @@ define("ember-data/system/model/states",
 
           deleteRecord: function(record) {
             record.transitionTo('deleted.uncommitted');
-            record.disconnectRelationships();
+            record.clearRelationships();
           },
 
           unloadRecord: function(record) {
@@ -9285,12 +9279,6 @@ define("ember-data/system/relationships/relationship",
         }, this);
       },
 
-      disconnect: function(){
-        this.members.forEach(function(member) {
-          this.removeRecordFromInverse(member);
-        }, this);
-      },
-
       removeRecords: function(records){
         var that = this;
         records.forEach(function(record){
@@ -9308,6 +9296,7 @@ define("ember-data/system/relationships/relationship",
         });
       },
 
+
       addRecord: function(record, idx) {
         if (!this.members.has(record)) {
           this.members.add(record);
@@ -9321,25 +9310,17 @@ define("ember-data/system/relationships/relationship",
 
       removeRecord: function(record) {
         if (this.members.has(record)) {
-          this.removeRecordFromOwn(record);
+          this.members.remove(record);
+          this.notifyRecordRelationshipRemoved(record);
           if (this.inverseKey) {
-            this.removeRecordFromInverse(record);
+            var inverseRelationship = record._relationships[this.inverseKey];
+            //Need to check for existence, as the record might unloading at the moment
+            if (inverseRelationship) {
+              inverseRelationship.removeRecord(this.record);
+            }
           }
+          this.record.updateRecordArrays();
         }
-      },
-
-      removeRecordFromInverse: function(record) {
-        var inverseRelationship = record._relationships[this.inverseKey];
-        //Need to check for existence, as the record might unloading at the moment
-        if (inverseRelationship) {
-          inverseRelationship.removeRecordFromOwn(this.record);
-        }
-      },
-
-      removeRecordFromOwn: function(record) {
-        this.members.remove(record);
-        this.notifyRecordRelationshipRemoved(record);
-        this.record.updateRecordArrays();
       },
 
       updateLink: function(link) {
@@ -9437,6 +9418,7 @@ define("ember-data/system/relationships/relationship",
 
     var BelongsToRelationship = function(store, record, inverseKey, relationshipMeta) {
       this._super$constructor(store, record, inverseKey, relationshipMeta);
+      this.members.add(record);
       this.record = record;
       this.key = relationshipMeta.key;
       this.inverseKey = inverseKey;
@@ -9477,11 +9459,15 @@ define("ember-data/system/relationships/relationship",
       this.record.notifyBelongsToRemoved(this.key, this);
     };
 
-    BelongsToRelationship.prototype._super$removeRecordFromOwn = Relationship.prototype.removeRecordFromOwn;
-    BelongsToRelationship.prototype.removeRecordFromOwn = function(record) {
+    BelongsToRelationship.prototype._super$removeRecord = Relationship.prototype.removeRecord;
+    BelongsToRelationship.prototype.removeRecord = function(record) {
       if (!this.members.has(record)){ return;}
-      this._super$removeRecordFromOwn(record);
+      this._super$removeRecord(record);
       this.inverseRecord = null;
+    };
+
+    BelongsToRelationship.prototype.currentOtherSideFor = function() {
+      return this.inverseRecord;
     };
 
     BelongsToRelationship.prototype.getRecord = function() {
