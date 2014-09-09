@@ -1353,7 +1353,7 @@ define("ember-data/adapters/rest_adapter",
         @param {String} url
         @return {Promise} promise
       */
-      findHasMany: function(store, record, url) {
+      findHasMany: function(store, record, url, relationship) {
         var host = get(this, 'host');
         var id   = get(record, 'id');
         var type = record.constructor.typeKey;
@@ -1392,7 +1392,7 @@ define("ember-data/adapters/rest_adapter",
         @param {String} url
         @return {Promise} promise
       */
-      findBelongsTo: function(store, record, url) {
+      findBelongsTo: function(store, record, url, relationship) {
         var id   = get(record, 'id');
         var type = record.constructor.typeKey;
 
@@ -1828,11 +1828,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.10+canary.a97b492a05'
+        @default '1.0.0-beta.10+canary.430024ffb0'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.10+canary.a97b492a05'
+        VERSION: '1.0.0-beta.10+canary.430024ffb0'
       });
 
       if (Ember.libraries) {
@@ -9364,7 +9364,7 @@ define("ember-data/system/relationships/relationship",
         var self = this;
         var promise;
         if (this.link && !this.hasFetchedLink) {
-          promise = this.store.findHasMany(this.record, this.link, this.belongsToType).then(function(records){
+          promise = this.store.findHasMany(this.record, this.link, this.relationshipMeta).then(function(records){
             self.updateRecordsFromAdapter(records);
             self.hasFetchedLink = true;
             //TODO(Igor) try to abstract the isLoaded part
@@ -11241,22 +11241,22 @@ define("ember-data/system/store",
       }, null, "DS: Extract payload of " + type);
     }
 
-    function _findHasMany(adapter, store, record, link, type) {
-      var promise = adapter.findHasMany(store, record, link);
-      var serializer = serializerForAdapter(adapter, type);
-      var label = "DS: Handle Adapter#findHasMany of " + record + " : " + type;
+    function _findHasMany(adapter, store, record, link, relationship) {
+      var promise = adapter.findHasMany(store, record, link, relationship);
+      var serializer = serializerForAdapter(adapter, relationship.type);
+      var label = "DS: Handle Adapter#findHasMany of " + record + " : " + relationship.type;
 
       promise = Promise.cast(promise, label);
       promise = _guard(promise, _bind(_objectIsAlive, store));
       promise = _guard(promise, _bind(_objectIsAlive, record));
 
       return promise.then(function(adapterPayload) {
-        var payload = serializer.extract(store, type, adapterPayload, null, 'findHasMany');
+        var payload = serializer.extract(store, relationship.type, adapterPayload, null, 'findHasMany');
 
         
-        var records = store.pushMany(type, payload);
+        var records = store.pushMany(relationship.type, payload);
         return records;
-      }, null, "DS: Extract payload of " + record + " : hasMany " + type);
+      }, null, "DS: Extract payload of " + record + " : hasMany " + relationship.type);
     }
 
     function _findBelongsTo(adapter, store, record, link, relationship) {
