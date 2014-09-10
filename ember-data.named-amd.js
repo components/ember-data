@@ -1833,11 +1833,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.12ecc96f40'
+        @default '1.0.0-beta.11+canary.271990ee23'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.12ecc96f40'
+        VERSION: '1.0.0-beta.11+canary.271990ee23'
       });
 
       if (Ember.libraries) {
@@ -10918,7 +10918,7 @@ define("ember-data/system/store",
         ```
 
         @method normalize
-        @param {String} The name of the model type for this payload
+        @param {String} type The name of the model type for this payload
         @param {Object} payload
         @return {Object} The normalized payload
       */
