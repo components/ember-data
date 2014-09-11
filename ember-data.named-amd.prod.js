@@ -1828,11 +1828,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.4b472f15a3'
+        @default '1.0.0-beta.11+canary.07991c6cdd'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.4b472f15a3'
+        VERSION: '1.0.0-beta.11+canary.07991c6cdd'
       });
 
       if (Ember.libraries) {
@@ -6211,6 +6211,27 @@ define("ember-data/system/model/model",
         this._attributes = {};
         this._inFlightAttributes = {};
         this._relationships = {};
+        /*
+          implicit relationships are relationship which have not been declared but the inverse side exists on
+          another record somewhere
+          For example if we are a
+          ```
+            App.Comment = DS.Model.extend({
+              name: DS.attr()
+            })
+          ```
+          but there is a
+          ```
+            App.Post = DS.Model.extend({
+              name: DS.attr(),
+              comments: DS.hasMany('comment')
+            })
+          ```
+
+          would have a implicit post relationship in order to be do things like remove ourselves from the post
+          when we are deleted
+        */
+        this._implicitRelationships = {};
         var model = this;
         //TODO Move into a getter for better perf
         this.constructor.eachRelationship(function(key, descriptor) {
@@ -6412,6 +6433,10 @@ define("ember-data/system/model/model",
         this.eachRelationship(function(name, relationship) {
           this._relationships[name].disconnect();
         }, this);
+        var model = this;
+        forEach.call(Ember.keys(this._implicitRelationships), function(key) {
+          model._implicitRelationships[key].disconnect();
+        });
       },
 
       /**
@@ -9245,6 +9270,9 @@ define("ember-data/system/relationships/relationship",
       this.key = relationshipMeta.key;
       this.isAsync = relationshipMeta.options.async;
       this.relationshipMeta = relationshipMeta;
+      //This probably breaks for polymorphic relationship in complex scenarios, due to
+      //multiple possible typeKeys
+      this.inversKeyForimplicit = this.typeKey + this.key;
     };
 
     Relationship.prototype = {
@@ -9288,6 +9316,11 @@ define("ember-data/system/relationships/relationship",
           this.notifyRecordRelationshipAdded(record, idx);
           if (this.inverseKey) {
             record._relationships[this.inverseKey].addRecord(this.record);
+          } else {
+            if (!record._implicitRelationships[this.inverseKeyForimplicit]) {
+              record._implicitRelationships[this.inverseKeyForimplicit] = new Relationship(this.store, record, this.key,  {options:{}});
+            }
+            record._implicitRelationships[this.inverseKeyForimplicit].addRecord(this.record);
           }
           this.record.updateRecordArrays();
         }
@@ -9298,6 +9331,10 @@ define("ember-data/system/relationships/relationship",
           this.removeRecordFromOwn(record);
           if (this.inverseKey) {
             this.removeRecordFromInverse(record);
+          } else {
+            if (record._implicitRelationships[this.inverseKeyForimplicit]) {
+              record._implicitRelationships[this.inverseKeyForimplicit].removeRecord(this.record);
+            }
           }
         }
       },
@@ -9327,7 +9364,10 @@ define("ember-data/system/relationships/relationship",
       updateRecordsFromAdapter: function(records) {
         //TODO Once we have adapter support, we need to handle updated and canonical changes
         this.computeChanges(records);
-      }
+      },
+
+      notifyRecordRelationshipAdded: Ember.K,
+      notifyRecordRelationshipRemoved: Ember.K
     };
 
     var ManyRelationship = function(store, record, inverseKey, relationshipMeta) {
@@ -9411,7 +9451,6 @@ define("ember-data/system/relationships/relationship",
       this._super$constructor(store, record, inverseKey, relationshipMeta);
       this.record = record;
       this.key = relationshipMeta.key;
-      this.inverseKey = inverseKey;
       this.inverseRecord = null;
     };
 
