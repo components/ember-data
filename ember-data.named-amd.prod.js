@@ -1828,11 +1828,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.fbe6332e5c'
+        @default '1.0.0-beta.11+canary.12301b9405'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.fbe6332e5c'
+        VERSION: '1.0.0-beta.11+canary.12301b9405'
       });
 
       if (Ember.libraries) {
@@ -9457,7 +9457,8 @@ define("ember-data/system/relationships/relationship",
         }
 
         return PromiseObject.create({
-          promise: promise
+          promise: promise,
+          content: this.inverseRecord
         });
       } else {
                 return this.inverseRecord;
