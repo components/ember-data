@@ -1945,11 +1945,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.aa91b3c78e'
+        @default '1.0.0-beta.11+canary.a83aea9245'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.aa91b3c78e'
+        VERSION: '1.0.0-beta.11+canary.a83aea9245'
       });
 
       if (Ember.libraries) {
@@ -2240,21 +2240,24 @@ define("ember-data/serializers/embedded_records_mixin",
       ```js
       App.PostSerializer = DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
-          author: {embedded: 'always'},
-          comments: {serialize: 'ids'}
+          author: { embedded: 'always' },
+          comments: { serialize: 'ids' }
         }
-      })
+      });
       ```
-      Note that this use of `{embedded: 'always'}` is unrelated to
-      the `{embedded: 'always'}` that is defined as an option on `DS.attr` as part of
+      Note that this use of `{ embedded: 'always' }` is unrelated to
+      the `{ embedded: 'always' }` that is defined as an option on `DS.attr` as part of
       defining a model while working with the ActiveModelSerializer.  Nevertheless,
-      using `{embedded: 'always'}` as an option to DS.attr is not a valid way to setup
+      using `{ embedded: 'always' }` as an option to DS.attr is not a valid way to setup
       embedded records.
 
-      The `attrs` option for a resource `{embedded: 'always'}` is shorthand for:
+      The `attrs` option for a resource `{ embedded: 'always' }` is shorthand for:
 
       ```js
-      {serialize: 'records', deserialize: 'records'}
+      { 
+        serialize: 'records',
+        deserialize: 'records'
+      }
       ```
 
       ### Configuring Attrs
@@ -2278,8 +2281,8 @@ define("ember-data/serializers/embedded_records_mixin",
       If you do not overwrite `attrs` for a specific relationship, the `EmbeddedRecordsMixin`
       will behave in the following way:
 
-      BelongsTo: `{serialize:'id', deserialize:'id'}`
-      HasMany:   `{serialize:false,  deserialize:'ids'}`
+      BelongsTo: `{ serialize: 'id', deserialize: 'id' }`  
+      HasMany:   `{ serialize: false, deserialize: 'ids' }`
 
       ### Model Relationships
 
