@@ -1940,11 +1940,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.e1ca37a9f5'
+        @default '1.0.0-beta.11+canary.0e2bbf9c99'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.e1ca37a9f5'
+        VERSION: '1.0.0-beta.11+canary.0e2bbf9c99'
       });
 
       if (Ember.libraries) {
@@ -8686,7 +8686,11 @@ define("ember-data/system/relationships/belongs_to",
           if ( value === undefined ) {
             value = null;
           }
-          this._relationships[key].setRecord(value);
+          if (value && value.then) {
+            this._relationships[key].addRecordPromise(value);
+          } else {
+            this._relationships[key].setRecord(value);
+          }
         }
 
         return this._relationships[key].getRecord();
@@ -9538,6 +9542,11 @@ define("ember-data/system/relationships/relationship",
 
       this.inverseRecord = newRecord;
       this._super$addRecord(newRecord);
+    };
+
+    BelongsToRelationship.prototype.addRecordPromise = function(newPromise) {
+        var content = newPromise.get('content');
+                this.addRecord(content);
     };
 
     BelongsToRelationship.prototype.notifyRecordRelationshipAdded = function(newRecord) {
