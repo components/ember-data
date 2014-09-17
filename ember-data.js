@@ -1945,11 +1945,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.a83aea9245'
+        @default '1.0.0-beta.11+canary.015c0c94ef'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.a83aea9245'
+        VERSION: '1.0.0-beta.11+canary.015c0c94ef'
       });
 
       if (Ember.libraries) {
@@ -3278,8 +3278,9 @@ define("ember-data/serializers/json_serializer",
             payloadKey = this.keyForRelationship(key, "belongsTo");
           }
 
-          if (isNone(belongsTo)) {
-            json[payloadKey] = belongsTo;
+          //Need to check whether the id is there for new&async records
+          if (isNone(belongsTo) || isNone(get(belongsTo, 'id'))) {
+            json[payloadKey] = null;
           } else {
             json[payloadKey] = get(belongsTo, 'id');
           }
