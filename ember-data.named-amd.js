@@ -1833,11 +1833,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.0e2bbf9c99'
+        @default '1.0.0-beta.11+canary.fb3acadfaa'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.0e2bbf9c99'
+        VERSION: '1.0.0-beta.11+canary.fb3acadfaa'
       });
 
       if (Ember.libraries) {
@@ -8593,11 +8593,7 @@ define("ember-data/system/relationships/belongs_to",
           if ( value === undefined ) {
             value = null;
           }
-          if (value && value.then) {
-            this._relationships[key].addRecordPromise(value);
-          } else {
-            this._relationships[key].setRecord(value);
-          }
+          this._relationships[key].setRecord(value);
         }
 
         return this._relationships[key].getRecord();
@@ -8729,17 +8725,41 @@ define("ember-data/system/relationships/ext",
         return relationship && relationship.type;
       },
 
-      inverseFor: function(name) {
-        var inverseType = this.typeForRelationship(name);
+      /*
+        Find the relationship which is the inverse of the one asked for.
 
+        For example, if you define models like this:
+
+       ```javascript
+          App.Post = DS.Model.extend({
+            comments: DS.hasMany('message', {inverse: null})
+          });
+
+          App.Message = DS.Model.extend({
+            owner: DS.belongsTo('post')
+          });
+        ```
+
+        App.Post.inverseFor('comments') -> {type: App.Message, name:'owner', kind:'belongsTo'}
+        App.Message.inverseFor('owner') -> {type: App.Post, name:'comments', kind:'hasMany'}
+
+        @method inverseFor
+        @static
+        @param {String} name the name of the relationship
+        @return {Object} the inverse relationship, or null
+      */
+      inverseFor: function(name) {
+
+        var inverseType = this.typeForRelationship(name);
         if (!inverseType) { return null; }
 
+        //If inverse is manually specified to be null, like  `comments: DS.hasMany('message', {inverse: null})`
         var options = this.metaForProperty(name).options;
-
         if (options.inverse === null) { return null; }
 
         var inverseName, inverseKind, inverse;
 
+        //If inverse is specified manually, return the inverse
         if (options.inverse) {
           inverseName = options.inverse;
           inverse = Ember.get(inverseType, 'relationshipsByName').get(inverseName);
@@ -8749,6 +8769,7 @@ define("ember-data/system/relationships/ext",
 
           inverseKind = inverse.kind;
         } else {
+          //No inverse was specified manually, we need to use a heuristic to guess one
           var possibleRelationships = findPossibleInverses(this, inverseType);
 
           if (possibleRelationships.length === 0) { return null; }
@@ -8772,6 +8793,7 @@ define("ember-data/system/relationships/ext",
             possibleRelationships.push.apply(possibleRelationships, relationshipMap.get(type));
           }
 
+          //Recurse to support polymorphism
           if (type.superclass) {
             findPossibleInverses(type.superclass, inverseType, possibleRelationships);
           }
@@ -9459,12 +9481,6 @@ define("ember-data/system/relationships/relationship",
 
       this.inverseRecord = newRecord;
       this._super$addRecord(newRecord);
-    };
-
-    BelongsToRelationship.prototype.addRecordPromise = function(newPromise) {
-        var content = newPromise.get('content');
-        Ember.assert("You passed in a promise that did not originate from an EmberData relationship. You can only pass promises that come from a belongsTo or hasMany relationship to the get call.`)", content !== undefined);
-        this.addRecord(content);
     };
 
     BelongsToRelationship.prototype.notifyRecordRelationshipAdded = function(newRecord) {
