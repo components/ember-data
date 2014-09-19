@@ -1833,11 +1833,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.1ccd406c6a'
+        @default '1.0.0-beta.11+canary.b868095a64'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.1ccd406c6a'
+        VERSION: '1.0.0-beta.11+canary.b868095a64'
       });
 
       if (Ember.libraries) {
@@ -7604,6 +7604,7 @@ define("ember-data/system/promise_proxies",
   function(__exports__) {
     "use strict";
     var Promise = Ember.RSVP.Promise;
+    var get = Ember.get;
 
     /**
       A `PromiseArray` is an object that acts like both an `Ember.Array`
@@ -7679,10 +7680,34 @@ define("ember-data/system/promise_proxies",
       });
     };
 
+    /**
+      A PromiseManyArray is a PromiseArray that also proxies certain method calls
+      to the underlying manyArray.
+      Right now we proxy:
+        `reload()`
+    */
+
+    var PromiseManyArray = PromiseArray.extend({
+      reload: function() {
+        //I don't think this should ever happen right now, but worth guarding if we refactor the async relationships
+        Ember.assert('You are trying to reload an async manyArray before it has been created', get(this, 'content'));
+        return get(this, 'content').reload();
+      }
+    });
+
+    var promiseManyArray = function(promise, label) {
+      return PromiseManyArray.create({
+        promise: Promise.resolve(promise, label)
+      });
+    };
+
+
     __exports__.PromiseArray = PromiseArray;
     __exports__.PromiseObject = PromiseObject;
+    __exports__.PromiseManyArray = PromiseManyArray;
     __exports__.promiseArray = promiseArray;
     __exports__.promiseObject = promiseObject;
+    __exports__.promiseManyArray = promiseManyArray;
   });
 define("ember-data/system/record_array_manager",
   ["ember-data/system/record_arrays","exports"],
@@ -8259,6 +8284,13 @@ define("ember-data/system/record_arrays/many_array",
         if (objects){
           this.get('relationship').addRecords(objects, idx);
         }
+      },
+      /**
+        @method reload
+        @public
+      */
+      reload: function() {
+        return this.relationship.reload();
       },
 
       /**
@@ -9298,7 +9330,7 @@ define("ember-data/system/relationships/relationship",
   ["ember-data/system/promise_proxies","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
-    var PromiseArray = __dependency1__.PromiseArray;
+    var PromiseManyArray = __dependency1__.PromiseManyArray;
     var PromiseObject = __dependency1__.PromiseObject;
 
     var Relationship = function(store, record, inverseKey, relationshipMeta) {
@@ -9436,6 +9468,19 @@ define("ember-data/system/relationships/relationship",
       this.record.notifyHasManyRemoved(this.key, record);
     };
 
+    ManyRelationship.prototype.reload = function() {
+      var self = this;
+      if (this.link) {
+        return this.fetchLink();
+      } else {
+        return this.store.scheduleFetchMany(this.manyArray.toArray()).then(function() {
+          //Goes away after the manyArray refactor
+          self.manyArray.set('isLoaded', true);
+          return self.manyArray;
+        });
+      }
+    };
+
     ManyRelationship.prototype.computeChanges = function(records) {
       var members = this.members;
 
@@ -9458,27 +9503,33 @@ define("ember-data/system/relationships/relationship",
       }, this);
     };
 
+    ManyRelationship.prototype.fetchLink = function() {
+      var self = this;
+      return this.store.findHasMany(this.record, this.link, this.relationshipMeta).then(function(records){
+        self.updateRecordsFromAdapter(records);
+        self.hasFetchedLink = true;
+         //Goes away after the manyArray refactor
+        self.manyArray.set('isLoaded', true);
+        return self.manyArray;
+      });
+    };
 
     ManyRelationship.prototype.getRecords = function() {
       if (this.isAsync) {
         var self = this;
         var promise;
         if (this.link && !this.hasFetchedLink) {
-          promise = this.store.findHasMany(this.record, this.link, this.relationshipMeta).then(function(records){
-            self.updateRecordsFromAdapter(records);
-            self.hasFetchedLink = true;
-            //TODO(Igor) try to abstract the isLoaded part
-            self.manyArray.set('isLoaded', true);
-            return self.manyArray;
-          });
+          promise = this.fetchLink();
         } else {
           var manyArray = this.manyArray;
           promise = this.store.findMany(manyArray.toArray()).then(function(){
+            //Goes away after the manyArray refactor
             self.manyArray.set('isLoaded', true);
             return manyArray;
           });
         }
-        return PromiseArray.create({
+        return PromiseManyArray.create({
+          content: this.manyArray,
           promise: promise
         });
       } else {
