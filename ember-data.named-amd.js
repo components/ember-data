@@ -1833,11 +1833,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.b30bcff405'
+        @default '1.0.0-beta.11+canary.1ccd406c6a'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.b30bcff405'
+        VERSION: '1.0.0-beta.11+canary.1ccd406c6a'
       });
 
       if (Ember.libraries) {
@@ -8757,7 +8757,7 @@ define("ember-data/system/relationships/ext",
 
        ```javascript
           App.Post = DS.Model.extend({
-            comments: DS.hasMany('message', {inverse: null})
+            comments: DS.hasMany('message')
           });
 
           App.Message = DS.Model.extend({
