@@ -1945,11 +1945,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.9c32d32803'
+        @default '1.0.0-beta.11+canary.fa10767924'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.9c32d32803'
+        VERSION: '1.0.0-beta.11+canary.fa10767924'
       });
 
       if (Ember.libraries) {
@@ -8951,8 +8951,8 @@ define("ember-data/system/relationships/ext",
           inverseKind = possibleRelationships[0].kind;
         }
 
-        function findPossibleInverses(type, inverseType, possibleRelationships) {
-          possibleRelationships = possibleRelationships || [];
+        function findPossibleInverses(type, inverseType, relationshipsSoFar) {
+          var possibleRelationships = relationshipsSoFar || [];
 
           var relationshipMap = get(inverseType, 'relationships');
           if (!relationshipMap) { return; }
