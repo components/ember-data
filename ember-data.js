@@ -1945,11 +1945,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.fa10767924'
+        @default '1.0.0-beta.11+canary.db7a94b8c3'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.fa10767924'
+        VERSION: '1.0.0-beta.11+canary.db7a94b8c3'
       });
 
       if (Ember.libraries) {
@@ -8797,6 +8797,7 @@ define("ember-data/system/relationships/ext",
     var Model = __dependency2__.Model;
 
     var get = Ember.get;
+    var filter = Ember.ArrayPolyfills.filter;
 
     /**
       @module ember-data
@@ -8871,6 +8872,7 @@ define("ember-data/system/relationships/ext",
     */
 
     Model.reopenClass({
+
       /**
         For a given relationship name, returns the model type of the relationship.
 
@@ -8893,6 +8895,10 @@ define("ember-data/system/relationships/ext",
         var relationship = get(this, 'relationshipsByName').get(name);
         return relationship && relationship.type;
       },
+
+      inverseMap: Ember.computed(function() {
+        return Object.create(null);
+      }),
 
       /*
         Find the relationship which is the inverse of the one asked for.
@@ -8918,9 +8924,23 @@ define("ember-data/system/relationships/ext",
         @return {Object} the inverse relationship, or null
       */
       inverseFor: function(name) {
+        var inverseMap = get(this, 'inverseMap');
+        if (inverseMap[name]) {
+          return inverseMap[name];
+        } else {
+          var inverse = this._findInverseFor(name);
+          inverseMap[name] = inverse;
+          return inverse;
+        }
+      },
+
+      //Calculate the inverse, ignoring the cache
+      _findInverseFor: function(name) {
 
         var inverseType = this.typeForRelationship(name);
-        if (!inverseType) { return null; }
+        if (!inverseType) {
+          return null;
+        }
 
         //If inverse is manually specified to be null, like  `comments: DS.hasMany('message', {inverse: null})`
         var options = this.metaForProperty(name).options;
@@ -8943,6 +8963,19 @@ define("ember-data/system/relationships/ext",
 
           if (possibleRelationships.length === 0) { return null; }
 
+          var filteredRelationships = filter.call(possibleRelationships, function(possibleRelationship) {
+            var optionsForRelationship = inverseType.metaForProperty(possibleRelationship.name).options;
+            return name === optionsForRelationship.inverse;
+          });
+
+          Ember.assert("You defined the '" + name + "' relationship on " + this + ", but you defined the inverse relationships of type " +
+            inverseType.toString() + " multiple times. Look at http://emberjs.com/guides/models/defining-models/#toc_explicit-inverses for how to explicitly specify inverses",
+            filteredRelationships.length < 2);
+
+          if (filteredRelationships.length === 1 ) {
+            possibleRelationships = filteredRelationships;
+          }
+
           Ember.assert("You defined the '" + name + "' relationship on " + this + ", but multiple possible inverse relationships of type " +
             this + " were found on " + inverseType + ". Look at http://emberjs.com/guides/models/defining-models/#toc_explicit-inverses for how to explicitly specify inverses",
             possibleRelationships.length === 1);
@@ -8958,8 +8991,19 @@ define("ember-data/system/relationships/ext",
           if (!relationshipMap) { return; }
 
           var relationships = relationshipMap.get(type);
+
+          relationships = filter.call(relationships, function(relationship) {
+            var optionsForRelationship = inverseType.metaForProperty(relationship.name).options;
+
+            if (!optionsForRelationship.inverse){
+              return true;
+            }
+
+            return name === optionsForRelationship.inverse;
+          });
+
           if (relationships) {
-            possibleRelationships.push.apply(possibleRelationships, relationshipMap.get(type));
+            possibleRelationships.push.apply(possibleRelationships, relationships);
           }
 
           //Recurse to support polymorphism
