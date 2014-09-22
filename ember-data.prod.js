@@ -1940,11 +1940,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.db7a94b8c3'
+        @default '1.0.0-beta.11+canary.27d1b3b4a3'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.db7a94b8c3'
+        VERSION: '1.0.0-beta.11+canary.27d1b3b4a3'
       });
 
       if (Ember.libraries) {
@@ -9470,7 +9470,7 @@ define("ember-data/system/relationships/relationship",
       this.relationshipMeta = relationshipMeta;
       //This probably breaks for polymorphic relationship in complex scenarios, due to
       //multiple possible typeKeys
-      this.inversKeyForimplicit = this.typeKey + this.key;
+      this.inverseKeyForimplicit = this.store.modelFor(this.record.constructor).typeKey + this.key;
     };
 
     Relationship.prototype = {
