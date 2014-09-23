@@ -1828,11 +1828,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.27d1b3b4a3'
+        @default '1.0.0-beta.11+canary.e5235299bf'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.27d1b3b4a3'
+        VERSION: '1.0.0-beta.11+canary.e5235299bf'
       });
 
       if (Ember.libraries) {
@@ -9359,11 +9359,12 @@ define("ember-data/system/relationships/relationship",
       //This probably breaks for polymorphic relationship in complex scenarios, due to
       //multiple possible typeKeys
       this.inverseKeyForimplicit = this.store.modelFor(this.record.constructor).typeKey + this.key;
+      //Cached promise when fetching the relationship from a link
+      this.linkPromise = null;
     };
 
     Relationship.prototype = {
       constructor: Relationship,
-      hasFetchedLink: false,
 
       destroy: Ember.K,
 
@@ -9442,8 +9443,20 @@ define("ember-data/system/relationships/relationship",
       updateLink: function(link) {
         if (link !== this.link) {
           this.link = link;
-          this.hasFetchedLink = false;
+          this.linkPromise = null;
           this.record.notifyPropertyChange(this.key);
+        }
+      },
+
+      findLink: function() {
+        if (this.linkPromise) {
+          return this.linkPromise;
+        } else {
+          var promise = this.fetchLink();
+          this.linkPromise = promise;
+          return promise.then(function(result) {
+            return result;
+          });
         }
       },
 
@@ -9520,10 +9533,18 @@ define("ember-data/system/relationships/relationship",
       var self = this;
       return this.store.findHasMany(this.record, this.link, this.relationshipMeta).then(function(records){
         self.updateRecordsFromAdapter(records);
-        self.hasFetchedLink = true;
         //Goes away after the manyArray refactor
         self.manyArray.set('isLoaded', true);
         return self.manyArray;
+      });
+    };
+
+    ManyRelationship.prototype.findRecords = function() {
+      var manyArray = this.manyArray;
+      return this.store.findMany(manyArray.toArray()).then(function(){
+        //Goes away after the manyArray refactor
+        manyArray.set('isLoaded', true);
+        return manyArray;
       });
     };
 
@@ -9531,15 +9552,12 @@ define("ember-data/system/relationships/relationship",
       if (this.isAsync) {
         var self = this;
         var promise;
-        if (this.link && !this.hasFetchedLink) {
-          promise = this.fetchLink();
-        } else {
-          var manyArray = this.manyArray;
-          promise = this.store.findMany(manyArray.toArray()).then(function(){
-            //Goes away after the manyArray refactor
-            self.manyArray.set('isLoaded', true);
-            return manyArray;
+        if (this.link) {
+          promise = this.findLink().then(function() {
+            return self.findRecords();
           });
+        } else {
+          promise = this.findRecords();
         }
         return PromiseManyArray.create({
           content: this.manyArray,
@@ -9599,21 +9617,32 @@ define("ember-data/system/relationships/relationship",
       this.inverseRecord = null;
     };
 
+    BelongsToRelationship.prototype.findRecord = function() {
+      if (this.inverseRecord) {
+        return this.store._findByRecord(this.inverseRecord);
+      } else {
+        return Ember.RSVP.Promise.resolve(null);
+      }
+    };
+
+    BelongsToRelationship.prototype.fetchLink = function() {
+      var self = this;
+      return this.store.findBelongsTo(this.record, this.link, this.relationshipMeta).then(function(record){
+        self.addRecord(record);
+        return record;
+      });
+    };
+
     BelongsToRelationship.prototype.getRecord = function() {
       if (this.isAsync) {
         var promise;
-
-        if (this.link && !this.hasFetchedLink){
+        if (this.link){
           var self = this;
-          promise = this.store.findBelongsTo(this.record, this.link, this.relationshipMeta).then(function(record){
-            self.addRecord(record);
-            self.hasFetchedLink = true;
-            return record;
+          promise = this.findLink().then(function() {
+            return self.findRecord();
           });
-        } else if (this.inverseRecord) {
-          promise = this.store._findByRecord(this.inverseRecord);
         } else {
-          promise = Ember.RSVP.Promise.resolve(null);
+          promise = this.findRecord();
         }
 
         return PromiseObject.create({
