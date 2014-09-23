@@ -1828,11 +1828,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.e5235299bf'
+        @default '1.0.0-beta.11+canary.5c3782e6ef'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.e5235299bf'
+        VERSION: '1.0.0-beta.11+canary.5c3782e6ef'
       });
 
       if (Ember.libraries) {
@@ -9533,8 +9533,6 @@ define("ember-data/system/relationships/relationship",
       var self = this;
       return this.store.findHasMany(this.record, this.link, this.relationshipMeta).then(function(records){
         self.updateRecordsFromAdapter(records);
-        //Goes away after the manyArray refactor
-        self.manyArray.set('isLoaded', true);
         return self.manyArray;
       });
     };
