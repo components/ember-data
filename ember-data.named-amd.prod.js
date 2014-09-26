@@ -1828,11 +1828,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.a4fe220441'
+        @default '1.0.0-beta.11+canary.77e12d95e5'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.a4fe220441'
+        VERSION: '1.0.0-beta.11+canary.77e12d95e5'
       });
 
       if (Ember.libraries) {
@@ -6443,6 +6443,17 @@ define("ember-data/system/model/model",
         });
       },
 
+      reconnectRelationships: function() {
+        this.eachRelationship(function(name, relationship) {
+          this._relationships[name].reconnect();
+        }, this);
+        var model = this;
+        forEach.call(Ember.keys(this._implicitRelationships), function(key) {
+          model._implicitRelationships[key].reconnect();
+        });
+      },
+
+
       /**
         @method updateRecordArrays
         @private
@@ -6660,6 +6671,13 @@ define("ember-data/system/model/model",
         if (get(this, 'isError')) {
           this._inFlightAttributes = {};
           set(this, 'isError', false);
+        }
+
+        //Eventually rollback will always work for relationships
+        //For now we support it only out of deleted state, because we
+        //have an explicit way of knowing when the server acked the relationship change
+        if (get(this, 'isDeleted')) {
+          this.reconnectRelationships();
         }
 
         if (!get(this, 'isValid')) {
@@ -9362,7 +9380,7 @@ define("ember-data/system/relationships/relationship",
       this.relationshipMeta = relationshipMeta;
       //This probably breaks for polymorphic relationship in complex scenarios, due to
       //multiple possible typeKeys
-      this.inverseKeyForimplicit = this.store.modelFor(this.record.constructor).typeKey + this.key;
+      this.inverseKeyForImplicit = this.store.modelFor(this.record.constructor).typeKey + this.key;
     };
 
     Relationship.prototype = {
@@ -9380,6 +9398,12 @@ define("ember-data/system/relationships/relationship",
       disconnect: function(){
         this.members.forEach(function(member) {
           this.removeRecordFromInverse(member);
+        }, this);
+      },
+
+      reconnect: function(){
+        this.members.forEach(function(member) {
+          this.addRecordToInverse(member);
         }, this);
       },
 
@@ -9407,10 +9431,10 @@ define("ember-data/system/relationships/relationship",
           if (this.inverseKey) {
             record._relationships[this.inverseKey].addRecord(this.record);
           } else {
-            if (!record._implicitRelationships[this.inverseKeyForimplicit]) {
-              record._implicitRelationships[this.inverseKeyForimplicit] = new Relationship(this.store, record, this.key,  {options:{}});
+            if (!record._implicitRelationships[this.inverseKeyForImplicit]) {
+              record._implicitRelationships[this.inverseKeyForImplicit] = new Relationship(this.store, record, this.key,  {options:{}});
             }
-            record._implicitRelationships[this.inverseKeyForimplicit].addRecord(this.record);
+            record._implicitRelationships[this.inverseKeyForImplicit].addRecord(this.record);
           }
           this.record.updateRecordArrays();
         }
@@ -9422,10 +9446,16 @@ define("ember-data/system/relationships/relationship",
           if (this.inverseKey) {
             this.removeRecordFromInverse(record);
           } else {
-            if (record._implicitRelationships[this.inverseKeyForimplicit]) {
-              record._implicitRelationships[this.inverseKeyForimplicit].removeRecord(this.record);
+            if (record._implicitRelationships[this.inverseKeyForImplicit]) {
+              record._implicitRelationships[this.inverseKeyForImplicit].removeRecord(this.record);
             }
           }
+        }
+      },
+
+      addRecordToInverse: function(record) {
+        if (this.inverseKey) {
+          record._relationships[this.inverseKey].addRecord(this.record);
         }
       },
 
