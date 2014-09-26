@@ -1940,11 +1940,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.ac47227108'
+        @default '1.0.0-beta.11+canary.deb493e1ab'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.ac47227108'
+        VERSION: '1.0.0-beta.11+canary.deb493e1ab'
       });
 
       if (Ember.libraries) {
@@ -6874,7 +6874,7 @@ define("ember-data/system/model/model",
         }, function(reason) {
           record.set('isError', true);
           throw reason;
-        }, "DS: Model#reload complete, update flags")["finally"](function () {
+        }, "DS: Model#reload complete, update flags")['finally'](function () {
           record.updateRecordArrays();
         });
 
