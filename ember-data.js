@@ -1075,8 +1075,8 @@ define("ember-data/adapters/fixture_adapter",
     });
   });
 define("ember-data/adapters/rest_adapter",
-  ["ember-data/system/adapter","exports"],
-  function(__dependency1__, __exports__) {
+  ["ember-data/system/adapter","ember-data/system/map","exports"],
+  function(__dependency1__, __dependency2__, __exports__) {
     "use strict";
     /**
       @module ember-data
@@ -1084,6 +1084,7 @@ define("ember-data/adapters/rest_adapter",
 
     var Adapter = __dependency1__.Adapter;
     var InvalidError = __dependency1__.InvalidError;
+    var MapWithDefault = __dependency2__.MapWithDefault;
     var get = Ember.get;
     var forEach = Ember.ArrayPolyfills.forEach;
 
@@ -1696,7 +1697,7 @@ define("ember-data/adapters/rest_adapter",
                           loaded separately by `findMany`.
       */
       groupRecordsForFindMany: function (store, records) {
-        var groups = Ember.MapWithDefault.create({defaultValue: function(){return [];}});
+        var groups = MapWithDefault.create({defaultValue: function(){return [];}});
         var adapter = this;
 
         forEach.call(records, function(record){
@@ -1726,7 +1727,7 @@ define("ember-data/adapters/rest_adapter",
         }
 
         var groupsArray = [];
-        groups.forEach(function(key, group){
+        groups.forEach(function(group, key){
           // http://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers
           var maxUrlLength = 2048;
           var splitGroups = splitGroupToFitInUrl(group, maxUrlLength);
@@ -1945,11 +1946,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.a872a918a0'
+        @default '1.0.0-beta.11+canary.845b12bf97'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.a872a918a0'
+        VERSION: '1.0.0-beta.11+canary.845b12bf97'
       });
 
       if (Ember.libraries) {
@@ -5058,7 +5059,7 @@ define("ember-data/system/debug/debug_adapter",
         }];
         var count = 0;
         var self = this;
-        get(type, 'attributes').forEach(function(name, meta) {
+        get(type, 'attributes').forEach(function(meta, name) {
             if (count++ > self.attributeLimit) { return false; }
             var desc = capitalize(underscore(name).replace('_', ' '));
             columns.push({ name: name, desc: desc });
@@ -5215,6 +5216,91 @@ define("ember-data/system/debug/debug_info",
 
     __exports__["default"] = Model;
   });
+define("ember-data/system/map",
+  ["exports"],
+  function(__exports__) {
+    "use strict";
+    /**
+     * Polyfill Ember.Map behavior for Ember <= 1.7
+     * This can probably be removed before 1.0 final
+    */
+    var mapForEach, deleteFn;
+
+    function OrderedSet(){
+      Ember.OrderedSet.apply(this, arguments);
+    }
+
+    function Map() {
+      Ember.Map.apply(this, arguments);
+    }
+
+    function MapWithDefault(){
+      Ember.MapWithDefault.apply(this, arguments);
+    }
+
+    var testMap = Ember.Map.create();
+    testMap.set('key', 'value');
+
+    var usesOldBehavior = false;
+
+    testMap.forEach(function(value, key){
+      usesOldBehavior = value === 'key' && key === 'value';
+    });
+
+    Map.prototype            = Object.create(Ember.Map.prototype);
+    MapWithDefault.prototype = Object.create(Ember.MapWithDefault.prototype);
+    OrderedSet.prototype     = Object.create(Ember.OrderedSet.prototype);
+
+    OrderedSet.create = function(){
+      return new OrderedSet();
+    };
+
+    function translate(valueKeyOrderedCallback){
+      return function(key, value){
+        valueKeyOrderedCallback.call(this, value, key);
+      };
+    }
+
+    // old, non ES6 compliant behavir
+    if (usesOldBehavior){
+      mapForEach = function(callback, thisArg){
+        Ember.Map.prototype.forEach.call(this, translate(callback), thisArg);
+      };
+
+      /* alias to remove */
+      deleteFn = function(thing){
+        this.remove.apply(this, arguments);
+      };
+
+      Map.prototype.forEach = mapForEach;
+      Map.prototype["delete"] = deleteFn;
+
+      MapWithDefault.prototype.forEach = mapForEach;
+      MapWithDefault.prototype["delete"] = deleteFn;
+
+      OrderedSet.prototype["delete"] = deleteFn;
+    }
+
+    MapWithDefault.constructor = MapWithDefault;
+    Map.constructor = Map;
+
+    MapWithDefault.create = function(options){
+      if (options) {
+        return new MapWithDefault(options);
+      } else {
+        return new Map();
+      }
+    };
+
+    Map.create = function(){
+      return new this.constructor();
+    };
+
+    __exports__["default"] = Map;
+    __exports__.Map = Map;
+    __exports__.MapWithDefault = MapWithDefault;
+    __exports__.OrderedSet = OrderedSet;
+  });
 define("ember-data/system/model",
   ["ember-data/system/model/model","ember-data/system/model/attributes","ember-data/system/model/states","ember-data/system/model/errors","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
@@ -5234,10 +5320,11 @@ define("ember-data/system/model",
     __exports__.Errors = Errors;
   });
 define("ember-data/system/model/attributes",
-  ["ember-data/system/model/model","exports"],
-  function(__dependency1__, __exports__) {
+  ["ember-data/system/model/model","ember-data/system/map","exports"],
+  function(__dependency1__, __dependency2__, __exports__) {
     "use strict";
     var Model = __dependency1__["default"];
+    var Map = __dependency2__.Map;
 
     /**
       @module ember-data
@@ -5283,7 +5370,7 @@ define("ember-data/system/model/attributes",
         @readOnly
       */
       attributes: Ember.computed(function() {
-        var map = Ember.Map.create();
+        var map = Map.create();
 
         this.eachComputedProperty(function(name, meta) {
           if (meta.isAttribute) {
@@ -5329,7 +5416,7 @@ define("ember-data/system/model/attributes",
         @readOnly
       */
       transformedAttributes: Ember.computed(function() {
-        var map = Ember.Map.create();
+        var map = Map.create();
 
         this.eachAttribute(function(key, meta) {
           if (meta.type) {
@@ -5382,7 +5469,7 @@ define("ember-data/system/model/attributes",
         @static
       */
       eachAttribute: function(callback, binding) {
-        get(this, 'attributes').forEach(function(name, meta) {
+        get(this, 'attributes').forEach(function(meta, name) {
           callback.call(binding, name, meta);
         }, binding);
       },
@@ -5430,7 +5517,7 @@ define("ember-data/system/model/attributes",
         @static
       */
       eachTransformedAttribute: function(callback, binding) {
-        get(this, 'transformedAttributes').forEach(function(name, type) {
+        get(this, 'transformedAttributes').forEach(function(type, name) {
           callback.call(binding, name, type);
         });
       }
@@ -5544,12 +5631,14 @@ define("ember-data/system/model/attributes",
     };
   });
 define("ember-data/system/model/errors",
-  ["exports"],
-  function(__exports__) {
+  ["ember-data/system/map","exports"],
+  function(__dependency1__, __exports__) {
     "use strict";
     var get = Ember.get;
     var isEmpty = Ember.isEmpty;
     var map = Ember.EnumerableUtils.map;
+
+    var MapWithDefault = __dependency1__.MapWithDefault;
 
     /**
     @module ember-data
@@ -5647,7 +5736,7 @@ define("ember-data/system/model/errors",
       */
       errorsByAttributeName: Ember.reduceComputed("content", {
         initialValue: function() {
-          return Ember.MapWithDefault.create({
+          return MapWithDefault.create({
             defaultValue: function() {
               return Ember.A();
             }
@@ -7842,8 +7931,8 @@ define("ember-data/system/promise_proxies",
     __exports__.promiseManyArray = promiseManyArray;
   });
 define("ember-data/system/record_array_manager",
-  ["ember-data/system/record_arrays","exports"],
-  function(__dependency1__, __exports__) {
+  ["ember-data/system/record_arrays","ember-data/system/map","exports"],
+  function(__dependency1__, __dependency2__, __exports__) {
     "use strict";
     /**
       @module ember-data
@@ -7853,6 +7942,8 @@ define("ember-data/system/record_array_manager",
     var FilteredRecordArray = __dependency1__.FilteredRecordArray;
     var AdapterPopulatedRecordArray = __dependency1__.AdapterPopulatedRecordArray;
     var ManyArray = __dependency1__.ManyArray;
+    var MapWithDefault = __dependency2__.MapWithDefault;
+    var OrderedSet = __dependency2__.OrderedSet;
     var get = Ember.get;
     var forEach = Ember.EnumerableUtils.forEach;
 
@@ -7864,7 +7955,7 @@ define("ember-data/system/record_array_manager",
     */
     __exports__["default"] = Ember.Object.extend({
       init: function() {
-        this.filteredRecordArrays = Ember.MapWithDefault.create({
+        this.filteredRecordArrays = MapWithDefault.create({
           defaultValue: function() { return []; }
         });
 
@@ -7879,7 +7970,7 @@ define("ember-data/system/record_array_manager",
       },
 
       recordArraysForRecord: function(record) {
-        record._recordArrays = record._recordArrays || Ember.OrderedSet.create();
+        record._recordArrays = record._recordArrays || OrderedSet.create();
         return record._recordArrays;
       },
 
@@ -7912,7 +8003,7 @@ define("ember-data/system/record_array_manager",
 
         if (!recordArrays) { return; }
 
-        forEach(recordArrays, function(array) {
+        recordArrays.forEach(function(array){
           array.removeRecord(record);
         });
       },
@@ -7966,7 +8057,7 @@ define("ember-data/system/record_array_manager",
             recordArrays.add(array);
           }
         } else if (!shouldBeInArray) {
-          recordArrays.remove(array);
+          recordArrays["delete"](array);
           array.removeRecord(record);
         }
       },
@@ -8644,7 +8735,7 @@ define("ember-data/system/record_arrays/record_array",
           var recordArrays = record._recordArrays;
 
           if (recordArrays) {
-            recordArrays.remove(array);
+            recordArrays["delete"](array);
           }
         });
       },
@@ -8813,12 +8904,14 @@ define("ember-data/system/relationships/belongs_to",
     __exports__["default"] = belongsTo;
   });
 define("ember-data/system/relationships/ext",
-  ["ember-data/system/relationship-meta","ember-data/system/model"],
-  function(__dependency1__, __dependency2__) {
+  ["ember-data/system/relationship-meta","ember-data/system/model","ember-data/system/map"],
+  function(__dependency1__, __dependency2__, __dependency3__) {
     "use strict";
     var typeForRelationshipMeta = __dependency1__.typeForRelationshipMeta;
     var relationshipFromMeta = __dependency1__.relationshipFromMeta;
     var Model = __dependency2__.Model;
+    var Map = __dependency3__.Map;
+    var MapWithDefault = __dependency3__.MapWithDefault;
 
     var get = Ember.get;
     var filter = Ember.ArrayPolyfills.filter;
@@ -9079,7 +9172,7 @@ define("ember-data/system/relationships/ext",
         @readOnly
       */
       relationships: Ember.computed(function() {
-        var map = new Ember.MapWithDefault({
+        var map = new MapWithDefault({
           defaultValue: function() { return []; }
         });
 
@@ -9229,7 +9322,7 @@ define("ember-data/system/relationships/ext",
         @readOnly
       */
       relationshipsByName: Ember.computed(function() {
-        var map = Ember.Map.create();
+        var map = Map.create();
 
         this.eachComputedProperty(function(name, meta) {
           if (meta.isRelationship) {
@@ -9279,7 +9372,7 @@ define("ember-data/system/relationships/ext",
         @readOnly
       */
       fields: Ember.computed(function() {
-        var map = Ember.Map.create();
+        var map = Map.create();
 
         this.eachComputedProperty(function(name, meta) {
           if (meta.isRelationship) {
@@ -9303,7 +9396,7 @@ define("ember-data/system/relationships/ext",
         @param {any} binding the value to which the callback's `this` should be bound
       */
       eachRelationship: function(callback, binding) {
-        get(this, 'relationshipsByName').forEach(function(name, relationship) {
+        get(this, 'relationshipsByName').forEach(function(relationship, name) {
           callback.call(binding, name, relationship);
         });
       },
@@ -9507,14 +9600,15 @@ define("ember-data/system/relationships/has_many",
     __exports__["default"] = hasMany;
   });
 define("ember-data/system/relationships/relationship",
-  ["ember-data/system/promise_proxies","exports"],
-  function(__dependency1__, __exports__) {
+  ["ember-data/system/promise_proxies","ember-data/system/map","exports"],
+  function(__dependency1__, __dependency2__, __exports__) {
     "use strict";
     var PromiseManyArray = __dependency1__.PromiseManyArray;
     var PromiseObject = __dependency1__.PromiseObject;
+    var OrderedSet = __dependency2__.OrderedSet;
 
     var Relationship = function(store, record, inverseKey, relationshipMeta) {
-      this.members = new Ember.OrderedSet();
+      this.members = new OrderedSet();
       this.store = store;
       this.key = relationshipMeta.key;
       this.inverseKey = inverseKey;
@@ -9613,7 +9707,7 @@ define("ember-data/system/relationships/relationship",
       },
 
       removeRecordFromOwn: function(record) {
-        this.members.remove(record);
+        this.members["delete"](record);
         this.notifyRecordRelationshipRemoved(record);
         this.record.updateRecordArrays();
       },
@@ -9690,16 +9784,22 @@ define("ember-data/system/relationships/relationship",
       var members = this.members;
 
       records = setForArray(records);
+      var recordsToRemove = [];
 
       members.forEach(function(member) {
         if (records.has(member)) return;
 
-        this.removeRecord(member);
-      }, this);
+        recordsToRemove.push(member);
+      });
+      this.removeRecords(recordsToRemove);
 
       var hasManyArray = this.manyArray;
 
-      records.forEach(function(record, index) {
+      // Using records.toArray() since currently using
+      // removeRecord can modify length, messing stuff up
+      // forEach since it directly looks at "length" each
+      // iteration
+      records.toArray().forEach(function(record, index) {
         //Need to preserve the order of incoming records
         if (hasManyArray.objectAt(index) === record ) return;
 
@@ -9841,7 +9941,7 @@ define("ember-data/system/relationships/relationship",
     };
 
     function setForArray(array) {
-      var set = new Ember.OrderedSet();
+      var set = new OrderedSet();
 
       if (array) {
         for (var i=0, l=array.length; i<l; i++) {
@@ -9875,8 +9975,8 @@ define("ember-data/system/relationships/relationship",
     __exports__.createRelationshipFor = createRelationshipFor;
   });
 define("ember-data/system/store",
-  ["ember-data/system/adapter","ember-inflector/system/string","ember-data/system/promise_proxies","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
+  ["ember-data/system/adapter","ember-inflector/system/string","ember-data/system/map","ember-data/system/promise_proxies","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
     "use strict";
     /*globals Ember*/
     /*jshint eqnull:true*/
@@ -9888,9 +9988,10 @@ define("ember-data/system/store",
     var InvalidError = __dependency1__.InvalidError;
     var Adapter = __dependency1__.Adapter;
     var singularize = __dependency2__.singularize;
+    var Map = __dependency3__.Map;
 
-    var promiseArray = __dependency3__.promiseArray;
-    var promiseObject = __dependency3__.promiseObject;
+    var promiseArray = __dependency4__.promiseArray;
+    var promiseObject = __dependency4__.promiseObject;
 
 
     var get = Ember.get;
@@ -10025,7 +10126,7 @@ define("ember-data/system/store",
         });
         this._pendingSave = [];
         //Used to keep track of all the find requests that need to be coalesced
-        this._pendingFetch = Ember.Map.create();
+        this._pendingFetch = Map.create();
       },
 
       /**
@@ -10413,10 +10514,10 @@ define("ember-data/system/store",
         }
 
         this._pendingFetch.forEach(this._flushPendingFetchForType, this);
-        this._pendingFetch = Ember.Map.create();
+        this._pendingFetch = Map.create();
       },
 
-      _flushPendingFetchForType: function (type, recordResolverPairs) {
+      _flushPendingFetchForType: function (recordResolverPairs, type) {
         var store = this;
         var adapter = store.adapterFor(type);
         var shouldCoalesce = !!adapter.findMany && adapter.coalesceFindRequests;

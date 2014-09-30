@@ -50,6 +50,8 @@ eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - ember-dat
 
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - ember-data/system/debug\');\ntest(\'ember-data/system/debug/debug_info.js should pass jshint\', function() { \n  ok(true, \'ember-data/system/debug/debug_info.js should pass jshint.\'); \n});\n\n}})();//@ sourceURL=ember-data/system/debug/debug_info.jshint.js");
 
+eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - ember-data/system\');\ntest(\'ember-data/system/map.js should pass jshint\', function() { \n  ok(true, \'ember-data/system/map.js should pass jshint.\'); \n});\n\n}})();//@ sourceURL=ember-data/system/map.jshint.js");
+
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - ember-data/system\');\ntest(\'ember-data/system/model.js should pass jshint\', function() { \n  ok(true, \'ember-data/system/model.js should pass jshint.\'); \n});\n\n}})();//@ sourceURL=ember-data/system/model.jshint.js");
 
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - ember-data/system/model\');\ntest(\'ember-data/system/model/attributes.js should pass jshint\', function() { \n  ok(true, \'ember-data/system/model/attributes.js should pass jshint.\'); \n});\n\n}})();//@ sourceURL=ember-data/system/model/attributes.jshint.js");
