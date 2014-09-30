@@ -1941,11 +1941,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.302e2f5bb3'
+        @default '1.0.0-beta.11+canary.74d2550d34'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.302e2f5bb3'
+        VERSION: '1.0.0-beta.11+canary.74d2550d34'
       });
 
       if (Ember.libraries) {
@@ -5262,18 +5262,20 @@ define("ember-data/system/map",
     // old, non ES6 compliant behavior
     if (usesOldBehavior){
       mapForEach = function(callback, thisArg){
-        Ember.Map.prototype.forEach.call(this, translate(callback), thisArg);
+        this.__super$forEach(translate(callback), thisArg);
       };
 
       /* alias to remove */
       deleteFn = function(thing){
-        this.remove.apply(this, arguments);
+        this.remove(thing);
       };
 
+      Map.prototype.__super$forEach = Ember.Map.prototype.forEach;
       Map.prototype.forEach = mapForEach;
       Map.prototype["delete"] = deleteFn;
 
       MapWithDefault.prototype.forEach = mapForEach;
+      MapWithDefault.prototype.__super$forEach = Ember.MapWithDefault.prototype.forEach;
       MapWithDefault.prototype["delete"] = deleteFn;
 
       OrderedSet.prototype["delete"] = deleteFn;
