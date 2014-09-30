@@ -1941,11 +1941,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.21cfe6b2ca'
+        @default '1.0.0-beta.11+canary.c39092b903'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.21cfe6b2ca'
+        VERSION: '1.0.0-beta.11+canary.c39092b903'
       });
 
       if (Ember.libraries) {
@@ -5245,13 +5245,21 @@ define("ember-data/system/map",
       return new OrderedSet();
     };
 
+    /**
+     * returns a function that calls the original
+     * callback function in the correct order.
+     * if we are in pre-Ember.1.8 land, Map/MapWithDefault
+     * forEach calls with key, value, in that order.
+     * >= 1.8 forEach is called with the order value, key as per
+     * the ES6 spec.
+    */
     function translate(valueKeyOrderedCallback){
       return function(key, value){
         valueKeyOrderedCallback.call(this, value, key);
       };
     }
 
-    // old, non ES6 compliant behavir
+    // old, non ES6 compliant behavior
     if (usesOldBehavior){
       mapForEach = function(callback, thisArg){
         Ember.Map.prototype.forEach.call(this, translate(callback), thisArg);
