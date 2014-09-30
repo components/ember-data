@@ -1829,11 +1829,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.c39092b903'
+        @default '1.0.0-beta.11+canary.302e2f5bb3'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.c39092b903'
+        VERSION: '1.0.0-beta.11+canary.302e2f5bb3'
       });
 
       if (Ember.libraries) {
@@ -9647,9 +9647,12 @@ define("ember-data/system/relationships/relationship",
 
     ManyRelationship.prototype.computeChanges = function(records) {
       var members = this.members;
+      var recordsToRemove = [];
+      var length;
+      var record;
+      var i;
 
       records = setForArray(records);
-      var recordsToRemove = [];
 
       members.forEach(function(member) {
         if (records.has(member)) return;
@@ -9664,13 +9667,17 @@ define("ember-data/system/relationships/relationship",
       // removeRecord can modify length, messing stuff up
       // forEach since it directly looks at "length" each
       // iteration
-      records.toArray().forEach(function(record, index) {
+      records = records.toArray();
+      length = records.length;
+      for (i = 0; i < length; i++){
+        record = records[i];
         //Need to preserve the order of incoming records
-        if (hasManyArray.objectAt(index) === record ) return;
-
+        if (hasManyArray.objectAt(i) === record ) {
+          continue;
+        }
         this.removeRecord(record);
-        this.addRecord(record, index);
-      }, this);
+        this.addRecord(record, i);
+      }
     };
 
     ManyRelationship.prototype.fetchLink = function() {
