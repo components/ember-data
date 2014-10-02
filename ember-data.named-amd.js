@@ -1834,11 +1834,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.f97d5c9adb'
+        @default '1.0.0-beta.11+canary.2997e47034'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.f97d5c9adb'
+        VERSION: '1.0.0-beta.11+canary.2997e47034'
       });
 
       if (Ember.libraries) {
@@ -9778,7 +9778,7 @@ define("ember-data/system/relationships/relationship",
       var type = this.relationshipMeta.type;
       Ember.assert("You can only add a '" + type.typeKey + "' record to this relationship", newRecord instanceof type);
 
-      if (this.inverseRecord && this.inverseKey) {
+      if (this.inverseRecord) {
         this.removeRecord(this.inverseRecord);
       }
 
