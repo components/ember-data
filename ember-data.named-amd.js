@@ -1834,11 +1834,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.2997e47034'
+        @default '1.0.0-beta.11+canary.4201bf6913'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.2997e47034'
+        VERSION: '1.0.0-beta.11+canary.4201bf6913'
       });
 
       if (Ember.libraries) {
@@ -8658,7 +8658,7 @@ define("ember-data/system/relationship-meta",
         if (meta.kind === 'hasMany') {
           typeKey = singularize(typeKey);
         }
-        type = store.modelFor(typeKey);
+        type = modelFor(store, typeKey, meta.options.polymorphic);
       } else {
         type = meta.type;
       }
@@ -8666,7 +8666,21 @@ define("ember-data/system/relationship-meta",
       return type;
     }
 
-    __exports__.typeForRelationshipMeta = typeForRelationshipMeta;function relationshipFromMeta(store, meta) {
+    __exports__.typeForRelationshipMeta = typeForRelationshipMeta;function modelFor(store, typeKey, isPolymorphic){
+      var model;
+      if (isPolymorphic){
+        try {
+          model = store.modelFor(typeKey);
+        } catch (e) {
+          model = null;
+        }
+      } else {
+        model = store.modelFor(typeKey);
+      }
+      return model;
+    }
+
+    function relationshipFromMeta(store, meta) {
       return {
         key:  meta.key,
         kind: meta.kind,
@@ -9505,7 +9519,7 @@ define("ember-data/system/relationships/relationship",
     var PromiseObject = __dependency1__.PromiseObject;
     var OrderedSet = __dependency2__.OrderedSet;
 
-    var Relationship = function(store, record, inverseKey, relationshipMeta) {
+    function Relationship(store, record, inverseKey, relationshipMeta) {
       this.members = new OrderedSet();
       this.store = store;
       this.key = relationshipMeta.key;
@@ -9516,13 +9530,22 @@ define("ember-data/system/relationships/relationship",
       this.relationshipMeta = relationshipMeta;
       //This probably breaks for polymorphic relationship in complex scenarios, due to
       //multiple possible typeKeys
-      this.inverseKeyForImplicit = this.store.modelFor(this.record.constructor).typeKey + this.key;
+      this.isPolymorphic = relationshipMeta.options.polymorphic;
+      this.inverseKeyForImplicit = this._inverseKeyForImplicit();
       //Cached promise when fetching the relationship from a link
       this.linkPromise = null;
-    };
+    }
 
     Relationship.prototype = {
       constructor: Relationship,
+
+      _inverseKeyForImplicit: function Relationship_inverseKeyForImplicit(){
+        var model = this.store.modelFor(this.record.constructor, this.isPolymorphic);
+        if (model){
+          return model.typeKey + this.key;
+        }
+        return model;
+      },
 
       destroy: Ember.K,
 
@@ -9644,7 +9667,6 @@ define("ember-data/system/relationships/relationship",
       this.belongsToType = relationshipMeta.type;
       this.manyArray = store.recordArrayManager.createManyArray(this.belongsToType, Ember.A());
       this.manyArray.relationship = this;
-      this.isPolymorphic = relationshipMeta.options.polymorphic;
       this.manyArray.isPolymorphic = this.isPolymorphic;
     };
 
@@ -11081,15 +11103,21 @@ define("ember-data/system/store",
 
         @method modelFor
         @param {String or subclass of DS.Model} key
+        @param {Boolean} forPolymorphicRelationship won't throw if this is for a polymorphic relationship lookup
         @return {subclass of DS.Model}
       */
-      modelFor: function(key) {
+      modelFor: function(key, forPolymorphicRelationship) {
+        var polymorphic = !!forPolymorphicRelationship;
         var factory;
 
         if (typeof key === 'string') {
           factory = this.container.lookupFactory('model:' + key);
           if (!factory) {
-            throw new Ember.Error("No model was found for '" + key + "'");
+            if (!polymorphic) {
+              throw new Ember.Error("No model was found for '" + key + "'");
+            } else {
+              return null;
+            }
           }
           factory.typeKey = factory.typeKey || this._normalizeTypeKey(key);
         } else {
