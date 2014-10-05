@@ -1946,11 +1946,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.4201bf6913'
+        @default '1.0.0-beta.11+canary.53dcc23ca1'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.4201bf6913'
+        VERSION: '1.0.0-beta.11+canary.53dcc23ca1'
       });
 
       if (Ember.libraries) {
@@ -8770,7 +8770,7 @@ define("ember-data/system/relationship-meta",
         if (meta.kind === 'hasMany') {
           typeKey = singularize(typeKey);
         }
-        type = modelFor(store, typeKey, meta.options.polymorphic);
+        type = store.modelFor(typeKey, meta.options.polymorphic);
       } else {
         type = meta.type;
       }
@@ -8778,21 +8778,7 @@ define("ember-data/system/relationship-meta",
       return type;
     }
 
-    __exports__.typeForRelationshipMeta = typeForRelationshipMeta;function modelFor(store, typeKey, isPolymorphic){
-      var model;
-      if (isPolymorphic){
-        try {
-          model = store.modelFor(typeKey);
-        } catch (e) {
-          model = null;
-        }
-      } else {
-        model = store.modelFor(typeKey);
-      }
-      return model;
-    }
-
-    function relationshipFromMeta(store, meta) {
+    __exports__.typeForRelationshipMeta = typeForRelationshipMeta;function relationshipFromMeta(store, meta) {
       return {
         key:  meta.key,
         kind: meta.kind,
