@@ -1829,11 +1829,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.53dcc23ca1'
+        @default '1.0.0-beta.11+canary.d6caeca964'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.53dcc23ca1'
+        VERSION: '1.0.0-beta.11+canary.d6caeca964'
       });
 
       if (Ember.libraries) {
@@ -3882,6 +3882,9 @@ define("ember-data/serializers/rest_serializer",
 
         for (var prop in payload) {
           var typeName  = this.typeForRoot(prop);
+          if (!this._modelExistsForKey(typeName, prop, store)){
+            continue;
+          }
           var type = store.modelFor(typeName);
           var isPrimary = type.typeKey === primaryTypeName;
           var value = payload[prop];
@@ -3918,6 +3921,11 @@ define("ember-data/serializers/rest_serializer",
         }
 
         return primaryRecord;
+      },
+
+      _modelExistsForKey: function RESTSerializer_modelExistsForKey(typeKey, prop, store){
+        var hasModel = store.modelFactoryFor(typeKey);
+                return hasModel;
       },
 
       /**
@@ -4035,6 +4043,9 @@ define("ember-data/serializers/rest_serializer",
           }
 
           var typeName = this.typeForRoot(typeKey);
+          if (!this._modelExistsForKey(typeName, prop, store)){
+            continue;
+          }
           var type = store.modelFor(typeName);
           var typeSerializer = store.serializerFor(type);
           var isPrimary = (!forcedSecondary && (type.typeKey === primaryTypeName));
@@ -4090,6 +4101,9 @@ define("ember-data/serializers/rest_serializer",
 
         for (var prop in payload) {
           var typeName = this.typeForRoot(prop);
+          if (!this._modelExistsForKey(typeName, prop, store)){
+            continue;
+          }
           var type = store.modelFor(typeName);
           var typeSerializer = store.serializerFor(type);
 
@@ -8639,7 +8653,7 @@ define("ember-data/system/relationship-meta",
         if (meta.kind === 'hasMany') {
           typeKey = singularize(typeKey);
         }
-        type = store.modelFor(typeKey, meta.options.polymorphic);
+        type = store.modelFor(typeKey);
       } else {
         type = meta.type;
       }
@@ -9475,7 +9489,7 @@ define("ember-data/system/relationships/relationship",
     var PromiseObject = __dependency1__.PromiseObject;
     var OrderedSet = __dependency2__.OrderedSet;
 
-    function Relationship(store, record, inverseKey, relationshipMeta) {
+    var Relationship = function(store, record, inverseKey, relationshipMeta) {
       this.members = new OrderedSet();
       this.store = store;
       this.key = relationshipMeta.key;
@@ -9486,22 +9500,13 @@ define("ember-data/system/relationships/relationship",
       this.relationshipMeta = relationshipMeta;
       //This probably breaks for polymorphic relationship in complex scenarios, due to
       //multiple possible typeKeys
-      this.isPolymorphic = relationshipMeta.options.polymorphic;
-      this.inverseKeyForImplicit = this._inverseKeyForImplicit();
+      this.inverseKeyForImplicit = this.store.modelFor(this.record.constructor).typeKey + this.key;
       //Cached promise when fetching the relationship from a link
       this.linkPromise = null;
-    }
+    };
 
     Relationship.prototype = {
       constructor: Relationship,
-
-      _inverseKeyForImplicit: function Relationship_inverseKeyForImplicit(){
-        var model = this.store.modelFor(this.record.constructor, this.isPolymorphic);
-        if (model){
-          return model.typeKey + this.key;
-        }
-        return model;
-      },
 
       destroy: Ember.K,
 
@@ -9623,6 +9628,7 @@ define("ember-data/system/relationships/relationship",
       this.belongsToType = relationshipMeta.type;
       this.manyArray = store.recordArrayManager.createManyArray(this.belongsToType, Ember.A());
       this.manyArray.relationship = this;
+      this.isPolymorphic = relationshipMeta.options.polymorphic;
       this.manyArray.isPolymorphic = this.isPolymorphic;
     };
 
@@ -11036,21 +11042,15 @@ define("ember-data/system/store",
 
         @method modelFor
         @param {String or subclass of DS.Model} key
-        @param {Boolean} forPolymorphicRelationship won't throw if this is for a polymorphic relationship lookup
         @return {subclass of DS.Model}
       */
-      modelFor: function(key, forPolymorphicRelationship) {
-        var polymorphic = !!forPolymorphicRelationship;
+      modelFor: function(key) {
         var factory;
 
         if (typeof key === 'string') {
-          factory = this.container.lookupFactory('model:' + key);
+          factory = this.modelFactoryFor(key);
           if (!factory) {
-            if (!polymorphic) {
-              throw new Ember.Error("No model was found for '" + key + "'");
-            } else {
-              return null;
-            }
+            throw new Ember.Error("No model was found for '" + key + "'");
           }
           factory.typeKey = factory.typeKey || this._normalizeTypeKey(key);
         } else {
@@ -11063,6 +11063,10 @@ define("ember-data/system/store",
 
         factory.store = this;
         return factory;
+      },
+
+      modelFactoryFor: function(key){
+        return this.container.lookupFactory('model:' + key);
       },
 
       /**
