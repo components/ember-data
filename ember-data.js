@@ -1612,7 +1612,7 @@ define("ember-data/adapters/rest_adapter",
         //We might get passed in an array of ids from findMany
         //in which case we don't want to modify the url, as the
         //ids will be passed in through a query param
-        if (id && !Ember.isArray(id)) { url.push(id); }
+        if (id && !Ember.isArray(id)) { url.push(encodeURIComponent(id)); }
 
         if (prefix) { url.unshift(prefix); }
 
@@ -1946,11 +1946,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.ce19d4afc1'
+        @default '1.0.0-beta.11+canary.4e51ded433'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.ce19d4afc1'
+        VERSION: '1.0.0-beta.11+canary.4e51ded433'
       });
 
       if (Ember.libraries) {
