@@ -1829,11 +1829,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.d6caeca964'
+        @default '1.0.0-beta.11+canary.ce19d4afc1'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.d6caeca964'
+        VERSION: '1.0.0-beta.11+canary.ce19d4afc1'
       });
 
       if (Ember.libraries) {
@@ -3882,9 +3882,6 @@ define("ember-data/serializers/rest_serializer",
 
         for (var prop in payload) {
           var typeName  = this.typeForRoot(prop);
-          if (!this._modelExistsForKey(typeName, prop, store)){
-            continue;
-          }
           var type = store.modelFor(typeName);
           var isPrimary = type.typeKey === primaryTypeName;
           var value = payload[prop];
@@ -3921,11 +3918,6 @@ define("ember-data/serializers/rest_serializer",
         }
 
         return primaryRecord;
-      },
-
-      _modelExistsForKey: function RESTSerializer_modelExistsForKey(typeKey, prop, store){
-        var hasModel = store.modelFactoryFor(typeKey);
-                return hasModel;
       },
 
       /**
@@ -4043,9 +4035,6 @@ define("ember-data/serializers/rest_serializer",
           }
 
           var typeName = this.typeForRoot(typeKey);
-          if (!this._modelExistsForKey(typeName, prop, store)){
-            continue;
-          }
           var type = store.modelFor(typeName);
           var typeSerializer = store.serializerFor(type);
           var isPrimary = (!forcedSecondary && (type.typeKey === primaryTypeName));
@@ -4101,9 +4090,6 @@ define("ember-data/serializers/rest_serializer",
 
         for (var prop in payload) {
           var typeName = this.typeForRoot(prop);
-          if (!this._modelExistsForKey(typeName, prop, store)){
-            continue;
-          }
           var type = store.modelFor(typeName);
           var typeSerializer = store.serializerFor(type);
 
@@ -6808,7 +6794,7 @@ define("ember-data/system/model/model",
 
       /**
         Save the record and persist any changes to the record to an
-        extenal source via the adapter.
+        external source via the adapter.
 
         Example
 
@@ -11048,7 +11034,7 @@ define("ember-data/system/store",
         var factory;
 
         if (typeof key === 'string') {
-          factory = this.modelFactoryFor(key);
+          factory = this.container.lookupFactory('model:' + key);
           if (!factory) {
             throw new Ember.Error("No model was found for '" + key + "'");
           }
@@ -11063,10 +11049,6 @@ define("ember-data/system/store",
 
         factory.store = this;
         return factory;
-      },
-
-      modelFactoryFor: function(key){
-        return this.container.lookupFactory('model:' + key);
       },
 
       /**
