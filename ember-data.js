@@ -1946,11 +1946,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.f364466ddc'
+        @default '1.0.0-beta.11+canary.58c77f15fe'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.f364466ddc'
+        VERSION: '1.0.0-beta.11+canary.58c77f15fe'
       });
 
       if (Ember.libraries) {
@@ -7047,13 +7047,30 @@ define("ember-data/system/model/model",
         @private
         @param name
       */
-      trigger: function(name) {
-        Ember.tryInvoke(this, name, [].slice.call(arguments, 1));
+      trigger: function() {
+        var length = arguments.length;
+        var args = new Array(length - 1);
+        var name = arguments[0];
+
+        for (var i = 1; i < length; i++ ){
+          args[i - 1] = arguments[i];
+        }
+
+        Ember.tryInvoke(this, name, args);
         this._super.apply(this, arguments);
       },
 
       triggerLater: function() {
-        if (this._deferredTriggers.push(arguments) !== 1) { return; }
+        var length = arguments.length;
+        var args = new Array(length);
+
+        for (var i = 0; i < length; i++ ){
+          args[i] = arguments[i];
+        }
+
+        if (this._deferredTriggers.push(args) !== 1) {
+          return;
+        }
         Ember.run.schedule('actions', this, '_triggerDeferredTriggers');
       },
 
