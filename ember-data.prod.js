@@ -1941,11 +1941,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.58c77f15fe'
+        @default '1.0.0-beta.11+canary.01ad2a39ce'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.58c77f15fe'
+        VERSION: '1.0.0-beta.11+canary.01ad2a39ce'
       });
 
       if (Ember.libraries) {
@@ -3781,7 +3781,7 @@ define("ember-data/serializers/rest_serializer",
       @namespace DS
       @extends DS.JSONSerializer
     */
-    __exports__["default"] = JSONSerializer.extend({
+    var RESTSerializer = JSONSerializer.extend({
       /**
         If you want to do normalizations specific to some part of the payload, you
         can specify those under `normalizeHash`.
@@ -3994,6 +3994,9 @@ define("ember-data/serializers/rest_serializer",
 
         for (var prop in payload) {
           var typeName  = this.typeForRoot(prop);
+          if (!store.modelFactoryFor(typeName)){
+                        continue;
+          }
           var type = store.modelFor(typeName);
           var isPrimary = type.typeKey === primaryTypeName;
           var value = payload[prop];
@@ -4147,6 +4150,9 @@ define("ember-data/serializers/rest_serializer",
           }
 
           var typeName = this.typeForRoot(typeKey);
+          if (!store.modelFactoryFor(typeName)) {
+                        continue;
+          }
           var type = store.modelFor(typeName);
           var typeSerializer = store.serializerFor(type);
           var isPrimary = (!forcedSecondary && (type.typeKey === primaryTypeName));
@@ -4202,6 +4208,9 @@ define("ember-data/serializers/rest_serializer",
 
         for (var prop in payload) {
           var typeName = this.typeForRoot(prop);
+          if (!store.modelFactoryFor(typeName, prop)){
+                        continue;
+          }
           var type = store.modelFor(typeName);
           var typeSerializer = store.serializerFor(type);
 
@@ -4456,6 +4465,9 @@ define("ember-data/serializers/rest_serializer",
         }
       }
     });
+
+    
+    __exports__["default"] = RESTSerializer;
   });
 define("ember-data/setup-container",
   ["ember-data/initializers/store","ember-data/initializers/transforms","ember-data/initializers/store_injections","ember-data/initializers/data_adapter","activemodel-adapter/setup-container","exports"],
@@ -11163,7 +11175,7 @@ define("ember-data/system/store",
         var factory;
 
         if (typeof key === 'string') {
-          factory = this.container.lookupFactory('model:' + key);
+          factory = this.modelFactoryFor(key);
           if (!factory) {
             throw new Ember.Error("No model was found for '" + key + "'");
           }
@@ -11178,6 +11190,10 @@ define("ember-data/system/store",
 
         factory.store = this;
         return factory;
+      },
+
+      modelFactoryFor: function(key){
+        return this.container.lookupFactory('model:' + key);
       },
 
       /**
