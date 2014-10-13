@@ -1279,6 +1279,9 @@ define("ember-data/adapters/rest_adapter",
 
         will also send a request to: `GET /comments?ids[]=1&ids[]=2`
 
+        Note: Requests coalescing rely on URL building strategy. So if you override `buildUrl` in your app
+        `groupRecordsForFindMany` more likely should be overriden as well in order for coalescing to work.
+
         @property coalesceFindRequests
         @type {boolean}
       */
@@ -1941,11 +1944,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.41b93cd7d2'
+        @default '1.0.0-beta.11+canary.c97cc73763'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.41b93cd7d2'
+        VERSION: '1.0.0-beta.11+canary.c97cc73763'
       });
 
       if (Ember.libraries) {
