@@ -290,7 +290,7 @@ define("activemodel-adapter/system/active_model_adapter",
         https://tools.ietf.org/html/rfc4918#section-11.2
 
         @method ajaxError
-        @param jqXHR
+        @param {Object} jqXHR
         @return error
       */
       ajaxError: function(jqXHR) {
@@ -479,7 +479,7 @@ define("activemodel-adapter/system/active_model_serializer",
         @method serializePolymorphicType
         @param {DS.Model} record
         @param {Object} json
-        @param relationship
+        @param {Object} relationship
       */
       serializePolymorphicType: function(record, json, relationship) {
         var key = relationship.key;
@@ -1944,11 +1944,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.e3a423bc59'
+        @default '1.0.0-beta.11+canary.39c91c062a'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.e3a423bc59'
+        VERSION: '1.0.0-beta.11+canary.39c91c062a'
       });
 
       if (Ember.libraries) {
@@ -2067,7 +2067,8 @@ define("ember-data/ext/date",
 
     /**
       @method parse
-      @param date
+      @param {Date} date
+      @return {Number} timestamp
     */
     Ember.Date.parse = function (date) {
         var timestamp, struct, minutesOffset = 0;
@@ -4414,8 +4415,9 @@ define("ember-data/serializers/rest_serializer",
         ```
 
         @method serialize
-        @param record
-        @param options
+        @param {subclass of DS.Model} record
+        @param {Object} options
+        @return {Object} json
       */
       serialize: function(record, options) {
         return this._super.apply(this, arguments);
@@ -7046,7 +7048,7 @@ define("ember-data/system/model/model",
 
         @method trigger
         @private
-        @param name
+        @param {String} name
       */
       trigger: function() {
         var length = arguments.length;
@@ -8096,9 +8098,9 @@ define("ember-data/system/record_array_manager",
         method is invoked when the filter is created in th first place.
 
         @method updateFilter
-        @param array
-        @param type
-        @param filter
+        @param {Array} array
+        @param {String} type
+        @param {Function} filter
       */
       updateFilter: function(array, type, filter) {
         var typeMap = this.store.typeMapFor(type);
@@ -8977,9 +8979,9 @@ define("ember-data/system/relationships/ext",
         property returned by `DS.belongsTo` as the value.
 
         @method didDefineProperty
-        @param proto
-        @param key
-        @param value
+        @param {Object} proto
+        @param {String} key
+        @param {Ember.ComputedProperty} value
       */
       didDefineProperty: function(proto, key, value) {
         // Check if the value being set is a computed property.
@@ -11119,7 +11121,7 @@ define("ember-data/system/store",
 
         @method typeMapFor
         @private
-        @param type
+        @param {subclass of DS.Model} type
         @return {Object} typeMap
       */
       typeMapFor: function(type) {
@@ -11932,8 +11934,8 @@ define("ember-data/transforms/base",
         ```
 
         @method serialize
-        @param deserialized The deserialized value
-        @return The serialized value
+        @param {mixed} deserialized The deserialized value
+        @return {mixed} The serialized value
       */
       serialize: Ember.required(),
 
@@ -11950,8 +11952,8 @@ define("ember-data/transforms/base",
         ```
 
         @method deserialize
-        @param serialized The serialized value
-        @return The deserialized value
+        @param {mixed} serialized The serialized value
+        @return {mixed} The deserialized value
       */
       deserialize: Ember.required()
     });
