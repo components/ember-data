@@ -1941,11 +1941,11 @@ define("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.11+canary.d96c747da5'
+        @default '1.0.0-beta.11+canary.41b93cd7d2'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.11+canary.d96c747da5'
+        VERSION: '1.0.0-beta.11+canary.41b93cd7d2'
       });
 
       if (Ember.libraries) {
@@ -8027,6 +8027,8 @@ define("ember-data/system/record_array_manager",
         recordArrays.forEach(function(array){
           array.removeRecord(record);
         });
+
+        record._recordArrays = null;
       },
 
       _recordWasChanged: function (record) {
