@@ -8560,7 +8560,7 @@ define("ember-data/system/record_arrays/many_array",
         var record;
 
         
-        record = store.createRecord.call(store, type, hash);
+        record = store.createRecord(type, hash);
         this.pushObject(record);
 
         return record;
