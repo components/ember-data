@@ -8398,17 +8398,19 @@ define("ember-data/system/record_arrays/many_array",
       */
       isPolymorphic: false,
 
-      // LOADING STATE
+      /**
+        The loading state of this array
 
+        @property {Boolean} isLoaded
+      */
       isLoaded: false,
 
        /**
          The relationship which manages this array.
 
-         @property {DS.Model} owner
+         @property {ManyRelationship} relationship
          @private
        */
-
       relationship: null,
 
 
@@ -8961,7 +8963,7 @@ define("ember-data/system/relationships/ext",
         return Object.create(null);
       }),
 
-      /*
+      /**
         Find the relationship which is the inverse of the one asked for.
 
         For example, if you define models like this:
@@ -9299,7 +9301,7 @@ define("ember-data/system/relationships/ext",
         });
 
         var fields = Ember.get(App.Blog, 'fields');
-        fields.forEach(function(field, kind) {
+        fields.forEach(function(kind, field) {
           console.log(field, kind);
         });
 
