@@ -161,7 +161,6 @@ define("activemodel-adapter/system/active_model_adapter",
       @module ember-data
     */
 
-    var forEach = Ember.EnumerableUtils.forEach;
     var decamelize = Ember.String.decamelize,
         underscore = Ember.String.underscore;
 
@@ -297,18 +296,7 @@ define("activemodel-adapter/system/active_model_adapter",
         var error = this._super(jqXHR);
 
         if (jqXHR && jqXHR.status === 422) {
-          var response = Ember.$.parseJSON(jqXHR.responseText),
-              errors = {};
-
-          if (response.errors !== undefined) {
-            var jsonErrors = response.errors;
-
-            forEach(Ember.keys(jsonErrors), function(key) {
-              errors[Ember.String.camelize(key)] = jsonErrors[key];
-            });
-          }
-
-          return new InvalidError(errors);
+          return new InvalidError(Ember.$.parseJSON(jqXHR.responseText));
         } else {
           return error;
         }
@@ -1768,11 +1756,17 @@ define("ember-data/adapters/rest_adapter",
       },
 
       /**
-        Takes an ajax response, and returns a relevant error.
+        Takes an ajax response, and returns an error payload.
 
         Returning a `DS.InvalidError` from this method will cause the
         record to transition into the `invalid` state and make the
         `errors` object available on the record.
+
+        This function should return the entire payload as received from the
+        server.  Error object extraction and normalization of model errors
+        should be performed by `extractErrors` on the serializer.
+
+        Example
 
         ```javascript
         App.ApplicationAdapter = DS.RESTAdapter.extend({
@@ -1780,7 +1774,7 @@ define("ember-data/adapters/rest_adapter",
             var error = this._super(jqXHR);
 
             if (jqXHR && jqXHR.status === 422) {
-              var jsonErrors = Ember.$.parseJSON(jqXHR.responseText)["errors"];
+              var jsonErrors = Ember.$.parseJSON(jqXHR.responseText);
 
               return new DS.InvalidError(jsonErrors);
             } else {
@@ -2954,6 +2948,16 @@ define("ember-data/serializers/json_serializer",
       },
 
       /**
+        @method normalizeErrors
+        @private
+      */
+      normalizeErrors: function(type, hash) {
+        this.normalizeId(hash);
+        this.normalizeAttributes(type, hash);
+        this.normalizeRelationships(type, hash);
+      },
+
+      /**
         Looks up the property key that was set by the custom `attr` mapping
         passed to the serializer.
 
@@ -3661,6 +3665,41 @@ define("ember-data/serializers/json_serializer",
           store.metaForType(type, payload.meta);
           delete payload.meta;
         }
+      },
+
+      /**
+        `extractErrors` is used to extract model errors when a call is made
+        to `DS.Model#save` which fails with an InvalidError`. By default
+        Ember Data expects error information to be located on the `errors`
+        property of the payload object.
+
+        Example
+
+        ```javascript
+        App.PostSerializer = DS.JSONSerializer.extend({
+          extractErrors: function(store, type, payload, id) {
+            if (payload && typeof payload === 'object' && payload._problems) {
+              payload = payload._problems;
+              this.normalizeErrors(type, payload);
+            }
+            return payload;
+          }
+        });
+        ```
+
+        @method extractErrors
+        @param {DS.Store} store
+        @param {subclass of DS.Model} type
+        @param {Object} payload
+        @param {String or Number} id
+        @return {Object} json The deserialized errors
+      */
+      extractErrors: function(store, type, payload, id) {
+        if (payload && typeof payload === 'object' && payload.errors) {
+          payload = payload.errors;
+          this.normalizeErrors(type, payload);
+        }
+        return payload;
       },
 
       /**
@@ -4525,6 +4564,10 @@ define("ember-data/system/adapter",
       transition to the `invalid` state and the errors will be set to the
       `errors` property on the record.
 
+      This function should return the entire payload as received from the
+      server.  Error object extraction and normalization of model errors
+      should be performed by `extractErrors` on the serializer.
+
       Example
 
       ```javascript
@@ -4533,7 +4576,7 @@ define("ember-data/system/adapter",
           var error = this._super(jqXHR);
 
           if (jqXHR && jqXHR.status === 422) {
-            var jsonErrors = Ember.$.parseJSON(jqXHR.responseText)["errors"];
+            var jsonErrors = Ember.$.parseJSON(jqXHR.responseText);
             return new DS.InvalidError(jsonErrors);
           } else {
             return error;
@@ -11833,7 +11876,9 @@ define("ember-data/system/store",
         return record;
       }, function(reason) {
         if (reason instanceof InvalidError) {
-          store.recordWasInvalid(record, reason.errors);
+          var errors = serializer.extractErrors(store, type, reason.errors, get(record, 'id'));
+          store.recordWasInvalid(record, errors);
+          reason = new InvalidError(errors);
         } else {
           store.recordWasError(record, reason);
         }
