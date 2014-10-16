@@ -9562,7 +9562,6 @@ define("ember-data/system/relationships/relationship",
       this.key = relationshipMeta.key;
       this.inverseKey = inverseKey;
       this.record = record;
-      this.key = relationshipMeta.key;
       this.isAsync = relationshipMeta.options.async;
       this.relationshipMeta = relationshipMeta;
       //This probably breaks for polymorphic relationship in complex scenarios, due to
@@ -9662,7 +9661,7 @@ define("ember-data/system/relationships/relationship",
       },
 
       updateLink: function(link) {
-        if (link !== this.link) {
+                if (link !== this.link) {
           this.link = link;
           this.linkPromise = null;
           this.record.notifyPropertyChange(this.key);
