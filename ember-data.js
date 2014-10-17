@@ -11733,6 +11733,7 @@ define("ember-data/system/store",
       if (isNone(id) || id instanceof Model) {
         return;
       }
+      Ember.assert("A " + relationship.parentType + " record was pushed into the store with the value of " + key + " being " + Ember.inspect(id) + ", but " + key + " is a belongsTo relationship so the value must not be an array. You should probably check your data payload or serializer.", !Ember.isArray(id));
 
       var type;
 
@@ -11754,9 +11755,11 @@ define("ember-data/system/store",
     }
 
     function deserializeRecordIds(store, data, key, relationship, ids) {
-      if (!Ember.isArray(ids)) {
+      if (isNone(ids)) {
         return;
       }
+
+      Ember.assert("A " + relationship.parentType + " record was pushed into the store with the value of " + key + " being '" + Ember.inspect(ids) + "', but " + key + " is a hasMany relationship so the value must be an array. You should probably check your data payload or serializer.", Ember.isArray(ids));
       for (var i=0, l=ids.length; i<l; i++) {
         deserializeRecordId(store, ids, i, relationship, ids[i]);
       }

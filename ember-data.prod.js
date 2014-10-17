@@ -11663,7 +11663,7 @@ define("ember-data/system/store",
       if (isNone(id) || id instanceof Model) {
         return;
       }
-
+      
       var type;
 
       if (typeof id === 'number' || typeof id === 'string') {
@@ -11684,10 +11684,11 @@ define("ember-data/system/store",
     }
 
     function deserializeRecordIds(store, data, key, relationship, ids) {
-      if (!Ember.isArray(ids)) {
+      if (isNone(ids)) {
         return;
       }
-      for (var i=0, l=ids.length; i<l; i++) {
+
+            for (var i=0, l=ids.length; i<l; i++) {
         deserializeRecordId(store, ids, i, relationship, ids[i]);
       }
     }
