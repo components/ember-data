@@ -5716,7 +5716,7 @@ define("ember-data/system/model/errors",
       `DS.Errors`. This can be used to display validation error
       messages returned from the server when a `record.save()` rejects.
       This works automatically with `DS.ActiveModelAdapter`, but you
-      can implement [ajaxError](api/data/classes/DS.RESTAdapter.html#method_ajaxError)
+      can implement [ajaxError](/api/data/classes/DS.RESTAdapter.html#method_ajaxError)
       in other adapters as well.
 
       For Example, if you had an `User` model that looked like this:
