@@ -7912,8 +7912,7 @@ define("ember-data/system/promise_proxies",
 
       createRecord: function() {
         var content = get(this, 'content');
-        content.createRecord.apply(content, arguments);
-        return this;
+        return content.createRecord.apply(content, arguments);
       }
     });
 
