@@ -7900,6 +7900,7 @@ define("ember-data/system/promise_proxies",
       to the underlying manyArray.
       Right now we proxy:
         `reload()`
+        `createRecord()`
     */
 
     var PromiseManyArray = PromiseArray.extend({
@@ -7907,6 +7908,12 @@ define("ember-data/system/promise_proxies",
         //I don't think this should ever happen right now, but worth guarding if we refactor the async relationships
         Ember.assert('You are trying to reload an async manyArray before it has been created', get(this, 'content'));
         return get(this, 'content').reload();
+      },
+
+      createRecord: function() {
+        var content = get(this, 'content');
+        content.createRecord.apply(content, arguments);
+        return this;
       }
     });
 

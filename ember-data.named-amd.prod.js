@@ -7873,12 +7873,19 @@ define("ember-data/system/promise_proxies",
       to the underlying manyArray.
       Right now we proxy:
         `reload()`
+        `createRecord()`
     */
 
     var PromiseManyArray = PromiseArray.extend({
       reload: function() {
         //I don't think this should ever happen right now, but worth guarding if we refactor the async relationships
                 return get(this, 'content').reload();
+      },
+
+      createRecord: function() {
+        var content = get(this, 'content');
+        content.createRecord.apply(content, arguments);
+        return this;
       }
     });
 
