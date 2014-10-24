@@ -6428,15 +6428,6 @@ define("ember-data/system/model/model",
       },
 
       /**
-        Fired when the record is ready to be interacted with,
-        that is either loaded from the server or created locally
-
-        @event didLoad
-      */
-      ready: function() {
-        this.store.recordArrayManager.recordWasLoaded(this);
-      },
-      /**
         Fired when the record is loaded from the server.
 
         @event didLoad
@@ -7468,7 +7459,6 @@ define("ember-data/system/model/states",
 
         rollback: function(record) {
           record.rollback();
-          record.triggerLater('ready');
         }
       },
 
@@ -7535,7 +7525,6 @@ define("ember-data/system/model/states",
 
         rolledBack: function(record) {
           get(record, 'errors').clear();
-          record.triggerLater('ready');
         },
 
         becameValid: function(record) {
@@ -7587,7 +7576,7 @@ define("ember-data/system/model/states",
     var createdState = dirtyState({
       dirtyType: 'created',
       // FLAGS
-      isNew: true,
+      isNew: true
     });
 
     createdState.uncommitted.rolledBack = function(record) {
@@ -7667,13 +7656,11 @@ define("ember-data/system/model/states",
         loadedData: function(record) {
           record.transitionTo('loaded.created.uncommitted');
           record.notifyPropertyChange('data');
-          record.triggerLater('ready');
         },
 
         pushedData: function(record) {
           record.transitionTo('loaded.saved');
           record.triggerLater('didLoad');
-          record.triggerLater('ready');
         }
       },
 
@@ -7695,7 +7682,6 @@ define("ember-data/system/model/states",
         pushedData: function(record) {
           record.transitionTo('loaded.saved');
           record.triggerLater('didLoad');
-          record.triggerLater('ready');
           set(record, 'isError', false);
         },
 
@@ -7822,7 +7808,6 @@ define("ember-data/system/model/states",
 
           rollback: function(record) {
             record.rollback();
-            record.triggerLater('ready');
           },
 
           becomeDirty: Ember.K,
@@ -7830,7 +7815,6 @@ define("ember-data/system/model/states",
 
           rolledBack: function(record) {
             record.transitionTo('loaded.saved');
-            record.triggerLater('ready');
           }
         },
 
@@ -8110,23 +8094,7 @@ define("ember-data/system/record_array_manager",
         record._recordArrays = null;
       },
 
-
-      //Don't need to update non filtered arrays on simple changes
       _recordWasChanged: function (record) {
-        var type = record.constructor;
-        var recordArrays = this.filteredRecordArrays.get(type);
-        var filter;
-
-        forEach(recordArrays, function(array) {
-          filter = get(array, 'filterFunction');
-          if (filter) {
-            this.updateRecordArray(array, filter, type, record);
-          }
-        }, this);
-      },
-
-      //Need to update live arrays on loading
-      recordWasLoaded: function(record) {
         var type = record.constructor;
         var recordArrays = this.filteredRecordArrays.get(type);
         var filter;
@@ -8135,7 +8103,20 @@ define("ember-data/system/record_array_manager",
           filter = get(array, 'filterFunction');
           this.updateRecordArray(array, filter, type, record);
         }, this);
+
+        // loop through all manyArrays containing an unloaded copy of this
+        // clientId and notify them that the record was loaded.
+        var manyArrays = record._loadingRecordArrays;
+
+        if (manyArrays) {
+          for (var i=0, l=manyArrays.length; i<l; i++) {
+            manyArrays[i].loadedRecord();
+          }
+
+          record._loadingRecordArrays = [];
+        }
       },
+
       /**
         Update an individual filter.
 
@@ -9769,7 +9750,7 @@ define("ember-data/system/relationships/relationship",
             }
             record._implicitRelationships[this.inverseKeyForImplicit].addRecord(this.record);
           }
-          this.record.updateRecordArraysLater();
+          this.record.updateRecordArrays();
         }
       },
 
@@ -11055,8 +11036,9 @@ define("ember-data/system/store",
       // ............
 
       /**
-        If the adapter updates attributes the record will notify
-        the store to update its  membership in any filters.
+        If the adapter updates attributes or acknowledges creation
+        or deletion, the record will notify the store to update its
+        membership in any filters.
         To avoid thrashing, this method is invoked only once per
 
         run loop per record.
@@ -11560,11 +11542,6 @@ define("ember-data/system/store",
         typeMap.records.push(record);
 
         return record;
-      },
-
-      //Called by the state machine to notify the store that the record is ready to be interacted with
-      recordWasLoaded: function(record) {
-        this.recordArrayManager.recordWasLoaded(record);
       },
 
       // ...............
