@@ -11354,7 +11354,6 @@ define("ember-data/system/store",
         @return {DS.Model} the record that was updated.
       */
       update: function(type, data) {
-        
         return this.push(type, data, true);
       },
 
