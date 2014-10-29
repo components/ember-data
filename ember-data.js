@@ -1,5 +1,5 @@
 (function(global){
-var define, requireModule, require, requirejs;
+var enifed, requireModule, eriuqer, requirejs;
 
 (function() {
 
@@ -15,7 +15,7 @@ var define, requireModule, require, requirejs;
   var registry = {}, seen = {}, state = {};
   var FAILED = false;
 
-  define = function(name, deps, callback) {
+  enifed = function(name, deps, callback) {
   
     if (!_isArray(deps)) {
       callback = deps;
@@ -39,7 +39,7 @@ var define, requireModule, require, requirejs;
       if (dep === 'exports') {
         exports = reified[i] = seen;
       } else {
-        reified[i] = require(resolve(dep, name));
+        reified[i] = eriuqer(resolve(dep, name));
       }
     }
 
@@ -49,7 +49,7 @@ var define, requireModule, require, requirejs;
     };
   }
 
-  requirejs = require = requireModule = function(name) {
+  requirejs = eriuqer = requireModule = function(name) {
     if (state[name] !== FAILED &&
         seen.hasOwnProperty(name)) {
       return seen[name];
@@ -110,7 +110,7 @@ var define, requireModule, require, requirejs;
   };
 })();
 
-define("activemodel-adapter",
+enifed("activemodel-adapter",
   ["activemodel-adapter/system","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
@@ -120,7 +120,7 @@ define("activemodel-adapter",
     __exports__.ActiveModelAdapter = ActiveModelAdapter;
     __exports__.ActiveModelSerializer = ActiveModelSerializer;
   });
-define("activemodel-adapter/setup-container",
+enifed("activemodel-adapter/setup-container",
   ["ember-data/system/container_proxy","activemodel-adapter/system/active_model_serializer","activemodel-adapter/system/active_model_adapter","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
     "use strict";
@@ -139,7 +139,7 @@ define("activemodel-adapter/setup-container",
       container.register('adapter:-active-model', ActiveModelAdapter);
     };
   });
-define("activemodel-adapter/system",
+enifed("activemodel-adapter/system",
   ["activemodel-adapter/system/active_model_adapter","activemodel-adapter/system/active_model_serializer","exports"],
   function(__dependency1__, __dependency2__, __exports__) {
     "use strict";
@@ -149,7 +149,7 @@ define("activemodel-adapter/system",
     __exports__.ActiveModelAdapter = ActiveModelAdapter;
     __exports__.ActiveModelSerializer = ActiveModelSerializer;
   });
-define("activemodel-adapter/system/active_model_adapter",
+enifed("activemodel-adapter/system/active_model_adapter",
   ["ember-data/adapters","ember-data/system/adapter","ember-inflector","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
     "use strict";
@@ -305,7 +305,7 @@ define("activemodel-adapter/system/active_model_adapter",
 
     __exports__["default"] = ActiveModelAdapter;
   });
-define("activemodel-adapter/system/active_model_serializer",
+enifed("activemodel-adapter/system/active_model_serializer",
   ["ember-inflector","ember-data/serializers/rest_serializer","exports"],
   function(__dependency1__, __dependency2__, __exports__) {
     "use strict";
@@ -601,7 +601,7 @@ define("activemodel-adapter/system/active_model_serializer",
 
     __exports__["default"] = ActiveModelSerializer;
   });
-define("ember-data",
+enifed("ember-data",
   ["ember-data/core","ember-data/ext/date","ember-data/system/promise_proxies","ember-data/system/store","ember-data/system/model","ember-data/system/adapter","ember-data/system/debug","ember-data/system/record_arrays","ember-data/system/record_array_manager","ember-data/adapters","ember-data/serializers/json_serializer","ember-data/serializers/rest_serializer","ember-inflector","ember-data/serializers/embedded_records_mixin","activemodel-adapter","ember-data/transforms","ember-data/system/relationships","ember-data/ember-initializer","ember-data/setup-container","ember-data/system/container_proxy","ember-data/system/relationships/relationship","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __dependency7__, __dependency8__, __dependency9__, __dependency10__, __dependency11__, __dependency12__, __dependency13__, __dependency14__, __dependency15__, __dependency16__, __dependency17__, __dependency18__, __dependency19__, __dependency20__, __dependency21__, __exports__) {
     "use strict";
@@ -703,7 +703,7 @@ define("ember-data",
 
     __exports__["default"] = DS;
   });
-define("ember-data/adapters",
+enifed("ember-data/adapters",
   ["ember-data/adapters/fixture_adapter","ember-data/adapters/rest_adapter","exports"],
   function(__dependency1__, __dependency2__, __exports__) {
     "use strict";
@@ -717,7 +717,7 @@ define("ember-data/adapters",
     __exports__.RESTAdapter = RESTAdapter;
     __exports__.FixtureAdapter = FixtureAdapter;
   });
-define("ember-data/adapters/fixture_adapter",
+enifed("ember-data/adapters/fixture_adapter",
   ["ember-data/system/adapter","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
@@ -1062,7 +1062,7 @@ define("ember-data/adapters/fixture_adapter",
       }
     });
   });
-define("ember-data/adapters/rest_adapter",
+enifed("ember-data/adapters/rest_adapter",
   ["ember-data/system/adapter","ember-data/system/map","exports"],
   function(__dependency1__, __dependency2__, __exports__) {
     "use strict";
@@ -1930,7 +1930,7 @@ define("ember-data/adapters/rest_adapter",
       }
     }
   });
-define("ember-data/core",
+enifed("ember-data/core",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -1963,7 +1963,7 @@ define("ember-data/core",
 
     __exports__["default"] = DS;
   });
-define("ember-data/ember-initializer",
+enifed("ember-data/ember-initializer",
   ["ember-data/setup-container"],
   function(__dependency1__) {
     "use strict";
@@ -2047,7 +2047,7 @@ define("ember-data/ember-initializer",
       });
     });
   });
-define("ember-data/ext/date",
+enifed("ember-data/ext/date",
   [],
   function() {
     "use strict";
@@ -2113,7 +2113,7 @@ define("ember-data/ext/date",
       Date.parse = Ember.Date.parse;
     }
   });
-define("ember-data/initializers/data_adapter",
+enifed("ember-data/initializers/data_adapter",
   ["ember-data/system/debug/debug_adapter","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
@@ -2130,7 +2130,7 @@ define("ember-data/initializers/data_adapter",
       container.register('data-adapter:main', DebugAdapter);
     };
   });
-define("ember-data/initializers/store",
+enifed("ember-data/initializers/store",
   ["ember-data/serializers","ember-data/adapters","ember-data/system/container_proxy","ember-data/system/store","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
     "use strict";
@@ -2173,7 +2173,7 @@ define("ember-data/initializers/store",
       container.lookup('store:main');
     };
   });
-define("ember-data/initializers/store_injections",
+enifed("ember-data/initializers/store_injections",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -2191,7 +2191,7 @@ define("ember-data/initializers/store_injections",
       container.injection('data-adapter', 'store', 'store:main');
     };
   });
-define("ember-data/initializers/transforms",
+enifed("ember-data/initializers/transforms",
   ["ember-data/transforms","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
@@ -2214,7 +2214,7 @@ define("ember-data/initializers/transforms",
       container.register('transform:string',  StringTransform);
     };
   });
-define("ember-data/serializers",
+enifed("ember-data/serializers",
   ["ember-data/serializers/json_serializer","ember-data/serializers/rest_serializer","exports"],
   function(__dependency1__, __dependency2__, __exports__) {
     "use strict";
@@ -2224,7 +2224,7 @@ define("ember-data/serializers",
     __exports__.JSONSerializer = JSONSerializer;
     __exports__.RESTSerializer = RESTSerializer;
   });
-define("ember-data/serializers/embedded_records_mixin",
+enifed("ember-data/serializers/embedded_records_mixin",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -2694,7 +2694,7 @@ define("ember-data/serializers/embedded_records_mixin",
 
     __exports__["default"] = EmbeddedRecordsMixin;
   });
-define("ember-data/serializers/json_serializer",
+enifed("ember-data/serializers/json_serializer",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -3778,7 +3778,7 @@ define("ember-data/serializers/json_serializer",
       }
     });
   });
-define("ember-data/serializers/rest_serializer",
+enifed("ember-data/serializers/rest_serializer",
   ["ember-data/serializers/json_serializer","ember-inflector/system/string","exports"],
   function(__dependency1__, __dependency2__, __exports__) {
     "use strict";
@@ -4537,7 +4537,7 @@ define("ember-data/serializers/rest_serializer",
 
     __exports__["default"] = RESTSerializer;
   });
-define("ember-data/setup-container",
+enifed("ember-data/setup-container",
   ["ember-data/initializers/store","ember-data/initializers/transforms","ember-data/initializers/store_injections","ember-data/initializers/data_adapter","activemodel-adapter/setup-container","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __exports__) {
     "use strict";
@@ -4559,7 +4559,7 @@ define("ember-data/setup-container",
       setupActiveModelContainer(container, application);
     };
   });
-define("ember-data/system/adapter",
+enifed("ember-data/system/adapter",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -5029,7 +5029,7 @@ define("ember-data/system/adapter",
     __exports__.Adapter = Adapter;
     __exports__["default"] = Adapter;
   });
-define("ember-data/system/container_proxy",
+enifed("ember-data/system/container_proxy",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -5084,7 +5084,7 @@ define("ember-data/system/container_proxy",
 
     __exports__["default"] = ContainerProxy;
   });
-define("ember-data/system/debug",
+enifed("ember-data/system/debug",
   ["ember-data/system/debug/debug_info","ember-data/system/debug/debug_adapter","exports"],
   function(__dependency1__, __dependency2__, __exports__) {
     "use strict";
@@ -5096,7 +5096,7 @@ define("ember-data/system/debug",
 
     __exports__["default"] = DebugAdapter;
   });
-define("ember-data/system/debug/debug_adapter",
+enifed("ember-data/system/debug/debug_adapter",
   ["ember-data/system/model","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
@@ -5219,7 +5219,7 @@ define("ember-data/system/debug/debug_adapter",
 
     });
   });
-define("ember-data/system/debug/debug_info",
+enifed("ember-data/system/debug/debug_info",
   ["ember-data/system/model","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
@@ -5293,7 +5293,7 @@ define("ember-data/system/debug/debug_info",
 
     __exports__["default"] = Model;
   });
-define("ember-data/system/map",
+enifed("ember-data/system/map",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -5388,7 +5388,7 @@ define("ember-data/system/map",
     __exports__.MapWithDefault = MapWithDefault;
     __exports__.OrderedSet = OrderedSet;
   });
-define("ember-data/system/model",
+enifed("ember-data/system/model",
   ["ember-data/system/model/model","ember-data/system/model/attributes","ember-data/system/model/states","ember-data/system/model/errors","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
     "use strict";
@@ -5406,7 +5406,7 @@ define("ember-data/system/model",
     __exports__.attr = attr;
     __exports__.Errors = Errors;
   });
-define("ember-data/system/model/attributes",
+enifed("ember-data/system/model/attributes",
   ["ember-data/system/model/model","ember-data/system/map","exports"],
   function(__dependency1__, __dependency2__, __exports__) {
     "use strict";
@@ -5717,7 +5717,7 @@ define("ember-data/system/model/attributes",
       }).meta(meta);
     };
   });
-define("ember-data/system/model/errors",
+enifed("ember-data/system/model/errors",
   ["ember-data/system/map","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
@@ -6064,7 +6064,7 @@ define("ember-data/system/model/errors",
       }
     });
   });
-define("ember-data/system/model/model",
+enifed("ember-data/system/model/model",
   ["ember-data/system/model/states","ember-data/system/model/errors","ember-data/system/promise_proxies","ember-data/system/relationships/relationship","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
     "use strict";
@@ -7207,7 +7207,7 @@ define("ember-data/system/model/model",
 
     __exports__["default"] = Model;
   });
-define("ember-data/system/model/states",
+enifed("ember-data/system/model/states",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -7930,7 +7930,7 @@ define("ember-data/system/model/states",
 
     __exports__["default"] = RootState;
   });
-define("ember-data/system/promise_proxies",
+enifed("ember-data/system/promise_proxies",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -8046,7 +8046,7 @@ define("ember-data/system/promise_proxies",
     __exports__.promiseObject = promiseObject;
     __exports__.promiseManyArray = promiseManyArray;
   });
-define("ember-data/system/record_array_manager",
+enifed("ember-data/system/record_array_manager",
   ["ember-data/system/record_arrays","ember-data/system/map","exports"],
   function(__dependency1__, __dependency2__, __exports__) {
     "use strict";
@@ -8359,7 +8359,7 @@ define("ember-data/system/record_array_manager",
       return result;
     }
   });
-define("ember-data/system/record_arrays",
+enifed("ember-data/system/record_arrays",
   ["ember-data/system/record_arrays/record_array","ember-data/system/record_arrays/filtered_record_array","ember-data/system/record_arrays/adapter_populated_record_array","ember-data/system/record_arrays/many_array","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
     "use strict";
@@ -8377,7 +8377,7 @@ define("ember-data/system/record_arrays",
     __exports__.AdapterPopulatedRecordArray = AdapterPopulatedRecordArray;
     __exports__.ManyArray = ManyArray;
   });
-define("ember-data/system/record_arrays/adapter_populated_record_array",
+enifed("ember-data/system/record_arrays/adapter_populated_record_array",
   ["ember-data/system/record_arrays/record_array","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
@@ -8440,7 +8440,7 @@ define("ember-data/system/record_arrays/adapter_populated_record_array",
       }
     });
   });
-define("ember-data/system/record_arrays/filtered_record_array",
+enifed("ember-data/system/record_arrays/filtered_record_array",
   ["ember-data/system/record_arrays/record_array","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
@@ -8511,7 +8511,7 @@ define("ember-data/system/record_arrays/filtered_record_array",
       }, 'filterFunction')
     });
   });
-define("ember-data/system/record_arrays/many_array",
+enifed("ember-data/system/record_arrays/many_array",
   ["ember-data/system/record_arrays/record_array","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
@@ -8658,7 +8658,7 @@ define("ember-data/system/record_arrays/many_array",
       }
     });
   });
-define("ember-data/system/record_arrays/record_array",
+enifed("ember-data/system/record_arrays/record_array",
   ["ember-data/system/promise_proxies","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
@@ -8866,7 +8866,7 @@ define("ember-data/system/record_arrays/record_array",
       }
     });
   });
-define("ember-data/system/relationship-meta",
+enifed("ember-data/system/relationship-meta",
   ["ember-inflector/system","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
@@ -8901,7 +8901,7 @@ define("ember-data/system/relationship-meta",
 
     __exports__.relationshipFromMeta = relationshipFromMeta;
   });
-define("ember-data/system/relationships",
+enifed("ember-data/system/relationships",
   ["./relationships/belongs_to","./relationships/has_many","ember-data/system/relationships/ext","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
     "use strict";
@@ -8916,7 +8916,7 @@ define("ember-data/system/relationships",
     __exports__.belongsTo = belongsTo;
     __exports__.hasMany = hasMany;
   });
-define("ember-data/system/relationships/belongs_to",
+enifed("ember-data/system/relationships/belongs_to",
   ["ember-data/system/model","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
@@ -9023,7 +9023,7 @@ define("ember-data/system/relationships/belongs_to",
 
     __exports__["default"] = belongsTo;
   });
-define("ember-data/system/relationships/ext",
+enifed("ember-data/system/relationships/ext",
   ["ember-data/system/relationship-meta","ember-data/system/model","ember-data/system/map"],
   function(__dependency1__, __dependency2__, __dependency3__) {
     "use strict";
@@ -9584,7 +9584,7 @@ define("ember-data/system/relationships/ext",
 
     });
   });
-define("ember-data/system/relationships/has_many",
+enifed("ember-data/system/relationships/has_many",
   ["ember-data/system/model","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
@@ -9719,7 +9719,7 @@ define("ember-data/system/relationships/has_many",
 
     __exports__["default"] = hasMany;
   });
-define("ember-data/system/relationships/relationship",
+enifed("ember-data/system/relationships/relationship",
   ["ember-data/system/promise_proxies","ember-data/system/map","exports"],
   function(__dependency1__, __dependency2__, __exports__) {
     "use strict";
@@ -10103,7 +10103,7 @@ define("ember-data/system/relationships/relationship",
     __exports__.BelongsToRelationship = BelongsToRelationship;
     __exports__.createRelationshipFor = createRelationshipFor;
   });
-define("ember-data/system/store",
+enifed("ember-data/system/store",
   ["ember-data/system/adapter","ember-inflector/system/string","ember-data/system/map","ember-data/system/promise_proxies","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
     "use strict";
@@ -12010,7 +12010,7 @@ define("ember-data/system/store",
     __exports__.Store = Store;
     __exports__["default"] = Store;
   });
-define("ember-data/transforms",
+enifed("ember-data/transforms",
   ["ember-data/transforms/base","ember-data/transforms/number","ember-data/transforms/date","ember-data/transforms/string","ember-data/transforms/boolean","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __exports__) {
     "use strict";
@@ -12026,7 +12026,7 @@ define("ember-data/transforms",
     __exports__.StringTransform = StringTransform;
     __exports__.BooleanTransform = BooleanTransform;
   });
-define("ember-data/transforms/base",
+enifed("ember-data/transforms/base",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -12102,7 +12102,7 @@ define("ember-data/transforms/base",
       deserialize: Ember.required()
     });
   });
-define("ember-data/transforms/boolean",
+enifed("ember-data/transforms/boolean",
   ["ember-data/transforms/base","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
@@ -12149,7 +12149,7 @@ define("ember-data/transforms/boolean",
       }
     });
   });
-define("ember-data/transforms/date",
+enifed("ember-data/transforms/date",
   ["ember-data/transforms/base","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
@@ -12227,7 +12227,7 @@ define("ember-data/transforms/date",
       }
     });
   });
-define("ember-data/transforms/number",
+enifed("ember-data/transforms/number",
   ["ember-data/transforms/base","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
@@ -12266,7 +12266,7 @@ define("ember-data/transforms/number",
       }
     });
   });
-define("ember-data/transforms/string",
+enifed("ember-data/transforms/string",
   ["ember-data/transforms/base","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
@@ -12303,7 +12303,7 @@ define("ember-data/transforms/string",
       }
     });
   });
-define("ember-inflector",
+enifed("ember-inflector",
   ["./system","./helpers","./ext/string","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
     "use strict";
@@ -12324,7 +12324,7 @@ define("ember-inflector",
     __exports__.pluralize = pluralize;
     __exports__.singularize = singularize;
   });
-define("ember-inflector/ext/string",
+enifed("ember-inflector/ext/string",
   ["../system/string"],
   function(__dependency1__) {
     "use strict";
@@ -12353,7 +12353,7 @@ define("ember-inflector/ext/string",
       };
     }
   });
-define("ember-inflector/helpers",
+enifed("ember-inflector/helpers",
   ["./system/string"],
   function(__dependency1__) {
     "use strict";
@@ -12392,7 +12392,7 @@ define("ember-inflector/helpers",
     */
     Ember.Handlebars.helper('pluralize', pluralize);
   });
-define("ember-inflector/system",
+enifed("ember-inflector/system",
   ["./system/inflector","./system/string","./system/inflections","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
     "use strict";
@@ -12411,7 +12411,7 @@ define("ember-inflector/system",
     __exports__.pluralize = pluralize;
     __exports__.defaultRules = defaultRules;
   });
-define("ember-inflector/system/inflections",
+enifed("ember-inflector/system/inflections",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -12494,7 +12494,7 @@ define("ember-inflector/system/inflections",
       ]
     };
   });
-define("ember-inflector/system/inflector",
+enifed("ember-inflector/system/inflector",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -12795,7 +12795,7 @@ define("ember-inflector/system/inflector",
 
     __exports__["default"] = Inflector;
   });
-define("ember-inflector/system/string",
+enifed("ember-inflector/system/string",
   ["./inflector","exports"],
   function(__dependency1__, __exports__) {
     "use strict";
