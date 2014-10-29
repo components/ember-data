@@ -6982,6 +6982,10 @@ define("ember-data/system/model/model",
           this.reconnectRelationships();
         }
 
+        if (get(this, 'isNew')) {
+          this.clearRelationships();
+        }
+
         if (!get(this, 'isValid')) {
           this._inFlightAttributes = {};
         }
@@ -7606,7 +7610,6 @@ define("ember-data/system/model/states",
     });
 
     createdState.uncommitted.rolledBack = function(record) {
-      record.clearRelationships();
       record.transitionTo('deleted.saved');
     };
 
