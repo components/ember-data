@@ -7580,6 +7580,7 @@ define("ember-data/system/model/states",
     });
 
     createdState.uncommitted.rolledBack = function(record) {
+      record.clearRelationships();
       record.transitionTo('deleted.saved');
     };
 
@@ -9923,7 +9924,9 @@ define("ember-data/system/relationships/relationship",
         });
       } else {
           
-        this.manyArray.set('isLoaded', true);
+        if (!this.manyArray.get('isDestroyed')) {
+          this.manyArray.set('isLoaded', true);
+        }
         return this.manyArray;
      }
     };
