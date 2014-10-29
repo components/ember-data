@@ -4616,7 +4616,7 @@ define("ember-data/system/adapter",
       ```javascript
       return new DS.InvalidError({
         length: 'Must be less than 15',
-        name: 'Must not be blank
+        name: 'Must not be blank'
       });
       ```
 
