@@ -10026,9 +10026,9 @@ enifed("ember-data/system/relationships/relationship",
 
     BelongsToRelationship.prototype._super$removeRecordFromOwn = Relationship.prototype.removeRecordFromOwn;
     BelongsToRelationship.prototype.removeRecordFromOwn = function(record) {
-      if (!this.members.has(record)){ return;}
-      this._super$removeRecordFromOwn(record);
+      if (!this.members.has(record)) { return; }
       this.inverseRecord = null;
+      this._super$removeRecordFromOwn(record);
     };
 
     BelongsToRelationship.prototype.findRecord = function() {
