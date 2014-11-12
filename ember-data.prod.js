@@ -11335,6 +11335,7 @@ enifed("ember-data/system/store",
 
         data = normalizeRelationships(this, type, data);
 
+        
         // Actually load the record into the store.
 
         this._load(type, data, _partial);
