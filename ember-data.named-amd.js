@@ -3939,6 +3939,7 @@ define("ember-data/serializers/rest_serializer",
 
         for (var prop in payload) {
           var typeName  = this.typeForRoot(prop);
+
           if (!store.modelFactoryFor(typeName)){
             Ember.warn(this.warnMessageNoModelForKey(prop, typeName), false);
             continue;
@@ -3946,6 +3947,10 @@ define("ember-data/serializers/rest_serializer",
           var type = store.modelFor(typeName);
           var isPrimary = type.typeKey === primaryTypeName;
           var value = payload[prop];
+
+          if (value === null) {
+            continue;
+          }
 
           // legacy support for singular resources
           if (isPrimary && Ember.typeOf(value) !== "array" ) {
@@ -9930,7 +9935,9 @@ define("ember-data/system/relationships/relationship",
     BelongsToRelationship.prototype.fetchLink = function() {
       var self = this;
       return this.store.findBelongsTo(this.record, this.link, this.relationshipMeta).then(function(record){
-        self.addRecord(record);
+        if (record) {
+          self.addRecord(record);
+        }
         return record;
       });
     };
@@ -11808,6 +11815,11 @@ define("ember-data/system/store",
 
       return promise.then(function(adapterPayload) {
         var payload = serializer.extract(store, relationship.type, adapterPayload, null, 'findBelongsTo');
+
+        if (!payload) {
+          return null;
+        }
+
         var record = store.push(relationship.type, payload);
         return record;
       }, null, "DS: Extract payload of " + record + " : " + relationship.type);
