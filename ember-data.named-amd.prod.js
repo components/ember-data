@@ -5558,7 +5558,7 @@ define("ember-data/system/model/attributes",
         options: options
       };
 
-      return Ember.computed('data', function(key, value) {
+      return Ember.computed(function(key, value) {
         if (arguments.length > 1) {
                     var oldValue = getValue(this, key);
 
@@ -6700,6 +6700,20 @@ define("ember-data/system/model/model",
       },
 
       /**
+        @method _notifyProperties
+        @private
+      */
+      _notifyProperties: function(keys) {
+        Ember.beginPropertyChanges();
+        var key;
+        for (var i = 0, length = keys.length; i < length; i++){
+          key = keys[i];
+          this.notifyPropertyChange(key);
+        }
+        Ember.endPropertyChanges();
+      },
+
+      /**
         Returns an object, whose keys are changed properties, and value is
         an [oldProp, newProp] array.
 
@@ -6764,7 +6778,7 @@ define("ember-data/system/model/model",
 
         if (!data) { return; }
 
-        this.notifyPropertyChange('data');
+        this._notifyProperties(Ember.keys(data));
       },
 
       /**
@@ -6797,15 +6811,16 @@ define("ember-data/system/model/model",
           the existing data, not replace it.
       */
       setupData: function(data, partial) {
+        
         if (partial) {
           Ember.merge(this._data, data);
         } else {
           this._data = data;
         }
 
-        if (data) { this.pushedData(); }
+        this.pushedData();
 
-        this.notifyPropertyChange('data');
+        this._notifyProperties(Ember.keys(data));
       },
 
       materializeId: function(id) {
@@ -6861,7 +6876,8 @@ define("ember-data/system/model/model",
 
         this.send('rolledBack');
 
-        this.notifyPropertyChange('data');
+        this._notifyProperties(Ember.keys(this._data));
+
       },
 
       toStringExtension: function() {
