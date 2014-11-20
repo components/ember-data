@@ -8084,6 +8084,7 @@ enifed("ember-data/system/record_array_manager",
     var OrderedSet = __dependency2__.OrderedSet;
     var get = Ember.get;
     var forEach = Ember.EnumerableUtils.forEach;
+    var indexOf = Ember.EnumerableUtils.indexOf;
 
     /**
       @class RecordArrayManager
@@ -8336,6 +8337,19 @@ enifed("ember-data/system/record_array_manager",
         this.updateFilter(array, type, filter);
       },
 
+      /**
+        Unregister a FilteredRecordArray.
+        So manager will not update this array.
+
+        @method unregisterFilteredRecordArray
+        @param {DS.RecordArray} array
+      */
+      unregisterFilteredRecordArray: function(array) {
+        var recordArrays = this.filteredRecordArrays.get(array.type);
+        var index = indexOf(recordArrays, array);
+        recordArrays.splice(index, 1);
+      },
+
       // Internally, we maintain a map of all unloaded IDs requested by
       // a ManyArray. As the adapter loads data into the store, the
       // store notifies any interested ManyArrays. When the ManyArray's
@@ -8530,7 +8544,20 @@ enifed("ember-data/system/record_arrays/filtered_record_array",
 
       updateFilter: Ember.observer(function() {
         Ember.run.once(this, this._updateFilter);
-      }, 'filterFunction')
+      }, 'filterFunction'),
+
+      /**
+        @method _unregisterFromManager
+        @private
+      */
+      _unregisterFromManager: function(){
+        this.manager.unregisterFilteredRecordArray(this);
+      },
+
+      willDestroy: function(){
+        this._unregisterFromManager();
+        this._super();
+      }
     });
   });
 enifed("ember-data/system/record_arrays/many_array",
