@@ -11211,9 +11211,9 @@ enifed("ember-data/system/store",
         if (typeMap) { return typeMap; }
 
         typeMap = {
-          idToRecord: Object.create(null),
+          idToRecord: Ember.create(null),
           records: [],
-          metadata: Object.create(null),
+          metadata: Ember.create(null),
           type: type
         };
 
@@ -11347,6 +11347,7 @@ enifed("ember-data/system/store",
         // merged into the existing data, not replace it.
                 
         var type = this.modelFor(typeName);
+        var filter = Ember.EnumerableUtils.filter;
 
         // If the payload contains relationships that are specified as
         // IDs, normalizeRelationships will convert them into DS.Model instances

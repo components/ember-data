@@ -11163,9 +11163,9 @@ define("ember-data/system/store",
         if (typeMap) { return typeMap; }
 
         typeMap = {
-          idToRecord: Object.create(null),
+          idToRecord: Ember.create(null),
           records: [],
-          metadata: Object.create(null),
+          metadata: Ember.create(null),
           type: type
         };
 
@@ -11301,6 +11301,7 @@ define("ember-data/system/store",
         Ember.assert("You must include an `id` for " + typeName + " in an object passed to `push`/`update`", data.id != null && data.id !== '');
 
         var type = this.modelFor(typeName);
+        var filter = Ember.EnumerableUtils.filter;
 
         // If the payload contains relationships that are specified as
         // IDs, normalizeRelationships will convert them into DS.Model instances
@@ -11310,10 +11311,10 @@ define("ember-data/system/store",
         data = normalizeRelationships(this, type, data);
 
         Ember.warn("The payload for '" + typeName + "' contains these unknown keys: " +
-          Ember.inspect(Ember.keys(data).filter(function(key) {
+          Ember.inspect(filter(Ember.keys(data), function(key) {
             return !get(type, 'fields').has(key) && key !== 'id' && key !== 'links';
           })) + ". Make sure they've been defined in your model.",
-          Ember.keys(data).filter(function(key) {
+          filter(Ember.keys(data), function(key) {
             return !get(type, 'fields').has(key) && key !== 'id' && key !== 'links';
           }).length === 0
         );
