@@ -10917,14 +10917,17 @@ enifed("ember-data/system/store",
       },
 
       /**
-        This method returns a filtered array that contains all of the known records
-        for a given type.
+        This method returns a filtered array that contains all of the
+        known records for a given type in the store.
 
-        Note that because it's just a filter, it will have any locally
-        created records of the type.
+        Note that because it's just a filter, the result will contain any
+        locally created records of the type, however, it will not make a
+        request to the backend to retrieve additional records. If you
+        would like to request all the records from the backend please use
+        [store.find](#method_find).
 
         Also note that multiple calls to `all` for a given type will always
-        return the same RecordArray.
+        return the same `RecordArray`.
 
         Example
 
