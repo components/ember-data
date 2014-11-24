@@ -8011,7 +8011,19 @@ enifed("ember-data/system/promise_proxies",
       Right now we proxy:
         `reload()`
         `createRecord()`
+        `on()`
+        `one()`
+        `trigger()`
+        `off()`
+        `has()`
     */
+
+    function proxyToContent(method) {
+      return function() {
+        var content = get(this, 'content');
+        return content[method].apply(content, arguments);
+      };
+    }
 
     var PromiseManyArray = PromiseArray.extend({
       reload: function() {
@@ -8019,10 +8031,17 @@ enifed("ember-data/system/promise_proxies",
                 return get(this, 'content').reload();
       },
 
-      createRecord: function() {
-        var content = get(this, 'content');
-        return content.createRecord.apply(content, arguments);
-      }
+      createRecord: proxyToContent('createRecord'),
+
+      on: proxyToContent('on'),
+
+      one: proxyToContent('one'),
+
+      trigger: proxyToContent('trigger'),
+
+      off: proxyToContent('off'),
+
+      has: proxyToContent('has')
     });
 
     var promiseManyArray = function(promise, label) {
