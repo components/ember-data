@@ -1717,7 +1717,7 @@ define("ember-data/adapters/rest_adapter",
         @method ajaxSuccess
         @param  {Object} jqXHR
         @param  {Object} jsonPayload
-        @return {Object} jqXHR
+        @return {Object} jsonPayload
       */
 
       ajaxSuccess: function(jqXHR, jsonPayload) {
