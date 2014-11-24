@@ -602,8 +602,8 @@ enifed("activemodel-adapter/system/active_model_serializer",
     __exports__["default"] = ActiveModelSerializer;
   });
 enifed("ember-data",
-  ["ember-data/system/create","ember-data/core","ember-data/ext/date","ember-data/system/promise_proxies","ember-data/system/store","ember-data/system/model","ember-data/system/adapter","ember-data/system/debug","ember-data/system/record_arrays","ember-data/system/record_array_manager","ember-data/adapters","ember-data/serializers/json_serializer","ember-data/serializers/rest_serializer","ember-inflector","ember-data/serializers/embedded_records_mixin","activemodel-adapter","ember-data/transforms","ember-data/system/relationships","ember-data/ember-initializer","ember-data/setup-container","ember-data/system/container_proxy","ember-data/system/relationships/relationship","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __dependency7__, __dependency8__, __dependency9__, __dependency10__, __dependency11__, __dependency12__, __dependency13__, __dependency14__, __dependency15__, __dependency16__, __dependency17__, __dependency18__, __dependency19__, __dependency20__, __dependency21__, __dependency22__, __exports__) {
+  ["ember-data/core","ember-data/ext/date","ember-data/system/promise_proxies","ember-data/system/store","ember-data/system/model","ember-data/system/adapter","ember-data/system/debug","ember-data/system/record_arrays","ember-data/system/record_array_manager","ember-data/adapters","ember-data/serializers/json_serializer","ember-data/serializers/rest_serializer","ember-inflector","ember-data/serializers/embedded_records_mixin","activemodel-adapter","ember-data/transforms","ember-data/system/relationships","ember-data/ember-initializer","ember-data/setup-container","ember-data/system/container_proxy","ember-data/system/relationships/relationship","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __dependency6__, __dependency7__, __dependency8__, __dependency9__, __dependency10__, __dependency11__, __dependency12__, __dependency13__, __dependency14__, __dependency15__, __dependency16__, __dependency17__, __dependency18__, __dependency19__, __dependency20__, __dependency21__, __exports__) {
     "use strict";
     /**
       Ember Data
@@ -615,43 +615,43 @@ enifed("ember-data",
     // support RSVP 2.x via resolve,  but prefer RSVP 3.x's Promise.cast
     Ember.RSVP.Promise.cast = Ember.RSVP.Promise.cast || Ember.RSVP.resolve;
 
-    var DS = __dependency2__["default"];
+    var DS = __dependency1__["default"];
 
-    var PromiseArray = __dependency4__.PromiseArray;
-    var PromiseObject = __dependency4__.PromiseObject;
-    var Store = __dependency5__.Store;
-    var Model = __dependency6__.Model;
-    var Errors = __dependency6__.Errors;
-    var RootState = __dependency6__.RootState;
-    var attr = __dependency6__.attr;
-    var InvalidError = __dependency7__.InvalidError;
-    var Adapter = __dependency7__.Adapter;
-    var DebugAdapter = __dependency8__["default"];
-    var RecordArray = __dependency9__.RecordArray;
-    var FilteredRecordArray = __dependency9__.FilteredRecordArray;
-    var AdapterPopulatedRecordArray = __dependency9__.AdapterPopulatedRecordArray;
-    var ManyArray = __dependency9__.ManyArray;
-    var RecordArrayManager = __dependency10__["default"];
-    var RESTAdapter = __dependency11__.RESTAdapter;
-    var FixtureAdapter = __dependency11__.FixtureAdapter;
-    var JSONSerializer = __dependency12__["default"];
-    var RESTSerializer = __dependency13__["default"];
-    var EmbeddedRecordsMixin = __dependency15__["default"];
-    var ActiveModelAdapter = __dependency16__.ActiveModelAdapter;
-    var ActiveModelSerializer = __dependency16__.ActiveModelSerializer;
+    var PromiseArray = __dependency3__.PromiseArray;
+    var PromiseObject = __dependency3__.PromiseObject;
+    var Store = __dependency4__.Store;
+    var Model = __dependency5__.Model;
+    var Errors = __dependency5__.Errors;
+    var RootState = __dependency5__.RootState;
+    var attr = __dependency5__.attr;
+    var InvalidError = __dependency6__.InvalidError;
+    var Adapter = __dependency6__.Adapter;
+    var DebugAdapter = __dependency7__["default"];
+    var RecordArray = __dependency8__.RecordArray;
+    var FilteredRecordArray = __dependency8__.FilteredRecordArray;
+    var AdapterPopulatedRecordArray = __dependency8__.AdapterPopulatedRecordArray;
+    var ManyArray = __dependency8__.ManyArray;
+    var RecordArrayManager = __dependency9__["default"];
+    var RESTAdapter = __dependency10__.RESTAdapter;
+    var FixtureAdapter = __dependency10__.FixtureAdapter;
+    var JSONSerializer = __dependency11__["default"];
+    var RESTSerializer = __dependency12__["default"];
+    var EmbeddedRecordsMixin = __dependency14__["default"];
+    var ActiveModelAdapter = __dependency15__.ActiveModelAdapter;
+    var ActiveModelSerializer = __dependency15__.ActiveModelSerializer;
 
-    var Transform = __dependency17__.Transform;
-    var DateTransform = __dependency17__.DateTransform;
-    var NumberTransform = __dependency17__.NumberTransform;
-    var StringTransform = __dependency17__.StringTransform;
-    var BooleanTransform = __dependency17__.BooleanTransform;
+    var Transform = __dependency16__.Transform;
+    var DateTransform = __dependency16__.DateTransform;
+    var NumberTransform = __dependency16__.NumberTransform;
+    var StringTransform = __dependency16__.StringTransform;
+    var BooleanTransform = __dependency16__.BooleanTransform;
 
-    var hasMany = __dependency18__.hasMany;
-    var belongsTo = __dependency18__.belongsTo;
-    var setupContainer = __dependency20__["default"];
+    var hasMany = __dependency17__.hasMany;
+    var belongsTo = __dependency17__.belongsTo;
+    var setupContainer = __dependency19__["default"];
 
-    var ContainerProxy = __dependency21__["default"];
-    var Relationship = __dependency22__.Relationship;
+    var ContainerProxy = __dependency20__["default"];
+    var Relationship = __dependency21__.Relationship;
 
     DS.Store         = Store;
     DS.PromiseArray  = PromiseArray;
@@ -5069,20 +5069,6 @@ enifed("ember-data/system/container_proxy",
 
     __exports__["default"] = ContainerProxy;
   });
-enifed("ember-data/system/create",
-  [],
-  function() {
-    "use strict";
-    /*
-      Detect if the user has a correct Object.create shim.
-      Ember has provided this for a long time but has had an incorrect shim before 1.8
-      TODO: Remove for Ember Data 1.0.
-    */
-    var object = Ember.create(null);
-    if (object.toString !== undefined && Ember.keys(Ember.create({})).length !== 0){
-      throw new Error("Ember Data requires a correct Object.create shim. You should upgrade to Ember >= 1.8 which provides one for you.");
-    }
-  });
 enifed("ember-data/system/debug",
   ["ember-data/system/debug/debug_info","ember-data/system/debug/debug_adapter","exports"],
   function(__dependency1__, __dependency2__, __exports__) {
@@ -5323,9 +5309,9 @@ enifed("ember-data/system/map",
       usesOldBehavior = value === 'key' && key === 'value';
     });
 
-    Map.prototype            = Ember.create(Ember.Map.prototype);
-    MapWithDefault.prototype = Ember.create(Ember.MapWithDefault.prototype);
-    OrderedSet.prototype     = Ember.create(Ember.OrderedSet.prototype);
+    Map.prototype            = Object.create(Ember.Map.prototype);
+    MapWithDefault.prototype = Object.create(Ember.MapWithDefault.prototype);
+    OrderedSet.prototype     = Object.create(Ember.OrderedSet.prototype);
 
     OrderedSet.create = function(){
       return new OrderedSet();
@@ -5386,6 +5372,29 @@ enifed("ember-data/system/map",
     __exports__.Map = Map;
     __exports__.MapWithDefault = MapWithDefault;
     __exports__.OrderedSet = OrderedSet;
+  });
+enifed("ember-data/system/merge",
+  ["exports"],
+  function(__exports__) {
+    "use strict";
+    function merge(original, updates) {
+      if (!updates || typeof updates !== 'object') {
+        return original;
+      }
+
+      var props = Ember.keys(updates);
+      var prop;
+      var length = props.length;
+
+      for (var i = 0; i < length; i++) {
+        prop = props[i];
+        original[prop] = updates[prop];
+      }
+
+      return original;
+    }
+
+    __exports__["default"] = merge;
   });
 enifed("ember-data/system/model",
   ["ember-data/system/model/model","ember-data/system/model/attributes","ember-data/system/model/states","ember-data/system/model/errors","exports"],
@@ -5624,15 +5633,15 @@ enifed("ember-data/system/model/attributes",
     }
 
     function hasValue(record, key) {
-      return record._attributes.hasOwnProperty(key) ||
-             record._inFlightAttributes.hasOwnProperty(key) ||
+      return key in record._attributes ||
+             key in record._inFlightAttributes ||
              record._data.hasOwnProperty(key);
     }
 
     function getValue(record, key) {
-      if (record._attributes.hasOwnProperty(key)) {
+      if (key in record._attributes) {
         return record._attributes[key];
-      } else if (record._inFlightAttributes.hasOwnProperty(key)) {
+      } else if (key in record._inFlightAttributes) {
         return record._inFlightAttributes[key];
       } else {
         return record._data[key];
@@ -6062,13 +6071,14 @@ enifed("ember-data/system/model/errors",
     });
   });
 enifed("ember-data/system/model/model",
-  ["ember-data/system/model/states","ember-data/system/model/errors","ember-data/system/promise_proxies","ember-data/system/relationships/relationship","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
+  ["ember-data/system/model/states","ember-data/system/model/errors","ember-data/system/promise_proxies","ember-data/system/relationships/relationship","ember-data/system/merge","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __exports__) {
     "use strict";
     var RootState = __dependency1__["default"];
     var Errors = __dependency2__["default"];
     var PromiseObject = __dependency3__.PromiseObject;
     var createRelationshipFor = __dependency4__.createRelationshipFor;
+    var merge = __dependency5__["default"];
 
     /**
       @module ember-data
@@ -6076,7 +6086,6 @@ enifed("ember-data/system/model/model",
 
     var get = Ember.get;
     var set = Ember.set;
-    var merge = Ember.merge;
     var Promise = Ember.RSVP.Promise;
     var forEach = Ember.ArrayPolyfills.forEach;
     var map = Ember.ArrayPolyfills.map;
@@ -6086,8 +6095,8 @@ enifed("ember-data/system/model/model",
       return get(get(this, 'currentState'), key);
     }).readOnly();
 
-    var _extractPivotNameCache = Ember.create(null);
-    var _splitOnDotCache = Ember.create(null);
+    var _extractPivotNameCache = Object.create(null);
+    var _splitOnDotCache = Object.create(null);
 
     function splitOnDot(name) {
       return _splitOnDotCache[name] || (
@@ -6509,8 +6518,8 @@ enifed("ember-data/system/model/model",
         this._changesToSync = {};
         this._deferredTriggers = [];
         this._data = {};
-        this._attributes = {};
-        this._inFlightAttributes = {};
+        this._attributes = Ember.create(null);
+        this._inFlightAttributes = Ember.create(null);
         this._relationships = {};
         /*
           implicit relationships are relationship which have not been declared but the inverse side exists on
@@ -6532,7 +6541,7 @@ enifed("ember-data/system/model/model",
           would have a implicit post relationship in order to be do things like remove ourselves from the post
           when we are deleted
         */
-        this._implicitRelationships = Ember.create(null);
+        this._implicitRelationships = Object.create(null);
         var model = this;
         //TODO Move into a getter for better perf
         this.constructor.eachRelationship(function(key, descriptor) {
@@ -6894,10 +6903,10 @@ enifed("ember-data/system/model/model",
         if (data) {
           this._data = data;
         } else {
-          Ember.mixin(this._data, this._inFlightAttributes);
+          merge(this._data, this._inFlightAttributes);
         }
 
-        this._inFlightAttributes = {};
+        this._inFlightAttributes = Ember.create(null);
 
         this.send('didCommit');
         this.updateRecordArraysLater();
@@ -6939,7 +6948,7 @@ enifed("ember-data/system/model/model",
       setupData: function(data, partial) {
         
         if (partial) {
-          Ember.merge(this._data, data);
+          merge(this._data, data);
         } else {
           this._data = data;
         }
@@ -6978,10 +6987,10 @@ enifed("ember-data/system/model/model",
         @method rollback
       */
       rollback: function() {
-        this._attributes = {};
+        this._attributes = Ember.create(null);
 
         if (get(this, 'isError')) {
-          this._inFlightAttributes = {};
+          this._inFlightAttributes = Ember.create(null);
           set(this, 'isError', false);
         }
 
@@ -6997,7 +7006,7 @@ enifed("ember-data/system/model/model",
         }
 
         if (!get(this, 'isValid')) {
-          this._inFlightAttributes = {};
+          this._inFlightAttributes = Ember.create(null);
         }
 
         this.send('rolledBack');
@@ -7034,7 +7043,7 @@ enifed("ember-data/system/model/model",
 
         this.get('store').scheduleSave(this, resolver);
         this._inFlightAttributes = this._attributes;
-        this._attributes = {};
+        this._attributes = Ember.create(null);
 
         return PromiseObject.create({
           promise: resolver.promise
@@ -7092,22 +7101,6 @@ enifed("ember-data/system/model/model",
 
       // FOR USE DURING COMMIT PROCESS
 
-      adapterDidUpdateAttribute: function(attributeName, value) {
-
-        // If a value is passed in, update the internal attributes and clear
-        // the attribute cache so it picks up the new value. Otherwise,
-        // collapse the current value into the internal attributes because
-        // the adapter has acknowledged it.
-        if (value !== undefined) {
-          this._data[attributeName] = value;
-          this.notifyPropertyChange(attributeName);
-        } else {
-          this._data[attributeName] = this._inFlightAttributes[attributeName];
-        }
-
-        this.updateRecordArraysLater();
-      },
-
       /**
         @method adapterDidInvalidate
         @private
@@ -7122,6 +7115,7 @@ enifed("ember-data/system/model/model",
 
         this.eachAttribute(addError);
         this.eachRelationship(addError);
+        this._saveWasRejected();
       },
 
       /**
@@ -7131,6 +7125,17 @@ enifed("ember-data/system/model/model",
       adapterDidError: function() {
         this.send('becameError');
         set(this, 'isError', true);
+        this._saveWasRejected();
+      },
+
+      _saveWasRejected: function() {
+        var keys = Ember.keys(this._inFlightAttributes);
+        for (var i=0; i < keys.length; i++) {
+          if (this._attributes[keys[i]] === undefined) {
+            this._attributes[keys[i]] = this._inFlightAttributes[keys[i]];
+          }
+        }
+        this._inFlightAttributes = Ember.create(null);
       },
 
       /**
@@ -7470,7 +7475,7 @@ enifed("ember-data/system/model/states",
         loadingData: Ember.K,
 
         propertyWasReset: function(record, name) {
-          var length = Ember.keys(record._attributes);
+          var length = Ember.keys(record._attributes).length;
           var stillDirty = length > 0;
 
           if (!stillDirty) { record.send('rolledBack'); }
@@ -7753,14 +7758,7 @@ enifed("ember-data/system/model/states",
         saved: {
           setup: function(record) {
             var attrs = record._attributes;
-            var isDirty = false;
-
-            for (var prop in attrs) {
-              if (attrs.hasOwnProperty(prop)) {
-                isDirty = true;
-                break;
-              }
-            }
+            var isDirty = Ember.keys(attrs).length > 0;
 
             if (isDirty) {
               record.adapterDidDirty();
@@ -8410,7 +8408,7 @@ enifed("ember-data/system/record_arrays/adapter_populated_record_array",
     var get = Ember.get;
 
     function cloneNull(source) {
-      var clone = Ember.create(null);
+      var clone = Object.create(null);
       for (var key in source) {
         clone[key] = source[key];
       }
@@ -9166,7 +9164,7 @@ enifed("ember-data/system/relationships/ext",
       },
 
       inverseMap: Ember.computed(function() {
-        return Ember.create(null);
+        return Object.create(null);
       }),
 
       /**
@@ -9788,24 +9786,20 @@ enifed("ember-data/system/relationships/relationship",
       },
 
       removeRecords: function(records){
-        var length = Ember.get(records, 'length');
-        var record;
-        for (var i = 0; i < length; i++){
-          record = records[i];
-          this.removeRecord(record);
-        }
+        var that = this;
+        records.forEach(function(record){
+          that.removeRecord(record);
+        });
       },
 
       addRecords: function(records, idx){
-        var length = Ember.get(records, 'length');
-        var record;
-        for (var i = 0; i < length; i++){
-          record = records[i];
-          this.addRecord(record, idx);
+        var that = this;
+        records.forEach(function(record){
+          that.addRecord(record, idx);
           if (idx !== undefined) {
             idx++;
           }
-        }
+        });
       },
 
       addRecord: function(record, idx) {
@@ -9895,7 +9889,7 @@ enifed("ember-data/system/relationships/relationship",
       this.manyArray.isPolymorphic = this.isPolymorphic;
     };
 
-    ManyRelationship.prototype = Ember.create(Relationship.prototype);
+    ManyRelationship.prototype = Object.create(Relationship.prototype);
     ManyRelationship.prototype.constructor = ManyRelationship;
     ManyRelationship.prototype._super$constructor = Relationship;
 
@@ -10007,7 +10001,7 @@ enifed("ember-data/system/relationships/relationship",
       this.inverseRecord = null;
     };
 
-    BelongsToRelationship.prototype = Ember.create(Relationship.prototype);
+    BelongsToRelationship.prototype = Object.create(Relationship.prototype);
     BelongsToRelationship.prototype.constructor = BelongsToRelationship;
     BelongsToRelationship.prototype._super$constructor = Relationship;
 
