@@ -1949,11 +1949,11 @@ enifed("ember-data/core",
       /**
         @property VERSION
         @type String
-        @default '1.0.0-beta.12-canary'
+        @default '1.0.0-beta.12'
         @static
       */
       DS = Ember.Namespace.create({
-        VERSION: '1.0.0-beta.12-canary'
+        VERSION: '1.0.0-beta.12'
       });
 
       if (Ember.libraries) {
@@ -12331,7 +12331,6 @@ enifed("ember-data/transforms/date",
     }
 
     __exports__["default"] = Transform.extend({
-
       deserialize: function(serialized) {
         var type = typeof serialized;
 
