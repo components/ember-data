@@ -152,6 +152,7 @@
       filter: syncForTest(),
       find: syncForTest(),
       findMany: syncForTest(),
+      findHasMany: syncForTest(),
       findByIds: syncForTest(),
       didSaveRecord: syncForTest(),
       didSaveRecords: syncForTest(),
@@ -168,7 +169,12 @@
       reload: syncForTest(),
       deleteRecord: syncForTest(),
       dataDidChange: Ember.observer(syncForTest(), 'data'),
-      updateRecordArraysLater: syncForTest()
+      updateRecordArraysLater: syncForTest(),
+      updateRecordArrays: syncForTest()
+    });
+
+    DS.ManyArray.reopen({
+      reload: syncForTest()
     });
 
     DS.Errors.reopen({
@@ -179,6 +185,11 @@
 
     DS.Relationship.prototype.addRecord = syncForTest(DS.Relationship.prototype.addRecord);
     DS.Relationship.prototype.removeRecord = syncForTest(DS.Relationship.prototype.removeRecord);
+
+    DS.Relationship.prototype.removeRecordFromInverse = syncForTest(DS.Relationship.prototype.removeRecordFromInverse);
+    DS.Relationship.prototype.removeRecordFromOwn = syncForTest(DS.Relationship.prototype.removeRecordFromOwn);
+
+    DS.Relationship.prototype.addRecordToInverse = syncForTest(DS.Relationship.prototype.addRecordToInverse);
 
     var transforms = {
       'boolean': DS.BooleanTransform.create(),
@@ -200,5 +211,38 @@
   // Generate the jQuery expando on window ahead of time
   // to make the QUnit global check run clean
   jQuery(window).data('testing', true);
+
+  window.warns = function(callback, regex){
+    var warnWasCalled = false;
+    var oldWarn = Ember.warn;
+    Ember.warn = function Ember_assertWarning(message, test){
+      if (!test) {
+        warnWasCalled = true;
+        if (regex) {
+          ok(regex.test(message), 'the call to Ember.warn got an unexpected message: ' + message);
+        }
+      }
+    };
+    try {
+      callback();
+      ok(warnWasCalled, 'expected Ember.warn to warn, but was not called');
+    } finally {
+      Ember.warn = oldWarn;
+    }
+  };
+
+  window.noWarns = function(callback){
+    var oldWarn = Ember.warn;
+    var warnWasCalled = false;
+    Ember.warn = function Ember_noWarn(message, test){
+      warnWasCalled = !test;
+    };
+    try {
+      callback();
+    } finally {
+      ok(!warnWasCalled, 'Ember.warn warned when it should not have warned');
+      Ember.warn = oldWarn;
+    }
+  };
 
 })();
