@@ -12179,6 +12179,10 @@ define("ember-data/transforms/number",
 
     var empty = Ember.isEmpty;
 
+    function isNumber(value) {
+      return value === value && value !== Infinity && value !== -Infinity;
+    }
+
     /**
       The `DS.NumberTransform` class is used to serialize and deserialize
       numeric attributes on Ember Data record objects. This transform is
@@ -12202,11 +12206,27 @@ define("ember-data/transforms/number",
      */
     __exports__["default"] = Transform.extend({
       deserialize: function(serialized) {
-        return empty(serialized) ? null : Number(serialized);
+        var transformed;
+
+        if (empty(serialized)) {
+          return null;
+        } else {
+          transformed = Number(serialized);
+
+          return isNumber(transformed) ? transformed : null;
+        }
       },
 
       serialize: function(deserialized) {
-        return empty(deserialized) ? null : Number(deserialized);
+        var transformed;
+
+        if (empty(deserialized)) {
+          return null;
+        } else {
+          transformed = Number(deserialized);
+
+          return isNumber(transformed) ? transformed : null;
+        }
       }
     });
   });
