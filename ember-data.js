@@ -5407,6 +5407,29 @@ enifed("ember-data/system/map",
     __exports__.MapWithDefault = MapWithDefault;
     __exports__.OrderedSet = OrderedSet;
   });
+enifed("ember-data/system/merge",
+  ["exports"],
+  function(__exports__) {
+    "use strict";
+    function merge(original, updates) {
+      if (!updates || typeof updates !== 'object') {
+        return original;
+      }
+
+      var props = Ember.keys(updates);
+      var prop;
+      var length = props.length;
+
+      for (var i = 0; i < length; i++) {
+        prop = props[i];
+        original[prop] = updates[prop];
+      }
+
+      return original;
+    }
+
+    __exports__["default"] = merge;
+  });
 enifed("ember-data/system/model",
   ["ember-data/system/model/model","ember-data/system/model/attributes","ember-data/system/model/states","ember-data/system/model/errors","exports"],
   function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
@@ -5645,15 +5668,15 @@ enifed("ember-data/system/model/attributes",
     }
 
     function hasValue(record, key) {
-      return record._attributes.hasOwnProperty(key) ||
-             record._inFlightAttributes.hasOwnProperty(key) ||
+      return key in record._attributes ||
+             key in record._inFlightAttributes ||
              record._data.hasOwnProperty(key);
     }
 
     function getValue(record, key) {
-      if (record._attributes.hasOwnProperty(key)) {
+      if (key in record._attributes) {
         return record._attributes[key];
-      } else if (record._inFlightAttributes.hasOwnProperty(key)) {
+      } else if (key in record._inFlightAttributes) {
         return record._inFlightAttributes[key];
       } else {
         return record._data[key];
@@ -6089,13 +6112,14 @@ enifed("ember-data/system/model/errors",
     });
   });
 enifed("ember-data/system/model/model",
-  ["ember-data/system/model/states","ember-data/system/model/errors","ember-data/system/promise_proxies","ember-data/system/relationships/relationship","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
+  ["ember-data/system/model/states","ember-data/system/model/errors","ember-data/system/promise_proxies","ember-data/system/relationships/relationship","ember-data/system/merge","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __dependency5__, __exports__) {
     "use strict";
     var RootState = __dependency1__["default"];
     var Errors = __dependency2__["default"];
     var PromiseObject = __dependency3__.PromiseObject;
     var createRelationshipFor = __dependency4__.createRelationshipFor;
+    var merge = __dependency5__["default"];
 
     /**
       @module ember-data
@@ -6103,7 +6127,6 @@ enifed("ember-data/system/model/model",
 
     var get = Ember.get;
     var set = Ember.set;
-    var merge = Ember.merge;
     var Promise = Ember.RSVP.Promise;
     var forEach = Ember.ArrayPolyfills.forEach;
     var map = Ember.ArrayPolyfills.map;
@@ -6469,7 +6492,9 @@ enifed("ember-data/system/model/model",
       toJSON: function(options) {
         if (!JSONSerializer) { JSONSerializer = requireModule("ember-data/serializers/json_serializer")["default"]; }
         // container is for lazy transform lookups
-        var serializer = JSONSerializer.create({ container: this.container });
+        var serializer = JSONSerializer.create({
+          container: this.container
+        });
         return serializer.serialize(this, options);
       },
 
@@ -6525,8 +6550,6 @@ enifed("ember-data/system/model/model",
         return this._data;
       }).readOnly(),
 
-      _data: null,
-
       init: function() {
         this._super();
         this._setup();
@@ -6536,8 +6559,8 @@ enifed("ember-data/system/model/model",
         this._changesToSync = {};
         this._deferredTriggers = [];
         this._data = {};
-        this._attributes = {};
-        this._inFlightAttributes = {};
+        this._attributes = Ember.create(null);
+        this._inFlightAttributes = Ember.create(null);
         this._relationships = {};
         /*
           implicit relationships are relationship which have not been declared but the inverse side exists on
@@ -6922,10 +6945,10 @@ enifed("ember-data/system/model/model",
         if (data) {
           this._data = data;
         } else {
-          Ember.mixin(this._data, this._inFlightAttributes);
+          merge(this._data, this._inFlightAttributes);
         }
 
-        this._inFlightAttributes = {};
+        this._inFlightAttributes = Ember.create(null);
 
         this.send('didCommit');
         this.updateRecordArraysLater();
@@ -6968,7 +6991,7 @@ enifed("ember-data/system/model/model",
         Ember.assert("Expected an object as `data` in `setupData`", Ember.typeOf(data) === 'object');
 
         if (partial) {
-          Ember.merge(this._data, data);
+          merge(this._data, data);
         } else {
           this._data = data;
         }
@@ -7008,10 +7031,10 @@ enifed("ember-data/system/model/model",
         @method rollback
       */
       rollback: function() {
-        this._attributes = {};
+        this._attributes = Ember.create(null);
 
         if (get(this, 'isError')) {
-          this._inFlightAttributes = {};
+          this._inFlightAttributes = Ember.create(null);
           set(this, 'isError', false);
         }
 
@@ -7027,7 +7050,7 @@ enifed("ember-data/system/model/model",
         }
 
         if (!get(this, 'isValid')) {
-          this._inFlightAttributes = {};
+          this._inFlightAttributes = Ember.create(null);
         }
 
         this.send('rolledBack');
@@ -7064,7 +7087,7 @@ enifed("ember-data/system/model/model",
 
         this.get('store').scheduleSave(this, resolver);
         this._inFlightAttributes = this._attributes;
-        this._attributes = {};
+        this._attributes = Ember.create(null);
 
         return PromiseObject.create({
           promise: resolver.promise
@@ -7122,22 +7145,6 @@ enifed("ember-data/system/model/model",
 
       // FOR USE DURING COMMIT PROCESS
 
-      adapterDidUpdateAttribute: function(attributeName, value) {
-
-        // If a value is passed in, update the internal attributes and clear
-        // the attribute cache so it picks up the new value. Otherwise,
-        // collapse the current value into the internal attributes because
-        // the adapter has acknowledged it.
-        if (value !== undefined) {
-          this._data[attributeName] = value;
-          this.notifyPropertyChange(attributeName);
-        } else {
-          this._data[attributeName] = this._inFlightAttributes[attributeName];
-        }
-
-        this.updateRecordArraysLater();
-      },
-
       /**
         @method adapterDidInvalidate
         @private
@@ -7152,6 +7159,7 @@ enifed("ember-data/system/model/model",
 
         this.eachAttribute(addError);
         this.eachRelationship(addError);
+        this._saveWasRejected();
       },
 
       /**
@@ -7161,6 +7169,17 @@ enifed("ember-data/system/model/model",
       adapterDidError: function() {
         this.send('becameError');
         set(this, 'isError', true);
+        this._saveWasRejected();
+      },
+
+      _saveWasRejected: function() {
+        var keys = Ember.keys(this._inFlightAttributes);
+        for (var i=0; i < keys.length; i++) {
+          if (this._attributes[keys[i]] === undefined) {
+            this._attributes[keys[i]] = this._inFlightAttributes[keys[i]];
+          }
+        }
+        this._inFlightAttributes = Ember.create(null);
       },
 
       /**
@@ -7501,7 +7520,7 @@ enifed("ember-data/system/model/states",
         loadingData: Ember.K,
 
         propertyWasReset: function(record, name) {
-          var length = Ember.keys(record._attributes);
+          var length = Ember.keys(record._attributes).length;
           var stillDirty = length > 0;
 
           if (!stillDirty) { record.send('rolledBack'); }
@@ -7786,14 +7805,7 @@ enifed("ember-data/system/model/states",
         saved: {
           setup: function(record) {
             var attrs = record._attributes;
-            var isDirty = false;
-
-            for (var prop in attrs) {
-              if (attrs.hasOwnProperty(prop)) {
-                isDirty = true;
-                break;
-              }
-            }
+            var isDirty = Ember.keys(attrs).length > 0;
 
             if (isDirty) {
               record.adapterDidDirty();
