@@ -5585,7 +5585,12 @@ define("ember-data/system/model/attributes",
     */
 
     __exports__["default"] = function attr(type, options) {
-      options = options || {};
+      if (typeof type === 'object') {
+        options = type;
+        type = undefined;
+      } else {
+        options = options || {};
+      }
 
       var meta = {
         type: type,
