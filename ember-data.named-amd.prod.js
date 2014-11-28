@@ -6358,7 +6358,9 @@ define("ember-data/system/model/model",
       toJSON: function(options) {
         if (!JSONSerializer) { JSONSerializer = requireModule("ember-data/serializers/json_serializer")["default"]; }
         // container is for lazy transform lookups
-        var serializer = JSONSerializer.create({ container: this.container });
+        var serializer = JSONSerializer.create({
+          container: this.container
+        });
         return serializer.serialize(this, options);
       },
 
@@ -6413,8 +6415,6 @@ define("ember-data/system/model/model",
         this._data = this._data || {};
         return this._data;
       }).readOnly(),
-
-      _data: null,
 
       init: function() {
         this._super();
