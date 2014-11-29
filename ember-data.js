@@ -6492,9 +6492,7 @@ enifed("ember-data/system/model/model",
       toJSON: function(options) {
         if (!JSONSerializer) { JSONSerializer = requireModule("ember-data/serializers/json_serializer")["default"]; }
         // container is for lazy transform lookups
-        var serializer = JSONSerializer.create({
-          container: this.container
-        });
+        var serializer = JSONSerializer.create({ container: this.container });
         return serializer.serialize(this, options);
       },
 
@@ -6549,6 +6547,8 @@ enifed("ember-data/system/model/model",
         this._data = this._data || {};
         return this._data;
       }).readOnly(),
+
+      _data: null,
 
       init: function() {
         this._super();
@@ -9826,6 +9826,8 @@ enifed("ember-data/system/relationships/relationship",
     var PromiseObject = __dependency1__.PromiseObject;
     var OrderedSet = __dependency2__.OrderedSet;
 
+    var forEach = Ember.EnumerableUtils.forEach;
+
     var Relationship = function(store, record, inverseKey, relationshipMeta) {
       this.members = new OrderedSet();
       this.store = store;
@@ -9865,24 +9867,20 @@ enifed("ember-data/system/relationships/relationship",
       },
 
       removeRecords: function(records){
-        var length = Ember.get(records, 'length');
-        var record;
-        for (var i = 0; i < length; i++){
-          record = records[i];
-          this.removeRecord(record);
-        }
+        var self = this;
+        forEach(records, function(record){
+          self.removeRecord(record);
+        });
       },
 
       addRecords: function(records, idx){
-        var length = Ember.get(records, 'length');
-        var record;
-        for (var i = 0; i < length; i++){
-          record = records[i];
-          this.addRecord(record, idx);
+        var self = this;
+        forEach(records, function(record){
+          self.addRecord(record, idx);
           if (idx !== undefined) {
             idx++;
           }
-        }
+        });
       },
 
       addRecord: function(record, idx) {
