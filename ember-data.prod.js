@@ -842,13 +842,13 @@
 
       ember$data$lib$system$map$$Map.prototype.__super$forEach = Ember.Map.prototype.forEach;
       ember$data$lib$system$map$$Map.prototype.forEach = ember$data$lib$system$map$$mapForEach;
-      ember$data$lib$system$map$$Map.prototype.delete = ember$data$lib$system$map$$deleteFn;
+      ember$data$lib$system$map$$Map.prototype["delete"] = ember$data$lib$system$map$$deleteFn;
 
       ember$data$lib$system$map$$MapWithDefault.prototype.forEach = ember$data$lib$system$map$$mapForEach;
       ember$data$lib$system$map$$MapWithDefault.prototype.__super$forEach = Ember.MapWithDefault.prototype.forEach;
-      ember$data$lib$system$map$$MapWithDefault.prototype.delete = ember$data$lib$system$map$$deleteFn;
+      ember$data$lib$system$map$$MapWithDefault.prototype["delete"] = ember$data$lib$system$map$$deleteFn;
 
-      ember$data$lib$system$map$$OrderedSet.prototype.delete = ember$data$lib$system$map$$deleteFn;
+      ember$data$lib$system$map$$OrderedSet.prototype["delete"] = ember$data$lib$system$map$$deleteFn;
     }
 
     ember$data$lib$system$map$$MapWithDefault.constructor = ember$data$lib$system$map$$MapWithDefault;
@@ -4659,7 +4659,7 @@
           var recordArrays = record._recordArrays;
 
           if (recordArrays) {
-            recordArrays.delete(array);
+            recordArrays["delete"](array);
           }
         });
       },
@@ -5000,7 +5000,7 @@
             recordArrays.add(array);
           }
         } else if (!shouldBeInArray) {
-          recordArrays.delete(array);
+          recordArrays["delete"](array);
           array.removeRecord(record);
         }
       },
@@ -6272,7 +6272,7 @@
       },
 
       removeRecordFromOwn: function(record) {
-        this.members.delete(record);
+        this.members["delete"](record);
         this.notifyRecordRelationshipRemoved(record);
         this.record.updateRecordArrays();
       },
