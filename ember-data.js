@@ -9337,7 +9337,7 @@
 
         data = ember$data$lib$system$store$$normalizeRelationships(this, type, data);
 
-        Ember.warn("The payload for '" + typeName + "' contains these unknown keys: " +
+        Ember.warn("The payload for '" + type.typeKey + "' contains these unknown keys: " +
           Ember.inspect(filter(Ember.keys(data), function(key) {
             return !ember$data$lib$system$store$$get(type, 'fields').has(key) && key !== 'id' && key !== 'links';
           })) + ". Make sure they've been defined in your model.",
