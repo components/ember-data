@@ -4664,20 +4664,7 @@
         });
       },
 
-      /**
-        @method _unregisterFromManager
-        @private
-      */
-      _unregisterFromManager: function(){
-        var manager = ember$data$lib$system$record_arrays$record_array$$get(this, 'manager');
-        //We will stop needing this stupid if statement soon, once manyArray are refactored to not be RecordArrays
-        if (manager) {
-          manager.unregisterFilteredRecordArray(this);
-        }
-      },
-
       willDestroy: function(){
-        this._unregisterFromManager();
         this._dissociateFromOwnRecords();
         this._super();
       }
@@ -4737,6 +4724,18 @@
         Ember.run.once(this, this._updateFilter);
       }, 'filterFunction'),
 
+      /**
+        @method _unregisterFromManager
+        @private
+      */
+      _unregisterFromManager: function(){
+        this.manager.unregisterFilteredRecordArray(this);
+      },
+
+      willDestroy: function(){
+        this._unregisterFromManager();
+        this._super();
+      }
     });
 
     /**
@@ -5068,8 +5067,7 @@
           type: type,
           content: Ember.A(),
           store: this.store,
-          isLoaded: true,
-          manager: this
+          isLoaded: true
         });
 
         this.registerFilteredRecordArray(array, type);
