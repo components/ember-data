@@ -4664,7 +4664,20 @@
         });
       },
 
+      /**
+        @method _unregisterFromManager
+        @private
+      */
+      _unregisterFromManager: function(){
+        var manager = ember$data$lib$system$record_arrays$record_array$$get(this, 'manager');
+        //We will stop needing this stupid if statement soon, once manyArray are refactored to not be RecordArrays
+        if (manager) {
+          manager.unregisterFilteredRecordArray(this);
+        }
+      },
+
       willDestroy: function(){
+        this._unregisterFromManager();
         this._dissociateFromOwnRecords();
         this._super();
       }
@@ -4724,18 +4737,6 @@
         Ember.run.once(this, this._updateFilter);
       }, 'filterFunction'),
 
-      /**
-        @method _unregisterFromManager
-        @private
-      */
-      _unregisterFromManager: function(){
-        this.manager.unregisterFilteredRecordArray(this);
-      },
-
-      willDestroy: function(){
-        this._unregisterFromManager();
-        this._super();
-      }
     });
 
     /**
@@ -5067,7 +5068,8 @@
           type: type,
           content: Ember.A(),
           store: this.store,
-          isLoaded: true
+          isLoaded: true,
+          manager: this
         });
 
         this.registerFilteredRecordArray(array, type);
@@ -10920,7 +10922,7 @@
       @namespace
       @method belongsTo
       @for DS
-      @param {String or DS.Model} type the model type of the relationship
+      @param {String} type the model type of the relationship
       @param {Object} options a hash of options
       @return {Ember.computed} relationship
     */
@@ -10928,9 +10930,9 @@
       if (typeof type === 'object') {
         options = type;
         type = undefined;
-      } else {
-              }
+      }
 
+      
       options = options || {};
 
       var meta = {
@@ -11050,7 +11052,7 @@
       @namespace
       @method hasMany
       @for DS
-      @param {String or DS.Model} type the model type of the relationship
+      @param {String} type the model type of the relationship
       @param {Object} options a hash of options
       @return {Ember.computed} relationship
     */
@@ -11060,6 +11062,7 @@
         type = undefined;
       }
 
+      
       options = options || {};
 
       // Metadata about relationships is stored on the meta of

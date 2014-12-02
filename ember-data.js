@@ -4683,7 +4683,20 @@
         });
       },
 
+      /**
+        @method _unregisterFromManager
+        @private
+      */
+      _unregisterFromManager: function(){
+        var manager = ember$data$lib$system$record_arrays$record_array$$get(this, 'manager');
+        //We will stop needing this stupid if statement soon, once manyArray are refactored to not be RecordArrays
+        if (manager) {
+          manager.unregisterFilteredRecordArray(this);
+        }
+      },
+
       willDestroy: function(){
+        this._unregisterFromManager();
         this._dissociateFromOwnRecords();
         this._super();
       }
@@ -4743,18 +4756,6 @@
         Ember.run.once(this, this._updateFilter);
       }, 'filterFunction'),
 
-      /**
-        @method _unregisterFromManager
-        @private
-      */
-      _unregisterFromManager: function(){
-        this.manager.unregisterFilteredRecordArray(this);
-      },
-
-      willDestroy: function(){
-        this._unregisterFromManager();
-        this._super();
-      }
     });
 
     /**
@@ -5087,7 +5088,8 @@
           type: type,
           content: Ember.A(),
           store: this.store,
-          isLoaded: true
+          isLoaded: true,
+          manager: this
         });
 
         this.registerFilteredRecordArray(array, type);
@@ -10995,7 +10997,7 @@
       @namespace
       @method belongsTo
       @for DS
-      @param {String or DS.Model} type the model type of the relationship
+      @param {String} type the model type of the relationship
       @param {Object} options a hash of options
       @return {Ember.computed} relationship
     */
@@ -11003,9 +11005,9 @@
       if (typeof type === 'object') {
         options = type;
         type = undefined;
-      } else {
-        Ember.assert("The first argument to DS.belongsTo must be a string representing a model type key, e.g. use DS.belongsTo('person') to define a relation to the App.Person model", !!type && (typeof type === 'string' || ember$data$lib$system$model$model$$default.detect(type)));
       }
+
+      Ember.assert("The first argument to DS.belongsTo must be a string representing a model type key, not an instance of " + Ember.inspect(type) + ". E.g., to define a relation to the Person model, use DS.belongsTo('person')", typeof type === 'string' || typeof type === 'undefined');
 
       options = options || {};
 
@@ -11126,7 +11128,7 @@
       @namespace
       @method hasMany
       @for DS
-      @param {String or DS.Model} type the model type of the relationship
+      @param {String} type the model type of the relationship
       @param {Object} options a hash of options
       @return {Ember.computed} relationship
     */
@@ -11135,6 +11137,8 @@
         options = type;
         type = undefined;
       }
+
+      Ember.assert("The first argument to DS.hasMany must be a string representing a model type key, not an instance of " + Ember.inspect(type) + ". E.g., to define a relation to the Comment model, use DS.hasMany('comment')", typeof type === 'string' || typeof type === 'undefined');
 
       options = options || {};
 
