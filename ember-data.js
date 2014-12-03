@@ -11211,6 +11211,80 @@
     var ember$data$lib$system$relationships$ext$$get = Ember.get;
     var ember$data$lib$system$relationships$ext$$filter = Ember.ArrayPolyfills.filter;
 
+    var ember$data$lib$system$relationships$ext$$relationshipsDescriptor = Ember.computed(function() {
+       if (Ember.testing === true && ember$data$lib$system$relationships$ext$$relationshipsDescriptor._cacheable === true) {
+          ember$data$lib$system$relationships$ext$$relationshipsDescriptor._cacheable = false;
+        }
+
+        var map = new ember$data$lib$system$map$$MapWithDefault({
+          defaultValue: function() { return []; }
+        });
+
+        // Loop through each computed property on the class
+        this.eachComputedProperty(function(name, meta) {
+          // If the computed property is a relationship, add
+          // it to the map.
+          if (meta.isRelationship) {
+            meta.key = name;
+            var relationshipsForType = map.get(ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(this.store, meta));
+
+            relationshipsForType.push({
+              name: name,
+              kind: meta.kind
+            });
+          }
+        });
+
+        return map;
+    }).readOnly();
+
+    var ember$data$lib$system$relationships$ext$$relatedTypesDescriptor = Ember.computed(function() {
+      if (Ember.testing === true && ember$data$lib$system$relationships$ext$$relatedTypesDescriptor._cacheable === true) {
+        ember$data$lib$system$relationships$ext$$relatedTypesDescriptor._cacheable = false;
+      }
+
+      var type;
+      var types = Ember.A();
+
+      // Loop through each computed property on the class,
+      // and create an array of the unique types involved
+      // in relationships
+      this.eachComputedProperty(function(name, meta) {
+        if (meta.isRelationship) {
+          meta.key = name;
+          type = ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(this.store, meta);
+
+          Ember.assert("You specified a hasMany (" + meta.type + ") on " + meta.parentType + " but " + meta.type + " was not found.",  type);
+
+          if (!types.contains(type)) {
+            Ember.assert("Trying to sideload " + name + " on " + this.toString() + " but the type doesn't exist.", !!type);
+            types.push(type);
+          }
+        }
+      });
+
+      return types;
+    }).readOnly();
+
+    var ember$data$lib$system$relationships$ext$$relationshipsByNameDescriptor = Ember.computed(function() {
+      if (Ember.testing === true && ember$data$lib$system$relationships$ext$$relationshipsByNameDescriptor._cacheable === true) {
+        ember$data$lib$system$relationships$ext$$relationshipsByNameDescriptor._cacheable = false;
+      }
+
+      var map = ember$data$lib$system$map$$Map.create();
+
+      this.eachComputedProperty(function(name, meta) {
+        if (meta.isRelationship) {
+          meta.key = name;
+          var relationship = ember$data$lib$system$relationship$meta$$relationshipFromMeta(this.store, meta);
+          relationship.type = ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(this.store, meta);
+          map.set(name, relationship);
+        }
+      });
+
+      return map;
+    }).readOnly();
+
     /**
       @module ember-data
     */
@@ -11466,28 +11540,8 @@
         @type Ember.Map
         @readOnly
       */
-      relationships: Ember.computed(function() {
-        var map = new ember$data$lib$system$map$$MapWithDefault({
-          defaultValue: function() { return []; }
-        });
 
-        // Loop through each computed property on the class
-        this.eachComputedProperty(function(name, meta) {
-          // If the computed property is a relationship, add
-          // it to the map.
-          if (meta.isRelationship) {
-            meta.key = name;
-            var relationshipsForType = map.get(ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(this.store, meta));
-
-            relationshipsForType.push({
-              name: name,
-              kind: meta.kind
-            });
-          }
-        });
-
-        return map;
-      }).cacheable(false).readOnly(),
+      relationships: ember$data$lib$system$relationships$ext$$relationshipsDescriptor,
 
       /**
         A hash containing lists of the model's relationships, grouped
@@ -11561,29 +11615,7 @@
         @type Ember.Array
         @readOnly
       */
-      relatedTypes: Ember.computed(function() {
-        var type;
-        var types = Ember.A();
-
-        // Loop through each computed property on the class,
-        // and create an array of the unique types involved
-        // in relationships
-        this.eachComputedProperty(function(name, meta) {
-          if (meta.isRelationship) {
-            meta.key = name;
-            type = ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(this.store, meta);
-
-            Ember.assert("You specified a hasMany (" + meta.type + ") on " + meta.parentType + " but " + meta.type + " was not found.",  type);
-
-            if (!types.contains(type)) {
-              Ember.assert("Trying to sideload " + name + " on " + this.toString() + " but the type doesn't exist.", !!type);
-              types.push(type);
-            }
-          }
-        });
-
-        return types;
-      }).cacheable(false).readOnly(),
+      relatedTypes: ember$data$lib$system$relationships$ext$$relatedTypesDescriptor,
 
       /**
         A map whose keys are the relationships of a model and whose values are
@@ -11616,20 +11648,7 @@
         @type Ember.Map
         @readOnly
       */
-      relationshipsByName: Ember.computed(function() {
-        var map = ember$data$lib$system$map$$Map.create();
-
-        this.eachComputedProperty(function(name, meta) {
-          if (meta.isRelationship) {
-            meta.key = name;
-            var relationship = ember$data$lib$system$relationship$meta$$relationshipFromMeta(this.store, meta);
-            relationship.type = ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(this.store, meta);
-            map.set(name, relationship);
-          }
-        });
-
-        return map;
-      }).cacheable(false).readOnly(),
+      relationshipsByName: ember$data$lib$system$relationships$ext$$relationshipsByNameDescriptor,
 
       /**
         A map whose keys are the fields of the model and whose values are strings
