@@ -1450,14 +1450,9 @@
         @param  {Object} responseText
         @return {Object} jqXHR
       */
-      ajaxError: function(jqXHR, responseText, errorThrown) {
-        var isObject = jqXHR !== null && typeof jqXHR === 'object';
-
-        if (isObject) {
+      ajaxError: function(jqXHR, responseText) {
+        if (jqXHR && typeof jqXHR === 'object') {
           jqXHR.then = null;
-          if (!jqXHR.errorThrown) {
-            jqXHR.errorThrown = errorThrown;
-          }
         }
 
         return jqXHR;
@@ -1529,11 +1524,11 @@
           };
 
           hash.error = function(jqXHR, textStatus, errorThrown) {
-            Ember.run(null, reject, adapter.ajaxError(jqXHR, jqXHR.responseText, errorThrown));
+            Ember.run(null, reject, adapter.ajaxError(jqXHR, jqXHR.responseText));
           };
 
           Ember.$.ajax(hash);
-        }, 'DS: RESTAdapter#ajax ' + type + ' to ' + url);
+        }, "DS: RESTAdapter#ajax " + type + " to " + url);
       },
 
       /**
@@ -2178,7 +2173,7 @@
         @return error
       */
       ajaxError: function(jqXHR) {
-        var error = this._super.apply(this, arguments);
+        var error = this._super(jqXHR);
 
         if (jqXHR && jqXHR.status === 422) {
           return new ember$data$lib$system$adapter$$InvalidError(Ember.$.parseJSON(jqXHR.responseText));
