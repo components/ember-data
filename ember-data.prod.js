@@ -466,7 +466,6 @@
     /**
       @module ember-data
     */
-
     var ember$data$lib$adapters$fixture_adapter$$get = Ember.get;
     var ember$data$lib$adapters$fixture_adapter$$fmt = Ember.String.fmt;
     var ember$data$lib$adapters$fixture_adapter$$indexOf = Ember.EnumerableUtils.indexOf;
@@ -4461,7 +4460,9 @@
     var ember$data$lib$system$promise_proxies$$PromiseManyArray = ember$data$lib$system$promise_proxies$$PromiseArray.extend({
       reload: function() {
         //I don't think this should ever happen right now, but worth guarding if we refactor the async relationships
-                return ember$data$lib$system$promise_proxies$$get(this, 'content').reload();
+                return ember$data$lib$system$promise_proxies$$PromiseManyArray.create({
+          promise: ember$data$lib$system$promise_proxies$$get(this, 'content').reload()
+        });
       },
 
       createRecord: ember$data$lib$system$promise_proxies$$proxyToContent('createRecord'),
@@ -8933,7 +8934,6 @@
 
         promise = promise || ember$data$lib$system$store$$Promise.cast(array);
 
-
         return ember$data$lib$system$promise_proxies$$promiseArray(promise.then(function() {
           return array;
         }, null, "DS: Store#filter of " + type));
@@ -11702,6 +11702,8 @@
     ember$data$lib$core$$default.Store         = ember$data$lib$system$store$$Store;
     ember$data$lib$core$$default.PromiseArray  = ember$data$lib$system$promise_proxies$$PromiseArray;
     ember$data$lib$core$$default.PromiseObject = ember$data$lib$system$promise_proxies$$PromiseObject;
+
+    ember$data$lib$core$$default.PromiseManyArray = ember$data$lib$system$promise_proxies$$PromiseManyArray;
 
     ember$data$lib$core$$default.Model     = ember$data$lib$system$model$model$$default;
     ember$data$lib$core$$default.RootState = ember$data$lib$system$model$states$$default;
