@@ -911,7 +911,7 @@
         will also send a request to: `GET /comments?ids[]=1&ids[]=2`
 
         Note: Requests coalescing rely on URL building strategy. So if you override `buildUrl` in your app
-        `groupRecordsForFindMany` more likely should be overriden as well in order for coalescing to work.
+        `groupRecordsForFindMany` more likely should be overridden as well in order for coalescing to work.
 
         @property coalesceFindRequests
         @type {boolean}
@@ -6202,13 +6202,9 @@
       destroy: Ember.K,
 
       clear: function() {
-        var members = this.members.list;
-        var member;
-
-        while (members.length > 0){
-          member = members[0];
+        this.members.forEach(function(member) {
           this.removeRecord(member);
-        }
+        }, this);
       },
 
       disconnect: function(){
