@@ -2962,8 +2962,8 @@
 
       /**
         `extractCreateRecord` is a hook into the extract method used when a
-        call is made to `DS.Store#createRecord`. By default this method is
-        alias for [extractSave](#method_extractSave).
+        call is made to `DS.Model#save` and the record is new. By default
+        this method is alias for [extractSave](#method_extractSave).
 
         @method extractCreateRecord
         @param {DS.Store} store
@@ -2978,8 +2978,8 @@
       },
       /**
         `extractUpdateRecord` is a hook into the extract method used when
-        a call is made to `DS.Store#update`. By default this method is alias
-        for [extractSave](#method_extractSave).
+        a call is made to `DS.Model#save` and the record has been updated.
+        By default this method is alias for [extractSave](#method_extractSave).
 
         @method extractUpdateRecord
         @param {DS.Store} store
@@ -2994,8 +2994,8 @@
       },
       /**
         `extractDeleteRecord` is a hook into the extract method used when
-        a call is made to `DS.Store#deleteRecord`. By default this method is
-        alias for [extractSave](#method_extractSave).
+        a call is made to `DS.Model#save` and the record has been deleted.
+        By default this method is alias for [extractSave](#method_extractSave).
 
         @method extractDeleteRecord
         @param {DS.Store} store
@@ -7431,16 +7431,10 @@
         @method setupData
         @private
         @param {Object} data
-        @param {Boolean} partial the data should be merged into
-          the existing data, not replace it.
       */
-      setupData: function(data, partial) {
+      setupData: function(data) {
         
-        if (partial) {
-          ember$data$lib$system$merge$$default(this._data, data);
-        } else {
-          this._data = data;
-        }
+        Ember.merge(this._data, data);
 
         this.pushedData();
 
@@ -8055,7 +8049,7 @@
       You can learn more about writing a custom adapter by reading the `DS.Adapter`
       documentation.
 
-      ### Store createRecord() vs. push() vs. pushPayload() vs. update()
+      ### Store createRecord() vs. push() vs. pushPayload()
 
       The store provides multiple ways to create new record objects. They have
       some subtle differences in their use which are detailed below:
@@ -8068,7 +8062,7 @@
       [push](#method_push) is used to notify Ember Data's store of new or
       updated records that exist in the backend. This will return a record
       in the `loaded.saved` state. The primary use-case for `store#push` is
-      to notify Ember Data about record updates that happen
+      to notify Ember Data about record updates (full or partial) that happen
       outside of the normal adapter methods (for example
       [SSE](http://dev.w3.org/html5/eventsource/) or [Web
       Sockets](http://www.w3.org/TR/2009/WD-websockets-20091222/)).
@@ -8076,10 +8070,6 @@
       [pushPayload](#method_pushPayload) is a convenience wrapper for
       `store#push` that will deserialize payloads if the
       Serializer implements a `pushPayload` method.
-
-      [update](#method_update) works like `push`, except it can handle
-      partial attributes without overwriting the existing record
-      properties.
 
       Note: When creating a new record using any of the above methods
       Ember Data will update `DS.RecordArray`s such as those returned by
@@ -9181,14 +9171,12 @@
         @private
         @param {String or subclass of DS.Model} type
         @param {Object} data
-        @param {Boolean} partial the data should be merged into
-          the existing data, not replace it.
       */
-      _load: function(type, data, partial) {
+      _load: function(type, data) {
         var id = ember$data$lib$system$store$$coerceId(data.id);
         var record = this.recordForId(type, id);
 
-        record.setupData(data, partial);
+        record.setupData(data);
         this.recordArrayManager.recordDidChange(record);
 
         return record;
@@ -9295,10 +9283,7 @@
         @return {DS.Model} the record that was created or
           updated.
       */
-      push: function(typeName, data, _partial) {
-        // _partial is an internal param used by `update`.
-        // If passed, it means that the data should be
-        // merged into the existing data, not replace it.
+      push: function(typeName, data) {
                 
         var type = this.modelFor(typeName);
         var filter = Ember.EnumerableUtils.filter;
@@ -9313,7 +9298,7 @@
         
         // Actually load the record into the store.
 
-        this._load(type, data, _partial);
+        this._load(type, data);
 
         var record = this.recordForId(type, data.id);
 
@@ -9408,39 +9393,14 @@
       },
 
       /**
-        Update existing records in the store. Unlike [push](#method_push),
-        update will merge the new data properties with the existing
-        properties. This makes it safe to use with a subset of record
-        attributes. This method expects normalized data.
-
-        `update` is useful if your app broadcasts partial updates to
-        records.
-
-        ```js
-        App.Person = DS.Model.extend({
-          firstName: DS.attr('string'),
-          lastName: DS.attr('string')
-        });
-
-        store.get('person', 1).then(function(tom) {
-          tom.get('firstName'); // Tom
-          tom.get('lastName'); // Dale
-
-          var updateEvent = {id: 1, firstName: "TomHuda"};
-          store.update('person', updateEvent);
-
-          tom.get('firstName'); // TomHuda
-          tom.get('lastName'); // Dale
-        });
-        ```
-
         @method update
         @param {String} type
         @param {Object} data
         @return {DS.Model} the record that was updated.
+        @deprecated Use [push](#method_push) instead
       */
       update: function(type, data) {
-        return this.push(type, data, true);
+                return this.push(type, data);
       },
 
       /**
