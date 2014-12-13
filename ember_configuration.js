@@ -19,7 +19,7 @@
     timer = setTimeout(function() {
       start();
       ok(false, "Timeout was reached");
-    }, timeout || 400);
+    }, timeout || 200);
 
     return function() {
       clearTimeout(timer);
