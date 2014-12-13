@@ -4807,7 +4807,7 @@
 
       record: null,
 
-      serverState: null,
+      canonicalState: null,
       currentState: null,
 
       diff: null,
@@ -4818,15 +4818,15 @@
         if (this.currentState[index]) {
           return this.currentState[index];
         } else {
-          return this.serverState[index];
+          return this.canonicalState[index];
         }
       },
 
-      syncServer: function() {
+      flushCanonical: function() {
         //TODO make this smarter, currently its plenty stupid
         this.arrayContentWillChange(0, this.length, this.length);
-        this.set('length', this.serverState.length);
-        this.currentState = this.serverState.slice(0);
+        this.set('length', this.canonicalState.length);
+        this.currentState = this.canonicalState.slice(0);
         this.arrayContentDidChange(0, this.length, this.length);
         //TODO Figure out to notify only on additions and maybe only if unloaded
         this.relationship.notifyHasManyChanged();
@@ -6234,7 +6234,7 @@
 
     var ember$data$lib$system$relationships$state$relationship$$Relationship = function(store, record, inverseKey, relationshipMeta) {
       this.members = new ember$data$lib$system$map$$OrderedSet();
-      this.serverMembers = new ember$data$lib$system$map$$OrderedSet();
+      this.canonicalMembers = new ember$data$lib$system$map$$OrderedSet();
       this.store = store;
       this.key = relationshipMeta.key;
       this.inverseKey = inverseKey;
@@ -6287,53 +6287,53 @@
         });
       },
 
-      serverAddRecords: function(records, idx) {
+      addCanonicalRecords: function(records, idx) {
         for (var i=0; i<records.length; i++) {
           if (idx !== undefined) {
-            this.serverAddRecord(records[i], i+idx);
+            this.addCanonicalRecord(records[i], i+idx);
           } else {
-            this.serverAddRecord(records[i]);
+            this.addCanonicalRecord(records[i]);
           }
         }
       },
 
-      serverAddRecord: function(record, idx) {
-        if (!this.serverMembers.has(record)) {
-          this.serverMembers.add(record);
+      addCanonicalRecord: function(record, idx) {
+        if (!this.canonicalMembers.has(record)) {
+          this.canonicalMembers.add(record);
           if (this.inverseKey) {
-            record._relationships[this.inverseKey].serverAddRecord(this.record);
+            record._relationships[this.inverseKey].addCanonicalRecord(this.record);
           } else {
             if (!record._implicitRelationships[this.inverseKeyForImplicit]) {
               record._implicitRelationships[this.inverseKeyForImplicit] = new ember$data$lib$system$relationships$state$relationship$$Relationship(this.store, record, this.key,  {options:{}});
             }
-            record._implicitRelationships[this.inverseKeyForImplicit].serverAddRecord(this.record);
+            record._implicitRelationships[this.inverseKeyForImplicit].addCanonicalRecord(this.record);
           }
         }
-        this.syncServerLater();
+        this.flushCanonicalLater();
       },
 
-      serverRemoveRecords: function(records, idx) {
+      removeCanonicalRecords: function(records, idx) {
         for (var i=0; i<records.length; i++) {
           if (idx !== undefined) {
-            this.serverRemoveRecord(records[i], i+idx);
+            this.removeCanonicalRecord(records[i], i+idx);
           } else {
-            this.serverRemoveRecord(records[i]);
+            this.removeCanonicalRecord(records[i]);
           }
         }
       },
 
-      serverRemoveRecord: function(record, idx) {
-        if (this.serverMembers.has(record)) {
-          this.serverRemoveRecordFromOwn(record);
+      removeCanonicalRecord: function(record, idx) {
+        if (this.canonicalMembers.has(record)) {
+          this.removeCanonicalRecordFromOwn(record);
           if (this.inverseKey) {
-            this.serverRemoveRecordFromInverse(record);
+            this.removeCanonicalRecordFromInverse(record);
           } else {
             if (record._implicitRelationships[this.inverseKeyForImplicit]) {
-              record._implicitRelationships[this.inverseKeyForImplicit].serverRemoveRecord(this.record);
+              record._implicitRelationships[this.inverseKeyForImplicit].removeCanonicalRecord(this.record);
             }
           }
         }
-        this.syncServerLater();
+        this.flushCanonicalLater();
       },
 
       addRecord: function(record, idx) {
@@ -6385,33 +6385,33 @@
         this.record.updateRecordArrays();
       },
 
-      serverRemoveRecordFromInverse: function(record) {
+      removeCanonicalRecordFromInverse: function(record) {
         var inverseRelationship = record._relationships[this.inverseKey];
         //Need to check for existence, as the record might unloading at the moment
         if (inverseRelationship) {
-          inverseRelationship.serverRemoveRecordFromOwn(this.record);
+          inverseRelationship.removeCanonicalRecordFromOwn(this.record);
         }
       },
 
-      serverRemoveRecordFromOwn: function(record) {
-        this.serverMembers["delete"](record);
-        this.syncServerLater();
+      removeCanonicalRecordFromOwn: function(record) {
+        this.canonicalMembers["delete"](record);
+        this.flushCanonicalLater();
       },
 
-      syncServer: function() {
+      flushCanonical: function() {
         this.willSync = false;
         //TODO(Igor) make this less abysmally slow
-        this.members = this.serverMembers.copy();
+        this.members = this.canonicalMembers.copy();
       },
 
-      syncServerLater: function() {
+      flushCanonicalLater: function() {
         if (this.willSync) {
           return;
         }
         this.willSync = true;
         var self = this;
         this.store._backburner.join(function() {
-          self.store._backburner.schedule('syncRelationships', self, self.syncServer);
+          self.store._backburner.schedule('syncRelationships', self, self.flushCanonical);
         });
       },
 
@@ -6454,8 +6454,8 @@
     var ember$data$lib$system$relationships$state$has_many$$ManyRelationship = function(store, record, inverseKey, relationshipMeta) {
       this._super$constructor(store, record, inverseKey, relationshipMeta);
       this.belongsToType = relationshipMeta.type;
-      this.serverState = [];
-      this.manyArray = ember$data$lib$system$record_arrays$many_array$$default.create({ serverState:this.serverState, store:this.store, relationship:this, type:this.belongsToType, record:record});
+      this.canonicalState = [];
+      this.manyArray = ember$data$lib$system$record_arrays$many_array$$default.create({ canonicalState:this.canonicalState, store:this.store, relationship:this, type:this.belongsToType, record:record});
       this.isPolymorphic = relationshipMeta.options.polymorphic;
       this.manyArray.isPolymorphic = this.isPolymorphic;
     };
@@ -6468,17 +6468,17 @@
       this.manyArray.destroy();
     };
 
-    ember$data$lib$system$relationships$state$has_many$$ManyRelationship.prototype._super$serverAddRecord = ember$data$lib$system$relationships$state$relationship$$default.prototype.serverAddRecord;
-    ember$data$lib$system$relationships$state$has_many$$ManyRelationship.prototype.serverAddRecord = function(record, idx) {
-      if (this.serverMembers.has(record)) {
+    ember$data$lib$system$relationships$state$has_many$$ManyRelationship.prototype._super$addCanonicalRecord = ember$data$lib$system$relationships$state$relationship$$default.prototype.addCanonicalRecord;
+    ember$data$lib$system$relationships$state$has_many$$ManyRelationship.prototype.addCanonicalRecord = function(record, idx) {
+      if (this.canonicalMembers.has(record)) {
         return;
       }
       if (idx !== undefined) {
-        this.serverState.splice(idx, 0, record);
+        this.canonicalState.splice(idx, 0, record);
       } else {
-        this.serverState.push(record);
+        this.canonicalState.push(record);
       }
-      this._super$serverAddRecord(record, idx);
+      this._super$addCanonicalRecord(record, idx);
     };
 
     ember$data$lib$system$relationships$state$has_many$$ManyRelationship.prototype._super$addRecord = ember$data$lib$system$relationships$state$relationship$$default.prototype.addRecord;
@@ -6490,25 +6490,25 @@
       this.manyArray.internalAddRecords([record], idx);
     };
 
-    ember$data$lib$system$relationships$state$has_many$$ManyRelationship.prototype._super$serverRemoveRecordFromOwn = ember$data$lib$system$relationships$state$relationship$$default.prototype.serverRemoveRecordFromOwn;
-    ember$data$lib$system$relationships$state$has_many$$ManyRelationship.prototype.serverRemoveRecordFromOwn = function(record, idx) {
+    ember$data$lib$system$relationships$state$has_many$$ManyRelationship.prototype._super$removeCanonicalRecordFromOwn = ember$data$lib$system$relationships$state$relationship$$default.prototype.removeCanonicalRecordFromOwn;
+    ember$data$lib$system$relationships$state$has_many$$ManyRelationship.prototype.removeCanonicalRecordFromOwn = function(record, idx) {
       var i = idx;
-      if (!this.serverMembers.has(record)) {
+      if (!this.canonicalMembers.has(record)) {
         return;
       }
       if (i === undefined) {
-        i = this.serverState.indexOf(record);
+        i = this.canonicalState.indexOf(record);
       }
       if (i > -1) {
-        this.serverState.splice(i, 1);
+        this.canonicalState.splice(i, 1);
       }
-      this._super$serverRemoveRecordFromOwn(record, idx);
+      this._super$removeCanonicalRecordFromOwn(record, idx);
     };
 
-    ember$data$lib$system$relationships$state$has_many$$ManyRelationship.prototype._super$syncServer = ember$data$lib$system$relationships$state$relationship$$default.prototype.syncServer;
-    ember$data$lib$system$relationships$state$has_many$$ManyRelationship.prototype.syncServer = function() {
-      this.manyArray.syncServer();
-      this._super$syncServer();
+    ember$data$lib$system$relationships$state$has_many$$ManyRelationship.prototype._super$flushCanonical = ember$data$lib$system$relationships$state$relationship$$default.prototype.flushCanonical;
+    ember$data$lib$system$relationships$state$has_many$$ManyRelationship.prototype.flushCanonical = function() {
+      this.manyArray.flushCanonical();
+      this._super$flushCanonical();
     };
 
     ember$data$lib$system$relationships$state$has_many$$ManyRelationship.prototype._super$removeRecordFromOwn = ember$data$lib$system$relationships$state$relationship$$default.prototype.removeRecordFromOwn;
@@ -6543,7 +6543,7 @@
     };
 
     ember$data$lib$system$relationships$state$has_many$$ManyRelationship.prototype.computeChanges = function(records) {
-      var members = this.serverMembers;
+      var members = this.canonicalMembers;
       var recordsToRemove = [];
       var length;
       var record;
@@ -6557,7 +6557,7 @@
         recordsToRemove.push(member);
       });
 
-      this.serverRemoveRecords(recordsToRemove);
+      this.removeCanonicalRecords(recordsToRemove);
 
       var hasManyArray = this.manyArray;
 
@@ -6573,8 +6573,8 @@
         if (hasManyArray.objectAt(i) === record ) {
           continue;
         }
-        this.serverRemoveRecord(record);
-        this.serverAddRecord(record, i);
+        this.removeCanonicalRecord(record);
+        this.addCanonicalRecord(record, i);
       }
     };
 
@@ -6643,7 +6643,7 @@
       this.record = record;
       this.key = relationshipMeta.key;
       this.inverseRecord = null;
-      this.serverState = null;
+      this.canonicalState = null;
     };
 
     ember$data$lib$system$relationships$state$belongs_to$$BelongsToRelationship.prototype = Object.create(ember$data$lib$system$relationships$state$relationship$$default.prototype);
@@ -6658,32 +6658,32 @@
       }
     };
 
-    ember$data$lib$system$relationships$state$belongs_to$$BelongsToRelationship.prototype.serverSetRecord = function(newRecord) {
+    ember$data$lib$system$relationships$state$belongs_to$$BelongsToRelationship.prototype.setCanonicalRecord = function(newRecord) {
       if (newRecord) {
-        this.serverAddRecord(newRecord);
+        this.addCanonicalRecord(newRecord);
       } else if (this.inverseRecord) {
-        this.serverRemoveRecord(this.inverseRecord);
+        this.removeCanonicalRecord(this.inverseRecord);
       }
     };
 
-    ember$data$lib$system$relationships$state$belongs_to$$BelongsToRelationship.prototype._super$serverAddRecord = ember$data$lib$system$relationships$state$relationship$$default.prototype.serverAddRecord;
-    ember$data$lib$system$relationships$state$belongs_to$$BelongsToRelationship.prototype.serverAddRecord = function(newRecord) {
-      if (this.serverMembers.has(newRecord)){ return;}
+    ember$data$lib$system$relationships$state$belongs_to$$BelongsToRelationship.prototype._super$addCanonicalRecord = ember$data$lib$system$relationships$state$relationship$$default.prototype.addCanonicalRecord;
+    ember$data$lib$system$relationships$state$belongs_to$$BelongsToRelationship.prototype.addCanonicalRecord = function(newRecord) {
+      if (this.canonicalMembers.has(newRecord)){ return;}
       var type = this.relationshipMeta.type;
       
-      if (this.serverState) {
-        this.serverRemoveRecord(this.serverState);
+      if (this.canonicalState) {
+        this.removeCanonicalRecord(this.canonicalState);
       }
 
-      this.serverState = newRecord;
-      this._super$serverAddRecord(newRecord);
+      this.canonicalState = newRecord;
+      this._super$addCanonicalRecord(newRecord);
     };
 
-    ember$data$lib$system$relationships$state$belongs_to$$BelongsToRelationship.prototype._super$syncServer = ember$data$lib$system$relationships$state$relationship$$default.prototype.syncServer;
-    ember$data$lib$system$relationships$state$belongs_to$$BelongsToRelationship.prototype.syncServer = function() {
-      this.inverseRecord = this.serverState;
+    ember$data$lib$system$relationships$state$belongs_to$$BelongsToRelationship.prototype._super$flushCanonical = ember$data$lib$system$relationships$state$relationship$$default.prototype.flushCanonical;
+    ember$data$lib$system$relationships$state$belongs_to$$BelongsToRelationship.prototype.flushCanonical = function() {
+      this.inverseRecord = this.canonicalState;
       this.record.notifyBelongsToChanged(this.key);
-      this._super$syncServer();
+      this._super$flushCanonical();
     };
 
     ember$data$lib$system$relationships$state$belongs_to$$BelongsToRelationship.prototype._super$addRecord = ember$data$lib$system$relationships$state$relationship$$default.prototype.addRecord;
@@ -6713,11 +6713,11 @@
       this.record.notifyBelongsToChanged(this.key);
     };
 
-    ember$data$lib$system$relationships$state$belongs_to$$BelongsToRelationship.prototype._super$serverRemoveRecordFromOwn = ember$data$lib$system$relationships$state$relationship$$default.prototype.serverRemoveRecordFromOwn;
-    ember$data$lib$system$relationships$state$belongs_to$$BelongsToRelationship.prototype.serverRemoveRecordFromOwn = function(record) {
-      if (!this.serverMembers.has(record)){ return;}
-      this.serverState = null;
-      this._super$serverRemoveRecordFromOwn(record);
+    ember$data$lib$system$relationships$state$belongs_to$$BelongsToRelationship.prototype._super$removeCanonicalRecordFromOwn = ember$data$lib$system$relationships$state$relationship$$default.prototype.removeCanonicalRecordFromOwn;
+    ember$data$lib$system$relationships$state$belongs_to$$BelongsToRelationship.prototype.removeCanonicalRecordFromOwn = function(record) {
+      if (!this.canonicalMembers.has(record)){ return;}
+      this.canonicalState = null;
+      this._super$removeCanonicalRecordFromOwn(record);
     };
 
     ember$data$lib$system$relationships$state$belongs_to$$BelongsToRelationship.prototype.findRecord = function() {
@@ -6739,7 +6739,7 @@
     };
 
     ember$data$lib$system$relationships$state$belongs_to$$BelongsToRelationship.prototype.getRecord = function() {
-      //TODO(Igor) syncServer here once our syncing is not stupid
+      //TODO(Igor) flushCanonical here once our syncing is not stupid
       if (this.isAsync) {
         var promise;
         if (this.link){
@@ -10097,7 +10097,7 @@
           if (value === undefined) {
             return;
           }
-          relationship.serverSetRecord(value);
+          relationship.setCanonicalRecord(value);
         } else if (kind === 'hasMany' && value) {
          relationship.updateRecordsFromAdapter(value);
         }
@@ -11963,378 +11963,6 @@
     Ember.lookup.DS = ember$data$lib$core$$default;
 
     var ember$data$lib$main$$default = ember$data$lib$core$$default;
-
-    var ember$data$lib$system$relationships$relationship$$forEach = Ember.EnumerableUtils.forEach;
-
-    var ember$data$lib$system$relationships$relationship$$Relationship = function(store, record, inverseKey, relationshipMeta) {
-      this.members = new ember$data$lib$system$map$$OrderedSet();
-      this.store = store;
-      this.key = relationshipMeta.key;
-      this.inverseKey = inverseKey;
-      this.record = record;
-      this.isAsync = relationshipMeta.options.async;
-      this.relationshipMeta = relationshipMeta;
-      //This probably breaks for polymorphic relationship in complex scenarios, due to
-      //multiple possible typeKeys
-      this.inverseKeyForImplicit = this.store.modelFor(this.record.constructor).typeKey + this.key;
-      //Cached promise when fetching the relationship from a link
-      this.linkPromise = null;
-    };
-
-    ember$data$lib$system$relationships$relationship$$Relationship.prototype = {
-      constructor: ember$data$lib$system$relationships$relationship$$Relationship,
-
-      destroy: Ember.K,
-
-      clear: function() {
-        var members = this.members.list;
-        var member;
-
-        while (members.length > 0){
-          member = members[0];
-          this.removeRecord(member);
-        }
-      },
-
-      disconnect: function(){
-        this.members.forEach(function(member) {
-          this.removeRecordFromInverse(member);
-        }, this);
-      },
-
-      reconnect: function(){
-        this.members.forEach(function(member) {
-          this.addRecordToInverse(member);
-        }, this);
-      },
-
-      removeRecords: function(records){
-        var self = this;
-        ember$data$lib$system$relationships$relationship$$forEach(records, function(record){
-          self.removeRecord(record);
-        });
-      },
-
-      addRecords: function(records, idx){
-        var self = this;
-        ember$data$lib$system$relationships$relationship$$forEach(records, function(record){
-          self.addRecord(record, idx);
-          if (idx !== undefined) {
-            idx++;
-          }
-        });
-      },
-
-      addRecord: function(record, idx) {
-        if (!this.members.has(record)) {
-          this.members.add(record);
-          this.notifyRecordRelationshipAdded(record, idx);
-          if (this.inverseKey) {
-            record._relationships[this.inverseKey].addRecord(this.record);
-          } else {
-            if (!record._implicitRelationships[this.inverseKeyForImplicit]) {
-              record._implicitRelationships[this.inverseKeyForImplicit] = new ember$data$lib$system$relationships$relationship$$Relationship(this.store, record, this.key,  {options:{}});
-            }
-            record._implicitRelationships[this.inverseKeyForImplicit].addRecord(this.record);
-          }
-          this.record.updateRecordArrays();
-        }
-      },
-
-      removeRecord: function(record) {
-        if (this.members.has(record)) {
-          this.removeRecordFromOwn(record);
-          if (this.inverseKey) {
-            this.removeRecordFromInverse(record);
-          } else {
-            if (record._implicitRelationships[this.inverseKeyForImplicit]) {
-              record._implicitRelationships[this.inverseKeyForImplicit].removeRecord(this.record);
-            }
-          }
-        }
-      },
-
-      addRecordToInverse: function(record) {
-        if (this.inverseKey) {
-          record._relationships[this.inverseKey].addRecord(this.record);
-        }
-      },
-
-      removeRecordFromInverse: function(record) {
-        var inverseRelationship = record._relationships[this.inverseKey];
-        //Need to check for existence, as the record might unloading at the moment
-        if (inverseRelationship) {
-          inverseRelationship.removeRecordFromOwn(this.record);
-        }
-      },
-
-      removeRecordFromOwn: function(record) {
-        this.members["delete"](record);
-        this.notifyRecordRelationshipRemoved(record);
-        this.record.updateRecordArrays();
-      },
-
-      updateLink: function(link) {
-                if (link !== this.link) {
-          this.link = link;
-          this.linkPromise = null;
-          this.record.notifyPropertyChange(this.key);
-        }
-      },
-
-      findLink: function() {
-        if (this.linkPromise) {
-          return this.linkPromise;
-        } else {
-          var promise = this.fetchLink();
-          this.linkPromise = promise;
-          return promise.then(function(result) {
-            return result;
-          });
-        }
-      },
-
-      updateRecordsFromAdapter: function(records) {
-        //TODO Once we have adapter support, we need to handle updated and canonical changes
-        this.computeChanges(records);
-      },
-
-      notifyRecordRelationshipAdded: Ember.K,
-      notifyRecordRelationshipRemoved: Ember.K
-    };
-
-    var ember$data$lib$system$relationships$relationship$$ManyRelationship = function(store, record, inverseKey, relationshipMeta) {
-      this._super$constructor(store, record, inverseKey, relationshipMeta);
-      this.belongsToType = relationshipMeta.type;
-      this.manyArray = store.recordArrayManager.createManyArray(this.belongsToType, Ember.A());
-      this.manyArray.relationship = this;
-      this.isPolymorphic = relationshipMeta.options.polymorphic;
-      this.manyArray.isPolymorphic = this.isPolymorphic;
-    };
-
-    ember$data$lib$system$relationships$relationship$$ManyRelationship.prototype = Ember.create(ember$data$lib$system$relationships$relationship$$Relationship.prototype);
-    ember$data$lib$system$relationships$relationship$$ManyRelationship.prototype.constructor = ember$data$lib$system$relationships$relationship$$ManyRelationship;
-    ember$data$lib$system$relationships$relationship$$ManyRelationship.prototype._super$constructor = ember$data$lib$system$relationships$relationship$$Relationship;
-
-    ember$data$lib$system$relationships$relationship$$ManyRelationship.prototype.destroy = function() {
-      this.manyArray.destroy();
-    };
-
-    ember$data$lib$system$relationships$relationship$$ManyRelationship.prototype.notifyRecordRelationshipAdded = function(record, idx) {
-            this.record.notifyHasManyAdded(this.key, record, idx);
-    };
-
-    ember$data$lib$system$relationships$relationship$$ManyRelationship.prototype.notifyRecordRelationshipRemoved = function(record) {
-      this.record.notifyHasManyRemoved(this.key, record);
-    };
-
-    ember$data$lib$system$relationships$relationship$$ManyRelationship.prototype.reload = function() {
-      var self = this;
-      if (this.link) {
-        return this.fetchLink();
-      } else {
-        return this.store.scheduleFetchMany(this.manyArray.toArray()).then(function() {
-          //Goes away after the manyArray refactor
-          self.manyArray.set('isLoaded', true);
-          return self.manyArray;
-        });
-      }
-    };
-
-    ember$data$lib$system$relationships$relationship$$ManyRelationship.prototype.computeChanges = function(records) {
-      var members = this.members;
-      var recordsToRemove = [];
-      var length;
-      var record;
-      var i;
-
-      records = ember$data$lib$system$relationships$relationship$$setForArray(records);
-
-      members.forEach(function(member) {
-        if (member.get('isNew') || records.has(member)) return;
-
-        recordsToRemove.push(member);
-      });
-      this.removeRecords(recordsToRemove);
-
-      var hasManyArray = this.manyArray;
-
-      // Using records.toArray() since currently using
-      // removeRecord can modify length, messing stuff up
-      // forEach since it directly looks at "length" each
-      // iteration
-      records = records.toArray();
-      length = records.length;
-      for (i = 0; i < length; i++){
-        record = records[i];
-        //Need to preserve the order of incoming records
-        if (hasManyArray.objectAt(i) === record ) {
-          continue;
-        }
-        this.removeRecord(record);
-        this.addRecord(record, i);
-      }
-    };
-
-    ember$data$lib$system$relationships$relationship$$ManyRelationship.prototype.fetchLink = function() {
-      var self = this;
-      return this.store.findHasMany(this.record, this.link, this.relationshipMeta).then(function(records){
-        self.updateRecordsFromAdapter(records);
-        return self.manyArray;
-      });
-    };
-
-    ember$data$lib$system$relationships$relationship$$ManyRelationship.prototype.findRecords = function() {
-      var manyArray = this.manyArray;
-      return this.store.findMany(manyArray.toArray()).then(function(){
-        //Goes away after the manyArray refactor
-        manyArray.set('isLoaded', true);
-        return manyArray;
-      });
-    };
-
-    ember$data$lib$system$relationships$relationship$$ManyRelationship.prototype.getRecords = function() {
-      if (this.isAsync) {
-        var self = this;
-        var promise;
-        if (this.link) {
-          promise = this.findLink().then(function() {
-            return self.findRecords();
-          });
-        } else {
-          promise = this.findRecords();
-        }
-        return ember$data$lib$system$promise_proxies$$PromiseManyArray.create({
-          content: this.manyArray,
-          promise: promise
-        });
-      } else {
-          
-        if (!this.manyArray.get('isDestroyed')) {
-          this.manyArray.set('isLoaded', true);
-        }
-        return this.manyArray;
-     }
-    };
-
-    var ember$data$lib$system$relationships$relationship$$BelongsToRelationship = function(store, record, inverseKey, relationshipMeta) {
-      this._super$constructor(store, record, inverseKey, relationshipMeta);
-      this.record = record;
-      this.key = relationshipMeta.key;
-      this.inverseRecord = null;
-    };
-
-    ember$data$lib$system$relationships$relationship$$BelongsToRelationship.prototype = Ember.create(ember$data$lib$system$relationships$relationship$$Relationship.prototype);
-    ember$data$lib$system$relationships$relationship$$BelongsToRelationship.prototype.constructor = ember$data$lib$system$relationships$relationship$$BelongsToRelationship;
-    ember$data$lib$system$relationships$relationship$$BelongsToRelationship.prototype._super$constructor = ember$data$lib$system$relationships$relationship$$Relationship;
-
-    ember$data$lib$system$relationships$relationship$$BelongsToRelationship.prototype.setRecord = function(newRecord) {
-      if (newRecord) {
-        this.addRecord(newRecord);
-      } else if (this.inverseRecord) {
-        this.removeRecord(this.inverseRecord);
-      }
-    };
-
-    ember$data$lib$system$relationships$relationship$$BelongsToRelationship.prototype._super$addRecord = ember$data$lib$system$relationships$relationship$$Relationship.prototype.addRecord;
-    ember$data$lib$system$relationships$relationship$$BelongsToRelationship.prototype.addRecord = function(newRecord) {
-      if (this.members.has(newRecord)){ return;}
-      var type = this.relationshipMeta.type;
-      
-      if (this.inverseRecord) {
-        this.removeRecord(this.inverseRecord);
-      }
-
-      this.inverseRecord = newRecord;
-      this._super$addRecord(newRecord);
-    };
-
-    ember$data$lib$system$relationships$relationship$$BelongsToRelationship.prototype.setRecordPromise = function(newPromise) {
-      var content = newPromise.get && newPromise.get('content');
-            this.setRecord(content);
-    };
-
-    ember$data$lib$system$relationships$relationship$$BelongsToRelationship.prototype.notifyRecordRelationshipAdded = function(newRecord) {
-      this.record.notifyBelongsToAdded(this.key, this);
-    };
-
-    ember$data$lib$system$relationships$relationship$$BelongsToRelationship.prototype.notifyRecordRelationshipRemoved = function(record) {
-      this.record.notifyBelongsToRemoved(this.key, this);
-    };
-
-    ember$data$lib$system$relationships$relationship$$BelongsToRelationship.prototype._super$removeRecordFromOwn = ember$data$lib$system$relationships$relationship$$Relationship.prototype.removeRecordFromOwn;
-    ember$data$lib$system$relationships$relationship$$BelongsToRelationship.prototype.removeRecordFromOwn = function(record) {
-      if (!this.members.has(record)) { return; }
-      this.inverseRecord = null;
-      this._super$removeRecordFromOwn(record);
-    };
-
-    ember$data$lib$system$relationships$relationship$$BelongsToRelationship.prototype.findRecord = function() {
-      if (this.inverseRecord) {
-        return this.store._findByRecord(this.inverseRecord);
-      } else {
-        return Ember.RSVP.Promise.resolve(null);
-      }
-    };
-
-    ember$data$lib$system$relationships$relationship$$BelongsToRelationship.prototype.fetchLink = function() {
-      var self = this;
-      return this.store.findBelongsTo(this.record, this.link, this.relationshipMeta).then(function(record){
-        if (record) {
-          self.addRecord(record);
-        }
-        return record;
-      });
-    };
-
-    ember$data$lib$system$relationships$relationship$$BelongsToRelationship.prototype.getRecord = function() {
-      if (this.isAsync) {
-        var promise;
-        if (this.link){
-          var self = this;
-          promise = this.findLink().then(function() {
-            return self.findRecord();
-          });
-        } else {
-          promise = this.findRecord();
-        }
-
-        return ember$data$lib$system$promise_proxies$$PromiseObject.create({
-          promise: promise,
-          content: this.inverseRecord
-        });
-      } else {
-                return this.inverseRecord;
-      }
-    };
-
-    function ember$data$lib$system$relationships$relationship$$setForArray(array) {
-      var set = new ember$data$lib$system$map$$OrderedSet();
-
-      if (array) {
-        for (var i=0, l=array.length; i<l; i++) {
-          set.add(array[i]);
-        }
-      }
-
-      return set;
-    }
-
-    var ember$data$lib$system$relationships$relationship$$createRelationshipFor = function(record, relationshipMeta, store){
-      var inverseKey;
-      var inverse = record.constructor.inverseFor(relationshipMeta.key);
-
-      if (inverse) {
-        inverseKey = inverse.name;
-      }
-
-      if (relationshipMeta.kind === 'hasMany'){
-        return new ember$data$lib$system$relationships$relationship$$ManyRelationship(store, record, inverseKey, relationshipMeta);
-      }
-      else {
-        return new ember$data$lib$system$relationships$relationship$$BelongsToRelationship(store, record, inverseKey, relationshipMeta);
-      }
-    };
 }).call(this);
 
 //# sourceMappingURL=ember-data.js.map

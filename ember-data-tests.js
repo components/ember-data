@@ -96,8 +96,6 @@ eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - system/re
 
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - system/relationships\');\ntest(\'system/relationships/has_many.js should pass jshint\', function() { \n  ok(true, \'system/relationships/has_many.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/system/relationships/has_many.jshint.js");
 
-eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - system/relationships\');\ntest(\'system/relationships/relationship.js should pass jshint\', function() { \n  ok(true, \'system/relationships/relationship.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/system/relationships/relationship.jshint.js");
-
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - system/relationships/state\');\ntest(\'system/relationships/state/belongs_to.js should pass jshint\', function() { \n  ok(true, \'system/relationships/state/belongs_to.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/system/relationships/state/belongs_to.jshint.js");
 
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - system/relationships/state\');\ntest(\'system/relationships/state/create.js should pass jshint\', function() { \n  ok(true, \'system/relationships/state/create.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/system/relationships/state/create.jshint.js");
