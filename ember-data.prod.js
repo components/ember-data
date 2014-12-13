@@ -10897,11 +10897,22 @@
       });
       ```
 
+      You can avoid passing a string as the first parameter. In that case Ember Data
+      will infer the type from the key name.
+
+      ```javascript
+      App.Comment = DS.Model.extend({
+        post: DS.belongsTo()
+      });
+      ```
+
+      will lookup for a Post type.
+
       @namespace
       @method belongsTo
       @for DS
-      @param {String} type the model type of the relationship
-      @param {Object} options a hash of options
+      @param {String} type (optional) type of the relationship
+      @param {Object} options (optional) a hash of options
       @return {Ember.computed} relationship
     */
     function ember$data$lib$system$relationships$belongs_to$$belongsTo(type, options) {
@@ -10994,6 +11005,17 @@
       });
       ```
 
+      You can avoid passing a string as the first parameter. In that case Ember Data
+      will infer the type from the singularized key name.
+
+      ```javascript
+      App.Post = DS.Model.extend({
+        tags: DS.hasMany()
+      });
+      ```
+
+      will lookup for a Tag type.
+
       #### Explicit Inverses
 
       Ember Data will do its best to discover which relationships map to
@@ -11030,8 +11052,8 @@
       @namespace
       @method hasMany
       @for DS
-      @param {String} type the model type of the relationship
-      @param {Object} options a hash of options
+      @param {String} type (optional) type of the relationship
+      @param {Object} options (optional) a hash of options
       @return {Ember.computed} relationship
     */
     function ember$data$lib$system$relationships$has_many$$hasMany(type, options) {
