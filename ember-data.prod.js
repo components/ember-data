@@ -6290,7 +6290,7 @@
       },
 
       updateLink: function(link) {
-                if (link !== this.link) {
+                        if (link !== this.link) {
           this.link = link;
           this.linkPromise = null;
           this.record.notifyPropertyChange(this.key);
