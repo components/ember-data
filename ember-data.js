@@ -5699,7 +5699,6 @@
 
         loadedData: function(record) {
           record.transitionTo('loaded.created.uncommitted');
-          record.notifyPropertyChange('data');
         },
 
         pushedData: function(record) {
