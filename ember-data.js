@@ -5988,7 +5988,8 @@
           email: 'invalidEmail'
         });
         user.save().catch(function(){
-          user.get('errors').errorsFor('email'); // ["Doesn't look like a valid email."]
+          user.get('errors').errorsFor('email'); // returns:
+          // [{attribute: "email", message: "Doesn't look like a valid email."}]
         });
         ```
 
