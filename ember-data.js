@@ -8253,6 +8253,32 @@
     //Stanley told me to do this
     var ember$data$lib$system$store$$Backburner = Ember.__loader.require('backburner')['default'] || Ember.__loader.require('backburner')['Backburner'];
 
+    //Shim Backburner.join
+    if (!ember$data$lib$system$store$$Backburner.prototype.join) {
+      ember$data$lib$system$store$$Backburner.prototype.join = function(target, method /*, args */) {
+        var slice = [].slice;
+        var isString = function(suspect) {
+          return typeof suspect === 'string';
+        };
+
+
+        if (this.currentInstance) {
+          if (!method) {
+            method = target;
+            target = null;
+          }
+
+          if (isString(method)) {
+            method = target[method];
+          }
+
+          return method.apply(target, slice.call(arguments, 2));
+        } else {
+          return this.run.apply(this, arguments);
+        }
+      };
+    }
+
 
     var ember$data$lib$system$store$$get = Ember.get;
     var ember$data$lib$system$store$$set = Ember.set;
