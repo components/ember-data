@@ -8219,23 +8219,38 @@
 
     //Shim Backburner.join
     if (!ember$data$lib$system$store$$Backburner.prototype.join) {
-      var ember$data$lib$system$store$$slice = [].slice;
       var ember$data$lib$system$store$$isString = function(suspect) {
         return typeof suspect === 'string';
       };
 
-      ember$data$lib$system$store$$Backburner.prototype.join = function(target, method /*, args */) {
+      ember$data$lib$system$store$$Backburner.prototype.join = function(/*target, method, args */) {
+        var method, target;
+
         if (this.currentInstance) {
-          if (!method) {
-            method = target;
+          var length = arguments.length;
+          if (length === 1) {
+            method = arguments[0];
             target = null;
+          } else {
+            target = arguments[0];
+            method = arguments[1];
           }
 
           if (ember$data$lib$system$store$$isString(method)) {
             method = target[method];
           }
 
-          return method.apply(target, ember$data$lib$system$store$$slice.call(arguments, 2));
+          if (length === 1) {
+            return method();
+          } else if (length === 2) {
+            return method.call(target);
+          } else {
+            var args = new Array(length - 2);
+            for (var i =0, l = length - 2; i < l; i++) {
+              args[i] = arguments[i + 2];
+            }
+            return method.apply(target, args);
+          }
         } else {
           return this.run.apply(this, arguments);
         }
