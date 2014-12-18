@@ -8255,24 +8255,23 @@
 
     //Shim Backburner.join
     if (!ember$data$lib$system$store$$Backburner.prototype.join) {
+      var ember$data$lib$system$store$$slice = [].slice;
+      var ember$data$lib$system$store$$isString = function(suspect) {
+        return typeof suspect === 'string';
+      };
+
       ember$data$lib$system$store$$Backburner.prototype.join = function(target, method /*, args */) {
-        var slice = [].slice;
-        var isString = function(suspect) {
-          return typeof suspect === 'string';
-        };
-
-
         if (this.currentInstance) {
           if (!method) {
             method = target;
             target = null;
           }
 
-          if (isString(method)) {
+          if (ember$data$lib$system$store$$isString(method)) {
             method = target[method];
           }
 
-          return method.apply(target, slice.call(arguments, 2));
+          return method.apply(target, ember$data$lib$system$store$$slice.call(arguments, 2));
         } else {
           return this.run.apply(this, arguments);
         }
