@@ -7741,9 +7741,11 @@
         @method rollback
       */
       rollback: function() {
+        var toNotify = this._attributes;
         this._attributes = Ember.create(null);
 
         if (ember$data$lib$system$model$model$$get(this, 'isError')) {
+          Ember.merge(toNotify, this._inFlightAttributes);
           this._inFlightAttributes = Ember.create(null);
           ember$data$lib$system$model$model$$set(this, 'isError', false);
         }
@@ -7760,12 +7762,13 @@
         }
 
         if (!ember$data$lib$system$model$model$$get(this, 'isValid')) {
+          Ember.merge(toNotify, this._inFlightAttributes);
           this._inFlightAttributes = Ember.create(null);
         }
 
         this.send('rolledBack');
 
-        this._notifyProperties(Ember.keys(this._data));
+        this._notifyProperties(Ember.keys(toNotify));
 
       },
 
