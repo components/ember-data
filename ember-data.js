@@ -4464,13 +4464,18 @@
       A PromiseManyArray is a PromiseArray that also proxies certain method calls
       to the underlying manyArray.
       Right now we proxy:
-        `reload()`
-        `createRecord()`
-        `on()`
-        `one()`
-        `trigger()`
-        `off()`
-        `has()`
+
+        * `reload()`
+        * `createRecord()`
+        * `on()`
+        * `one()`
+        * `trigger()`
+        * `off()`
+        * `has()`
+
+      @class PromiseManyArray
+      @namespace DS
+      @extends Ember.ArrayProxy
     */
 
     function ember$data$lib$system$promise_proxies$$proxyToContent(method) {
