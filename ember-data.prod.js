@@ -9573,7 +9573,11 @@
         var type = this.modelFor(typeName);
         var filter = Ember.EnumerableUtils.filter;
 
-        
+        // If the payload contains unused keys log a warning.
+        // Adding `Ember.ENV.DS_NO_WARN_ON_UNUSED_KEYS = true` will suppress the warning.
+        if (!Ember.ENV.DS_NO_WARN_ON_UNUSED_KEYS) {
+                  }
+
         // Actually load the record into the store.
 
         this._load(type, data);
