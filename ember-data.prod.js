@@ -6555,7 +6555,9 @@
     };
 
     ember$data$lib$system$relationships$state$has_many$$ManyRelationship.prototype.notifyRecordRelationshipAdded = function(record, idx) {
-            this.record.notifyHasManyAdded(this.key, record, idx);
+      var type = this.relationshipMeta.type;
+      
+      this.record.notifyHasManyAdded(this.key, record, idx);
     };
 
     ember$data$lib$system$relationships$state$has_many$$ManyRelationship.prototype.reload = function() {
