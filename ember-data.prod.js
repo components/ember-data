@@ -6030,7 +6030,7 @@
         record. This is useful for displaying all errors to the user.
 
         ```handlebars
-        {{#each errors.messages}}
+        {{#each message in errors.messages}}
           <div class="error">
             {{message}}
           </div>
