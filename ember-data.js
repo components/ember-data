@@ -4515,6 +4515,7 @@
 
 
     var ember$data$lib$system$record_arrays$record_array$$get = Ember.get;
+    var ember$data$lib$system$record_arrays$record_array$$set = Ember.set;
 
     var ember$data$lib$system$record_arrays$record_array$$default = Ember.ArrayProxy.extend(Ember.Evented, {
       /**
@@ -4644,8 +4645,6 @@
       pushRecord: function(record) {
         ember$data$lib$system$record_arrays$record_array$$get(this, 'content').pushObject(record);
       },
-
-
       /**
         Removes a record to the `RecordArray`.
 
@@ -4709,6 +4708,8 @@
       willDestroy: function(){
         this._unregisterFromManager();
         this._dissociateFromOwnRecords();
+        ember$data$lib$system$record_arrays$record_array$$set(this, 'content', undefined);
+        delete this.content;
         this._super();
       }
     });
