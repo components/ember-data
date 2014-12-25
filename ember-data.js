@@ -4709,7 +4709,6 @@
         this._unregisterFromManager();
         this._dissociateFromOwnRecords();
         ember$data$lib$system$record_arrays$record_array$$set(this, 'content', undefined);
-        delete this.content;
         this._super();
       }
     });
