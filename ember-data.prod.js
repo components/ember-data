@@ -779,9 +779,17 @@
       }
     });
 
-    var ember$data$lib$system$map$$Map = Ember.Map;
+    /*
+     The Map/MapWithDefault/OrderedSet code has been in flux as we try
+     to catch up with ES6. This is difficult as we support multiple
+     versions of Ember.
+     This file is currently here in case we have to polyfill ember's code
+     across a few releases. As ES6 comes to a close we should have a smaller
+     and smaller gap in implementations between Ember releases.
+    */
+    var ember$data$lib$system$map$$Map            = Ember.Map;
     var ember$data$lib$system$map$$MapWithDefault = Ember.MapWithDefault;
-    var ember$data$lib$system$map$$OrderedSet = Ember.OrderedSet;
+    var ember$data$lib$system$map$$OrderedSet     = Ember.OrderedSet;
 
     var ember$data$lib$system$map$$default = ember$data$lib$system$map$$Map;
     var ember$data$lib$adapters$rest_adapter$$get = Ember.get;
