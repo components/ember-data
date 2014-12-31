@@ -12027,7 +12027,6 @@
     });
     /**
       Ember Data
-
       @module ember-data
       @main ember-data
     */
@@ -12035,6 +12034,7 @@
     // support RSVP 2.x via resolve,  but prefer RSVP 3.x's Promise.cast
     Ember.RSVP.Promise.cast = Ember.RSVP.Promise.cast || Ember.RSVP.resolve;
 
+    
     ember$data$lib$core$$default.Store         = ember$data$lib$system$store$$Store;
     ember$data$lib$core$$default.PromiseArray  = ember$data$lib$system$promise_proxies$$PromiseArray;
     ember$data$lib$core$$default.PromiseObject = ember$data$lib$system$promise_proxies$$PromiseObject;
