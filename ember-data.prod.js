@@ -779,17 +779,91 @@
       }
     });
 
-    /*
-     The Map/MapWithDefault/OrderedSet code has been in flux as we try
-     to catch up with ES6. This is difficult as we support multiple
-     versions of Ember.
-     This file is currently here in case we have to polyfill ember's code
-     across a few releases. As ES6 comes to a close we should have a smaller
-     and smaller gap in implementations between Ember releases.
+    /**
+     * Polyfill Ember.Map behavior for Ember <= 1.7
+     * This can probably be removed before 1.0 final
     */
-    var ember$data$lib$system$map$$Map            = Ember.Map;
-    var ember$data$lib$system$map$$MapWithDefault = Ember.MapWithDefault;
-    var ember$data$lib$system$map$$OrderedSet     = Ember.OrderedSet;
+    var ember$data$lib$system$map$$mapForEach, ember$data$lib$system$map$$deleteFn;
+
+    function ember$data$lib$system$map$$OrderedSet(){
+      Ember.OrderedSet.apply(this, arguments);
+    }
+
+    function ember$data$lib$system$map$$Map() {
+      Ember.Map.apply(this, arguments);
+    }
+
+    function ember$data$lib$system$map$$MapWithDefault(){
+      Ember.MapWithDefault.apply(this, arguments);
+    }
+
+    var ember$data$lib$system$map$$testMap = Ember.Map.create();
+    ember$data$lib$system$map$$testMap.set('key', 'value');
+
+    var ember$data$lib$system$map$$usesOldBehavior = false;
+
+    ember$data$lib$system$map$$testMap.forEach(function(value, key){
+      ember$data$lib$system$map$$usesOldBehavior = value === 'key' && key === 'value';
+    });
+
+    ember$data$lib$system$map$$Map.prototype            = Ember.create(Ember.Map.prototype);
+    ember$data$lib$system$map$$MapWithDefault.prototype = Ember.create(Ember.MapWithDefault.prototype);
+    ember$data$lib$system$map$$OrderedSet.prototype     = Ember.create(Ember.OrderedSet.prototype);
+
+    ember$data$lib$system$map$$OrderedSet.create = function(){
+      return new ember$data$lib$system$map$$OrderedSet();
+    };
+
+    /**
+     * returns a function that calls the original
+     * callback function in the correct order.
+     * if we are in pre-Ember.1.8 land, Map/MapWithDefault
+     * forEach calls with key, value, in that order.
+     * >= 1.8 forEach is called with the order value, key as per
+     * the ES6 spec.
+    */
+    function ember$data$lib$system$map$$translate(valueKeyOrderedCallback){
+      return function(key, value){
+        valueKeyOrderedCallback.call(this, value, key);
+      };
+    }
+
+    // old, non ES6 compliant behavior
+    if (ember$data$lib$system$map$$usesOldBehavior){
+      ember$data$lib$system$map$$mapForEach = function(callback, thisArg){
+        this.__super$forEach(ember$data$lib$system$map$$translate(callback), thisArg);
+      };
+
+      /* alias to remove */
+      ember$data$lib$system$map$$deleteFn = function(thing){
+        this.remove(thing);
+      };
+
+      ember$data$lib$system$map$$Map.prototype.__super$forEach = Ember.Map.prototype.forEach;
+      ember$data$lib$system$map$$Map.prototype.forEach = ember$data$lib$system$map$$mapForEach;
+      ember$data$lib$system$map$$Map.prototype["delete"] = ember$data$lib$system$map$$deleteFn;
+
+      ember$data$lib$system$map$$MapWithDefault.prototype.forEach = ember$data$lib$system$map$$mapForEach;
+      ember$data$lib$system$map$$MapWithDefault.prototype.__super$forEach = Ember.MapWithDefault.prototype.forEach;
+      ember$data$lib$system$map$$MapWithDefault.prototype["delete"] = ember$data$lib$system$map$$deleteFn;
+
+      ember$data$lib$system$map$$OrderedSet.prototype["delete"] = ember$data$lib$system$map$$deleteFn;
+    }
+
+    ember$data$lib$system$map$$MapWithDefault.constructor = ember$data$lib$system$map$$MapWithDefault;
+    ember$data$lib$system$map$$Map.constructor = ember$data$lib$system$map$$Map;
+
+    ember$data$lib$system$map$$MapWithDefault.create = function(options){
+      if (options) {
+        return new ember$data$lib$system$map$$MapWithDefault(options);
+      } else {
+        return new ember$data$lib$system$map$$Map();
+      }
+    };
+
+    ember$data$lib$system$map$$Map.create = function(){
+      return new this.constructor();
+    };
 
     var ember$data$lib$system$map$$default = ember$data$lib$system$map$$Map;
     var ember$data$lib$adapters$rest_adapter$$get = Ember.get;
@@ -4973,7 +5047,23 @@
         record._recordArrays = null;
       },
 
+
+      //Don't need to update non filtered arrays on simple changes
       _recordWasChanged: function (record) {
+        var type = record.constructor;
+        var recordArrays = this.filteredRecordArrays.get(type);
+        var filter;
+
+        ember$data$lib$system$record_array_manager$$forEach(recordArrays, function(array) {
+          filter = ember$data$lib$system$record_array_manager$$get(array, 'filterFunction');
+          if (filter) {
+            this.updateRecordArray(array, filter, type, record);
+          }
+        }, this);
+      },
+
+      //Need to update live arrays on loading
+      recordWasLoaded: function(record) {
         var type = record.constructor;
         var recordArrays = this.filteredRecordArrays.get(type);
         var filter;
@@ -4982,9 +5072,7 @@
           filter = ember$data$lib$system$record_array_manager$$get(array, 'filterFunction');
           this.updateRecordArray(array, filter, type, record);
         }, this);
-
       },
-
       /**
         Update an individual filter.
 
@@ -5449,6 +5537,7 @@
 
         rollback: function(record) {
           record.rollback();
+          record.triggerLater('ready');
         }
       },
 
@@ -5515,6 +5604,7 @@
 
         rolledBack: function(record) {
           ember$data$lib$system$model$states$$get(record, 'errors').clear();
+          record.triggerLater('ready');
         },
 
         becameValid: function(record) {
@@ -5645,11 +5735,13 @@
 
         loadedData: function(record) {
           record.transitionTo('loaded.created.uncommitted');
+          record.triggerLater('ready');
         },
 
         pushedData: function(record) {
           record.transitionTo('loaded.saved');
           record.triggerLater('didLoad');
+          record.triggerLater('ready');
         }
       },
 
@@ -5671,6 +5763,7 @@
         pushedData: function(record) {
           record.transitionTo('loaded.saved');
           record.triggerLater('didLoad');
+          record.triggerLater('ready');
           ember$data$lib$system$model$states$$set(record, 'isError', false);
         },
 
@@ -5790,6 +5883,7 @@
 
           rollback: function(record) {
             record.rollback();
+            record.triggerLater('ready');
           },
 
           becomeDirty: Ember.K,
@@ -5797,6 +5891,7 @@
 
           rolledBack: function(record) {
             record.transitionTo('loaded.saved');
+            record.triggerLater('ready');
           }
         },
 
@@ -6288,7 +6383,7 @@
             }
             record._implicitRelationships[this.inverseKeyForImplicit].addRecord(this.record);
           }
-          this.record.updateRecordArrays();
+          this.record.updateRecordArraysLater();
         }
       },
 
@@ -7110,6 +7205,15 @@
         return serializer.serialize(this, options);
       },
 
+      /**
+        Fired when the record is ready to be interacted with,
+        that is either loaded from the server or created locally.
+
+        @event ready
+      */
+      ready: function() {
+        this.store.recordArrayManager.recordWasLoaded(this);
+      },
       /**
         Fired when the record is loaded from the server.
 
@@ -9206,9 +9310,8 @@
       // ............
 
       /**
-        If the adapter updates attributes or acknowledges creation
-        or deletion, the record will notify the store to update its
-        membership in any filters.
+        If the adapter updates attributes the record will notify
+        the store to update its  membership in any filters.
         To avoid thrashing, this method is invoked only once per
 
         run loop per record.
@@ -9700,6 +9803,11 @@
         typeMap.records.push(record);
 
         return record;
+      },
+
+      //Called by the state machine to notify the store that the record is ready to be interacted with
+      recordWasLoaded: function(record) {
+        this.recordArrayManager.recordWasLoaded(record);
       },
 
       // ...............
@@ -10561,6 +10669,15 @@
 
     if (Ember.EXTEND_PROTOTYPES === true || Ember.EXTEND_PROTOTYPES.Date) {
       Date.parse = Ember.Date.parse;
+    }
+    /*
+      Detect if the user has a correct Object.create shim.
+      Ember has provided this for a long time but has had an incorrect shim before 1.8
+      TODO: Remove for Ember Data 1.0.
+    */
+    var object = Ember.create(null);
+    if (object.toString !== undefined && Ember.keys(Ember.create({}))[0] === '__proto__'){
+      throw new Error("Ember Data requires a correct Object.create shim. You should upgrade to Ember >= 1.8 which provides one for you. If you are using ES5-shim, you should try removing that after upgrading Ember.");
     }
 
     ember$data$lib$system$model$model$$default.reopen({
