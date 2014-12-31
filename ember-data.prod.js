@@ -6862,6 +6862,29 @@
       );
     }
 
+    // Like Ember.merge, but instead returns a list of keys
+    // for values that fail a strict equality check
+    // instead of the original object.
+    function ember$data$lib$system$model$model$$mergeAndReturnChangedKeys(original, newInfo) {
+      var ret = [];
+      if (!newInfo || typeof newInfo !== 'object') {
+        return [];
+      }
+      var keys = Ember.keys(newInfo);
+      var length = keys.length;
+      var i, val, key;
+
+      for (i = 0; i < length; i++) {
+        key = keys[i];
+        val = newInfo[key];
+        if (original[key] !== val) {
+          ret.push(key);
+        }
+        original[key] = val;
+      }
+      return ret;
+    }
+
     /**
 
       The model class that all Ember Data records descend from.
@@ -7657,10 +7680,11 @@
         @method adapterDidCommit
       */
       adapterDidCommit: function(data) {
+        var changedKeys;
         ember$data$lib$system$model$model$$set(this, 'isError', false);
 
         if (data) {
-          this._data = data;
+          changedKeys = ember$data$lib$system$model$model$$mergeAndReturnChangedKeys(this._data, data);
         } else {
           ember$data$lib$system$merge$$default(this._data, this._inFlightAttributes);
         }
@@ -7672,7 +7696,7 @@
 
         if (!data) { return; }
 
-        this._notifyProperties(Ember.keys(data));
+        this._notifyProperties(changedKeys);
       },
 
       /**
@@ -7704,11 +7728,11 @@
       */
       setupData: function(data) {
         
-        Ember.merge(this._data, data);
+        var changedKeys = ember$data$lib$system$model$model$$mergeAndReturnChangedKeys(this._data, data);
 
         this.pushedData();
 
-        this._notifyProperties(Ember.keys(data));
+        this._notifyProperties(changedKeys);
       },
 
       materializeId: function(id) {
