@@ -50,8 +50,6 @@ eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - system\')
 
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - system\');\ntest(\'system/container_proxy.js should pass jshint\', function() { \n  ok(true, \'system/container_proxy.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/system/container_proxy.jshint.js");
 
-eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - system\');\ntest(\'system/create.js should pass jshint\', function() { \n  ok(true, \'system/create.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/system/create.jshint.js");
-
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - system\');\ntest(\'system/debug.js should pass jshint\', function() { \n  ok(true, \'system/debug.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/system/debug.jshint.js");
 
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - system/debug\');\ntest(\'system/debug/debug_adapter.js should pass jshint\', function() { \n  ok(true, \'system/debug/debug_adapter.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/system/debug/debug_adapter.jshint.js");
