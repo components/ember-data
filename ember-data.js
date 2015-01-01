@@ -6913,24 +6913,26 @@
     // Like Ember.merge, but instead returns a list of keys
     // for values that fail a strict equality check
     // instead of the original object.
-    function ember$data$lib$system$model$model$$mergeAndReturnChangedKeys(original, newInfo) {
-      var ret = [];
-      if (!newInfo || typeof newInfo !== 'object') {
-        return [];
+    function ember$data$lib$system$model$model$$mergeAndReturnChangedKeys(original, updates) {
+      var changedKeys = [];
+      if (!updates || typeof updates !== 'object') {
+        return changedKeys;
       }
-      var keys = Ember.keys(newInfo);
+      var keys   = Ember.keys(updates);
       var length = keys.length;
       var i, val, key;
 
       for (i = 0; i < length; i++) {
         key = keys[i];
-        val = newInfo[key];
+        val = updates[key];
+
         if (original[key] !== val) {
-          ret.push(key);
+          changedKeys.push(key);
         }
+
         original[key] = val;
       }
-      return ret;
+      return changedKeys;
     }
 
     /**
