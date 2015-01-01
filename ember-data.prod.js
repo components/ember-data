@@ -779,91 +779,17 @@
       }
     });
 
-    /**
-     * Polyfill Ember.Map behavior for Ember <= 1.7
-     * This can probably be removed before 1.0 final
+    /*
+     The Map/MapWithDefault/OrderedSet code has been in flux as we try
+     to catch up with ES6. This is difficult as we support multiple
+     versions of Ember.
+     This file is currently here in case we have to polyfill ember's code
+     across a few releases. As ES6 comes to a close we should have a smaller
+     and smaller gap in implementations between Ember releases.
     */
-    var ember$data$lib$system$map$$mapForEach, ember$data$lib$system$map$$deleteFn;
-
-    function ember$data$lib$system$map$$OrderedSet(){
-      Ember.OrderedSet.apply(this, arguments);
-    }
-
-    function ember$data$lib$system$map$$Map() {
-      Ember.Map.apply(this, arguments);
-    }
-
-    function ember$data$lib$system$map$$MapWithDefault(){
-      Ember.MapWithDefault.apply(this, arguments);
-    }
-
-    var ember$data$lib$system$map$$testMap = Ember.Map.create();
-    ember$data$lib$system$map$$testMap.set('key', 'value');
-
-    var ember$data$lib$system$map$$usesOldBehavior = false;
-
-    ember$data$lib$system$map$$testMap.forEach(function(value, key){
-      ember$data$lib$system$map$$usesOldBehavior = value === 'key' && key === 'value';
-    });
-
-    ember$data$lib$system$map$$Map.prototype            = Ember.create(Ember.Map.prototype);
-    ember$data$lib$system$map$$MapWithDefault.prototype = Ember.create(Ember.MapWithDefault.prototype);
-    ember$data$lib$system$map$$OrderedSet.prototype     = Ember.create(Ember.OrderedSet.prototype);
-
-    ember$data$lib$system$map$$OrderedSet.create = function(){
-      return new ember$data$lib$system$map$$OrderedSet();
-    };
-
-    /**
-     * returns a function that calls the original
-     * callback function in the correct order.
-     * if we are in pre-Ember.1.8 land, Map/MapWithDefault
-     * forEach calls with key, value, in that order.
-     * >= 1.8 forEach is called with the order value, key as per
-     * the ES6 spec.
-    */
-    function ember$data$lib$system$map$$translate(valueKeyOrderedCallback){
-      return function(key, value){
-        valueKeyOrderedCallback.call(this, value, key);
-      };
-    }
-
-    // old, non ES6 compliant behavior
-    if (ember$data$lib$system$map$$usesOldBehavior){
-      ember$data$lib$system$map$$mapForEach = function(callback, thisArg){
-        this.__super$forEach(ember$data$lib$system$map$$translate(callback), thisArg);
-      };
-
-      /* alias to remove */
-      ember$data$lib$system$map$$deleteFn = function(thing){
-        this.remove(thing);
-      };
-
-      ember$data$lib$system$map$$Map.prototype.__super$forEach = Ember.Map.prototype.forEach;
-      ember$data$lib$system$map$$Map.prototype.forEach = ember$data$lib$system$map$$mapForEach;
-      ember$data$lib$system$map$$Map.prototype["delete"] = ember$data$lib$system$map$$deleteFn;
-
-      ember$data$lib$system$map$$MapWithDefault.prototype.forEach = ember$data$lib$system$map$$mapForEach;
-      ember$data$lib$system$map$$MapWithDefault.prototype.__super$forEach = Ember.MapWithDefault.prototype.forEach;
-      ember$data$lib$system$map$$MapWithDefault.prototype["delete"] = ember$data$lib$system$map$$deleteFn;
-
-      ember$data$lib$system$map$$OrderedSet.prototype["delete"] = ember$data$lib$system$map$$deleteFn;
-    }
-
-    ember$data$lib$system$map$$MapWithDefault.constructor = ember$data$lib$system$map$$MapWithDefault;
-    ember$data$lib$system$map$$Map.constructor = ember$data$lib$system$map$$Map;
-
-    ember$data$lib$system$map$$MapWithDefault.create = function(options){
-      if (options) {
-        return new ember$data$lib$system$map$$MapWithDefault(options);
-      } else {
-        return new ember$data$lib$system$map$$Map();
-      }
-    };
-
-    ember$data$lib$system$map$$Map.create = function(){
-      return new this.constructor();
-    };
+    var ember$data$lib$system$map$$Map            = Ember.Map;
+    var ember$data$lib$system$map$$MapWithDefault = Ember.MapWithDefault;
+    var ember$data$lib$system$map$$OrderedSet     = Ember.OrderedSet;
 
     var ember$data$lib$system$map$$default = ember$data$lib$system$map$$Map;
     var ember$data$lib$adapters$rest_adapter$$get = Ember.get;
@@ -6862,33 +6788,6 @@
       );
     }
 
-    // Like Ember.merge, but instead returns a list of keys
-    // for values that fail a strict equality check
-    // instead of the original object.
-    function ember$data$lib$system$model$model$$mergeAndReturnChangedKeys(original, updates) {
-      var changedKeys = [];
-
-      if (!updates || typeof updates !== 'object') {
-        return changedKeys;
-      }
-
-      var keys   = Ember.keys(updates);
-      var length = keys.length;
-      var i, val, key;
-
-      for (i = 0; i < length; i++) {
-        key = keys[i];
-        val = updates[key];
-
-        if (original[key] !== val) {
-          changedKeys.push(key);
-        }
-
-        original[key] = val;
-      }
-      return changedKeys;
-    }
-
     /**
 
       The model class that all Ember Data records descend from.
@@ -7684,11 +7583,10 @@
         @method adapterDidCommit
       */
       adapterDidCommit: function(data) {
-        var changedKeys;
         ember$data$lib$system$model$model$$set(this, 'isError', false);
 
         if (data) {
-          changedKeys = ember$data$lib$system$model$model$$mergeAndReturnChangedKeys(this._data, data);
+          this._data = data;
         } else {
           ember$data$lib$system$merge$$default(this._data, this._inFlightAttributes);
         }
@@ -7700,7 +7598,7 @@
 
         if (!data) { return; }
 
-        this._notifyProperties(changedKeys);
+        this._notifyProperties(Ember.keys(data));
       },
 
       /**
@@ -7732,11 +7630,11 @@
       */
       setupData: function(data) {
         
-        var changedKeys = ember$data$lib$system$model$model$$mergeAndReturnChangedKeys(this._data, data);
+        Ember.merge(this._data, data);
 
         this.pushedData();
 
-        this._notifyProperties(changedKeys);
+        this._notifyProperties(Ember.keys(data));
       },
 
       materializeId: function(id) {
@@ -10697,15 +10595,6 @@
 
     if (Ember.EXTEND_PROTOTYPES === true || Ember.EXTEND_PROTOTYPES.Date) {
       Date.parse = Ember.Date.parse;
-    }
-    /*
-      Detect if the user has a correct Object.create shim.
-      Ember has provided this for a long time but has had an incorrect shim before 1.8
-      TODO: Remove for Ember Data 1.0.
-    */
-    var object = Ember.create(null);
-    if (object.toString !== undefined && Ember.keys(Ember.create({}))[0] === '__proto__'){
-      throw new Error("Ember Data requires a correct Object.create shim. You should upgrade to Ember >= 1.8 which provides one for you. If you are using ES5-shim, you should try removing that after upgrading Ember.");
     }
 
     ember$data$lib$system$model$model$$default.reopen({
