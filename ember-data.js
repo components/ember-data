@@ -6915,9 +6915,11 @@
     // instead of the original object.
     function ember$data$lib$system$model$model$$mergeAndReturnChangedKeys(original, updates) {
       var changedKeys = [];
+
       if (!updates || typeof updates !== 'object') {
         return changedKeys;
       }
+
       var keys   = Ember.keys(updates);
       var length = keys.length;
       var i, val, key;
