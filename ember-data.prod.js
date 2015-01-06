@@ -9897,7 +9897,7 @@
         type = ember$data$lib$system$store$$typeFor(relationship, key, data);
         data[key] = store.recordForId(type, id);
       } else if (typeof id === 'object') {
-        // polymorphic
+        // hasMany polymorphic
                 data[key] = store.recordForId(id.type, id.id);
       }
     }
@@ -10724,7 +10724,7 @@
       The `attrs` option for a resource `{ embedded: 'always' }` is shorthand for:
 
       ```js
-      { 
+      {
         serialize: 'records',
         deserialize: 'records'
       }
@@ -10751,7 +10751,7 @@
       If you do not overwrite `attrs` for a specific relationship, the `EmbeddedRecordsMixin`
       will behave in the following way:
 
-      BelongsTo: `{ serialize: 'id', deserialize: 'id' }`  
+      BelongsTo: `{ serialize: 'id', deserialize: 'id' }`
       HasMany:   `{ serialize: false, deserialize: 'ids' }`
 
       ### Model Relationships
@@ -11088,13 +11088,16 @@
           if (relationship.kind === "hasMany") {
             if (relationship.options.polymorphic) {
               ember$data$lib$serializers$embedded_records_mixin$$extractEmbeddedHasManyPolymorphic(store, key, partial);
-            }
-            else {
+            } else {
               ember$data$lib$serializers$embedded_records_mixin$$extractEmbeddedHasMany(store, key, embeddedType, partial);
             }
           }
           if (relationship.kind === "belongsTo") {
-            ember$data$lib$serializers$embedded_records_mixin$$extractEmbeddedBelongsTo(store, key, embeddedType, partial);
+            if (relationship.options.polymorphic) {
+              ember$data$lib$serializers$embedded_records_mixin$$extractEmbeddedBelongsToPolymorphic(store, key, partial);
+            } else {
+              ember$data$lib$serializers$embedded_records_mixin$$extractEmbeddedBelongsTo(store, key, embeddedType, partial);
+            }
           }
         }
       });
@@ -11154,6 +11157,25 @@
 
       hash[key] = embeddedRecord.id;
       //TODO Need to add a reference to the parent later so relationship works between both `belongsTo` records
+      return hash;
+    }
+
+    function ember$data$lib$serializers$embedded_records_mixin$$extractEmbeddedBelongsToPolymorphic(store, key, hash) {
+      if (!hash[key]) {
+        return hash;
+      }
+
+      var data = hash[key];
+      var typeKey = data.type;
+      var embeddedSerializer = store.serializerFor(typeKey);
+      var embeddedType = store.modelFor(typeKey);
+      var primaryKey = ember$data$lib$serializers$embedded_records_mixin$$get(embeddedSerializer, 'primaryKey');
+
+      var embeddedRecord = embeddedSerializer.normalize(embeddedType, data, null);
+      store.push(embeddedType, embeddedRecord);
+
+      hash[key] = embeddedRecord[primaryKey];
+      hash[key + 'Type'] = typeKey;
       return hash;
     }
 
