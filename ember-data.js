@@ -11275,7 +11275,6 @@
 
     var ember$data$lib$serializers$embedded_records_mixin$$default = ember$data$lib$serializers$embedded_records_mixin$$EmbeddedRecordsMixin;
 
-
     /**
       `DS.belongsTo` is used to define One-To-One and One-To-Many
       relationships on a [DS.Model](/api/data/classes/DS.Model.html).
