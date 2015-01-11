@@ -5154,21 +5154,12 @@
       willDestroy: function(){
         this._super();
 
-        ember$data$lib$system$record_array_manager$$forEach(ember$data$lib$system$record_array_manager$$flatten(ember$data$lib$system$record_array_manager$$values(this.filteredRecordArrays.values)), ember$data$lib$system$record_array_manager$$destroy);
+        this.filteredRecordArrays.forEach(function(value) {
+          ember$data$lib$system$record_array_manager$$forEach(ember$data$lib$system$record_array_manager$$flatten(value), ember$data$lib$system$record_array_manager$$destroy);
+        });
         ember$data$lib$system$record_array_manager$$forEach(this._adapterPopulatedRecordArrays, ember$data$lib$system$record_array_manager$$destroy);
       }
     });
-
-    function ember$data$lib$system$record_array_manager$$values(obj) {
-      var result = [];
-      var keys = Ember.keys(obj);
-
-      for (var i = 0; i < keys.length; i++) {
-        result.push(obj[keys[i]]);
-      }
-
-      return result;
-    }
 
     function ember$data$lib$system$record_array_manager$$destroy(entry) {
       entry.destroy();
