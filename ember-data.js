@@ -1380,7 +1380,11 @@
         if (isObject) {
           jqXHR.then = null;
           if (!jqXHR.errorThrown) {
-            jqXHR.errorThrown = errorThrown;
+            if (typeof errorThrown === 'string') {
+              jqXHR.errorThrown = new Error(errorThrown);
+            } else {
+              jqXHR.errorThrown = errorThrown;
+            }
           }
         }
 
