@@ -4544,15 +4544,20 @@
         }
       },
 
+      _pushRecord: function(record) {
+        ember$data$lib$system$record_arrays$record_array$$get(this, 'content').pushObject(record);
+      },
+
       /**
         Adds a record to the `RecordArray`, but allows duplicates
 
+        @deprecated
         @method pushRecord
         @private
         @param {DS.Model} record
       */
       pushRecord: function(record) {
-        ember$data$lib$system$record_arrays$record_array$$get(this, 'content').pushObject(record);
+                this._pushRecord(record);
       },
       /**
         Removes a record to the `RecordArray`.
@@ -5023,7 +5028,7 @@
 
         if (shouldBeInArray) {
           if (!recordArrays.has(array)) {
-            array.pushRecord(record);
+            array._pushRecord(record);
             recordArrays.add(array);
           }
         } else if (!shouldBeInArray) {
