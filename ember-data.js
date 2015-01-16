@@ -1438,7 +1438,7 @@
         @private
         @param {String} url
         @param {String} type The request type GET, POST, PUT, DELETE etc.
-        @param {Object} hash
+        @param {Object} options
         @return {Promise} promise
       */
       ajax: function(url, type, options) {
@@ -1469,8 +1469,8 @@
         @private
         @param {String} url
         @param {String} type The request type GET, POST, PUT, DELETE etc.
-        @param {Object} hash
-        @return {Object} hash
+        @param {Object} options
+        @return {Object}
       */
       ajaxOptions: function(url, type, options) {
         var hash = options || {};
@@ -7717,7 +7717,7 @@
       },
 
       materializeAttributes: function(attributes) {
-        Ember.assert("Must pass a hash of attributes to materializeAttributes", !!attributes);
+        Ember.assert("Must pass an object to materializeAttributes", !!attributes);
         ember$data$lib$system$merge$$default(this._data, attributes);
       },
 
@@ -9983,7 +9983,7 @@
         data[key] = store.recordForId(type, id);
       } else if (typeof id === 'object') {
         // hasMany polymorphic
-        Ember.assert('Ember Data expected a number or string to represent the record(s) in the `' + relationship.key + '` relationship instead it found an object. If this is a polymorphic relationship please specify a `type` key. If this is an embedded relationship please include the `DS.EmbeddedRecordsMixin` and specify the `' + relationship.key +'` property in your serializer\'s attrs hash.', id.type);
+        Ember.assert('Ember Data expected a number or string to represent the record(s) in the `' + relationship.key + '` relationship instead it found an object. If this is a polymorphic relationship please specify a `type` key. If this is an embedded relationship please include the `DS.EmbeddedRecordsMixin` and specify the `' + relationship.key +'` property in your serializer\'s attrs object.', id.type);
         data[key] = store.recordForId(id.type, id.id);
       }
     }
