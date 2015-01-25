@@ -8353,7 +8353,7 @@
       Define your application's store like this:
 
       ```javascript
-      MyApp.Store = DS.Store.extend();
+      MyApp.ApplicationStore = DS.Store.extend();
       ```
 
       Most Ember.js applications will only have a single `DS.Store` that is
