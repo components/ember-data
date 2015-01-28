@@ -1190,8 +1190,15 @@
         var url = [];
 
         if (path) {
+          // Protocol relative url
+          //jscs:disable disallowEmptyBlocks
+          if (/^\/\//.test(path)) {
+            // Do nothing, the full host is already included. This branch
+            // avoids the absolute path logic and the relative path logic.
+
           // Absolute path
-          if (path.charAt(0) === '/') {
+          } else if (path.charAt(0) === '/') {
+            //jscs:enable disallowEmptyBlocks
             if (host) {
               path = path.slice(1);
               url.push(host);
@@ -1500,7 +1507,6 @@
         return string.endsWith(suffix);
       }
     }
-
     var ember$inflector$lib$system$inflector$$capitalize = Ember.String.capitalize;
 
     var ember$inflector$lib$system$inflector$$BLANK_REGEX = /^\s*$/;
