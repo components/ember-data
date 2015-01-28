@@ -9677,10 +9677,10 @@
         if (Ember.ENV.DS_WARN_ON_UNKNOWN_KEYS) {
           Ember.warn("The payload for '" + type.typeKey + "' contains these unknown keys: " +
             Ember.inspect(filter(Ember.keys(data), function(key) {
-              return !(key === 'id' || key === 'links' || ember$data$lib$system$store$$get(type, 'fields').has(key) || key.match(/Type$/));
+              return !(key === 'id' || key === 'links' || ember$data$lib$system$store$$get(type, 'fields').has(key) || key.match(/Type$/));
             })) + ". Make sure they've been defined in your model.",
             filter(Ember.keys(data), function(key) {
-              return !(key === 'id' || key === 'links' || ember$data$lib$system$store$$get(type, 'fields').has(key) || key.match(/Type$/));
+              return !(key === 'id' || key === 'links' || ember$data$lib$system$store$$get(type, 'fields').has(key) || key.match(/Type$/));
             }).length === 0
           );
         }
@@ -11386,7 +11386,7 @@
         type = undefined;
       }
 
-      Ember.assert("The first argument to DS.belongsTo must be a string representing a model type key, not an instance of " + Ember.inspect(type) + ". E.g., to define a relation to the Person model, use DS.belongsTo('person')", typeof type === 'string' || typeof type === 'undefined');
+      Ember.assert("The first argument to DS.belongsTo must be a string representing a model type key, not an instance of " + Ember.inspect(type) + ". E.g., to define a relation to the Person model, use DS.belongsTo('person')", typeof type === 'string' || typeof type === 'undefined');
 
       options = options || {};
 
@@ -11524,7 +11524,7 @@
         type = undefined;
       }
 
-      Ember.assert("The first argument to DS.hasMany must be a string representing a model type key, not an instance of " + Ember.inspect(type) + ". E.g., to define a relation to the Comment model, use DS.hasMany('comment')", typeof type === 'string' || typeof type === 'undefined');
+      Ember.assert("The first argument to DS.hasMany must be a string representing a model type key, not an instance of " + Ember.inspect(type) + ". E.g., to define a relation to the Comment model, use DS.hasMany('comment')", typeof type === 'string' || typeof type === 'undefined');
 
       options = options || {};
 
