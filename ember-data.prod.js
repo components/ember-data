@@ -8483,7 +8483,7 @@
         // to avoid conflicts.
 
         if (ember$data$lib$system$store$$isNone(properties.id)) {
-          properties.id = this._generateId(type);
+          properties.id = this._generateId(type, properties);
         }
 
         // Coerce ID to a string
@@ -8508,13 +8508,14 @@
         @method _generateId
         @private
         @param {String} type
+        @param {Object} properties from the new record
         @return {String} if the adapter can generate one, an ID
       */
-      _generateId: function(type) {
+      _generateId: function(type, properties) {
         var adapter = this.adapterFor(type);
 
         if (adapter && adapter.generateIdForRecord) {
-          return adapter.generateIdForRecord(this);
+          return adapter.generateIdForRecord(this, type, properties);
         }
 
         return null;
