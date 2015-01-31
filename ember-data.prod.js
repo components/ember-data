@@ -4633,7 +4633,7 @@
         this._unregisterFromManager();
         this._dissociateFromOwnRecords();
         ember$data$lib$system$record_arrays$record_array$$set(this, 'content', undefined);
-        this._super();
+        this._super.apply(this, arguments);
       }
     });
 
@@ -5172,7 +5172,7 @@
       },
 
       willDestroy: function() {
-        this._super();
+        this._super.apply(this, arguments);
 
         this.filteredRecordArrays.forEach(function(value) {
           ember$data$lib$system$record_array_manager$$forEach(ember$data$lib$system$record_array_manager$$flatten(value), ember$data$lib$system$record_array_manager$$destroy);
@@ -7236,7 +7236,7 @@
       _data: null,
 
       init: function() {
-        this._super();
+        this._super.apply(this, arguments);
         this._setup();
       },
 
@@ -7906,7 +7906,7 @@
       },
 
       willDestroy: function() {
-        this._super();
+        this._super.apply(this, arguments);
         this.clearRelationships();
       },
 
