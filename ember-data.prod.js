@@ -11433,12 +11433,9 @@
       }).meta(meta);
     }
 
-    /**
+    /*
       These observers observe all `belongsTo` relationships on the record. See
       `relationships/ext` to see how these observers get their dependencies.
-
-      @class Model
-      @namespace DS
     */
     ember$data$lib$system$model$model$$default.reopen({
       notifyBelongsToChanged: function(key) {
