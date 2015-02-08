@@ -263,7 +263,7 @@
         the first parameter and the newly created record as the second parameter:
 
         ```javascript
-        generateIdForRecord: function(store, record) {
+        generateIdForRecord: function(store, inputProperties) {
           var uuid = App.generateUUIDWithStatisticallyLowOddsOfCollision();
           return uuid;
         }
@@ -271,7 +271,8 @@
 
         @method generateIdForRecord
         @param {DS.Store} store
-        @param {DS.Model} record
+        @param {Object} inputProperties a hash of properties to set on the
+          newly created record.
         @return {String|Number} id
       */
       generateIdForRecord: null,
