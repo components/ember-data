@@ -804,6 +804,60 @@
       defaultSerializer: '-rest',
 
       /**
+        By default, the RESTAdapter will send the query params sorted alphabetically to the
+        server.
+
+        For example:
+
+        ```js
+          store.find('posts', {sort: 'price', category: 'pets'});
+        ```
+
+        will generate a requests like this `/posts?category=pets&sort=price`, even if the
+        parameters were specified in a different order.
+
+        That way the generated URL will be deterministic and that simplifies caching mechanisms
+        in the backend.
+
+        Setting `sortQueryParams` to a falsey value will respect the original order.
+
+        In case you want to sort the query parameters with a different criteria, set
+        `sortQueryParams` to your custom sort function.
+
+        ```js
+        export default DS.RESTAdapter.extend({
+          sortQueryParams: function(params) {
+            var sortedKeys = Object.keys(params).sort().reverse();
+            var len = sortedKeys.length, newParams = {};
+
+            for (var i = 0; i < len; i++) {
+              newParams[sortedKeys[i]] = params[sortedKeys[i]];
+            }
+            return newParams;
+          }
+        });
+        ```
+
+        @method sortQueryParams
+        @param {Object} obj
+        @return {Object}
+      */
+      sortQueryParams: function(obj) {
+        var keys = Ember.keys(obj);
+        var len = keys.length;
+        if (len < 2) {
+          return obj;
+        }
+        var newQueryParams = {};
+        var sortedKeys = keys.sort();
+
+        for (var i = 0; i < len; i++) {
+          newQueryParams[sortedKeys[i]] = obj[sortedKeys[i]];
+        }
+        return newQueryParams;
+      },
+
+      /**
         By default the RESTAdapter will send each find request coming from a `store.find`
         or from accessing a relationship separately to the server. If your server supports passing
         ids as a query string, you can set coalesceFindRequests to true to coalesce all find requests
@@ -962,6 +1016,9 @@
         @return {Promise} promise
       */
       findQuery: function(store, type, query) {
+        if (this.sortQueryParams) {
+          query = this.sortQueryParams(query);
+        }
         return this.ajax(this.buildURL(type.typeKey), 'GET', { data: query });
       },
 
@@ -8764,18 +8821,45 @@
         });
         ```
 
-        @method fetch
+        @method fetchById
         @param {String or subclass of DS.Model} type
         @param {String|Integer} id
         @param {Object} preload - optional set of attributes and relationships passed in either as IDs or as actual models
         @return {Promise} promise
       */
-      fetch: function(type, id, preload) {
+      fetchById: function(type, id, preload) {
         if (this.hasRecordForId(type, id)) {
           return this.getById(type, id).reload();
         } else {
           return this.find(type, id, preload);
         }
+      },
+
+      /**
+        This method returns a fresh collection from the server, regardless of if there is already records
+        in the store or not.
+
+        @method fetchAll
+        @param {String or subclass of DS.Model} type
+        @return {Promise} promise
+      */
+      fetchAll: function(type) {
+        type = this.modelFor(type);
+
+        return this._fetchAll(type, this.all(type));
+      },
+
+      /**
+        @method fetch
+        @param {String or subclass of DS.Model} type
+        @param {String|Integer} id
+        @param {Object} preload - optional set of attributes and relationships passed in either as IDs or as actual models
+        @return {Promise} promise
+        @deprecated Use [fetchById](#method_fetchById) instead
+      */
+      fetch: function(type, id, preload) {
+        Ember.deprecate('Using store.fetch() has been deprecated. Use store.fetchById for fetching individual records or store.fetchAll for collections');
+        return this.fetchById(type, id, preload);
       },
 
       /**
@@ -9148,19 +9232,17 @@
         @return {DS.AdapterPopulatedRecordArray}
       */
       findAll: function(typeName) {
-        var type = this.modelFor(typeName);
-
-        return this.fetchAll(type, this.all(type));
+        return this.fetchAll(typeName);
       },
 
       /**
-        @method fetchAll
+        @method _fetchAll
         @private
         @param {DS.Model} type
         @param {DS.RecordArray} array
         @return {Promise} promise
       */
-      fetchAll: function(type, array) {
+      _fetchAll: function(type, array) {
         var adapter = this.adapterFor(type);
         var sinceToken = this.typeMapFor(type).metadata.since;
 
@@ -10495,15 +10577,15 @@
 
     function ember$data$lib$initializers$transforms$$initializeTransforms(container) {
       container.register('transform:boolean', ember$data$lib$transforms$boolean$$default);
-      container.register('transform:date',    ember$data$lib$transforms$date$$default);
-      container.register('transform:number',  ember$data$lib$transforms$number$$default);
-      container.register('transform:string',  ember$data$lib$transforms$string$$default);
+      container.register('transform:date', ember$data$lib$transforms$date$$default);
+      container.register('transform:number', ember$data$lib$transforms$number$$default);
+      container.register('transform:string', ember$data$lib$transforms$string$$default);
     }
     var ember$data$lib$initializers$transforms$$default = ember$data$lib$initializers$transforms$$initializeTransforms;
     function ember$data$lib$initializers$store_injections$$initializeStoreInjections(container) {
-      container.injection('controller',   'store', 'store:main');
-      container.injection('route',        'store', 'store:main');
-      container.injection('serializer',   'store', 'store:main');
+      container.injection('controller', 'store', 'store:main');
+      container.injection('route', 'store', 'store:main');
+      container.injection('serializer', 'store', 'store:main');
       container.injection('data-adapter', 'store', 'store:main');
     }
     var ember$data$lib$initializers$store_injections$$default = ember$data$lib$initializers$store_injections$$initializeStoreInjections;
@@ -11639,7 +11721,7 @@
           meta.key = name;
           type = ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(this.store, meta);
 
-          Ember.assert("You specified a hasMany (" + meta.type + ") on " + meta.parentType + " but " + meta.type + " was not found.",  type);
+          Ember.assert("You specified a hasMany (" + meta.type + ") on " + meta.parentType + " but " + meta.type + " was not found.", type);
 
           if (!types.contains(type)) {
             Ember.assert("Trying to sideload " + name + " on " + this.toString() + " but the type doesn't exist.", !!type);
