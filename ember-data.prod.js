@@ -4658,10 +4658,11 @@
         @return {DS.PromiseArray} promise
       */
       save: function() {
+        var recordArray = this;
         var promiseLabel = "DS: RecordArray#save " + ember$data$lib$system$record_arrays$record_array$$get(this, 'type');
         var promise = Ember.RSVP.all(this.invoke("save"), promiseLabel).then(function(array) {
-          return Ember.A(array);
-        }, null, "DS: RecordArray#save apply Ember.NativeArray");
+          return recordArray;
+        }, null, "DS: RecordArray#save return RecordArray");
 
         return ember$data$lib$system$promise_proxies$$PromiseArray.create({ promise: promise });
       },
@@ -4800,10 +4801,6 @@
         Ember.run.once(this, 'trigger', 'didLoad');
       }
     });
-
-    /**
-      @module ember-data
-    */
 
     var ember$data$lib$system$record_arrays$many_array$$get = Ember.get;
     var ember$data$lib$system$record_arrays$many_array$$set = Ember.set;
@@ -4949,6 +4946,35 @@
       */
       reload: function() {
         return this.relationship.reload();
+      },
+
+      /**
+        Saves all of the records in the `ManyArray`.
+
+        Example
+
+        ```javascript
+        store.find('inbox', 1).then(function(inbox) {
+          inbox.get('messages').then(function(messages) {
+            messages.forEach(function(message) {
+              message.set('isRead', true);
+            });
+            messages.save()
+          });
+        });
+        ```
+
+        @method save
+        @return {DS.PromiseArray} promise
+      */
+      save: function() {
+        var manyArray = this;
+        var promiseLabel = "DS: ManyArray#save " + ember$data$lib$system$record_arrays$many_array$$get(this, 'type');
+        var promise = Ember.RSVP.all(this.invoke("save"), promiseLabel).then(function(array) {
+          return manyArray;
+        }, null, "DS: ManyArray#save return ManyArray");
+
+        return ember$data$lib$system$promise_proxies$$PromiseArray.create({ promise: promise });
       },
 
       /**
