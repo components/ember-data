@@ -1956,51 +1956,105 @@
 
     ember$inflector$lib$system$inflector$$default.inflector = new ember$inflector$lib$system$inflector$$default(ember$inflector$lib$system$inflections$$default);
 
-    /**
-     *
-     * If you have Ember Inflector (such as if Ember Data is present),
-     * singularize a word. For example, turn "oxen" into "ox".
-     *
-     * Example:
-     *
-     * {{singularize myProperty}}
-     * {{singularize "oxen"}}
-     *
-     * @for Ember.Handlebars.helpers
-     * @method singularize
-     * @param {String|Property} word word to singularize
-    */
-    Ember.Handlebars.helper('singularize', ember$inflector$lib$system$string$$singularize);
+    if (Ember.HTMLBars) {
+      /**
+       *
+       * If you have Ember Inflector (such as if Ember Data is present),
+       * singularize a word. For example, turn "oxen" into "ox".
+       *
+       * Example:
+       *
+       * {{singularize myProperty}}
+       * {{singularize "oxen"}}
+       *
+       * @for Ember.HTMLBars.helpers
+       * @method singularize
+       * @param {String|Property} word word to singularize
+      */
+      Ember.HTMLBars._registerHelper('singularize', Ember.HTMLBars.makeBoundHelper(function(params){
+        return ember$inflector$lib$system$string$$singularize(params[0]);
+      }));
 
-    /**
-     *
-     * If you have Ember Inflector (such as if Ember Data is present),
-     * pluralize a word. For example, turn "ox" into "oxen".
-     *
-     * Example:
-     *
-     * {{pluralize count myProperty}}
-     * {{pluralize 1 "oxen"}}
-     * {{pluralize myProperty}}
-     * {{pluralize "ox"}}
-     *
-     * @for Ember.Handlebars.helpers
-     * @method pluralize
-     * @param {Number|Property} [count] count of objects
-     * @param {String|Property} word word to pluralize
-    */
-    Ember.Handlebars.helper('pluralize', function(count, word, options) {
-      if(arguments.length < 3) {
-        return ember$inflector$lib$system$string$$pluralize(count);
-      } else {
-        /* jshint eqeqeq: false */
-        if(count != 1) {
-          /* jshint eqeqeq: true */
-          word = ember$inflector$lib$system$string$$pluralize(word);
+      /**
+       *
+       * If you have Ember Inflector (such as if Ember Data is present),
+       * pluralize a word. For example, turn "ox" into "oxen".
+       *
+       * Example:
+       *
+       * {{pluralize count myProperty}}
+       * {{pluralize 1 "oxen"}}
+       * {{pluralize myProperty}}
+       * {{pluralize "ox"}}
+       *
+       * @for Ember.HTMLBars.helpers
+       * @method pluralize
+       * @param {Number|Property} [count] count of objects
+       * @param {String|Property} word word to pluralize
+      */
+      Ember.HTMLBars._registerHelper('pluralize', Ember.HTMLBars.makeBoundHelper(function(params) {
+        var count, word;
+
+        if (params.length === 1) {
+          word = params[0];
+          return ember$inflector$lib$system$string$$pluralize(word);
+        } else {
+          count = params[0];
+          word  = params[1];
+
+          if (count !== 1) {
+            word = ember$inflector$lib$system$string$$pluralize(word);
+          }
+          return count + " " + word;
         }
-        return count + " " + word;
-      }
-    });
+      }));
+    } else {
+      /**
+       *
+       * If you have Ember Inflector (such as if Ember Data is present),
+       * singularize a word. For example, turn "oxen" into "ox".
+       *
+       * Example:
+       *
+       * {{singularize myProperty}}
+       * {{singularize "oxen"}}
+       *
+       * @for Ember.Handlebars.helpers
+       * @method singularize
+       * @param {String|Property} word word to singularize
+      */
+      Ember.Handlebars.helper('singularize', ember$inflector$lib$system$string$$singularize);
+
+      /**
+       *
+       * If you have Ember Inflector (such as if Ember Data is present),
+       * pluralize a word. For example, turn "ox" into "oxen".
+       *
+       * Example:
+       *
+       * {{pluralize count myProperty}}
+       * {{pluralize 1 "oxen"}}
+       * {{pluralize myProperty}}
+       * {{pluralize "ox"}}
+       *
+       * @for Ember.Handlebars.helpers
+       * @method pluralize
+       * @param {Number|Property} [count] count of objects
+       * @param {String|Property} word word to pluralize
+      */
+      Ember.Handlebars.helper('pluralize', function(count, word, options) {
+        if(arguments.length < 3) {
+          return ember$inflector$lib$system$string$$pluralize(count);
+        } else {
+          /* jshint eqeqeq: false */
+          if(count != 1) {
+            /* jshint eqeqeq: true */
+            word = ember$inflector$lib$system$string$$pluralize(word);
+          }
+          return count + " " + word;
+        }
+      });
+    }
 
     if (Ember.EXTEND_PROTOTYPES === true || Ember.EXTEND_PROTOTYPES.String) {
       /**
@@ -2031,6 +2085,15 @@
     Ember.String.singularize = ember$inflector$lib$system$string$$singularize;
 
     var ember$inflector$lib$main$$default = ember$inflector$lib$system$inflector$$default;
+
+    if (typeof define !== 'undefined' && define.amd){
+      define('ember-inflector', ['exports'], function(__exports__){
+        __exports__['default'] = ember$inflector$lib$system$inflector$$default;
+        return ember$inflector$lib$system$inflector$$default;
+      });
+    } else if (typeof module !== 'undefined' && module['exports']){
+      module['exports'] = ember$inflector$lib$system$inflector$$default;
+    }
 
     /**
       @module ember-data
