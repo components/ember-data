@@ -6630,13 +6630,14 @@
     ember$data$lib$system$relationships$state$has_many$$ManyRelationship.prototype.notifyRecordRelationshipAdded = function(record, idx) {
       var type = this.relationshipMeta.type;
       Ember.assert("You cannot add '" + record.constructor.typeKey + "' records to the " + this.record.constructor.typeKey + "." + this.key + " relationship (only '" + this.belongsToType.typeKey + "' allowed)", (function () {
-        if (record instanceof type) {
-          return true;
-        } else if (Ember.MODEL_FACTORY_INJECTIONS) {
-          return record instanceof type.superclass;
+        if (Ember.MODEL_FACTORY_INJECTIONS) {
+          type = type.superclass;
+        }
+        if (type.__isMixin) {
+          type = type.superclass;
         }
 
-        return false;
+        return record instanceof type;
       })());
 
       this.record.notifyHasManyAdded(this.key, record, idx);
@@ -6809,13 +6810,13 @@
       if (this.members.has(newRecord)) { return;}
       var type = this.relationshipMeta.type;
       Ember.assert("You can only add a '" + type.typeKey + "' record to this relationship", (function () {
-        if (newRecord instanceof type) {
-          return true;
-        } else if (Ember.MODEL_FACTORY_INJECTIONS) {
-          return newRecord instanceof type.superclass;
+        if (Ember.MODEL_FACTORY_INJECTIONS) {
+          type = type.superclass;
         }
-
-        return false;
+        if (type.__isMixin) {
+          type = type.superclass;
+        }
+        return newRecord instanceof type;
       })());
 
       if (this.inverseRecord) {
@@ -9683,6 +9684,33 @@
         return record;
       },
 
+      /*
+        In case someone defined a relationship to a mixin, for example:
+        ```
+          var Comment = DS.Model.extend({
+            owner: belongsTo('commentable'. { polymorphic: true})
+          });
+          var Commentable = Ember.Mixin.create({
+            comments: hasMany('comment')
+          });
+        ```
+        we want to look up a Commentable class which has all the necessary
+        relationship metadata. Thus, we look up the mixin and create a mock
+        DS.Model, so we can access the relationship CPs of the mixin (`comments`)
+        in this case
+      */
+
+      _modelForMixin: function(key) {
+        var mixin = this.container.resolve('mixin:' + key);
+        if (mixin) {
+          //Cache the class as a model
+          this.container.register('model:' + key, DS.Model.extend(mixin));
+        }
+        var factory = this.modelFactoryFor(key);
+        factory.__isMixin = true;
+        return factory;
+      },
+
       /**
         Returns a model class for a particular key. Used by
         methods that take a type key (like `find`, `createRecord`,
@@ -9697,6 +9725,10 @@
 
         if (typeof key === 'string') {
           factory = this.modelFactoryFor(key);
+          if (!factory) {
+            //Support looking up mixins as base types for polymorphic relationships
+            factory = this._modelForMixin(key);
+          }
           if (!factory) {
             throw new Ember.Error("No model was found for '" + key + "'");
           }
