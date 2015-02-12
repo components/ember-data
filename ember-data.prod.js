@@ -3215,7 +3215,7 @@
 
       /**
         `extractErrors` is used to extract model errors when a call is made
-        to `DS.Model#save` which fails with an InvalidError`. By default
+        to `DS.Model#save` which fails with an `InvalidError`. By default
         Ember Data expects error information to be located on the `errors`
         property of the payload object.
 
