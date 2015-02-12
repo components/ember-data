@@ -10218,6 +10218,9 @@
         var record = store.getById(type, id);
         if (record) {
           record.notFound();
+          if (ember$data$lib$system$store$$get(record, 'isEmpty')) {
+            store.dematerializeRecord(record);
+          }
         }
         throw error;
       }, "DS: Extract payload of '" + type + "'");
