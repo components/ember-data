@@ -299,7 +299,8 @@
         @return {Object} serialized record
       */
       serialize: function(record, options) {
-        return ember$data$lib$system$adapter$$get(record, 'store').serializerFor(record.constructor.typeKey).serialize(record, options);
+        var snapshot = record._createSnapshot();
+        return ember$data$lib$system$adapter$$get(record, 'store').serializerFor(snapshot.typeKey).serialize(snapshot, options);
       },
 
       /**
@@ -556,11 +557,13 @@
         Implement this method in order to provide json for CRUD methods
 
         @method mockJSON
+        @param {DS.Store} store
         @param {Subclass of DS.Model} type
         @param {DS.Model} record
       */
       mockJSON: function(store, type, record) {
-        return store.serializerFor(type).serialize(record, { includeId: true });
+        var snapshot = record._createSnapshot();
+        return store.serializerFor(snapshot.typeKey).serialize(snapshot, { includeId: true });
       },
 
       /**
@@ -1153,7 +1156,8 @@
         var data = {};
         var serializer = store.serializerFor(type.typeKey);
 
-        serializer.serializeIntoHash(data, type, record, { includeId: true });
+        var snapshot = record._createSnapshot();
+        serializer.serializeIntoHash(data, type, snapshot, { includeId: true });
 
         return this.ajax(this.buildURL(type.typeKey, null, record), "POST", { data: data });
       },
@@ -1178,7 +1182,8 @@
         var data = {};
         var serializer = store.serializerFor(type.typeKey);
 
-        serializer.serializeIntoHash(data, type, record);
+        var snapshot = record._createSnapshot();
+        serializer.serializeIntoHash(data, type, snapshot);
 
         var id = ember$data$lib$adapters$rest_adapter$$get(record, 'id');
 
@@ -2673,15 +2678,15 @@
 
         ```javascript
         App.PostSerializer = DS.JSONSerializer.extend({
-          serialize: function(post, options) {
+          serialize: function(snapshot, options) {
             var json = {
-              POST_TTL: post.get('title'),
-              POST_BDY: post.get('body'),
-              POST_CMS: post.get('comments').mapBy('id')
+              POST_TTL: snapshot.attr('title'),
+              POST_BDY: snapshot.attr('body'),
+              POST_CMS: snapshot.hasMany('comments', { ids: true })
             }
 
             if (options.includeId) {
-              json.POST_ID_ = post.get('id');
+              json.POST_ID_ = snapshot.id;
             }
 
             return json;
@@ -2697,21 +2702,21 @@
 
         ```javascript
         App.ApplicationSerializer = DS.JSONSerializer.extend({
-          serialize: function(record, options) {
+          serialize: function(snapshot, options) {
             var json = {};
 
-            record.eachAttribute(function(name) {
-              json[serverAttributeName(name)] = record.get(name);
+            snapshot.eachAttribute(function(name) {
+              json[serverAttributeName(name)] = snapshot.attr(name);
             })
 
-            record.eachRelationship(function(name, relationship) {
+            snapshot.eachRelationship(function(name, relationship) {
               if (relationship.kind === 'hasMany') {
-                json[serverHasManyName(name)] = record.get(name).mapBy('id');
+                json[serverHasManyName(name)] = snapshot.hasMany(name, { ids: true });
               }
             });
 
             if (options.includeId) {
-              json.ID_ = record.get('id');
+              json.ID_ = snapshot.id;
             }
 
             return json;
@@ -2745,7 +2750,7 @@
 
         ```javascript
         App.PostSerializer = DS.JSONSerializer.extend({
-          serialize: function(record, options) {
+          serialize: function(snapshot, options) {
             var json = this._super.apply(this, arguments);
 
             json.subject = json.title;
@@ -2757,30 +2762,30 @@
         ```
 
         @method serialize
-        @param {subclass of DS.Model} record
+        @param {DS.Snapshot} snapshot
         @param {Object} options
         @return {Object} json
       */
-      serialize: function(record, options) {
+      serialize: function(snapshot, options) {
         var json = {};
 
         if (options && options.includeId) {
-          var id = ember$data$lib$serializers$json_serializer$$get(record, 'id');
+          var id = snapshot.id;
 
           if (id) {
             json[ember$data$lib$serializers$json_serializer$$get(this, 'primaryKey')] = id;
           }
         }
 
-        record.eachAttribute(function(key, attribute) {
-          this.serializeAttribute(record, json, key, attribute);
+        snapshot.eachAttribute(function(key, attribute) {
+          this.serializeAttribute(snapshot, json, key, attribute);
         }, this);
 
-        record.eachRelationship(function(key, relationship) {
+        snapshot.eachRelationship(function(key, relationship) {
           if (relationship.kind === 'belongsTo') {
-            this.serializeBelongsTo(record, json, relationship);
+            this.serializeBelongsTo(snapshot, json, relationship);
           } else if (relationship.kind === 'hasMany') {
-            this.serializeHasMany(record, json, relationship);
+            this.serializeHasMany(snapshot, json, relationship);
           }
         }, this);
 
@@ -2798,9 +2803,9 @@
 
         ```js
         App.ApplicationSerializer = DS.RESTSerializer.extend({
-          serializeIntoHash: function(data, type, record, options) {
+          serializeIntoHash: function(data, type, snapshot, options) {
             var root = Ember.String.decamelize(type.typeKey);
-            data[root] = this.serialize(record, options);
+            data[root] = this.serialize(snapshot, options);
           }
         });
         ```
@@ -2808,11 +2813,11 @@
         @method serializeIntoHash
         @param {Object} hash
         @param {subclass of DS.Model} type
-        @param {DS.Model} record
+        @param {DS.Snapshot} snapshot
         @param {Object} options
       */
-      serializeIntoHash: function(hash, type, record, options) {
-        ember$data$lib$serializers$json_serializer$$merge(hash, this.serialize(record, options));
+      serializeIntoHash: function(hash, type, snapshot, options) {
+        ember$data$lib$serializers$json_serializer$$merge(hash, this.serialize(snapshot, options));
       },
 
       /**
@@ -2825,24 +2830,24 @@
 
        ```javascript
        App.ApplicationSerializer = DS.JSONSerializer.extend({
-         serializeAttribute: function(record, json, key, attributes) {
+         serializeAttribute: function(snapshot, json, key, attributes) {
            json.attributes = json.attributes || {};
-           this._super(record, json.attributes, key, attributes);
+           this._super(snapshot, json.attributes, key, attributes);
          }
        });
        ```
 
        @method serializeAttribute
-       @param {DS.Model} record
+       @param {DS.Snapshot} snapshot
        @param {Object} json
        @param {String} key
        @param {Object} attribute
       */
-      serializeAttribute: function(record, json, key, attribute) {
+      serializeAttribute: function(snapshot, json, key, attribute) {
         var type = attribute.type;
 
         if (this._canSerialize(key)) {
-          var value = ember$data$lib$serializers$json_serializer$$get(record, key);
+          var value = snapshot.attr(key);
           if (type) {
             var transform = this.transformFor(type);
             value = transform.serialize(value);
@@ -2868,28 +2873,28 @@
 
        ```javascript
        App.PostSerializer = DS.JSONSerializer.extend({
-         serializeBelongsTo: function(record, json, relationship) {
+         serializeBelongsTo: function(snapshot, json, relationship) {
            var key = relationship.key;
 
-           var belongsTo = get(record, key);
+           var belongsTo = snapshot.belongsTo(key);
 
            key = this.keyForRelationship ? this.keyForRelationship(key, "belongsTo") : key;
 
-           json[key] = Ember.isNone(belongsTo) ? belongsTo : belongsTo.toJSON();
+           json[key] = Ember.isNone(belongsTo) ? belongsTo : belongsTo.record.toJSON();
          }
        });
        ```
 
        @method serializeBelongsTo
-       @param {DS.Model} record
+       @param {DS.Snapshot} snapshot
        @param {Object} json
        @param {Object} relationship
       */
-      serializeBelongsTo: function(record, json, relationship) {
+      serializeBelongsTo: function(snapshot, json, relationship) {
         var key = relationship.key;
 
         if (this._canSerialize(key)) {
-          var belongsTo = ember$data$lib$serializers$json_serializer$$get(record, key);
+          var belongsToId = snapshot.belongsTo(key, { id: true });
 
           // if provided, use the mapping provided by `attrs` in
           // the serializer
@@ -2899,14 +2904,14 @@
           }
 
           //Need to check whether the id is there for new&async records
-          if (ember$data$lib$serializers$json_serializer$$isNone(belongsTo) || ember$data$lib$serializers$json_serializer$$isNone(ember$data$lib$serializers$json_serializer$$get(belongsTo, 'id'))) {
+          if (ember$data$lib$serializers$json_serializer$$isNone(belongsToId)) {
             json[payloadKey] = null;
           } else {
-            json[payloadKey] = ember$data$lib$serializers$json_serializer$$get(belongsTo, 'id');
+            json[payloadKey] = belongsToId;
           }
 
           if (relationship.options.polymorphic) {
-            this.serializePolymorphicType(record, json, relationship);
+            this.serializePolymorphicType(snapshot, json, relationship);
           }
         }
       },
@@ -2919,7 +2924,7 @@
 
        ```javascript
        App.PostSerializer = DS.JSONSerializer.extend({
-         serializeHasMany: function(record, json, relationship) {
+         serializeHasMany: function(snapshot, json, relationship) {
            var key = relationship.key;
            if (key === 'comments') {
              return;
@@ -2931,11 +2936,11 @@
        ```
 
        @method serializeHasMany
-       @param {DS.Model} record
+       @param {DS.Snapshot} snapshot
        @param {Object} json
        @param {Object} relationship
       */
-      serializeHasMany: function(record, json, relationship) {
+      serializeHasMany: function(snapshot, json, relationship) {
         var key = relationship.key;
 
         if (this._canSerialize(key)) {
@@ -2948,10 +2953,10 @@
             payloadKey = this.keyForRelationship(key, "hasMany");
           }
 
-          var relationshipType = record.constructor.determineRelationshipType(relationship);
+          var relationshipType = snapshot.type.determineRelationshipType(relationship);
 
           if (relationshipType === 'manyToNone' || relationshipType === 'manyToMany') {
-            json[payloadKey] = ember$data$lib$serializers$json_serializer$$get(record, key).mapBy('id');
+            json[payloadKey] = snapshot.hasMany(key, { ids: true });
             // TODO support for polymorphic manyToNone and manyToMany relationships
           }
         }
@@ -2967,22 +2972,22 @@
 
         ```javascript
         App.CommentSerializer = DS.JSONSerializer.extend({
-          serializePolymorphicType: function(record, json, relationship) {
+          serializePolymorphicType: function(snapshot, json, relationship) {
             var key = relationship.key,
-                belongsTo = get(record, key);
+                belongsTo = snapshot.belongsTo(key);
             key = this.keyForAttribute ? this.keyForAttribute(key) : key;
 
             if (Ember.isNone(belongsTo)) {
               json[key + "_type"] = null;
             } else {
-              json[key + "_type"] = belongsTo.constructor.typeKey;
+              json[key + "_type"] = belongsTo.typeKey;
             }
           }
         });
        ```
 
         @method serializePolymorphicType
-        @param {DS.Model} record
+        @param {DS.Snapshot} snapshot
         @param {Object} json
         @param {Object} relationship
       */
@@ -3385,7 +3390,6 @@
       }
     });
 
-    var ember$data$lib$serializers$rest_serializer$$get = Ember.get;
     var ember$data$lib$serializers$rest_serializer$$forEach = Ember.ArrayPolyfills.forEach;
     var ember$data$lib$serializers$rest_serializer$$map = Ember.ArrayPolyfills.map;
     var ember$data$lib$serializers$rest_serializer$$camelize = Ember.String.camelize;
@@ -3985,15 +3989,15 @@
 
         ```js
         App.PostSerializer = DS.RESTSerializer.extend({
-          serialize: function(post, options) {
+          serialize: function(snapshot, options) {
             var json = {
-              POST_TTL: post.get('title'),
-              POST_BDY: post.get('body'),
-              POST_CMS: post.get('comments').mapBy('id')
+              POST_TTL: snapshot.attr('title'),
+              POST_BDY: snapshot.attr('body'),
+              POST_CMS: snapshot.hasMany('comments', { ids: true })
             }
 
             if (options.includeId) {
-              json.POST_ID_ = post.get('id');
+              json.POST_ID_ = snapshot.id;
             }
 
             return json;
@@ -4009,21 +4013,21 @@
 
         ```js
         App.ApplicationSerializer = DS.RESTSerializer.extend({
-          serialize: function(record, options) {
+          serialize: function(snapshot, options) {
             var json = {};
 
-            record.eachAttribute(function(name) {
-              json[serverAttributeName(name)] = record.get(name);
+            snapshot.eachAttribute(function(name) {
+              json[serverAttributeName(name)] = snapshot.attr(name);
             })
 
-            record.eachRelationship(function(name, relationship) {
+            snapshot.eachRelationship(function(name, relationship) {
               if (relationship.kind === 'hasMany') {
-                json[serverHasManyName(name)] = record.get(name).mapBy('id');
+                json[serverHasManyName(name)] = snapshot.hasMany(name, { ids: true });
               }
             });
 
             if (options.includeId) {
-              json.ID_ = record.get('id');
+              json.ID_ = snapshot.id;
             }
 
             return json;
@@ -4057,8 +4061,8 @@
 
         ```js
         App.PostSerializer = DS.RESTSerializer.extend({
-          serialize: function(record, options) {
-            var json = this._super(record, options);
+          serialize: function(snapshot, options) {
+            var json = this._super(snapshot, options);
 
             json.subject = json.title;
             delete json.title;
@@ -4069,11 +4073,11 @@
         ```
 
         @method serialize
-        @param {subclass of DS.Model} record
+        @param {DS.Snapshot} snapshot
         @param {Object} options
         @return {Object} json
       */
-      serialize: function(record, options) {
+      serialize: function(snapshot, options) {
         return this._super.apply(this, arguments);
       },
 
@@ -4096,11 +4100,11 @@
         @method serializeIntoHash
         @param {Object} hash
         @param {subclass of DS.Model} type
-        @param {DS.Model} record
+        @param {DS.Snapshot} snapshot
         @param {Object} options
       */
-      serializeIntoHash: function(hash, type, record, options) {
-        hash[type.typeKey] = this.serialize(record, options);
+      serializeIntoHash: function(hash, type, snapshot, options) {
+        hash[type.typeKey] = this.serialize(snapshot, options);
       },
 
       /**
@@ -4109,18 +4113,18 @@
         the attribute and value from the model's camelcased model name.
 
         @method serializePolymorphicType
-        @param {DS.Model} record
+        @param {DS.Snapshot} snapshot
         @param {Object} json
         @param {Object} relationship
       */
-      serializePolymorphicType: function(record, json, relationship) {
+      serializePolymorphicType: function(snapshot, json, relationship) {
         var key = relationship.key;
-        var belongsTo = ember$data$lib$serializers$rest_serializer$$get(record, key);
+        var belongsTo = snapshot.belongsTo(key);
         key = this.keyForAttribute ? this.keyForAttribute(key) : key;
         if (Ember.isNone(belongsTo)) {
           json[key + "Type"] = null;
         } else {
-          json[key + "Type"] = Ember.String.camelize(belongsTo.constructor.typeKey);
+          json[key + "Type"] = Ember.String.camelize(belongsTo.typeKey);
         }
       }
     });
@@ -4131,12 +4135,12 @@
       @module ember-data
     */
 
-    var activemodel$adapter$lib$system$active_model_serializer$$get = Ember.get;
     var activemodel$adapter$lib$system$active_model_serializer$$forEach = Ember.EnumerableUtils.forEach;
     var activemodel$adapter$lib$system$active_model_serializer$$camelize =   Ember.String.camelize;
     var activemodel$adapter$lib$system$active_model_serializer$$capitalize = Ember.String.capitalize;
     var activemodel$adapter$lib$system$active_model_serializer$$decamelize = Ember.String.decamelize;
     var activemodel$adapter$lib$system$active_model_serializer$$underscore = Ember.String.underscore;
+
     /**
       The ActiveModelSerializer is a subclass of the RESTSerializer designed to integrate
       with a JSON API that uses an underscored naming convention instead of camelCasing.
@@ -4269,31 +4273,31 @@
         @method serializeIntoHash
         @param {Object} hash
         @param {subclass of DS.Model} type
-        @param {DS.Model} record
+        @param {DS.Snapshot} snapshot
         @param {Object} options
       */
-      serializeIntoHash: function(data, type, record, options) {
+      serializeIntoHash: function(data, type, snapshot, options) {
         var root = activemodel$adapter$lib$system$active_model_serializer$$underscore(activemodel$adapter$lib$system$active_model_serializer$$decamelize(type.typeKey));
-        data[root] = this.serialize(record, options);
+        data[root] = this.serialize(snapshot, options);
       },
 
       /**
         Serializes a polymorphic type as a fully capitalized model name.
 
         @method serializePolymorphicType
-        @param {DS.Model} record
+        @param {DS.Snapshot} snapshot
         @param {Object} json
         @param {Object} relationship
       */
-      serializePolymorphicType: function(record, json, relationship) {
+      serializePolymorphicType: function(snapshot, json, relationship) {
         var key = relationship.key;
-        var belongsTo = activemodel$adapter$lib$system$active_model_serializer$$get(record, key);
+        var belongsTo = snapshot.belongsTo(key);
         var jsonKey = activemodel$adapter$lib$system$active_model_serializer$$underscore(key + "_type");
 
         if (Ember.isNone(belongsTo)) {
           json[jsonKey] = null;
         } else {
-          json[jsonKey] = activemodel$adapter$lib$system$active_model_serializer$$capitalize(activemodel$adapter$lib$system$active_model_serializer$$camelize(belongsTo.constructor.typeKey));
+          json[jsonKey] = activemodel$adapter$lib$system$active_model_serializer$$capitalize(activemodel$adapter$lib$system$active_model_serializer$$camelize(belongsTo.typeKey));
         }
       },
 
@@ -6995,6 +6999,365 @@
     };
 
     var ember$data$lib$system$relationships$state$create$$default = ember$data$lib$system$relationships$state$create$$createRelationshipFor;
+    /**
+      @module ember-data
+    */
+
+    var ember$data$lib$system$snapshot$$get = Ember.get;
+
+    /**
+      @class Snapshot
+      @namespace DS
+      @private
+      @constructor
+      @param {DS.Model} record The record to create a snapshot from
+    */
+    function ember$data$lib$system$snapshot$$Snapshot(record) {
+      this._attributes = Ember.create(null);
+      this._belongsToRelationships = Ember.create(null);
+      this._belongsToIds = Ember.create(null);
+      this._hasManyRelationships = Ember.create(null);
+      this._hasManyIds = Ember.create(null);
+
+      record.eachAttribute(function(keyName) {
+        this._attributes[keyName] = ember$data$lib$system$snapshot$$get(record, keyName);
+      }, this);
+
+      this.id = ember$data$lib$system$snapshot$$get(record, 'id');
+      this.record = record;
+      this.type = record.constructor;
+      this.typeKey = record.constructor.typeKey;
+
+      // The following code is here to keep backwards compatibility when accessing
+      // `constructor` directly.
+      //
+      // With snapshots you should use `type` instead of `constructor`.
+      //
+      // Remove for Ember Data 1.0.
+      if (Ember.platform.hasPropertyAccessors) {
+        var callDeprecate = true;
+
+        Ember.defineProperty(this, 'constructor', {
+          get: function() {
+            // Ugly hack since accessing error.stack (done in `Ember.deprecate()`)
+            // causes the internals of Chrome to access the constructor, which then
+            // causes an infinite loop if accessed and calls `Ember.deprecate()`
+            // again.
+            if (callDeprecate) {
+              callDeprecate = false;
+                            callDeprecate = true;
+            }
+
+            return this.type;
+          }
+        });
+      } else {
+        this.constructor = this.type;
+      }
+    }
+
+    ember$data$lib$system$snapshot$$Snapshot.prototype = {
+      constructor: ember$data$lib$system$snapshot$$Snapshot,
+
+      /**
+        The id of the snapshot's underlying record
+
+        Example
+
+        ```javascript
+        var post = store.push('post', { id: 1, author: 'Tomster', title: 'Ember.js rocks' });
+        var snapshot = post._createSnapshot();
+
+        snapshot.id; // => '1'
+        ```
+
+        @property id
+        @type {String}
+      */
+      id: null,
+
+      /**
+        The underlying record for this snapshot. Can be used to access methods and
+        properties defined on the record.
+
+        Example
+
+        ```javascript
+        var json = snapshot.record.toJSON();
+        ```
+
+        @property record
+        @type {DS.Model}
+      */
+      record: null,
+
+      /**
+        The type of the underlying record for this snapshot, as a subclass of DS.Model.
+
+        @property type
+        @type {subclass of DS.Model}
+      */
+      type: null,
+
+      /**
+        The name of the type of the underlying record for this snapshot, as a string.
+
+        @property typeKey
+        @type {String}
+      */
+      typeKey: null,
+
+      /**
+        Returns the value of an attribute.
+
+        Example
+
+        ```javascript
+        var post = store.createRecord('post', { author: 'Tomster', title: 'Ember.js rocks' });
+        var snapshot = post._createSnapshot();
+
+        snapshot.attr('author'); // => 'Tomster'
+        snapshot.attr('title'); // => 'Ember.js rocks'
+        ```
+
+        Note: Values are loaded eagerly and cached when the snapshot is created.
+
+        @method attr
+        @param {String} keyName
+        @return {Object} The attribute value or undefined
+      */
+      attr: function(keyName) {
+        if (keyName in this._attributes) {
+          return this._attributes[keyName];
+        }
+        throw new Ember.Error("Model '" + Ember.inspect(this.record) + "' has no attribute named '" + keyName + "' defined.");
+      },
+
+      /**
+        Returns all attributes and their corresponding values.
+
+        Example
+
+        ```javascript
+        var post = store.createRecord('post', { author: 'Tomster', title: 'Ember.js rocks' });
+        var snapshot = post._createSnapshot();
+
+        snapshot.attributes(); // => { author: 'Tomster', title: 'Ember.js rocks' }
+        ```
+
+        @method attributes
+        @return {Array} All attributes for the current snapshot
+      */
+      attributes: function() {
+        return Ember.copy(this._attributes);
+      },
+
+      /**
+        Returns the current value of a belongsTo relationship.
+
+        `belongsTo` takes an optional hash of options as a second parameter,
+        currently supported options are:
+
+       - `id`: set to `true` if you only want the ID of the related record to be
+          returned.
+
+        Example
+
+        ```javascript
+        var post = store.push('post', { id: 1, title: 'Hello World' });
+        var comment = store.createRecord('comment', { body: 'Lorem ipsum', post: post });
+        var snapshot = comment._createSnapshot();
+
+        snapshot.belongsTo('post'); // => DS.Snapshot of post
+        snapshot.belongsTo('post', { id: true }); // => '1'
+        ```
+
+        Calling `belongsTo` will return a new Snapshot as long as there's any
+        data available, such as an ID. If there's no data available `belongsTo` will
+        return undefined.
+
+        Note: Relationships are loaded lazily and cached upon first access.
+
+        @method belongsTo
+        @param {String} keyName
+        @param {Object} [options]
+        @return {DS.Snapshot|String|undefined} A snapshot or ID of a belongsTo relationship, or undefined
+      */
+      belongsTo: function(keyName, options) {
+        var id = options && options.id;
+        var result;
+        var relationship, inverseRecord;
+
+        if (id && keyName in this._belongsToIds) {
+          return this._belongsToIds[keyName];
+        }
+
+        if (!id && keyName in this._belongsToRelationships) {
+          return this._belongsToRelationships[keyName];
+        }
+
+        relationship = this.record._relationships[keyName];
+        if (!(relationship && relationship.relationshipMeta.kind === 'belongsTo')) {
+          throw new Ember.Error("Model '" + Ember.inspect(this.record) + "' has no belongsTo relationship named '" + keyName + "' defined.");
+        }
+
+        inverseRecord = ember$data$lib$system$snapshot$$get(relationship, 'inverseRecord');
+        if (id) {
+          if (inverseRecord) {
+            result = ember$data$lib$system$snapshot$$get(inverseRecord, 'id');
+          }
+          this._belongsToIds[keyName] = result;
+        } else {
+          if (inverseRecord) {
+            result = inverseRecord._createSnapshot();
+          }
+          this._belongsToRelationships[keyName] = result;
+        }
+
+        return result;
+      },
+
+      /**
+        Returns the current value of a hasMany relationship.
+
+        `hasMany` takes an optional hash of options as a second parameter,
+        currently supported options are:
+
+       - `ids`: set to `true` if you only want the IDs of the related records to be
+          returned.
+
+        Example
+
+        ```javascript
+        var post = store.createRecord('post', { title: 'Hello World', comments: [2, 3] });
+        var snapshot = post._createSnapshot();
+
+        snapshot.hasMany('comments'); // => [DS.Snapshot, DS.Snapshot]
+        snapshot.hasMany('comments', { ids: true }); // => ['2', '3']
+        ```
+
+        Note: Relationships are loaded lazily and cached upon first access.
+
+        @method hasMany
+        @param {String} keyName
+        @param {Object} [options]
+        @return {Array} An array of snapshots or IDs of a hasMany relationship
+      */
+      hasMany: function(keyName, options) {
+        var ids = options && options.ids;
+        var results = [];
+        var relationship, members;
+
+        if (ids && keyName in this._hasManyIds) {
+          return this._hasManyIds[keyName];
+        }
+
+        if (!ids && keyName in this._hasManyRelationships) {
+          return this._hasManyRelationships[keyName];
+        }
+
+        relationship = this.record._relationships[keyName];
+        if (!(relationship && relationship.relationshipMeta.kind === 'hasMany')) {
+          throw new Ember.Error("Model '" + Ember.inspect(this.record) + "' has no hasMany relationship named '" + keyName + "' defined.");
+        }
+
+        members = ember$data$lib$system$snapshot$$get(relationship, 'members');
+
+        if (ids) {
+          members.forEach(function(member) {
+            results.push(ember$data$lib$system$snapshot$$get(member, 'id'));
+          });
+          this._hasManyIds[keyName] = results;
+        } else {
+          members.forEach(function(member) {
+            results.push(member._createSnapshot());
+          });
+          this._hasManyRelationships[keyName] = results;
+        }
+
+        return results;
+      },
+
+      /**
+        Iterates through all the attributes of the model, calling the passed
+        function on each attribute.
+
+        Example
+
+        ```javascript
+        snapshot.eachAttribute(function(name, meta) {
+          // ...
+        });
+        ```
+
+        @method eachAttribute
+        @param {Function} callback the callback to execute
+        @param {Object} [binding] the value to which the callback's `this` should be bound
+      */
+      eachAttribute: function(callback, binding) {
+        this.record.eachAttribute(callback, binding);
+      },
+
+      /**
+        Iterates through all the relationships of the model, calling the passed
+        function on each relationship.
+
+        Example
+
+        ```javascript
+        snapshot.eachRelationship(function(name, relationship) {
+          // ...
+        });
+        ```
+
+        @method eachRelationship
+        @param {Function} callback the callback to execute
+        @param {Object} [binding] the value to which the callback's `this` should be bound
+      */
+      eachRelationship: function(callback, binding) {
+        this.record.eachRelationship(callback, binding);
+      },
+
+      /**
+        @method get
+        @param {String} keyName
+        @return {Object} The property value
+        @deprecated Use [attr](#method_attr), [belongsTo](#method_belongsTo) or [hasMany](#method_hasMany) instead
+      */
+      get: function(keyName) {
+        
+        if (keyName === 'id') {
+          return this.id;
+        }
+
+        if (keyName in this._attributes) {
+          return this.attr(keyName);
+        }
+
+        var relationship = this.record._relationships[keyName];
+
+        if (relationship && relationship.relationshipMeta.kind === 'belongsTo') {
+          return this.belongsTo(keyName);
+        }
+        if (relationship && relationship.relationshipMeta.kind === 'hasMany') {
+          return this.hasMany(keyName);
+        }
+
+        return ember$data$lib$system$snapshot$$get(this.record, keyName);
+      },
+
+      /**
+        @method unknownProperty
+        @param {String} keyName
+        @return {Object} The property value
+        @deprecated Use [attr](#method_attr), [belongsTo](#method_belongsTo) or [hasMany](#method_hasMany) instead
+      */
+      unknownProperty: function(keyName) {
+        return this.get(keyName);
+      }
+    };
+
+    var ember$data$lib$system$snapshot$$default = ember$data$lib$system$snapshot$$Snapshot;
 
     /**
       @module ember-data
@@ -7392,7 +7755,9 @@
       toJSON: function(options) {
         // container is for lazy transform lookups
         var serializer = ember$data$lib$serializers$json_serializer$$default.create({ container: this.container });
-        return serializer.serialize(this, options);
+        var snapshot = this._createSnapshot();
+
+        return serializer.serialize(snapshot, options);
       },
 
       /**
@@ -7960,6 +8325,14 @@
         this.send('rolledBack');
 
         this._notifyProperties(dirtyKeys);
+      },
+
+      /**
+        @method _createSnapshot
+        @private
+      */
+      _createSnapshot: function() {
+        return new ember$data$lib$system$snapshot$$default(this);
       },
 
       toStringExtension: function() {
@@ -8637,7 +9010,8 @@
         @param {Object} options an options hash
       */
       serialize: function(record, options) {
-        return this.serializerFor(record.constructor.typeKey).serialize(record, options);
+        var snapshot = record._createSnapshot();
+        return this.serializerFor(snapshot.typeKey).serialize(snapshot, options);
       },
 
       /**
@@ -11169,34 +11543,34 @@
         ```
 
         @method serializeBelongsTo
-        @param {DS.Model} record
+        @param {DS.Snapshot} snapshot
         @param {Object} json
         @param {Object} relationship
       */
-      serializeBelongsTo: function(record, json, relationship) {
+      serializeBelongsTo: function(snapshot, json, relationship) {
         var attr = relationship.key;
         if (this.noSerializeOptionSpecified(attr)) {
-          this._super(record, json, relationship);
+          this._super(snapshot, json, relationship);
           return;
         }
         var includeIds = this.hasSerializeIdsOption(attr);
         var includeRecords = this.hasSerializeRecordsOption(attr);
-        var embeddedRecord = record.get(attr);
+        var embeddedSnapshot = snapshot.belongsTo(attr);
         var key;
         if (includeIds) {
           key = this.keyForRelationship(attr, relationship.kind);
-          if (!embeddedRecord) {
+          if (!embeddedSnapshot) {
             json[key] = null;
           } else {
-            json[key] = ember$data$lib$serializers$embedded_records_mixin$$get(embeddedRecord, 'id');
+            json[key] = embeddedSnapshot.id;
           }
         } else if (includeRecords) {
           key = this.keyForAttribute(attr);
-          if (!embeddedRecord) {
+          if (!embeddedSnapshot) {
             json[key] = null;
           } else {
-            json[key] = embeddedRecord.serialize({ includeId: true });
-            this.removeEmbeddedForeignKey(record, embeddedRecord, relationship, json[key]);
+            json[key] = embeddedSnapshot.record.serialize({ includeId: true });
+            this.removeEmbeddedForeignKey(snapshot, embeddedSnapshot, relationship, json[key]);
           }
         }
       },
@@ -11278,14 +11652,14 @@
         ```
 
         @method serializeHasMany
-        @param {DS.Model} record
+        @param {DS.Snapshot} snapshot
         @param {Object} json
         @param {Object} relationship
       */
-      serializeHasMany: function(record, json, relationship) {
+      serializeHasMany: function(snapshot, json, relationship) {
         var attr = relationship.key;
         if (this.noSerializeOptionSpecified(attr)) {
-          this._super(record, json, relationship);
+          this._super(snapshot, json, relationship);
           return;
         }
         var includeIds = this.hasSerializeIdsOption(attr);
@@ -11293,13 +11667,13 @@
         var key;
         if (includeIds) {
           key = this.keyForRelationship(attr, relationship.kind);
-          json[key] = ember$data$lib$serializers$embedded_records_mixin$$get(record, attr).mapBy('id');
+          json[key] = snapshot.hasMany(attr, { ids: true });
         } else if (includeRecords) {
           key = this.keyForAttribute(attr);
-          json[key] = ember$data$lib$serializers$embedded_records_mixin$$get(record, attr).map(function(embeddedRecord) {
-            var serializedEmbeddedRecord = embeddedRecord.serialize({ includeId: true });
-            this.removeEmbeddedForeignKey(record, embeddedRecord, relationship, serializedEmbeddedRecord);
-            return serializedEmbeddedRecord;
+          json[key] = snapshot.hasMany(attr).map(function(embeddedSnapshot) {
+            var embeddedJson = embeddedSnapshot.record.serialize({ includeId: true });
+            this.removeEmbeddedForeignKey(snapshot, embeddedSnapshot, relationship, embeddedJson);
+            return embeddedJson;
           }, this);
         }
       },
@@ -11315,19 +11689,19 @@
         the parent record.
 
         @method removeEmbeddedForeignKey
-        @param {DS.Model} record
-        @param {DS.Model} embeddedRecord
+        @param {DS.Snapshot} snapshot
+        @param {DS.Snapshot} embeddedSnapshot
         @param {Object} relationship
         @param {Object} json
       */
-      removeEmbeddedForeignKey: function (record, embeddedRecord, relationship, json) {
+      removeEmbeddedForeignKey: function (snapshot, embeddedSnapshot, relationship, json) {
         if (relationship.kind === 'hasMany') {
           return;
         } else if (relationship.kind === 'belongsTo') {
-          var parentRecord = record.constructor.inverseFor(relationship.key);
+          var parentRecord = snapshot.type.inverseFor(relationship.key);
           if (parentRecord) {
             var name = parentRecord.name;
-            var embeddedSerializer = this.store.serializerFor(embeddedRecord.constructor);
+            var embeddedSerializer = this.store.serializerFor(embeddedSnapshot.type);
             var parentKey = embeddedSerializer.keyForRelationship(name, parentRecord.kind);
             if (parentKey) {
               delete json[parentKey];
@@ -12360,6 +12734,8 @@
     ember$data$lib$core$$default.RootState = ember$data$lib$system$model$states$$default;
     ember$data$lib$core$$default.attr      = ember$data$lib$system$model$attributes$$default;
     ember$data$lib$core$$default.Errors    = ember$data$lib$system$model$errors$$default;
+
+    ember$data$lib$core$$default.Snapshot = ember$data$lib$system$snapshot$$default;
 
     ember$data$lib$core$$default.Adapter      = ember$data$lib$system$adapter$$Adapter;
     ember$data$lib$core$$default.InvalidError = ember$data$lib$system$adapter$$InvalidError;
