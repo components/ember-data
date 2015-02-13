@@ -108,6 +108,8 @@ eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/syste
 
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/system/relationships/state\');\ntest(\'lib/system/relationships/state/relationship.js should pass jshint\', function() { \n  ok(true, \'lib/system/relationships/state/relationship.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/system/relationships/state/relationship.jshint.js");
 
+eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/system\');\ntest(\'lib/system/serializer.js should pass jshint\', function() { \n  ok(true, \'lib/system/serializer.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/system/serializer.jshint.js");
+
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/system\');\ntest(\'lib/system/store.js should pass jshint\', function() { \n  ok(true, \'lib/system/store.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/system/store.jshint.js");
 
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib\');\ntest(\'lib/transforms.js should pass jshint\', function() { \n  ok(true, \'lib/transforms.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/transforms.jshint.js");
