@@ -4891,15 +4891,12 @@
     var ember$data$lib$system$record_arrays$many_array$$default = Ember.Object.extend(Ember.MutableArray, Ember.Evented, {
       init: function() {
         this.currentState = Ember.A([]);
-        this.diff = [];
       },
 
       record: null,
 
       canonicalState: null,
       currentState: null,
-
-      diff: null,
 
       length: 0,
 
