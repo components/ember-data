@@ -6093,7 +6093,7 @@
 
           setup: function(record) {
             var store = ember$data$lib$system$model$states$$get(record, 'store');
-            store.dematerializeRecord(record);
+            store._dematerializeRecord(record);
           },
 
           invokeLifecycleCallbacks: function(record) {
@@ -10434,14 +10434,24 @@
       // ...............
 
       /**
-        When a record is destroyed, this un-indexes it and
-        removes it from any record arrays so it can be GCed.
-
         @method dematerializeRecord
         @private
         @param {DS.Model} record
+        @deprecated Use [unloadRecord](#method_unloadRecord) instead
       */
       dematerializeRecord: function(record) {
+                this._dematerializeRecord(record);
+      },
+
+      /**
+        When a record is destroyed, this un-indexes it and
+        removes it from any record arrays so it can be GCed.
+
+        @method _dematerializeRecord
+        @private
+        @param {DS.Model} record
+      */
+      _dematerializeRecord: function(record) {
         var type = record.constructor;
         var typeMap = this.typeMapFor(type);
         var id = ember$data$lib$system$store$$get(record, 'id');
@@ -10664,7 +10674,7 @@
         if (record) {
           record.notFound();
           if (ember$data$lib$system$store$$get(record, 'isEmpty')) {
-            store.dematerializeRecord(record);
+            store.unloadRecord(record);
           }
         }
         throw error;
