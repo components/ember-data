@@ -5864,6 +5864,11 @@
       record.transitionTo('deleted.saved');
     };
 
+    ember$data$lib$system$model$states$$createdState.uncommitted.pushedData = function(record) {
+      record.transitionTo('loaded.updated.uncommitted');
+      record.triggerLater('didLoad');
+    };
+
     ember$data$lib$system$model$states$$createdState.uncommitted.propertyWasReset = Ember.K;
 
     function ember$data$lib$system$model$states$$assertAgainstUnloadRecord(record) {
@@ -6812,8 +6817,6 @@
 
       this.removeCanonicalRecords(recordsToRemove);
 
-      var hasManyArray = this.manyArray;
-
       // Using records.toArray() since currently using
       // removeRecord can modify length, messing stuff up
       // forEach since it directly looks at "length" each
@@ -6822,10 +6825,6 @@
       length = records.length;
       for (i = 0; i < length; i++) {
         record = records[i];
-        //Need to preserve the order of incoming records
-        if (hasManyArray.objectAt(i) === record ) {
-          continue;
-        }
         this.removeCanonicalRecord(record);
         this.addCanonicalRecord(record, i);
       }
