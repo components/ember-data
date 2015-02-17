@@ -4495,12 +4495,12 @@
     /**
       @property VERSION
       @type String
-      @default '1.0.0-beta.16+canary.d798867959'
+      @default '1.0.0-beta.16+canary.3b1674df0e'
       @static
     */
     /*jshint -W079 */
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.d798867959'
+      VERSION: '1.0.0-beta.16+canary.3b1674df0e'
     });
 
     if (Ember.libraries) {
@@ -7783,7 +7783,7 @@
       didUpdate: Ember.K,
 
       /**
-        Fired when the record is created.
+        Fired when a new record is commited to the server.
 
         @event didCreate
       */
