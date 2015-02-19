@@ -4495,12 +4495,12 @@
     /**
       @property VERSION
       @type String
-      @default '1.0.0-beta.16+canary.3b1674df0e'
+      @default '1.0.0-beta.16+canary.f9495b2cd3'
       @static
     */
     /*jshint -W079 */
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.3b1674df0e'
+      VERSION: '1.0.0-beta.16+canary.f9495b2cd3'
     });
 
     if (Ember.libraries) {
@@ -10117,6 +10117,35 @@
         return record;
       },
 
+      /*
+        In case someone defined a relationship to a mixin, for example:
+        ```
+          var Comment = DS.Model.extend({
+            owner: belongsTo('commentable'. { polymorphic: true})
+          });
+          var Commentable = Ember.Mixin.create({
+            comments: hasMany('comment')
+          });
+        ```
+        we want to look up a Commentable class which has all the necessary
+        relationship metadata. Thus, we look up the mixin and create a mock
+        DS.Model, so we can access the relationship CPs of the mixin (`comments`)
+        in this case
+      */
+
+      _modelForMixin: function(key) {
+        var mixin = this.container.resolve('mixin:' + key);
+        if (mixin) {
+          //Cache the class as a model
+          this.container.register('model:' + key, DS.Model.extend(mixin));
+        }
+        var factory = this.modelFactoryFor(key);
+        factory.__isMixin = true;
+        factory.__mixin = mixin;
+
+        return factory;
+      },
+
       /**
         Returns a model class for a particular key. Used by
         methods that take a type key (like `find`, `createRecord`,
@@ -10131,6 +10160,10 @@
 
         if (typeof key === 'string') {
           factory = this.modelFactoryFor(key);
+          if (!factory) {
+            //Support looking up mixins as base types for polymorphic relationships
+            factory = this._modelForMixin(key);
+          }
           if (!factory) {
             throw new Ember.Error("No model was found for '" + key + "'");
           }
@@ -10148,7 +10181,11 @@
       },
 
       modelFactoryFor: function(key) {
-        return this.container.lookupFactory('model:' + key);
+        if (this.container.has('model:' + key)) {
+          return this.container.lookupFactory('model:' + key);
+        } else {
+          return null;
+        }
       },
 
       /**
