@@ -4513,12 +4513,12 @@
     /**
       @property VERSION
       @type String
-      @default '1.0.0-beta.16+canary.f9495b2cd3'
+      @default '1.0.0-beta.16+canary.b4c1247855'
       @static
     */
     /*jshint -W079 */
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.f9495b2cd3'
+      VERSION: '1.0.0-beta.16+canary.b4c1247855'
     });
 
     if (Ember.libraries) {
@@ -6775,13 +6775,12 @@
     ember$data$lib$system$relationships$state$has_many$$ManyRelationship.prototype.notifyRecordRelationshipAdded = function(record, idx) {
       var type = this.relationshipMeta.type;
       Ember.assert("You cannot add '" + record.constructor.typeKey + "' records to the " + this.record.constructor.typeKey + "." + this.key + " relationship (only '" + this.belongsToType.typeKey + "' allowed)", (function () {
-        if (Ember.MODEL_FACTORY_INJECTIONS) {
-          type = type.superclass;
-        }
         if (type.__isMixin) {
           return type.__mixin.detect(record);
         }
-
+        if (Ember.MODEL_FACTORY_INJECTIONS) {
+          type = type.superclass;
+        }
         return record instanceof type;
       })());
 
@@ -6949,11 +6948,11 @@
       if (this.members.has(newRecord)) { return;}
       var type = this.relationshipMeta.type;
       Ember.assert("You can only add a '" + type.typeKey + "' record to this relationship", (function () {
-        if (Ember.MODEL_FACTORY_INJECTIONS) {
-          type = type.superclass;
-        }
         if (type.__isMixin) {
           return type.__mixin.detect(newRecord);
+        }
+        if (Ember.MODEL_FACTORY_INJECTIONS) {
+          type = type.superclass;
         }
         return newRecord instanceof type;
       })());
