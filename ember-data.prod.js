@@ -4495,12 +4495,12 @@
     /**
       @property VERSION
       @type String
-      @default '1.0.0-beta.16+canary.8f4cff0bc8'
+      @default '1.0.0-beta.16+canary.5c5602b918'
       @static
     */
     /*jshint -W079 */
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.8f4cff0bc8'
+      VERSION: '1.0.0-beta.16+canary.5c5602b918'
     });
 
     if (Ember.libraries) {
@@ -4638,6 +4638,191 @@
     };
 
 
+    var ember$data$lib$system$store$common$$get = Ember.get;
+
+    function ember$data$lib$system$store$common$$_bind(fn) {
+      var args = Array.prototype.slice.call(arguments, 1);
+
+      return function() {
+        return fn.apply(undefined, args);
+      };
+    }
+
+    function ember$data$lib$system$store$common$$_guard(promise, test) {
+      var guarded = promise['finally'](function() {
+        if (!test()) {
+          guarded._subscribers.length = 0;
+        }
+      });
+
+      return guarded;
+    }
+
+    function ember$data$lib$system$store$common$$_objectIsAlive(object) {
+      return !(ember$data$lib$system$store$common$$get(object, "isDestroyed") || ember$data$lib$system$store$common$$get(object, "isDestroying"));
+    }
+    function ember$data$lib$system$store$store$$serializerFor(container, type, defaultSerializer) {
+      return container.lookup('serializer:'+type) ||
+                     container.lookup('serializer:application') ||
+                     container.lookup('serializer:' + defaultSerializer) ||
+                     container.lookup('serializer:-default');
+    }
+
+    function ember$data$lib$system$store$store$$serializerForAdapter(adapter, type) {
+      var serializer = adapter.serializer;
+      var defaultSerializer = adapter.defaultSerializer;
+      var container = adapter.container;
+
+      if (container && serializer === undefined) {
+        serializer = ember$data$lib$system$store$store$$serializerFor(container, type.typeKey, defaultSerializer);
+      }
+
+      if (serializer === null || serializer === undefined) {
+        serializer = {
+          extract: function(store, type, payload) { return payload; }
+        };
+      }
+
+      return serializer;
+    }
+
+
+    var ember$data$lib$system$store$finders$$get = Ember.get;
+    var ember$data$lib$system$store$finders$$Promise = Ember.RSVP.Promise;
+
+    function ember$data$lib$system$store$finders$$_find(adapter, store, type, id, record) {
+      var promise = adapter.find(store, type, id, record);
+      var serializer = ember$data$lib$system$store$store$$serializerForAdapter(adapter, type);
+      var label = "DS: Handle Adapter#find of " + type + " with id: " + id;
+
+      promise = ember$data$lib$system$store$finders$$Promise.cast(promise, label);
+      promise = ember$data$lib$system$store$common$$_guard(promise, ember$data$lib$system$store$common$$_bind(ember$data$lib$system$store$common$$_objectIsAlive, store));
+
+      return promise.then(function(adapterPayload) {
+                return store._adapterRun(function() {
+          var payload = serializer.extract(store, type, adapterPayload, id, 'find');
+
+          return store.push(type, payload);
+        });
+      }, function(error) {
+        var record = store.getById(type, id);
+        if (record) {
+          record.notFound();
+          if (ember$data$lib$system$store$finders$$get(record, 'isEmpty')) {
+            store.unloadRecord(record);
+          }
+        }
+        throw error;
+      }, "DS: Extract payload of '" + type + "'");
+    }
+
+
+    function ember$data$lib$system$store$finders$$_findMany(adapter, store, type, ids, records) {
+      var promise = adapter.findMany(store, type, ids, records);
+      var serializer = ember$data$lib$system$store$store$$serializerForAdapter(adapter, type);
+      var label = "DS: Handle Adapter#findMany of " + type;
+
+      if (promise === undefined) {
+        throw new Error('adapter.findMany returned undefined, this was very likely a mistake');
+      }
+
+      promise = ember$data$lib$system$store$finders$$Promise.cast(promise, label);
+      promise = ember$data$lib$system$store$common$$_guard(promise, ember$data$lib$system$store$common$$_bind(ember$data$lib$system$store$common$$_objectIsAlive, store));
+
+      return promise.then(function(adapterPayload) {
+        return store._adapterRun(function() {
+          var payload = serializer.extract(store, type, adapterPayload, null, 'findMany');
+
+          
+          return store.pushMany(type, payload);
+        });
+      }, null, "DS: Extract payload of " + type);
+    }
+
+    function ember$data$lib$system$store$finders$$_findHasMany(adapter, store, record, link, relationship) {
+      var promise = adapter.findHasMany(store, record, link, relationship);
+      var serializer = ember$data$lib$system$store$store$$serializerForAdapter(adapter, relationship.type);
+      var label = "DS: Handle Adapter#findHasMany of " + record + " : " + relationship.type;
+
+      promise = ember$data$lib$system$store$finders$$Promise.cast(promise, label);
+      promise = ember$data$lib$system$store$common$$_guard(promise, ember$data$lib$system$store$common$$_bind(ember$data$lib$system$store$common$$_objectIsAlive, store));
+      promise = ember$data$lib$system$store$common$$_guard(promise, ember$data$lib$system$store$common$$_bind(ember$data$lib$system$store$common$$_objectIsAlive, record));
+
+      return promise.then(function(adapterPayload) {
+        return store._adapterRun(function() {
+          var payload = serializer.extract(store, relationship.type, adapterPayload, null, 'findHasMany');
+
+          
+          var records = store.pushMany(relationship.type, payload);
+          return records;
+        });
+      }, null, "DS: Extract payload of " + record + " : hasMany " + relationship.type);
+    }
+
+    function ember$data$lib$system$store$finders$$_findBelongsTo(adapter, store, record, link, relationship) {
+      var promise = adapter.findBelongsTo(store, record, link, relationship);
+      var serializer = ember$data$lib$system$store$store$$serializerForAdapter(adapter, relationship.type);
+      var label = "DS: Handle Adapter#findBelongsTo of " + record + " : " + relationship.type;
+
+      promise = ember$data$lib$system$store$finders$$Promise.cast(promise, label);
+      promise = ember$data$lib$system$store$common$$_guard(promise, ember$data$lib$system$store$common$$_bind(ember$data$lib$system$store$common$$_objectIsAlive, store));
+      promise = ember$data$lib$system$store$common$$_guard(promise, ember$data$lib$system$store$common$$_bind(ember$data$lib$system$store$common$$_objectIsAlive, record));
+
+      return promise.then(function(adapterPayload) {
+        return store._adapterRun(function() {
+          var payload = serializer.extract(store, relationship.type, adapterPayload, null, 'findBelongsTo');
+
+          if (!payload) {
+            return null;
+          }
+
+          var record = store.push(relationship.type, payload);
+          return record;
+        });
+      }, null, "DS: Extract payload of " + record + " : " + relationship.type);
+    }
+
+    function ember$data$lib$system$store$finders$$_findAll(adapter, store, type, sinceToken) {
+      var promise = adapter.findAll(store, type, sinceToken);
+      var serializer = ember$data$lib$system$store$store$$serializerForAdapter(adapter, type);
+      var label = "DS: Handle Adapter#findAll of " + type;
+
+      promise = ember$data$lib$system$store$finders$$Promise.cast(promise, label);
+      promise = ember$data$lib$system$store$common$$_guard(promise, ember$data$lib$system$store$common$$_bind(ember$data$lib$system$store$common$$_objectIsAlive, store));
+
+      return promise.then(function(adapterPayload) {
+        store._adapterRun(function() {
+          var payload = serializer.extract(store, type, adapterPayload, null, 'findAll');
+
+          
+          store.pushMany(type, payload);
+        });
+
+        store.didUpdateAll(type);
+        return store.all(type);
+      }, null, "DS: Extract payload of findAll " + type);
+    }
+
+    function ember$data$lib$system$store$finders$$_findQuery(adapter, store, type, query, recordArray) {
+      var promise = adapter.findQuery(store, type, query, recordArray);
+      var serializer = ember$data$lib$system$store$store$$serializerForAdapter(adapter, type);
+      var label = "DS: Handle Adapter#findQuery of " + type;
+
+      promise = ember$data$lib$system$store$finders$$Promise.cast(promise, label);
+      promise = ember$data$lib$system$store$common$$_guard(promise, ember$data$lib$system$store$common$$_bind(ember$data$lib$system$store$common$$_objectIsAlive, store));
+
+      return promise.then(function(adapterPayload) {
+        var payload;
+        store._adapterRun(function() {
+          payload = serializer.extract(store, type, adapterPayload, null, 'findQuery');
+
+                  });
+
+        recordArray.load(payload);
+        return recordArray;
+
+      }, null, "DS: Extract payload of findQuery " + type);
+    }
     var ember$data$lib$system$record_arrays$record_array$$get = Ember.get;
     var ember$data$lib$system$record_arrays$record_array$$set = Ember.set;
 
@@ -9417,7 +9602,7 @@
         var adapter = this.adapterFor(type);
 
                 
-        var promise = ember$data$lib$system$store$$_find(adapter, this, type, id, record);
+        var promise = ember$data$lib$system$store$finders$$_find(adapter, this, type, id, record);
         return promise;
       },
 
@@ -9509,7 +9694,7 @@
             var requestedRecords = Ember.A(groupOfRecords);
             var ids = requestedRecords.mapBy('id');
             if (ids.length > 1) {
-              ember$data$lib$system$store$$_findMany(adapter, store, type, ids, requestedRecords).
+              ember$data$lib$system$store$finders$$_findMany(adapter, store, type, ids, requestedRecords).
                 then(resolveFoundRecords).
                 then(makeMissingRecordsRejector(requestedRecords)).
                 then(null, makeRecordsRejector(requestedRecords));
@@ -9649,7 +9834,7 @@
         var adapter = this.adapterFor(owner.constructor);
 
                 
-        return ember$data$lib$system$store$$_findHasMany(adapter, this, owner, link, type);
+        return ember$data$lib$system$store$finders$$_findHasMany(adapter, this, owner, link, type);
       },
 
       /**
@@ -9664,7 +9849,7 @@
         var adapter = this.adapterFor(owner.constructor);
 
                 
-        return ember$data$lib$system$store$$_findBelongsTo(adapter, this, owner, link, relationship);
+        return ember$data$lib$system$store$finders$$_findBelongsTo(adapter, this, owner, link, relationship);
       },
 
       /**
@@ -9692,7 +9877,7 @@
         var adapter = this.adapterFor(type);
 
                 
-        return ember$data$lib$system$promise_proxies$$promiseArray(ember$data$lib$system$store$$_findQuery(adapter, this, type, query, array));
+        return ember$data$lib$system$promise_proxies$$promiseArray(ember$data$lib$system$store$finders$$_findQuery(adapter, this, type, query, array));
       },
 
       /**
@@ -9723,7 +9908,7 @@
         ember$data$lib$system$store$$set(array, 'isUpdating', true);
 
                 
-        return ember$data$lib$system$promise_proxies$$promiseArray(ember$data$lib$system$store$$_findAll(adapter, this, type, sinceToken));
+        return ember$data$lib$system$promise_proxies$$promiseArray(ember$data$lib$system$store$finders$$_findAll(adapter, this, type, sinceToken));
       },
 
       /**
@@ -10356,7 +10541,7 @@
           serializer = this.serializerFor(type);
         }
         var store = this;
-        ember$data$lib$system$store$$_adapterRun(this, function() {
+        this._adapterRun(function() {
           serializer.pushPayload(store, payload);
         });
       },
@@ -10532,6 +10717,10 @@
         return adapter || ember$data$lib$system$store$$get(this, 'defaultAdapter');
       },
 
+      _adapterRun: function (fn) {
+        return this._backburner.run(fn);
+      },
+
       // ..............................
       // . RECORD CHANGE NOTIFICATION .
       // ..............................
@@ -10557,7 +10746,7 @@
         type = this.modelFor(type);
         var adapter = this.adapterFor(type);
 
-        return ember$data$lib$system$store$$serializerFor(this.container, type.typeKey, adapter && adapter.defaultSerializer);
+        return ember$data$lib$system$store$store$$serializerFor(this.container, type.typeKey, adapter && adapter.defaultSerializer);
       },
 
       willDestroy: function() {
@@ -10642,211 +10831,27 @@
     // Delegation to the adapter and promise management
 
 
-    function ember$data$lib$system$store$$serializerFor(container, type, defaultSerializer) {
-      return container.lookup('serializer:'+type) ||
-                     container.lookup('serializer:application') ||
-                     container.lookup('serializer:' + defaultSerializer) ||
-                     container.lookup('serializer:-default');
-    }
 
     function ember$data$lib$system$store$$defaultSerializer(container) {
       return container.lookup('serializer:application') ||
              container.lookup('serializer:-default');
     }
 
-    function ember$data$lib$system$store$$serializerForAdapter(adapter, type) {
-      var serializer = adapter.serializer;
-      var defaultSerializer = adapter.defaultSerializer;
-      var container = adapter.container;
-
-      if (container && serializer === undefined) {
-        serializer = ember$data$lib$system$store$$serializerFor(container, type.typeKey, defaultSerializer);
-      }
-
-      if (serializer === null || serializer === undefined) {
-        serializer = {
-          extract: function(store, type, payload) { return payload; }
-        };
-      }
-
-      return serializer;
-    }
-
-    function ember$data$lib$system$store$$_objectIsAlive(object) {
-      return !(ember$data$lib$system$store$$get(object, "isDestroyed") || ember$data$lib$system$store$$get(object, "isDestroying"));
-    }
-
-    function ember$data$lib$system$store$$_guard(promise, test) {
-      var guarded = promise['finally'](function() {
-        if (!test()) {
-          guarded._subscribers.length = 0;
-        }
-      });
-
-      return guarded;
-    }
-
-    function ember$data$lib$system$store$$_adapterRun(store, fn) {
-      return store._backburner.run(fn);
-    }
-
-    function ember$data$lib$system$store$$_bind(fn) {
-      var args = Array.prototype.slice.call(arguments, 1);
-
-      return function() {
-        return fn.apply(undefined, args);
-      };
-    }
-
-    function ember$data$lib$system$store$$_find(adapter, store, type, id, record) {
-      var promise = adapter.find(store, type, id, record);
-      var serializer = ember$data$lib$system$store$$serializerForAdapter(adapter, type);
-      var label = "DS: Handle Adapter#find of " + type + " with id: " + id;
-
-      promise = ember$data$lib$system$store$$Promise.cast(promise, label);
-      promise = ember$data$lib$system$store$$_guard(promise, ember$data$lib$system$store$$_bind(ember$data$lib$system$store$$_objectIsAlive, store));
-
-      return promise.then(function(adapterPayload) {
-                return ember$data$lib$system$store$$_adapterRun(store, function() {
-          var payload = serializer.extract(store, type, adapterPayload, id, 'find');
-
-          return store.push(type, payload);
-        });
-      }, function(error) {
-        var record = store.getById(type, id);
-        if (record) {
-          record.notFound();
-          if (ember$data$lib$system$store$$get(record, 'isEmpty')) {
-            store.unloadRecord(record);
-          }
-        }
-        throw error;
-      }, "DS: Extract payload of '" + type + "'");
-    }
-
-
-    function ember$data$lib$system$store$$_findMany(adapter, store, type, ids, records) {
-      var promise = adapter.findMany(store, type, ids, records);
-      var serializer = ember$data$lib$system$store$$serializerForAdapter(adapter, type);
-      var label = "DS: Handle Adapter#findMany of " + type;
-
-      if (promise === undefined) {
-        throw new Error('adapter.findMany returned undefined, this was very likely a mistake');
-      }
-
-      promise = ember$data$lib$system$store$$Promise.cast(promise, label);
-      promise = ember$data$lib$system$store$$_guard(promise, ember$data$lib$system$store$$_bind(ember$data$lib$system$store$$_objectIsAlive, store));
-
-      return promise.then(function(adapterPayload) {
-        return ember$data$lib$system$store$$_adapterRun(store, function() {
-          var payload = serializer.extract(store, type, adapterPayload, null, 'findMany');
-
-          
-          return store.pushMany(type, payload);
-        });
-      }, null, "DS: Extract payload of " + type);
-    }
-
-    function ember$data$lib$system$store$$_findHasMany(adapter, store, record, link, relationship) {
-      var promise = adapter.findHasMany(store, record, link, relationship);
-      var serializer = ember$data$lib$system$store$$serializerForAdapter(adapter, relationship.type);
-      var label = "DS: Handle Adapter#findHasMany of " + record + " : " + relationship.type;
-
-      promise = ember$data$lib$system$store$$Promise.cast(promise, label);
-      promise = ember$data$lib$system$store$$_guard(promise, ember$data$lib$system$store$$_bind(ember$data$lib$system$store$$_objectIsAlive, store));
-      promise = ember$data$lib$system$store$$_guard(promise, ember$data$lib$system$store$$_bind(ember$data$lib$system$store$$_objectIsAlive, record));
-
-      return promise.then(function(adapterPayload) {
-        return ember$data$lib$system$store$$_adapterRun(store, function() {
-          var payload = serializer.extract(store, relationship.type, adapterPayload, null, 'findHasMany');
-
-          
-          var records = store.pushMany(relationship.type, payload);
-          return records;
-        });
-      }, null, "DS: Extract payload of " + record + " : hasMany " + relationship.type);
-    }
-
-    function ember$data$lib$system$store$$_findBelongsTo(adapter, store, record, link, relationship) {
-      var promise = adapter.findBelongsTo(store, record, link, relationship);
-      var serializer = ember$data$lib$system$store$$serializerForAdapter(adapter, relationship.type);
-      var label = "DS: Handle Adapter#findBelongsTo of " + record + " : " + relationship.type;
-
-      promise = ember$data$lib$system$store$$Promise.cast(promise, label);
-      promise = ember$data$lib$system$store$$_guard(promise, ember$data$lib$system$store$$_bind(ember$data$lib$system$store$$_objectIsAlive, store));
-      promise = ember$data$lib$system$store$$_guard(promise, ember$data$lib$system$store$$_bind(ember$data$lib$system$store$$_objectIsAlive, record));
-
-      return promise.then(function(adapterPayload) {
-        return ember$data$lib$system$store$$_adapterRun(store, function() {
-          var payload = serializer.extract(store, relationship.type, adapterPayload, null, 'findBelongsTo');
-
-          if (!payload) {
-            return null;
-          }
-
-          var record = store.push(relationship.type, payload);
-          return record;
-        });
-      }, null, "DS: Extract payload of " + record + " : " + relationship.type);
-    }
-
-    function ember$data$lib$system$store$$_findAll(adapter, store, type, sinceToken) {
-      var promise = adapter.findAll(store, type, sinceToken);
-      var serializer = ember$data$lib$system$store$$serializerForAdapter(adapter, type);
-      var label = "DS: Handle Adapter#findAll of " + type;
-
-      promise = ember$data$lib$system$store$$Promise.cast(promise, label);
-      promise = ember$data$lib$system$store$$_guard(promise, ember$data$lib$system$store$$_bind(ember$data$lib$system$store$$_objectIsAlive, store));
-
-      return promise.then(function(adapterPayload) {
-        ember$data$lib$system$store$$_adapterRun(store, function() {
-          var payload = serializer.extract(store, type, adapterPayload, null, 'findAll');
-
-          
-          store.pushMany(type, payload);
-        });
-
-        store.didUpdateAll(type);
-        return store.all(type);
-      }, null, "DS: Extract payload of findAll " + type);
-    }
-
-    function ember$data$lib$system$store$$_findQuery(adapter, store, type, query, recordArray) {
-      var promise = adapter.findQuery(store, type, query, recordArray);
-      var serializer = ember$data$lib$system$store$$serializerForAdapter(adapter, type);
-      var label = "DS: Handle Adapter#findQuery of " + type;
-
-      promise = ember$data$lib$system$store$$Promise.cast(promise, label);
-      promise = ember$data$lib$system$store$$_guard(promise, ember$data$lib$system$store$$_bind(ember$data$lib$system$store$$_objectIsAlive, store));
-
-      return promise.then(function(adapterPayload) {
-        var payload;
-        ember$data$lib$system$store$$_adapterRun(store, function() {
-          payload = serializer.extract(store, type, adapterPayload, null, 'findQuery');
-
-                  });
-
-        recordArray.load(payload);
-        return recordArray;
-
-      }, null, "DS: Extract payload of findQuery " + type);
-    }
-
     function ember$data$lib$system$store$$_commit(adapter, store, operation, record) {
       var type = record.constructor;
       var promise = adapter[operation](store, type, record);
-      var serializer = ember$data$lib$system$store$$serializerForAdapter(adapter, type);
+      var serializer = ember$data$lib$system$store$store$$serializerForAdapter(adapter, type);
       var label = "DS: Extract and notify about " + operation + " completion of " + record;
 
       
       promise = ember$data$lib$system$store$$Promise.cast(promise, label);
-      promise = ember$data$lib$system$store$$_guard(promise, ember$data$lib$system$store$$_bind(ember$data$lib$system$store$$_objectIsAlive, store));
-      promise = ember$data$lib$system$store$$_guard(promise, ember$data$lib$system$store$$_bind(ember$data$lib$system$store$$_objectIsAlive, record));
+      promise = ember$data$lib$system$store$common$$_guard(promise, ember$data$lib$system$store$common$$_bind(ember$data$lib$system$store$common$$_objectIsAlive, store));
+      promise = ember$data$lib$system$store$common$$_guard(promise, ember$data$lib$system$store$common$$_bind(ember$data$lib$system$store$common$$_objectIsAlive, record));
 
       return promise.then(function(adapterPayload) {
         var payload;
 
-        ember$data$lib$system$store$$_adapterRun(store, function() {
+        store._adapterRun(function() {
           if (adapterPayload) {
             payload = serializer.extract(store, type, adapterPayload, ember$data$lib$system$store$$get(record, 'id'), operation);
           } else {

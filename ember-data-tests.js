@@ -114,6 +114,12 @@ eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/syste
 
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/system\');\ntest(\'lib/system/store.js should pass jshint\', function() { \n  ok(true, \'lib/system/store.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/system/store.jshint.js");
 
+eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/system/store\');\ntest(\'lib/system/store/common.js should pass jshint\', function() { \n  ok(true, \'lib/system/store/common.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/system/store/common.jshint.js");
+
+eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/system/store\');\ntest(\'lib/system/store/finders.js should pass jshint\', function() { \n  ok(true, \'lib/system/store/finders.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/system/store/finders.jshint.js");
+
+eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/system/store\');\ntest(\'lib/system/store/store.js should pass jshint\', function() { \n  ok(true, \'lib/system/store/store.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/system/store/store.jshint.js");
+
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib\');\ntest(\'lib/transforms.js should pass jshint\', function() { \n  ok(true, \'lib/transforms.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/transforms.jshint.js");
 
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/transforms\');\ntest(\'lib/transforms/base.js should pass jshint\', function() { \n  ok(true, \'lib/transforms/base.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/transforms/base.jshint.js");
