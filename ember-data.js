@@ -4513,12 +4513,12 @@
     /**
       @property VERSION
       @type String
-      @default '1.0.0-beta.16+canary.cb195e44d9'
+      @default '1.0.0-beta.16+canary.8f4cff0bc8'
       @static
     */
     /*jshint -W079 */
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.cb195e44d9'
+      VERSION: '1.0.0-beta.16+canary.8f4cff0bc8'
     });
 
     if (Ember.libraries) {
@@ -7786,8 +7786,7 @@
         @return {Object} an object whose values are primitive JSON values only
       */
       serialize: function(options) {
-        var store = ember$data$lib$system$model$model$$get(this, 'store');
-        return store.serialize(this, options);
+        return this.store.serialize(this, options);
       },
 
       /**
@@ -8139,7 +8138,7 @@
       */
       updateRecordArrays: function() {
         this._updatingRecordArraysLater = false;
-        ember$data$lib$system$model$model$$get(this, 'store').dataWasUpdated(this.constructor, this);
+        this.store.dataWasUpdated(this.constructor, this);
       },
 
       /**
@@ -8421,7 +8420,7 @@
         var promiseLabel = "DS: Model#save " + this;
         var resolver = Ember.RSVP.defer(promiseLabel);
 
-        this.get('store').scheduleSave(this, resolver);
+        this.store.scheduleSave(this, resolver);
         this._inFlightAttributes = this._attributes;
         this._attributes = Ember.create(null);
 
