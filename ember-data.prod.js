@@ -4495,12 +4495,12 @@
     /**
       @property VERSION
       @type String
-      @default '1.0.0-beta.16+canary.6f629c7607'
+      @default '1.0.0-beta.16+canary.cb195e44d9'
       @static
     */
     /*jshint -W079 */
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.6f629c7607'
+      VERSION: '1.0.0-beta.16+canary.cb195e44d9'
     });
 
     if (Ember.libraries) {
@@ -7426,6 +7426,9 @@
     var ember$data$lib$system$model$model$$Model = Ember.Object.extend(Ember.Evented, {
       _recordArrays: undefined,
       _relationships: undefined,
+
+      store: null,
+
       /**
         If this property is `true` the record is in the `empty`
         state. Empty is the first state all records enter after they have
