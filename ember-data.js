@@ -4513,12 +4513,12 @@
     /**
       @property VERSION
       @type String
-      @default '1.0.0-beta.16+canary.5c5602b918'
+      @default '1.0.0-beta.16+canary.9f8e8a9849'
       @static
     */
     /*jshint -W079 */
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.5c5602b918'
+      VERSION: '1.0.0-beta.16+canary.9f8e8a9849'
     });
 
     if (Ember.libraries) {
@@ -4680,20 +4680,20 @@
     function ember$data$lib$system$store$common$$_objectIsAlive(object) {
       return !(ember$data$lib$system$store$common$$get(object, "isDestroyed") || ember$data$lib$system$store$common$$get(object, "isDestroying"));
     }
-    function ember$data$lib$system$store$store$$serializerFor(container, type, defaultSerializer) {
+    function ember$data$lib$system$store$serializers$$serializerFor(container, type, defaultSerializer) {
       return container.lookup('serializer:'+type) ||
                      container.lookup('serializer:application') ||
                      container.lookup('serializer:' + defaultSerializer) ||
                      container.lookup('serializer:-default');
     }
 
-    function ember$data$lib$system$store$store$$serializerForAdapter(adapter, type) {
+    function ember$data$lib$system$store$serializers$$serializerForAdapter(adapter, type) {
       var serializer = adapter.serializer;
       var defaultSerializer = adapter.defaultSerializer;
       var container = adapter.container;
 
       if (container && serializer === undefined) {
-        serializer = ember$data$lib$system$store$store$$serializerFor(container, type.typeKey, defaultSerializer);
+        serializer = ember$data$lib$system$store$serializers$$serializerFor(container, type.typeKey, defaultSerializer);
       }
 
       if (serializer === null || serializer === undefined) {
@@ -4711,7 +4711,7 @@
 
     function ember$data$lib$system$store$finders$$_find(adapter, store, type, id, record) {
       var promise = adapter.find(store, type, id, record);
-      var serializer = ember$data$lib$system$store$store$$serializerForAdapter(adapter, type);
+      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(adapter, type);
       var label = "DS: Handle Adapter#find of " + type + " with id: " + id;
 
       promise = ember$data$lib$system$store$finders$$Promise.cast(promise, label);
@@ -4739,7 +4739,7 @@
 
     function ember$data$lib$system$store$finders$$_findMany(adapter, store, type, ids, records) {
       var promise = adapter.findMany(store, type, ids, records);
-      var serializer = ember$data$lib$system$store$store$$serializerForAdapter(adapter, type);
+      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(adapter, type);
       var label = "DS: Handle Adapter#findMany of " + type;
 
       if (promise === undefined) {
@@ -4762,7 +4762,7 @@
 
     function ember$data$lib$system$store$finders$$_findHasMany(adapter, store, record, link, relationship) {
       var promise = adapter.findHasMany(store, record, link, relationship);
-      var serializer = ember$data$lib$system$store$store$$serializerForAdapter(adapter, relationship.type);
+      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(adapter, relationship.type);
       var label = "DS: Handle Adapter#findHasMany of " + record + " : " + relationship.type;
 
       promise = ember$data$lib$system$store$finders$$Promise.cast(promise, label);
@@ -4783,7 +4783,7 @@
 
     function ember$data$lib$system$store$finders$$_findBelongsTo(adapter, store, record, link, relationship) {
       var promise = adapter.findBelongsTo(store, record, link, relationship);
-      var serializer = ember$data$lib$system$store$store$$serializerForAdapter(adapter, relationship.type);
+      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(adapter, relationship.type);
       var label = "DS: Handle Adapter#findBelongsTo of " + record + " : " + relationship.type;
 
       promise = ember$data$lib$system$store$finders$$Promise.cast(promise, label);
@@ -4806,7 +4806,7 @@
 
     function ember$data$lib$system$store$finders$$_findAll(adapter, store, type, sinceToken) {
       var promise = adapter.findAll(store, type, sinceToken);
-      var serializer = ember$data$lib$system$store$store$$serializerForAdapter(adapter, type);
+      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(adapter, type);
       var label = "DS: Handle Adapter#findAll of " + type;
 
       promise = ember$data$lib$system$store$finders$$Promise.cast(promise, label);
@@ -4828,7 +4828,7 @@
 
     function ember$data$lib$system$store$finders$$_findQuery(adapter, store, type, query, recordArray) {
       var promise = adapter.findQuery(store, type, query, recordArray);
-      var serializer = ember$data$lib$system$store$store$$serializerForAdapter(adapter, type);
+      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(adapter, type);
       var label = "DS: Handle Adapter#findQuery of " + type;
 
       promise = ember$data$lib$system$store$finders$$Promise.cast(promise, label);
@@ -10842,7 +10842,7 @@
         type = this.modelFor(type);
         var adapter = this.adapterFor(type);
 
-        return ember$data$lib$system$store$store$$serializerFor(this.container, type.typeKey, adapter && adapter.defaultSerializer);
+        return ember$data$lib$system$store$serializers$$serializerFor(this.container, type.typeKey, adapter && adapter.defaultSerializer);
       },
 
       willDestroy: function() {
@@ -10939,7 +10939,7 @@
     function ember$data$lib$system$store$$_commit(adapter, store, operation, record) {
       var type = record.constructor;
       var promise = adapter[operation](store, type, record);
-      var serializer = ember$data$lib$system$store$store$$serializerForAdapter(adapter, type);
+      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(adapter, type);
       var label = "DS: Extract and notify about " + operation + " completion of " + record;
 
       Ember.assert("Your adapter's '" + operation + "' method must return a value, but it returned `undefined", promise !==undefined);
