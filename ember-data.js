@@ -4513,12 +4513,12 @@
     /**
       @property VERSION
       @type String
-      @default '1.0.0-beta.16+canary.6dc79e8caf'
+      @default '1.0.0-beta.16+canary.6f629c7607'
       @static
     */
     /*jshint -W079 */
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.6dc79e8caf'
+      VERSION: '1.0.0-beta.16+canary.6f629c7607'
     });
 
     if (Ember.libraries) {
@@ -6947,7 +6947,7 @@
     ember$data$lib$system$relationships$state$belongs_to$$BelongsToRelationship.prototype.addRecord = function(newRecord) {
       if (this.members.has(newRecord)) { return;}
       var type = this.relationshipMeta.type;
-      Ember.assert("You can only add a '" + type.typeKey + "' record to this relationship", (function () {
+      Ember.assert("You cannot add a '" + newRecord.constructor.typeKey + "' record to the '" + this.record.constructor.typeKey + "." + this.key +"'. " + "You can only add a '" + type.typeKey + "' record to this relationship.", (function () {
         if (type.__isMixin) {
           return type.__mixin.detect(newRecord);
         }
