@@ -4513,12 +4513,12 @@
     /**
       @property VERSION
       @type String
-      @default '1.0.0-beta.16+canary.f71e90a76f'
+      @default '1.0.0-beta.16+canary.759d6facf6'
       @static
     */
     /*jshint -W079 */
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.f71e90a76f'
+      VERSION: '1.0.0-beta.16+canary.759d6facf6'
     });
 
     if (Ember.libraries) {
@@ -8757,6 +8757,7 @@
       // rely on the data property.
       willMergeMixin: function(props) {
         Ember.assert('`data` is a reserved property name on DS.Model objects. Please choose a different property name for ' + this.constructor.toString(), !props.data);
+        Ember.assert('`store` is a reserved property name on DS.Model objects. Please choose a different property name for '+ this.constructor.toString(), !props.store);
       }
     });
 
