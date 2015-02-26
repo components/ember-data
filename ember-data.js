@@ -4513,12 +4513,12 @@
     /**
       @property VERSION
       @type String
-      @default '1.0.0-beta.16+canary.759d6facf6'
+      @default '1.0.0-beta.16+canary.b8aff09107'
       @static
     */
     /*jshint -W079 */
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.759d6facf6'
+      VERSION: '1.0.0-beta.16+canary.b8aff09107'
     });
 
     if (Ember.libraries) {
@@ -10413,8 +10413,10 @@
           this.container.register('model:' + key, DS.Model.extend(mixin));
         }
         var factory = this.modelFactoryFor(key);
-        factory.__isMixin = true;
-        factory.__mixin = mixin;
+        if (factory) {
+          factory.__isMixin = true;
+          factory.__mixin = mixin;
+        }
 
         return factory;
       },
