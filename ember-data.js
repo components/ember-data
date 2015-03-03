@@ -4513,12 +4513,12 @@
     /**
       @property VERSION
       @type String
-      @default '1.0.0-beta.16+canary.b8aff09107'
+      @default '1.0.0-beta.16+canary.1123f05451'
       @static
     */
     /*jshint -W079 */
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.b8aff09107'
+      VERSION: '1.0.0-beta.16+canary.1123f05451'
     });
 
     if (Ember.libraries) {
@@ -9064,6 +9064,7 @@
       }).meta(meta);
     }
     var ember$data$lib$system$model$attributes$$default = ember$data$lib$system$model$attributes$$attr;
+    var ember$data$lib$system$model$$default = ember$data$lib$system$model$model$$default;
     //Stanley told me to do this
     var ember$data$lib$system$store$$Backburner = Ember.__loader.require('backburner')['default'] || Ember.__loader.require('backburner')['Backburner'];
 
@@ -10894,7 +10895,7 @@
     }
 
     function ember$data$lib$system$store$$deserializeRecordId(store, data, key, relationship, id) {
-      if (ember$data$lib$system$store$$isNone(id) || id instanceof ember$data$lib$system$model$model$$default) {
+      if (ember$data$lib$system$store$$isNone(id) || id instanceof ember$data$lib$system$model$$default) {
         return;
       }
       Ember.assert("A " + relationship.parentType + " record was pushed into the store with the value of " + key + " being " + Ember.inspect(id) + ", but " + key + " is a belongsTo relationship so the value must not be an array. You should probably check your data payload or serializer.", !Ember.isArray(id));
@@ -11208,7 +11209,7 @@
       },
 
       detect: function(klass) {
-        return klass !== ember$data$lib$system$model$model$$default && ember$data$lib$system$model$model$$default.detect(klass);
+        return klass !== ember$data$lib$system$model$$default && ember$data$lib$system$model$$default.detect(klass);
       },
 
       columnsForType: function(type) {
@@ -11460,7 +11461,7 @@
       Date.parse = Ember.Date.parse;
     }
 
-    ember$data$lib$system$model$model$$default.reopen({
+    ember$data$lib$system$model$$default.reopen({
 
       /**
         Provides info about the model for debugging purposes
@@ -11526,7 +11527,7 @@
       }
     });
 
-    var ember$data$lib$system$debug$debug_info$$default = ember$data$lib$system$model$model$$default;
+    var ember$data$lib$system$debug$debug_info$$default = ember$data$lib$system$model$$default;
     var ember$data$lib$system$debug$$default = ember$data$lib$system$debug$debug_adapter$$default;
     var ember$data$lib$serializers$embedded_records_mixin$$get = Ember.get;
     var ember$data$lib$serializers$embedded_records_mixin$$forEach = Ember.EnumerableUtils.forEach;
@@ -12112,7 +12113,7 @@
       These observers observe all `belongsTo` relationships on the record. See
       `relationships/ext` to see how these observers get their dependencies.
     */
-    ember$data$lib$system$model$model$$default.reopen({
+    ember$data$lib$system$model$$default.reopen({
       notifyBelongsToChanged: function(key) {
         this.notifyPropertyChange(key);
       }
@@ -12237,7 +12238,7 @@
       }).meta(meta).readOnly();
     }
 
-    ember$data$lib$system$model$model$$default.reopen({
+    ember$data$lib$system$model$$default.reopen({
       notifyHasManyAdded: function(key) {
         //We need to notifyPropertyChange in the adding case because we need to make sure
         //we fetch the newly added record in case it is unloaded
@@ -12367,7 +12368,7 @@
       @class Model
       @namespace DS
     */
-    ember$data$lib$system$model$model$$default.reopen({
+    ember$data$lib$system$model$$default.reopen({
 
       /**
         This Ember.js hook allows an object to be notified when a property
@@ -12426,7 +12427,7 @@
       extensively.
     */
 
-    ember$data$lib$system$model$model$$default.reopenClass({
+    ember$data$lib$system$model$$default.reopenClass({
 
       /**
         For a given relationship name, returns the model type of the relationship.
@@ -12826,7 +12827,7 @@
 
     });
 
-    ember$data$lib$system$model$model$$default.reopen({
+    ember$data$lib$system$model$$default.reopen({
       /**
         Given a callback, iterates over each of the relationships in the model,
         invoking the callback with the name of each relationship and its relationship
@@ -12913,7 +12914,7 @@
 
     ember$data$lib$core$$default.PromiseManyArray = ember$data$lib$system$promise_proxies$$PromiseManyArray;
 
-    ember$data$lib$core$$default.Model     = ember$data$lib$system$model$model$$default;
+    ember$data$lib$core$$default.Model     = ember$data$lib$system$model$$default;
     ember$data$lib$core$$default.RootState = ember$data$lib$system$model$states$$default;
     ember$data$lib$core$$default.attr      = ember$data$lib$system$model$attributes$$default;
     ember$data$lib$core$$default.Errors    = ember$data$lib$system$model$errors$$default;
