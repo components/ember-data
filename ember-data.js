@@ -4513,12 +4513,12 @@
     /**
       @property VERSION
       @type String
-      @default '1.0.0-beta.16+canary.df3c26f491'
+      @default '1.0.0-beta.16+canary.c13a61bab6'
       @static
     */
     /*jshint -W079 */
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.df3c26f491'
+      VERSION: '1.0.0-beta.16+canary.c13a61bab6'
     });
 
     if (Ember.libraries) {
