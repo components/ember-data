@@ -477,6 +477,8 @@
     var ember$data$lib$adapters$fixture_adapter$$default = ember$data$lib$system$adapter$$default.extend({
       // by default, fixtures are already in normalized form
       serializer: null,
+      // The fixture adapter does not support coalesceFindRequests
+      coalesceFindRequests: false,
 
       /**
         If `simulateRemoteResponse` is `true` the `FixtureAdapter` will
@@ -4513,12 +4515,12 @@
     /**
       @property VERSION
       @type String
-      @default '1.0.0-beta.16+canary.c13a61bab6'
+      @default '1.0.0-beta.16+canary.f480016859'
       @static
     */
     /*jshint -W079 */
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.c13a61bab6'
+      VERSION: '1.0.0-beta.16+canary.f480016859'
     });
 
     if (Ember.libraries) {
@@ -9730,11 +9732,18 @@
               resolver.resolve(record);
             }
           });
+          return records;
         }
 
         function makeMissingRecordsRejector(requestedRecords) {
           return function rejectMissingRecords(resolvedRecords) {
-            var missingRecords = requestedRecords.without(resolvedRecords);
+            resolvedRecords = Ember.A(resolvedRecords);
+            var missingRecords = requestedRecords.reject(function(record) {
+              return resolvedRecords.contains(record);
+            });
+            if (missingRecords.length) {
+              Ember.warn('Ember Data expected to find records with the following ids in the adapter response but they were missing: ' + Ember.inspect(Ember.A(missingRecords).mapBy('id')), false);
+            }
             rejectRecords(missingRecords);
           };
         }
