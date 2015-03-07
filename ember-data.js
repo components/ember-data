@@ -4515,12 +4515,12 @@
     /**
       @property VERSION
       @type String
-      @default '1.0.0-beta.16+canary.f480016859'
+      @default '1.0.0-beta.16+canary.7f76251e7b'
       @static
     */
     /*jshint -W079 */
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.f480016859'
+      VERSION: '1.0.0-beta.16+canary.7f76251e7b'
     });
 
     if (Ember.libraries) {
@@ -8760,6 +8760,18 @@
       willMergeMixin: function(props) {
         Ember.assert('`data` is a reserved property name on DS.Model objects. Please choose a different property name for ' + this.constructor.toString(), !props.data);
         Ember.assert('`store` is a reserved property name on DS.Model objects. Please choose a different property name for '+ this.constructor.toString(), !props.store);
+      },
+
+      attr: function() {
+        Ember.assert("The `attr` method is not available on DS.Model, a DS.Snapshot was probably expected. Are you passing a DS.Model instead of a DS.Snapshot to your serializer?", false);
+      },
+
+      belongsTo: function() {
+        Ember.assert("The `belongsTo` method is not available on DS.Model, a DS.Snapshot was probably expected. Are you passing a DS.Model instead of a DS.Snapshot to your serializer?", false);
+      },
+
+      hasMany: function() {
+        Ember.assert("The `hasMany` method is not available on DS.Model, a DS.Snapshot was probably expected. Are you passing a DS.Model instead of a DS.Snapshot to your serializer?", false);
       }
     });
 
