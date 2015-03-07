@@ -4497,12 +4497,12 @@
     /**
       @property VERSION
       @type String
-      @default '1.0.0-beta.16+canary.7f76251e7b'
+      @default '1.0.0-beta.16+canary.b1af203821'
       @static
     */
     /*jshint -W079 */
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.7f76251e7b'
+      VERSION: '1.0.0-beta.16+canary.b1af203821'
     });
 
     if (Ember.libraries) {
@@ -9071,6 +9071,11 @@
 
     var ember$data$lib$system$store$$camelize = Ember.String.camelize;
 
+    var ember$data$lib$system$store$$Service = Ember.Service;
+    if (!ember$data$lib$system$store$$Service) {
+      ember$data$lib$system$store$$Service = Ember.Object;
+    }
+
     // Implementors Note:
     //
     //   The variables in this file are consistently named according to the following
@@ -9161,9 +9166,9 @@
 
       @class Store
       @namespace DS
-      @extends Ember.Object
+      @extends Ember.Service
     */
-    ember$data$lib$system$store$$Store = Ember.Object.extend({
+    ember$data$lib$system$store$$Store = ember$data$lib$system$store$$Service.extend({
 
       /**
         @method init
@@ -10938,7 +10943,8 @@
 
       // Eagerly generate the store so defaultStore is populated.
       // TODO: Do this in a finisher hook
-      container.lookup('store:main');
+      var store = container.lookup('store:main');
+      container.register('service:store', store, { instantiate: false });
     }
     var ember$data$lib$initializers$store$$default = ember$data$lib$initializers$store$$initializeStore;
 
