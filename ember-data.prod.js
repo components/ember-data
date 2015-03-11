@@ -1,8 +1,5 @@
 (function() {
     "use strict";
-    /**
-      @module ember-data
-    */
 
     var ember$data$lib$system$adapter$$get = Ember.get;
 
@@ -465,9 +462,6 @@
     });
 
     var ember$data$lib$system$adapter$$default = ember$data$lib$system$adapter$$Adapter;
-    /**
-      @module ember-data
-    */
     var ember$data$lib$adapters$fixture_adapter$$get = Ember.get;
     var ember$data$lib$adapters$fixture_adapter$$fmt = Ember.String.fmt;
     var ember$data$lib$adapters$fixture_adapter$$indexOf = Ember.EnumerableUtils.indexOf;
@@ -785,14 +779,6 @@
       }
     });
 
-    /*
-     The Map/MapWithDefault/OrderedSet code has been in flux as we try
-     to catch up with ES6. This is difficult as we support multiple
-     versions of Ember.
-     This file is currently here in case we have to polyfill ember's code
-     across a few releases. As ES6 comes to a close we should have a smaller
-     and smaller gap in implementations between Ember releases.
-    */
     var ember$data$lib$system$map$$Map            = Ember.Map;
     var ember$data$lib$system$map$$MapWithDefault = Ember.MapWithDefault;
     var ember$data$lib$system$map$$OrderedSet     = Ember.OrderedSet;
@@ -2249,29 +2235,6 @@
     });
 
     var activemodel$adapter$lib$system$active_model_adapter$$default = activemodel$adapter$lib$system$active_model_adapter$$ActiveModelAdapter;
-    /**
-      @module ember-data
-    */
-
-    /**
-      `DS.Serializer` is an abstract base class that you should override in your
-      application to customize it for your backend. The minimum set of methods
-      that you should implement is:
-
-        * `extract()`
-        * `serialize()`
-
-      And you can optionally override the following methods:
-
-        * `normalize()`
-
-      For an example implementation, see
-      [DS.JSONSerializer](DS.JSONSerializer.html), the included JSON serializer.
-
-      @class Serializer
-      @namespace DS
-      @extends Ember.Object
-    */
 
     var ember$data$lib$system$serializer$$Serializer = Ember.Object.extend({
 
@@ -4422,14 +4385,6 @@
     });
 
     var activemodel$adapter$lib$system$active_model_serializer$$default = activemodel$adapter$lib$system$active_model_serializer$$ActiveModelSerializer;
-    /**
-      This is used internally to enable deprecation of container paths and provide
-      a decent message to the user indicating how to fix the issue.
-
-      @class ContainerProxy
-      @namespace DS
-      @private
-    */
     function ember$data$lib$system$container_proxy$$ContainerProxy(container) {
       this.container = container;
     }
@@ -4483,26 +4438,8 @@
       container.register('adapter:-active-model', activemodel$adapter$lib$system$active_model_adapter$$default);
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
-    /**
-      @module ember-data
-    */
-
-    /**
-      All Ember Data methods and functions are defined inside of this namespace.
-
-      @class DS
-      @static
-    */
-
-    /**
-      @property VERSION
-      @type String
-      @default '1.0.0-beta.16+canary.99462d25d1'
-      @static
-    */
-    /*jshint -W079 */
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.99462d25d1'
+      VERSION: '1.0.0-beta.16+canary.673e477076'
     });
 
     if (Ember.libraries) {
@@ -5609,9 +5546,6 @@
 
       return result;
     }
-    /**
-      @module ember-data
-    */
 
     var ember$data$lib$system$model$states$$get = Ember.get;
     var ember$data$lib$system$model$states$$set = Ember.set;
@@ -6273,6 +6207,11 @@
           becameError: function(record) {
             record.transitionTo('uncommitted');
             record.triggerLater('becameError', record);
+          },
+
+          becameInvalid: function(record) {
+            record.transitionTo('invalid');
+            record.triggerLater('becameInvalid', record);
           }
         },
 
@@ -6296,6 +6235,32 @@
           willCommit: Ember.K,
 
           didCommit: Ember.K
+        },
+
+        invalid: {
+          isValid: false,
+
+          didSetProperty: function(record, context) {
+            ember$data$lib$system$model$states$$get(record, 'errors').remove(context.name);
+
+            ember$data$lib$system$model$states$$didSetProperty(record, context);
+          },
+
+          deleteRecord: Ember.K,
+          becomeDirty: Ember.K,
+          willCommit: Ember.K,
+
+
+          rolledBack: function(record) {
+            ember$data$lib$system$model$states$$get(record, 'errors').clear();
+            record.transitionTo('loaded.saved');
+            record.triggerLater('ready');
+          },
+
+          becameValid: function(record) {
+            record.transitionTo('uncommitted');
+          }
+
         }
       },
 
@@ -7185,9 +7150,6 @@
     };
 
     var ember$data$lib$system$relationships$state$create$$default = ember$data$lib$system$relationships$state$create$$createRelationshipFor;
-    /**
-      @module ember-data
-    */
 
     var ember$data$lib$system$snapshot$$get = Ember.get;
 
@@ -11318,21 +11280,6 @@
         initialize: ember$data$lib$ember$initializer$$K
       });
     });
-    /**
-      @module ember-data
-    */
-
-    /**
-      Date.parse with progressive enhancement for ISO 8601 <https://github.com/csnover/js-iso8601>
-
-      © 2011 Colin Snover <http://zetafleet.com>
-
-      Released under MIT license.
-
-      @class Date
-      @namespace Ember
-      @static
-    */
     Ember.Date = Ember.Date || {};
 
     var origParse = Date.parse;
@@ -12798,13 +12745,6 @@
       }
 
     });
-    /**
-      Ember Data
-      @module ember-data
-      @main ember-data
-    */
-
-    // support RSVP 2.x via resolve,  but prefer RSVP 3.x's Promise.cast
     Ember.RSVP.Promise.cast = Ember.RSVP.Promise.cast || Ember.RSVP.resolve;
 
     
