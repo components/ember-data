@@ -4457,7 +4457,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.673e477076'
+      VERSION: '1.0.0-beta.16+canary.94901f2f75'
     });
 
     if (Ember.libraries) {
@@ -5983,6 +5983,7 @@
     ember$data$lib$system$model$states$$createdState.uncommitted.deleteRecord = function(record) {
       record.disconnectRelationships();
       record.transitionTo('deleted.saved');
+      record.send('invokeLifecycleCallbacks');
     };
 
     ember$data$lib$system$model$states$$createdState.uncommitted.rollback = function(record) {
