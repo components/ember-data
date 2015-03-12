@@ -4439,7 +4439,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.0fc8121a30'
+      VERSION: '1.0.0-beta.16+canary.ee714ccc7f'
     });
 
     if (Ember.libraries) {
@@ -6950,9 +6950,7 @@
     ember$data$lib$system$relationships$state$has_many$$ManyRelationship.prototype.fetchLink = function() {
       var self = this;
       return this.store.findHasMany(this.record, this.link, this.relationshipMeta).then(function(records) {
-        self.store._backburner.join(function() {
-          self.updateRecordsFromAdapter(records);
-        });
+        self.updateRecordsFromAdapter(records);
         return self.manyArray;
       });
     };
@@ -9470,7 +9468,7 @@
         ```javascript
         App.PostRoute = Ember.Route.extend({
           model: function(params) {
-            return this.store.fetch('post', params.post_id);
+            return this.store.fetchById('post', params.post_id);
           }
         });
         ```
