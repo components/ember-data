@@ -4455,7 +4455,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.c7cda14350'
+      VERSION: '1.0.0-beta.16+canary.6f4a48722c'
     });
 
     if (Ember.libraries) {
@@ -5081,218 +5081,6 @@
 
         // TODO: should triggering didLoad event be the last action of the runLoop?
         Ember.run.once(this, 'trigger', 'didLoad');
-      }
-    });
-
-    var ember$data$lib$system$record_arrays$many_array$$get = Ember.get;
-    var ember$data$lib$system$record_arrays$many_array$$set = Ember.set;
-
-    var ember$data$lib$system$record_arrays$many_array$$default = Ember.Object.extend(Ember.MutableArray, Ember.Evented, {
-      init: function() {
-        this.currentState = Ember.A([]);
-      },
-
-      record: null,
-
-      canonicalState: null,
-      currentState: null,
-
-      length: 0,
-
-      objectAt: function(index) {
-        if (this.currentState[index]) {
-          return this.currentState[index];
-        } else {
-          return this.canonicalState[index];
-        }
-      },
-
-      flushCanonical: function() {
-        //TODO make this smarter, currently its plenty stupid
-        var toSet = this.canonicalState.slice(0);
-        //a hack for not removing new records
-        //TODO remove once we have proper diffing
-        var newRecords = this.currentState.filter(function(record) {
-          return record.get('isNew');
-        });
-        toSet = toSet.concat(newRecords);
-        var oldLength = this.length;
-        this.arrayContentWillChange(0, this.length, toSet.length);
-        this.set('length', toSet.length);
-        this.currentState = toSet;
-        this.arrayContentDidChange(0, oldLength, this.length);
-        //TODO Figure out to notify only on additions and maybe only if unloaded
-        this.relationship.notifyHasManyChanged();
-        this.record.updateRecordArrays();
-      },
-      /**
-        `true` if the relationship is polymorphic, `false` otherwise.
-
-        @property {Boolean} isPolymorphic
-        @private
-      */
-      isPolymorphic: false,
-
-      /**
-        The loading state of this array
-
-        @property {Boolean} isLoaded
-      */
-      isLoaded: false,
-
-       /**
-         The relationship which manages this array.
-
-         @property {ManyRelationship} relationship
-         @private
-       */
-      relationship: null,
-
-      internalReplace: function(idx, amt, objects) {
-        if (!objects) {
-          objects = [];
-        }
-        this.arrayContentWillChange(idx, amt, objects.length);
-        this.currentState.splice.apply(this.currentState, [idx, amt].concat(objects));
-        this.set('length', this.currentState.length);
-        this.arrayContentDidChange(idx, amt, objects.length);
-        if (objects) {
-          //TODO(Igor) probably needed only for unloaded records
-          this.relationship.notifyHasManyChanged();
-        }
-        this.record.updateRecordArrays();
-      },
-
-      //TODO(Igor) optimize
-      internalRemoveRecords: function(records) {
-        var index;
-        for (var i=0; i < records.length; i++) {
-          index = this.currentState.indexOf(records[i]);
-          this.internalReplace(index, 1);
-        }
-      },
-
-      //TODO(Igor) optimize
-      internalAddRecords: function(records, idx) {
-        if (idx === undefined) {
-          idx = this.currentState.length;
-        }
-        this.internalReplace(idx, 0, records);
-      },
-
-      replace: function(idx, amt, objects) {
-        var records;
-        if (amt > 0) {
-          records = this.currentState.slice(idx, idx+amt);
-          this.get('relationship').removeRecords(records);
-        }
-        if (objects) {
-          this.get('relationship').addRecords(objects, idx);
-        }
-      },
-      /**
-        Used for async `hasMany` arrays
-        to keep track of when they will resolve.
-
-        @property {Ember.RSVP.Promise} promise
-        @private
-      */
-      promise: null,
-
-      /**
-        @method loadingRecordsCount
-        @param {Number} count
-        @private
-      */
-      loadingRecordsCount: function(count) {
-        this.loadingRecordsCount = count;
-      },
-
-      /**
-        @method loadedRecord
-        @private
-      */
-      loadedRecord: function() {
-        this.loadingRecordsCount--;
-        if (this.loadingRecordsCount === 0) {
-          ember$data$lib$system$record_arrays$many_array$$set(this, 'isLoaded', true);
-          this.trigger('didLoad');
-        }
-      },
-
-      /**
-        @method reload
-        @public
-      */
-      reload: function() {
-        return this.relationship.reload();
-      },
-
-      /**
-        Saves all of the records in the `ManyArray`.
-
-        Example
-
-        ```javascript
-        store.find('inbox', 1).then(function(inbox) {
-          inbox.get('messages').then(function(messages) {
-            messages.forEach(function(message) {
-              message.set('isRead', true);
-            });
-            messages.save()
-          });
-        });
-        ```
-
-        @method save
-        @return {DS.PromiseArray} promise
-      */
-      save: function() {
-        var manyArray = this;
-        var promiseLabel = "DS: ManyArray#save " + ember$data$lib$system$record_arrays$many_array$$get(this, 'type');
-        var promise = Ember.RSVP.all(this.invoke("save"), promiseLabel).then(function(array) {
-          return manyArray;
-        }, null, "DS: ManyArray#save return ManyArray");
-
-        return ember$data$lib$system$promise_proxies$$PromiseArray.create({ promise: promise });
-      },
-
-      /**
-        Create a child record within the owner
-
-        @method createRecord
-        @private
-        @param {Object} hash
-        @return {DS.Model} record
-      */
-      createRecord: function(hash) {
-        var store = ember$data$lib$system$record_arrays$many_array$$get(this, 'store');
-        var type = ember$data$lib$system$record_arrays$many_array$$get(this, 'type');
-        var record;
-
-        
-        record = store.createRecord(type, hash);
-        this.pushObject(record);
-
-        return record;
-      },
-
-      /**
-        @method addRecord
-        @param {DS.Model} record
-        @deprecated Use `addObject()` instead
-      */
-      addRecord: function(record) {
-                this.addObject(record);
-      },
-
-      /**
-        @method removeRecord
-        @param {DS.Model} record
-        @deprecated Use `removeObject()` instead
-      */
-      removeRecord: function(record) {
-                this.removeObject(record);
       }
     });
 
@@ -6834,11 +6622,223 @@
 
     var ember$data$lib$system$relationships$state$relationship$$default = ember$data$lib$system$relationships$state$relationship$$Relationship;
 
+    var ember$data$lib$system$many_array$$get = Ember.get;
+    var ember$data$lib$system$many_array$$set = Ember.set;
+
+    var ember$data$lib$system$many_array$$default = Ember.Object.extend(Ember.MutableArray, Ember.Evented, {
+      init: function() {
+        this.currentState = Ember.A([]);
+      },
+
+      record: null,
+
+      canonicalState: null,
+      currentState: null,
+
+      length: 0,
+
+      objectAt: function(index) {
+        if (this.currentState[index]) {
+          return this.currentState[index];
+        } else {
+          return this.canonicalState[index];
+        }
+      },
+
+      flushCanonical: function() {
+        //TODO make this smarter, currently its plenty stupid
+        var toSet = this.canonicalState.slice(0);
+        //a hack for not removing new records
+        //TODO remove once we have proper diffing
+        var newRecords = this.currentState.filter(function(record) {
+          return record.get('isNew');
+        });
+        toSet = toSet.concat(newRecords);
+        var oldLength = this.length;
+        this.arrayContentWillChange(0, this.length, toSet.length);
+        this.set('length', toSet.length);
+        this.currentState = toSet;
+        this.arrayContentDidChange(0, oldLength, this.length);
+        //TODO Figure out to notify only on additions and maybe only if unloaded
+        this.relationship.notifyHasManyChanged();
+        this.record.updateRecordArrays();
+      },
+      /**
+        `true` if the relationship is polymorphic, `false` otherwise.
+
+        @property {Boolean} isPolymorphic
+        @private
+      */
+      isPolymorphic: false,
+
+      /**
+        The loading state of this array
+
+        @property {Boolean} isLoaded
+      */
+      isLoaded: false,
+
+       /**
+         The relationship which manages this array.
+
+         @property {ManyRelationship} relationship
+         @private
+       */
+      relationship: null,
+
+      internalReplace: function(idx, amt, objects) {
+        if (!objects) {
+          objects = [];
+        }
+        this.arrayContentWillChange(idx, amt, objects.length);
+        this.currentState.splice.apply(this.currentState, [idx, amt].concat(objects));
+        this.set('length', this.currentState.length);
+        this.arrayContentDidChange(idx, amt, objects.length);
+        if (objects) {
+          //TODO(Igor) probably needed only for unloaded records
+          this.relationship.notifyHasManyChanged();
+        }
+        this.record.updateRecordArrays();
+      },
+
+      //TODO(Igor) optimize
+      internalRemoveRecords: function(records) {
+        var index;
+        for (var i=0; i < records.length; i++) {
+          index = this.currentState.indexOf(records[i]);
+          this.internalReplace(index, 1);
+        }
+      },
+
+      //TODO(Igor) optimize
+      internalAddRecords: function(records, idx) {
+        if (idx === undefined) {
+          idx = this.currentState.length;
+        }
+        this.internalReplace(idx, 0, records);
+      },
+
+      replace: function(idx, amt, objects) {
+        var records;
+        if (amt > 0) {
+          records = this.currentState.slice(idx, idx+amt);
+          this.get('relationship').removeRecords(records);
+        }
+        if (objects) {
+          this.get('relationship').addRecords(objects, idx);
+        }
+      },
+      /**
+        Used for async `hasMany` arrays
+        to keep track of when they will resolve.
+
+        @property {Ember.RSVP.Promise} promise
+        @private
+      */
+      promise: null,
+
+      /**
+        @method loadingRecordsCount
+        @param {Number} count
+        @private
+      */
+      loadingRecordsCount: function(count) {
+        this.loadingRecordsCount = count;
+      },
+
+      /**
+        @method loadedRecord
+        @private
+      */
+      loadedRecord: function() {
+        this.loadingRecordsCount--;
+        if (this.loadingRecordsCount === 0) {
+          ember$data$lib$system$many_array$$set(this, 'isLoaded', true);
+          this.trigger('didLoad');
+        }
+      },
+
+      /**
+        @method reload
+        @public
+      */
+      reload: function() {
+        return this.relationship.reload();
+      },
+
+      /**
+        Saves all of the records in the `ManyArray`.
+
+        Example
+
+        ```javascript
+        store.find('inbox', 1).then(function(inbox) {
+          inbox.get('messages').then(function(messages) {
+            messages.forEach(function(message) {
+              message.set('isRead', true);
+            });
+            messages.save()
+          });
+        });
+        ```
+
+        @method save
+        @return {DS.PromiseArray} promise
+      */
+      save: function() {
+        var manyArray = this;
+        var promiseLabel = "DS: ManyArray#save " + ember$data$lib$system$many_array$$get(this, 'type');
+        var promise = Ember.RSVP.all(this.invoke("save"), promiseLabel).then(function(array) {
+          return manyArray;
+        }, null, "DS: ManyArray#save return ManyArray");
+
+        return ember$data$lib$system$promise_proxies$$PromiseArray.create({ promise: promise });
+      },
+
+      /**
+        Create a child record within the owner
+
+        @method createRecord
+        @private
+        @param {Object} hash
+        @return {DS.Model} record
+      */
+      createRecord: function(hash) {
+        var store = ember$data$lib$system$many_array$$get(this, 'store');
+        var type = ember$data$lib$system$many_array$$get(this, 'type');
+        var record;
+
+        
+        record = store.createRecord(type, hash);
+        this.pushObject(record);
+
+        return record;
+      },
+
+      /**
+        @method addRecord
+        @param {DS.Model} record
+        @deprecated Use `addObject()` instead
+      */
+      addRecord: function(record) {
+                this.addObject(record);
+      },
+
+      /**
+        @method removeRecord
+        @param {DS.Model} record
+        @deprecated Use `removeObject()` instead
+      */
+      removeRecord: function(record) {
+                this.removeObject(record);
+      }
+    });
+
     var ember$data$lib$system$relationships$state$has_many$$ManyRelationship = function(store, record, inverseKey, relationshipMeta) {
       this._super$constructor(store, record, inverseKey, relationshipMeta);
       this.belongsToType = relationshipMeta.type;
       this.canonicalState = [];
-      this.manyArray = ember$data$lib$system$record_arrays$many_array$$default.create({
+      this.manyArray = ember$data$lib$system$many_array$$default.create({
         canonicalState: this.canonicalState,
         store: this.store,
         relationship: this,
@@ -12790,7 +12790,7 @@
     ember$data$lib$core$$default.RecordArray                 = ember$data$lib$system$record_arrays$record_array$$default;
     ember$data$lib$core$$default.FilteredRecordArray         = ember$data$lib$system$record_arrays$filtered_record_array$$default;
     ember$data$lib$core$$default.AdapterPopulatedRecordArray = ember$data$lib$system$record_arrays$adapter_populated_record_array$$default;
-    ember$data$lib$core$$default.ManyArray                   = ember$data$lib$system$record_arrays$many_array$$default;
+    ember$data$lib$core$$default.ManyArray                   = ember$data$lib$system$many_array$$default;
 
     ember$data$lib$core$$default.RecordArrayManager = ember$data$lib$system$record_array_manager$$default;
 

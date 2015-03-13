@@ -64,6 +64,8 @@ eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/syste
 
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/system/debug\');\ntest(\'lib/system/debug/debug_info.js should pass jshint\', function() { \n  ok(true, \'lib/system/debug/debug_info.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/system/debug/debug_info.jshint.js");
 
+eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/system\');\ntest(\'lib/system/many_array.js should pass jshint\', function() { \n  ok(true, \'lib/system/many_array.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/system/many_array.jshint.js");
+
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/system\');\ntest(\'lib/system/map.js should pass jshint\', function() { \n  ok(true, \'lib/system/map.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/system/map.jshint.js");
 
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/system\');\ntest(\'lib/system/merge.js should pass jshint\', function() { \n  ok(true, \'lib/system/merge.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/system/merge.jshint.js");
@@ -87,8 +89,6 @@ eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/syste
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/system/record_arrays\');\ntest(\'lib/system/record_arrays/adapter_populated_record_array.js should pass jshint\', function() { \n  ok(true, \'lib/system/record_arrays/adapter_populated_record_array.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/system/record_arrays/adapter_populated_record_array.jshint.js");
 
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/system/record_arrays\');\ntest(\'lib/system/record_arrays/filtered_record_array.js should pass jshint\', function() { \n  ok(true, \'lib/system/record_arrays/filtered_record_array.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/system/record_arrays/filtered_record_array.jshint.js");
-
-eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/system/record_arrays\');\ntest(\'lib/system/record_arrays/many_array.js should pass jshint\', function() { \n  ok(true, \'lib/system/record_arrays/many_array.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/system/record_arrays/many_array.jshint.js");
 
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/system/record_arrays\');\ntest(\'lib/system/record_arrays/record_array.js should pass jshint\', function() { \n  ok(true, \'lib/system/record_arrays/record_array.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/system/record_arrays/record_array.jshint.js");
 
