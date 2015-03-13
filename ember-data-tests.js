@@ -22,6 +22,8 @@ eval("(function() {var env, adapter;\nmodule(\"unit/adapter/path_for_type - DS.A
 
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib\');\ntest(\'lib/adapters.js should pass jshint\', function() { \n  ok(true, \'lib/adapters.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/adapters.jshint.js");
 
+eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/adapters\');\ntest(\'lib/adapters/build_url_mixin.js should pass jshint\', function() { \n  ok(true, \'lib/adapters/build_url_mixin.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/adapters/build_url_mixin.jshint.js");
+
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/adapters\');\ntest(\'lib/adapters/fixture_adapter.js should pass jshint\', function() { \n  ok(true, \'lib/adapters/fixture_adapter.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/adapters/fixture_adapter.jshint.js");
 
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/adapters\');\ntest(\'lib/adapters/rest_adapter.js should pass jshint\', function() { \n  ok(true, \'lib/adapters/rest_adapter.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/adapters/rest_adapter.jshint.js");
