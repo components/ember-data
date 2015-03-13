@@ -2237,6 +2237,16 @@
     var activemodel$adapter$lib$system$active_model_adapter$$default = activemodel$adapter$lib$system$active_model_adapter$$ActiveModelAdapter;
 
     var ember$data$lib$system$serializer$$Serializer = Ember.Object.extend({
+      /**
+        The `store` property is the application's `store` that contains all records.
+        It's injected as a service.
+        It can be used to push records from a non flat data structure server
+        response.
+
+        @property store
+        @type {DS.Store}
+        @public
+      */
 
       /**
         The `extract` method is used to deserialize the payload received from your
@@ -4439,7 +4449,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.ee714ccc7f'
+      VERSION: '1.0.0-beta.16+canary.2824af7fa9'
     });
 
     if (Ember.libraries) {
