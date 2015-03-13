@@ -4455,7 +4455,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.6449e67dec'
+      VERSION: '1.0.0-beta.16+canary.c7cda14350'
     });
 
     if (Ember.libraries) {
@@ -6966,7 +6966,9 @@
     ember$data$lib$system$relationships$state$has_many$$ManyRelationship.prototype.fetchLink = function() {
       var self = this;
       return this.store.findHasMany(this.record, this.link, this.relationshipMeta).then(function(records) {
-        self.updateRecordsFromAdapter(records);
+        self.store._backburner.join(function() {
+          self.updateRecordsFromAdapter(records);
+        });
         return self.manyArray;
       });
     };
