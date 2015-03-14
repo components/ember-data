@@ -786,7 +786,6 @@
 
     var ember$data$lib$system$map$$Map            = Ember.Map;
     var ember$data$lib$system$map$$MapWithDefault = Ember.MapWithDefault;
-    var ember$data$lib$system$map$$OrderedSet     = Ember.OrderedSet;
 
     var ember$data$lib$system$map$$default = ember$data$lib$system$map$$Map;
     var ember$data$lib$adapters$build_url_mixin$$get = Ember.get;
@@ -4473,7 +4472,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.6f4a48722c'
+      VERSION: '1.0.0-beta.16+canary.4689e94045'
     });
 
     if (Ember.libraries) {
@@ -5109,6 +5108,45 @@
       }
     });
 
+    var ember$data$lib$system$ordered$set$$EmberOrderedSet = Ember.OrderedSet;
+    var ember$data$lib$system$ordered$set$$guidFor = Ember.guidFor;
+
+    var ember$data$lib$system$ordered$set$$OrderedSet = function() {
+      this._super$constructor();
+    };
+
+    ember$data$lib$system$ordered$set$$OrderedSet.create = function() {
+      var Constructor = this;
+      return new Constructor();
+    };
+
+    ember$data$lib$system$ordered$set$$OrderedSet.prototype = Ember.create(ember$data$lib$system$ordered$set$$EmberOrderedSet.prototype);
+    ember$data$lib$system$ordered$set$$OrderedSet.prototype.constructor = ember$data$lib$system$ordered$set$$OrderedSet;
+    ember$data$lib$system$ordered$set$$OrderedSet.prototype._super$constructor = ember$data$lib$system$ordered$set$$EmberOrderedSet;
+
+    ember$data$lib$system$ordered$set$$OrderedSet.prototype.addWithIndex = function(obj, idx) {
+      var guid = ember$data$lib$system$ordered$set$$guidFor(obj);
+      var presenceSet = this.presenceSet;
+      var list = this.list;
+
+      if (presenceSet[guid] === true) {
+        return;
+      }
+
+      presenceSet[guid] = true;
+
+      if (idx === undefined || idx == null) {
+        list.push(obj);
+      } else {
+        list.splice(idx, 0, obj);
+      }
+
+      this.size += 1;
+
+      return this;
+    };
+
+    var ember$data$lib$system$ordered$set$$default = ember$data$lib$system$ordered$set$$OrderedSet;
     var ember$data$lib$system$record_array_manager$$get = Ember.get;
     var ember$data$lib$system$record_array_manager$$forEach = Ember.EnumerableUtils.forEach;
     var ember$data$lib$system$record_array_manager$$indexOf = Ember.EnumerableUtils.indexOf;
@@ -5130,7 +5168,7 @@
       },
 
       recordArraysForRecord: function(record) {
-        record._recordArrays = record._recordArrays || ember$data$lib$system$map$$OrderedSet.create();
+        record._recordArrays = record._recordArrays || ember$data$lib$system$ordered$set$$default.create();
         return record._recordArrays;
       },
 
@@ -6416,8 +6454,8 @@
     var ember$data$lib$system$relationships$state$relationship$$forEach = Ember.EnumerableUtils.forEach;
 
     var ember$data$lib$system$relationships$state$relationship$$Relationship = function(store, record, inverseKey, relationshipMeta) {
-      this.members = new ember$data$lib$system$map$$OrderedSet();
-      this.canonicalMembers = new ember$data$lib$system$map$$OrderedSet();
+      this.members = new ember$data$lib$system$ordered$set$$default();
+      this.canonicalMembers = new ember$data$lib$system$ordered$set$$default();
       this.store = store;
       this.key = relationshipMeta.key;
       this.inverseKey = inverseKey;
@@ -6525,7 +6563,7 @@
 
       addRecord: function(record, idx) {
         if (!this.members.has(record)) {
-          this.members.add(record);
+          this.members.addWithIndex(record, idx);
           this.notifyRecordRelationshipAdded(record, idx);
           if (this.inverseKey) {
             record._relationships[this.inverseKey].addRecord(this.record);
@@ -7054,7 +7092,7 @@
     };
 
     function ember$data$lib$system$relationships$state$has_many$$setForArray(array) {
-      var set = new ember$data$lib$system$map$$OrderedSet();
+      var set = new ember$data$lib$system$ordered$set$$default();
 
       if (array) {
         for (var i=0, l=array.length; i<l; i++) {
