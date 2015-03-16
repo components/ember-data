@@ -4454,7 +4454,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.04871c10fe'
+      VERSION: '1.0.0-beta.16+canary.7ab063f545'
     });
 
     if (Ember.libraries) {
@@ -10164,7 +10164,6 @@
         If the adapter updates attributes the record will notify
         the store to update its  membership in any filters.
         To avoid thrashing, this method is invoked only once per
-
         run loop per record.
 
         @method dataWasUpdated
