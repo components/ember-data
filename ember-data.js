@@ -1438,6 +1438,7 @@
         @method ajaxError
         @param  {Object} jqXHR
         @param  {Object} responseText
+        @param  {Object} errorThrown
         @return {Object} jqXHR
       */
       ajaxError: function(jqXHR, responseText, errorThrown) {
@@ -4471,7 +4472,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.f01e8cc9b9'
+      VERSION: '1.0.0-beta.16+canary.ec64e76c89'
     });
 
     if (Ember.libraries) {
