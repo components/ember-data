@@ -2991,7 +2991,7 @@
         the `requestType`.
 
         To override this method with a custom one, make sure to call
-        `this._super(store, type, payload, id, requestType)` with your
+        `return this._super(store, type, payload, id, requestType)` with your
         pre-processed data.
 
         Here's an example of using `extract` manually:
@@ -4472,7 +4472,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.ec64e76c89'
+      VERSION: '1.0.0-beta.16+canary.1ca06423eb'
     });
 
     if (Ember.libraries) {
