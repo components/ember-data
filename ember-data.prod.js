@@ -201,7 +201,7 @@
         @param {String} id
         @return {Promise} promise
       */
-      find: Ember.required(Function),
+      find: null,
 
       /**
         The `findAll()` method is called when you call `find` on the store
@@ -360,7 +360,7 @@
         @param {DS.Model} record
         @return {Promise} promise
       */
-      createRecord: Ember.required(Function),
+      createRecord: null,
 
       /**
         Implement this method in a subclass to handle the updating of
@@ -400,7 +400,7 @@
         @param {DS.Model} record
         @return {Promise} promise
       */
-      updateRecord: Ember.required(Function),
+      updateRecord: null,
 
       /**
         Implement this method in a subclass to handle the deletion of
@@ -440,7 +440,7 @@
         @param {DS.Model} record
         @return {Promise} promise
       */
-      deleteRecord: Ember.required(Function),
+      deleteRecord: null,
 
       /**
         By default the store will try to coalesce all `fetchRecord` calls within the same runloop
@@ -2287,7 +2287,7 @@
         @param {String} requestType
         @return {Object}
       */
-      extract: Ember.required(Function),
+      extract: null,
 
       /**
         The `serialize` method is used when a record is saved in order to convert
@@ -2303,7 +2303,7 @@
         @param {Object} [options]
         @return {Object}
       */
-      serialize: Ember.required(Function),
+      serialize: null,
 
       /**
         The `normalize` method is used to convert a payload received from your
@@ -4476,7 +4476,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.05d8c25524'
+      VERSION: '1.0.0-beta.16+canary.c53850cd05'
     });
 
     if (Ember.libraries) {
@@ -11039,7 +11039,7 @@
         @param {mixed} deserialized The deserialized value
         @return {mixed} The serialized value
       */
-      serialize: Ember.required(),
+      serialize: null,
 
       /**
         When given a serialize value from a JSON object this method must
@@ -11057,7 +11057,7 @@
         @param {mixed} serialized The serialized value
         @return {mixed} The deserialized value
       */
-      deserialize: Ember.required()
+      deserialize: null
     });
 
     var ember$data$lib$transforms$number$$empty = Ember.isEmpty;
