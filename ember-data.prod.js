@@ -4464,19 +4464,19 @@
     };
 
     var ember$data$lib$system$container$proxy$$default = ember$data$lib$system$container$proxy$$ContainerProxy;
-    function activemodel$adapter$lib$setup$container$$setupActiveModelAdapter(container, application) {
-      var proxy = new ember$data$lib$system$container$proxy$$default(container);
+    function activemodel$adapter$lib$setup$container$$setupActiveModelAdapter(registry, application) {
+      var proxy = new ember$data$lib$system$container$proxy$$default(registry);
       proxy.registerDeprecations([
         { deprecated: 'serializer:_ams',  valid: 'serializer:-active-model' },
         { deprecated: 'adapter:_ams',     valid: 'adapter:-active-model' }
       ]);
 
-      container.register('serializer:-active-model', activemodel$adapter$lib$system$active$model$serializer$$default);
-      container.register('adapter:-active-model', activemodel$adapter$lib$system$active$model$adapter$$default);
+      registry.register('serializer:-active-model', activemodel$adapter$lib$system$active$model$serializer$$default);
+      registry.register('adapter:-active-model', activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.c53850cd05'
+      VERSION: '1.0.0-beta.16+canary.8c010881b3'
     });
 
     if (Ember.libraries) {
@@ -10423,10 +10423,11 @@
       */
 
       _modelForMixin: function(key) {
-        var mixin = this.container.resolve('mixin:' + key);
+        var registry = this.container._registry ? this.container._registry : this.container;
+        var mixin = registry.resolve('mixin:' + key);
         if (mixin) {
           //Cache the class as a model
-          this.container.register('model:' + key, DS.Model.extend(mixin));
+          registry.register('model:' + key, DS.Model.extend(mixin));
         }
         var factory = this.modelFactoryFor(key);
         if (factory) {
@@ -10472,11 +10473,7 @@
       },
 
       modelFactoryFor: function(key) {
-        if (this.container.has('model:' + key)) {
-          return this.container.lookupFactory('model:' + key);
-        } else {
-          return null;
-        }
+        return this.container.lookupFactory('model:' + key);
       },
 
       /**
@@ -10997,13 +10994,13 @@
     }
 
     var ember$data$lib$system$store$$default = ember$data$lib$system$store$$Store;
-    function ember$data$lib$initializers$store$$initializeStore(container, application) {
+    function ember$data$lib$initializers$store$$initializeStore(registry, application) {
       
-      container.register('store:main', container.lookupFactory('store:application') || (application && application.Store) || ember$data$lib$system$store$$default);
+      registry.register('store:main', registry.lookupFactory('store:application') || (application && application.Store) || ember$data$lib$system$store$$default);
 
       // allow older names to be looked up
 
-      var proxy = new ember$data$lib$system$container$proxy$$default(container);
+      var proxy = new ember$data$lib$system$container$proxy$$default(registry);
       proxy.registerDeprecations([
         { deprecated: 'serializer:_default',  valid: 'serializer:-default' },
         { deprecated: 'serializer:_rest',     valid: 'serializer:-rest' },
@@ -11011,14 +11008,14 @@
       ]);
 
       // new go forward paths
-      container.register('serializer:-default', ember$data$lib$serializers$json$serializer$$default);
-      container.register('serializer:-rest', ember$data$lib$serializers$rest$serializer$$default);
-      container.register('adapter:-rest', ember$data$lib$adapters$rest$adapter$$default);
+      registry.register('serializer:-default', ember$data$lib$serializers$json$serializer$$default);
+      registry.register('serializer:-rest', ember$data$lib$serializers$rest$serializer$$default);
+      registry.register('adapter:-rest', ember$data$lib$adapters$rest$adapter$$default);
 
       // Eagerly generate the store so defaultStore is populated.
       // TODO: Do this in a finisher hook
-      var store = container.lookup('store:main');
-      container.register('service:store', store, { instantiate: false });
+      var store = registry.lookup('store:main');
+      registry.register('service:store', store, { instantiate: false });
     }
     var ember$data$lib$initializers$store$$default = ember$data$lib$initializers$store$$initializeStore;
 
@@ -11175,18 +11172,18 @@
       }
     });
 
-    function ember$data$lib$initializers$transforms$$initializeTransforms(container) {
-      container.register('transform:boolean', ember$data$lib$transforms$boolean$$default);
-      container.register('transform:date', ember$data$lib$transforms$date$$default);
-      container.register('transform:number', ember$data$lib$transforms$number$$default);
-      container.register('transform:string', ember$data$lib$transforms$string$$default);
+    function ember$data$lib$initializers$transforms$$initializeTransforms(registry) {
+      registry.register('transform:boolean', ember$data$lib$transforms$boolean$$default);
+      registry.register('transform:date', ember$data$lib$transforms$date$$default);
+      registry.register('transform:number', ember$data$lib$transforms$number$$default);
+      registry.register('transform:string', ember$data$lib$transforms$string$$default);
     }
     var ember$data$lib$initializers$transforms$$default = ember$data$lib$initializers$transforms$$initializeTransforms;
-    function ember$data$lib$initializers$store$injections$$initializeStoreInjections(container) {
-      container.injection('controller', 'store', 'store:main');
-      container.injection('route', 'store', 'store:main');
-      container.injection('serializer', 'store', 'store:main');
-      container.injection('data-adapter', 'store', 'store:main');
+    function ember$data$lib$initializers$store$injections$$initializeStoreInjections(registry) {
+      registry.injection('controller', 'store', 'store:main');
+      registry.injection('route', 'store', 'store:main');
+      registry.injection('serializer', 'store', 'store:main');
+      registry.injection('data-adapter', 'store', 'store:main');
     }
     var ember$data$lib$initializers$store$injections$$default = ember$data$lib$initializers$store$injections$$initializeStoreInjections;
     var ember$data$lib$system$debug$debug$adapter$$get = Ember.get;
@@ -11298,8 +11295,8 @@
 
     });
 
-    function ember$data$lib$initializers$data$adapter$$initializeDebugAdapter(container) {
-      container.register('data-adapter:main', ember$data$lib$system$debug$debug$adapter$$default);
+    function ember$data$lib$initializers$data$adapter$$initializeDebugAdapter(registry) {
+      registry.register('data-adapter:main', ember$data$lib$system$debug$debug$adapter$$default);
     }
     var ember$data$lib$initializers$data$adapter$$default = ember$data$lib$initializers$data$adapter$$initializeDebugAdapter;
     function ember$data$lib$setup$container$$setupContainer(container, application) {
