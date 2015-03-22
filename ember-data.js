@@ -4494,7 +4494,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.8c010881b3'
+      VERSION: '1.0.0-beta.16+canary.5eef713369'
     });
 
     if (Ember.libraries) {
@@ -9943,7 +9943,8 @@
       hasRecordForId: function(typeName, inputId) {
         var type = this.modelFor(typeName);
         var id = ember$data$lib$system$store$$coerceId(inputId);
-        return !!this.typeMapFor(type).idToRecord[id];
+        var record = this.typeMapFor(type).idToRecord[id];
+        return !!record && ember$data$lib$system$store$$get(record, 'isLoaded');
       },
 
       /**
