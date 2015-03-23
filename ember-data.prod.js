@@ -4478,7 +4478,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.90ae872a2c'
+      VERSION: '1.0.0-beta.16+canary.d62dc66cf3'
     });
 
     if (Ember.libraries) {
@@ -6681,6 +6681,7 @@
 
     var ember$data$lib$system$many$array$$get = Ember.get;
     var ember$data$lib$system$many$array$$set = Ember.set;
+    var ember$data$lib$system$many$array$$filter = Ember.ArrayPolyfills.filter;
 
     var ember$data$lib$system$many$array$$default = Ember.Object.extend(Ember.MutableArray, Ember.Evented, {
       init: function() {
@@ -6704,7 +6705,10 @@
 
       flushCanonical: function() {
         //TODO make this smarter, currently its plenty stupid
-        var toSet = this.canonicalState.slice(0);
+        var toSet = ember$data$lib$system$many$array$$filter.call(this.canonicalState, function(record) {
+          return !record.get('isDeleted');
+        });
+
         //a hack for not removing new records
         //TODO remove once we have proper diffing
         var newRecords = this.currentState.filter(function(record) {
