@@ -4476,7 +4476,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.174fc94488'
+      VERSION: '1.0.0-beta.16+canary.f540d9860e'
     });
 
     if (Ember.libraries) {
@@ -7586,6 +7586,15 @@
     var ember$data$lib$system$model$model$$Promise = Ember.RSVP.Promise;
     var ember$data$lib$system$model$model$$forEach = Ember.ArrayPolyfills.forEach;
     var ember$data$lib$system$model$model$$map = Ember.ArrayPolyfills.map;
+    var ember$data$lib$system$model$model$$intersection = Ember.EnumerableUtils.intersection;
+    var ember$data$lib$system$model$model$$RESERVED_MODEL_PROPS = [
+      'attributes', 'clientId', 'currentState', 'data', 'dirtyType',
+      'errors', 'fields', 'isDeleted', 'isDirty', 'isDestroyed',
+      'isDestroying', 'isEmpty', 'isError', 'isLoaded',
+      'isLoading', 'isNew', 'isReloading', 'isSaving', 'isValid',
+      'relatedTypes', 'relationshipNames', 'relationships',
+      'relationshipsByName', 'transformedAttributes', 'store'
+    ];
 
     var ember$data$lib$system$model$model$$retrieveFromCurrentState = Ember.computed('currentState', function(key, value) {
       return ember$data$lib$system$model$model$$get(ember$data$lib$system$model$model$$get(this, 'currentState'), key);
@@ -8767,16 +8776,7 @@
       // rely on the data property.
       willMergeMixin: function(props) {
         var constructor = this.constructor;
-        [
-          'attributes', 'clientId', 'currentState', 'data', 'dirtyType',
-          'errors', 'fields', 'isDeleted', 'isDirty', 'isDestroyed',
-          'isDestroying', 'isEmpty', 'isError', 'isLoaded',
-          'isLoading', 'isNew', 'isReloading', 'isSaving', 'isValid',
-          'relatedTypes', 'relationshipNames', 'relationships',
-          'relationshipsByName', 'transformedAttributes', 'store'
-        ].forEach(function(reservedProperty) {
-                  });
-      },
+              },
 
       attr: function() {
               },
