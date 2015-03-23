@@ -4478,7 +4478,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.2ecbae0b07'
+      VERSION: '1.0.0-beta.16+canary.90ae872a2c'
     });
 
     if (Ember.libraries) {
@@ -7597,10 +7597,7 @@
     var ember$data$lib$system$model$model$$map = Ember.ArrayPolyfills.map;
     var ember$data$lib$system$model$model$$intersection = Ember.EnumerableUtils.intersection;
     var ember$data$lib$system$model$model$$RESERVED_MODEL_PROPS = [
-      'attributes', 'clientId', 'currentState', 'data', 'dirtyType',
-      'errors', 'fields', 'isDeleted', 'isDirty', 'isDestroyed',
-      'isDestroying', 'isEmpty', 'isError', 'isLoaded',
-      'isLoading', 'isNew', 'isReloading', 'isSaving', 'isValid',
+      'attributes', 'currentState', 'data',
       'relatedTypes', 'relationshipNames', 'relationships',
       'relationshipsByName', 'transformedAttributes', 'store'
     ];
