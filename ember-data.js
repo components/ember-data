@@ -180,7 +180,7 @@
 
         ```javascript
         App.ApplicationAdapter = DS.Adapter.extend({
-          find: function(store, type, id) {
+          find: function(store, type, id, snapshot) {
             var url = [type.typeKey, id].join('/');
 
             return new Ember.RSVP.Promise(function(resolve, reject) {
@@ -199,6 +199,7 @@
         @param {DS.Store} store
         @param {subclass of DS.Model} type
         @param {String} id
+        @param {DS.Snapshot} snapshot
         @return {Promise} promise
       */
       find: null,
@@ -304,8 +305,8 @@
 
         ```javascript
         App.ApplicationAdapter = DS.Adapter.extend({
-          createRecord: function(store, type, record) {
-            var data = this.serialize(record, { includeId: true });
+          createRecord: function(store, type, snapshot) {
+            var data = this.serialize(snapshot, { includeId: true });
             var url = type;
 
             // ...
@@ -333,8 +334,8 @@
 
         ```javascript
         App.ApplicationAdapter = DS.Adapter.extend({
-          createRecord: function(store, type, record) {
-            var data = this.serialize(record, { includeId: true });
+          createRecord: function(store, type, snapshot) {
+            var data = this.serialize(snapshot, { includeId: true });
             var url = type;
 
             return new Ember.RSVP.Promise(function(resolve, reject) {
@@ -357,7 +358,7 @@
         @method createRecord
         @param {DS.Store} store
         @param {subclass of DS.Model} type   the DS.Model class of the record
-        @param {DS.Model} record
+        @param {DS.Snapshot} snapshot
         @return {Promise} promise
       */
       createRecord: null,
@@ -372,9 +373,9 @@
 
         ```javascript
         App.ApplicationAdapter = DS.Adapter.extend({
-          updateRecord: function(store, type, record) {
-            var data = this.serialize(record, { includeId: true });
-            var id = record.get('id');
+          updateRecord: function(store, type, snapshot) {
+            var data = this.serialize(snapshot, { includeId: true });
+            var id = snapshot.id;
             var url = [type, id].join('/');
 
             return new Ember.RSVP.Promise(function(resolve, reject) {
@@ -397,7 +398,7 @@
         @method updateRecord
         @param {DS.Store} store
         @param {subclass of DS.Model} type   the DS.Model class of the record
-        @param {DS.Model} record
+        @param {DS.Snapshot} snapshot
         @return {Promise} promise
       */
       updateRecord: null,
@@ -412,9 +413,9 @@
 
         ```javascript
         App.ApplicationAdapter = DS.Adapter.extend({
-          deleteRecord: function(store, type, record) {
-            var data = this.serialize(record, { includeId: true });
-            var id = record.get('id');
+          deleteRecord: function(store, type, snapshot) {
+            var data = this.serialize(snapshot, { includeId: true });
+            var id = snapshot.id;
             var url = [type, id].join('/');
 
             return new Ember.RSVP.Promise(function(resolve, reject) {
@@ -437,7 +438,7 @@
         @method deleteRecord
         @param {DS.Store} store
         @param {subclass of DS.Model} type   the DS.Model class of the record
-        @param {DS.Model} record
+        @param {DS.Snapshot} snapshot
         @return {Promise} promise
       */
       deleteRecord: null,
@@ -460,7 +461,7 @@
         @param {DS.Store} store
         @param {subclass of DS.Model} type   the DS.Model class of the records
         @param {Array}    ids
-        @param {Array} records
+        @param {Array} snapshots
         @return {Promise} promise
       */
 
@@ -475,12 +476,12 @@
 
         @method groupRecordsForFindMany
         @param {DS.Store} store
-        @param {Array} records
+        @param {Array} snapshots
         @return {Array}  an array of arrays of records, each of which is to be
                           loaded separately by `findMany`.
       */
-      groupRecordsForFindMany: function (store, records) {
-        return [records];
+      groupRecordsForFindMany: function(store, snapshots) {
+        return [snapshots];
       }
     });
 
@@ -579,10 +580,9 @@
         @method mockJSON
         @param {DS.Store} store
         @param {Subclass of DS.Model} type
-        @param {DS.Model} record
+        @param {DS.Snapshot} snapshot
       */
-      mockJSON: function(store, type, record) {
-        var snapshot = record._createSnapshot();
+      mockJSON: function(store, type, snapshot) {
         return store.serializerFor(snapshot.typeKey).serialize(snapshot, { includeId: true });
       },
 
@@ -601,9 +601,10 @@
         @param {DS.Store} store
         @param {subclass of DS.Model} type
         @param {String} id
+        @param {DS.Snapshot} snapshot
         @return {Promise} promise
       */
-      find: function(store, type, id) {
+      find: function(store, type, id, snapshot) {
         var fixtures = this.fixturesForType(type);
         var fixture;
 
@@ -625,9 +626,10 @@
         @param {DS.Store} store
         @param {subclass of DS.Model} type
         @param {Array} ids
+        @param {Array} snapshots
         @return {Promise} promise
       */
-      findMany: function(store, type, ids) {
+      findMany: function(store, type, ids, snapshots) {
         var fixtures = this.fixturesForType(type);
 
         Ember.assert("Unable to find fixtures for model type "+type.toString(), fixtures);
@@ -690,11 +692,11 @@
         @method createRecord
         @param {DS.Store} store
         @param {subclass of DS.Model} type
-        @param {DS.Model} record
+        @param {DS.Snapshot} snapshot
         @return {Promise} promise
       */
-      createRecord: function(store, type, record) {
-        var fixture = this.mockJSON(store, type, record);
+      createRecord: function(store, type, snapshot) {
+        var fixture = this.mockJSON(store, type, snapshot);
 
         this.updateFixtures(type, fixture);
 
@@ -707,11 +709,11 @@
         @method updateRecord
         @param {DS.Store} store
         @param {subclass of DS.Model} type
-        @param {DS.Model} record
+        @param {DS.Snapshot} snapshot
         @return {Promise} promise
       */
-      updateRecord: function(store, type, record) {
-        var fixture = this.mockJSON(store, type, record);
+      updateRecord: function(store, type, snapshot) {
+        var fixture = this.mockJSON(store, type, snapshot);
 
         this.updateFixtures(type, fixture);
 
@@ -724,11 +726,11 @@
         @method deleteRecord
         @param {DS.Store} store
         @param {subclass of DS.Model} type
-        @param {DS.Model} record
+        @param {DS.Snapshot} snapshot
         @return {Promise} promise
       */
-      deleteRecord: function(store, type, record) {
-        this.deleteLoadedFixture(type, record);
+      deleteRecord: function(store, type, snapshot) {
+        this.deleteLoadedFixture(type, snapshot);
 
         return this.simulateRemoteCall(function() {
           // no payload in a deletion
@@ -740,10 +742,10 @@
         @method deleteLoadedFixture
         @private
         @param type
-        @param record
+        @param snapshot
       */
-      deleteLoadedFixture: function(type, record) {
-        var existingFixture = this.findExistingFixture(type, record);
+      deleteLoadedFixture: function(type, snapshot) {
+        var existingFixture = this.findExistingFixture(type, snapshot);
 
         if (existingFixture) {
           var index = ember$data$lib$adapters$fixture$adapter$$indexOf(type.FIXTURES, existingFixture);
@@ -756,11 +758,11 @@
         @method findExistingFixture
         @private
         @param type
-        @param record
+        @param snapshot
       */
-      findExistingFixture: function(type, record) {
+      findExistingFixture: function(type, snapshot) {
         var fixtures = this.fixturesForType(type);
-        var id = ember$data$lib$adapters$fixture$adapter$$get(record, 'id');
+        var id = snapshot.id;
 
         return this.findFixtureById(fixtures, id);
       },
@@ -824,13 +826,16 @@
         If an ID is specified, it adds the ID to the path generated
         for the type, separated by a `/`.
 
+        When called by RESTAdapter.findMany() the `id` and `snapshot` parameters
+        will be arrays of ids and snapshots.
+
         @method buildURL
         @param {String} type
-        @param {String} id
-        @param {DS.Model} record
+        @param {String|Array} id single id or array of ids
+        @param {DS.Snapshot|Array} snapshot single snapshot or array of snapshots
         @return {String} url
       */
-      buildURL: function(type, id, record) {
+      buildURL: function(type, id, snapshot) {
         var url = [];
         var host = ember$data$lib$adapters$build$url$mixin$$get(this, 'host');
         var prefix = this.urlPrefix();
@@ -1096,11 +1101,11 @@
         @param {DS.Store} store
         @param {subclass of DS.Model} type
         @param {String} id
-        @param {DS.Model} record
+        @param {DS.Snapshot} snapshot
         @return {Promise} promise
       */
-      find: function(store, type, id, record) {
-        return this.ajax(this.buildURL(type.typeKey, id, record), 'GET');
+      find: function(store, type, id, snapshot) {
+        return this.ajax(this.buildURL(type.typeKey, id, snapshot), 'GET');
       },
 
       /**
@@ -1181,11 +1186,11 @@
         @param {DS.Store} store
         @param {subclass of DS.Model} type
         @param {Array} ids
-        @param {Array} records
+        @param {Array} snapshots
         @return {Promise} promise
       */
-      findMany: function(store, type, ids, records) {
-        return this.ajax(this.buildURL(type.typeKey, ids, records), 'GET', { data: { ids: ids } });
+      findMany: function(store, type, ids, snapshots) {
+        return this.ajax(this.buildURL(type.typeKey, ids, snapshots), 'GET', { data: { ids: ids } });
       },
 
       /**
@@ -1213,14 +1218,14 @@
 
         @method findHasMany
         @param {DS.Store} store
-        @param {DS.Model} record
+        @param {DS.Snapshot} snapshot
         @param {String} url
         @return {Promise} promise
       */
-      findHasMany: function(store, record, url, relationship) {
+      findHasMany: function(store, snapshot, url, relationship) {
         var host = ember$data$lib$adapters$rest$adapter$$get(this, 'host');
-        var id   = ember$data$lib$adapters$rest$adapter$$get(record, 'id');
-        var type = record.constructor.typeKey;
+        var id   = snapshot.id;
+        var type = snapshot.typeKey;
 
         if (host && url.charAt(0) === '/' && url.charAt(1) !== '/') {
           url = host + url;
@@ -1252,13 +1257,13 @@
 
         @method findBelongsTo
         @param {DS.Store} store
-        @param {DS.Model} record
+        @param {DS.Snapshot} snapshot
         @param {String} url
         @return {Promise} promise
       */
-      findBelongsTo: function(store, record, url, relationship) {
-        var id   = ember$data$lib$adapters$rest$adapter$$get(record, 'id');
-        var type = record.constructor.typeKey;
+      findBelongsTo: function(store, snapshot, url, relationship) {
+        var id   = snapshot.id;
+        var type = snapshot.typeKey;
 
         return this.ajax(this.urlPrefix(url, this.buildURL(type, id)), 'GET');
       },
@@ -1276,17 +1281,16 @@
         @method createRecord
         @param {DS.Store} store
         @param {subclass of DS.Model} type
-        @param {DS.Model} record
+        @param {DS.Snapshot} snapshot
         @return {Promise} promise
       */
-      createRecord: function(store, type, record) {
+      createRecord: function(store, type, snapshot) {
         var data = {};
         var serializer = store.serializerFor(type.typeKey);
 
-        var snapshot = record._createSnapshot();
         serializer.serializeIntoHash(data, type, snapshot, { includeId: true });
 
-        return this.ajax(this.buildURL(type.typeKey, null, record), "POST", { data: data });
+        return this.ajax(this.buildURL(type.typeKey, null, snapshot), "POST", { data: data });
       },
 
       /**
@@ -1302,19 +1306,18 @@
         @method updateRecord
         @param {DS.Store} store
         @param {subclass of DS.Model} type
-        @param {DS.Model} record
+        @param {DS.Snapshot} snapshot
         @return {Promise} promise
       */
-      updateRecord: function(store, type, record) {
+      updateRecord: function(store, type, snapshot) {
         var data = {};
         var serializer = store.serializerFor(type.typeKey);
 
-        var snapshot = record._createSnapshot();
         serializer.serializeIntoHash(data, type, snapshot);
 
-        var id = ember$data$lib$adapters$rest$adapter$$get(record, 'id');
+        var id = snapshot.id;
 
-        return this.ajax(this.buildURL(type.typeKey, id, record), "PUT", { data: data });
+        return this.ajax(this.buildURL(type.typeKey, id, snapshot), "PUT", { data: data });
       },
 
       /**
@@ -1325,23 +1328,22 @@
         @method deleteRecord
         @param {DS.Store} store
         @param {subclass of DS.Model} type
-        @param {DS.Model} record
+        @param {DS.Snapshot} snapshot
         @return {Promise} promise
       */
-      deleteRecord: function(store, type, record) {
-        var id = ember$data$lib$adapters$rest$adapter$$get(record, 'id');
+      deleteRecord: function(store, type, snapshot) {
+        var id = snapshot.id;
 
-        return this.ajax(this.buildURL(type.typeKey, id, record), "DELETE");
+        return this.ajax(this.buildURL(type.typeKey, id, snapshot), "DELETE");
       },
 
-      _stripIDFromURL: function(store, record) {
-        var type = record.constructor;
-        var url = this.buildURL(type.typeKey, record.get('id'), record);
+      _stripIDFromURL: function(store, snapshot) {
+        var url = this.buildURL(snapshot.typeKey, snapshot.id, snapshot);
 
         var expandedURL = url.split('/');
         //Case when the url is of the format ...something/:id
         var lastSegment = expandedURL[expandedURL.length - 1];
-        var id = record.get('id');
+        var id = snapshot.id;
         if (lastSegment === id) {
           expandedURL[expandedURL.length - 1] = "";
         } else if (ember$data$lib$adapters$rest$adapter$$endsWith(lastSegment, '?id=' + id)) {
@@ -1373,18 +1375,18 @@
 
         @method groupRecordsForFindMany
         @param {DS.Store} store
-        @param {Array} records
+        @param {Array} snapshots
         @return {Array}  an array of arrays of records, each of which is to be
                           loaded separately by `findMany`.
       */
-      groupRecordsForFindMany: function (store, records) {
+      groupRecordsForFindMany: function (store, snapshots) {
         var groups = ember$data$lib$system$map$$MapWithDefault.create({ defaultValue: function() { return []; } });
         var adapter = this;
         var maxUrlLength = this.maxUrlLength;
 
-        ember$data$lib$adapters$rest$adapter$$forEach.call(records, function(record) {
-          var baseUrl = adapter._stripIDFromURL(store, record);
-          groups.get(baseUrl).push(record);
+        ember$data$lib$adapters$rest$adapter$$forEach.call(snapshots, function(snapshot) {
+          var baseUrl = adapter._stripIDFromURL(store, snapshot);
+          groups.get(baseUrl).push(snapshot);
         });
 
         function splitGroupToFitInUrl(group, maxUrlLength, paramNameLength) {
@@ -1392,8 +1394,8 @@
           var idsSize = 0;
           var splitGroups = [[]];
 
-          ember$data$lib$adapters$rest$adapter$$forEach.call(group, function(record) {
-            var additionalLength = encodeURIComponent(record.get('id')).length + paramNameLength;
+          ember$data$lib$adapters$rest$adapter$$forEach.call(group, function(snapshot) {
+            var additionalLength = encodeURIComponent(snapshot.id).length + paramNameLength;
             if (baseUrl.length + idsSize + additionalLength >= maxUrlLength) {
               idsSize = 0;
               splitGroups.push([]);
@@ -1402,7 +1404,7 @@
             idsSize += additionalLength;
 
             var lastGroupIndex = splitGroups.length - 1;
-            splitGroups[lastGroupIndex].push(record);
+            splitGroups[lastGroupIndex].push(snapshot);
           });
 
           return splitGroups;
@@ -4494,7 +4496,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16+canary.f540d9860e'
+      VERSION: '1.0.0-beta.16+canary.2ecbae0b07'
     });
 
     if (Ember.libraries) {
@@ -4677,7 +4679,8 @@
     var ember$data$lib$system$store$finders$$Promise = Ember.RSVP.Promise;
 
     function ember$data$lib$system$store$finders$$_find(adapter, store, type, id, record) {
-      var promise = adapter.find(store, type, id, record);
+      var snapshot = record._createSnapshot();
+      var promise = adapter.find(store, type, id, snapshot);
       var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, type);
       var label = "DS: Handle Adapter#find of " + type + " with id: " + id;
 
@@ -4705,7 +4708,8 @@
 
 
     function ember$data$lib$system$store$finders$$_findMany(adapter, store, type, ids, records) {
-      var promise = adapter.findMany(store, type, ids, records);
+      var snapshots = Ember.A(records).invoke('_createSnapshot');
+      var promise = adapter.findMany(store, type, ids, snapshots);
       var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, type);
       var label = "DS: Handle Adapter#findMany of " + type;
 
@@ -4728,7 +4732,8 @@
     }
 
     function ember$data$lib$system$store$finders$$_findHasMany(adapter, store, record, link, relationship) {
-      var promise = adapter.findHasMany(store, record, link, relationship);
+      var snapshot = record._createSnapshot();
+      var promise = adapter.findHasMany(store, snapshot, link, relationship);
       var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, relationship.type);
       var label = "DS: Handle Adapter#findHasMany of " + record + " : " + relationship.type;
 
@@ -4749,7 +4754,8 @@
     }
 
     function ember$data$lib$system$store$finders$$_findBelongsTo(adapter, store, record, link, relationship) {
-      var promise = adapter.findBelongsTo(store, record, link, relationship);
+      var snapshot = record._createSnapshot();
+      var promise = adapter.findBelongsTo(store, snapshot, link, relationship);
       var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, relationship.type);
       var label = "DS: Handle Adapter#findBelongsTo of " + record + " : " + relationship.type;
 
@@ -7337,10 +7343,9 @@
         Example
 
         ```javascript
-        var post = store.push('post', { id: 1, author: 'Tomster', title: 'Ember.js rocks' });
-        var snapshot = post._createSnapshot();
+        // store.push('post', { id: 1, author: 'Tomster', title: 'Ember.js rocks' });
 
-        snapshot.id; // => '1'
+        postSnapshot.id; // => '1'
         ```
 
         @property id
@@ -7385,11 +7390,10 @@
         Example
 
         ```javascript
-        var post = store.createRecord('post', { author: 'Tomster', title: 'Ember.js rocks' });
-        var snapshot = post._createSnapshot();
+        // store.push('post', { id: 1, author: 'Tomster', title: 'Ember.js rocks' });
 
-        snapshot.attr('author'); // => 'Tomster'
-        snapshot.attr('title'); // => 'Ember.js rocks'
+        postSnapshot.attr('author'); // => 'Tomster'
+        postSnapshot.attr('title'); // => 'Ember.js rocks'
         ```
 
         Note: Values are loaded eagerly and cached when the snapshot is created.
@@ -7411,10 +7415,9 @@
         Example
 
         ```javascript
-        var post = store.createRecord('post', { author: 'Tomster', title: 'Ember.js rocks' });
-        var snapshot = post._createSnapshot();
+        // store.push('post', { id: 1, author: 'Tomster', title: 'Hello World' });
 
-        snapshot.attributes(); // => { author: 'Tomster', title: 'Ember.js rocks' }
+        postSnapshot.attributes(); // => { author: 'Tomster', title: 'Ember.js rocks' }
         ```
 
         @method attributes
@@ -7436,12 +7439,11 @@
         Example
 
         ```javascript
-        var post = store.push('post', { id: 1, title: 'Hello World' });
-        var comment = store.createRecord('comment', { body: 'Lorem ipsum', post: post });
-        var snapshot = comment._createSnapshot();
+        // store.push('post', { id: 1, title: 'Hello World' });
+        // store.createRecord('comment', { body: 'Lorem ipsum', post: post });
 
-        snapshot.belongsTo('post'); // => DS.Snapshot of post
-        snapshot.belongsTo('post', { id: true }); // => '1'
+        commentSnapshot.belongsTo('post'); // => DS.Snapshot
+        commentSnapshot.belongsTo('post', { id: true }); // => '1'
         ```
 
         Calling `belongsTo` will return a new Snapshot as long as there's any
@@ -7501,11 +7503,10 @@
         Example
 
         ```javascript
-        var post = store.createRecord('post', { title: 'Hello World', comments: [2, 3] });
-        var snapshot = post._createSnapshot();
+        // store.push('post', { id: 1, title: 'Hello World', comments: [2, 3] });
 
-        snapshot.hasMany('comments'); // => [DS.Snapshot, DS.Snapshot]
-        snapshot.hasMany('comments', { ids: true }); // => ['2', '3']
+        postSnapshot.hasMany('comments'); // => [DS.Snapshot, DS.Snapshot]
+        postSnapshot.hasMany('comments', { ids: true }); // => ['2', '3']
         ```
 
         Note: Relationships are loaded lazily and cached upon first access.
@@ -7627,6 +7628,15 @@
       */
       unknownProperty: function(keyName) {
         return this.get(keyName);
+      },
+
+      /**
+        @method _createSnapshot
+        @private
+      */
+      _createSnapshot: function() {
+        Ember.deprecate("You called _createSnapshot on what's already a DS.Snapshot. You shouldn't manually create snapshots in your adapter since the store passes snapshots to adapters by default.");
+        return this;
       }
     };
 
@@ -9861,8 +9871,22 @@
         if (recordResolverPairs.length === 1) {
           _fetchRecord(recordResolverPairs[0]);
         } else if (shouldCoalesce) {
-          var groups = adapter.groupRecordsForFindMany(this, records);
-          ember$data$lib$system$store$$forEach(groups, function (groupOfRecords) {
+
+          // TODO: Improve records => snapshots => records => snapshots
+          //
+          // We want to provide records to all store methods and snapshots to all
+          // adapter methods. To make sure we're doing that we're providing an array
+          // of snapshots to adapter.groupRecordsForFindMany(), which in turn will
+          // return grouped snapshots instead of grouped records.
+          //
+          // But since the _findMany() finder is a store method we need to get the
+          // records from the grouped snapshots even though the _findMany() finder
+          // will once again convert the records to snapshots for adapter.findMany()
+
+          var snapshots = Ember.A(records).invoke('_createSnapshot');
+          var groups = adapter.groupRecordsForFindMany(this, snapshots);
+          ember$data$lib$system$store$$forEach(groups, function (groupOfSnapshots) {
+            var groupOfRecords = Ember.A(groupOfSnapshots).mapBy('record');
             var requestedRecords = Ember.A(groupOfRecords);
             var ids = requestedRecords.mapBy('id');
             if (ids.length > 1) {
@@ -11105,7 +11129,8 @@
 
     function ember$data$lib$system$store$$_commit(adapter, store, operation, record) {
       var type = record.constructor;
-      var promise = adapter[operation](store, type, record);
+      var snapshot = record._createSnapshot();
+      var promise = adapter[operation](store, type, snapshot);
       var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, type);
       var label = "DS: Extract and notify about " + operation + " completion of " + record;
 
