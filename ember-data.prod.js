@@ -1590,20 +1590,22 @@
         return string.endsWith(suffix);
       }
     }
-    var ember$inflector$lib$system$inflector$$capitalize = Ember.String.capitalize;
+    var ember$lib$main$$default = self.Ember;
 
-    var ember$inflector$lib$system$inflector$$BLANK_REGEX = /^\s*$/;
-    var ember$inflector$lib$system$inflector$$LAST_WORD_DASHED_REGEX = /(\w+[_-])([a-z\d]+$)/;
-    var ember$inflector$lib$system$inflector$$LAST_WORD_CAMELIZED_REGEX = /(\w+)([A-Z][a-z\d]*$)/;
-    var ember$inflector$lib$system$inflector$$CAMELIZED_REGEX = /[A-Z][a-z\d]*$/;
+    var ember$inflector$lib$lib$system$inflector$$capitalize = ember$lib$main$$default.String.capitalize;
 
-    function ember$inflector$lib$system$inflector$$loadUncountable(rules, uncountable) {
+    var ember$inflector$lib$lib$system$inflector$$BLANK_REGEX = /^\s*$/;
+    var ember$inflector$lib$lib$system$inflector$$LAST_WORD_DASHED_REGEX = /(\w+[_-])([a-z\d]+$)/;
+    var ember$inflector$lib$lib$system$inflector$$LAST_WORD_CAMELIZED_REGEX = /(\w+)([A-Z][a-z\d]*$)/;
+    var ember$inflector$lib$lib$system$inflector$$CAMELIZED_REGEX = /[A-Z][a-z\d]*$/;
+
+    function ember$inflector$lib$lib$system$inflector$$loadUncountable(rules, uncountable) {
       for (var i = 0, length = uncountable.length; i < length; i++) {
         rules.uncountable[uncountable[i].toLowerCase()] = true;
       }
     }
 
-    function ember$inflector$lib$system$inflector$$loadIrregular(rules, irregularPairs) {
+    function ember$inflector$lib$lib$system$inflector$$loadIrregular(rules, irregularPairs) {
       var pair;
 
       for (var i = 0, length = irregularPairs.length; i < length; i++) {
@@ -1677,21 +1679,21 @@
       @class Inflector
       @namespace Ember
     */
-    function ember$inflector$lib$system$inflector$$Inflector(ruleSet) {
+    function ember$inflector$lib$lib$system$inflector$$Inflector(ruleSet) {
       ruleSet = ruleSet || {};
-      ruleSet.uncountable = ruleSet.uncountable || ember$inflector$lib$system$inflector$$makeDictionary();
-      ruleSet.irregularPairs = ruleSet.irregularPairs || ember$inflector$lib$system$inflector$$makeDictionary();
+      ruleSet.uncountable = ruleSet.uncountable || ember$inflector$lib$lib$system$inflector$$makeDictionary();
+      ruleSet.irregularPairs = ruleSet.irregularPairs || ember$inflector$lib$lib$system$inflector$$makeDictionary();
 
       var rules = this.rules = {
         plurals:  ruleSet.plurals || [],
         singular: ruleSet.singular || [],
-        irregular: ember$inflector$lib$system$inflector$$makeDictionary(),
-        irregularInverse: ember$inflector$lib$system$inflector$$makeDictionary(),
-        uncountable: ember$inflector$lib$system$inflector$$makeDictionary()
+        irregular: ember$inflector$lib$lib$system$inflector$$makeDictionary(),
+        irregularInverse: ember$inflector$lib$lib$system$inflector$$makeDictionary(),
+        uncountable: ember$inflector$lib$lib$system$inflector$$makeDictionary()
       };
 
-      ember$inflector$lib$system$inflector$$loadUncountable(rules, ruleSet.uncountable);
-      ember$inflector$lib$system$inflector$$loadIrregular(rules, ruleSet.irregularPairs);
+      ember$inflector$lib$lib$system$inflector$$loadUncountable(rules, ruleSet.uncountable);
+      ember$inflector$lib$lib$system$inflector$$loadIrregular(rules, ruleSet.irregularPairs);
 
       this.enableCache();
     }
@@ -1700,14 +1702,14 @@
       throw new Error("This browser does not support Object.create(null), please polyfil with es5-sham: http://git.io/yBU2rg");
     }
 
-    function ember$inflector$lib$system$inflector$$makeDictionary() {
+    function ember$inflector$lib$lib$system$inflector$$makeDictionary() {
       var cache = Object.create(null);
       cache['_dict'] = null;
       delete cache['_dict'];
       return cache;
     }
 
-    ember$inflector$lib$system$inflector$$Inflector.prototype = {
+    ember$inflector$lib$lib$system$inflector$$Inflector.prototype = {
       /**
         @public
 
@@ -1737,8 +1739,8 @@
       */
       purgeCache: function() {
         this._cacheUsed = false;
-        this._sCache = ember$inflector$lib$system$inflector$$makeDictionary();
-        this._pCache = ember$inflector$lib$system$inflector$$makeDictionary();
+        this._sCache = ember$inflector$lib$lib$system$inflector$$makeDictionary();
+        this._pCache = ember$inflector$lib$lib$system$inflector$$makeDictionary();
       },
 
       /**
@@ -1785,7 +1787,7 @@
       */
       uncountable: function(string) {
         if (this._cacheUsed) { this.purgeCache(); }
-        ember$inflector$lib$system$inflector$$loadUncountable(this.rules, [string.toLowerCase()]);
+        ember$inflector$lib$lib$system$inflector$$loadUncountable(this.rules, [string.toLowerCase()]);
       },
 
       /**
@@ -1795,7 +1797,7 @@
       */
       irregular: function (singular, plural) {
         if (this._cacheUsed) { this.purgeCache(); }
-        ember$inflector$lib$system$inflector$$loadIrregular(this.rules, [[singular, plural]]);
+        ember$inflector$lib$lib$system$inflector$$loadIrregular(this.rules, [[singular, plural]]);
       },
 
       /**
@@ -1832,10 +1834,10 @@
       inflect: function(word, typeRules, irregular) {
         var inflection, substitution, result, lowercase, wordSplit,
           firstPhrase, lastWord, isBlank, isCamelized, isUncountable,
-          isIrregular, isIrregularInverse, rule;
+          isIrregular, rule;
 
-        isBlank = ember$inflector$lib$system$inflector$$BLANK_REGEX.test(word);
-        isCamelized = ember$inflector$lib$system$inflector$$CAMELIZED_REGEX.test(word);
+        isBlank = ember$inflector$lib$lib$system$inflector$$BLANK_REGEX.test(word);
+        isCamelized = ember$inflector$lib$lib$system$inflector$$CAMELIZED_REGEX.test(word);
         firstPhrase = "";
 
         if (isBlank) {
@@ -1843,7 +1845,7 @@
         }
 
         lowercase = word.toLowerCase();
-        wordSplit = ember$inflector$lib$system$inflector$$LAST_WORD_DASHED_REGEX.exec(word) || ember$inflector$lib$system$inflector$$LAST_WORD_CAMELIZED_REGEX.exec(word);
+        wordSplit = ember$inflector$lib$lib$system$inflector$$LAST_WORD_DASHED_REGEX.exec(word) || ember$inflector$lib$lib$system$inflector$$LAST_WORD_CAMELIZED_REGEX.exec(word);
         if (wordSplit){
           firstPhrase = wordSplit[1];
           lastWord = wordSplit[2].toLowerCase();
@@ -1862,7 +1864,7 @@
             return isIrregular;
           }
           else {
-            isIrregular = (isCamelized) ? ember$inflector$lib$system$inflector$$capitalize(isIrregular) : isIrregular;
+            isIrregular = (isCamelized) ? ember$inflector$lib$lib$system$inflector$$capitalize(isIrregular) : isIrregular;
             return firstPhrase + isIrregular;
           }
         }
@@ -1887,17 +1889,17 @@
       }
     };
 
-    var ember$inflector$lib$system$inflector$$default = ember$inflector$lib$system$inflector$$Inflector;
+    var ember$inflector$lib$lib$system$inflector$$default = ember$inflector$lib$lib$system$inflector$$Inflector;
 
-    function ember$inflector$lib$system$string$$pluralize(word) {
-      return ember$inflector$lib$system$inflector$$default.inflector.pluralize(word);
+    function ember$inflector$lib$lib$system$string$$pluralize(word) {
+      return ember$inflector$lib$lib$system$inflector$$default.inflector.pluralize(word);
     }
 
-    function ember$inflector$lib$system$string$$singularize(word) {
-      return ember$inflector$lib$system$inflector$$default.inflector.singularize(word);
+    function ember$inflector$lib$lib$system$string$$singularize(word) {
+      return ember$inflector$lib$lib$system$inflector$$default.inflector.singularize(word);
     }
 
-    var ember$inflector$lib$system$inflections$$default = {
+    var ember$inflector$lib$lib$system$inflections$$default = {
       plurals: [
         [/$/, 's'],
         [/s$/i, 's'],
@@ -1976,109 +1978,96 @@
       ]
     };
 
-    ember$inflector$lib$system$inflector$$default.inflector = new ember$inflector$lib$system$inflector$$default(ember$inflector$lib$system$inflections$$default);
+    ember$inflector$lib$lib$system$inflector$$default.inflector = new ember$inflector$lib$lib$system$inflector$$default(ember$inflector$lib$lib$system$inflections$$default);
 
-    if (Ember.HTMLBars) {
-      /**
-       *
-       * If you have Ember Inflector (such as if Ember Data is present),
-       * singularize a word. For example, turn "oxen" into "ox".
-       *
-       * Example:
-       *
-       * {{singularize myProperty}}
-       * {{singularize "oxen"}}
-       *
-       * @for Ember.HTMLBars.helpers
-       * @method singularize
-       * @param {String|Property} word word to singularize
-      */
-      Ember.HTMLBars._registerHelper('singularize', Ember.HTMLBars.makeBoundHelper(function(params){
-        return ember$inflector$lib$system$string$$singularize(params[0]);
-      }));
-
-      /**
-       *
-       * If you have Ember Inflector (such as if Ember Data is present),
-       * pluralize a word. For example, turn "ox" into "oxen".
-       *
-       * Example:
-       *
-       * {{pluralize count myProperty}}
-       * {{pluralize 1 "oxen"}}
-       * {{pluralize myProperty}}
-       * {{pluralize "ox"}}
-       *
-       * @for Ember.HTMLBars.helpers
-       * @method pluralize
-       * @param {Number|Property} [count] count of objects
-       * @param {String|Property} word word to pluralize
-      */
-      Ember.HTMLBars._registerHelper('pluralize', Ember.HTMLBars.makeBoundHelper(function(params) {
-        var count, word;
-
-        if (params.length === 1) {
-          word = params[0];
-          return ember$inflector$lib$system$string$$pluralize(word);
-        } else {
-          count = params[0];
-          word  = params[1];
-
-          if (count !== 1) {
-            word = ember$inflector$lib$system$string$$pluralize(word);
-          }
-          return count + " " + word;
-        }
-      }));
-    } else {
-      /**
-       *
-       * If you have Ember Inflector (such as if Ember Data is present),
-       * singularize a word. For example, turn "oxen" into "ox".
-       *
-       * Example:
-       *
-       * {{singularize myProperty}}
-       * {{singularize "oxen"}}
-       *
-       * @for Ember.Handlebars.helpers
-       * @method singularize
-       * @param {String|Property} word word to singularize
-      */
-      Ember.Handlebars.helper('singularize', ember$inflector$lib$system$string$$singularize);
-
-      /**
-       *
-       * If you have Ember Inflector (such as if Ember Data is present),
-       * pluralize a word. For example, turn "ox" into "oxen".
-       *
-       * Example:
-       *
-       * {{pluralize count myProperty}}
-       * {{pluralize 1 "oxen"}}
-       * {{pluralize myProperty}}
-       * {{pluralize "ox"}}
-       *
-       * @for Ember.Handlebars.helpers
-       * @method pluralize
-       * @param {Number|Property} [count] count of objects
-       * @param {String|Property} word word to pluralize
-      */
-      Ember.Handlebars.helper('pluralize', function(count, word, options) {
-        if(arguments.length < 3) {
-          return ember$inflector$lib$system$string$$pluralize(count);
-        } else {
-          /* jshint eqeqeq: false */
-          if(count != 1) {
-            /* jshint eqeqeq: true */
-            word = ember$inflector$lib$system$string$$pluralize(word);
-          }
-          return count + " " + word;
-        }
-      });
+    function ember$inflector$lib$lib$utils$register$helper$$registerHelperIteration1(name, helperFunction) {
+      //earlier versions of ember with htmlbars used this
+      ember$lib$main$$default.HTMLBars.helpers[name] = helperFunction;
     }
 
-    if (Ember.EXTEND_PROTOTYPES === true || Ember.EXTEND_PROTOTYPES.String) {
+    function ember$inflector$lib$lib$utils$register$helper$$registerHelperIteration2(name, helperFunction) {
+      //registerHelper has been made private as _registerHelper
+      //this is kept here if anyone is using it
+      ember$lib$main$$default.HTMLBars.registerHelper(name, helperFunction);
+    }
+
+    function ember$inflector$lib$lib$utils$register$helper$$registerHelperIteration3(name, helperFunction) {
+      //latest versin of ember uses this
+      ember$lib$main$$default.HTMLBars._registerHelper(name, helperFunction);
+    }
+
+    function ember$inflector$lib$lib$utils$register$helper$$registerHelper(name, helperFunction) {
+      if (ember$lib$main$$default.HTMLBars) {
+        var fn = ember$lib$main$$default.HTMLBars.makeBoundHelper(helperFunction);
+
+        if (ember$lib$main$$default.HTMLBars._registerHelper) {
+          if (ember$lib$main$$default.HTMLBars.helpers) {
+            ember$inflector$lib$lib$utils$register$helper$$registerHelperIteration1(name, fn);
+          } else {
+            ember$inflector$lib$lib$utils$register$helper$$registerHelperIteration3(name, fn);
+          }
+        } else if (ember$lib$main$$default.HTMLBars.registerHelper) {
+          ember$inflector$lib$lib$utils$register$helper$$registerHelperIteration2(name, fn);
+        }
+      } else if (ember$lib$main$$default.Handlebars) {
+        ember$lib$main$$default.Handlebars.helper(name, helperFunction);
+      }
+    }
+    var ember$inflector$lib$lib$utils$register$helper$$default = ember$inflector$lib$lib$utils$register$helper$$registerHelper;
+
+    /**
+     *
+     * If you have Ember Inflector (such as if Ember Data is present),
+     * singularize a word. For example, turn "oxen" into "ox".
+     *
+     * Example:
+     *
+     * {{singularize myProperty}}
+     * {{singularize "oxen"}}
+     *
+     * @for Ember.HTMLBars.helpers
+     * @method singularize
+     * @param {String|Property} word word to singularize
+    */
+    ember$inflector$lib$lib$utils$register$helper$$default('singularize', function(params){
+      return ember$inflector$lib$lib$system$string$$singularize(params[0]);
+    });
+
+    /**
+     *
+     * If you have Ember Inflector (such as if Ember Data is present),
+     * pluralize a word. For example, turn "ox" into "oxen".
+     *
+     * Example:
+     *
+     * {{pluralize count myProperty}}
+     * {{pluralize 1 "oxen"}}
+     * {{pluralize myProperty}}
+     * {{pluralize "ox"}}
+     *
+     * @for Ember.HTMLBars.helpers
+     * @method pluralize
+     * @param {Number|Property} [count] count of objects
+     * @param {String|Property} word word to pluralize
+    */
+    ember$inflector$lib$lib$utils$register$helper$$default('pluralize', function(params) {
+      var count, word;
+
+      if (params.length === 1) {
+        word = params[0];
+        return ember$inflector$lib$lib$system$string$$pluralize(word);
+      } else {
+        count = params[0];
+        word  = params[1];
+
+        if (count !== 1) {
+          word = ember$inflector$lib$lib$system$string$$pluralize(word);
+        }
+        return count + " " + word;
+      }
+    });
+
+    if (ember$lib$main$$default.EXTEND_PROTOTYPES === true || ember$lib$main$$default.EXTEND_PROTOTYPES.String) {
       /**
         See {{#crossLink "Ember.String/pluralize"}}{{/crossLink}}
 
@@ -2086,7 +2075,7 @@
         @for String
       */
       String.prototype.pluralize = function() {
-        return ember$inflector$lib$system$string$$pluralize(this);
+        return ember$inflector$lib$lib$system$string$$pluralize(this);
       };
 
       /**
@@ -2096,25 +2085,25 @@
         @for String
       */
       String.prototype.singularize = function() {
-        return ember$inflector$lib$system$string$$singularize(this);
+        return ember$inflector$lib$lib$system$string$$singularize(this);
       };
     }
 
-    ember$inflector$lib$system$inflector$$default.defaultRules = ember$inflector$lib$system$inflections$$default;
-    Ember.Inflector        = ember$inflector$lib$system$inflector$$default;
+    ember$inflector$lib$lib$system$inflector$$default.defaultRules = ember$inflector$lib$lib$system$inflections$$default;
+    ember$lib$main$$default.Inflector        = ember$inflector$lib$lib$system$inflector$$default;
 
-    Ember.String.pluralize   = ember$inflector$lib$system$string$$pluralize;
-    Ember.String.singularize = ember$inflector$lib$system$string$$singularize;
+    ember$lib$main$$default.String.pluralize   = ember$inflector$lib$lib$system$string$$pluralize;
+    ember$lib$main$$default.String.singularize = ember$inflector$lib$lib$system$string$$singularize;
 
-    var ember$inflector$lib$main$$default = ember$inflector$lib$system$inflector$$default;
+    var ember$inflector$lib$main$$default = ember$inflector$lib$lib$system$inflector$$default;
 
     if (typeof define !== 'undefined' && define.amd){
       define('ember-inflector', ['exports'], function(__exports__){
-        __exports__['default'] = ember$inflector$lib$system$inflector$$default;
-        return ember$inflector$lib$system$inflector$$default;
+        __exports__['default'] = ember$inflector$lib$lib$system$inflector$$default;
+        return ember$inflector$lib$lib$system$inflector$$default;
       });
     } else if (typeof module !== 'undefined' && module['exports']){
-      module['exports'] = ember$inflector$lib$system$inflector$$default;
+      module['exports'] = ember$inflector$lib$lib$system$inflector$$default;
     }
 
     /**
@@ -2233,7 +2222,7 @@
       pathForType: function(type) {
         var decamelized = activemodel$adapter$lib$system$active$model$adapter$$decamelize(type);
         var underscored = activemodel$adapter$lib$system$active$model$adapter$$underscore(decamelized);
-        return ember$inflector$lib$system$string$$pluralize(underscored);
+        return ember$inflector$lib$lib$system$string$$pluralize(underscored);
       },
 
       /**
@@ -3933,7 +3922,7 @@
         @return {String} the model's typeKey
       */
       typeForRoot: function(key) {
-        return ember$data$lib$serializers$rest$serializer$$camelize(ember$inflector$lib$system$string$$singularize(key));
+        return ember$data$lib$serializers$rest$serializer$$camelize(ember$inflector$lib$lib$system$string$$singularize(key));
       },
 
       // SERIALIZE
@@ -4260,7 +4249,7 @@
         if (kind === "belongsTo") {
           return key + "_id";
         } else if (kind === "hasMany") {
-          return ember$inflector$lib$system$string$$singularize(key) + "_ids";
+          return ember$inflector$lib$lib$system$string$$singularize(key) + "_ids";
         } else {
           return key;
         }
@@ -4478,7 +4467,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.25ed16ccb1'
+      VERSION: '1.0.0-beta.17+canary.8d1f6032bb'
     });
 
     if (Ember.libraries) {
@@ -10966,7 +10955,7 @@
         @return {String} if the adapter can generate one, an ID
       */
       _normalizeTypeKey: function(key) {
-        return ember$data$lib$system$store$$camelize(ember$inflector$lib$system$string$$singularize(key));
+        return ember$data$lib$system$store$$camelize(ember$inflector$lib$lib$system$string$$singularize(key));
       }
     });
 
@@ -12329,7 +12318,7 @@
       typeKey = meta.type || meta.key;
       if (typeof typeKey === 'string') {
         if (meta.kind === 'hasMany') {
-          typeKey = ember$inflector$lib$system$string$$singularize(typeKey);
+          typeKey = ember$inflector$lib$lib$system$string$$singularize(typeKey);
         }
         type = store.modelFor(typeKey);
       } else {
