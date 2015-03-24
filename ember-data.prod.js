@@ -4478,7 +4478,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.77bf4387e4'
+      VERSION: '1.0.0-beta.17+canary.25ed16ccb1'
     });
 
     if (Ember.libraries) {
@@ -10879,7 +10879,9 @@
         @return {DS.Serializer}
       */
       serializerFor: function(type) {
-        type = this.modelFor(type);
+        if (type !== 'application') {
+          type = this.modelFor(type);
+        }
 
         var serializer = this.lookupSerializer(type.typeKey) || this.lookupSerializer('application');
 
