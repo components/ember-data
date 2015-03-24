@@ -4478,7 +4478,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.c93909398a'
+      VERSION: '1.0.0-beta.17+canary.77bf4387e4'
     });
 
     if (Ember.libraries) {
@@ -7371,7 +7371,7 @@
         ```
 
         @method attributes
-        @return {Array} All attributes for the current snapshot
+        @return {Object} All attributes of the current snapshot
       */
       attributes: function() {
         return Ember.copy(this._attributes);
