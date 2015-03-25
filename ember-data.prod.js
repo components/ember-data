@@ -822,9 +822,10 @@
         @param {String} type
         @param {String|Array} id single id or array of ids
         @param {DS.Snapshot|Array} snapshot single snapshot or array of snapshots
+        @param {String} requestType
         @return {String} url
       */
-      buildURL: function(type, id, snapshot) {
+      buildURL: function(type, id, snapshot, requestType) {
         var url = [];
         var host = ember$data$lib$adapters$build$url$mixin$$get(this, 'host');
         var prefix = this.urlPrefix();
@@ -1094,7 +1095,7 @@
         @return {Promise} promise
       */
       find: function(store, type, id, snapshot) {
-        return this.ajax(this.buildURL(type.typeKey, id, snapshot), 'GET');
+        return this.ajax(this.buildURL(type.typeKey, id, snapshot, 'find'), 'GET');
       },
 
       /**
@@ -1112,13 +1113,15 @@
         @return {Promise} promise
       */
       findAll: function(store, type, sinceToken) {
-        var query;
+        var query, url;
 
         if (sinceToken) {
           query = { since: sinceToken };
         }
 
-        return this.ajax(this.buildURL(type.typeKey), 'GET', { data: query });
+        url = this.buildURL(type.typeKey, null, null, 'findAll');
+
+        return this.ajax(url, 'GET', { data: query });
       },
 
       /**
@@ -1139,10 +1142,13 @@
         @return {Promise} promise
       */
       findQuery: function(store, type, query) {
+        var url = this.buildURL(type.typeKey, null, null, 'findQuery');
+
         if (this.sortQueryParams) {
           query = this.sortQueryParams(query);
         }
-        return this.ajax(this.buildURL(type.typeKey), 'GET', { data: query });
+
+        return this.ajax(url, 'GET', { data: query });
       },
 
       /**
@@ -1179,7 +1185,8 @@
         @return {Promise} promise
       */
       findMany: function(store, type, ids, snapshots) {
-        return this.ajax(this.buildURL(type.typeKey, ids, snapshots), 'GET', { data: { ids: ids } });
+        var url = this.buildURL(type.typeKey, ids, snapshots, 'findMany');
+        return this.ajax(url, 'GET', { data: { ids: ids } });
       },
 
       /**
@@ -1220,7 +1227,9 @@
           url = host + url;
         }
 
-        return this.ajax(this.urlPrefix(url, this.buildURL(type, id)), 'GET');
+        url = this.urlPrefix(url, this.buildURL(type, id, null, 'findHasMany'));
+
+        return this.ajax(url, 'GET');
       },
 
       /**
@@ -1254,7 +1263,8 @@
         var id   = snapshot.id;
         var type = snapshot.typeKey;
 
-        return this.ajax(this.urlPrefix(url, this.buildURL(type, id)), 'GET');
+        url = this.urlPrefix(url, this.buildURL(type, id, null, 'findBelongsTo'));
+        return this.ajax(url, 'GET');
       },
 
       /**
@@ -1276,10 +1286,11 @@
       createRecord: function(store, type, snapshot) {
         var data = {};
         var serializer = store.serializerFor(type.typeKey);
+        var url = this.buildURL(type.typeKey, null, snapshot, 'createRecord');
 
         serializer.serializeIntoHash(data, type, snapshot, { includeId: true });
 
-        return this.ajax(this.buildURL(type.typeKey, null, snapshot), "POST", { data: data });
+        return this.ajax(url, "POST", { data: data });
       },
 
       /**
@@ -1305,8 +1316,9 @@
         serializer.serializeIntoHash(data, type, snapshot);
 
         var id = snapshot.id;
+        var url = this.buildURL(type.typeKey, id, snapshot, 'updateRecord');
 
-        return this.ajax(this.buildURL(type.typeKey, id, snapshot), "PUT", { data: data });
+        return this.ajax(url, "PUT", { data: data });
       },
 
       /**
@@ -1323,7 +1335,7 @@
       deleteRecord: function(store, type, snapshot) {
         var id = snapshot.id;
 
-        return this.ajax(this.buildURL(type.typeKey, id, snapshot), "DELETE");
+        return this.ajax(this.buildURL(type.typeKey, id, snapshot, 'deleteRecord'), "DELETE");
       },
 
       _stripIDFromURL: function(store, snapshot) {
@@ -4461,7 +4473,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.9c26d0268c'
+      VERSION: '1.0.0-beta.17+canary.e8ceeeb4c0'
     });
 
     if (Ember.libraries) {
