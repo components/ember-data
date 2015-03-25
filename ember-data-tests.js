@@ -76,6 +76,8 @@ eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/syste
 
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/system/model\');\ntest(\'lib/system/model/errors.js should pass jshint\', function() { \n  ok(true, \'lib/system/model/errors.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/system/model/errors.jshint.js");
 
+eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/system/model/errors\');\ntest(\'lib/system/model/errors/invalid.js should pass jshint\', function() { \n  ok(true, \'lib/system/model/errors/invalid.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/system/model/errors/invalid.jshint.js");
+
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/system/model\');\ntest(\'lib/system/model/model.js should pass jshint\', function() { \n  ok(true, \'lib/system/model/model.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/system/model/model.jshint.js");
 
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/system/model\');\ntest(\'lib/system/model/states.js should pass jshint\', function() { \n  ok(true, \'lib/system/model/states.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/system/model/states.jshint.js");
