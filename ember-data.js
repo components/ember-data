@@ -4491,7 +4491,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.e8ceeeb4c0'
+      VERSION: '1.0.0-beta.17+canary.e463719fbe'
     });
 
     if (Ember.libraries) {
@@ -6480,6 +6480,7 @@
       //multiple possible typeKeys
       this.inverseKeyForImplicit = this.store.modelFor(this.record.constructor).typeKey + this.key;
       this.linkPromise = null;
+      this.hasData = false;
     };
 
     ember$data$lib$system$relationships$state$relationship$$Relationship.prototype = {
@@ -6695,7 +6696,11 @@
       },
 
       notifyRecordRelationshipAdded: Ember.K,
-      notifyRecordRelationshipRemoved: Ember.K
+      notifyRecordRelationshipRemoved: Ember.K,
+
+      setHasData: function() {
+        this.hasData = true;
+      }
     };
 
 
@@ -9450,6 +9455,10 @@
         // Set the properties specified on the record.
         record.setProperties(properties);
 
+        record.eachRelationship(function(key, descriptor) {
+          record._relationships[key].setHasData(true);
+        });
+
         return record;
       },
 
@@ -11178,13 +11187,13 @@
           relationship.updateLink(data.links[key]);
         }
 
-        if (kind === 'belongsTo') {
-          if (value === undefined) {
-            return;
+        if (value !== undefined) {
+          if (kind === 'belongsTo') {
+            relationship.setCanonicalRecord(value);
+          } else if (kind === 'hasMany') {
+            relationship.updateRecordsFromAdapter(value);
           }
-          relationship.setCanonicalRecord(value);
-        } else if (kind === 'hasMany' && value) {
-          relationship.updateRecordsFromAdapter(value);
+          relationship.setHasData(true);
         }
       });
     }
