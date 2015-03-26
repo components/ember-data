@@ -4491,7 +4491,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.e463719fbe'
+      VERSION: '1.0.0-beta.17+canary.cb4f6a7365'
     });
 
     if (Ember.libraries) {
@@ -10008,7 +10008,7 @@
         @param {Array} records
         @param {String or subclass of DS.Model} type
         @param {Resolver} resolver
-        @return {DS.ManyArray} records
+        @return {Promise} promise
       */
       findMany: function(records) {
         var store = this;
