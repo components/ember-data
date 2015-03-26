@@ -4491,7 +4491,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.cb4f6a7365'
+      VERSION: '1.0.0-beta.17+canary.b421b880eb'
     });
 
     if (Ember.libraries) {
