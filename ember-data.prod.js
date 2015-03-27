@@ -4473,7 +4473,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.060f2d3e2f'
+      VERSION: '1.0.0-beta.17+canary.6990154edc'
     });
 
     if (Ember.libraries) {
@@ -7601,9 +7601,7 @@
     var ember$data$lib$system$model$model$$map = Ember.ArrayPolyfills.map;
     var ember$data$lib$system$model$model$$intersection = Ember.EnumerableUtils.intersection;
     var ember$data$lib$system$model$model$$RESERVED_MODEL_PROPS = [
-      'attributes', 'currentState', 'data',
-      'relatedTypes', 'relationshipNames', 'relationships',
-      'relationshipsByName', 'transformedAttributes', 'store'
+      'currentState', 'data', 'store'
     ];
 
     var ember$data$lib$system$model$model$$retrieveFromCurrentState = Ember.computed('currentState', function(key, value) {
