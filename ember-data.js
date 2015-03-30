@@ -4491,7 +4491,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.6990154edc'
+      VERSION: '1.0.0-beta.17+canary.5b2a17e823'
     });
 
     if (Ember.libraries) {
@@ -7660,7 +7660,7 @@
       'currentState', 'data', 'store'
     ];
 
-    var ember$data$lib$system$model$model$$retrieveFromCurrentState = Ember.computed('currentState', function(key, value) {
+    var ember$data$lib$system$model$model$$retrieveFromCurrentState = Ember.computed('currentState', function(key) {
       return ember$data$lib$system$model$model$$get(ember$data$lib$system$model$model$$get(this, 'currentState'), key);
     }).readOnly();
 
