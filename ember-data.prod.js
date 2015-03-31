@@ -1842,7 +1842,8 @@
           firstPhrase, lastWord, isBlank, isCamelized, isUncountable,
           isIrregular, rule;
 
-        isBlank = ember$inflector$lib$lib$system$inflector$$BLANK_REGEX.test(word);
+        isBlank = !word || ember$inflector$lib$lib$system$inflector$$BLANK_REGEX.test(word);
+
         isCamelized = ember$inflector$lib$lib$system$inflector$$CAMELIZED_REGEX.test(word);
         firstPhrase = "";
 
