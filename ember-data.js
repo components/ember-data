@@ -4491,7 +4491,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.5b2a17e823'
+      VERSION: '1.0.0-beta.17+canary.339b79aa3e'
     });
 
     if (Ember.libraries) {
@@ -6768,12 +6768,12 @@
       */
       isLoaded: false,
 
-       /**
-         The relationship which manages this array.
+      /**
+        The relationship which manages this array.
 
-         @property {ManyRelationship} relationship
-         @private
-       */
+        @property {ManyRelationship} relationship
+        @private
+      */
       relationship: null,
 
       internalReplace: function(idx, amt, objects) {
@@ -9156,9 +9156,9 @@
           return ember$data$lib$system$model$attributes$$getDefaultValue(this, options, key);
         }
 
-      // `data` is never set directly. However, it may be
-      // invalidated from the state manager's setData
-      // event.
+        // `data` is never set directly. However, it may be
+        // invalidated from the state manager's setData
+        // event.
       }).meta(meta);
     }
     var ember$data$lib$system$model$attributes$$default = ember$data$lib$system$model$attributes$$attr;
