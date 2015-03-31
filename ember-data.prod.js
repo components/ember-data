@@ -309,13 +309,12 @@
         ```
 
         @method serialize
-        @param {DS.Model} record
+        @param {DS.Snapshot} snapshot
         @param {Object}   options
-        @return {Object} serialized record
+        @return {Object} serialized snapshot
       */
-      serialize: function(record, options) {
-        var snapshot = record._createSnapshot();
-        return ember$data$lib$system$adapter$$get(record, 'store').serializerFor(snapshot.typeKey).serialize(snapshot, options);
+      serialize: function(snapshot, options) {
+        return ember$data$lib$system$adapter$$get(snapshot.record, 'store').serializerFor(snapshot.typeKey).serialize(snapshot, options);
       },
 
       /**
@@ -4474,7 +4473,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.e1887fdf27'
+      VERSION: '1.0.0-beta.17+canary.d85526c626'
     });
 
     if (Ember.libraries) {
