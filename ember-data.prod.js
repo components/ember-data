@@ -828,8 +828,12 @@
         var url = [];
         var host = ember$data$lib$adapters$build$url$mixin$$get(this, 'host');
         var prefix = this.urlPrefix();
+        var path;
 
-        if (type) { url.push(this.pathForType(type)); }
+        if (type) {
+          path = this.pathForType(type);
+          if (path) { url.push(path); }
+        }
 
         //We might get passed in an array of ids from findMany
         //in which case we don't want to modify the url, as the
@@ -4473,7 +4477,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.d85526c626'
+      VERSION: '1.0.0-beta.17+canary.1be7a77eaf'
     });
 
     if (Ember.libraries) {
