@@ -4495,7 +4495,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.58a00dbe65'
+      VERSION: '1.0.0-beta.17+canary.2c575aac0e'
     });
 
     if (Ember.libraries) {
@@ -13131,7 +13131,7 @@
     Ember.RSVP.Promise.cast = Ember.RSVP.Promise.cast || Ember.RSVP.resolve;
 
     Ember.runInDebug(function() {
-      if (Ember.VERSION.match(/^1\.[0-7]\./)) {
+      if (Ember.VERSION.match(/1\.[0-7]\./)) {
         throw new Ember.Error("Ember Data requires at least Ember 1.8.0, but you have " +
                               Ember.VERSION +
                               ". Please upgrade your version of Ember, then upgrade Ember Data");
