@@ -138,6 +138,10 @@ eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/trans
 
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/transforms\');\ntest(\'lib/transforms/string.js should pass jshint\', function() { \n  ok(true, \'lib/transforms/string.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/transforms/string.jshint.js");
 
+eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/utils\');\ntest(\'lib/utils/computed-polyfill.js should pass jshint\', function() { \n  ok(true, \'lib/utils/computed-polyfill.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/utils/computed-polyfill.jshint.js");
+
+eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/utils\');\ntest(\'lib/utils/supports-computed-getter-setter.js should pass jshint\', function() { \n  ok(true, \'lib/utils/supports-computed-getter-setter.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/utils/supports-computed-getter-setter.jshint.js");
+
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - tests/integration/adapter\');\ntest(\'tests/integration/adapter/build-url-mixin-test.js should pass jshint\', function() { \n  ok(true, \'tests/integration/adapter/build-url-mixin-test.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/tests/integration/adapter/build-url-mixin-test.jshint.js");
 
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - tests/integration/adapter\');\ntest(\'tests/integration/adapter/find-all-test.js should pass jshint\', function() { \n  ok(true, \'tests/integration/adapter/find-all-test.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/tests/integration/adapter/find-all-test.jshint.js");

@@ -4495,7 +4495,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.1be7a77eaf'
+      VERSION: '1.0.0-beta.17+canary.58a00dbe65'
     });
 
     if (Ember.libraries) {
@@ -8892,6 +8892,53 @@
     });
 
     var ember$data$lib$system$model$model$$default = ember$data$lib$system$model$model$$Model;
+    var ember$data$lib$utils$supports$computed$getter$setter$$supportsComputedGetterSetter;
+
+    try {
+      Ember.computed({
+        get: function() { },
+        set: function() { }
+      });
+      ember$data$lib$utils$supports$computed$getter$setter$$supportsComputedGetterSetter = true;
+    } catch(e) {
+      ember$data$lib$utils$supports$computed$getter$setter$$supportsComputedGetterSetter = false;
+    }
+
+    var ember$data$lib$utils$supports$computed$getter$setter$$default = ember$data$lib$utils$supports$computed$getter$setter$$supportsComputedGetterSetter;
+
+    var ember$data$lib$utils$computed$polyfill$$computed = Ember.computed;
+
+    var ember$data$lib$utils$computed$polyfill$$default = function() {
+      var polyfillArguments = [];
+      var config = arguments[arguments.length - 1];
+
+      if (typeof config === 'function' || ember$data$lib$utils$supports$computed$getter$setter$$default) {
+        return ember$data$lib$utils$computed$polyfill$$computed.apply(null, arguments);
+      }
+
+      for (var i = 0, l = arguments.length - 1; i < l; i++) {
+        polyfillArguments.push(arguments[i]);
+      }
+
+      var func;
+      if (config.set) {
+        func = function(key, value) {
+          if (arguments.length > 1) {
+            return config.set.call(this, key, value);
+          } else {
+            return config.get.call(this, key);
+          }
+        };
+      } else {
+        func = function(key) {
+          return config.get.call(this, key);
+        };
+      }
+
+      polyfillArguments.push(func);
+
+      return ember$data$lib$utils$computed$polyfill$$computed.apply(null, polyfillArguments);
+    };
 
     /**
       @module ember-data
@@ -9135,8 +9182,15 @@
         options: options
       };
 
-      return Ember.computed(function(key, value) {
-        if (arguments.length > 1) {
+      return ember$data$lib$utils$computed$polyfill$$default({
+        get: function(key) {
+          if (ember$data$lib$system$model$attributes$$hasValue(this, key)) {
+            return ember$data$lib$system$model$attributes$$getValue(this, key);
+          } else {
+            return ember$data$lib$system$model$attributes$$getDefaultValue(this, options, key);
+          }
+        },
+        set: function(key, value) {
           Ember.assert("You may not set `id` as an attribute on your model. Please remove any lines that look like: `id: DS.attr('<type>')` from " + this.constructor.toString(), key !== 'id');
           var oldValue = ember$data$lib$system$model$attributes$$getValue(this, key);
 
@@ -9154,15 +9208,7 @@
           }
 
           return value;
-        } else if (ember$data$lib$system$model$attributes$$hasValue(this, key)) {
-          return ember$data$lib$system$model$attributes$$getValue(this, key);
-        } else {
-          return ember$data$lib$system$model$attributes$$getDefaultValue(this, options, key);
         }
-
-        // `data` is never set directly. However, it may be
-        // invalidated from the state manager's setData
-        // event.
       }).meta(meta);
     }
     var ember$data$lib$system$model$attributes$$default = ember$data$lib$system$model$attributes$$attr;
@@ -12281,9 +12327,12 @@
         key: null
       };
 
-      return Ember.computed(function(key, value) {
-        if (arguments.length>1) {
-          if ( value === undefined ) {
+      return ember$data$lib$utils$computed$polyfill$$default({
+        get: function(key) {
+          return this._relationships[key].getRecord();
+        },
+        set: function(key, value) {
+          if (value === undefined) {
             value = null;
           }
           if (value && value.then) {
@@ -12291,9 +12340,9 @@
           } else {
             this._relationships[key].setRecord(value);
           }
-        }
 
-        return this._relationships[key].getRecord();
+          return this._relationships[key].getRecord();
+        }
       }).meta(meta);
     }
 
@@ -13082,7 +13131,7 @@
     Ember.RSVP.Promise.cast = Ember.RSVP.Promise.cast || Ember.RSVP.resolve;
 
     Ember.runInDebug(function() {
-      if (Ember.VERSION.match(/1\.[0-7]\./)) {
+      if (Ember.VERSION.match(/^1\.[0-7]\./)) {
         throw new Ember.Error("Ember Data requires at least Ember 1.8.0, but you have " +
                               Ember.VERSION +
                               ". Please upgrade your version of Ember, then upgrade Ember Data");
