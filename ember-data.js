@@ -4496,7 +4496,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.ad401a0c32'
+      VERSION: '1.0.0-beta.17+canary.0e09351356'
     });
 
     if (Ember.libraries) {
@@ -6926,8 +6926,10 @@
         var type = ember$data$lib$system$many$array$$get(this, 'type');
         var record;
 
-        var klass = store.modelFactoryFor(type);
+        var klass = store.modelFor(type);
 
+        // TODO: Do we need to actually make sure the type defined in the relationship exists for polymorphic relationships?
+        // It seems polymorphic relationships should be able to use any DS.Model instance
         Ember.assert("You cannot add '" + klass.typeKey + "' records to this polymorphic relationship.", !ember$data$lib$system$many$array$$get(this, 'isPolymorphic'));
 
         record = store.createRecord(type, hash);
