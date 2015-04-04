@@ -4496,7 +4496,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.0e09351356'
+      VERSION: '1.0.0-beta.17+canary.a712fd9d02'
     });
 
     if (Ember.libraries) {
@@ -4504,6 +4504,13 @@
     }
 
     var ember$data$lib$core$$default = ember$data$lib$core$$DS;
+
+    var ember$data$lib$system$normalize$type$key$$camelize = Ember.String.camelize;
+
+    function ember$data$lib$system$normalize$type$key$$normalizeTypeKey(typeKey) {
+      return ember$data$lib$system$normalize$type$key$$camelize(ember$inflector$lib$lib$system$string$$singularize(typeKey));
+    }
+    var ember$data$lib$system$normalize$type$key$$default = ember$data$lib$system$normalize$type$key$$normalizeTypeKey;
     var ember$data$lib$system$promise$proxies$$Promise = Ember.RSVP.Promise;
     var ember$data$lib$system$promise$proxies$$get = Ember.get;
 
@@ -4673,6 +4680,32 @@
 
       return serializer;
     }
+    function ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(meta) {
+      var typeKey, type;
+
+      typeKey = meta.type || meta.key;
+      if (typeof typeKey === 'string') {
+        if (meta.kind === 'hasMany') {
+          typeKey = ember$data$lib$system$normalize$type$key$$default(typeKey);
+        }
+        type = typeKey;
+      } else {
+        type = meta.type;
+      }
+
+      return type;
+    }
+
+    function ember$data$lib$system$relationship$meta$$relationshipFromMeta(meta) {
+      return {
+        key:  meta.key,
+        kind: meta.kind,
+        type: ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(meta),
+        options:    meta.options,
+        parentType: meta.parentType,
+        isRelationship: true
+      };
+    }
 
 
     var ember$data$lib$system$store$finders$$get = Ember.get;
@@ -4731,11 +4764,12 @@
       }, null, "DS: Extract payload of " + type);
     }
 
-    function ember$data$lib$system$store$finders$$_findHasMany(adapter, store, record, link, relationship) {
+    function ember$data$lib$system$store$finders$$_findHasMany(adapter, store, record, link, relationshipMeta) {
       var snapshot = record._createSnapshot();
-      var promise = adapter.findHasMany(store, snapshot, link, relationship);
-      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, relationship.type);
-      var label = "DS: Handle Adapter#findHasMany of " + record + " : " + relationship.type;
+      var promise = adapter.findHasMany(store, snapshot, link, relationshipMeta);
+      var typeKey = ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(relationshipMeta);
+      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, typeKey);
+      var label = "DS: Handle Adapter#findHasMany of " + record + " : " + typeKey;
 
       promise = ember$data$lib$system$store$finders$$Promise.cast(promise, label);
       promise = ember$data$lib$system$store$common$$_guard(promise, ember$data$lib$system$store$common$$_bind(ember$data$lib$system$store$common$$_objectIsAlive, store));
@@ -4743,14 +4777,14 @@
 
       return promise.then(function(adapterPayload) {
         return store._adapterRun(function() {
-          var payload = serializer.extract(store, store.modelFor(relationship.type), adapterPayload, null, 'findHasMany');
+          var payload = serializer.extract(store, store.modelFor(typeKey), adapterPayload, null, 'findHasMany');
 
           Ember.assert("The response from a findHasMany must be an Array, not " + Ember.inspect(payload), Ember.typeOf(payload) === 'array');
 
-          var records = store.pushMany(relationship.type, payload);
+          var records = store.pushMany(typeKey, payload);
           return records;
         });
-      }, null, "DS: Extract payload of " + record + " : hasMany " + relationship.type);
+      }, null, "DS: Extract payload of " + record + " : hasMany " + typeKey);
     }
 
     function ember$data$lib$system$store$finders$$_findBelongsTo(adapter, store, record, link, relationship) {
@@ -6709,32 +6743,6 @@
     };
 
     var ember$data$lib$system$relationships$state$relationship$$default = ember$data$lib$system$relationships$state$relationship$$Relationship;
-    function ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(meta) {
-      var typeKey, type;
-
-      typeKey = meta.type || meta.key;
-      if (typeof typeKey === 'string') {
-        if (meta.kind === 'hasMany') {
-          typeKey = ember$inflector$lib$lib$system$string$$singularize(typeKey);
-        }
-        type = typeKey;
-      } else {
-        type = meta.type;
-      }
-
-      return type;
-    }
-
-    function ember$data$lib$system$relationship$meta$$relationshipFromMeta(meta) {
-      return {
-        key:  meta.key,
-        kind: meta.kind,
-        type: ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(meta),
-        options:    meta.options,
-        parentType: meta.parentType,
-        isRelationship: true
-      };
-    }
 
     var ember$data$lib$system$many$array$$get = Ember.get;
     var ember$data$lib$system$many$array$$set = Ember.set;
@@ -6926,11 +6934,14 @@
         var type = ember$data$lib$system$many$array$$get(this, 'type');
         var record;
 
-        var klass = store.modelFor(type);
+        var klass = store.modelFactoryFor(type);
+
+        if (klass) {
+          Ember.assert("You cannot add '" + klass.typeKey + "' records to this polymorphic relationship.", !ember$data$lib$system$many$array$$get(this, 'isPolymorphic'));
+        }
 
         // TODO: Do we need to actually make sure the type defined in the relationship exists for polymorphic relationships?
         // It seems polymorphic relationships should be able to use any DS.Model instance
-        Ember.assert("You cannot add '" + klass.typeKey + "' records to this polymorphic relationship.", !ember$data$lib$system$many$array$$get(this, 'isPolymorphic'));
 
         record = store.createRecord(type, hash);
         this.pushObject(record);
@@ -7040,15 +7051,16 @@
     };
 
     ember$data$lib$system$relationships$state$has$many$$ManyRelationship.prototype.notifyRecordRelationshipAdded = function(record, idx) {
-      var type = this.store.modelFor(this.relationshipMeta.type);
+      var typeKey   = ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(this.relationshipMeta);
+      var typeClass = this.store.modelFor(typeKey);
       Ember.assert("You cannot add '" + record.constructor.typeKey + "' records to the " + this.record.constructor.typeKey + "." + this.key + " relationship (only '" + this.belongsToType + "' allowed)", (function () {
-        if (type.__isMixin) {
-          return type.__mixin.detect(record);
+        if (typeClass.__isMixin) {
+          return typeClass.__mixin.detect(record);
         }
-        if (type.superclass && type.superclass !== DS.Model) {
-          type = type.superclass;
+        if (typeClass.superclass && typeClass.superclass !== DS.Model) {
+          typeClass = typeClass.superclass;
         }
-        return record instanceof type;
+        return record instanceof typeClass;
       })());
 
       this.record.notifyHasManyAdded(this.key, record, idx);
@@ -9300,8 +9312,6 @@
     var ember$data$lib$system$store$$copy = Ember.copy;
     var ember$data$lib$system$store$$Store;
 
-    var ember$data$lib$system$store$$camelize = Ember.String.camelize;
-
     var ember$data$lib$system$store$$Service = Ember.Service;
     if (!ember$data$lib$system$store$$Service) {
       ember$data$lib$system$store$$Service = Ember.Object;
@@ -10621,14 +10631,14 @@
       */
 
       _modelForMixin: function(key) {
-        var singularizedKey = ember$inflector$lib$lib$system$string$$singularize(key);
+        var normalizedKey = ember$data$lib$system$normalize$type$key$$default(key);
         var registry = this.container._registry ? this.container._registry : this.container;
-        var mixin = registry.resolve('mixin:' + singularizedKey);
+        var mixin = registry.resolve('mixin:' + normalizedKey);
         if (mixin) {
           //Cache the class as a model
-          registry.register('model:' + singularizedKey, DS.Model.extend(mixin));
+          registry.register('model:' + normalizedKey, DS.Model.extend(mixin));
         }
-        var factory = this.modelFactoryFor(singularizedKey);
+        var factory = this.modelFactoryFor(normalizedKey);
         if (factory) {
           factory.__isMixin = true;
           factory.__mixin = mixin;
@@ -10648,22 +10658,25 @@
       */
       modelFor: function(key) {
         var factory;
+        var normalizedTypeKey;
 
         if (typeof key === 'string') {
-          factory = this.modelFactoryFor(key);
+          normalizedTypeKey = ember$data$lib$system$normalize$type$key$$default(key);
+          factory = this.modelFactoryFor(normalizedTypeKey);
           if (!factory) {
             //Support looking up mixins as base types for polymorphic relationships
-            factory = this._modelForMixin(key);
+            factory = this._modelForMixin(normalizedTypeKey);
           }
           if (!factory) {
-            throw new Ember.Error("No model was found for '" + key + "'");
+            throw new Ember.Error("No model was found for '" + normalizedTypeKey + "'");
           }
-          factory.typeKey = factory.typeKey || this._normalizeTypeKey(key);
+          factory.typeKey = factory.typeKey || normalizedTypeKey;
         } else {
+          // TODO: This won't be supported in the future.
           // A factory already supplied. Ensure it has a normalized key.
           factory = key;
           if (factory.typeKey) {
-            factory.typeKey = this._normalizeTypeKey(factory.typeKey);
+            factory.typeKey = ember$data$lib$system$normalize$type$key$$default(factory.typeKey);
           }
         }
 
@@ -10672,8 +10685,7 @@
       },
 
       modelFactoryFor: function(key) {
-        var singularized = ember$inflector$lib$lib$system$string$$singularize(key);
-        return this.container.lookupFactory('model:' + singularized);
+        return this.container.lookupFactory('model:' + ember$data$lib$system$normalize$type$key$$default(key));
       },
 
       /**
@@ -11142,19 +11154,6 @@
         }
 
         delete this._containerCache;
-      },
-
-      /**
-        All typeKeys are camelCase internally. Changing this function may
-        require changes to other normalization hooks (such as typeForRoot).
-
-        @method _normalizeTypeKey
-        @private
-        @param {String} type
-        @return {String} if the adapter can generate one, an ID
-      */
-      _normalizeTypeKey: function(key) {
-        return ember$data$lib$system$store$$camelize(ember$inflector$lib$lib$system$string$$singularize(key));
       }
     });
 
@@ -12633,7 +12632,6 @@
         @method inverseFor
         @static
         @param {String} name the name of the relationship
-        @param {DS.Store} store the current store
         @return {Object} the inverse relationship, or null
       */
       inverseFor: function(name) {
