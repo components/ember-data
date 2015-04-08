@@ -843,7 +843,9 @@
         if (prefix) { url.unshift(prefix); }
 
         url = url.join('/');
-        if (!host && url) { url = '/' + url; }
+        if (!host && url && url.charAt(0) !== '/') {
+          url = '/' + url;
+        }
 
         return url;
       },
@@ -1599,7 +1601,7 @@
         return string.endsWith(suffix);
       }
     }
-    var ember$lib$main$$default = self.Ember;
+    var ember$lib$main$$default = Ember;
 
     var ember$inflector$lib$lib$system$inflector$$capitalize = ember$lib$main$$default.String.capitalize;
 
@@ -4477,7 +4479,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.bcff59b545'
+      VERSION: '1.0.0-beta.17+canary.9013d86936'
     });
 
     if (Ember.libraries) {
