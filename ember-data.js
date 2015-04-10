@@ -824,12 +824,42 @@
 
         @method buildURL
         @param {String} type
-        @param {String|Array} id single id or array of ids
+        @param {String|Array|Object} id single id or array of ids or query
         @param {DS.Snapshot|Array} snapshot single snapshot or array of snapshots
         @param {String} requestType
         @return {String} url
       */
       buildURL: function(type, id, snapshot, requestType) {
+        switch (requestType) {
+          case 'find':
+            return this.urlForFind(id, type, snapshot);
+          case 'findAll':
+            return this.urlForFindAll(type);
+          case 'findQuery':
+            return this.urlForFindQuery(id, type);
+          case 'findMany':
+            return this.urlForFindMany(id, type, snapshot);
+          case 'findHasMany':
+            return this.urlForFindHasMany(id, type);
+          case 'findBelongsTo':
+            return this.urlForFindBelongsTo(id, type);
+          case 'createRecord':
+            return this.urlForCreateRecord(type, snapshot);
+          case 'deleteRecord':
+            return this.urlForDeleteRecord(id, type, snapshot);
+          default:
+            return this._buildURL(type, id);
+        }
+      },
+
+      /**
+        @method _buildURL
+        @private
+        @param {String} type
+        @param {String} id
+        @return {String} url
+      */
+      _buildURL: function(type, id) {
         var url = [];
         var host = ember$data$lib$adapters$build$url$mixin$$get(this, 'host');
         var prefix = this.urlPrefix();
@@ -840,11 +870,7 @@
           if (path) { url.push(path); }
         }
 
-        //We might get passed in an array of ids from findMany
-        //in which case we don't want to modify the url, as the
-        //ids will be passed in through a query param
-        if (id && !Ember.isArray(id)) { url.push(encodeURIComponent(id)); }
-
+        if (id) { url.push(encodeURIComponent(id)); }
         if (prefix) { url.unshift(prefix); }
 
         url = url.join('/');
@@ -853,6 +879,88 @@
         }
 
         return url;
+      },
+
+      /**
+       * @method urlForFind
+       * @param {String} id
+       * @param {String} type
+       * @param {DS.Snapshot} snapshot
+       * @return {String} url
+       */
+      urlForFind: function(id, type, snapshot) {
+        return this._buildURL(type, id);
+      },
+
+      /**
+       * @method urlForFindAll
+       * @param {String} type
+       * @return {String} url
+       */
+      urlForFindAll: function(type) {
+        return this._buildURL(type);
+      },
+
+      /**
+       * @method urlForFindQuery
+       * @param {Object} query
+       * @param {String} type
+       * @return {String} url
+       */
+      urlForFindQuery: function(query, type) {
+        return this._buildURL(type);
+      },
+
+      /**
+       * @method urlForFindMany
+       * @param {Array} ids
+       * @param {String} type
+       * @param {Array} snapshots
+       * @return {String} url
+       */
+      urlForFindMany: function(ids, type, snapshots) {
+        return this._buildURL(type);
+      },
+
+      /**
+       * @method urlForFindHasMany
+       * @param {String} id
+       * @param {String} type
+       * @return {String} url
+       */
+      urlForFindHasMany: function(id, type) {
+        return this._buildURL(type, id);
+      },
+
+      /**
+       * @method urlForFindBelongTo
+       * @param {String} id
+       * @param {String} type
+       * @return {String} url
+       */
+      urlForFindBelongsTo: function(id, type) {
+        return this._buildURL(type, id);
+      },
+
+      /**
+       * @method urlForCreateRecord
+       * @param {String} type
+       * @param {DS.Snapshot} snapshot
+       * @return {String} url
+       */
+      urlForCreateRecord: function(type, snapshot) {
+        return this._buildURL(type);
+      },
+
+      /**
+       * @method urlForDeleteRecord
+       * @param {String} id
+       * @param {String} type
+       * @param {DS.Snapshot} snapshot
+       * @return {String} url
+       */
+      urlForDeleteRecord: function(id, type, snapshot) {
+        return this._buildURL(type, id);
       },
 
       /**
@@ -1152,7 +1260,7 @@
         @return {Promise} promise
       */
       findQuery: function(store, type, query) {
-        var url = this.buildURL(type.typeKey, null, null, 'findQuery');
+        var url = this.buildURL(type.typeKey, query, null, 'findQuery');
 
         if (this.sortQueryParams) {
           query = this.sortQueryParams(query);
@@ -4497,7 +4605,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.851bf4a1a2'
+      VERSION: '1.0.0-beta.17+canary.1d17291660'
     });
 
     if (Ember.libraries) {
