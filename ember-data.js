@@ -2576,7 +2576,7 @@
         ```
 
         @method normalize
-        @param {String} type
+        @param {subclass of DS.Model} type
         @param {Object} hash
         @return {Object}
       */
@@ -3667,7 +3667,7 @@
         payload.
 
         @method normalize
-        @param {String} type
+        @param {subclass of DS.Model} type
         @param {Object} hash
         @param {String} prop
         @return {Object}
@@ -3913,7 +3913,7 @@
 
         @method extractArray
         @param {DS.Store} store
-        @param {String} primaryType
+        @param {subclass of DS.Model} primaryType
         @param {Object} payload
         @return {Array} The primary array that was returned in response
           to the original query.
@@ -4461,7 +4461,7 @@
         ```
 
         @method normalize
-        @param {String} type
+        @param {subclass of DS.Model} type
         @param {Object} hash
         @param {String} prop
         @return Object
@@ -4606,7 +4606,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.4b49d93ece'
+      VERSION: '1.0.0-beta.17+canary.cc33136764'
     });
 
     if (Ember.libraries) {
@@ -7052,12 +7052,11 @@
 
         var klass = store.modelFactoryFor(type);
 
+        // TODO: Do we need to actually make sure the type defined in the relationship exists for polymorphic relationships?
+        // It seems polymorphic relationships should be able to use any DS.Model instance
         if (klass) {
           Ember.assert("You cannot add '" + klass.typeKey + "' records to this polymorphic relationship.", !ember$data$lib$system$many$array$$get(this, 'isPolymorphic'));
         }
-
-        // TODO: Do we need to actually make sure the type defined in the relationship exists for polymorphic relationships?
-        // It seems polymorphic relationships should be able to use any DS.Model instance
 
         record = store.createRecord(type, hash);
         this.pushObject(record);
@@ -12619,7 +12618,6 @@
         if (meta.isRelationship) {
           meta.key = name;
           var relationship = ember$data$lib$system$relationship$meta$$relationshipFromMeta(meta);
-          relationship.type = ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(meta);
           map.set(name, relationship);
         }
       });
