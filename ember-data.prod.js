@@ -4479,7 +4479,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.f6e40f1aa7'
+      VERSION: '1.0.0-beta.17+canary.851bf4a1a2'
     });
 
     if (Ember.libraries) {
@@ -11724,8 +11724,9 @@
       Embedded records must have a model defined to be extracted and serialized. Note that
       when defining any relationships on your model such as `belongsTo` and `hasMany`, you
       should not both specify `async:true` and also indicate through the serializer's
-      `attrs` attribute that the related model should be embedded.  If a model is
-      declared embedded, then do not use `async:true`.
+      `attrs` attribute that the related model should be embedded for deserialization.
+      If a model is declared embedded for deserialization (`embedded: 'always'`,
+      `deserialize: 'record'` or `deserialize: 'records'`), then do not use `async:true`.
 
       To successfully extract and serialize embedded records the model relationships
       must be setup correcty See the
