@@ -2625,7 +2625,7 @@
 
         if (this.keyForAttribute) {
           type.eachAttribute(function(key) {
-            payloadKey = this.keyForAttribute(key);
+            payloadKey = this.keyForAttribute(key, 'deserialize');
             if (key === payloadKey) { return; }
             if (!hash.hasOwnProperty(payloadKey)) { return; }
 
@@ -2644,7 +2644,7 @@
 
         if (this.keyForRelationship) {
           type.eachRelationship(function(key, relationship) {
-            payloadKey = this.keyForRelationship(key, relationship.kind);
+            payloadKey = this.keyForRelationship(key, relationship.kind, 'deserialize');
             if (key === payloadKey) { return; }
             if (!hash.hasOwnProperty(payloadKey)) { return; }
 
@@ -2996,7 +2996,7 @@
 
            var belongsTo = snapshot.belongsTo(key);
 
-           key = this.keyForRelationship ? this.keyForRelationship(key, "belongsTo") : key;
+           key = this.keyForRelationship ? this.keyForRelationship(key, "belongsTo", "serialize") : key;
 
            json[key] = Ember.isNone(belongsTo) ? belongsTo : belongsTo.record.toJSON();
          }
@@ -3018,7 +3018,7 @@
           // the serializer
           var payloadKey = this._getMappedKey(key);
           if (payloadKey === key && this.keyForRelationship) {
-            payloadKey = this.keyForRelationship(key, "belongsTo");
+            payloadKey = this.keyForRelationship(key, "belongsTo", "serialize");
           }
 
           //Need to check whether the id is there for new&async records
@@ -3068,7 +3068,7 @@
           // the serializer
           payloadKey = this._getMappedKey(key);
           if (payloadKey === key && this.keyForRelationship) {
-            payloadKey = this.keyForRelationship(key, "hasMany");
+            payloadKey = this.keyForRelationship(key, "hasMany", "serialize");
           }
 
           var relationshipType = snapshot.type.determineRelationshipType(relationship);
@@ -3550,8 +3550,9 @@
       ```
 
       You can also implement `keyForRelationship`, which takes the name
-      of the relationship as the first parameter, and the kind of
-      relationship (`hasMany` or `belongsTo`) as the second parameter.
+      of the relationship as the first parameter, the kind of
+      relationship (`hasMany` or `belongsTo`) as the second parameter, and
+      the method (`serialize` or `deserialize`) as the third parameter.
 
       @class RESTSerializer
       @namespace DS
@@ -4242,7 +4243,7 @@
       serializePolymorphicType: function(snapshot, json, relationship) {
         var key = relationship.key;
         var belongsTo = snapshot.belongsTo(key);
-        key = this.keyForAttribute ? this.keyForAttribute(key) : key;
+        key = this.keyForAttribute ? this.keyForAttribute(key, "serialize") : key;
         if (Ember.isNone(belongsTo)) {
           json[key + "Type"] = null;
         } else {
@@ -4522,7 +4523,7 @@
           type.eachRelationship(function(key, relationship) {
             var payloadKey, payload;
             if (relationship.options.polymorphic) {
-              payloadKey = this.keyForAttribute(key);
+              payloadKey = this.keyForAttribute(key, "deserialize");
               payload = hash[payloadKey];
               if (payload && payload.type) {
                 payload.type = this.typeForRoot(payload.type);
@@ -4533,7 +4534,7 @@
                 });
               }
             } else {
-              payloadKey = this.keyForRelationship(key, relationship.kind);
+              payloadKey = this.keyForRelationship(key, relationship.kind, "deserialize");
               if (!hash.hasOwnProperty(payloadKey)) { return; }
               payload = hash[payloadKey];
             }
@@ -4605,7 +4606,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.92eb2c7c7a'
+      VERSION: '1.0.0-beta.17+canary.dcaf77bdc8'
     });
 
     if (Ember.libraries) {
@@ -12023,11 +12024,11 @@
         return ember$data$lib$serializers$embedded$records$mixin$$extractEmbeddedRecords(this, this.store, type, normalizedHash);
       },
 
-      keyForRelationship: function(key, type) {
-        if (this.hasDeserializeRecordsOption(key)) {
-          return this.keyForAttribute(key);
+      keyForRelationship: function(key, type, method) {
+        if ((method === 'serialize' && this.hasSerializeRecordsOption(key)) || (method === 'deserialize' && this.hasDeserializeRecordsOption(key))) {
+          return this.keyForAttribute(key, method);
         } else {
-          return this._super(key, type) || key;
+          return this._super(key, type, method) || key;
         }
       },
 
@@ -12091,14 +12092,14 @@
         var embeddedSnapshot = snapshot.belongsTo(attr);
         var key;
         if (includeIds) {
-          key = this.keyForRelationship(attr, relationship.kind);
+          key = this.keyForRelationship(attr, relationship.kind, 'serialize');
           if (!embeddedSnapshot) {
             json[key] = null;
           } else {
             json[key] = embeddedSnapshot.id;
           }
         } else if (includeRecords) {
-          key = this.keyForAttribute(attr);
+          key = this.keyForAttribute(attr, 'serialize');
           if (!embeddedSnapshot) {
             json[key] = null;
           } else {
@@ -12199,10 +12200,10 @@
         var includeRecords = this.hasSerializeRecordsOption(attr);
         var key;
         if (includeIds) {
-          key = this.keyForRelationship(attr, relationship.kind);
+          key = this.keyForRelationship(attr, relationship.kind, 'serialize');
           json[key] = snapshot.hasMany(attr, { ids: true });
         } else if (includeRecords) {
-          key = this.keyForAttribute(attr);
+          key = this.keyForAttribute(attr, 'serialize');
           json[key] = snapshot.hasMany(attr).map(function(embeddedSnapshot) {
             var embeddedJson = embeddedSnapshot.record.serialize({ includeId: true });
             this.removeEmbeddedForeignKey(snapshot, embeddedSnapshot, relationship, embeddedJson);
@@ -12235,7 +12236,7 @@
           if (parentRecord) {
             var name = parentRecord.name;
             var embeddedSerializer = this.store.serializerFor(embeddedSnapshot.type);
-            var parentKey = embeddedSerializer.keyForRelationship(name, parentRecord.kind);
+            var parentKey = embeddedSerializer.keyForRelationship(name, parentRecord.kind, 'deserialize');
             if (parentKey) {
               delete json[parentKey];
             }
