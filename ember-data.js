@@ -2511,6 +2511,8 @@
 
         ```javascript
         {
+          "firstName": "Harry",
+          "lastName": "Houdini",
           "career": "magician"
         }
         ```
@@ -4606,7 +4608,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.4ad70aab2a'
+      VERSION: '1.0.0-beta.17+canary.65f003aace'
     });
 
     if (Ember.libraries) {
