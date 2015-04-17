@@ -4606,7 +4606,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.111ce54802'
+      VERSION: '1.0.0-beta.17+canary.4ad70aab2a'
     });
 
     if (Ember.libraries) {
@@ -9549,6 +9549,7 @@
           the JSON representation
 
         @method serialize
+        @private
         @param {DS.Model} record the record to serialize
         @param {Object} options an options hash
       */
