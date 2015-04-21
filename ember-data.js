@@ -3845,7 +3845,7 @@
             }],
             "comment": [{
               "_id": 1,
-              "comment_title": "Rails is unagi"
+              "comment_title": "Rails is unagi",
               "post_id": 1
             }, {
               "_id": 2,
@@ -3879,7 +3879,7 @@
               delete comment.post_id;
             });
 
-            payload = { comments: comments, posts: payload };
+            payload = { comments: comments, posts: posts };
 
             return this._super(store, type, payload);
           },
@@ -4608,7 +4608,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.219b331738'
+      VERSION: '1.0.0-beta.17+canary.d84dabe566'
     });
 
     if (Ember.libraries) {
