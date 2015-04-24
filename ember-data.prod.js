@@ -4590,7 +4590,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.d84dabe566'
+      VERSION: '1.0.0-beta.17+canary.0f5f777845'
     });
 
     if (Ember.libraries) {
@@ -11237,8 +11237,6 @@
         store._adapterRun(function() {
           if (adapterPayload) {
             payload = serializer.extract(store, type, adapterPayload, ember$data$lib$system$store$$get(record, 'id'), operation);
-          } else {
-            payload = adapterPayload;
           }
           store.didSaveRecord(record, payload);
         });
