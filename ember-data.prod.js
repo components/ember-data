@@ -840,6 +840,8 @@
             return this.urlForFindBelongsTo(id, type);
           case 'createRecord':
             return this.urlForCreateRecord(type, snapshot);
+          case 'updateRecord':
+            return this.urlForUpdateRecord(id, type, snapshot);
           case 'deleteRecord':
             return this.urlForDeleteRecord(id, type, snapshot);
           default:
@@ -945,6 +947,17 @@
        */
       urlForCreateRecord: function(type, snapshot) {
         return this._buildURL(type);
+      },
+
+      /**
+       * @method urlForUpdateRecord
+       * @param {String} id
+       * @param {String} type
+       * @param {DS.Snapshot} snapshot
+       * @return {String} url
+       */
+      urlForUpdateRecord: function(id, type, snapshot) {
+        return this._buildURL(type, id);
       },
 
       /**
@@ -1322,8 +1335,6 @@
         This method will be called with the parent record and `/posts/1/comments`.
 
         The `findHasMany` method will make an Ajax (HTTP GET) request to the originally specified URL.
-        If the URL is host-relative (starting with a single slash), the
-        request will use the host specified on the adapter (if any).
 
         @method findHasMany
         @param {DS.Store} store
@@ -1332,13 +1343,8 @@
         @return {Promise} promise
       */
       findHasMany: function(store, snapshot, url, relationship) {
-        var host = ember$data$lib$adapters$rest$adapter$$get(this, 'host');
         var id   = snapshot.id;
         var type = snapshot.typeKey;
-
-        if (host && url.charAt(0) === '/' && url.charAt(1) !== '/') {
-          url = host + url;
-        }
 
         url = this.urlPrefix(url, this.buildURL(type, id, null, 'findHasMany'));
 
@@ -4590,7 +4596,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.0f5f777845'
+      VERSION: '1.0.0-beta.17+canary.e77538d95d'
     });
 
     if (Ember.libraries) {
