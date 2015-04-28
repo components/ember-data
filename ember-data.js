@@ -4614,7 +4614,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.e77538d95d'
+      VERSION: '1.0.0-beta.17+canary.49f00ab09e'
     });
 
     if (Ember.libraries) {
@@ -10365,31 +10365,46 @@
         return array;
       },
 
-
       /**
-        This method unloads all of the known records for a given type.
+       This method unloads all records in the store.
 
-        ```javascript
-        store.unloadAll('post');
-        ```
+       Optionally you can pass a type which unload all records for a given type.
 
-        @method unloadAll
-        @param {String or subclass of DS.Model} type
+       ```javascript
+       store.unloadAll();
+       store.unloadAll('post');
+       ```
+
+       @method unloadAll
+       @param {String or subclass of DS.Model} optional type
       */
       unloadAll: function(type) {
-        var modelType = this.modelFor(type);
-        var typeMap = this.typeMapFor(modelType);
-        var records = typeMap.records.slice();
-        var record;
+        if (arguments.length === 0) {
+          var typeMaps = this.typeMaps;
+          var keys = Ember.keys(typeMaps);
 
-        for (var i = 0; i < records.length; i++) {
-          record = records[i];
-          record.unloadRecord();
-          record.destroy(); // maybe within unloadRecord
+          var types = ember$data$lib$system$store$$map(keys, byType);
+
+          ember$data$lib$system$store$$forEach(types, this.unloadAll, this);
+        } else {
+          var modelType = this.modelFor(type);
+          var typeMap = this.typeMapFor(modelType);
+          var records = typeMap.records.slice();
+          var record;
+
+          for (var i = 0; i < records.length; i++) {
+            record = records[i];
+            record.unloadRecord();
+            record.destroy(); // maybe within unloadRecord
+          }
+
+          typeMap.findAllCache = null;
+          typeMap.metadata = Ember.create(null);
         }
 
-        typeMap.findAllCache = null;
-        typeMap.metadata = Ember.create(null);
+        function byType(entry) {
+          return typeMaps[entry]['type'];
+        }
       },
 
       /**
@@ -11233,18 +11248,9 @@
       },
 
       willDestroy: function() {
-        var typeMaps = this.typeMaps;
-        var keys = Ember.keys(typeMaps);
-
-        var types = ember$data$lib$system$store$$map(keys, byType);
-
         this.recordArrayManager.destroy();
 
-        ember$data$lib$system$store$$forEach(types, this.unloadAll, this);
-
-        function byType(entry) {
-          return typeMaps[entry]['type'];
-        }
+        this.unloadAll();
 
         for (var cacheKey in this._containerCache) {
           this._containerCache[cacheKey].destroy();
