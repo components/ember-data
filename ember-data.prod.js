@@ -1,17 +1,7 @@
 (function() {
     "use strict";
-
-    var ember$data$lib$system$adapter$$get = Ember.get;
-
-    var ember$data$lib$system$adapter$$errorProps = [
-      'description',
-      'fileName',
-      'lineNumber',
-      'message',
-      'name',
-      'number',
-      'stack'
-    ];
+    var ember$data$lib$system$model$errors$invalid$$create = Ember.create;
+    var ember$data$lib$system$model$errors$invalid$$EmberError = Ember.Error;
 
     /**
       A `DS.InvalidError` is used by an adapter to signal the external API
@@ -80,16 +70,20 @@
       @class InvalidError
       @namespace DS
     */
-    function ember$data$lib$system$adapter$$InvalidError(errors) {
-      var tmp = Error.prototype.constructor.call(this, "The backend rejected the commit because it was invalid: " + Ember.inspect(errors));
+    function ember$data$lib$system$model$errors$invalid$$InvalidError(errors) {
+      ember$data$lib$system$model$errors$invalid$$EmberError.call(this, "The backend rejected the commit because it was invalid: " + Ember.inspect(errors));
       this.errors = errors;
-
-      for (var i=0, l=ember$data$lib$system$adapter$$errorProps.length; i<l; i++) {
-        this[ember$data$lib$system$adapter$$errorProps[i]] = tmp[ember$data$lib$system$adapter$$errorProps[i]];
-      }
     }
 
-    ember$data$lib$system$adapter$$InvalidError.prototype = Ember.create(Error.prototype);
+    ember$data$lib$system$model$errors$invalid$$InvalidError.prototype = ember$data$lib$system$model$errors$invalid$$create(ember$data$lib$system$model$errors$invalid$$EmberError.prototype);
+
+    var ember$data$lib$system$model$errors$invalid$$default = ember$data$lib$system$model$errors$invalid$$InvalidError;
+
+    /**
+      @module ember-data
+    */
+
+    var ember$data$lib$system$adapter$$get = Ember.get;
 
     /**
       An adapter is an object that receives requests from a store and
@@ -315,13 +309,12 @@
         ```
 
         @method serialize
-        @param {DS.Model} record
+        @param {DS.Snapshot} snapshot
         @param {Object}   options
-        @return {Object} serialized record
+        @return {Object} serialized snapshot
       */
-      serialize: function(record, options) {
-        var snapshot = record._createSnapshot();
-        return ember$data$lib$system$adapter$$get(record, 'store').serializerFor(snapshot.typeKey).serialize(snapshot, options);
+      serialize: function(snapshot, options) {
+        return ember$data$lib$system$adapter$$get(snapshot.record, 'store').serializerFor(snapshot.typeKey).serialize(snapshot, options);
       },
 
       /**
@@ -804,10 +797,6 @@
       }
     });
 
-    var ember$data$lib$system$map$$Map            = Ember.Map;
-    var ember$data$lib$system$map$$MapWithDefault = Ember.MapWithDefault;
-
-    var ember$data$lib$system$map$$default = ember$data$lib$system$map$$Map;
     var ember$data$lib$adapters$build$url$mixin$$get = Ember.get;
 
     var ember$data$lib$adapters$build$url$mixin$$default = Ember.Mixin.create({
@@ -826,28 +815,143 @@
 
         @method buildURL
         @param {String} type
-        @param {String|Array} id single id or array of ids
+        @param {String|Array|Object} id single id or array of ids or query
         @param {DS.Snapshot|Array} snapshot single snapshot or array of snapshots
+        @param {String} requestType
         @return {String} url
       */
-      buildURL: function(type, id, snapshot) {
+      buildURL: function(type, id, snapshot, requestType) {
+        switch (requestType) {
+          case 'find':
+            return this.urlForFind(id, type, snapshot);
+          case 'findAll':
+            return this.urlForFindAll(type);
+          case 'findQuery':
+            return this.urlForFindQuery(id, type);
+          case 'findMany':
+            return this.urlForFindMany(id, type, snapshot);
+          case 'findHasMany':
+            return this.urlForFindHasMany(id, type);
+          case 'findBelongsTo':
+            return this.urlForFindBelongsTo(id, type);
+          case 'createRecord':
+            return this.urlForCreateRecord(type, snapshot);
+          case 'deleteRecord':
+            return this.urlForDeleteRecord(id, type, snapshot);
+          default:
+            return this._buildURL(type, id);
+        }
+      },
+
+      /**
+        @method _buildURL
+        @private
+        @param {String} type
+        @param {String} id
+        @return {String} url
+      */
+      _buildURL: function(type, id) {
         var url = [];
         var host = ember$data$lib$adapters$build$url$mixin$$get(this, 'host');
         var prefix = this.urlPrefix();
+        var path;
 
-        if (type) { url.push(this.pathForType(type)); }
+        if (type) {
+          path = this.pathForType(type);
+          if (path) { url.push(path); }
+        }
 
-        //We might get passed in an array of ids from findMany
-        //in which case we don't want to modify the url, as the
-        //ids will be passed in through a query param
-        if (id && !Ember.isArray(id)) { url.push(encodeURIComponent(id)); }
-
+        if (id) { url.push(encodeURIComponent(id)); }
         if (prefix) { url.unshift(prefix); }
 
         url = url.join('/');
-        if (!host && url) { url = '/' + url; }
+        if (!host && url && url.charAt(0) !== '/') {
+          url = '/' + url;
+        }
 
         return url;
+      },
+
+      /**
+       * @method urlForFind
+       * @param {String} id
+       * @param {String} type
+       * @param {DS.Snapshot} snapshot
+       * @return {String} url
+       */
+      urlForFind: function(id, type, snapshot) {
+        return this._buildURL(type, id);
+      },
+
+      /**
+       * @method urlForFindAll
+       * @param {String} type
+       * @return {String} url
+       */
+      urlForFindAll: function(type) {
+        return this._buildURL(type);
+      },
+
+      /**
+       * @method urlForFindQuery
+       * @param {Object} query
+       * @param {String} type
+       * @return {String} url
+       */
+      urlForFindQuery: function(query, type) {
+        return this._buildURL(type);
+      },
+
+      /**
+       * @method urlForFindMany
+       * @param {Array} ids
+       * @param {String} type
+       * @param {Array} snapshots
+       * @return {String} url
+       */
+      urlForFindMany: function(ids, type, snapshots) {
+        return this._buildURL(type);
+      },
+
+      /**
+       * @method urlForFindHasMany
+       * @param {String} id
+       * @param {String} type
+       * @return {String} url
+       */
+      urlForFindHasMany: function(id, type) {
+        return this._buildURL(type, id);
+      },
+
+      /**
+       * @method urlForFindBelongTo
+       * @param {String} id
+       * @param {String} type
+       * @return {String} url
+       */
+      urlForFindBelongsTo: function(id, type) {
+        return this._buildURL(type, id);
+      },
+
+      /**
+       * @method urlForCreateRecord
+       * @param {String} type
+       * @param {DS.Snapshot} snapshot
+       * @return {String} url
+       */
+      urlForCreateRecord: function(type, snapshot) {
+        return this._buildURL(type);
+      },
+
+      /**
+       * @method urlForDeleteRecord
+       * @param {String} id
+       * @param {String} type
+       * @param {DS.Snapshot} snapshot
+       * @return {String} url
+       */
+      urlForDeleteRecord: function(id, type, snapshot) {
+        return this._buildURL(type, id);
       },
 
       /**
@@ -923,6 +1027,171 @@
       }
     });
 
+    var ember$data$lib$adapters$json$api$adapter$$get = Ember.get;
+
+    var ember$data$lib$adapters$json$api$adapter$$default = ember$data$lib$system$adapter$$Adapter.extend(ember$data$lib$adapters$build$url$mixin$$default, {
+      defaultSerializer: '-json-api',
+
+      coalesceFindRequests: false,
+
+      /**
+        @property host
+        @type {String}
+      */
+
+      /**
+        @property namespace
+        @type {String}
+      */
+
+      find: function(store, type, id, snapshot) {
+        return this.ajax(this.buildURL(type.typeKey, id, snapshot, 'find'), 'GET');
+      },
+
+      findAll: function(store, type) {
+        return this.ajax(this.buildURL(type.typeKey, null, null, 'findAll'), 'GET');
+      },
+
+      findMany: function(store, type, ids, snapshots) {
+        var data = {
+          filter: {
+            id: ids.join(',')
+          }
+        };
+        return this.ajax(this.buildURL(type.typeKey, ids, snapshots, 'findMany'), 'GET', { data: data });
+      },
+
+      findQuery: function(store, type, query) {
+        return this.ajax(this.buildURL(type.typeKey, query, null, 'findQuery'), 'GET', { data: query });
+      },
+
+      findBelongsTo: function(store, snapshot, link, relationship) {
+        return this._findRelationship(store, snapshot, link, relationship, 'findBelongsTo');
+      },
+
+      findHasMany: function(store, snapshot, link, relationship) {
+        return this._findRelationship(store, snapshot, link, relationship, 'findHasMany');
+      },
+
+      _findRelationship: function(store, snapshot, link, relationship, requestType) {
+        var url;
+        var type = snapshot.typeKey;
+        var id = snapshot.id;
+
+        if (link.related) {
+          url = link.related;
+        } else {
+          url = this.pathForRelationship(snapshot, relationship);
+        }
+
+        url = this.urlPrefix(url, this.buildURL(type, id, null, requestType));
+
+        return this.ajax(url, 'GET');
+      },
+
+
+      createRecord: function(store, type, snapshot) {
+        var serializer = store.serializerFor(type.typeKey);
+        var data = serializer.serialize(snapshot);
+
+        return this.ajax(this.buildURL(type.typeKey, null, snapshot, 'createRecord'), 'POST', { data: data });
+      },
+
+      updateRecord: function(store, type, snapshot) {
+        var serializer = store.serializerFor(type.typeKey);
+        var data = serializer.serialize(snapshot, { includeId: true });
+
+        var id = snapshot.id;
+
+        return this.ajax(this.buildURL(type.typeKey, id, snapshot, 'updateRecord'), 'PATCH', { data: data });
+      },
+
+      deleteRecord: function(store, type, snapshot) {
+        var id = snapshot.id;
+
+        return this.ajax(this.buildURL(type.typeKey, id, snapshot, 'deleteRecord'), 'DELETE');
+      },
+
+
+      pathForType: function(typeKey) {
+        return Ember.String.dasherize(typeKey);
+      },
+
+      pathForRelationship: function(snapshot, relationship) {
+        return Ember.String.dasherize(relationship.key);
+      },
+
+
+      ajax: function(url, type, options) {
+        var adapter = this;
+
+        return new Ember.RSVP.Promise(function(resolve, reject) {
+          var hash = adapter.ajaxOptions(url, type, options);
+
+          hash.success = function(json, textStatus, jqXHR) {
+            json = adapter.ajaxSuccess(jqXHR, json);
+            if (json instanceof ember$data$lib$system$model$errors$invalid$$default) {
+              Ember.run(null, reject, json);
+            } else {
+              Ember.run(null, resolve, json);
+            }
+          };
+
+          hash.error = function(jqXHR, textStatus, errorThrown) {
+            Ember.run(null, reject, adapter.ajaxError(jqXHR, jqXHR.responseText, errorThrown));
+          };
+
+          Ember.$.ajax(hash);
+        }, 'DS: JSONAPIAdapter#ajax ' + type + ' to ' + url);
+      },
+
+      ajaxOptions: function(url, type, options) {
+        var hash = options || {};
+        hash.url = url;
+        hash.type = type;
+        hash.dataType = 'json';
+        hash.context = this;
+
+        if (hash.data && type !== 'GET') {
+          hash.contentType = 'application/vnd.api+json; charset=utf-8';
+          hash.data = JSON.stringify(hash.data);
+        }
+
+        var defaultHeaders = {
+          Accept: 'application/vnd.api+json; charset=utf-8'
+        };
+        hash.headers = Ember.merge(defaultHeaders, ember$data$lib$adapters$json$api$adapter$$get(this, 'headers'));
+
+        return hash;
+      },
+
+      ajaxError: function(jqXHR, responseText, errorThrown) {
+        var isObject = jqXHR !== null && typeof jqXHR === 'object';
+
+        if (isObject) {
+          jqXHR.then = null;
+          if (!jqXHR.errorThrown) {
+            if (typeof errorThrown === 'string') {
+              jqXHR.errorThrown = new Error(errorThrown);
+            } else {
+              jqXHR.errorThrown = errorThrown;
+            }
+          }
+        }
+
+        return jqXHR;
+      },
+
+      ajaxSuccess: function(jqXHR, jsonPayload) {
+        return jsonPayload;
+      }
+
+    });
+
+    var ember$data$lib$system$map$$Map            = Ember.Map;
+    var ember$data$lib$system$map$$MapWithDefault = Ember.MapWithDefault;
+
+    var ember$data$lib$system$map$$default = ember$data$lib$system$map$$Map;
     var ember$data$lib$adapters$rest$adapter$$get = Ember.get;
     var ember$data$lib$adapters$rest$adapter$$forEach = Ember.ArrayPolyfills.forEach;
 
@@ -1100,7 +1369,7 @@
         @return {Promise} promise
       */
       find: function(store, type, id, snapshot) {
-        return this.ajax(this.buildURL(type.typeKey, id, snapshot), 'GET');
+        return this.ajax(this.buildURL(type.typeKey, id, snapshot, 'find'), 'GET');
       },
 
       /**
@@ -1118,13 +1387,15 @@
         @return {Promise} promise
       */
       findAll: function(store, type, sinceToken) {
-        var query;
+        var query, url;
 
         if (sinceToken) {
           query = { since: sinceToken };
         }
 
-        return this.ajax(this.buildURL(type.typeKey), 'GET', { data: query });
+        url = this.buildURL(type.typeKey, null, null, 'findAll');
+
+        return this.ajax(url, 'GET', { data: query });
       },
 
       /**
@@ -1145,10 +1416,13 @@
         @return {Promise} promise
       */
       findQuery: function(store, type, query) {
+        var url = this.buildURL(type.typeKey, query, null, 'findQuery');
+
         if (this.sortQueryParams) {
           query = this.sortQueryParams(query);
         }
-        return this.ajax(this.buildURL(type.typeKey), 'GET', { data: query });
+
+        return this.ajax(url, 'GET', { data: query });
       },
 
       /**
@@ -1185,7 +1459,8 @@
         @return {Promise} promise
       */
       findMany: function(store, type, ids, snapshots) {
-        return this.ajax(this.buildURL(type.typeKey, ids, snapshots), 'GET', { data: { ids: ids } });
+        var url = this.buildURL(type.typeKey, ids, snapshots, 'findMany');
+        return this.ajax(url, 'GET', { data: { ids: ids } });
       },
 
       /**
@@ -1226,7 +1501,9 @@
           url = host + url;
         }
 
-        return this.ajax(this.urlPrefix(url, this.buildURL(type, id)), 'GET');
+        url = this.urlPrefix(url, this.buildURL(type, id, null, 'findHasMany'));
+
+        return this.ajax(url, 'GET');
       },
 
       /**
@@ -1260,7 +1537,8 @@
         var id   = snapshot.id;
         var type = snapshot.typeKey;
 
-        return this.ajax(this.urlPrefix(url, this.buildURL(type, id)), 'GET');
+        url = this.urlPrefix(url, this.buildURL(type, id, null, 'findBelongsTo'));
+        return this.ajax(url, 'GET');
       },
 
       /**
@@ -1282,10 +1560,11 @@
       createRecord: function(store, type, snapshot) {
         var data = {};
         var serializer = store.serializerFor(type.typeKey);
+        var url = this.buildURL(type.typeKey, null, snapshot, 'createRecord');
 
         serializer.serializeIntoHash(data, type, snapshot, { includeId: true });
 
-        return this.ajax(this.buildURL(type.typeKey, null, snapshot), "POST", { data: data });
+        return this.ajax(url, "POST", { data: data });
       },
 
       /**
@@ -1311,8 +1590,9 @@
         serializer.serializeIntoHash(data, type, snapshot);
 
         var id = snapshot.id;
+        var url = this.buildURL(type.typeKey, id, snapshot, 'updateRecord');
 
-        return this.ajax(this.buildURL(type.typeKey, id, snapshot), "PUT", { data: data });
+        return this.ajax(url, "PUT", { data: data });
       },
 
       /**
@@ -1329,7 +1609,7 @@
       deleteRecord: function(store, type, snapshot) {
         var id = snapshot.id;
 
-        return this.ajax(this.buildURL(type.typeKey, id, snapshot), "DELETE");
+        return this.ajax(this.buildURL(type.typeKey, id, snapshot, 'deleteRecord'), "DELETE");
       },
 
       _stripIDFromURL: function(store, snapshot) {
@@ -1534,7 +1814,7 @@
 
           hash.success = function(json, textStatus, jqXHR) {
             json = adapter.ajaxSuccess(jqXHR, json);
-            if (json instanceof ember$data$lib$system$adapter$$InvalidError) {
+            if (json instanceof ember$data$lib$system$model$errors$invalid$$default) {
               Ember.run(null, reject, json);
             } else {
               Ember.run(null, resolve, json);
@@ -1590,7 +1870,7 @@
         return string.endsWith(suffix);
       }
     }
-    var ember$lib$main$$default = self.Ember;
+    var ember$lib$main$$default = Ember;
 
     var ember$inflector$lib$lib$system$inflector$$capitalize = ember$lib$main$$default.String.capitalize;
 
@@ -1836,7 +2116,8 @@
           firstPhrase, lastWord, isBlank, isCamelized, isUncountable,
           isIrregular, rule;
 
-        isBlank = ember$inflector$lib$lib$system$inflector$$BLANK_REGEX.test(word);
+        isBlank = !word || ember$inflector$lib$lib$system$inflector$$BLANK_REGEX.test(word);
+
         isCamelized = ember$inflector$lib$lib$system$inflector$$CAMELIZED_REGEX.test(word);
         firstPhrase = "";
 
@@ -2245,7 +2526,7 @@
         var error = this._super.apply(this, arguments);
 
         if (jqXHR && jqXHR.status === 422) {
-          return new ember$data$lib$system$adapter$$InvalidError(Ember.$.parseJSON(jqXHR.responseText));
+          return new ember$data$lib$system$model$errors$invalid$$default(Ember.$.parseJSON(jqXHR.responseText));
         } else {
           return error;
         }
@@ -2386,6 +2667,8 @@
 
         ```javascript
         {
+          "firstName": "Harry",
+          "lastName": "Houdini",
           "career": "magician"
         }
         ```
@@ -2500,7 +2783,7 @@
 
         if (this.keyForAttribute) {
           type.eachAttribute(function(key) {
-            payloadKey = this.keyForAttribute(key);
+            payloadKey = this.keyForAttribute(key, 'deserialize');
             if (key === payloadKey) { return; }
             if (!hash.hasOwnProperty(payloadKey)) { return; }
 
@@ -2519,7 +2802,7 @@
 
         if (this.keyForRelationship) {
           type.eachRelationship(function(key, relationship) {
-            payloadKey = this.keyForRelationship(key, relationship.kind);
+            payloadKey = this.keyForRelationship(key, relationship.kind, 'deserialize');
             if (key === payloadKey) { return; }
             if (!hash.hasOwnProperty(payloadKey)) { return; }
 
@@ -2871,7 +3154,7 @@
 
            var belongsTo = snapshot.belongsTo(key);
 
-           key = this.keyForRelationship ? this.keyForRelationship(key, "belongsTo") : key;
+           key = this.keyForRelationship ? this.keyForRelationship(key, "belongsTo", "serialize") : key;
 
            json[key] = Ember.isNone(belongsTo) ? belongsTo : belongsTo.record.toJSON();
          }
@@ -2893,7 +3176,7 @@
           // the serializer
           var payloadKey = this._getMappedKey(key);
           if (payloadKey === key && this.keyForRelationship) {
-            payloadKey = this.keyForRelationship(key, "belongsTo");
+            payloadKey = this.keyForRelationship(key, "belongsTo", "serialize");
           }
 
           //Need to check whether the id is there for new&async records
@@ -2943,7 +3226,7 @@
           // the serializer
           payloadKey = this._getMappedKey(key);
           if (payloadKey === key && this.keyForRelationship) {
-            payloadKey = this.keyForRelationship(key, "hasMany");
+            payloadKey = this.keyForRelationship(key, "hasMany", "serialize");
           }
 
           var relationshipType = snapshot.type.determineRelationshipType(relationship);
@@ -3424,8 +3707,9 @@
       ```
 
       You can also implement `keyForRelationship`, which takes the name
-      of the relationship as the first parameter, and the kind of
-      relationship (`hasMany` or `belongsTo`) as the second parameter.
+      of the relationship as the first parameter, the kind of
+      relationship (`hasMany` or `belongsTo`) as the second parameter, and
+      the method (`serialize` or `deserialize`) as the third parameter.
 
       @class RESTSerializer
       @namespace DS
@@ -3715,7 +3999,7 @@
             }],
             "comment": [{
               "_id": 1,
-              "comment_title": "Rails is unagi"
+              "comment_title": "Rails is unagi",
               "post_id": 1
             }, {
               "_id": 2,
@@ -3749,7 +4033,7 @@
               delete comment.post_id;
             });
 
-            payload = { comments: comments, posts: payload };
+            payload = { comments: comments, posts: posts };
 
             return this._super(store, type, payload);
           },
@@ -4113,7 +4397,7 @@
       serializePolymorphicType: function(snapshot, json, relationship) {
         var key = relationship.key;
         var belongsTo = snapshot.belongsTo(key);
-        key = this.keyForAttribute ? this.keyForAttribute(key) : key;
+        key = this.keyForAttribute ? this.keyForAttribute(key, "serialize") : key;
         if (Ember.isNone(belongsTo)) {
           json[key + "Type"] = null;
         } else {
@@ -4386,7 +4670,7 @@
           type.eachRelationship(function(key, relationship) {
             var payloadKey, payload;
             if (relationship.options.polymorphic) {
-              payloadKey = this.keyForAttribute(key);
+              payloadKey = this.keyForAttribute(key, "deserialize");
               payload = hash[payloadKey];
               if (payload && payload.type) {
                 payload.type = this.typeForRoot(payload.type);
@@ -4397,7 +4681,7 @@
                 });
               }
             } else {
-              payloadKey = this.keyForRelationship(key, relationship.kind);
+              payloadKey = this.keyForRelationship(key, relationship.kind, "deserialize");
               if (!hash.hasOwnProperty(payloadKey)) { return; }
               payload = hash[payloadKey];
             }
@@ -4467,7 +4751,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.16.1'
+      VERSION: '1.0.0-beta.17+canary.0bfde88bb9'
     });
 
     if (Ember.libraries) {
@@ -4475,6 +4759,290 @@
     }
 
     var ember$data$lib$core$$default = ember$data$lib$core$$DS;
+
+    var ember$data$lib$serializers$json$api$serializer$$copy = Ember.copy;
+    var ember$data$lib$serializers$json$api$serializer$$get = Ember.get;
+    var ember$data$lib$serializers$json$api$serializer$$forEach = Ember.ArrayPolyfills.forEach;
+    var ember$data$lib$serializers$json$api$serializer$$map = Ember.ArrayPolyfills.map;
+
+    var ember$data$lib$serializers$json$api$serializer$$default = ember$data$lib$system$serializer$$default.extend({
+
+      keyForAttribute: function(key) {
+        return Ember.String.dasherize(key);
+      },
+
+      keyForRelationship: function(key, kind) {
+        return Ember.String.dasherize(key);
+      },
+
+      normalizeTypeKey: function(typeKey) {
+        return Ember.String.dasherize(typeKey);
+      },
+
+      serializeTypeKey: function(typeKey) {
+        return Ember.String.dasherize(typeKey);
+      },
+
+
+
+      extract: function(store, type, payload, id, requestType) {
+        if (!payload.data) { return; }
+
+        var dataType = Ember.typeOf(payload.data);
+
+        switch (dataType) {
+          case 'object':
+            return this.extractSingle(store, payload, id);
+          case 'array':
+            store.setMetadataFor(type, payload.meta || {});
+            return this.extractArray(store, payload);
+        }
+      },
+
+      extractSingle: function(store, payload, id) {
+        var data;
+
+        this.extractIncluded(store, payload.included);
+
+        data = this.extractData(store, ember$data$lib$serializers$json$api$serializer$$get(payload, 'data'));
+
+        return data;
+      },
+
+      extractArray: function(store, payload) {
+        var data;
+
+        this.extractIncluded(store, payload.included);
+
+        data = ember$data$lib$serializers$json$api$serializer$$map.call(payload.data, function(item) {
+          return this.extractData(store, item);
+        }, this);
+
+        return data;
+      },
+
+      extractData: function(store, data) {
+        var type, typeName, typeSerializer;
+
+        if (!data) { return; }
+
+        typeName = this.normalizeTypeKey(data.type);
+
+        
+        type = store.modelFor(typeName);
+        typeSerializer = store.serializerFor(type);
+
+        return typeSerializer.normalize(type, data);
+      },
+
+      extractIncluded: function(store, included) {
+        var type, typeName, typeSerializer, hash;
+
+        if (!included) { return; }
+
+        ember$data$lib$serializers$json$api$serializer$$forEach.call(included, function(data) {
+          typeName = this.normalizeTypeKey(data.type);
+
+          if (!store.modelFactoryFor(typeName)) {
+                        return;
+          }
+
+          type = store.modelFor(typeName);
+          typeSerializer = store.serializerFor(type);
+
+          hash = typeSerializer.normalize(type, data);
+          store.push(typeName, hash);
+        }, this);
+      },
+
+
+      extractErrors: function(store, type, payload, id) {
+        if (!payload.errors) { return payload; }
+
+        return payload.errors;
+      },
+
+
+      serialize: function(snapshot, options) {
+        var json = {};
+
+        json['type'] = this.serializeTypeKey(snapshot.typeKey);
+
+        if (options && options.includeId) {
+          json['id'] = snapshot.id;
+        }
+
+        snapshot.eachAttribute(function(key, attribute) {
+          this.serializeAttribute(snapshot, json, key, attribute);
+        }, this);
+
+        snapshot.eachRelationship(function(key, relationship) {
+          switch (relationship.kind) {
+            case 'belongsTo':
+              this.serializeBelongsTo(snapshot, json, relationship);
+              break;
+            case 'hasMany':
+              this.serializeHasMany(snapshot, json, relationship);
+              break;
+          }
+        }, this);
+
+        json = { data: json };
+
+        return json;
+      },
+
+      serializeAttribute: function(snapshot, json, key, attribute) {
+        var value = snapshot.attr(key);
+        var type = attribute.type;
+
+        if (type) {
+          var transform = this.transformFor(type);
+          value = transform.serialize(value);
+        }
+
+        var payloadKey = this.keyForAttribute(key);
+        json[payloadKey] = value;
+      },
+
+      serializeBelongsTo: function(snapshot, json, relationship) {
+        var key = relationship.key;
+        var belongsTo = snapshot.belongsTo(key);
+
+        var links = json['links'] = json['links'] || {};
+
+        var payloadKey = this.keyForRelationship(key, 'belongsTo');
+        var linkage = null;
+
+        if (!Ember.isNone(belongsTo)) {
+          linkage = {
+            type: this.serializeTypeKey(belongsTo.typeKey),
+            id: belongsTo.id
+          };
+        }
+
+        links[payloadKey] = { linkage: linkage };
+      },
+
+      serializeHasMany: function(snapshot, json, relationship) {
+        var key = relationship.key;
+        var hasMany = snapshot.hasMany(key);
+
+        var links = json['links'] = json['links'] || {};
+
+        var payloadKey = this.keyForRelationship(key, 'hasMany');
+        var linkage = [];
+
+        for (var i = 0; i < hasMany.length; i++) {
+          linkage.push({
+            type: this.serializeTypeKey(hasMany[i].typeKey),
+            id: hasMany[i].id
+          });
+        }
+
+        links[payloadKey] = { linkage: linkage };
+      },
+
+
+
+      normalize: function(type, data) {
+        var hash = ember$data$lib$serializers$json$api$serializer$$copy(data);
+
+        this.normalizeAttributes(type, hash);
+        this.normalizeRelationships(type, hash);
+        this.applyTransforms(type, hash);
+
+        return hash;
+      },
+
+      normalizeAttributes: function(type, hash) {
+        var payloadKey;
+
+        type.eachAttribute(function(key) {
+          payloadKey = this.keyForAttribute(key);
+
+          if (key === payloadKey) { return; }
+          if (!hash.hasOwnProperty(payloadKey)) { return; }
+
+          hash[key] = hash[payloadKey];
+          delete hash[payloadKey];
+        }, this);
+      },
+
+      normalizeRelationships: function(type, hash) {
+        var payloadKey, link;
+
+        if (!hash.links) { return; }
+
+        type.eachRelationship(function(key, relationship) {
+          payloadKey = this.keyForRelationship(key, relationship.kind);
+
+          if (hash.links[payloadKey]) {
+            link = hash.links[payloadKey];
+            delete hash.links[payloadKey];
+
+            if (link.linkage) {
+              switch (relationship.kind) {
+                case 'belongsTo':
+                  this.normalizeBelongsTo(hash, key, link);
+                  break;
+                case 'hasMany':
+                  this.normalizeHasMany(hash, key, link);
+                  break;
+              }
+            } else {
+              this.normalizeLink(hash, key, link);
+            }
+          }
+        }, this);
+      },
+
+      normalizeBelongsTo: function(hash, key, link) {
+        var linkage = link.linkage;
+        if (linkage) {
+          hash[key] = {
+            type: this.normalizeTypeKey(linkage.type),
+            id: linkage.id
+          };
+        }
+      },
+
+      normalizeHasMany: function(hash, key, link) {
+        var linkage = link.linkage;
+        if (linkage) {
+          hash[key] = ember$data$lib$serializers$json$api$serializer$$map.call(linkage, function(item) {
+            return {
+              type: this.normalizeTypeKey(item.type),
+              id: item.id
+            };
+          }, this);
+        }
+      },
+
+      normalizeLink: function(hash, key, link) {
+        if (Ember.typeOf(link) === 'string') {
+          hash.links[key] = {
+            self: null,
+            related: link
+          };
+        } else {
+          hash.links[key] = {
+            self: link.self || null,
+            related: link.related || null
+          };
+        }
+      },
+
+      applyTransforms: function(type, hash) {
+        type.eachTransformedAttribute(function applyTransform(key, type) {
+          if (!hash.hasOwnProperty(key)) { return; }
+
+          var transform = this.transformFor(type);
+          hash[key] = transform.deserialize(hash[key]);
+        }, this);
+      }
+    });
+
     var ember$data$lib$system$promise$proxies$$Promise = Ember.RSVP.Promise;
     var ember$data$lib$system$promise$proxies$$get = Ember.get;
 
@@ -6218,7 +6786,7 @@
         record. This is useful for displaying all errors to the user.
 
         ```handlebars
-        {{#each message in model.errors.messages}}
+        {{#each model.errors.messages as |message|}}
           <div class="error">
             {{message}}
           </div>
@@ -6447,6 +7015,7 @@
       //multiple possible typeKeys
       this.inverseKeyForImplicit = this.store.modelFor(this.record.constructor).typeKey + this.key;
       this.linkPromise = null;
+      this.hasData = false;
     };
 
     ember$data$lib$system$relationships$state$relationship$$Relationship.prototype = {
@@ -6516,6 +7085,7 @@
           }
         }
         this.flushCanonicalLater();
+        this.setHasData(true);
       },
 
       removeCanonicalRecords: function(records, idx) {
@@ -6556,6 +7126,7 @@
           }
           this.record.updateRecordArraysLater();
         }
+        this.setHasData(true);
       },
 
       removeRecord: function(record) {
@@ -6633,7 +7204,7 @@
       },
 
       updateLink: function(link) {
-                        if (link !== this.link) {
+                if (link !== this.link) {
           this.link = link;
           this.linkPromise = null;
           this.record.notifyPropertyChange(this.key);
@@ -6657,10 +7228,15 @@
         var self = this;
         //TODO Once we have adapter support, we need to handle updated and canonical changes
         self.computeChanges(records);
+        self.setHasData(true);
       },
 
       notifyRecordRelationshipAdded: Ember.K,
-      notifyRecordRelationshipRemoved: Ember.K
+      notifyRecordRelationshipRemoved: Ember.K,
+
+      setHasData: function(value) {
+        this.hasData = value;
+      }
     };
 
 
@@ -6728,12 +7304,12 @@
       */
       isLoaded: false,
 
-       /**
-         The relationship which manages this array.
+      /**
+        The relationship which manages this array.
 
-         @property {ManyRelationship} relationship
-         @private
-       */
+        @property {ManyRelationship} relationship
+        @private
+      */
       relationship: null,
 
       internalReplace: function(idx, amt, objects) {
@@ -7093,6 +7669,7 @@
       } else if (this.inverseRecord) {
         this.removeRecord(this.inverseRecord);
       }
+      this.setHasData(true);
     };
 
     ember$data$lib$system$relationships$state$belongs$to$$BelongsToRelationship.prototype.setCanonicalRecord = function(newRecord) {
@@ -7101,6 +7678,7 @@
       } else if (this.inverseRecord) {
         this.removeCanonicalRecord(this.inverseRecord);
       }
+      this.setHasData(true);
     };
 
     ember$data$lib$system$relationships$state$belongs$to$$BelongsToRelationship.prototype._super$addCanonicalRecord = ember$data$lib$system$relationships$state$relationship$$default.prototype.addCanonicalRecord;
@@ -7283,7 +7861,6 @@
 
         ```javascript
         // store.push('post', { id: 1, author: 'Tomster', title: 'Ember.js rocks' });
-
         postSnapshot.id; // => '1'
         ```
 
@@ -7330,7 +7907,6 @@
 
         ```javascript
         // store.push('post', { id: 1, author: 'Tomster', title: 'Ember.js rocks' });
-
         postSnapshot.attr('author'); // => 'Tomster'
         postSnapshot.attr('title'); // => 'Ember.js rocks'
         ```
@@ -7355,7 +7931,6 @@
 
         ```javascript
         // store.push('post', { id: 1, author: 'Tomster', title: 'Hello World' });
-
         postSnapshot.attributes(); // => { author: 'Tomster', title: 'Ember.js rocks' }
         ```
 
@@ -7380,26 +7955,31 @@
         ```javascript
         // store.push('post', { id: 1, title: 'Hello World' });
         // store.createRecord('comment', { body: 'Lorem ipsum', post: post });
-
         commentSnapshot.belongsTo('post'); // => DS.Snapshot
         commentSnapshot.belongsTo('post', { id: true }); // => '1'
+
+        // store.push('comment', { id: 1, body: 'Lorem ipsum' });
+        commentSnapshot.belongsTo('post'); // => undefined
         ```
 
-        Calling `belongsTo` will return a new Snapshot as long as there's any
-        data available, such as an ID. If there's no data available `belongsTo` will
-        return undefined.
+        Calling `belongsTo` will return a new Snapshot as long as there's any known
+        data for the relationship available, such as an ID. If the relationship is
+        known but unset, `belongsTo` will return `null`. If the contents of the
+        relationship is unknown `belongsTo` will return `undefined`.
 
         Note: Relationships are loaded lazily and cached upon first access.
 
         @method belongsTo
         @param {String} keyName
         @param {Object} [options]
-        @return {DS.Snapshot|String|undefined} A snapshot or ID of a belongsTo relationship, or undefined
+        @return {DS.Snapshot|String|null|undefined} A snapshot or ID of a known
+          relationship or null if the relationship is known but unset. undefined
+          will be returned if the contents of the relationship is unknown.
       */
       belongsTo: function(keyName, options) {
         var id = options && options.id;
+        var relationship, inverseRecord, hasData;
         var result;
-        var relationship, inverseRecord;
 
         if (id && keyName in this._belongsToIds) {
           return this._belongsToIds[keyName];
@@ -7414,16 +7994,24 @@
           throw new Ember.Error("Model '" + Ember.inspect(this.record) + "' has no belongsTo relationship named '" + keyName + "' defined.");
         }
 
+        hasData = ember$data$lib$system$snapshot$$get(relationship, 'hasData');
         inverseRecord = ember$data$lib$system$snapshot$$get(relationship, 'inverseRecord');
-        if (id) {
+
+        if (hasData) {
           if (inverseRecord) {
-            result = ember$data$lib$system$snapshot$$get(inverseRecord, 'id');
+            if (id) {
+              result = ember$data$lib$system$snapshot$$get(inverseRecord, 'id');
+            } else {
+              result = inverseRecord._createSnapshot();
+            }
+          } else {
+            result = null;
           }
+        }
+
+        if (id) {
           this._belongsToIds[keyName] = result;
         } else {
-          if (inverseRecord) {
-            result = inverseRecord._createSnapshot();
-          }
           this._belongsToRelationships[keyName] = result;
         }
 
@@ -7443,9 +8031,11 @@
 
         ```javascript
         // store.push('post', { id: 1, title: 'Hello World', comments: [2, 3] });
-
         postSnapshot.hasMany('comments'); // => [DS.Snapshot, DS.Snapshot]
         postSnapshot.hasMany('comments', { ids: true }); // => ['2', '3']
+
+        // store.push('post', { id: 1, title: 'Hello World' });
+        postSnapshot.hasMany('comments'); // => undefined
         ```
 
         Note: Relationships are loaded lazily and cached upon first access.
@@ -7453,12 +8043,14 @@
         @method hasMany
         @param {String} keyName
         @param {Object} [options]
-        @return {Array} An array of snapshots or IDs of a hasMany relationship
+        @return {Array|undefined} An array of snapshots or IDs of a known
+          relationship or an empty array if the relationship is known but unset.
+          undefined will be returned if the contents of the relationship is unknown.
       */
       hasMany: function(keyName, options) {
         var ids = options && options.ids;
-        var results = [];
-        var relationship, members;
+        var relationship, members, hasData;
+        var results;
 
         if (ids && keyName in this._hasManyIds) {
           return this._hasManyIds[keyName];
@@ -7473,17 +8065,23 @@
           throw new Ember.Error("Model '" + Ember.inspect(this.record) + "' has no hasMany relationship named '" + keyName + "' defined.");
         }
 
+        hasData = ember$data$lib$system$snapshot$$get(relationship, 'hasData');
         members = ember$data$lib$system$snapshot$$get(relationship, 'members');
 
-        if (ids) {
+        if (hasData) {
+          results = [];
           members.forEach(function(member) {
-            results.push(ember$data$lib$system$snapshot$$get(member, 'id'));
+            if (ids) {
+              results.push(ember$data$lib$system$snapshot$$get(member, 'id'));
+            } else {
+              results.push(member._createSnapshot());
+            }
           });
+        }
+
+        if (ids) {
           this._hasManyIds[keyName] = results;
         } else {
-          members.forEach(function(member) {
-            results.push(member._createSnapshot());
-          });
           this._hasManyRelationships[keyName] = results;
         }
 
@@ -7590,12 +8188,10 @@
     var ember$data$lib$system$model$model$$map = Ember.ArrayPolyfills.map;
     var ember$data$lib$system$model$model$$intersection = Ember.EnumerableUtils.intersection;
     var ember$data$lib$system$model$model$$RESERVED_MODEL_PROPS = [
-      'attributes', 'currentState', 'data',
-      'relatedTypes', 'relationshipNames', 'relationships',
-      'relationshipsByName', 'transformedAttributes', 'store'
+      'currentState', 'data', 'store'
     ];
 
-    var ember$data$lib$system$model$model$$retrieveFromCurrentState = Ember.computed('currentState', function(key, value) {
+    var ember$data$lib$system$model$model$$retrieveFromCurrentState = Ember.computed('currentState', function(key) {
       return ember$data$lib$system$model$model$$get(ember$data$lib$system$model$model$$get(this, 'currentState'), key);
     }).readOnly();
 
@@ -7942,13 +8538,13 @@
 
         ```handlebars
         <label>Username: {{input value=username}} </label>
-        {{#each error in model.errors.username}}
+        {{#each model.errors.username as |error|}}
           <div class="error">
             {{error.message}}
           </div>
         {{/each}}
         <label>Email: {{input value=email}} </label>
-        {{#each error in model.errors.email}}
+        {{#each model.errors.email as |error|}}
           <div class="error">
             {{error.message}}
           </div>
@@ -7960,7 +8556,7 @@
         object to get an array of all the error strings.
 
         ```handlebars
-        {{#each message in model.errors.messages}}
+        {{#each model.errors.messages as |message|}}
           <div class="error">
             {{message}}
           </div>
@@ -8816,6 +9412,53 @@
     });
 
     var ember$data$lib$system$model$model$$default = ember$data$lib$system$model$model$$Model;
+    var ember$data$lib$utils$supports$computed$getter$setter$$supportsComputedGetterSetter;
+
+    try {
+      Ember.computed({
+        get: function() { },
+        set: function() { }
+      });
+      ember$data$lib$utils$supports$computed$getter$setter$$supportsComputedGetterSetter = true;
+    } catch(e) {
+      ember$data$lib$utils$supports$computed$getter$setter$$supportsComputedGetterSetter = false;
+    }
+
+    var ember$data$lib$utils$supports$computed$getter$setter$$default = ember$data$lib$utils$supports$computed$getter$setter$$supportsComputedGetterSetter;
+
+    var ember$data$lib$utils$computed$polyfill$$computed = Ember.computed;
+
+    var ember$data$lib$utils$computed$polyfill$$default = function() {
+      var polyfillArguments = [];
+      var config = arguments[arguments.length - 1];
+
+      if (typeof config === 'function' || ember$data$lib$utils$supports$computed$getter$setter$$default) {
+        return ember$data$lib$utils$computed$polyfill$$computed.apply(null, arguments);
+      }
+
+      for (var i = 0, l = arguments.length - 1; i < l; i++) {
+        polyfillArguments.push(arguments[i]);
+      }
+
+      var func;
+      if (config.set) {
+        func = function(key, value) {
+          if (arguments.length > 1) {
+            return config.set.call(this, key, value);
+          } else {
+            return config.get.call(this, key);
+          }
+        };
+      } else {
+        func = function(key) {
+          return config.get.call(this, key);
+        };
+      }
+
+      polyfillArguments.push(func);
+
+      return ember$data$lib$utils$computed$polyfill$$computed.apply(null, polyfillArguments);
+    };
 
     /**
       @module ember-data
@@ -9058,8 +9701,15 @@
         options: options
       };
 
-      return Ember.computed(function(key, value) {
-        if (arguments.length > 1) {
+      return ember$data$lib$utils$computed$polyfill$$default({
+        get: function(key) {
+          if (ember$data$lib$system$model$attributes$$hasValue(this, key)) {
+            return ember$data$lib$system$model$attributes$$getValue(this, key);
+          } else {
+            return ember$data$lib$system$model$attributes$$getDefaultValue(this, options, key);
+          }
+        },
+        set: function(key, value) {
                     var oldValue = ember$data$lib$system$model$attributes$$getValue(this, key);
 
           if (value !== oldValue) {
@@ -9076,15 +9726,7 @@
           }
 
           return value;
-        } else if (ember$data$lib$system$model$attributes$$hasValue(this, key)) {
-          return ember$data$lib$system$model$attributes$$getValue(this, key);
-        } else {
-          return ember$data$lib$system$model$attributes$$getDefaultValue(this, options, key);
         }
-
-      // `data` is never set directly. However, it may be
-      // invalidated from the state manager's setData
-      // event.
       }).meta(meta);
     }
     var ember$data$lib$system$model$attributes$$default = ember$data$lib$system$model$attributes$$attr;
@@ -9377,6 +10019,10 @@
 
         // Set the properties specified on the record.
         record.setProperties(properties);
+
+        record.eachRelationship(function(key, descriptor) {
+          record._relationships[key].setHasData(true);
+        });
 
         return record;
       },
@@ -9917,7 +10563,7 @@
         @param {Array} records
         @param {String or subclass of DS.Model} type
         @param {Resolver} resolver
-        @return {DS.ManyArray} records
+        @return {Promise} promise
       */
       findMany: function(records) {
         var store = this;
@@ -10098,6 +10744,7 @@
         }
 
         typeMap.findAllCache = null;
+        typeMap.metadata = Ember.create(null);
       },
 
       /**
@@ -11043,10 +11690,10 @@
 
         return record;
       }, function(reason) {
-        if (reason instanceof ember$data$lib$system$adapter$$InvalidError) {
+        if (reason instanceof ember$data$lib$system$model$errors$invalid$$default) {
           var errors = serializer.extractErrors(store, type, reason.errors, ember$data$lib$system$store$$get(record, 'id'));
           store.recordWasInvalid(record, errors);
-          reason = new ember$data$lib$system$adapter$$InvalidError(errors);
+          reason = new ember$data$lib$system$model$errors$invalid$$default(errors);
         } else {
           store.recordWasError(record, reason);
         }
@@ -11067,13 +11714,12 @@
           relationship.updateLink(data.links[key]);
         }
 
-        if (kind === 'belongsTo') {
-          if (value === undefined) {
-            return;
+        if (value !== undefined) {
+          if (kind === 'belongsTo') {
+            relationship.setCanonicalRecord(value);
+          } else if (kind === 'hasMany') {
+            relationship.updateRecordsFromAdapter(value);
           }
-          relationship.setCanonicalRecord(value);
-        } else if (kind === 'hasMany' && value) {
-          relationship.updateRecordsFromAdapter(value);
         }
       });
     }
@@ -11097,7 +11743,9 @@
 
       // new go forward paths
       registry.register('serializer:-default', ember$data$lib$serializers$json$serializer$$default);
+      registry.register('serializer:-json-api', ember$data$lib$serializers$json$api$serializer$$default);
       registry.register('serializer:-rest', ember$data$lib$serializers$rest$serializer$$default);
+      registry.register('adapter:-json-api', ember$data$lib$adapters$json$api$adapter$$default);
       registry.register('adapter:-rest', ember$data$lib$adapters$rest$adapter$$default);
 
       // Eagerly generate the store so defaultStore is populated.
@@ -11658,8 +12306,9 @@
       Embedded records must have a model defined to be extracted and serialized. Note that
       when defining any relationships on your model such as `belongsTo` and `hasMany`, you
       should not both specify `async:true` and also indicate through the serializer's
-      `attrs` attribute that the related model should be embedded.  If a model is
-      declared embedded, then do not use `async:true`.
+      `attrs` attribute that the related model should be embedded for deserialization.
+      If a model is declared embedded for deserialization (`embedded: 'always'`,
+      `deserialize: 'record'` or `deserialize: 'records'`), then do not use `async:true`.
 
       To successfully extract and serialize embedded records the model relationships
       must be setup correcty See the
@@ -11717,11 +12366,11 @@
         return ember$data$lib$serializers$embedded$records$mixin$$extractEmbeddedRecords(this, this.store, type, normalizedHash);
       },
 
-      keyForRelationship: function(key, type) {
-        if (this.hasDeserializeRecordsOption(key)) {
-          return this.keyForAttribute(key);
+      keyForRelationship: function(key, type, method) {
+        if ((method === 'serialize' && this.hasSerializeRecordsOption(key)) || (method === 'deserialize' && this.hasDeserializeRecordsOption(key))) {
+          return this.keyForAttribute(key, method);
         } else {
-          return this._super(key, type) || key;
+          return this._super(key, type, method) || key;
         }
       },
 
@@ -11785,14 +12434,14 @@
         var embeddedSnapshot = snapshot.belongsTo(attr);
         var key;
         if (includeIds) {
-          key = this.keyForRelationship(attr, relationship.kind);
+          key = this.keyForRelationship(attr, relationship.kind, 'serialize');
           if (!embeddedSnapshot) {
             json[key] = null;
           } else {
             json[key] = embeddedSnapshot.id;
           }
         } else if (includeRecords) {
-          key = this.keyForAttribute(attr);
+          key = this.keyForAttribute(attr, 'serialize');
           if (!embeddedSnapshot) {
             json[key] = null;
           } else {
@@ -11893,10 +12542,10 @@
         var includeRecords = this.hasSerializeRecordsOption(attr);
         var key;
         if (includeIds) {
-          key = this.keyForRelationship(attr, relationship.kind);
+          key = this.keyForRelationship(attr, relationship.kind, 'serialize');
           json[key] = snapshot.hasMany(attr, { ids: true });
         } else if (includeRecords) {
-          key = this.keyForAttribute(attr);
+          key = this.keyForAttribute(attr, 'serialize');
           json[key] = snapshot.hasMany(attr).map(function(embeddedSnapshot) {
             var embeddedJson = embeddedSnapshot.record.serialize({ includeId: true });
             this.removeEmbeddedForeignKey(snapshot, embeddedSnapshot, relationship, embeddedJson);
@@ -11929,7 +12578,7 @@
           if (parentRecord) {
             var name = parentRecord.name;
             var embeddedSerializer = this.store.serializerFor(embeddedSnapshot.type);
-            var parentKey = embeddedSerializer.keyForRelationship(name, parentRecord.kind);
+            var parentKey = embeddedSerializer.keyForRelationship(name, parentRecord.kind, 'deserialize');
             if (parentKey) {
               delete json[parentKey];
             }
@@ -12155,9 +12804,12 @@
         key: null
       };
 
-      return Ember.computed(function(key, value) {
-        if (arguments.length>1) {
-          if ( value === undefined ) {
+      return ember$data$lib$utils$computed$polyfill$$default({
+        get: function(key) {
+          return this._relationships[key].getRecord();
+        },
+        set: function(key, value) {
+          if (value === undefined) {
             value = null;
           }
           if (value && value.then) {
@@ -12165,9 +12817,9 @@
           } else {
             this._relationships[key].setRecord(value);
           }
-        }
 
-        return this._relationships[key].getRecord();
+          return this._relationships[key].getRecord();
+        }
       }).meta(meta);
     }
 
@@ -12958,7 +13610,7 @@
     ember$data$lib$core$$default.Snapshot = ember$data$lib$system$snapshot$$default;
 
     ember$data$lib$core$$default.Adapter      = ember$data$lib$system$adapter$$Adapter;
-    ember$data$lib$core$$default.InvalidError = ember$data$lib$system$adapter$$InvalidError;
+    ember$data$lib$core$$default.InvalidError = ember$data$lib$system$model$errors$invalid$$default;
 
     ember$data$lib$core$$default.Serializer = ember$data$lib$system$serializer$$default;
 
@@ -12971,12 +13623,15 @@
 
     ember$data$lib$core$$default.RecordArrayManager = ember$data$lib$system$record$array$manager$$default;
 
-    ember$data$lib$core$$default.RESTAdapter    = ember$data$lib$adapters$rest$adapter$$default;
-    ember$data$lib$core$$default.BuildURLMixin  = ember$data$lib$adapters$build$url$mixin$$default;
-    ember$data$lib$core$$default.FixtureAdapter = ember$data$lib$adapters$fixture$adapter$$default;
+    ember$data$lib$core$$default.BuildURLMixin = ember$data$lib$adapters$build$url$mixin$$default;
 
-    ember$data$lib$core$$default.RESTSerializer = ember$data$lib$serializers$rest$serializer$$default;
-    ember$data$lib$core$$default.JSONSerializer = ember$data$lib$serializers$json$serializer$$default;
+    ember$data$lib$core$$default.FixtureAdapter = ember$data$lib$adapters$fixture$adapter$$default;
+    ember$data$lib$core$$default.JSONAPIAdapter = ember$data$lib$adapters$json$api$adapter$$default;
+    ember$data$lib$core$$default.RESTAdapter    = ember$data$lib$adapters$rest$adapter$$default;
+
+    ember$data$lib$core$$default.JSONSerializer    = ember$data$lib$serializers$json$serializer$$default;
+    ember$data$lib$core$$default.JSONAPISerializer = ember$data$lib$serializers$json$api$serializer$$default;
+    ember$data$lib$core$$default.RESTSerializer    = ember$data$lib$serializers$rest$serializer$$default;
 
     ember$data$lib$core$$default.Transform       = ember$data$lib$transforms$base$$default;
     ember$data$lib$core$$default.DateTransform   = ember$data$lib$transforms$date$$default;
