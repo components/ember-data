@@ -2445,6 +2445,7 @@
     var ember$data$lib$serializers$json$serializer$$isNone = Ember.isNone;
     var ember$data$lib$serializers$json$serializer$$map = Ember.ArrayPolyfills.map;
     var ember$data$lib$serializers$json$serializer$$merge = Ember.merge;
+    var ember$data$lib$serializers$json$serializer$$camelize = Ember.String.camelize;
 
     var ember$data$lib$serializers$json$serializer$$default = ember$data$lib$system$serializer$$default.extend({
       /**
@@ -3493,7 +3494,7 @@
       */
 
       keyForRelationship: function(key, typeClass) {
-        return key;
+        return ember$data$lib$serializers$json$serializer$$camelize(key);
       },
 
       // HELPERS
@@ -3510,6 +3511,14 @@
                 return transform;
       }
     });
+
+    var ember$data$lib$system$normalize$type$key$$dasherize = Ember.String.dasherize;
+    var ember$data$lib$system$normalize$type$key$$camelize  = Ember.String.camelize;
+
+    function ember$data$lib$system$normalize$type$key$$normalizeTypeKey(typeKey) {
+      return ember$inflector$lib$lib$system$string$$singularize(ember$data$lib$system$normalize$type$key$$dasherize(ember$data$lib$system$normalize$type$key$$camelize(typeKey)));
+    }
+    var ember$data$lib$system$normalize$type$key$$default = ember$data$lib$system$normalize$type$key$$normalizeTypeKey;
 
     var ember$data$lib$serializers$rest$serializer$$forEach = Ember.ArrayPolyfills.forEach;
     var ember$data$lib$serializers$rest$serializer$$map = Ember.ArrayPolyfills.map;
@@ -4011,8 +4020,8 @@
         This method is used to convert each JSON root key in the payload
         into a typeKey that it can use to look up the appropriate model for
         that part of the payload. By default the typeKey for a model is its
-        name in camelCase, so if your JSON root key is 'fast-car' you would
-        use typeForRoot to convert it to 'fastCar' so that Ember Data finds
+        name in camelCase, so if your JSON root key is 'fast_car' you would
+        use typeForRoot to convert it to 'fast-car' so that Ember Data finds
         the `FastCar` model.
 
         If you diverge from this norm you should also consider changes to
@@ -4051,7 +4060,7 @@
         @return {String} the model's typeKey
       */
       typeForRoot: function(key) {
-        return ember$data$lib$serializers$rest$serializer$$camelize(ember$inflector$lib$lib$system$string$$singularize(key));
+        return ember$data$lib$system$normalize$type$key$$default(key);
       },
 
       // SERIALIZE
@@ -4226,7 +4235,8 @@
         @param {Object} options
       */
       serializeIntoHash: function(hash, typeClass, snapshot, options) {
-        hash[typeClass.typeKey] = this.serialize(snapshot, options);
+        var rootTypeKey = ember$data$lib$serializers$rest$serializer$$camelize(typeClass.typeKey);
+        hash[rootTypeKey] = this.serialize(snapshot, options);
       },
 
       /**
@@ -4597,7 +4607,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.d11a412396'
+      VERSION: '1.0.0-beta.17+canary.0267a23d76'
     });
 
     if (Ember.libraries) {
@@ -9346,8 +9356,6 @@
     var ember$data$lib$system$store$$copy = Ember.copy;
     var ember$data$lib$system$store$$Store;
 
-    var ember$data$lib$system$store$$camelize = Ember.String.camelize;
-
     var ember$data$lib$system$store$$Service = Ember.Service;
     if (!ember$data$lib$system$store$$Service) {
       ember$data$lib$system$store$$Service = Ember.Object;
@@ -10659,14 +10667,15 @@
         in this case
       */
 
-      _modelForMixin: function(key) {
+      _modelForMixin: function(typeKey) {
+        var normalizedTypeKey = this._normalizeTypeKey(typeKey);
         var registry = this.container._registry ? this.container._registry : this.container;
-        var mixin = registry.resolve('mixin:' + key);
+        var mixin = registry.resolve('mixin:' + normalizedTypeKey);
         if (mixin) {
           //Cache the class as a model
-          registry.register('model:' + key, DS.Model.extend(mixin));
+          registry.register('model:' + normalizedTypeKey, DS.Model.extend(mixin));
         }
-        var factory = this.modelFactoryFor(key);
+        var factory = this.modelFactoryFor(normalizedTypeKey);
         if (factory) {
           factory.__isMixin = true;
           factory.__mixin = mixin;
@@ -10710,7 +10719,8 @@
       },
 
       modelFactoryFor: function(key) {
-        return this.container.lookupFactory('model:' + key);
+        var normalizedKey = this._normalizeTypeKey(key);
+        return this.container.lookupFactory('model:' + normalizedKey);
       },
 
       /**
@@ -10775,14 +10785,14 @@
         records, as well as to update existing records.
 
         @method push
-        @param {String or subclass of DS.Model} type
+        @param {String or subclass of DS.Model} typeKey
         @param {Object} data
         @return {DS.Model} the record that was created or
           updated.
       */
-      push: function(typeName, data) {
+      push: function(typeKey, data) {
                 
-        var type = this.modelFor(typeName);
+        var type = this.modelFor(typeKey);
         var filter = Ember.EnumerableUtils.filter;
 
         // If Ember.ENV.DS_WARN_ON_UNKNOWN_KEYS is set to true and the payload
@@ -11116,12 +11126,13 @@
 
         @method retrieveManagedInstance
         @private
-        @param {String} type the object type
+        @param {String} type the object typeKey
         @param {String} type the object name
         @return {Ember.Object}
       */
-      retrieveManagedInstance: function(type, name) {
-        var key = type+":"+name;
+      retrieveManagedInstance: function(typeKey, name) {
+        var normalizedTypeKey = this._normalizeTypeKey(typeKey);
+        var key = normalizedTypeKey +":"+name;
 
         if (!this._containerCache[key]) {
           var instance = this.container.lookup(key);
@@ -11166,7 +11177,7 @@
         @return {String} if the adapter can generate one, an ID
       */
       _normalizeTypeKey: function(key) {
-        return ember$data$lib$system$store$$camelize(ember$inflector$lib$lib$system$string$$singularize(key));
+        return ember$data$lib$system$normalize$type$key$$default(key);
       }
     });
 
@@ -12344,23 +12355,31 @@
       @namespace
       @method belongsTo
       @for DS
-      @param {String} type (optional) type of the relationship
+      @param {String} modelTypeKey (optional) type of the relationship
       @param {Object} options (optional) a hash of options
       @return {Ember.computed} relationship
     */
-    function ember$data$lib$system$relationships$belongs$to$$belongsTo(type, options) {
-      if (typeof type === 'object') {
-        options = type;
-        type = undefined;
+    function ember$data$lib$system$relationships$belongs$to$$belongsTo(modelTypeKey, options) {
+      var opts, typeKey;
+      if (typeof modelTypeKey === 'object') {
+        opts = modelTypeKey;
+        typeKey = undefined;
+      } else {
+        opts = options;
+        typeKey = modelTypeKey;
+      }
+
+      if (typeof typeKey === 'string') {
+        typeKey = ember$data$lib$system$normalize$type$key$$default(typeKey);
       }
 
       
-      options = options || {};
+      opts = opts || {};
 
       var meta = {
-        type: type,
+        type: typeKey,
         isRelationship: true,
-        options: options,
+        options: opts,
         kind: 'belongsTo',
         key: null
       };
@@ -12494,6 +12513,10 @@
       
       options = options || {};
 
+      if (typeof type === 'string') {
+        type = ember$data$lib$system$normalize$type$key$$default(type);
+      }
+
       // Metadata about relationships is stored on the meta of
       // the relationship. This is used for introspection and
       // serialization. Note that `key` is populated lazily
@@ -12531,7 +12554,7 @@
       typeKey = meta.type || meta.key;
       if (typeof typeKey === 'string') {
         if (meta.kind === 'hasMany') {
-          typeKey = ember$inflector$lib$lib$system$string$$singularize(typeKey);
+          typeKey = ember$data$lib$system$normalize$type$key$$default(typeKey);
         }
         typeClass = store.modelFor(typeKey);
       } else {
