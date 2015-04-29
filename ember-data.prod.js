@@ -519,12 +519,12 @@
         Implement this method in order to provide data associated with a type
 
         @method fixturesForType
-        @param {Subclass of DS.Model} type
+        @param {Subclass of DS.Model} typeClass
         @return {Array}
       */
-      fixturesForType: function(type) {
-        if (type.FIXTURES) {
-          var fixtures = Ember.A(type.FIXTURES);
+      fixturesForType: function(typeClass) {
+        if (typeClass.FIXTURES) {
+          var fixtures = Ember.A(typeClass.FIXTURES);
           return fixtures.map(function(fixture) {
             var fixtureIdType = typeof fixture.id;
             if (fixtureIdType !== "number" && fixtureIdType !== "string") {
@@ -543,25 +543,25 @@
         @method queryFixtures
         @param {Array} fixture
         @param {Object} query
-        @param {Subclass of DS.Model} type
+        @param {Subclass of DS.Model} typeClass
         @return {Promise|Array}
       */
-      queryFixtures: function(fixtures, query, type) {
+      queryFixtures: function(fixtures, query, typeClass) {
               },
 
       /**
         @method updateFixtures
-        @param {Subclass of DS.Model} type
+        @param {Subclass of DS.Model} typeClass
         @param {Array} fixture
       */
-      updateFixtures: function(type, fixture) {
-        if (!type.FIXTURES) {
-          type.FIXTURES = [];
+      updateFixtures: function(typeClass, fixture) {
+        if (!typeClass.FIXTURES) {
+          typeClass.FIXTURES = [];
         }
 
-        var fixtures = type.FIXTURES;
+        var fixtures = typeClass.FIXTURES;
 
-        this.deleteLoadedFixture(type, fixture);
+        this.deleteLoadedFixture(typeClass, fixture);
 
         fixtures.push(fixture);
       },
@@ -571,10 +571,10 @@
 
         @method mockJSON
         @param {DS.Store} store
-        @param {Subclass of DS.Model} type
+        @param {Subclass of DS.Model} typeClass
         @param {DS.Snapshot} snapshot
       */
-      mockJSON: function(store, type, snapshot) {
+      mockJSON: function(store, typeClass, snapshot) {
         return store.serializerFor(snapshot.typeKey).serialize(snapshot, { includeId: true });
       },
 
@@ -591,13 +591,13 @@
       /**
         @method find
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @param {String} id
         @param {DS.Snapshot} snapshot
         @return {Promise} promise
       */
-      find: function(store, type, id, snapshot) {
-        var fixtures = this.fixturesForType(type);
+      find: function(store, typeClass, id, snapshot) {
+        var fixtures = this.fixturesForType(typeClass);
         var fixture;
 
         
@@ -615,13 +615,13 @@
       /**
         @method findMany
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @param {Array} ids
         @param {Array} snapshots
         @return {Promise} promise
       */
-      findMany: function(store, type, ids, snapshots) {
-        var fixtures = this.fixturesForType(type);
+      findMany: function(store, typeClass, ids, snapshots) {
+        var fixtures = this.fixturesForType(typeClass);
 
         
         if (fixtures) {
@@ -641,12 +641,12 @@
         @private
         @method findAll
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @param {String} sinceToken
         @return {Promise} promise
       */
-      findAll: function(store, type) {
-        var fixtures = this.fixturesForType(type);
+      findAll: function(store, typeClass) {
+        var fixtures = this.fixturesForType(typeClass);
 
         
         return this.simulateRemoteCall(function() {
@@ -658,16 +658,16 @@
         @private
         @method findQuery
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @param {Object} query
         @param {DS.AdapterPopulatedRecordArray} recordArray
         @return {Promise} promise
       */
-      findQuery: function(store, type, query, array) {
-        var fixtures = this.fixturesForType(type);
+      findQuery: function(store, typeClass, query, array) {
+        var fixtures = this.fixturesForType(typeClass);
 
         
-        fixtures = this.queryFixtures(fixtures, query, type);
+        fixtures = this.queryFixtures(fixtures, query, typeClass);
 
         if (fixtures) {
           return this.simulateRemoteCall(function() {
@@ -679,14 +679,14 @@
       /**
         @method createRecord
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @param {DS.Snapshot} snapshot
         @return {Promise} promise
       */
-      createRecord: function(store, type, snapshot) {
-        var fixture = this.mockJSON(store, type, snapshot);
+      createRecord: function(store, typeClass, snapshot) {
+        var fixture = this.mockJSON(store, typeClass, snapshot);
 
-        this.updateFixtures(type, fixture);
+        this.updateFixtures(typeClass, fixture);
 
         return this.simulateRemoteCall(function() {
           return fixture;
@@ -700,10 +700,10 @@
         @param {DS.Snapshot} snapshot
         @return {Promise} promise
       */
-      updateRecord: function(store, type, snapshot) {
-        var fixture = this.mockJSON(store, type, snapshot);
+      updateRecord: function(store, typeClass, snapshot) {
+        var fixture = this.mockJSON(store, typeClass, snapshot);
 
-        this.updateFixtures(type, fixture);
+        this.updateFixtures(typeClass, fixture);
 
         return this.simulateRemoteCall(function() {
           return fixture;
@@ -713,12 +713,12 @@
       /**
         @method deleteRecord
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @param {DS.Snapshot} snapshot
         @return {Promise} promise
       */
-      deleteRecord: function(store, type, snapshot) {
-        this.deleteLoadedFixture(type, snapshot);
+      deleteRecord: function(store, typeClass, snapshot) {
+        this.deleteLoadedFixture(typeClass, snapshot);
 
         return this.simulateRemoteCall(function() {
           // no payload in a deletion
@@ -729,15 +729,15 @@
       /*
         @method deleteLoadedFixture
         @private
-        @param type
+        @param typeClass
         @param snapshot
       */
-      deleteLoadedFixture: function(type, snapshot) {
-        var existingFixture = this.findExistingFixture(type, snapshot);
+      deleteLoadedFixture: function(typeClass, snapshot) {
+        var existingFixture = this.findExistingFixture(typeClass, snapshot);
 
         if (existingFixture) {
-          var index = ember$data$lib$adapters$fixture$adapter$$indexOf(type.FIXTURES, existingFixture);
-          type.FIXTURES.splice(index, 1);
+          var index = ember$data$lib$adapters$fixture$adapter$$indexOf(typeClass.FIXTURES, existingFixture);
+          typeClass.FIXTURES.splice(index, 1);
           return true;
         }
       },
@@ -745,11 +745,11 @@
       /*
         @method findExistingFixture
         @private
-        @param type
+        @param typeClass
         @param snapshot
       */
-      findExistingFixture: function(type, snapshot) {
-        var fixtures = this.fixturesForType(type);
+      findExistingFixture: function(typeClass, snapshot) {
+        var fixtures = this.fixturesForType(typeClass);
         var id = snapshot.id;
 
         return this.findFixtureById(fixtures, id);
@@ -818,52 +818,52 @@
         will be arrays of ids and snapshots.
 
         @method buildURL
-        @param {String} type
+        @param {String} typeKey
         @param {String|Array|Object} id single id or array of ids or query
         @param {DS.Snapshot|Array} snapshot single snapshot or array of snapshots
         @param {String} requestType
         @return {String} url
       */
-      buildURL: function(type, id, snapshot, requestType) {
+      buildURL: function(typeKey, id, snapshot, requestType) {
         switch (requestType) {
           case 'find':
-            return this.urlForFind(id, type, snapshot);
+            return this.urlForFind(id, typeKey, snapshot);
           case 'findAll':
-            return this.urlForFindAll(type);
+            return this.urlForFindAll(typeKey);
           case 'findQuery':
-            return this.urlForFindQuery(id, type);
+            return this.urlForFindQuery(id, typeKey);
           case 'findMany':
-            return this.urlForFindMany(id, type, snapshot);
+            return this.urlForFindMany(id, typeKey, snapshot);
           case 'findHasMany':
-            return this.urlForFindHasMany(id, type);
+            return this.urlForFindHasMany(id, typeKey);
           case 'findBelongsTo':
-            return this.urlForFindBelongsTo(id, type);
+            return this.urlForFindBelongsTo(id, typeKey);
           case 'createRecord':
-            return this.urlForCreateRecord(type, snapshot);
+            return this.urlForCreateRecord(typeKey, snapshot);
           case 'updateRecord':
-            return this.urlForUpdateRecord(id, type, snapshot);
+            return this.urlForUpdateRecord(id, typeKey, snapshot);
           case 'deleteRecord':
-            return this.urlForDeleteRecord(id, type, snapshot);
+            return this.urlForDeleteRecord(id, typeKey, snapshot);
           default:
-            return this._buildURL(type, id);
+            return this._buildURL(typeKey, id);
         }
       },
 
       /**
         @method _buildURL
         @private
-        @param {String} type
+        @param {String} typeKey
         @param {String} id
         @return {String} url
       */
-      _buildURL: function(type, id) {
+      _buildURL: function(typeKey, id) {
         var url = [];
         var host = ember$data$lib$adapters$build$url$mixin$$get(this, 'host');
         var prefix = this.urlPrefix();
         var path;
 
-        if (type) {
-          path = this.pathForType(type);
+        if (typeKey) {
+          path = this.pathForType(typeKey);
           if (path) { url.push(path); }
         }
 
@@ -881,31 +881,31 @@
       /**
        * @method urlForFind
        * @param {String} id
-       * @param {String} type
+       * @param {String} typeKey
        * @param {DS.Snapshot} snapshot
        * @return {String} url
        */
-      urlForFind: function(id, type, snapshot) {
-        return this._buildURL(type, id);
+      urlForFind: function(id, typeKey, snapshot) {
+        return this._buildURL(typeKey, id);
       },
 
       /**
        * @method urlForFindAll
-       * @param {String} type
+       * @param {String} typeKey
        * @return {String} url
        */
-      urlForFindAll: function(type) {
-        return this._buildURL(type);
+      urlForFindAll: function(typeKey) {
+        return this._buildURL(typeKey);
       },
 
       /**
        * @method urlForFindQuery
        * @param {Object} query
-       * @param {String} type
+       * @param {String} typeKey
        * @return {String} url
        */
-      urlForFindQuery: function(query, type) {
-        return this._buildURL(type);
+      urlForFindQuery: function(query, typeKey) {
+        return this._buildURL(typeKey);
       },
 
       /**
@@ -915,60 +915,60 @@
        * @param {Array} snapshots
        * @return {String} url
        */
-      urlForFindMany: function(ids, type, snapshots) {
-        return this._buildURL(type);
+      urlForFindMany: function(ids, typeKey, snapshots) {
+        return this._buildURL(typeKey);
       },
 
       /**
        * @method urlForFindHasMany
        * @param {String} id
-       * @param {String} type
+       * @param {String} typeKey
        * @return {String} url
        */
-      urlForFindHasMany: function(id, type) {
-        return this._buildURL(type, id);
+      urlForFindHasMany: function(id, typeKey) {
+        return this._buildURL(typeKey, id);
       },
 
       /**
        * @method urlForFindBelongTo
        * @param {String} id
-       * @param {String} type
+       * @param {String} typeKey
        * @return {String} url
        */
-      urlForFindBelongsTo: function(id, type) {
-        return this._buildURL(type, id);
+      urlForFindBelongsTo: function(id, typeKey) {
+        return this._buildURL(typeKey, id);
       },
 
       /**
        * @method urlForCreateRecord
-       * @param {String} type
+       * @param {String} typeKey
        * @param {DS.Snapshot} snapshot
        * @return {String} url
        */
-      urlForCreateRecord: function(type, snapshot) {
-        return this._buildURL(type);
+      urlForCreateRecord: function(typeKey, snapshot) {
+        return this._buildURL(typeKey);
       },
 
       /**
        * @method urlForUpdateRecord
        * @param {String} id
-       * @param {String} type
+       * @param {String} typeKey
        * @param {DS.Snapshot} snapshot
        * @return {String} url
        */
-      urlForUpdateRecord: function(id, type, snapshot) {
-        return this._buildURL(type, id);
+      urlForUpdateRecord: function(id, typeKey, snapshot) {
+        return this._buildURL(typeKey, id);
       },
 
       /**
        * @method urlForDeleteRecord
        * @param {String} id
-       * @param {String} type
+       * @param {String} typeKey
        * @param {DS.Snapshot} snapshot
        * @return {String} url
        */
-      urlForDeleteRecord: function(id, type, snapshot) {
-        return this._buildURL(type, id);
+      urlForDeleteRecord: function(id, typeKey, snapshot) {
+        return this._buildURL(typeKey, id);
       },
 
       /**
@@ -1027,19 +1027,19 @@
 
         ```js
         App.ApplicationAdapter = DS.RESTAdapter.extend({
-          pathForType: function(type) {
-            var decamelized = Ember.String.decamelize(type);
+          pathForType: function(typeKey) {
+            var decamelized = Ember.String.decamelize(typeKey);
             return Ember.String.pluralize(decamelized);
           }
         });
         ```
 
         @method pathForType
-        @param {String} type
+        @param {String} typeKey
         @return {String} path
       **/
-      pathForType: function(type) {
-        var camelized = Ember.String.camelize(type);
+      pathForType: function(typeKey) {
+        var camelized = Ember.String.camelize(typeKey);
         return Ember.String.pluralize(camelized);
       }
     });
@@ -2342,11 +2342,11 @@
         ```
 
         @method pathForType
-        @param {String} type
+        @param {String} typeKey
         @return String
       */
-      pathForType: function(type) {
-        var decamelized = activemodel$adapter$lib$system$active$model$adapter$$decamelize(type);
+      pathForType: function(typeKey) {
+        var decamelized = activemodel$adapter$lib$system$active$model$adapter$$decamelize(typeKey);
         var underscored = activemodel$adapter$lib$system$active$model$adapter$$underscore(decamelized);
         return ember$inflector$lib$lib$system$string$$pluralize(underscored);
       },
@@ -2398,7 +2398,7 @@
 
         @method extract
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @param {Object} payload
         @param {String|Number} id
         @param {String} requestType
@@ -2429,11 +2429,11 @@
         payload.
 
         @method normalize
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @param {Object} hash
         @return {Object}
       */
-      normalize: function(type, hash) {
+      normalize: function(typeClass, hash) {
         return hash;
       }
 
@@ -2533,15 +2533,15 @@
 
        @method applyTransforms
        @private
-       @param {subclass of DS.Model} type
+       @param {subclass of DS.Model} typeClass
        @param {Object} data The data to transform
        @return {Object} data The transformed data object
       */
-      applyTransforms: function(type, data) {
-        type.eachTransformedAttribute(function applyTransform(key, type) {
+      applyTransforms: function(typeClass, data) {
+        typeClass.eachTransformedAttribute(function applyTransform(key, typeClass) {
           if (!data.hasOwnProperty(key)) { return; }
 
-          var transform = this.transformFor(type);
+          var transform = this.transformFor(typeClass);
           data[key] = transform.deserialize(data[key]);
         }, this);
 
@@ -2564,8 +2564,8 @@
 
         ```javascript
         App.ApplicationSerializer = DS.JSONSerializer.extend({
-          normalize: function(type, hash) {
-            var fields = Ember.get(type, 'fields');
+          normalize: function(typeClass, hash) {
+            var fields = Ember.get(typeClass, 'fields');
             fields.forEach(function(field) {
               var payloadField = Ember.String.underscore(field);
               if (field === payloadField) { return; }
@@ -2579,19 +2579,19 @@
         ```
 
         @method normalize
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @param {Object} hash
         @return {Object}
       */
-      normalize: function(type, hash) {
+      normalize: function(typeClass, hash) {
         if (!hash) { return hash; }
 
         this.normalizeId(hash);
-        this.normalizeAttributes(type, hash);
-        this.normalizeRelationships(type, hash);
+        this.normalizeAttributes(typeClass, hash);
+        this.normalizeRelationships(typeClass, hash);
 
-        this.normalizeUsingDeclaredMapping(type, hash);
-        this.applyTransforms(type, hash);
+        this.normalizeUsingDeclaredMapping(typeClass, hash);
+        this.applyTransforms(typeClass, hash);
         return hash;
       },
 
@@ -2623,11 +2623,11 @@
         @method normalizeAttributes
         @private
       */
-      normalizeAttributes: function(type, hash) {
+      normalizeAttributes: function(typeClass, hash) {
         var payloadKey;
 
         if (this.keyForAttribute) {
-          type.eachAttribute(function(key) {
+          typeClass.eachAttribute(function(key) {
             payloadKey = this.keyForAttribute(key, 'deserialize');
             if (key === payloadKey) { return; }
             if (!hash.hasOwnProperty(payloadKey)) { return; }
@@ -2642,11 +2642,11 @@
         @method normalizeRelationships
         @private
       */
-      normalizeRelationships: function(type, hash) {
+      normalizeRelationships: function(typeClass, hash) {
         var payloadKey;
 
         if (this.keyForRelationship) {
-          type.eachRelationship(function(key, relationship) {
+          typeClass.eachRelationship(function(key, relationship) {
             payloadKey = this.keyForRelationship(key, relationship.kind, 'deserialize');
             if (key === payloadKey) { return; }
             if (!hash.hasOwnProperty(payloadKey)) { return; }
@@ -2661,7 +2661,7 @@
         @method normalizeUsingDeclaredMapping
         @private
       */
-      normalizeUsingDeclaredMapping: function(type, hash) {
+      normalizeUsingDeclaredMapping: function(typeClass, hash) {
         var attrs = ember$data$lib$serializers$json$serializer$$get(this, 'attrs');
         var payloadKey, key;
 
@@ -2695,10 +2695,10 @@
         @method normalizeErrors
         @private
       */
-      normalizeErrors: function(type, hash) {
+      normalizeErrors: function(typeClass, hash) {
         this.normalizeId(hash);
-        this.normalizeAttributes(type, hash);
-        this.normalizeRelationships(type, hash);
+        this.normalizeAttributes(typeClass, hash);
+        this.normalizeRelationships(typeClass, hash);
       },
 
       /**
@@ -2933,11 +2933,11 @@
 
         @method serializeIntoHash
         @param {Object} hash
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @param {DS.Snapshot} snapshot
         @param {Object} options
       */
-      serializeIntoHash: function(hash, type, snapshot, options) {
+      serializeIntoHash: function(hash, typeClass, snapshot, options) {
         ember$data$lib$serializers$json$serializer$$merge(hash, this.serialize(snapshot, options));
       },
 
@@ -3135,9 +3135,9 @@
         ```javascript
         socket.on('message', function(message) {
           var data = message.data;
-          var type = store.modelFor(message.modelName);
-          var serializer = store.serializerFor(type.typeKey);
-          var record = serializer.extract(store, type, data, data.id, 'single');
+          var typeClass = store.modelFor(message.modelName);
+          var serializer = store.serializerFor(typeClass.typeKey);
+          var record = serializer.extract(store, typeClass, data, data.id, 'single');
 
           store.push(message.modelName, record);
         });
@@ -3145,17 +3145,17 @@
 
         @method extract
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @param {Object} payload
         @param {String or Number} id
         @param {String} requestType
         @return {Object} json The deserialized payload
       */
-      extract: function(store, type, payload, id, requestType) {
-        this.extractMeta(store, type, payload);
+      extract: function(store, typeClass, payload, id, requestType) {
+        this.extractMeta(store, typeClass, payload);
 
         var specificExtract = "extract" + requestType.charAt(0).toUpperCase() + requestType.substr(1);
-        return this[specificExtract](store, type, payload, id, requestType);
+        return this[specificExtract](store, typeClass, payload, id, requestType);
       },
 
       /**
@@ -3165,14 +3165,14 @@
 
         @method extractFindAll
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @param {Object} payload
         @param {String or Number} id
         @param {String} requestType
         @return {Array} array An array of deserialized objects
       */
-      extractFindAll: function(store, type, payload, id, requestType) {
-        return this.extractArray(store, type, payload, id, requestType);
+      extractFindAll: function(store, typeClass, payload, id, requestType) {
+        return this.extractArray(store, typeClass, payload, id, requestType);
       },
       /**
         `extractFindQuery` is a hook into the extract method used when a
@@ -3187,8 +3187,8 @@
         @param {String} requestType
         @return {Array} array An array of deserialized objects
       */
-      extractFindQuery: function(store, type, payload, id, requestType) {
-        return this.extractArray(store, type, payload, id, requestType);
+      extractFindQuery: function(store, typeClass, payload, id, requestType) {
+        return this.extractArray(store, typeClass, payload, id, requestType);
       },
       /**
         `extractFindMany` is a hook into the extract method used when a
@@ -3197,14 +3197,14 @@
 
         @method extractFindMany
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @param {Object} payload
         @param {String or Number} id
         @param {String} requestType
         @return {Array} array An array of deserialized objects
       */
-      extractFindMany: function(store, type, payload, id, requestType) {
-        return this.extractArray(store, type, payload, id, requestType);
+      extractFindMany: function(store, typeClass, payload, id, requestType) {
+        return this.extractArray(store, typeClass, payload, id, requestType);
       },
       /**
         `extractFindHasMany` is a hook into the extract method used when a
@@ -3213,14 +3213,14 @@
 
         @method extractFindHasMany
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @param {Object} payload
         @param {String or Number} id
         @param {String} requestType
         @return {Array} array An array of deserialized objects
       */
-      extractFindHasMany: function(store, type, payload, id, requestType) {
-        return this.extractArray(store, type, payload, id, requestType);
+      extractFindHasMany: function(store, typeClass, payload, id, requestType) {
+        return this.extractArray(store, typeClass, payload, id, requestType);
       },
 
       /**
@@ -3230,14 +3230,14 @@
 
         @method extractCreateRecord
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @param {Object} payload
         @param {String or Number} id
         @param {String} requestType
         @return {Object} json The deserialized payload
       */
-      extractCreateRecord: function(store, type, payload, id, requestType) {
-        return this.extractSave(store, type, payload, id, requestType);
+      extractCreateRecord: function(store, typeClass, payload, id, requestType) {
+        return this.extractSave(store, typeClass, payload, id, requestType);
       },
       /**
         `extractUpdateRecord` is a hook into the extract method used when
@@ -3246,14 +3246,14 @@
 
         @method extractUpdateRecord
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @param {Object} payload
         @param {String or Number} id
         @param {String} requestType
         @return {Object} json The deserialized payload
       */
-      extractUpdateRecord: function(store, type, payload, id, requestType) {
-        return this.extractSave(store, type, payload, id, requestType);
+      extractUpdateRecord: function(store, typeClass, payload, id, requestType) {
+        return this.extractSave(store, typeClass, payload, id, requestType);
       },
       /**
         `extractDeleteRecord` is a hook into the extract method used when
@@ -3262,14 +3262,14 @@
 
         @method extractDeleteRecord
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @param {Object} payload
         @param {String or Number} id
         @param {String} requestType
         @return {Object} json The deserialized payload
       */
-      extractDeleteRecord: function(store, type, payload, id, requestType) {
-        return this.extractSave(store, type, payload, id, requestType);
+      extractDeleteRecord: function(store, typeClass, payload, id, requestType) {
+        return this.extractSave(store, typeClass, payload, id, requestType);
       },
 
       /**
@@ -3279,14 +3279,14 @@
 
         @method extractFind
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @param {Object} payload
         @param {String or Number} id
         @param {String} requestType
         @return {Object} json The deserialized payload
       */
-      extractFind: function(store, type, payload, id, requestType) {
-        return this.extractSingle(store, type, payload, id, requestType);
+      extractFind: function(store, typeClass, payload, id, requestType) {
+        return this.extractSingle(store, typeClass, payload, id, requestType);
       },
       /**
         `extractFindBelongsTo` is a hook into the extract method used when
@@ -3295,14 +3295,14 @@
 
         @method extractFindBelongsTo
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @param {Object} payload
         @param {String or Number} id
         @param {String} requestType
         @return {Object} json The deserialized payload
       */
-      extractFindBelongsTo: function(store, type, payload, id, requestType) {
-        return this.extractSingle(store, type, payload, id, requestType);
+      extractFindBelongsTo: function(store, typeClass, payload, id, requestType) {
+        return this.extractSingle(store, typeClass, payload, id, requestType);
       },
       /**
         `extractSave` is a hook into the extract method used when a call
@@ -3317,8 +3317,8 @@
         @param {String} requestType
         @return {Object} json The deserialized payload
       */
-      extractSave: function(store, type, payload, id, requestType) {
-        return this.extractSingle(store, type, payload, id, requestType);
+      extractSave: function(store, typeClass, payload, id, requestType) {
+        return this.extractSingle(store, typeClass, payload, id, requestType);
       },
 
       /**
@@ -3329,26 +3329,26 @@
 
         ```javascript
         App.PostSerializer = DS.JSONSerializer.extend({
-          extractSingle: function(store, type, payload) {
+          extractSingle: function(store, typeClass, payload) {
             payload.comments = payload._embedded.comment;
             delete payload._embedded;
 
-            return this._super(store, type, payload);
+            return this._super(store, typeClass, payload);
           },
         });
         ```
 
         @method extractSingle
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @param {Object} payload
         @param {String or Number} id
         @param {String} requestType
         @return {Object} json The deserialized payload
       */
-      extractSingle: function(store, type, payload, id, requestType) {
-        payload = this.normalizePayload(payload);
-        return this.normalize(type, payload);
+      extractSingle: function(store, typeClass, payload, id, requestType) {
+        var normalizedPayload = this.normalizePayload(payload);
+        return this.normalize(typeClass, normalizedPayload);
       },
 
       /**
@@ -3359,9 +3359,9 @@
 
         ```javascript
         App.PostSerializer = DS.JSONSerializer.extend({
-          extractArray: function(store, type, payload) {
+          extractArray: function(store, typeClass, payload) {
             return payload.map(function(json) {
-              return this.extractSingle(store, type, json);
+              return this.extractSingle(store, typeClass, json);
             }, this);
           }
         });
@@ -3369,18 +3369,18 @@
 
         @method extractArray
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @param {Object} payload
         @param {String or Number} id
         @param {String} requestType
         @return {Array} array An array of deserialized objects
       */
-      extractArray: function(store, type, arrayPayload, id, requestType) {
+      extractArray: function(store, typeClass, arrayPayload, id, requestType) {
         var normalizedPayload = this.normalizePayload(arrayPayload);
         var serializer = this;
 
         return ember$data$lib$serializers$json$serializer$$map.call(normalizedPayload, function(singlePayload) {
-          return serializer.normalize(type, singlePayload);
+          return serializer.normalize(typeClass, singlePayload);
         });
       },
 
@@ -3393,9 +3393,9 @@
 
         ```javascript
         App.PostSerializer = DS.JSONSerializer.extend({
-          extractMeta: function(store, type, payload) {
+          extractMeta: function(store, typeClass, payload) {
             if (payload && payload._pagination) {
-              store.setMetadataFor(type, payload._pagination);
+              store.setMetadataFor(typeClass, payload._pagination);
               delete payload._pagination;
             }
           }
@@ -3404,12 +3404,12 @@
 
         @method extractMeta
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @param {Object} payload
       */
-      extractMeta: function(store, type, payload) {
+      extractMeta: function(store, typeClass, payload) {
         if (payload && payload.meta) {
-          store.setMetadataFor(type, payload.meta);
+          store.setMetadataFor(typeClass, payload.meta);
           delete payload.meta;
         }
       },
@@ -3424,10 +3424,10 @@
 
         ```javascript
         App.PostSerializer = DS.JSONSerializer.extend({
-          extractErrors: function(store, type, payload, id) {
+          extractErrors: function(store, typeClass, payload, id) {
             if (payload && typeof payload === 'object' && payload._problems) {
               payload = payload._problems;
-              this.normalizeErrors(type, payload);
+              this.normalizeErrors(typeClass, payload);
             }
             return payload;
           }
@@ -3436,15 +3436,15 @@
 
         @method extractErrors
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @param {Object} payload
         @param {String or Number} id
         @return {Object} json The deserialized errors
       */
-      extractErrors: function(store, type, payload, id) {
+      extractErrors: function(store, typeClass, payload, id) {
         if (payload && typeof payload === 'object' && payload.errors) {
           payload = payload.errors;
-          this.normalizeErrors(type, payload);
+          this.normalizeErrors(typeClass, payload);
         }
         return payload;
       },
@@ -3488,11 +3488,11 @@
 
        @method keyForRelationship
        @param {String} key
-       @param {String} relationship type
+       @param {String} relationship typeClass
        @return {String} normalized key
       */
 
-      keyForRelationship: function(key, type) {
+      keyForRelationship: function(key, typeClass) {
         return key;
       },
 
@@ -3669,23 +3669,23 @@
         payload.
 
         @method normalize
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @param {Object} hash
         @param {String} prop
         @return {Object}
       */
-      normalize: function(type, hash, prop) {
+      normalize: function(typeClass, hash, prop) {
         this.normalizeId(hash);
-        this.normalizeAttributes(type, hash);
-        this.normalizeRelationships(type, hash);
+        this.normalizeAttributes(typeClass, hash);
+        this.normalizeRelationships(typeClass, hash);
 
-        this.normalizeUsingDeclaredMapping(type, hash);
+        this.normalizeUsingDeclaredMapping(typeClass, hash);
 
         if (this.normalizeHash && this.normalizeHash[prop]) {
           this.normalizeHash[prop](hash);
         }
 
-        this.applyTransforms(type, hash);
+        this.applyTransforms(typeClass, hash);
         return hash;
       },
 
@@ -3726,12 +3726,12 @@
         ```js
         App.PostSerializer = DS.RESTSerializer.extend({
           // First, restructure the top-level so it's organized by type
-          extractSingle: function(store, type, payload, id) {
+          extractSingle: function(store, typeClass, payload, id) {
             var comments = payload._embedded.comment;
             delete payload._embedded;
 
             payload = { comments: comments, post: payload };
-            return this._super(store, type, payload, id);
+            return this._super(store, typeClass, payload, id);
           },
 
           normalizeHash: {
@@ -3761,14 +3761,14 @@
 
         @method extractSingle
         @param {DS.Store} store
-        @param {subclass of DS.Model} primaryType
+        @param {subclass of DS.Model} primaryTypeClasss
         @param {Object} payload
         @param {String} recordId
         @return {Object} the primary response to the original request
       */
-      extractSingle: function(store, primaryType, rawPayload, recordId) {
+      extractSingle: function(store, primaryTypeClass, rawPayload, recordId) {
         var payload = this.normalizePayload(rawPayload);
-        var primaryTypeName = primaryType.typeKey;
+        var primaryTypeClassName = primaryTypeClass.typeKey;
         var primaryRecord;
 
         for (var prop in payload) {
@@ -3778,7 +3778,7 @@
                         continue;
           }
           var type = store.modelFor(typeName);
-          var isPrimary = type.typeKey === primaryTypeName;
+          var isPrimary = type.typeKey === primaryTypeClassName;
           var value = payload[prop];
 
           if (value === null) {
@@ -3787,7 +3787,7 @@
 
           // legacy support for singular resources
           if (isPrimary && Ember.typeOf(value) !== "array" ) {
-            primaryRecord = this.normalize(primaryType, value, prop);
+            primaryRecord = this.normalize(primaryTypeClass, value, prop);
             continue;
           }
 
@@ -3914,14 +3914,14 @@
 
         @method extractArray
         @param {DS.Store} store
-        @param {subclass of DS.Model} primaryType
+        @param {subclass of DS.Model} primaryTypeClass
         @param {Object} payload
         @return {Array} The primary array that was returned in response
           to the original query.
       */
-      extractArray: function(store, primaryType, rawPayload) {
+      extractArray: function(store, primaryTypeClass, rawPayload) {
         var payload = this.normalizePayload(rawPayload);
-        var primaryTypeName = primaryType.typeKey;
+        var primaryTypeClassName = primaryTypeClass.typeKey;
         var primaryArray;
 
         for (var prop in payload) {
@@ -3939,7 +3939,7 @@
           }
           var type = store.modelFor(typeName);
           var typeSerializer = store.serializerFor(type);
-          var isPrimary = (!forcedSecondary && (type.typeKey === primaryTypeName));
+          var isPrimary = (!forcedSecondary && (type.typeKey === primaryTypeClassName));
 
           /*jshint loopfunc:true*/
           var normalizedArray = ember$data$lib$serializers$rest$serializer$$map.call(payload[prop], function(hash) {
@@ -3991,11 +3991,11 @@
         var payload = this.normalizePayload(rawPayload);
 
         for (var prop in payload) {
-          var typeName = this.typeForRoot(prop);
-          if (!store.modelFactoryFor(typeName, prop)) {
+          var typeKey = this.typeForRoot(prop);
+          if (!store.modelFactoryFor(typeKey, prop)) {
                         continue;
           }
-          var type = store.modelFor(typeName);
+          var type = store.modelFor(typeKey);
           var typeSerializer = store.serializerFor(type);
 
           /*jshint loopfunc:true*/
@@ -4003,7 +4003,7 @@
             return typeSerializer.normalize(type, hash, prop);
           }, this);
 
-          store.pushMany(typeName, normalizedArray);
+          store.pushMany(typeKey, normalizedArray);
         }
       },
 
@@ -4221,12 +4221,12 @@
 
         @method serializeIntoHash
         @param {Object} hash
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @param {DS.Snapshot} snapshot
         @param {Object} options
       */
-      serializeIntoHash: function(hash, type, snapshot, options) {
-        hash[type.typeKey] = this.serialize(snapshot, options);
+      serializeIntoHash: function(hash, typeClass, snapshot, options) {
+        hash[typeClass.typeKey] = this.serialize(snapshot, options);
       },
 
       /**
@@ -4369,12 +4369,12 @@
         relationship keys.
 
         @method keyForRelationship
-        @param {String} key
+        @param {String} relationshipTypeKey
         @param {String} kind
         @return String
       */
-      keyForRelationship: function(rawKey, kind) {
-        var key = activemodel$adapter$lib$system$active$model$serializer$$decamelize(rawKey);
+      keyForRelationship: function(relationshipTypeKey, kind) {
+        var key = activemodel$adapter$lib$system$active$model$serializer$$decamelize(relationshipTypeKey);
         if (kind === "belongsTo") {
           return key + "_id";
         } else if (kind === "hasMany") {
@@ -4394,12 +4394,12 @@
 
         @method serializeIntoHash
         @param {Object} hash
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @param {DS.Snapshot} snapshot
         @param {Object} options
       */
-      serializeIntoHash: function(data, type, snapshot, options) {
-        var root = activemodel$adapter$lib$system$active$model$serializer$$underscore(activemodel$adapter$lib$system$active$model$serializer$$decamelize(type.typeKey));
+      serializeIntoHash: function(data, typeClass, snapshot, options) {
+        var root = activemodel$adapter$lib$system$active$model$serializer$$underscore(activemodel$adapter$lib$system$active$model$serializer$$decamelize(typeClass.typeKey));
         data[root] = this.serialize(snapshot, options);
       },
 
@@ -4453,16 +4453,16 @@
         ```
 
         @method normalize
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @param {Object} hash
         @param {String} prop
         @return Object
       */
 
-      normalize: function(type, hash, prop) {
+      normalize: function(typeClass, hash, prop) {
         this.normalizeLinks(hash);
 
-        return this._super(type, hash, prop);
+        return this._super(typeClass, hash, prop);
       },
 
       /**
@@ -4506,13 +4506,14 @@
           }
         ```
 
+        @param {Subclass of DS.Model} typeClass
         @method normalizeRelationships
         @private
       */
-      normalizeRelationships: function(type, hash) {
+      normalizeRelationships: function(typeClass, hash) {
 
         if (this.keyForRelationship) {
-          type.eachRelationship(function(key, relationship) {
+          typeClass.eachRelationship(function(key, relationship) {
             var payloadKey, payload;
             if (relationship.options.polymorphic) {
               payloadKey = this.keyForAttribute(key, "deserialize");
@@ -4596,7 +4597,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.49f00ab09e'
+      VERSION: '1.0.0-beta.17+canary.f4ec9d6461'
     });
 
     if (Ember.libraries) {
@@ -4777,23 +4778,23 @@
     var ember$data$lib$system$store$finders$$get = Ember.get;
     var ember$data$lib$system$store$finders$$Promise = Ember.RSVP.Promise;
 
-    function ember$data$lib$system$store$finders$$_find(adapter, store, type, id, record) {
+    function ember$data$lib$system$store$finders$$_find(adapter, store, typeClass, id, record) {
       var snapshot = record._createSnapshot();
-      var promise = adapter.find(store, type, id, snapshot);
-      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, type);
-      var label = "DS: Handle Adapter#find of " + type + " with id: " + id;
+      var promise = adapter.find(store, typeClass, id, snapshot);
+      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, typeClass);
+      var label = "DS: Handle Adapter#find of " + typeClass + " with id: " + id;
 
       promise = ember$data$lib$system$store$finders$$Promise.cast(promise, label);
       promise = ember$data$lib$system$store$common$$_guard(promise, ember$data$lib$system$store$common$$_bind(ember$data$lib$system$store$common$$_objectIsAlive, store));
 
       return promise.then(function(adapterPayload) {
                 return store._adapterRun(function() {
-          var payload = serializer.extract(store, type, adapterPayload, id, 'find');
+          var payload = serializer.extract(store, typeClass, adapterPayload, id, 'find');
 
-          return store.push(type, payload);
+          return store.push(typeClass, payload);
         });
       }, function(error) {
-        var record = store.getById(type, id);
+        var record = store.getById(typeClass, id);
         if (record) {
           record.notFound();
           if (ember$data$lib$system$store$finders$$get(record, 'isEmpty')) {
@@ -4801,15 +4802,15 @@
           }
         }
         throw error;
-      }, "DS: Extract payload of '" + type + "'");
+      }, "DS: Extract payload of '" + typeClass + "'");
     }
 
 
-    function ember$data$lib$system$store$finders$$_findMany(adapter, store, type, ids, records) {
+    function ember$data$lib$system$store$finders$$_findMany(adapter, store, typeClass, ids, records) {
       var snapshots = Ember.A(records).invoke('_createSnapshot');
-      var promise = adapter.findMany(store, type, ids, snapshots);
-      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, type);
-      var label = "DS: Handle Adapter#findMany of " + type;
+      var promise = adapter.findMany(store, typeClass, ids, snapshots);
+      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, typeClass);
+      var label = "DS: Handle Adapter#findMany of " + typeClass;
 
       if (promise === undefined) {
         throw new Error('adapter.findMany returned undefined, this was very likely a mistake');
@@ -4820,12 +4821,12 @@
 
       return promise.then(function(adapterPayload) {
         return store._adapterRun(function() {
-          var payload = serializer.extract(store, type, adapterPayload, null, 'findMany');
+          var payload = serializer.extract(store, typeClass, adapterPayload, null, 'findMany');
 
           
-          return store.pushMany(type, payload);
+          return store.pushMany(typeClass, payload);
         });
-      }, null, "DS: Extract payload of " + type);
+      }, null, "DS: Extract payload of " + typeClass);
     }
 
     function ember$data$lib$system$store$finders$$_findHasMany(adapter, store, record, link, relationship) {
@@ -4873,31 +4874,31 @@
       }, null, "DS: Extract payload of " + record + " : " + relationship.type);
     }
 
-    function ember$data$lib$system$store$finders$$_findAll(adapter, store, type, sinceToken) {
-      var promise = adapter.findAll(store, type, sinceToken);
-      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, type);
-      var label = "DS: Handle Adapter#findAll of " + type;
+    function ember$data$lib$system$store$finders$$_findAll(adapter, store, typeClass, sinceToken) {
+      var promise = adapter.findAll(store, typeClass, sinceToken);
+      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, typeClass);
+      var label = "DS: Handle Adapter#findAll of " + typeClass;
 
       promise = ember$data$lib$system$store$finders$$Promise.cast(promise, label);
       promise = ember$data$lib$system$store$common$$_guard(promise, ember$data$lib$system$store$common$$_bind(ember$data$lib$system$store$common$$_objectIsAlive, store));
 
       return promise.then(function(adapterPayload) {
         store._adapterRun(function() {
-          var payload = serializer.extract(store, type, adapterPayload, null, 'findAll');
+          var payload = serializer.extract(store, typeClass, adapterPayload, null, 'findAll');
 
           
-          store.pushMany(type, payload);
+          store.pushMany(typeClass, payload);
         });
 
-        store.didUpdateAll(type);
-        return store.all(type);
-      }, null, "DS: Extract payload of findAll " + type);
+        store.didUpdateAll(typeClass);
+        return store.all(typeClass);
+      }, null, "DS: Extract payload of findAll " + typeClass);
     }
 
-    function ember$data$lib$system$store$finders$$_findQuery(adapter, store, type, query, recordArray) {
-      var promise = adapter.findQuery(store, type, query, recordArray);
-      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, type);
-      var label = "DS: Handle Adapter#findQuery of " + type;
+    function ember$data$lib$system$store$finders$$_findQuery(adapter, store, typeClass, query, recordArray) {
+      var promise = adapter.findQuery(store, typeClass, query, recordArray);
+      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, typeClass);
+      var label = "DS: Handle Adapter#findQuery of " + typeClass;
 
       promise = ember$data$lib$system$store$finders$$Promise.cast(promise, label);
       promise = ember$data$lib$system$store$common$$_guard(promise, ember$data$lib$system$store$common$$_bind(ember$data$lib$system$store$common$$_objectIsAlive, store));
@@ -4905,14 +4906,14 @@
       return promise.then(function(adapterPayload) {
         var payload;
         store._adapterRun(function() {
-          payload = serializer.extract(store, type, adapterPayload, null, 'findQuery');
+          payload = serializer.extract(store, typeClass, adapterPayload, null, 'findQuery');
 
                   });
 
         recordArray.load(payload);
         return recordArray;
 
-      }, null, "DS: Extract payload of findQuery " + type);
+      }, null, "DS: Extract payload of findQuery " + typeClass);
     }
     var ember$data$lib$system$record$arrays$record$array$$get = Ember.get;
     var ember$data$lib$system$record$arrays$record$array$$set = Ember.set;
@@ -5293,8 +5294,6 @@
         To avoid thrashing, it only runs at most once per run loop.
 
         @method updateRecordArrays
-        @param {Class} type
-        @param {Number|String} clientId
       */
       updateRecordArrays: function() {
         ember$data$lib$system$record$array$manager$$forEach(this.changedRecords, function(record) {
@@ -5323,27 +5322,27 @@
 
       //Don't need to update non filtered arrays on simple changes
       _recordWasChanged: function (record) {
-        var type = record.constructor;
-        var recordArrays = this.filteredRecordArrays.get(type);
+        var typeClass = record.constructor;
+        var recordArrays = this.filteredRecordArrays.get(typeClass);
         var filter;
 
         ember$data$lib$system$record$array$manager$$forEach(recordArrays, function(array) {
           filter = ember$data$lib$system$record$array$manager$$get(array, 'filterFunction');
           if (filter) {
-            this.updateRecordArray(array, filter, type, record);
+            this.updateRecordArray(array, filter, typeClass, record);
           }
         }, this);
       },
 
       //Need to update live arrays on loading
       recordWasLoaded: function(record) {
-        var type = record.constructor;
-        var recordArrays = this.filteredRecordArrays.get(type);
+        var typeClass = record.constructor;
+        var recordArrays = this.filteredRecordArrays.get(typeClass);
         var filter;
 
         ember$data$lib$system$record$array$manager$$forEach(recordArrays, function(array) {
           filter = ember$data$lib$system$record$array$manager$$get(array, 'filterFunction');
-          this.updateRecordArray(array, filter, type, record);
+          this.updateRecordArray(array, filter, typeClass, record);
         }, this);
       },
       /**
@@ -5352,10 +5351,10 @@
         @method updateRecordArray
         @param {DS.FilteredRecordArray} array
         @param {Function} filter
-        @param {Class} type
+        @param {subclass of DS.Model} typeClass
         @param {Number|String} clientId
       */
-      updateRecordArray: function(array, filter, type, record) {
+      updateRecordArray: function(array, filter, typeClass, record) {
         var shouldBeInArray;
 
         if (!filter) {
@@ -5386,11 +5385,11 @@
 
         @method updateFilter
         @param {Array} array
-        @param {String} type
+        @param {String} typeKey
         @param {Function} filter
       */
-      updateFilter: function(array, type, filter) {
-        var typeMap = this.store.typeMapFor(type);
+      updateFilter: function(array, typeKey, filter) {
+        var typeMap = this.store.typeMapFor(typeKey);
         var records = typeMap.records;
         var record;
 
@@ -5398,7 +5397,7 @@
           record = records[i];
 
           if (!ember$data$lib$system$record$array$manager$$get(record, 'isDeleted') && !ember$data$lib$system$record$array$manager$$get(record, 'isEmpty')) {
-            this.updateRecordArray(array, filter, type, record);
+            this.updateRecordArray(array, filter, typeKey, record);
           }
         }
       },
@@ -5407,19 +5406,19 @@
         Create a `DS.RecordArray` for a type and register it for updates.
 
         @method createRecordArray
-        @param {Class} type
+        @param {Class} typeClass
         @return {DS.RecordArray}
       */
-      createRecordArray: function(type) {
+      createRecordArray: function(typeClass) {
         var array = ember$data$lib$system$record$arrays$record$array$$default.create({
-          type: type,
+          type: typeClass,
           content: Ember.A(),
           store: this.store,
           isLoaded: true,
           manager: this
         });
 
-        this.registerFilteredRecordArray(array, type);
+        this.registerFilteredRecordArray(array, typeClass);
 
         return array;
       },
@@ -5428,22 +5427,22 @@
         Create a `DS.FilteredRecordArray` for a type and register it for updates.
 
         @method createFilteredRecordArray
-        @param {Class} type
+        @param {subclass of DS.Model} typeClass
         @param {Function} filter
         @param {Object} query (optional
         @return {DS.FilteredRecordArray}
       */
-      createFilteredRecordArray: function(type, filter, query) {
+      createFilteredRecordArray: function(typeClass, filter, query) {
         var array = ember$data$lib$system$record$arrays$filtered$record$array$$default.create({
           query: query,
-          type: type,
+          type: typeClass,
           content: Ember.A(),
           store: this.store,
           manager: this,
           filterFunction: filter
         });
 
-        this.registerFilteredRecordArray(array, type, filter);
+        this.registerFilteredRecordArray(array, typeClass, filter);
 
         return array;
       },
@@ -5452,13 +5451,13 @@
         Create a `DS.AdapterPopulatedRecordArray` for a type with given query.
 
         @method createAdapterPopulatedRecordArray
-        @param {Class} type
+        @param {subclass of DS.Model} typeClass
         @param {Object} query
         @return {DS.AdapterPopulatedRecordArray}
       */
-      createAdapterPopulatedRecordArray: function(type, query) {
+      createAdapterPopulatedRecordArray: function(typeClass, query) {
         var array = ember$data$lib$system$record$arrays$adapter$populated$record$array$$default.create({
-          type: type,
+          type: typeClass,
           query: query,
           content: Ember.A(),
           store: this.store,
@@ -5478,14 +5477,14 @@
 
         @method registerFilteredRecordArray
         @param {DS.RecordArray} array
-        @param {Class} type
+        @param {subclass of DS.Model} typeClass
         @param {Function} filter
       */
-      registerFilteredRecordArray: function(array, type, filter) {
-        var recordArrays = this.filteredRecordArrays.get(type);
+      registerFilteredRecordArray: function(array, typeClass, filter) {
+        var recordArrays = this.filteredRecordArrays.get(typeClass);
         recordArrays.push(array);
 
-        this.updateFilter(array, type, filter);
+        this.updateFilter(array, typeClass, filter);
       },
 
       /**
@@ -9551,13 +9550,13 @@
         ```
 
         @method createRecord
-        @param {String} type
+        @param {String} typeKey
         @param {Object} properties a hash of properties to set on the
           newly created record.
         @return {DS.Model} record
       */
-      createRecord: function(typeName, inputProperties) {
-        var type = this.modelFor(typeName);
+      createRecord: function(typeKey, inputProperties) {
+        var typeClass = this.modelFor(typeKey);
         var properties = ember$data$lib$system$store$$copy(inputProperties) || {};
 
         // If the passed properties do not include a primary key,
@@ -9566,13 +9565,13 @@
         // to avoid conflicts.
 
         if (ember$data$lib$system$store$$isNone(properties.id)) {
-          properties.id = this._generateId(type, properties);
+          properties.id = this._generateId(typeClass, properties);
         }
 
         // Coerce ID to a string
         properties.id = ember$data$lib$system$store$$coerceId(properties.id);
 
-        var record = this.buildRecord(type, properties.id);
+        var record = this.buildRecord(typeClass, properties.id);
 
         // Move the record out of its initial `empty` state into
         // the `loaded` state.
@@ -9594,15 +9593,15 @@
 
         @method _generateId
         @private
-        @param {String} type
+        @param {String} typeKey
         @param {Object} properties from the new record
         @return {String} if the adapter can generate one, an ID
       */
-      _generateId: function(type, properties) {
-        var adapter = this.adapterFor(type);
+      _generateId: function(typeKey, properties) {
+        var adapter = this.adapterFor(typeKey);
 
         if (adapter && adapter.generateIdForRecord) {
-          return adapter.generateIdForRecord(this, type, properties);
+          return adapter.generateIdForRecord(this, typeKey, properties);
         }
 
         return null;
@@ -9755,23 +9754,23 @@
         ```
 
         @method find
-        @param {String or subclass of DS.Model} type
+        @param {String} typeKey
         @param {Object|String|Integer|null} id
         @param {Object} preload - optional set of attributes and relationships passed in either as IDs or as actual models
         @return {Promise} promise
       */
-      find: function(type, id, preload) {
+      find: function(typeKey, id, preload) {
                 
         if (arguments.length === 1) {
-          return this.findAll(type);
+          return this.findAll(typeKey);
         }
 
         // We are passed a query instead of an id.
         if (Ember.typeOf(id) === 'object') {
-          return this.findQuery(type, id);
+          return this.findQuery(typeKey, id);
         }
 
-        return this.findById(type, ember$data$lib$system$store$$coerceId(id), preload);
+        return this.findById(typeKey, ember$data$lib$system$store$$coerceId(id), preload);
       },
 
       /**
@@ -9795,16 +9794,16 @@
         ```
 
         @method fetchById
-        @param {String or subclass of DS.Model} type
+        @param {String} typeKey
         @param {String|Integer} id
         @param {Object} preload - optional set of attributes and relationships passed in either as IDs or as actual models
         @return {Promise} promise
       */
-      fetchById: function(type, id, preload) {
-        if (this.hasRecordForId(type, id)) {
-          return this.getById(type, id).reload();
+      fetchById: function(typeKey, id, preload) {
+        if (this.hasRecordForId(typeKey, id)) {
+          return this.getById(typeKey, id).reload();
         } else {
-          return this.find(type, id, preload);
+          return this.find(typeKey, id, preload);
         }
       },
 
@@ -9813,25 +9812,25 @@
         in the store or not.
 
         @method fetchAll
-        @param {String or subclass of DS.Model} type
+        @param {String} typeKey
         @return {Promise} promise
       */
-      fetchAll: function(type) {
-        type = this.modelFor(type);
+      fetchAll: function(typeKey) {
+        var typeClass = this.modelFor(typeKey);
 
-        return this._fetchAll(type, this.all(type));
+        return this._fetchAll(typeClass, this.all(typeKey));
       },
 
       /**
         @method fetch
-        @param {String or subclass of DS.Model} type
+        @param {String} typeKey
         @param {String|Integer} id
         @param {Object} preload - optional set of attributes and relationships passed in either as IDs or as actual models
         @return {Promise} promise
         @deprecated Use [fetchById](#method_fetchById) instead
       */
-      fetch: function(type, id, preload) {
-                return this.fetchById(type, id, preload);
+      fetch: function(typeKey, id, preload) {
+                return this.fetchById(typeKey, id, preload);
       },
 
       /**
@@ -9839,15 +9838,15 @@
 
         @method findById
         @private
-        @param {String or subclass of DS.Model} type
+        @param {String} typeKey
         @param {String|Integer} id
         @param {Object} preload - optional set of attributes and relationships passed in either as IDs or as actual models
         @return {Promise} promise
       */
-      findById: function(typeName, id, preload) {
+      findById: function(typeKey, id, preload) {
 
-        var type = this.modelFor(typeName);
-        var record = this.recordForId(type, id);
+        var typeClass = this.modelFor(typeKey);
+        var record = this.recordForId(typeClass, id);
 
         return this._findByRecord(record, preload);
       },
@@ -9875,16 +9874,16 @@
 
         @private
         @method findByIds
-        @param {String} type
+        @param {String} typeKey
         @param {Array} ids
         @return {Promise} promise
       */
-      findByIds: function(type, ids) {
+      findByIds: function(typeKey, ids) {
         var store = this;
 
         return ember$data$lib$system$promise$proxies$$promiseArray(Ember.RSVP.all(ember$data$lib$system$store$$map(ids, function(id) {
-          return store.findById(type, id);
-        })).then(Ember.A, null, "DS: Store#findByIds of " + type + " complete"));
+          return store.findById(typeKey, id);
+        })).then(Ember.A, null, "DS: Store#findByIds of " + typeKey + " complete"));
       },
 
       /**
@@ -9898,12 +9897,12 @@
         @return {Promise} promise
       */
       fetchRecord: function(record) {
-        var type = record.constructor;
+        var typeClass = record.constructor;
         var id = ember$data$lib$system$store$$get(record, 'id');
-        var adapter = this.adapterFor(type);
+        var adapter = this.adapterFor(typeClass);
 
                 
-        var promise = ember$data$lib$system$store$finders$$_find(adapter, this, type, id, record);
+        var promise = ember$data$lib$system$store$finders$$_find(adapter, this, typeClass, id, record);
         return promise;
       },
 
@@ -9912,11 +9911,11 @@
       },
 
       scheduleFetch: function(record) {
-        var type = record.constructor;
+        var typeClass = record.constructor;
         if (ember$data$lib$system$store$$isNone(record)) { return null; }
         if (record._loadingPromise) { return record._loadingPromise; }
 
-        var resolver = Ember.RSVP.defer('Fetching ' + type + 'with id: ' + record.get('id'));
+        var resolver = Ember.RSVP.defer('Fetching ' + typeClass + 'with id: ' + record.get('id'));
         var recordResolverPair = {
           record: record,
           resolver: resolver
@@ -9925,10 +9924,10 @@
 
         record.loadingData(promise);
 
-        if (!this._pendingFetch.get(type)) {
-          this._pendingFetch.set(type, [recordResolverPair]);
+        if (!this._pendingFetch.get(typeClass)) {
+          this._pendingFetch.set(typeClass, [recordResolverPair]);
         } else {
-          this._pendingFetch.get(type).push(recordResolverPair);
+          this._pendingFetch.get(typeClass).push(recordResolverPair);
         }
         Ember.run.scheduleOnce('afterRender', this, this.flushAllPendingFetches);
 
@@ -9944,9 +9943,9 @@
         this._pendingFetch = ember$data$lib$system$map$$Map.create();
       },
 
-      _flushPendingFetchForType: function (recordResolverPairs, type) {
+      _flushPendingFetchForType: function (recordResolverPairs, typeClass) {
         var store = this;
-        var adapter = store.adapterFor(type);
+        var adapter = store.adapterFor(typeClass);
         var shouldCoalesce = !!adapter.findMany && adapter.coalesceFindRequests;
         var records = Ember.A(recordResolverPairs).mapBy('record');
 
@@ -10015,7 +10014,7 @@
             var requestedRecords = Ember.A(groupOfRecords);
             var ids = requestedRecords.mapBy('id');
             if (ids.length > 1) {
-              ember$data$lib$system$store$finders$$_findMany(adapter, store, type, ids, requestedRecords).
+              ember$data$lib$system$store$finders$$_findMany(adapter, store, typeClass, ids, requestedRecords).
                 then(resolveFoundRecords).
                 then(makeMissingRecordsRejector(requestedRecords)).
                 then(null, makeRecordsRejector(requestedRecords));
@@ -10087,10 +10086,10 @@
         @param {String|Integer} id
         @return {Boolean}
       */
-      hasRecordForId: function(typeName, inputId) {
-        var type = this.modelFor(typeName);
+      hasRecordForId: function(typeKey, inputId) {
+        var typeClass = this.modelFor(typeKey);
         var id = ember$data$lib$system$store$$coerceId(inputId);
-        var record = this.typeMapFor(type).idToRecord[id];
+        var record = this.typeMapFor(typeClass).idToRecord[id];
         return !!record && ember$data$lib$system$store$$get(record, 'isLoaded');
       },
 
@@ -10100,18 +10099,18 @@
 
         @method recordForId
         @private
-        @param {String or subclass of DS.Model} type
+        @param {String} typeKey
         @param {String|Integer} id
         @return {DS.Model} record
       */
-      recordForId: function(typeName, inputId) {
-        var type = this.modelFor(typeName);
+      recordForId: function(typeKey, inputId) {
+        var typeClass = this.modelFor(typeKey);
         var id = ember$data$lib$system$store$$coerceId(inputId);
-        var idToRecord = this.typeMapFor(type).idToRecord;
+        var idToRecord = this.typeMapFor(typeClass).idToRecord;
         var record = idToRecord[id];
 
         if (!record || !idToRecord[id]) {
-          record = this.buildRecord(type, id);
+          record = this.buildRecord(typeClass, id);
         }
 
         return record;
@@ -10209,36 +10208,36 @@
 
         @method findAll
         @private
-        @param {String or subclass of DS.Model} type
+        @param {String} typeKey
         @return {DS.AdapterPopulatedRecordArray}
       */
-      findAll: function(typeName) {
-        return this.fetchAll(typeName);
+      findAll: function(typeKey) {
+        return this.fetchAll(typeKey);
       },
 
       /**
         @method _fetchAll
         @private
-        @param {DS.Model} type
+        @param {DS.Model} typeClass
         @param {DS.RecordArray} array
         @return {Promise} promise
       */
-      _fetchAll: function(type, array) {
-        var adapter = this.adapterFor(type);
-        var sinceToken = this.typeMapFor(type).metadata.since;
+      _fetchAll: function(typeClass, array) {
+        var adapter = this.adapterFor(typeClass);
+        var sinceToken = this.typeMapFor(typeClass).metadata.since;
 
         ember$data$lib$system$store$$set(array, 'isUpdating', true);
 
                 
-        return ember$data$lib$system$promise$proxies$$promiseArray(ember$data$lib$system$store$finders$$_findAll(adapter, this, type, sinceToken));
+        return ember$data$lib$system$promise$proxies$$promiseArray(ember$data$lib$system$store$finders$$_findAll(adapter, this, typeClass, sinceToken));
       },
 
       /**
         @method didUpdateAll
-        @param {DS.Model} type
+        @param {DS.Model} typeClass
       */
-      didUpdateAll: function(type) {
-        var findAllCache = this.typeMapFor(type).findAllCache;
+      didUpdateAll: function(typeClass) {
+        var findAllCache = this.typeMapFor(typeClass).findAllCache;
         ember$data$lib$system$store$$set(findAllCache, 'isUpdating', false);
       },
 
@@ -10262,20 +10261,20 @@
         ```
 
         @method all
-        @param {String or subclass of DS.Model} type
+        @param {String} typeKey
         @return {DS.RecordArray}
       */
-      all: function(typeName) {
-        var type = this.modelFor(typeName);
-        var typeMap = this.typeMapFor(type);
+      all: function(typeKey) {
+        var typeClass = this.modelFor(typeKey);
+        var typeMap = this.typeMapFor(typeClass);
         var findAllCache = typeMap.findAllCache;
 
         if (findAllCache) {
-          this.recordArrayManager.updateFilter(findAllCache, type);
+          this.recordArrayManager.updateFilter(findAllCache, typeClass);
           return findAllCache;
         }
 
-        var array = this.recordArrayManager.createRecordArray(type);
+        var array = this.recordArrayManager.createRecordArray(typeClass);
 
         typeMap.findAllCache = array;
         return array;
@@ -10292,9 +10291,9 @@
        ```
 
        @method unloadAll
-       @param {String or subclass of DS.Model} optional type
+       @param {String} optional typeKey
       */
-      unloadAll: function(type) {
+      unloadAll: function(typeKey) {
         if (arguments.length === 0) {
           var typeMaps = this.typeMaps;
           var keys = Ember.keys(typeMaps);
@@ -10303,8 +10302,8 @@
 
           ember$data$lib$system$store$$forEach(types, this.unloadAll, this);
         } else {
-          var modelType = this.modelFor(type);
-          var typeMap = this.typeMapFor(modelType);
+          var typeClass = this.modelFor(typeKey);
+          var typeMap = this.typeMapFor(typeClass);
           var records = typeMap.records.slice();
           var record;
 
@@ -10435,8 +10434,8 @@
         @return {object}
       */
       metadataFor: function(typeName) {
-        var type = this.modelFor(typeName);
-        return this.typeMapFor(type).metadata;
+        var typeClass = this.modelFor(typeName);
+        return this.typeMapFor(typeClass).metadata;
       },
 
       /**
@@ -10448,8 +10447,8 @@
         @return {object}
       */
       setMetadataFor: function(typeName, metadata) {
-        var type = this.modelFor(typeName);
-        Ember.merge(this.typeMapFor(type).metadata, metadata);
+        var typeClass = this.modelFor(typeName);
+        Ember.merge(this.typeMapFor(typeClass).metadata, metadata);
       },
 
       // ............
@@ -10600,15 +10599,13 @@
 
         @method typeMapFor
         @private
-        @param {subclass of DS.Model} type
+        @param {subclass of DS.Model} typeClass
         @return {Object} typeMap
       */
-      typeMapFor: function(type) {
+      typeMapFor: function(typeClass) {
         var typeMaps = ember$data$lib$system$store$$get(this, 'typeMaps');
-        var guid = Ember.guidFor(type);
-        var typeMap;
-
-        typeMap = typeMaps[guid];
+        var guid = Ember.guidFor(typeClass);
+        var typeMap = typeMaps[guid];
 
         if (typeMap) { return typeMap; }
 
@@ -10616,7 +10613,7 @@
           idToRecord: Ember.create(null),
           records: [],
           metadata: Ember.create(null),
-          type: type
+          type: typeClass
         };
 
         typeMaps[guid] = typeMap;
@@ -11268,9 +11265,9 @@
     }
 
     function ember$data$lib$system$store$$setupRelationships(store, record, data) {
-      var type = record.constructor;
+      var typeClass = record.constructor;
 
-      type.eachRelationship(function(key, descriptor) {
+      typeClass.eachRelationship(function(key, descriptor) {
         var kind = descriptor.kind;
         var value = data[key];
         var relationship = record._relationships[key];
@@ -11497,18 +11494,18 @@
         ];
       },
 
-      detect: function(klass) {
-        return klass !== ember$data$lib$system$model$$default && ember$data$lib$system$model$$default.detect(klass);
+      detect: function(typeClass) {
+        return typeClass !== ember$data$lib$system$model$$default && ember$data$lib$system$model$$default.detect(typeClass);
       },
 
-      columnsForType: function(type) {
+      columnsForType: function(typeClass) {
         var columns = [{
           name: 'id',
           desc: 'Id'
         }];
         var count = 0;
         var self = this;
-        ember$data$lib$system$debug$debug$adapter$$get(type, 'attributes').forEach(function(meta, name) {
+        ember$data$lib$system$debug$debug$adapter$$get(typeClass, 'attributes').forEach(function(meta, name) {
           if (count++ > self.attributeLimit) { return false; }
           var desc = ember$data$lib$system$debug$debug$adapter$$capitalize(ember$data$lib$system$debug$debug$adapter$$underscore(name).replace('_', ' '));
           columns.push({ name: name, desc: desc });
@@ -11516,8 +11513,8 @@
         return columns;
       },
 
-      getRecords: function(type) {
-        return this.get('store').all(type);
+      getRecords: function(typeKey) {
+        return this.get('store').all(typeKey);
       },
 
       getRecordColumnValues: function(record) {
@@ -11919,21 +11916,22 @@
         }
         ```
        @method normalize
-       @param {subclass of DS.Model} type
+       @param {subclass of DS.Model} typeClass
        @param {Object} hash to be normalized
        @param {String} key the hash has been referenced by
        @return {Object} the normalized hash
       **/
-      normalize: function(type, hash, prop) {
-        var normalizedHash = this._super(type, hash, prop);
-        return ember$data$lib$serializers$embedded$records$mixin$$extractEmbeddedRecords(this, this.store, type, normalizedHash);
+      normalize: function(typeClass, hash, prop) {
+        var normalizedHash = this._super(typeClass, hash, prop);
+        return ember$data$lib$serializers$embedded$records$mixin$$extractEmbeddedRecords(this, this.store, typeClass, normalizedHash);
       },
 
-      keyForRelationship: function(key, type, method) {
-        if ((method === 'serialize' && this.hasSerializeRecordsOption(key)) || (method === 'deserialize' && this.hasDeserializeRecordsOption(key))) {
+      keyForRelationship: function(key, typeClass, method) {
+        if ((method === 'serialize' && this.hasSerializeRecordsOption(key)) ||
+            (method === 'deserialize' && this.hasDeserializeRecordsOption(key))) {
           return this.keyForAttribute(key, method);
         } else {
-          return this._super(key, type, method) || key;
+          return this._super(key, typeClass, method) || key;
         }
       },
 
@@ -12191,23 +12189,23 @@
 
     // chooses a relationship kind to branch which function is used to update payload
     // does not change payload if attr is not embedded
-    function ember$data$lib$serializers$embedded$records$mixin$$extractEmbeddedRecords(serializer, store, type, partial) {
+    function ember$data$lib$serializers$embedded$records$mixin$$extractEmbeddedRecords(serializer, store, typeClass, partial) {
 
-      type.eachRelationship(function(key, relationship) {
+      typeClass.eachRelationship(function(key, relationship) {
         if (serializer.hasDeserializeRecordsOption(key)) {
-          var embeddedType = store.modelFor(relationship.type.typeKey);
+          var embeddedTypeClass = store.modelFor(relationship.type.typeKey);
           if (relationship.kind === "hasMany") {
             if (relationship.options.polymorphic) {
               ember$data$lib$serializers$embedded$records$mixin$$extractEmbeddedHasManyPolymorphic(store, key, partial);
             } else {
-              ember$data$lib$serializers$embedded$records$mixin$$extractEmbeddedHasMany(store, key, embeddedType, partial);
+              ember$data$lib$serializers$embedded$records$mixin$$extractEmbeddedHasMany(store, key, embeddedTypeClass, partial);
             }
           }
           if (relationship.kind === "belongsTo") {
             if (relationship.options.polymorphic) {
               ember$data$lib$serializers$embedded$records$mixin$$extractEmbeddedBelongsToPolymorphic(store, key, partial);
             } else {
-              ember$data$lib$serializers$embedded$records$mixin$$extractEmbeddedBelongsTo(store, key, embeddedType, partial);
+              ember$data$lib$serializers$embedded$records$mixin$$extractEmbeddedBelongsTo(store, key, embeddedTypeClass, partial);
             }
           }
         }
@@ -12217,17 +12215,17 @@
     }
 
     // handles embedding for `hasMany` relationship
-    function ember$data$lib$serializers$embedded$records$mixin$$extractEmbeddedHasMany(store, key, embeddedType, hash) {
+    function ember$data$lib$serializers$embedded$records$mixin$$extractEmbeddedHasMany(store, key, embeddedTypeClass, hash) {
       if (!hash[key]) {
         return hash;
       }
 
       var ids = [];
 
-      var embeddedSerializer = store.serializerFor(embeddedType.typeKey);
+      var embeddedSerializer = store.serializerFor(embeddedTypeClass.typeKey);
       ember$data$lib$serializers$embedded$records$mixin$$forEach(hash[key], function(data) {
-        var embeddedRecord = embeddedSerializer.normalize(embeddedType, data, null);
-        store.push(embeddedType, embeddedRecord);
+        var embeddedRecord = embeddedSerializer.normalize(embeddedTypeClass, data, null);
+        store.push(embeddedTypeClass, embeddedRecord);
         ids.push(embeddedRecord.id);
       });
 
@@ -12245,11 +12243,11 @@
       ember$data$lib$serializers$embedded$records$mixin$$forEach(hash[key], function(data) {
         var typeKey = data.type;
         var embeddedSerializer = store.serializerFor(typeKey);
-        var embeddedType = store.modelFor(typeKey);
+        var embeddedTypeClass = store.modelFor(typeKey);
         var primaryKey = ember$data$lib$serializers$embedded$records$mixin$$get(embeddedSerializer, 'primaryKey');
 
-        var embeddedRecord = embeddedSerializer.normalize(embeddedType, data, null);
-        store.push(embeddedType, embeddedRecord);
+        var embeddedRecord = embeddedSerializer.normalize(embeddedTypeClass, data, null);
+        store.push(embeddedTypeClass, embeddedRecord);
         ids.push({ id: embeddedRecord[primaryKey], type: typeKey });
       });
 
@@ -12257,14 +12255,14 @@
       return hash;
     }
 
-    function ember$data$lib$serializers$embedded$records$mixin$$extractEmbeddedBelongsTo(store, key, embeddedType, hash) {
+    function ember$data$lib$serializers$embedded$records$mixin$$extractEmbeddedBelongsTo(store, key, embeddedTypeClass, hash) {
       if (!hash[key]) {
         return hash;
       }
 
-      var embeddedSerializer = store.serializerFor(embeddedType.typeKey);
-      var embeddedRecord = embeddedSerializer.normalize(embeddedType, hash[key], null);
-      store.push(embeddedType, embeddedRecord);
+      var embeddedSerializer = store.serializerFor(embeddedTypeClass.typeKey);
+      var embeddedRecord = embeddedSerializer.normalize(embeddedTypeClass, hash[key], null);
+      store.push(embeddedTypeClass, embeddedRecord);
 
       hash[key] = embeddedRecord.id;
       //TODO Need to add a reference to the parent later so relationship works between both `belongsTo` records
@@ -12279,11 +12277,11 @@
       var data = hash[key];
       var typeKey = data.type;
       var embeddedSerializer = store.serializerFor(typeKey);
-      var embeddedType = store.modelFor(typeKey);
+      var embeddedTypeClass = store.modelFor(typeKey);
       var primaryKey = ember$data$lib$serializers$embedded$records$mixin$$get(embeddedSerializer, 'primaryKey');
 
-      var embeddedRecord = embeddedSerializer.normalize(embeddedType, data, null);
-      store.push(embeddedType, embeddedRecord);
+      var embeddedRecord = embeddedSerializer.normalize(embeddedTypeClass, data, null);
+      store.push(embeddedTypeClass, embeddedRecord);
 
       hash[key] = embeddedRecord[primaryKey];
       hash[key + 'Type'] = typeKey;
@@ -12528,19 +12526,19 @@
 
     var ember$data$lib$system$relationships$has$many$$default = ember$data$lib$system$relationships$has$many$$hasMany;
     function ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(store, meta) {
-      var typeKey, type;
+      var typeKey, typeClass;
 
       typeKey = meta.type || meta.key;
       if (typeof typeKey === 'string') {
         if (meta.kind === 'hasMany') {
           typeKey = ember$inflector$lib$lib$system$string$$singularize(typeKey);
         }
-        type = store.modelFor(typeKey);
+        typeClass = store.modelFor(typeKey);
       } else {
-        type = meta.type;
+        typeClass = meta.type;
       }
 
-      return type;
+      return typeClass;
     }
 
     function ember$data$lib$system$relationship$meta$$relationshipFromMeta(store, meta) {
@@ -12589,7 +12587,7 @@
         ember$data$lib$system$relationships$ext$$relatedTypesDescriptor._cacheable = false;
       }
 
-      var type;
+      var typeKey;
       var types = Ember.A();
 
       // Loop through each computed property on the class,
@@ -12598,11 +12596,11 @@
       this.eachComputedProperty(function(name, meta) {
         if (meta.isRelationship) {
           meta.key = name;
-          type = ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(this.store, meta);
+          typeKey = ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(this.store, meta);
 
           
-          if (!types.contains(type)) {
-                        types.push(type);
+          if (!types.contains(typeKey)) {
+                        types.push(typeKey);
           }
         }
       });
