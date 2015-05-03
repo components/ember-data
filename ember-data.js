@@ -4637,7 +4637,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.7f86945dc9'
+      VERSION: '1.0.0-beta.17+canary.2f2f8a9269'
     });
 
     if (Ember.libraries) {
@@ -8908,13 +8908,13 @@
         var promise = new ember$data$lib$system$model$model$$Promise(function(resolve) {
           record.send('reloadRecord', resolve);
         }, promiseLabel).then(function() {
-          record.set('isReloading', false);
           record.set('isError', false);
           return record;
         }, function(reason) {
           record.set('isError', true);
           throw reason;
         }, "DS: Model#reload complete, update flags")['finally'](function () {
+          record.set('isReloading', false);
           record.updateRecordArrays();
         });
 
