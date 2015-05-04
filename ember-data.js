@@ -4638,7 +4638,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.7b2a0335c9'
+      VERSION: '1.0.0-beta.17+canary.1a357aeb0c'
     });
 
     if (Ember.libraries) {
@@ -11246,7 +11246,7 @@
       */
       retrieveManagedInstance: function(typeKey, name) {
         var normalizedTypeKey = this._normalizeTypeKey(typeKey);
-        var key = normalizedTypeKey +":"+name;
+        var key = normalizedTypeKey + ":" +name;
 
         if (!this._containerCache[key]) {
           var instance = this.container.lookup(key);
