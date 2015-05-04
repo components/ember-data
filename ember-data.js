@@ -2241,7 +2241,6 @@
       @module ember-data
     */
 
-    var activemodel$adapter$lib$system$active$model$adapter$$camelize = Ember.String.camelize;
     var activemodel$adapter$lib$system$active$model$adapter$$decamelize = Ember.String.decamelize;
     var activemodel$adapter$lib$system$active$model$adapter$$underscore = Ember.String.underscore;
 
@@ -2379,15 +2378,6 @@
         if (jqXHR && jqXHR.status === 422) {
           var response = Ember.$.parseJSON(jqXHR.responseText);
           var errors = response.errors ? response.errors : response;
-
-          for (var underscoredError in errors) {
-            var camelizedError = activemodel$adapter$lib$system$active$model$adapter$$camelize(underscoredError);
-
-            if (camelizedError !== underscoredError) {
-              errors[camelizedError] = errors[underscoredError];
-              delete errors[underscoredError];
-            }
-          }
 
           return new ember$data$lib$system$model$errors$invalid$$default(errors);
         } else {
@@ -4638,7 +4628,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.f129656cb0'
+      VERSION: '1.0.0-beta.17+canary.100ede1721'
     });
 
     if (Ember.libraries) {
