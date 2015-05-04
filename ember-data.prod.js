@@ -2712,6 +2712,7 @@
         this.normalizeId(hash);
         this.normalizeAttributes(typeClass, hash);
         this.normalizeRelationships(typeClass, hash);
+        this.normalizeUsingDeclaredMapping(typeClass, hash);
       },
 
       /**
@@ -4619,7 +4620,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.2f2f8a9269'
+      VERSION: '1.0.0-beta.17+canary.f129656cb0'
     });
 
     if (Ember.libraries) {
