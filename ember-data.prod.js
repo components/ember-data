@@ -4611,7 +4611,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.a32bad4ee7'
+      VERSION: '1.0.0-beta.17+canary.c6de18e293'
     });
 
     if (Ember.libraries) {
@@ -6833,11 +6833,7 @@
       length: 0,
 
       objectAt: function(index) {
-        if (this.currentState[index]) {
-          return this.currentState[index];
-        } else {
-          return this.canonicalState[index];
-        }
+        return this.currentState[index];
       },
 
       flushCanonical: function() {
