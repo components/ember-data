@@ -2531,6 +2531,7 @@
         @property attrs
         @type {Object}
       */
+      mergedProperties: ['attrs'],
 
       /**
        Given a subclass of `DS.Model` and a JSON object this method will
@@ -4628,7 +4629,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.17+canary.51bac6a48b'
+      VERSION: '1.0.0-beta.17+canary.7d7c55d88d'
     });
 
     if (Ember.libraries) {
