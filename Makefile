@@ -1,4 +1,4 @@
-VERSION=v1.0.0-beta.15
+VERSION=v1.0.0-beta.17
 
 default:
 	@curl -O http://builds.emberjs.com/tags/$(VERSION)/ember-data.js
