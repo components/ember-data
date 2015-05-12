@@ -4629,7 +4629,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.18+canary.eaf9aa810c'
+      VERSION: '1.0.0-beta.18+canary.eddb66afb4'
     });
 
     if (Ember.libraries) {
@@ -8667,14 +8667,15 @@
         Example
 
         ```javascript
+        var attr = DS.attr;
         App.Mascot = DS.Model.extend({
           name: attr('string')
         });
 
-        var person = store.createRecord('person');
-        person.changedAttributes(); // {}
-        person.set('name', 'Tomster');
-        person.changedAttributes(); // {name: [undefined, 'Tomster']}
+        var mascot = store.createRecord('mascot');
+        mascot.changedAttributes(); // {}
+        mascot.set('name', 'Tomster');
+        mascot.changedAttributes(); // {name: [undefined, 'Tomster']}
         ```
 
         @method changedAttributes
