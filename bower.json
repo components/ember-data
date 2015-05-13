@@ -1,6 +1,6 @@
 {
   "name": "ember-data",
-  "version": "1.0.0-beta.18+canary.7b7fe8f23b",
+  "version": "1.0.0-beta.18+canary.e0b1a090e8",
   "main": "ember-data.js",
   "dependencies": {
     "ember": ">= 1.8.1 < 2.0.0"

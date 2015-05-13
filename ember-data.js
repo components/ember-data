@@ -4629,7 +4629,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.18+canary.7b7fe8f23b'
+      VERSION: '1.0.0-beta.18+canary.e0b1a090e8'
     });
 
     if (Ember.libraries) {
@@ -4976,7 +4976,7 @@
       content: null,
 
       /**
-        The flag to signal a `RecordArray` is currently loading data.
+        The flag to signal a `RecordArray` is finished loading data.
 
         Example
 
