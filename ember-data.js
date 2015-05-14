@@ -4051,7 +4051,7 @@
         ```
 
         In order for Ember Data to know that the model corresponding to
-        the 'response-fast-car' hash is `FastCar` (typeKey: 'fastCar'),
+        the 'response-fast-car' hash is `FastCar` (modelName: 'fastCar'),
         you can override modelNameFromPayloadKey to convert 'response-fast-car' to
         'fastCar' like so:
 
@@ -4693,7 +4693,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.18+canary.8fce755d96'
+      VERSION: '1.0.0-beta.18+canary.61164d2881'
     });
 
     if (Ember.libraries) {
