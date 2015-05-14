@@ -3518,10 +3518,10 @@
       }
     });
 
-    function ember$data$lib$system$normalize$type$key$$normalizeTypeKey(modelName) {
+    function ember$data$lib$system$normalize$model$name$$normalizeModelName(modelName) {
       return Ember.String.dasherize(modelName);
     }
-    var ember$data$lib$system$normalize$type$key$$default = ember$data$lib$system$normalize$type$key$$normalizeTypeKey;
+    var ember$data$lib$system$normalize$model$name$$default = ember$data$lib$system$normalize$model$name$$normalizeModelName;
 
     var ember$data$lib$serializers$rest$serializer$$forEach = Ember.ArrayPolyfills.forEach;
     var ember$data$lib$serializers$rest$serializer$$map = Ember.ArrayPolyfills.map;
@@ -4028,7 +4028,7 @@
         the `FastCar` model.
 
         If you diverge from this norm you should also consider changes to
-        store._normalizeTypeKey as well.
+        store._normalizeModelName as well.
 
         For example, your server may return prefixed root keys like so:
 
@@ -4063,7 +4063,7 @@
         @return {String} the model's modelName
       */
       typeForRoot: function(key) {
-        return ember$inflector$lib$lib$system$string$$singularize(ember$data$lib$system$normalize$type$key$$default(key));
+        return ember$inflector$lib$lib$system$string$$singularize(ember$data$lib$system$normalize$model$name$$default(key));
       },
 
       // SERIALIZE
@@ -4559,7 +4559,7 @@
         var convertedFromRubyModule = activemodel$adapter$lib$system$active$model$serializer$$camelize(ember$inflector$lib$lib$system$string$$singularize(key)).replace(/(^|\:)([A-Z])/g, function(match, separator, chr) {
           return match.toLowerCase();
         }).replace('::', '/');
-        return ember$data$lib$system$normalize$type$key$$default(convertedFromRubyModule);
+        return ember$data$lib$system$normalize$model$name$$default(convertedFromRubyModule);
       }
     });
 
@@ -4618,7 +4618,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.18+canary.70ee5a4e54'
+      VERSION: '1.0.0-beta.18+canary.5ea3517c8b'
     });
 
     if (Ember.libraries) {
@@ -7751,6 +7751,15 @@
       }
     };
 
+    Ember.defineProperty(ember$data$lib$system$snapshot$$Snapshot.prototype, 'typeKey', {
+      enumerable: false,
+      get: function() {
+                return this.modelName;
+      },
+      set: function() {
+              }
+    });
+
     var ember$data$lib$system$snapshot$$default = ember$data$lib$system$snapshot$$Snapshot;
 
     /**
@@ -10711,7 +10720,7 @@
       */
 
       _modelForMixin: function(modelName) {
-        var normalizedTypeKey = ember$data$lib$system$normalize$type$key$$default(modelName);
+        var normalizedTypeKey = ember$data$lib$system$normalize$model$name$$default(modelName);
         var registry = this.container._registry ? this.container._registry : this.container;
         var mixin = registry.resolve('mixin:' + normalizedTypeKey);
         if (mixin) {
@@ -10748,12 +10757,12 @@
           if (!factory) {
             throw new Ember.Error("No model was found for '" + key + "'");
           }
-          factory.modelName = factory.modelName || ember$data$lib$system$normalize$type$key$$default(key);
+          factory.modelName = factory.modelName || ember$data$lib$system$normalize$model$name$$default(key);
         } else {
           // A factory already supplied. Ensure it has a normalized key.
           factory = key;
           if (factory.modelName) {
-            factory.modelName = ember$data$lib$system$normalize$type$key$$default(factory.modelName);
+            factory.modelName = ember$data$lib$system$normalize$model$name$$default(factory.modelName);
           }
         }
 
@@ -10763,7 +10772,7 @@
       },
 
       modelFactoryFor: function(key) {
-        var normalizedKey = ember$data$lib$system$normalize$type$key$$default(key);
+        var normalizedKey = ember$data$lib$system$normalize$model$name$$default(key);
         return this.container.lookupFactory('model:' + normalizedKey);
       },
 
@@ -11175,7 +11184,7 @@
         @return {Ember.Object}
       */
       retrieveManagedInstance: function(modelName, name) {
-        var normalizedTypeKey = ember$data$lib$system$normalize$type$key$$default(modelName);
+        var normalizedTypeKey = ember$data$lib$system$normalize$model$name$$default(modelName);
         var key = normalizedTypeKey + ":" +name;
 
         if (!this._containerCache[key]) {
@@ -12402,7 +12411,7 @@
       }
 
       if (typeof userEnteredModelName === 'string') {
-        userEnteredModelName = ember$data$lib$system$normalize$type$key$$default(userEnteredModelName);
+        userEnteredModelName = ember$data$lib$system$normalize$model$name$$default(userEnteredModelName);
       }
 
       
@@ -12546,7 +12555,7 @@
       options = options || {};
 
       if (typeof type === 'string') {
-        type = ember$data$lib$system$normalize$type$key$$default(type);
+        type = ember$data$lib$system$normalize$model$name$$default(type);
       }
 
       // Metadata about relationships is stored on the meta of
@@ -13265,11 +13274,11 @@
 
     ember$data$lib$core$$default._setupContainer = ember$data$lib$setup$container$$default;
 
-    Ember.defineProperty(ember$data$lib$core$$default, 'normalizeTypeKey', {
+    Ember.defineProperty(ember$data$lib$core$$default, 'normalizeModelName', {
       enumerable: true,
       writable: false,
       configurable: false,
-      value: ember$data$lib$system$normalize$type$key$$default
+      value: ember$data$lib$system$normalize$model$name$$default
     });
 
     Ember.lookup.DS = ember$data$lib$core$$default;
