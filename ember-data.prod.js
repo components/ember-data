@@ -4618,7 +4618,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.18+canary.5ea3517c8b'
+      VERSION: '1.0.0-beta.18+canary.5b52480c88'
     });
 
     if (Ember.libraries) {
@@ -10766,7 +10766,19 @@
           }
         }
 
-        
+        // deprecate typeKey
+        if (!('typeKey' in factory)) {
+          Ember.defineProperty(factory, 'typeKey', {
+            enumerable: true,
+            configurable: false,
+            get: function() {
+                            return Ember.String.camelize(this.modelName);
+            },
+            set: function() {
+                          }
+          });
+        }
+
         factory.store = this;
         return factory;
       },

@@ -4636,7 +4636,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.18+canary.5ea3517c8b'
+      VERSION: '1.0.0-beta.18+canary.5b52480c88'
     });
 
     if (Ember.libraries) {
@@ -10853,22 +10853,20 @@
           }
         }
 
-        Ember.runInDebug(function() {
-          // deprecate typeKey
-          if (!('typeKey' in factory)) {
-            Ember.defineProperty(factory, 'typeKey', {
-              enumerable: false,
-              configurable: false,
-              get: function() {
-                Ember.Logger.warn('Usage of `typeKey` has been deprecated and will be removed in Ember Data 1.0. It has been replaced by `modelName` on the model class.');
-                return Ember.String.camelize(this.modelName);
-              },
-              set: function() {
-                throw new Ember.Error('Setting typeKey is not supported. In addition, typeKey has also been deprecated in favor of modelName. Setting modelName is also not supported.');
-              }
-            });
-          }
-        });
+        // deprecate typeKey
+        if (!('typeKey' in factory)) {
+          Ember.defineProperty(factory, 'typeKey', {
+            enumerable: true,
+            configurable: false,
+            get: function() {
+              Ember.deprecate('Usage of `typeKey` has been deprecated and will be removed in Ember Data 1.0. It has been replaced by `modelName` on the model class.');
+              return Ember.String.camelize(this.modelName);
+            },
+            set: function() {
+              Ember.assert('Setting typeKey is not supported. In addition, typeKey has also been deprecated in favor of modelName. Setting modelName is also not supported.');
+            }
+          });
+        }
 
         factory.store = this;
         return factory;
