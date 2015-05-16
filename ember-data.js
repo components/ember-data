@@ -4708,7 +4708,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.18+canary.dcba512ec5'
+      VERSION: '1.0.0-beta.18+canary.8800406379'
     });
 
     if (Ember.libraries) {
@@ -12808,20 +12808,14 @@
 
 
     var ember$data$lib$system$relationships$has$many$$default = ember$data$lib$system$relationships$has$many$$hasMany;
-
-    var ember$data$lib$system$normalize$type$key$$dasherize = Ember.String.dasherize;
-    var ember$data$lib$system$normalize$type$key$$camelize  = Ember.String.camelize;
-
-    function ember$data$lib$system$normalize$type$key$$normalizeModelName(modelName) {
-      return ember$inflector$lib$lib$system$string$$singularize(ember$data$lib$system$normalize$type$key$$dasherize(ember$data$lib$system$normalize$type$key$$camelize(modelName)));
-    }
-    var ember$data$lib$system$normalize$type$key$$default = ember$data$lib$system$normalize$type$key$$normalizeModelName;
     function ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(store, meta) {
       var modelName, typeClass;
 
       modelName = meta.type || meta.key;
       if (typeof modelName === 'string') {
-        modelName = ember$data$lib$system$normalize$type$key$$default(modelName);
+        if (meta.kind === 'hasMany') {
+          modelName = ember$inflector$lib$lib$system$string$$singularize(modelName);
+        }
         typeClass = store.modelFor(modelName);
       } else {
         typeClass = meta.type;

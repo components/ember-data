@@ -88,8 +88,6 @@ eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/syste
 
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/system\');\ntest(\'lib/system/normalize-model-name.js should pass jshint\', function() { \n  ok(true, \'lib/system/normalize-model-name.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/system/normalize-model-name.jshint.js");
 
-eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/system\');\ntest(\'lib/system/normalize-type-key.js should pass jshint\', function() { \n  ok(true, \'lib/system/normalize-type-key.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/system/normalize-type-key.jshint.js");
-
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/system\');\ntest(\'lib/system/ordered-set.js should pass jshint\', function() { \n  ok(true, \'lib/system/ordered-set.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/system/ordered-set.jshint.js");
 
 eval("(function() {if (!QUnit.urlParams.nojshint) {\nmodule(\'JSHint - lib/system\');\ntest(\'lib/system/promise-proxies.js should pass jshint\', function() { \n  ok(true, \'lib/system/promise-proxies.js should pass jshint.\'); \n});\n\n}})();//# sourceURL=ember-data-jshint/lib/system/promise-proxies.jshint.js");
