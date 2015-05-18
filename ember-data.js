@@ -4708,7 +4708,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.18+canary.8800406379'
+      VERSION: '1.0.0-beta.18+canary.e428b7b0be'
     });
 
     if (Ember.libraries) {
@@ -11322,8 +11322,17 @@
         @param {String} modelName
         @return DS.Adapter
       */
-      adapterFor: function(modelName) {
-        Ember.assert('Passing classes to store methods has been removed. Please pass a dasherized string instead of '+ Ember.inspect(modelName), typeof modelName === 'string');
+      adapterFor: function(modelOrClass) {
+        var modelName;
+
+        Ember.deprecate('Passing classes to store methods has been removed. Please pass a dasherized string instead of '+ Ember.inspect(modelName), typeof modelOrClass === 'string');
+
+        if (typeof modelOrClass !== 'string') {
+          modelName = modelOrClass.modelName;
+        } else {
+          modelName = modelOrClass;
+        }
+
         var adapter = this.lookupAdapter(modelName) || this.lookupAdapter('application');
 
         return adapter || ember$data$lib$system$store$$get(this, 'defaultAdapter');
@@ -11358,8 +11367,15 @@
         @param {String} modelName the record to serialize
         @return {DS.Serializer}
       */
-      serializerFor: function(modelName) {
-        Ember.assert('Passing classes to store methods has been removed. Please pass a dasherized string instead of '+ Ember.inspect(modelName), typeof modelName === 'string');
+      serializerFor: function(modelOrClass) {
+        var modelName;
+
+        Ember.deprecate('Passing classes to store methods has been removed. Please pass a dasherized string instead of '+ Ember.inspect(modelName), typeof modelOrClass === 'string');
+        if (typeof modelOrClass !== 'string') {
+          modelName = modelOrClass.modelName;
+        } else {
+          modelName = modelOrClass;
+        }
 
         var serializer = this.lookupSerializer(modelName) || this.lookupSerializer('application');
 
