@@ -4688,7 +4688,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.18+canary.dea143d0c6'
+      VERSION: '1.0.0-beta.18+canary.2f8330344e'
     });
 
     if (Ember.libraries) {
@@ -12652,10 +12652,18 @@
         key: null
       };
 
-      return Ember.computed(function(key) {
-        var relationship = this._relationships[key];
-        return relationship.getRecords();
-      }).meta(meta).readOnly();
+      return ember$data$lib$utils$computed$polyfill$$default({
+        get: function(key) {
+          var relationship = this._relationships[key];
+          return relationship.getRecords();
+        },
+        set: function(key, records) {
+          var relationship = this._relationships[key];
+          relationship.clear();
+          relationship.addRecords(records);
+          return relationship.getRecords();
+        }
+      }).meta(meta);
     }
 
     ember$data$lib$system$model$$default.reopen({
