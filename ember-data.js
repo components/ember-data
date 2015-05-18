@@ -828,16 +828,17 @@
         @param {String|Array|Object} id single id or array of ids or query
         @param {DS.Snapshot|Array} snapshot single snapshot or array of snapshots
         @param {String} requestType
+        @param {Object} query object of query parameters to send for findQuery requests.
         @return {String} url
       */
-      buildURL: function(modelName, id, snapshot, requestType) {
+      buildURL: function(modelName, id, snapshot, requestType, query) {
         switch (requestType) {
           case 'find':
             return this.urlForFind(id, modelName, snapshot);
           case 'findAll':
             return this.urlForFindAll(modelName);
           case 'findQuery':
-            return this.urlForFindQuery(id, modelName);
+            return this.urlForFindQuery(query, modelName);
           case 'findMany':
             return this.urlForFindMany(id, modelName, snapshot);
           case 'findHasMany':
@@ -1274,7 +1275,7 @@
         @return {Promise} promise
       */
       findQuery: function(store, type, query) {
-        var url = this.buildURL(type.modelName, query, null, 'findQuery');
+        var url = this.buildURL(type.modelName, null, null, 'findQuery', query);
 
         if (this.sortQueryParams) {
           query = this.sortQueryParams(query);
@@ -4707,7 +4708,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.18+canary.2f8330344e'
+      VERSION: '1.0.0-beta.18+canary.e1ad1e5278'
     });
 
     if (Ember.libraries) {
