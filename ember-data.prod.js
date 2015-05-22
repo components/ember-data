@@ -3079,7 +3079,7 @@
             payloadKey = this.keyForRelationship(key, "hasMany", "serialize");
           }
 
-          var relationshipType = snapshot.type.determineRelationshipType(relationship, this.store);
+          var relationshipType = snapshot.type.determineRelationshipType(relationship);
 
           if (relationshipType === 'manyToNone' || relationshipType === 'manyToMany') {
             json[payloadKey] = snapshot.hasMany(key, { ids: true });
@@ -3157,7 +3157,7 @@
         @return {Object} json The deserialized payload
       */
       extract: function(store, typeClass, payload, id, requestType) {
-        this.extractMeta(store, typeClass.modelName, payload);
+        this.extractMeta(store, typeClass, payload);
 
         var specificExtract = "extract" + requestType.charAt(0).toUpperCase() + requestType.substr(1);
         return this[specificExtract](store, typeClass, payload, id, requestType);
@@ -3784,13 +3784,13 @@
         var primaryRecord;
 
         for (var prop in payload) {
-          var modelName = this.modelNameFromPayloadKey(prop);
+          var typeName  = this.modelNameFromPayloadKey(prop);
 
-          if (!store.modelFactoryFor(modelName)) {
+          if (!store.modelFactoryFor(typeName)) {
                         continue;
           }
-          var typeClass = store.modelFor(modelName);
-          var isPrimary = typeClass.modelName === primaryTypeClassName;
+          var type = store.modelFor(typeName);
+          var isPrimary = type.modelName === primaryTypeClassName;
           var value = payload[prop];
 
           if (value === null) {
@@ -3806,9 +3806,10 @@
           /*jshint loopfunc:true*/
           ember$data$lib$serializers$rest$serializer$$forEach.call(value, function(hash) {
             var typeName = this.modelNameFromPayloadKey(prop);
-            var typeSerializer = store.serializerFor(typeName);
+            var type = store.modelFor(typeName);
+            var typeSerializer = store.serializerFor(type);
 
-            hash = typeSerializer.normalize(typeClass, hash, prop);
+            hash = typeSerializer.normalize(type, hash, prop);
 
             var isFirstCreatedRecord = isPrimary && !recordId && !primaryRecord;
             var isUpdatedRecord = isPrimary && ember$data$lib$serializers$rest$serializer$$coerceId(hash.id) === recordId;
@@ -3822,7 +3823,7 @@
             if (isFirstCreatedRecord || isUpdatedRecord) {
               primaryRecord = hash;
             } else {
-              store.push(modelName, hash);
+              store.push(typeName, hash);
             }
           }, this);
         }
@@ -3949,7 +3950,7 @@
                         continue;
           }
           var type = store.modelFor(typeName);
-          var typeSerializer = store.serializerFor(typeName);
+          var typeSerializer = store.serializerFor(type);
           var isPrimary = (!forcedSecondary && (type.modelName === primaryTypeClassName));
 
           /*jshint loopfunc:true*/
@@ -4006,12 +4007,12 @@
           if (!store.modelFactoryFor(modelName)) {
                         continue;
           }
-          var typeClass = store.modelFor(modelName);
-          var typeSerializer = store.serializerFor(modelName);
+          var type = store.modelFor(modelName);
+          var typeSerializer = store.serializerFor(type);
 
           /*jshint loopfunc:true*/
           var normalizedArray = ember$data$lib$serializers$rest$serializer$$map.call(Ember.makeArray(payload[prop]), function(hash) {
-            return typeSerializer.normalize(typeClass, hash, prop);
+            return typeSerializer.normalize(type, hash, prop);
           }, this);
 
           store.pushMany(modelName, normalizedArray);
@@ -4455,12 +4456,12 @@
         relationship keys.
 
         @method keyForRelationship
-        @param {String} relationshipModelName
+        @param {String} relationshipTypeKey
         @param {String} kind
         @return String
       */
-      keyForRelationship: function(relationshipModelName, kind) {
-        var key = activemodel$adapter$lib$system$active$model$serializer$$decamelize(relationshipModelName);
+      keyForRelationship: function(relationshipTypeKey, kind) {
+        var key = activemodel$adapter$lib$system$active$model$serializer$$decamelize(relationshipTypeKey);
         if (kind === "belongsTo") {
           return key + "_id";
         } else if (kind === "hasMany") {
@@ -4688,7 +4689,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.e8c5751171'
+      VERSION: '1.0.0-beta.19+canary.02706ec5e4'
     });
 
     if (Ember.libraries) {
@@ -4870,10 +4871,9 @@
     var ember$data$lib$system$store$finders$$Promise = Ember.RSVP.Promise;
 
     function ember$data$lib$system$store$finders$$_find(adapter, store, typeClass, id, record) {
-      var modelName = typeClass.modelName;
       var snapshot = record._createSnapshot();
       var promise = adapter.find(store, typeClass, id, snapshot);
-      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, modelName);
+      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, typeClass);
       var label = "DS: Handle Adapter#find of " + typeClass + " with id: " + id;
 
       promise = ember$data$lib$system$store$finders$$Promise.cast(promise, label);
@@ -4883,7 +4883,7 @@
                 return store._adapterRun(function() {
           var payload = serializer.extract(store, typeClass, adapterPayload, id, 'find');
 
-          return store.push(modelName, payload);
+          return store.push(typeClass, payload);
         });
       }, function(error) {
         record.notFound();
@@ -4897,10 +4897,9 @@
 
 
     function ember$data$lib$system$store$finders$$_findMany(adapter, store, typeClass, ids, records) {
-      var modelName = typeClass.modelName;
       var snapshots = Ember.A(records).invoke('_createSnapshot');
       var promise = adapter.findMany(store, typeClass, ids, snapshots);
-      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, modelName);
+      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, typeClass);
       var label = "DS: Handle Adapter#findMany of " + typeClass;
 
       if (promise === undefined) {
@@ -4915,17 +4914,15 @@
           var payload = serializer.extract(store, typeClass, adapterPayload, null, 'findMany');
 
           
-          return store.pushMany(modelName, payload);
+          return store.pushMany(typeClass, payload);
         });
       }, null, "DS: Extract payload of " + typeClass);
     }
 
     function ember$data$lib$system$store$finders$$_findHasMany(adapter, store, record, link, relationship) {
       var snapshot = record._createSnapshot();
-      var modelName = relationship.type;
-      var typeClass = store.modelFor(modelName);
       var promise = adapter.findHasMany(store, snapshot, link, relationship);
-      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, modelName);
+      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, relationship.type);
       var label = "DS: Handle Adapter#findHasMany of " + record + " : " + relationship.type;
 
       promise = ember$data$lib$system$store$finders$$Promise.cast(promise, label);
@@ -4934,21 +4931,19 @@
 
       return promise.then(function(adapterPayload) {
         return store._adapterRun(function() {
-          var payload = serializer.extract(store, typeClass, adapterPayload, null, 'findHasMany');
+          var payload = serializer.extract(store, relationship.type, adapterPayload, null, 'findHasMany');
 
           
-          var records = store.pushMany(modelName, payload);
+          var records = store.pushMany(relationship.type, payload);
           return records;
         });
       }, null, "DS: Extract payload of " + record + " : hasMany " + relationship.type);
     }
 
     function ember$data$lib$system$store$finders$$_findBelongsTo(adapter, store, record, link, relationship) {
-      var modelName = relationship.type;
-      var typeClass = store.modelFor(modelName);
       var snapshot = record._createSnapshot();
       var promise = adapter.findBelongsTo(store, snapshot, link, relationship);
-      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, modelName);
+      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, relationship.type);
       var label = "DS: Handle Adapter#findBelongsTo of " + record + " : " + relationship.type;
 
       promise = ember$data$lib$system$store$finders$$Promise.cast(promise, label);
@@ -4957,13 +4952,13 @@
 
       return promise.then(function(adapterPayload) {
         return store._adapterRun(function() {
-          var payload = serializer.extract(store, typeClass, adapterPayload, null, 'findBelongsTo');
+          var payload = serializer.extract(store, relationship.type, adapterPayload, null, 'findBelongsTo');
 
           if (!payload) {
             return null;
           }
 
-          var record = store.push(modelName, payload);
+          var record = store.push(relationship.type, payload);
           return record;
         });
       }, null, "DS: Extract payload of " + record + " : " + relationship.type);
@@ -4971,8 +4966,7 @@
 
     function ember$data$lib$system$store$finders$$_findAll(adapter, store, typeClass, sinceToken) {
       var promise = adapter.findAll(store, typeClass, sinceToken);
-      var modelName = typeClass.modelName;
-      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, modelName);
+      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, typeClass);
       var label = "DS: Handle Adapter#findAll of " + typeClass;
 
       promise = ember$data$lib$system$store$finders$$Promise.cast(promise, label);
@@ -4983,18 +4977,17 @@
           var payload = serializer.extract(store, typeClass, adapterPayload, null, 'findAll');
 
           
-          store.pushMany(modelName, payload);
+          store.pushMany(typeClass, payload);
         });
 
         store.didUpdateAll(typeClass);
-        return store.all(modelName);
+        return store.all(typeClass);
       }, null, "DS: Extract payload of findAll " + typeClass);
     }
 
     function ember$data$lib$system$store$finders$$_findQuery(adapter, store, typeClass, query, recordArray) {
-      var modelName = typeClass.modelName;
       var promise = adapter.findQuery(store, typeClass, query, recordArray);
-      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, modelName);
+      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, typeClass);
       var label = "DS: Handle Adapter#findQuery of " + typeClass;
 
       promise = ember$data$lib$system$store$finders$$Promise.cast(promise, label);
@@ -5109,9 +5102,9 @@
         if (ember$data$lib$system$record$arrays$record$array$$get(this, 'isUpdating')) { return; }
 
         var store = ember$data$lib$system$record$arrays$record$array$$get(this, 'store');
-        var modelName = ember$data$lib$system$record$arrays$record$array$$get(this, 'type.modelName');
+        var type = ember$data$lib$system$record$arrays$record$array$$get(this, 'type');
 
-        return store.fetchAll(modelName, this);
+        return store.fetchAll(type, this);
       },
 
       /**
@@ -5300,9 +5293,8 @@
       load: function(data) {
         var store = ember$data$lib$system$record$arrays$adapter$populated$record$array$$get(this, 'store');
         var type = ember$data$lib$system$record$arrays$adapter$populated$record$array$$get(this, 'type');
-        var modelName = type.modelName;
-        var records = store.pushMany(modelName, data);
-        var meta = store.metadataFor(modelName);
+        var records = store.pushMany(type, data);
+        var meta = store.metadataFor(type);
 
         this.setProperties({
           content: Ember.A(records),
@@ -6661,7 +6653,7 @@
 
     var ember$data$lib$system$relationships$state$relationship$$forEach = Ember.EnumerableUtils.forEach;
 
-    function ember$data$lib$system$relationships$state$relationship$$Relationship(store, record, inverseKey, relationshipMeta) {
+    var ember$data$lib$system$relationships$state$relationship$$Relationship = function(store, record, inverseKey, relationshipMeta) {
       this.members = new ember$data$lib$system$ordered$set$$default();
       this.canonicalMembers = new ember$data$lib$system$ordered$set$$default();
       this.store = store;
@@ -6672,10 +6664,10 @@
       this.relationshipMeta = relationshipMeta;
       //This probably breaks for polymorphic relationship in complex scenarios, due to
       //multiple possible modelNames
-      this.inverseKeyForImplicit = this.record.constructor.modelName + this.key;
+      this.inverseKeyForImplicit = this.store.modelFor(this.record.constructor).modelName + this.key;
       this.linkPromise = null;
       this.hasData = false;
-    }
+    };
 
     ember$data$lib$system$relationships$state$relationship$$Relationship.prototype = {
       constructor: ember$data$lib$system$relationships$state$relationship$$Relationship,
@@ -7090,7 +7082,7 @@
         var record;
 
         
-        record = store.createRecord(type.modelName, hash);
+        record = store.createRecord(type, hash);
         this.pushObject(record);
 
         return record;
@@ -7123,7 +7115,7 @@
         canonicalState: this.canonicalState,
         store: this.store,
         relationship: this,
-        type: this.store.modelFor(this.belongsToType),
+        type: this.belongsToType,
         record: record
       });
       this.isPolymorphic = relationshipMeta.options.polymorphic;
@@ -7196,7 +7188,7 @@
     };
 
     ember$data$lib$system$relationships$state$has$many$$ManyRelationship.prototype.notifyRecordRelationshipAdded = function(record, idx) {
-      var typeClass = this.store.modelFor(this.relationshipMeta.type);
+      var type = this.relationshipMeta.type;
       
       this.record.notifyHasManyAdded(this.key, record, idx);
     };
@@ -7363,7 +7355,7 @@
     ember$data$lib$system$relationships$state$belongs$to$$BelongsToRelationship.prototype._super$addRecord = ember$data$lib$system$relationships$state$relationship$$default.prototype.addRecord;
     ember$data$lib$system$relationships$state$belongs$to$$BelongsToRelationship.prototype.addRecord = function(newRecord) {
       if (this.members.has(newRecord)) { return;}
-      var typeClass = this.store.modelFor(this.relationshipMeta.type);
+      var type = this.relationshipMeta.type;
       
       if (this.inverseRecord) {
         this.removeRecord(this.inverseRecord);
@@ -7438,7 +7430,7 @@
 
     var ember$data$lib$system$relationships$state$create$$createRelationshipFor = function(record, relationshipMeta, store) {
       var inverseKey;
-      var inverse = record.constructor.inverseFor(relationshipMeta.key, store);
+      var inverse = record.constructor.inverseFor(relationshipMeta.key);
 
       if (inverse) {
         inverseKey = inverse.name;
@@ -9431,7 +9423,9 @@
     }
     var ember$data$lib$system$model$attributes$$default = ember$data$lib$system$model$attributes$$attr;
     var ember$data$lib$system$model$$default = ember$data$lib$system$model$model$$default;
-    var ember$data$lib$system$store$$Backburner = Ember.Backburner || Ember.__loader.require('backburner')['default'] || Ember.__loader.require('backburner')['Backburner'];
+
+    //Stanley told me to do this
+    var ember$data$lib$system$store$$Backburner = Ember.__loader.require('backburner')['default'] || Ember.__loader.require('backburner')['Backburner'];
 
     //Shim Backburner.join
     if (!ember$data$lib$system$store$$Backburner.prototype.join) {
@@ -9693,7 +9687,7 @@
         @return {DS.Model} record
       */
       createRecord: function(modelName, inputProperties) {
-                var typeClass = this.modelFor(modelName);
+        var typeClass = this.modelFor(modelName);
         var properties = ember$data$lib$system$store$$copy(inputProperties) || {};
 
         // If the passed properties do not include a primary key,
@@ -9702,7 +9696,7 @@
         // to avoid conflicts.
 
         if (ember$data$lib$system$store$$isNone(properties.id)) {
-          properties.id = this._generateId(modelName, properties);
+          properties.id = this._generateId(typeClass, properties);
         }
 
         // Coerce ID to a string
@@ -9897,7 +9891,7 @@
         @return {Promise} promise
       */
       find: function(modelName, id, preload) {
-                        
+                
         if (arguments.length === 1) {
           return this.findAll(modelName);
         }
@@ -9937,7 +9931,7 @@
         @return {Promise} promise
       */
       fetchById: function(modelName, id, preload) {
-                if (this.hasRecordForId(modelName, id)) {
+        if (this.hasRecordForId(modelName, id)) {
           return this.getById(modelName, id).reload();
         } else {
           return this.find(modelName, id, preload);
@@ -9953,7 +9947,7 @@
         @return {Promise} promise
       */
       fetchAll: function(modelName) {
-                var typeClass = this.modelFor(modelName);
+        var typeClass = this.modelFor(modelName);
 
         return this._fetchAll(typeClass, this.all(modelName));
       },
@@ -9967,7 +9961,7 @@
         @deprecated Use [fetchById](#method_fetchById) instead
       */
       fetch: function(modelName, id, preload) {
-                        return this.fetchById(modelName, id, preload);
+                return this.fetchById(modelName, id, preload);
       },
 
       /**
@@ -9981,8 +9975,9 @@
         @return {Promise} promise
       */
       findById: function(modelName, id, preload) {
-        
-        var record = this.recordForId(modelName, id);
+
+        var typeClass = this.modelFor(modelName);
+        var record = this.recordForId(typeClass, id);
 
         return this._findByRecord(record, preload);
       },
@@ -10015,7 +10010,7 @@
         @return {Promise} promise
       */
       findByIds: function(modelName, ids) {
-                var store = this;
+        var store = this;
 
         return ember$data$lib$system$promise$proxies$$promiseArray(Ember.RSVP.all(ember$data$lib$system$store$$map(ids, function(id) {
           return store.findById(modelName, id);
@@ -10035,7 +10030,7 @@
       fetchRecord: function(record) {
         var typeClass = record.constructor;
         var id = ember$data$lib$system$store$$get(record, 'id');
-        var adapter = this.adapterFor(typeClass.modelName);
+        var adapter = this.adapterFor(typeClass);
 
                 
         var promise = ember$data$lib$system$store$finders$$_find(adapter, this, typeClass, id, record);
@@ -10081,7 +10076,7 @@
 
       _flushPendingFetchForType: function (recordResolverPairs, typeClass) {
         var store = this;
-        var adapter = store.adapterFor(typeClass.modelName);
+        var adapter = store.adapterFor(typeClass);
         var shouldCoalesce = !!adapter.findMany && adapter.coalesceFindRequests;
         var records = Ember.A(recordResolverPairs).mapBy('record');
 
@@ -10181,13 +10176,13 @@
         ```
 
         @method getById
-        @param {String} modelName
+        @param {String or subclass of DS.Model} type
         @param {String|Integer} id
         @return {DS.Model|null} record
       */
-      getById: function(modelName, id) {
-                if (this.hasRecordForId(modelName, id)) {
-          return this.recordForId(modelName, id);
+      getById: function(type, id) {
+        if (this.hasRecordForId(type, id)) {
+          return this.recordForId(type, id);
         } else {
           return null;
         }
@@ -10207,7 +10202,7 @@
       */
       reloadRecord: function(record) {
         var type = record.constructor;
-        var adapter = this.adapterFor(type.modelName);
+        var adapter = this.adapterFor(type);
         var id = ember$data$lib$system$store$$get(record, 'id');
 
                         
@@ -10223,7 +10218,7 @@
         @return {Boolean}
       */
       hasRecordForId: function(modelName, inputId) {
-                var typeClass = this.modelFor(modelName);
+        var typeClass = this.modelFor(modelName);
         var id = ember$data$lib$system$store$$coerceId(inputId);
         var record = this.typeMapFor(typeClass).idToRecord[id];
         return !!record && ember$data$lib$system$store$$get(record, 'isLoaded');
@@ -10240,7 +10235,7 @@
         @return {DS.Model} record
       */
       recordForId: function(modelName, inputId) {
-                var typeClass = this.modelFor(modelName);
+        var typeClass = this.modelFor(modelName);
         var id = ember$data$lib$system$store$$coerceId(inputId);
         var idToRecord = this.typeMapFor(typeClass).idToRecord;
         var record = idToRecord[id];
@@ -10288,7 +10283,7 @@
         @return {Promise} promise
       */
       findHasMany: function(owner, link, type) {
-        var adapter = this.adapterFor(owner.constructor.modelName);
+        var adapter = this.adapterFor(owner.constructor);
 
                 
         return ember$data$lib$system$store$finders$$_findHasMany(adapter, this, owner, link, type);
@@ -10303,7 +10298,7 @@
         @return {Promise} promise
       */
       findBelongsTo: function(owner, link, relationship) {
-        var adapter = this.adapterFor(owner.constructor.modelName);
+        var adapter = this.adapterFor(owner.constructor);
 
                 
         return ember$data$lib$system$store$finders$$_findBelongsTo(adapter, this, owner, link, relationship);
@@ -10322,19 +10317,19 @@
 
         @method findQuery
         @private
-        @param {String} modelName
+        @param {String or subclass of DS.Model} type
         @param {any} query an opaque query to be used by the adapter
         @return {Promise} promise
       */
-      findQuery: function(modelName, query) {
-                var typeClass = this.modelFor(modelName);
+      findQuery: function(typeName, query) {
+        var type = this.modelFor(typeName);
         var array = this.recordArrayManager
-          .createAdapterPopulatedRecordArray(typeClass, query);
+          .createAdapterPopulatedRecordArray(type, query);
 
-        var adapter = this.adapterFor(modelName);
+        var adapter = this.adapterFor(type);
 
                 
-        return ember$data$lib$system$promise$proxies$$promiseArray(ember$data$lib$system$store$finders$$_findQuery(adapter, this, typeClass, query, array));
+        return ember$data$lib$system$promise$proxies$$promiseArray(ember$data$lib$system$store$finders$$_findQuery(adapter, this, type, query, array));
       },
 
       /**
@@ -10348,7 +10343,7 @@
         @return {DS.AdapterPopulatedRecordArray}
       */
       findAll: function(modelName) {
-                return this.fetchAll(modelName);
+        return this.fetchAll(modelName);
       },
 
       /**
@@ -10359,7 +10354,7 @@
         @return {Promise} promise
       */
       _fetchAll: function(typeClass, array) {
-        var adapter = this.adapterFor(typeClass.modelName);
+        var adapter = this.adapterFor(typeClass);
         var sinceToken = this.typeMapFor(typeClass).metadata.since;
 
         ember$data$lib$system$store$$set(array, 'isUpdating', true);
@@ -10371,7 +10366,6 @@
       /**
         @method didUpdateAll
         @param {DS.Model} typeClass
-        @private
       */
       didUpdateAll: function(typeClass) {
         var findAllCache = this.typeMapFor(typeClass).findAllCache;
@@ -10402,7 +10396,7 @@
         @return {DS.RecordArray}
       */
       all: function(modelName) {
-                var typeClass = this.modelFor(modelName);
+        var typeClass = this.modelFor(modelName);
         var typeMap = this.typeMapFor(typeClass);
         var findAllCache = typeMap.findAllCache;
 
@@ -10431,7 +10425,7 @@
        @param {String} optional modelName
       */
       unloadAll: function(modelName) {
-                if (arguments.length === 0) {
+        if (arguments.length === 0) {
           var typeMaps = this.typeMaps;
           var keys = Ember.keys(typeMaps);
 
@@ -10455,7 +10449,7 @@
         }
 
         function byType(entry) {
-          return typeMaps[entry]['type'].modelName;
+          return typeMaps[entry]['type'];
         }
       },
 
@@ -10506,37 +10500,37 @@
         ```
 
         @method filter
-        @param {String} modelName
+        @param {String or subclass of DS.Model} type
         @param {Object} query optional query
         @param {Function} filter
         @return {DS.PromiseArray}
       */
-      filter: function(modelName, query, filter) {
-                var promise;
+      filter: function(type, query, filter) {
+        var promise;
         var length = arguments.length;
         var array;
         var hasQuery = length === 3;
 
         // allow an optional server query
         if (hasQuery) {
-          promise = this.findQuery(modelName, query);
+          promise = this.findQuery(type, query);
         } else if (arguments.length === 2) {
           filter = query;
         }
 
-        modelName = this.modelFor(modelName);
+        type = this.modelFor(type);
 
         if (hasQuery) {
-          array = this.recordArrayManager.createFilteredRecordArray(modelName, filter, query);
+          array = this.recordArrayManager.createFilteredRecordArray(type, filter, query);
         } else {
-          array = this.recordArrayManager.createFilteredRecordArray(modelName, filter);
+          array = this.recordArrayManager.createFilteredRecordArray(type, filter);
         }
 
         promise = promise || ember$data$lib$system$store$$Promise.cast(array);
 
         return ember$data$lib$system$promise$proxies$$promiseArray(promise.then(function() {
           return array;
-        }, null, "DS: Store#filter of " + modelName));
+        }, null, "DS: Store#filter of " + type));
       },
 
       /**
@@ -10554,24 +10548,24 @@
         ```
 
         @method recordIsLoaded
-        @param {String} modelName
+        @param {String or subclass of DS.Model} type
         @param {string} id
         @return {boolean}
       */
-      recordIsLoaded: function(modelName, id) {
-                if (!this.hasRecordForId(modelName, id)) { return false; }
-        return !ember$data$lib$system$store$$get(this.recordForId(modelName, id), 'isEmpty');
+      recordIsLoaded: function(type, id) {
+        if (!this.hasRecordForId(type, id)) { return false; }
+        return !ember$data$lib$system$store$$get(this.recordForId(type, id), 'isEmpty');
       },
 
       /**
         This method returns the metadata for a specific type.
 
         @method metadataFor
-        @param {String or subclass of DS.Model} modelName
+        @param {String or subclass of DS.Model} typeName
         @return {object}
       */
-      metadataFor: function(modelName) {
-                var typeClass = this.modelFor(modelName);
+      metadataFor: function(typeName) {
+        var typeClass = this.modelFor(typeName);
         return this.typeMapFor(typeClass).metadata;
       },
 
@@ -10579,12 +10573,12 @@
         This method sets the metadata for a specific type.
 
         @method setMetadataFor
-        @param {String} modelName
+        @param {String or subclass of DS.Model} typeName
         @param {Object} metadata metadata to set
         @return {object}
       */
-      setMetadataFor: function(modelName, metadata) {
-                var typeClass = this.modelFor(modelName);
+      setMetadataFor: function(typeName, metadata) {
+        var typeClass = this.modelFor(typeName);
         Ember.merge(this.typeMapFor(typeClass).metadata, metadata);
       },
 
@@ -10642,7 +10636,7 @@
         ember$data$lib$system$store$$forEach(pending, function(tuple) {
           var record = tuple[0];
           var resolver = tuple[1];
-          var adapter = this.adapterFor(record.constructor.modelName);
+          var adapter = this.adapterFor(record.constructor);
           var operation;
 
           if (ember$data$lib$system$store$$get(record, 'currentState.stateName') === 'root.deleted.saved') {
@@ -10797,14 +10791,14 @@
       */
 
       _modelForMixin: function(modelName) {
-        var normalizedModelName = ember$data$lib$system$normalize$model$name$$default(modelName);
+        var normalizedTypeKey = ember$data$lib$system$normalize$model$name$$default(modelName);
         var registry = this.container._registry ? this.container._registry : this.container;
-        var mixin = registry.resolve('mixin:' + normalizedModelName);
+        var mixin = registry.resolve('mixin:' + normalizedTypeKey);
         if (mixin) {
           //Cache the class as a model
-          registry.register('model:' + normalizedModelName, DS.Model.extend(mixin));
+          registry.register('model:' + normalizedTypeKey, DS.Model.extend(mixin));
         }
-        var factory = this.modelFactoryFor(normalizedModelName);
+        var factory = this.modelFactoryFor(normalizedTypeKey);
         if (factory) {
           factory.__isMixin = true;
           factory.__mixin = mixin;
@@ -10819,20 +10813,29 @@
         etc.)
 
         @method modelFor
-        @param {String} modelName
+        @param {String or subclass of DS.Model} key
         @return {subclass of DS.Model}
       */
-      modelFor: function(modelName) {
-        
-        var factory = this.modelFactoryFor(modelName);
-        if (!factory) {
-          //Support looking up mixins as base types for polymorphic relationships
-          factory = this._modelForMixin(modelName);
+      modelFor: function(key) {
+        var factory;
+
+        if (typeof key === 'string') {
+          factory = this.modelFactoryFor(key);
+          if (!factory) {
+            //Support looking up mixins as base types for polymorphic relationships
+            factory = this._modelForMixin(key);
+          }
+          if (!factory) {
+            throw new Ember.Error("No model was found for '" + key + "'");
+          }
+          factory.modelName = factory.modelName || ember$data$lib$system$normalize$model$name$$default(key);
+        } else {
+          // A factory already supplied. Ensure it has a normalized key.
+          factory = key;
+          if (factory.modelName) {
+            factory.modelName = ember$data$lib$system$normalize$model$name$$default(factory.modelName);
+          }
         }
-        if (!factory) {
-          throw new Ember.Error("No model was found for '" + modelName + "'");
-        }
-        factory.modelName = factory.modelName || ember$data$lib$system$normalize$model$name$$default(modelName);
 
         // deprecate typeKey
         if (!('typeKey' in factory)) {
@@ -10847,11 +10850,12 @@
           });
         }
 
+        factory.store = this;
         return factory;
       },
 
-      modelFactoryFor: function(modelName) {
-                var normalizedKey = ember$data$lib$system$normalize$model$name$$default(modelName);
+      modelFactoryFor: function(key) {
+        var normalizedKey = ember$data$lib$system$normalize$model$name$$default(key);
         return this.container.lookupFactory('model:' + normalizedKey);
       },
 
@@ -10917,13 +10921,13 @@
         records, as well as to update existing records.
 
         @method push
-        @param {String} modelName
+        @param {String or subclass of DS.Model} modelName
         @param {Object} data
         @return {DS.Model} the record that was created or
           updated.
       */
       push: function(modelName, data) {
-                        
+                
         var type = this.modelFor(modelName);
         var filter = Ember.EnumerableUtils.filter;
 
@@ -10934,9 +10938,9 @@
 
         // Actually load the record into the store.
 
-        this._load(modelName, data);
+        this._load(type, data);
 
-        var record = this.recordForId(modelName, data.id);
+        var record = this.recordForId(type, data.id);
         var store = this;
 
         this._backburner.join(function() {
@@ -11002,18 +11006,18 @@
         ```
 
         @method pushPayload
-        @param {String} modelName Optionally, a model type used to determine which serializer will be used
+        @param {String} type Optionally, a model used to determine which serializer will be used
         @param {Object} payload
       */
-      pushPayload: function (modelName, inputPayload) {
+      pushPayload: function (type, inputPayload) {
         var serializer;
         var payload;
         if (!inputPayload) {
-          payload = modelName;
+          payload = type;
           serializer = ember$data$lib$system$store$$defaultSerializer(this.container);
                   } else {
           payload = inputPayload;
-                    serializer = this.serializerFor(modelName);
+          serializer = this.serializerFor(type);
         }
         var store = this;
         this._adapterRun(function() {
@@ -11036,25 +11040,25 @@
         ```
 
         @method normalize
-        @param {String} modelName The name of the model type for this payload
+        @param {String} type The name of the model type for this payload
         @param {Object} payload
         @return {Object} The normalized payload
       */
-      normalize: function (modelName, payload) {
-                var serializer = this.serializerFor(modelName);
-        var model = this.modelFor(modelName);
+      normalize: function (type, payload) {
+        var serializer = this.serializerFor(type);
+        var model = this.modelFor(type);
         return serializer.normalize(model, payload);
       },
 
       /**
         @method update
-        @param {String} modelName
+        @param {String} type
         @param {Object} data
         @return {DS.Model} the record that was updated.
         @deprecated Use [push](#method_push) instead
       */
-      update: function(modelName, data) {
-                        return this.push(modelName, data);
+      update: function(type, data) {
+                return this.push(type, data);
       },
 
       /**
@@ -11063,16 +11067,16 @@
         call `push` repeatedly for you.
 
         @method pushMany
-        @param {String} modelName
+        @param {String or subclass of DS.Model} type
         @param {Array} datas
         @return {Array}
       */
-      pushMany: function(modelName, datas) {
-                var length = datas.length;
+      pushMany: function(type, datas) {
+        var length = datas.length;
         var result = new Array(length);
 
         for (var i = 0; i < length; i++) {
-          result[i] = this.push(modelName, datas[i]);
+          result[i] = this.push(type, datas[i]);
         }
 
         return result;
@@ -11080,12 +11084,12 @@
 
       /**
         @method metaForType
-        @param {String or subclass of DS.Model} modelName
+        @param {String or subclass of DS.Model} typeName
         @param {Object} metadata
         @deprecated Use [setMetadataFor](#method_setMetadataFor) instead
       */
-      metaForType: function(modelName, metadata) {
-                        this.setMetadataFor(modelName, metadata);
+      metaForType: function(typeName, metadata) {
+                this.setMetadataFor(typeName, metadata);
       },
 
       /**
@@ -11187,20 +11191,15 @@
 
         @method adapterFor
         @private
-        @param {String} modelName
+        @param {String or subclass of DS.Model} type
         @return DS.Adapter
       */
-      adapterFor: function(modelOrClass) {
-        var modelName;
-
-        
-        if (typeof modelOrClass !== 'string') {
-          modelName = modelOrClass.modelName;
-        } else {
-          modelName = modelOrClass;
+      adapterFor: function(type) {
+        if (type !== 'application') {
+          type = this.modelFor(type);
         }
 
-        var adapter = this.lookupAdapter(modelName) || this.lookupAdapter('application');
+        var adapter = this.lookupAdapter(type.modelName) || this.lookupAdapter('application');
 
         return adapter || ember$data$lib$system$store$$get(this, 'defaultAdapter');
       },
@@ -11231,22 +11230,18 @@
 
         @method serializerFor
         @private
-        @param {String} modelName the record to serialize
+        @param {String or subclass of DS.Model} type the record to serialize
         @return {DS.Serializer}
       */
-      serializerFor: function(modelOrClass) {
-        var modelName;
-
-                if (typeof modelOrClass !== 'string') {
-          modelName = modelOrClass.modelName;
-        } else {
-          modelName = modelOrClass;
+      serializerFor: function(type) {
+        if (type !== 'application') {
+          type = this.modelFor(type);
         }
 
-        var serializer = this.lookupSerializer(modelName) || this.lookupSerializer('application');
+        var serializer = this.lookupSerializer(type.modelName) || this.lookupSerializer('application');
 
         if (!serializer) {
-          var adapter = this.adapterFor(modelName);
+          var adapter = this.adapterFor(type);
           serializer = this.lookupSerializer(ember$data$lib$system$store$$get(adapter, 'defaultSerializer'));
         }
 
@@ -11334,7 +11329,7 @@
 
       if (typeof id === 'number' || typeof id === 'string') {
         type = ember$data$lib$system$store$$typeFor(relationship, key, data);
-        data[key] = store.recordForId(typeof type === 'string' ? type : type.modelName, id);
+        data[key] = store.recordForId(type, id);
       } else if (typeof id === 'object') {
         // hasMany polymorphic
                 data[key] = store.recordForId(id.type, id.id);
@@ -11370,10 +11365,9 @@
 
     function ember$data$lib$system$store$$_commit(adapter, store, operation, record) {
       var type = record.constructor;
-      var modelName = type.modelName;
       var snapshot = record._createSnapshot();
       var promise = adapter[operation](store, type, snapshot);
-      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, modelName);
+      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, type);
       var label = "DS: Extract and notify about " + operation + " completion of " + record;
 
       
@@ -11654,11 +11648,7 @@
         return columns;
       },
 
-      getRecords: function(modelNameOrFactory) {
-        // TODO: Ask Teddy what we should do here.
-        // Ideally this should always get passed a string.
-
-        var modelName = typeof modelNameOrFactory === 'string' ? modelNameOrFactory : modelNameOrFactory.modelName;
+      getRecords: function(modelName) {
         return this.get('store').all(modelName);
       },
 
@@ -12283,7 +12273,7 @@
           var parentRecord = snapshot.type.inverseFor(relationship.key);
           if (parentRecord) {
             var name = parentRecord.name;
-            var embeddedSerializer = this.store.serializerFor(embeddedSnapshot.modelName);
+            var embeddedSerializer = this.store.serializerFor(embeddedSnapshot.type);
             var parentKey = embeddedSerializer.keyForRelationship(name, parentRecord.kind, 'deserialize');
             if (parentKey) {
               delete json[parentKey];
@@ -12338,7 +12328,7 @@
 
       typeClass.eachRelationship(function(key, relationship) {
         if (serializer.hasDeserializeRecordsOption(key)) {
-          var embeddedTypeClass = store.modelFor(relationship.type);
+          var embeddedTypeClass = store.modelFor(relationship.type.modelName);
           if (relationship.kind === "hasMany") {
             if (relationship.options.polymorphic) {
               ember$data$lib$serializers$embedded$records$mixin$$extractEmbeddedHasManyPolymorphic(store, key, partial);
@@ -12370,7 +12360,7 @@
       var embeddedSerializer = store.serializerFor(embeddedTypeClass.modelName);
       ember$data$lib$serializers$embedded$records$mixin$$forEach(hash[key], function(data) {
         var embeddedRecord = embeddedSerializer.normalize(embeddedTypeClass, data, null);
-        store.push(embeddedTypeClass.modelName, embeddedRecord);
+        store.push(embeddedTypeClass, embeddedRecord);
         ids.push(embeddedRecord.id);
       });
 
@@ -12392,7 +12382,7 @@
         var primaryKey = ember$data$lib$serializers$embedded$records$mixin$$get(embeddedSerializer, 'primaryKey');
 
         var embeddedRecord = embeddedSerializer.normalize(embeddedTypeClass, data, null);
-        store.push(embeddedTypeClass.modelName, embeddedRecord);
+        store.push(embeddedTypeClass, embeddedRecord);
         ids.push({ id: embeddedRecord[primaryKey], type: modelName });
       });
 
@@ -12407,7 +12397,7 @@
 
       var embeddedSerializer = store.serializerFor(embeddedTypeClass.modelName);
       var embeddedRecord = embeddedSerializer.normalize(embeddedTypeClass, hash[key], null);
-      store.push(embeddedTypeClass.modelName, embeddedRecord);
+      store.push(embeddedTypeClass, embeddedRecord);
 
       hash[key] = embeddedRecord.id;
       //TODO Need to add a reference to the parent later so relationship works between both `belongsTo` records
@@ -12426,7 +12416,7 @@
       var primaryKey = ember$data$lib$serializers$embedded$records$mixin$$get(embeddedSerializer, 'primaryKey');
 
       var embeddedRecord = embeddedSerializer.normalize(embeddedTypeClass, data, null);
-      store.push(embeddedTypeClass.modelName, embeddedRecord);
+      store.push(embeddedTypeClass, embeddedRecord);
 
       hash[key] = embeddedRecord[primaryKey];
       hash[key + 'Type'] = modelName;
@@ -12690,18 +12680,27 @@
 
 
     var ember$data$lib$system$relationships$has$many$$default = ember$data$lib$system$relationships$has$many$$hasMany;
-    function ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(meta) {
-      var modelName;
+    function ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(store, meta) {
+      var modelName, typeClass;
 
       modelName = meta.type || meta.key;
-      return ember$inflector$lib$lib$system$string$$singularize(ember$data$lib$system$normalize$model$name$$default(modelName));
+      if (typeof modelName === 'string') {
+        if (meta.kind === 'hasMany') {
+          modelName = ember$inflector$lib$lib$system$string$$singularize(modelName);
+        }
+        typeClass = store.modelFor(modelName);
+      } else {
+        typeClass = meta.type;
+      }
+
+      return typeClass;
     }
 
-    function ember$data$lib$system$relationship$meta$$relationshipFromMeta(meta) {
+    function ember$data$lib$system$relationship$meta$$relationshipFromMeta(store, meta) {
       return {
         key:  meta.key,
         kind: meta.kind,
-        type: ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(meta),
+        type: ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(store, meta),
         options:    meta.options,
         parentType: meta.parentType,
         isRelationship: true
@@ -12726,7 +12725,7 @@
         // it to the map.
         if (meta.isRelationship) {
           meta.key = name;
-          var relationshipsForType = map.get(ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(meta));
+          var relationshipsForType = map.get(ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(this.store, meta));
 
           relationshipsForType.push({
             name: name,
@@ -12752,7 +12751,7 @@
       this.eachComputedProperty(function(name, meta) {
         if (meta.isRelationship) {
           meta.key = name;
-          modelName = ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(meta);
+          modelName = ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(this.store, meta);
 
           
           if (!types.contains(modelName)) {
@@ -12774,8 +12773,8 @@
       this.eachComputedProperty(function(name, meta) {
         if (meta.isRelationship) {
           meta.key = name;
-          var relationship = ember$data$lib$system$relationship$meta$$relationshipFromMeta(meta);
-          relationship.type = ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(meta);
+          var relationship = ember$data$lib$system$relationship$meta$$relationshipFromMeta(this.store, meta);
+          relationship.type = ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(this.store, meta);
           map.set(name, relationship);
         }
       });
@@ -12873,12 +12872,11 @@
         @method typeForRelationship
         @static
         @param {String} name the name of the relationship
-        @param {store} store an instance of DS.Store
         @return {subclass of DS.Model} the type of the relationship, or undefined
       */
-      typeForRelationship: function(name, store) {
+      typeForRelationship: function(name) {
         var relationship = ember$data$lib$system$relationships$ext$$get(this, 'relationshipsByName').get(name);
-        return relationship && store.modelFor(relationship.type);
+        return relationship && relationship.type;
       },
 
       inverseMap: Ember.computed(function() {
@@ -12908,21 +12906,21 @@
         @param {String} name the name of the relationship
         @return {Object} the inverse relationship, or null
       */
-      inverseFor: function(name, store) {
+      inverseFor: function(name) {
         var inverseMap = ember$data$lib$system$relationships$ext$$get(this, 'inverseMap');
         if (inverseMap[name]) {
           return inverseMap[name];
         } else {
-          var inverse = this._findInverseFor(name, store);
+          var inverse = this._findInverseFor(name);
           inverseMap[name] = inverse;
           return inverse;
         }
       },
 
       //Calculate the inverse, ignoring the cache
-      _findInverseFor: function(name, store) {
+      _findInverseFor: function(name) {
 
-        var inverseType = this.typeForRelationship(name, store);
+        var inverseType = this.typeForRelationship(name);
         if (!inverseType) {
           return null;
         }
@@ -12967,9 +12965,9 @@
           var possibleRelationships = relationshipsSoFar || [];
 
           var relationshipMap = ember$data$lib$system$relationships$ext$$get(inverseType, 'relationships');
-          if (!relationshipMap) { return possibleRelationships; }
+          if (!relationshipMap) { return; }
 
-          var relationships = relationshipMap.get(type.modelName);
+          var relationships = relationshipMap.get(type);
 
           relationships = ember$data$lib$system$relationships$ext$$filter.call(relationships, function(relationship) {
             var optionsForRelationship = inverseType.metaForProperty(relationship.name).options;
@@ -13225,10 +13223,10 @@
         });
       },
 
-      determineRelationshipType: function(knownSide, store) {
+      determineRelationshipType: function(knownSide) {
         var knownKey = knownSide.key;
         var knownKind = knownSide.kind;
-        var inverse = this.inverseFor(knownKey, store);
+        var inverse = this.inverseFor(knownKey);
         var key, otherKind;
 
         if (!inverse) {
@@ -13307,7 +13305,7 @@
       },
 
       inverseFor: function(key) {
-        return this.constructor.inverseFor(key, this.store);
+        return this.constructor.inverseFor(key);
       }
 
     });
