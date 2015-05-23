@@ -4708,7 +4708,7 @@
     }
     var activemodel$adapter$lib$setup$container$$default = activemodel$adapter$lib$setup$container$$setupActiveModelAdapter;
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.02706ec5e4'
+      VERSION: '1.0.0-beta.19+canary.e9a3ef6d84'
     });
 
     if (Ember.libraries) {
@@ -13473,7 +13473,6 @@
 
     ember$data$lib$core$$default.RESTAdapter    = ember$data$lib$adapters$rest$adapter$$default;
     ember$data$lib$core$$default.BuildURLMixin  = ember$data$lib$adapters$build$url$mixin$$default;
-    ember$data$lib$core$$default.FixtureAdapter = ember$data$lib$adapters$fixture$adapter$$default;
 
     ember$data$lib$core$$default.RESTSerializer = ember$data$lib$serializers$rest$serializer$$default;
     ember$data$lib$core$$default.JSONSerializer = ember$data$lib$serializers$json$serializer$$default;
@@ -13503,6 +13502,22 @@
       configurable: false,
       value: ember$data$lib$system$normalize$model$name$$default
     });
+
+    var ember$data$lib$main$$fixtureAdapterWasDeprecated = false;
+
+    if (Ember.platform.hasPropertyAccessors) {
+      Ember.defineProperty(ember$data$lib$core$$default, 'FixtureAdapter', {
+        get: function() {
+          if (!ember$data$lib$main$$fixtureAdapterWasDeprecated) {
+            Ember.deprecate('DS.FixtureAdapter has been deprecated and moved into an unsupported addon: https://github.com/emberjs/ember-data-fixture-adapter/tree/master');
+            ember$data$lib$main$$fixtureAdapterWasDeprecated = true;
+          }
+          return ember$data$lib$adapters$fixture$adapter$$default;
+        }
+      });
+    } else {
+      ember$data$lib$core$$default.FixtureAdapter = ember$data$lib$adapters$fixture$adapter$$default;
+    }
 
     Ember.lookup.DS = ember$data$lib$core$$default;
 
