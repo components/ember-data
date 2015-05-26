@@ -3947,8 +3947,8 @@
 
     Ember.runInDebug(function () {
       ember$data$lib$serializers$rest$serializer$$RESTSerializer.reopen({
-        warnMessageNoModelForKey: function (prop, modelName) {
-          return "Encountered \"" + prop + "\" in payload, but no model was found for model name \"" + modelName + "\" (resolved model name using " + this.constructor.toString() + ".typeForRoot(\"" + prop + "\"))";
+        warnMessageNoModelForKey: function (prop, typeKey) {
+          return "Encountered \"" + prop + "\" in payload, but no model was found for model name \"" + typeKey + "\" (resolved model name using " + this.constructor.toString() + ".modelNameFromPayloadKey(\"" + prop + "\"))";
         }
       });
     });
@@ -4292,7 +4292,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.28e69260ee'
+      VERSION: '1.0.0-beta.19+canary.20075c2053'
     });
 
     if (Ember.libraries) {
@@ -8309,7 +8309,7 @@
 
       /**
         If the model `isDirty` this function will discard any unsaved
-        changes
+        changes. If the model `isNew` it will be removed from the store.
          Example
          ```javascript
         record.get('name'); // 'Untitled Document'
