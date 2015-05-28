@@ -3897,7 +3897,7 @@
         ```
          @method payloadKeyFromModelName
         @param {String} modelName
-        @returns {String}
+        @return {String}
       */
       payloadKeyFromModelName: function (modelName) {
         return ember$data$lib$serializers$rest$serializer$$camelize(modelName);
@@ -3907,7 +3907,7 @@
        Deprecated. Use payloadKeyFromModelName instead
          @method typeForRoot
         @param {String} modelName
-        @returns {String}
+        @return {String}
         @deprecated
       */
       typeForRoot: function (modelName) {
@@ -4075,7 +4075,7 @@
        Underscores the JSON root keys when serializing.
          @method payloadKeyFromModelName
         @param {String} modelName
-        @returns {String}
+        @return {String}
       */
       payloadKeyFromModelName: function (modelName) {
         return activemodel$adapter$lib$system$active$model$serializer$$underscore(activemodel$adapter$lib$system$active$model$serializer$$decamelize(modelName));
@@ -4274,7 +4274,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.911519dee5'
+      VERSION: '1.0.0-beta.19+canary.8eb34b8bd0'
     });
 
     if (Ember.libraries) {
