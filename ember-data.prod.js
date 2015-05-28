@@ -4274,7 +4274,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.8eb34b8bd0'
+      VERSION: '1.0.0-beta.19+canary.5d7c15f0be'
     });
 
     if (Ember.libraries) {
@@ -8232,18 +8232,6 @@
         this.pushedData();
 
         this._notifyProperties(changedKeys);
-      },
-
-      materializeId: function (id) {
-        ember$data$lib$system$model$model$$set(this, "id", id);
-      },
-
-      materializeAttributes: function (attributes) {
-                ember$data$lib$system$merge$$default(this._data, attributes);
-      },
-
-      materializeAttribute: function (name, value) {
-        this._data[name] = value;
       },
 
       /**
