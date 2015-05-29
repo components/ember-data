@@ -4274,7 +4274,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.5d7c15f0be'
+      VERSION: '1.0.0-beta.19+canary.46eed2cf70'
     });
 
     if (Ember.libraries) {
@@ -12525,10 +12525,12 @@
       @main ember-data
     */
 
-    // support RSVP 2.x via resolve,  but prefer RSVP 3.x's Promise.cast
-    Ember.RSVP.Promise.cast = Ember.RSVP.Promise.cast || Ember.RSVP.resolve;
+    if (Ember.VERSION.match(/^1\.[0-7]\./)) {
+      throw new Ember.Error("Ember Data requires at least Ember 1.8.0, but you have " + Ember.VERSION + ". Please upgrade your version of Ember, then upgrade Ember Data");
+    }
 
-    mber$data$lib$core$$default.Store = ember$data$lib$system$store$$Store;
+    // support RSVP 2.x via resolve,  but prefer RSVP 3.x's Promise.cast
+    Ember.RSVP.Promise.cast = Ember.RSVP.Promise.cast || Ember.RSVP.resolve;ember$data$lib$core$$default.Store = ember$data$lib$system$store$$Store;
     ember$data$lib$core$$default.PromiseArray = ember$data$lib$system$promise$proxies$$PromiseArray;
     ember$data$lib$core$$default.PromiseObject = ember$data$lib$system$promise$proxies$$PromiseObject;
 
