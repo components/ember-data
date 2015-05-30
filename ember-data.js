@@ -4292,7 +4292,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.46eed2cf70'
+      VERSION: '1.0.0-beta.19+canary.1b1bd43cd8'
     });
 
     if (Ember.libraries) {
@@ -4784,10 +4784,7 @@
       */
       _unregisterFromManager: function () {
         var manager = ember$data$lib$system$record$arrays$record$array$$get(this, 'manager');
-        //We will stop needing this stupid if statement soon, once manyArray are refactored to not be RecordArrays
-        if (manager) {
-          manager.unregisterFilteredRecordArray(this);
-        }
+        manager.unregisterFilteredRecordArray(this);
       },
 
       willDestroy: function () {
