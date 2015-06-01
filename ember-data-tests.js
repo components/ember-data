@@ -1075,20 +1075,21 @@ define(
     test('When all records for a type are requested, the store should call the adapter\'s `findAll` method.', function () {
       expect(5);
 
-      store = createStore({ adapter: DS.Adapter.extend({
+      store = createStore({
+        adapter: DS.Adapter.extend({
           findAll: function (store, type, since) {
             // this will get called twice
             ok(true, 'the adapter\'s findAll method should be invoked');
-
             return Ember.RSVP.resolve([{ id: 1, name: 'Braaaahm Dale' }]);
           }
-        })
+        }),
+        person: Person
       });
 
       var allRecords;
 
       run(function () {
-        store.find(Person).then(function (all) {
+        store.find('person').then(function (all) {
           allRecords = all;
           equal(get(all, 'length'), 1, 'the record array\'s length is 1 after a record is loaded into it');
           equal(all.objectAt(0).get('name'), 'Braaaahm Dale', 'the first item in the record array is Braaaahm Dale');
@@ -1096,7 +1097,7 @@ define(
       });
 
       run(function () {
-        store.find(Person).then(function (all) {
+        store.find('person').then(function (all) {
           // Only one record array per type should ever be created (identity map)
           strictEqual(allRecords, all, 'the same record array is returned every time all records of a type are requested');
         });
@@ -1119,15 +1120,16 @@ define(
               return Ember.RSVP.resolve([{ id: 1, name: 'Braaaahm Dale' }]);
             }
           }
-        })
+        }),
+        person: Person
       });
 
       var allRecords;
 
       run(function () {
-        store.find(Person).then(null, function () {
+        store.find('person').then(null, function () {
           ok(true, 'The rejection should get here');
-          return store.find(Person);
+          return store.find('person');
         }).then(function (all) {
           allRecords = all;
           equal(get(all, 'length'), 1, 'the record array\'s length is 1 after a record is loaded into it');
@@ -1138,16 +1140,19 @@ define(
 
     test('When all records for a type are requested, records that are already loaded should be returned immediately.', function () {
       expect(3);
-      store = createStore({ adapter: DS.Adapter.extend() });
+      store = createStore({
+        adapter: DS.Adapter.extend(),
+        person: Person
+      });
 
       run(function () {
         // Load a record from the server
-        store.push(Person, { id: 1, name: 'Jeremy Ashkenas' });
+        store.push('person', { id: 1, name: 'Jeremy Ashkenas' });
         // Create a new, unsaved record in the store
-        store.createRecord(Person, { name: 'Alex MacCaw' });
+        store.createRecord('person', { name: 'Alex MacCaw' });
       });
 
-      allRecords = store.all(Person);
+      allRecords = store.all('person');
 
       equal(get(allRecords, 'length'), 2, 'the record array\'s length is 2');
       equal(allRecords.objectAt(0).get('name'), 'Jeremy Ashkenas', 'the first item in the record array is Jeremy Ashkenas');
@@ -1157,14 +1162,17 @@ define(
     test('When all records for a type are requested, records that are created on the client should be added to the record array.', function () {
       expect(3);
 
-      store = createStore({ adapter: DS.Adapter.extend() });
+      store = createStore({
+        adapter: DS.Adapter.extend(),
+        person: Person
+      });
 
-      allRecords = store.all(Person);
+      allRecords = store.all('person');
 
       equal(get(allRecords, 'length'), 0, 'precond - the record array\'s length is zero before any records are loaded');
 
       run(function () {
-        store.createRecord(Person, { name: 'Carsten Nielsen' });
+        store.createRecord('person', { name: 'Carsten Nielsen' });
       });
 
       equal(get(allRecords, 'length'), 1, 'the record array\'s length is 1');
@@ -1211,14 +1219,16 @@ define(
     });
 
     test('It raises an assertion when `undefined` is passed as id (#1705)', function () {
-      store = createStore();
+      store = createStore({
+        person: Person
+      });
 
       expectAssertion(function () {
-        store.find(Person, undefined);
+        store.find('person', undefined);
       }, 'You may not pass `undefined` as id to the store\'s find method');
 
       expectAssertion(function () {
-        store.find(Person, null);
+        store.find('person', null);
       }, 'You may not pass `null` as id to the store\'s find method');
     });
 
@@ -1227,7 +1237,8 @@ define(
 
       var count = 0;
 
-      store = createStore({ adapter: DS.Adapter.extend({
+      store = createStore({
+        adapter: DS.Adapter.extend({
           find: function (store, type, id, snapshot) {
             equal(type, Person, 'the find method is called with the correct type');
             equal(count, 0, 'the find method is only called once');
@@ -1235,27 +1246,30 @@ define(
             count++;
             return { id: 1, name: 'Braaaahm Dale' };
           }
-        })
+        }),
+        person: Person
       });
 
       run(function () {
-        store.find(Person, 1);
-        store.find(Person, 1);
+        store.find('person', 1);
+        store.find('person', 1);
       });
     });
 
     test('When a single record is requested multiple times, all .find() calls are resolved after the promise is resolved', function () {
       var deferred = Ember.RSVP.defer();
 
-      store = createStore({ adapter: DS.Adapter.extend({
+      store = createStore({
+        adapter: DS.Adapter.extend({
           find: function (store, type, id, snapshot) {
             return deferred.promise;
           }
-        })
+        }),
+        person: Person
       });
 
       run(function () {
-        store.find(Person, 1).then(async(function (person) {
+        store.find('person', 1).then(async(function (person) {
           equal(person.get('id'), '1');
           equal(person.get('name'), 'Braaaahm Dale');
 
@@ -1271,7 +1285,7 @@ define(
       });
 
       run(function () {
-        store.find(Person, 1).then(async(function (post) {
+        store.find('person', 1).then(async(function (post) {
           equal(post.get('id'), '1');
           equal(post.get('name'), 'Braaaahm Dale');
 
@@ -1292,15 +1306,17 @@ define(
     });
 
     test('When a single record is requested, and the promise is rejected, .find() is rejected.', function () {
-      store = createStore({ adapter: DS.Adapter.extend({
+      store = createStore({
+        adapter: DS.Adapter.extend({
           find: function (store, type, id, snapshot) {
             return Ember.RSVP.reject();
           }
-        })
+        }),
+        person: Person
       });
 
       run(function () {
-        store.find(Person, 1).then(null, async(function (reason) {
+        store.find('person', 1).then(null, async(function (reason) {
           ok(true, 'The rejection handler was called');
         }));
       });
@@ -1309,20 +1325,22 @@ define(
     test('When a single record is requested, and the promise is rejected, the record should be unloaded.', function () {
       expect(2);
 
-      store = createStore({ adapter: DS.Adapter.extend({
+      store = createStore({
+        adapter: DS.Adapter.extend({
           find: function (store, type, id, snapshot) {
             return Ember.RSVP.reject();
           }
-        })
+        }),
+        person: Person
       });
 
       run(function () {
-        store.find(Person, 1).then(null, async(function (reason) {
+        store.find('person', 1).then(null, async(function (reason) {
           ok(true, 'The rejection handler was called');
         }));
       });
 
-      ok(!store.hasRecordForId(Person, 1), 'The record has been unloaded');
+      ok(!store.hasRecordForId('person', 1), 'The record has been unloaded');
     });
   }
 );
@@ -5438,7 +5456,7 @@ define(
       var filter;
 
       run(function () {
-        filter = store.filter(Person, { foo: 1 }, function (person) {
+        filter = store.filter("person", { foo: 1 }, function (person) {
           return true;
         });
       });
@@ -5459,7 +5477,7 @@ define(
           }
         }));
 
-        filter = store.filter(Person, function (person) {
+        filter = store.filter("person", function (person) {
           return person.get("isLoaded");
         });
       });
@@ -16058,11 +16076,12 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
         find: function (store, type, id, snapshot) {
           return Ember.RSVP.resolve({ id: 1, name: 'John' });
         }
-      })
+      }),
+      person: Person
     });
 
     run(function () {
-      store.find(Person, 1).then(function (person) {
+      store.find('person', 1).then(function (person) {
         equal(get(person, 'currentState.stateName'), 'root.loaded.saved', 'model is in loaded state');
         equal(get(person, 'isLoaded'), true, 'model is loaded');
       });
@@ -16293,11 +16312,12 @@ define(
       });
 
       var store = createStore({
-        adapter: adapter
+        adapter: adapter,
+        person: Person
       });
 
       run(function () {
-        store.find(Person, 1).then(function (person) {
+        store.find("person", 1).then(function (person) {
           equal(person.get("id"), "1", "The person's ID is available");
           equal(person.get("name"), "Foo", "The person's properties are available");
         });
@@ -16333,12 +16353,13 @@ define(
       });
 
       var store = createStore({
-        adapter: adapter
+        adapter: adapter,
+        person: Person
       });
       var asyncPerson;
 
       run(function () {
-        asyncPerson = store.find(Person, 1);
+        asyncPerson = store.find("person", 1);
       });
       equal(callCount, 0, "precond - didUpdate callback was not called yet");
 
@@ -16423,12 +16444,13 @@ define(
       });
 
       var store = createStore({
-        adapter: adapter
+        adapter: adapter,
+        person: Person
       });
       var asyncPerson;
 
       run(function () {
-        asyncPerson = store.find(Person, 1);
+        asyncPerson = store.find("person", 1);
       });
 
       equal(callCount, 0, "precond - didDelete callback was not called yet");
@@ -16509,12 +16531,13 @@ define(
       });
 
       var store = createStore({
-        adapter: adapter
+        adapter: adapter,
+        person: Person
       });
       var asyncPerson;
 
       run(function () {
-        asyncPerson = store.find(Person, 1);
+        asyncPerson = store.find("person", 1);
       });
       equal(callCount, 0, "precond - becameInvalid callback was not called yet");
 
@@ -16695,11 +16718,11 @@ define(
         }
       });
 
-      var store = createStore({ adapter: adapter });
+      var store = createStore({ adapter: adapter, person: Person });
       var person;
 
       run(function () {
-        person = store.push(Person, { id: 1, name: "Tom Dale" });
+        person = store.push("person", { id: 1, name: "Tom Dale" });
         person.set("name", "Tomasz Dale");
       });
 
@@ -18261,7 +18284,7 @@ define(
         return Ember.RSVP.resolve(array);
       };
 
-      recordArray = store.all(Person);
+      recordArray = store.all("person");
       run(function () {
         promise = recordArray.update();
       });
@@ -18440,11 +18463,11 @@ define(
         }
       });
 
-      var currentStore = createStore({ adapter: adapter });
       var currentType = DS.Model.extend();
+      var currentStore = createStore({ adapter: adapter, test: currentType });
 
       run(function () {
-        currentStore.find(currentType, 1);
+        currentStore.find("test", 1);
       });
     });
 
@@ -18464,13 +18487,13 @@ define(
         coalesceFindRequests: true
       });
 
-      var currentStore = createStore({ adapter: adapter });
       var currentType = DS.Model.extend();
-      currentType.modelName = "test";
+      var currentStore = createStore({ adapter: adapter, test: currentType });
+
       stop();
       run(function () {
-        currentStore.find(currentType, 1);
-        currentStore.find(currentType, 2);
+        currentStore.find("test", 1);
+        currentStore.find("test", 2);
       });
     });
 
@@ -18483,13 +18506,13 @@ define(
         }
       });
 
-      var currentStore = createStore({ adapter: adapter });
       var currentType = DS.Model.extend({
         name: DS.attr("string")
       });
+      var currentStore = createStore({ adapter: adapter, test: currentType });
 
       run(function () {
-        currentStore.find(currentType, 1).then(async(function (object) {
+        currentStore.find("test", 1).then(async(function (object) {
           strictEqual(get(object, "name"), "Scumbag Dale", "the data was pushed");
         }));
       });
@@ -18505,18 +18528,18 @@ define(
         }
       });
 
-      var currentStore = createStore({ adapter: adapter });
       var currentType = DS.Model.extend({
         name: DS.attr("string")
       });
+      var currentStore = createStore({ adapter: adapter, test: currentType });
 
       run(function () {
-        currentStore.find(currentType, 1).then(async(function (object) {
+        currentStore.find("test", 1).then(async(function (object) {
           equal(typeof object.get("id"), "string", "id was coerced to a string");
           run(function () {
-            currentStore.push(currentType, { id: 2, name: "Scumbag Sam Saffron" });
+            currentStore.push("test", { id: 2, name: "Scumbag Sam Saffron" });
           });
-          return currentStore.find(currentType, 2);
+          return currentStore.find("test", 2);
         })).then(async(function (object) {
           ok(object, "object was found");
           equal(typeof object.get("id"), "string", "id is a string despite being supplied and searched for as a number");
@@ -18748,16 +18771,17 @@ define(
         }
       });
 
-      var store = createStore({
-        adapter: adapter
-      });
-
       var Person = DS.Model.extend({
         name: DS.attr("string")
       });
 
+      var store = createStore({
+        adapter: adapter,
+        test: Person
+      });
+
       run(function () {
-        store.find(Person, 1, { name: "Test" });
+        store.find("test", 1, { name: "Test" });
       });
     });
 
@@ -18968,14 +18992,16 @@ define(
       });
 
       var store = createStore({
-        adapter: adapter
+        adapter: adapter,
+        test: Person,
+        phone: Phone
       });
 
       run(function () {
-        store.createRecord(Person);
+        store.createRecord("test");
       });
 
-      var records = Ember.A([store.recordForId(Person, 10), store.recordForId(Phone, 20), store.recordForId(Phone, 21)]);
+      var records = Ember.A([store.recordForId("test", 10), store.recordForId("phone", 20), store.recordForId("phone", 21)]);
 
       run(function () {
         store.scheduleFetchMany(records).then(async(function () {
@@ -19014,10 +19040,11 @@ define(
       });
 
       var store = createStore({
-        adapter: adapter
+        adapter: adapter,
+        test: Person
       });
 
-      var records = Ember.A([store.recordForId(Person, 10), store.recordForId(Person, 20), store.recordForId(Person, 21)]);
+      var records = Ember.A([store.recordForId("test", 10), store.recordForId("test", 20), store.recordForId("test", 21)]);
 
       run(function () {
         store.scheduleFetchMany(records).then(async(function () {
@@ -19055,12 +19082,13 @@ define(
       });
 
       var store = createStore({
-        adapter: adapter
+        adapter: adapter,
+        test: Person
       });
 
       run(function () {
-        var davidPromise = store.find(Person, "david");
-        var igorPromise = store.find(Person, "igor");
+        var davidPromise = store.find("test", "david");
+        var igorPromise = store.find("test", "igor");
 
         igorPromise.then(async(function () {
           equal(davidResolved, false, "Igor did not need to wait for David");
@@ -19100,12 +19128,13 @@ define(
       });
 
       var store = createStore({
-        adapter: adapter
+        adapter: adapter,
+        test: Person
       });
 
       run(function () {
-        var davidPromise = store.find(Person, "david");
-        var igorPromise = store.find(Person, "igor");
+        var davidPromise = store.find("test", "david");
+        var igorPromise = store.find("test", "igor");
 
         igorPromise.then(null, async(function () {
           equal(davidResolved, false, "Igor did not need to wait for David");
@@ -19135,13 +19164,14 @@ define(
       });
 
       var store = createStore({
-        adapter: adapter
+        adapter: adapter,
+        test: Person
       });
 
       warns(function () {
         run(function () {
-          var davidPromise = store.find(Person, "david");
-          var igorPromise = store.find(Person, "igor");
+          var davidPromise = store.find("test", "david");
+          var igorPromise = store.find("test", "igor");
 
           davidPromise.then(async(function () {
             ok(true, "David resolved");
@@ -20177,17 +20207,20 @@ define(
 
     module('unit/store/unload - Store unloading records', {
       setup: function () {
-        store = createStore({ adapter: DS.Adapter.extend({
-            find: function (store, type, id, snapshot) {
-              tryToFind = true;
-              return Ember.RSVP.resolve({ id: id, wasFetched: true });
-            }
-          })
-        });
 
         Record = DS.Model.extend({
           title: DS.attr('string'),
           wasFetched: DS.attr('boolean')
+        });
+
+        store = createStore({
+          adapter: DS.Adapter.extend({
+            find: function (store, type, id, snapshot) {
+              tryToFind = true;
+              return Ember.RSVP.resolve({ id: id, wasFetched: true });
+            }
+          }),
+          record: Record
         });
       },
 
@@ -20227,8 +20260,8 @@ define(
       expect(5);
 
       run(function () {
-        store.push(Record, { id: 1, title: 'toto' });
-        store.find(Record, 1).then(function (record) {
+        store.push('record', { id: 1, title: 'toto' });
+        store.find('record', 1).then(function (record) {
           equal(get(record, 'id'), 1, 'found record with id 1');
           equal(get(record, 'isDirty'), false, 'record is not dirty');
 
@@ -20240,7 +20273,7 @@ define(
           equal(get(record, 'isDeleted'), true, 'record is deleted');
 
           tryToFind = false;
-          return store.find(Record, 1).then(function () {
+          return store.find('record', 1).then(function () {
             equal(tryToFind, true, 'not found record with id 1');
           });
         });
