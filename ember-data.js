@@ -4292,7 +4292,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.a688614f78'
+      VERSION: '1.0.0-beta.19+canary.09809f3cbf'
     });
 
     if (Ember.libraries) {
@@ -7064,6 +7064,8 @@
       this.type = record.constructor;
       this.modelName = record.constructor.modelName;
 
+      this._changedAttributes = record.changedAttributes();
+
       // The following code is here to keep backwards compatibility when accessing
       // `constructor` directly.
       //
@@ -7158,7 +7160,7 @@
         Returns all attributes and their corresponding values.
          Example
          ```javascript
-        // store.push('post', { id: 1, author: 'Tomster', title: 'Hello World' });
+        // store.push('post', { id: 1, author: 'Tomster', title: 'Ember.js rocks' });
         postSnapshot.attributes(); // => { author: 'Tomster', title: 'Ember.js rocks' }
         ```
          @method attributes
@@ -7166,6 +7168,28 @@
       */
       attributes: function () {
         return Ember.copy(this._attributes);
+      },
+
+      /**
+        Returns all changed attributes and their old and new values.
+         Example
+         ```javascript
+        // store.push('post', { id: 1, author: 'Tomster', title: 'Ember.js rocks' });
+        postModel.set('title', 'Ember.js rocks!');
+        postSnapshot.changedAttributes(); // => { title: ['Ember.js rocks', 'Ember.js rocks!'] }
+        ```
+         @method changedAttributes
+        @return {Object} All changed attributes of the current snapshot
+      */
+      changedAttributes: function () {
+        var prop;
+        var changedAttributes = Ember.create(null);
+
+        for (prop in this._changedAttributes) {
+          changedAttributes[prop] = Ember.copy(this._changedAttributes[prop]);
+        }
+
+        return changedAttributes;
       },
 
       /**
@@ -8207,7 +8231,7 @@
       changedAttributes: function () {
         var oldData = ember$data$lib$system$model$model$$get(this, "_data");
         var newData = ember$data$lib$system$model$model$$get(this, "_attributes");
-        var diffData = {};
+        var diffData = Ember.create(null);
         var prop;
 
         for (prop in newData) {
@@ -8217,11 +8241,17 @@
         return diffData;
       },
 
+      flushChangedAttributes: function () {
+        this._inFlightAttributes = this._attributes;
+        this._attributes = Ember.create(null);
+      },
+
       /**
         @method adapterWillCommit
         @private
       */
       adapterWillCommit: function () {
+        this.flushChangedAttributes();
         this.send("willCommit");
       },
 
@@ -8367,8 +8397,6 @@
         var resolver = Ember.RSVP.defer(promiseLabel);
 
         this.store.scheduleSave(this, resolver);
-        this._inFlightAttributes = this._attributes;
-        this._attributes = Ember.create(null);
 
         return ember$data$lib$system$promise$proxies$$PromiseObject.create({
           promise: resolver.promise
@@ -10027,8 +10055,9 @@
         @param {Resolver} resolver
       */
       scheduleSave: function (record, resolver) {
+        var snapshot = record._createSnapshot();
         record.adapterWillCommit();
-        this._pendingSave.push([record, resolver]);
+        this._pendingSave.push([snapshot, resolver]);
         ember$data$lib$system$store$$once(this, "flushPendingSave");
       },
 
@@ -10043,8 +10072,9 @@
         this._pendingSave = [];
 
         ember$data$lib$system$store$$forEach(pending, function (tuple) {
-          var record = tuple[0];
+          var snapshot = tuple[0];
           var resolver = tuple[1];
+          var record = snapshot.record;
           var adapter = this.adapterFor(record.constructor);
           var operation;
 
@@ -10058,7 +10088,7 @@
             operation = "updateRecord";
           }
 
-          resolver.resolve(ember$data$lib$system$store$$_commit(adapter, this, operation, record));
+          resolver.resolve(ember$data$lib$system$store$$_commit(adapter, this, operation, snapshot));
         }, this);
       },
 
@@ -10744,9 +10774,9 @@
       return container.lookup("serializer:application") || container.lookup("serializer:-default");
     }
 
-    function ember$data$lib$system$store$$_commit(adapter, store, operation, record) {
-      var type = record.constructor;
-      var snapshot = record._createSnapshot();
+    function ember$data$lib$system$store$$_commit(adapter, store, operation, snapshot) {
+      var record = snapshot.record;
+      var type = snapshot.type;
       var promise = adapter[operation](store, type, snapshot);
       var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, type);
       var label = "DS: Extract and notify about " + operation + " completion of " + record;
@@ -10762,7 +10792,7 @@
 
         store._adapterRun(function () {
           if (adapterPayload) {
-            payload = serializer.extract(store, type, adapterPayload, ember$data$lib$system$store$$get(record, "id"), operation);
+            payload = serializer.extract(store, type, adapterPayload, ember$data$lib$system$store$$get(snapshot, "id"), operation);
           }
           store.didSaveRecord(record, payload);
         });
@@ -10770,7 +10800,7 @@
         return record;
       }, function (reason) {
         if (reason instanceof ember$data$lib$system$model$errors$invalid$$default) {
-          var errors = serializer.extractErrors(store, type, reason.errors, ember$data$lib$system$store$$get(record, "id"));
+          var errors = serializer.extractErrors(store, type, reason.errors, ember$data$lib$system$store$$get(snapshot, "id"));
           store.recordWasInvalid(record, errors);
           reason = new ember$data$lib$system$model$errors$invalid$$default(errors);
         } else {
