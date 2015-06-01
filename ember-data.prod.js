@@ -4274,7 +4274,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.09809f3cbf'
+      VERSION: '1.0.0-beta.19+canary.92704a07de'
     });
 
     if (Ember.libraries) {
@@ -11249,7 +11249,6 @@
 
     var ember$data$lib$system$debug$debug$info$$default = ember$data$lib$system$model$$default;
     var ember$data$lib$system$debug$$default = ember$data$lib$system$debug$debug$adapter$$default;
-    var ember$data$lib$serializers$embedded$records$mixin$$get = Ember.get;
     var ember$data$lib$serializers$embedded$records$mixin$$forEach = Ember.EnumerableUtils.forEach;
     var ember$data$lib$serializers$embedded$records$mixin$$camelize = Ember.String.camelize;
 
@@ -11666,11 +11665,10 @@
         var modelName = data.type;
         var embeddedSerializer = store.serializerFor(modelName);
         var embeddedTypeClass = store.modelFor(modelName);
-        var primaryKey = ember$data$lib$serializers$embedded$records$mixin$$get(embeddedSerializer, 'primaryKey');
 
         var embeddedRecord = embeddedSerializer.normalize(embeddedTypeClass, data, null);
         store.push(embeddedTypeClass, embeddedRecord);
-        ids.push({ id: embeddedRecord[primaryKey], type: modelName });
+        ids.push({ id: embeddedRecord.id, type: modelName });
       });
 
       hash[key] = ids;
@@ -11700,12 +11698,11 @@
       var modelName = data.type;
       var embeddedSerializer = store.serializerFor(modelName);
       var embeddedTypeClass = store.modelFor(modelName);
-      var primaryKey = ember$data$lib$serializers$embedded$records$mixin$$get(embeddedSerializer, 'primaryKey');
 
       var embeddedRecord = embeddedSerializer.normalize(embeddedTypeClass, data, null);
       store.push(embeddedTypeClass, embeddedRecord);
 
-      hash[key] = embeddedRecord[primaryKey];
+      hash[key] = embeddedRecord.id;
       hash[key + 'Type'] = modelName;
       return hash;
     }
