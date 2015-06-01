@@ -3904,7 +3904,7 @@
       },
 
       /**
-       Deprecated. Use payloadKeyFromModelName instead
+       Deprecated. Use modelNameFromPayloadKey instead
          @method typeForRoot
         @param {String} modelName
         @return {String}
@@ -4274,7 +4274,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.0cf67bb9d8'
+      VERSION: '1.0.0-beta.19+canary.8edc3c4b42'
     });
 
     if (Ember.libraries) {
