@@ -1097,7 +1097,7 @@
         Endpoint paths can be prefixed with a `namespace` by setting the namespace
         property on the adapter:
          ```javascript
-        DS.RESTAdapter.reopen({
+        App.ApplicationAdapter = DS.RESTAdapter.extend({
           namespace: 'api/1'
         });
         ```
@@ -1109,7 +1109,7 @@
       /**
         An adapter can target other hosts by setting the `host` property.
          ```javascript
-        DS.RESTAdapter.reopen({
+        App.ApplicationAdapter = DS.RESTAdapter.extend({
           host: 'https://api.example.com'
         });
         ```
@@ -4292,7 +4292,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.92704a07de'
+      VERSION: '1.0.0-beta.19+canary.0cf67bb9d8'
     });
 
     if (Ember.libraries) {
