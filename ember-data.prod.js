@@ -4277,7 +4277,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.6d6c6462fe'
+      VERSION: '1.0.0-beta.19+canary.5cadf4065a'
     });
 
     if (Ember.libraries) {
@@ -11800,13 +11800,16 @@
         }
         var includeIds = this.hasSerializeIdsOption(attr);
         var includeRecords = this.hasSerializeRecordsOption(attr);
-        var key;
+        var key, hasMany;
         if (includeIds) {
           key = this.keyForRelationship(attr, relationship.kind, 'serialize');
           json[key] = snapshot.hasMany(attr, { ids: true });
         } else if (includeRecords) {
           key = this.keyForAttribute(attr, 'serialize');
-          json[key] = snapshot.hasMany(attr).map(function (embeddedSnapshot) {
+          hasMany = snapshot.hasMany(attr);
+
+          
+          json[key] = Ember.A(hasMany).map(function (embeddedSnapshot) {
             var embeddedJson = embeddedSnapshot.record.serialize({ includeId: true });
             this.removeEmbeddedForeignKey(snapshot, embeddedSnapshot, relationship, embeddedJson);
             return embeddedJson;
