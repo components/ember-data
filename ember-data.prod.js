@@ -3225,14 +3225,21 @@
     function ember$data$lib$system$normalize$model$name$$normalizeModelName(modelName) {
       return Ember.String.dasherize(modelName);
     }
+    var ember$data$lib$system$coerce$id$$default = ember$data$lib$system$coerce$id$$coerceId;
+    // Used by the store to normalize IDs entering the store.  Despite the fact
+    // that developers may provide IDs as numbers (e.g., `store.find(Person, 1)`),
+    // it is important that internally we use strings, since IDs may be serialized
+    // and lose type information.  For example, Ember's router may put a record's
+    // ID into the URL, and if we later try to deserialize that URL and find the
+    // corresponding record, we will not know if it is a string or a number.
+
+    function ember$data$lib$system$coerce$id$$coerceId(id) {
+      return id == null ? null : id + '';
+    }
 
     var ember$data$lib$serializers$rest$serializer$$forEach = Ember.ArrayPolyfills.forEach;
     var ember$data$lib$serializers$rest$serializer$$map = Ember.ArrayPolyfills.map;
     var ember$data$lib$serializers$rest$serializer$$camelize = Ember.String.camelize;
-
-    function ember$data$lib$serializers$rest$serializer$$coerceId(id) {
-      return id == null ? null : id + "";
-    }
 
     /**
       Normally, applications will use the `RESTSerializer` by implementing
@@ -3478,7 +3485,7 @@
           /*jshint loopfunc:true*/
           ember$data$lib$serializers$rest$serializer$$forEach.call(normalizedArray, function (hash) {
             var isFirstCreatedRecord = isPrimary && !recordId && !primaryRecord;
-            var isUpdatedRecord = isPrimary && ember$data$lib$serializers$rest$serializer$$coerceId(hash.id) === recordId;
+            var isUpdatedRecord = isPrimary && ember$data$lib$system$coerce$id$$default(hash.id) === recordId;
 
             // find the primary record.
             //
@@ -4277,7 +4284,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.5cadf4065a'
+      VERSION: '1.0.0-beta.19+canary.52c29e3267'
     });
 
     if (Ember.libraries) {
@@ -9216,16 +9223,6 @@
     //     record, even if it has not yet been fully materialized.
     //   * +type+ means a subclass of DS.Model.
 
-    // Used by the store to normalize IDs entering the store.  Despite the fact
-    // that developers may provide IDs as numbers (e.g., `store.find(Person, 1)`),
-    // it is important that internally we use strings, since IDs may be serialized
-    // and lose type information.  For example, Ember's router may put a record's
-    // ID into the URL, and if we later try to deserialize that URL and find the
-    // corresponding record, we will not know if it is a string or a number.
-    function ember$data$lib$system$store$$coerceId(id) {
-      return id == null ? null : id + "";
-    }
-
     /**
       The store contains all of the data for records loaded from the server.
       It is also responsible for creating instances of `DS.Model` that wrap
@@ -9404,7 +9401,7 @@
         }
 
         // Coerce ID to a string
-        properties.id = ember$data$lib$system$store$$coerceId(properties.id);
+        properties.id = ember$data$lib$system$coerce$id$$default(properties.id);
 
         var internalModel = this.buildInternalModel(typeClass, properties.id);
         var record = internalModel.getRecord();
@@ -9570,7 +9567,7 @@
           return this.findQuery(modelName, id);
         }
 
-        return this.findById(modelName, ember$data$lib$system$store$$coerceId(id), preload);
+        return this.findById(modelName, ember$data$lib$system$coerce$id$$default(id), preload);
       },
 
       /**
@@ -9876,7 +9873,7 @@
       */
       hasRecordForId: function (modelName, inputId) {
         var typeClass = this.modelFor(modelName);
-        var id = ember$data$lib$system$store$$coerceId(inputId);
+        var id = ember$data$lib$system$coerce$id$$default(inputId);
         var record = this.typeMapFor(typeClass).idToRecord[id];
         return !!record && record.isLoaded();
       },
@@ -9896,7 +9893,7 @@
 
       _internalModelForId: function (typeName, inputId) {
         var typeClass = this.modelFor(typeName);
-        var id = ember$data$lib$system$store$$coerceId(inputId);
+        var id = ember$data$lib$system$coerce$id$$default(inputId);
         var idToRecord = this.typeMapFor(typeClass).idToRecord;
         var record = idToRecord[id];
 
@@ -10334,7 +10331,7 @@
       */
       updateId: function (record, data) {
         var oldId = ember$data$lib$system$store$$get(record, "id");
-        var id = ember$data$lib$system$store$$coerceId(data.id);
+        var id = ember$data$lib$system$coerce$id$$default(data.id);
 
         
         this.typeMapFor(record.type).idToRecord[id] = record;
@@ -10382,7 +10379,7 @@
         @param {Object} data
       */
       _load: function (type, data) {
-        var id = ember$data$lib$system$store$$coerceId(data.id);
+        var id = ember$data$lib$system$coerce$id$$default(data.id);
         var internalModel = this._internalModelForId(type, id);
 
         internalModel.setupData(data);

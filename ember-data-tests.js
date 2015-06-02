@@ -20850,6 +20850,13 @@ test('ember-data/lib/system/adapter.js should pass jshint', function() {
 }
 if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/lib/system');
+test('ember-data/lib/system/coerce-id.js should pass jshint', function() { 
+  ok(true, 'ember-data/lib/system/coerce-id.js should pass jshint.'); 
+});
+
+}
+if (!QUnit.urlParams.nojshint) {
+module('JSHint - ember-data/lib/system');
 test('ember-data/lib/system/container-proxy.js should pass jshint', function() { 
   ok(true, 'ember-data/lib/system/container-proxy.js should pass jshint.'); 
 });
