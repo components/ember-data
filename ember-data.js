@@ -4302,7 +4302,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.1c701ddc66'
+      VERSION: '1.0.0-beta.19+canary.984d8e018a'
     });
 
     if (Ember.libraries) {
@@ -7717,7 +7717,6 @@
         @private
       */
       adapterWillCommit: function () {
-        this.flushChangedAttributes();
         this.send("willCommit");
       },
 
@@ -9954,8 +9953,8 @@
       hasRecordForId: function (modelName, inputId) {
         var typeClass = this.modelFor(modelName);
         var id = ember$data$lib$system$coerce$id$$default(inputId);
-        var record = this.typeMapFor(typeClass).idToRecord[id];
-        return !!record && record.isLoaded();
+        var internalModel = this.typeMapFor(typeClass).idToRecord[id];
+        return !!internalModel && internalModel.isLoaded();
       },
 
       /**
@@ -10303,10 +10302,10 @@
          @method dataWasUpdated
         @private
         @param {Class} type
-        @param {DS.Model} record
+        @param {InternalModel} record
       */
-      dataWasUpdated: function (type, record) {
-        this.recordArrayManager.recordDidChange(record);
+      dataWasUpdated: function (type, internalModel) {
+        this.recordArrayManager.recordDidChange(internalModel);
       },
 
       // ..............
@@ -10319,12 +10318,13 @@
          It schedules saving to happen at the end of the run loop.
          @method scheduleSave
         @private
-        @param {DS.Model} record
+        @param {InternalModel} record
         @param {Resolver} resolver
       */
-      scheduleSave: function (record, resolver) {
-        var snapshot = record._createSnapshot();
-        record.adapterWillCommit();
+      scheduleSave: function (internalModel, resolver) {
+        var snapshot = internalModel._createSnapshot();
+        internalModel.flushChangedAttributes();
+        internalModel.adapterWillCommit();
         this._pendingSave.push([snapshot, resolver]);
         ember$data$lib$system$store$$once(this, "flushPendingSave");
       },
@@ -10368,19 +10368,19 @@
         update the record and the store's indexes.
          @method didSaveRecord
         @private
-        @param {DS.Model} record the in-flight record
+        @param {InternalModel} record the in-flight record
         @param {Object} data optional data (see above)
       */
-      didSaveRecord: function (record, data) {
+      didSaveRecord: function (internalModel, data) {
         if (data) {
           // normalize relationship IDs into records
-          this._backburner.schedule("normalizeRelationships", this, "_setupRelationships", record, record.type, data);
-          this.updateId(record, data);
+          this._backburner.schedule("normalizeRelationships", this, "_setupRelationships", internalModel, internalModel.type, data);
+          this.updateId(internalModel, data);
         }
 
         //We first make sure the primary data has been updated
         //TODO try to move notification to the user to the end of the runloop
-        record.adapterDidCommit(data);
+        internalModel.adapterDidCommit(data);
       },
 
       /**
@@ -10389,11 +10389,11 @@
         is rejected with a `DS.InvalidError`.
          @method recordWasInvalid
         @private
-        @param {DS.Model} record
+        @param {InternalModel} record
         @param {Object} errors
       */
-      recordWasInvalid: function (record, errors) {
-        record.adapterDidInvalidate(errors);
+      recordWasInvalid: function (internalModel, errors) {
+        internalModel.adapterDidInvalidate(errors);
       },
 
       /**
@@ -10402,10 +10402,10 @@
         is rejected (with anything other than a `DS.InvalidError`).
          @method recordWasError
         @private
-        @param {DS.Model} record
+        @param {InternalModel} record
       */
-      recordWasError: function (record) {
-        record.adapterDidError();
+      recordWasError: function (internalModel) {
+        internalModel.adapterDidError();
       },
 
       /**
@@ -10414,18 +10414,18 @@
         data.
          @method updateId
         @private
-        @param {DS.Model} record
+        @param {InternalModel} record
         @param {Object} data
       */
-      updateId: function (record, data) {
-        var oldId = ember$data$lib$system$store$$get(record, "id");
+      updateId: function (internalModel, data) {
+        var oldId = internalModel.id;
         var id = ember$data$lib$system$coerce$id$$default(data.id);
 
-        Ember.assert("An adapter cannot assign a new id to a record that already has an id. " + record + " had id: " + oldId + " and you tried to update it with " + id + ". This likely happened because your server returned data in response to a find or update that had a different id than the one you sent.", oldId === null || id === oldId);
+        Ember.assert("An adapter cannot assign a new id to a record that already has an id. " + internalModel + " had id: " + oldId + " and you tried to update it with " + id + ". This likely happened because your server returned data in response to a find or update that had a different id than the one you sent.", oldId === null || id === oldId);
 
-        this.typeMapFor(record.type).idToRecord[id] = record;
+        this.typeMapFor(internalModel.type).idToRecord[id] = internalModel;
 
-        record.setId(id);
+        internalModel.setId(id);
       },
 
       /**
@@ -10796,7 +10796,7 @@
         @param {subclass of DS.Model} type
         @param {String} id
         @param {Object} data
-        @return {DS.Model} record
+        @return {InternalModel} record
       */
       buildInternalModel: function (type, id, data) {
         var typeMap = this.typeMapFor(type);
@@ -10845,20 +10845,20 @@
         removes it from any record arrays so it can be GCed.
          @method _dematerializeRecord
         @private
-        @param {DS.Model} record
+        @param {InternalModel} record
       */
-      _dematerializeRecord: function (record) {
-        var type = record.type;
+      _dematerializeRecord: function (internalModel) {
+        var type = internalModel.type;
         var typeMap = this.typeMapFor(type);
-        var id = ember$data$lib$system$store$$get(record, "id");
+        var id = internalModel.id;
 
-        record.updateRecordArrays();
+        internalModel.updateRecordArrays();
 
         if (id) {
           delete typeMap.idToRecord[id];
         }
 
-        var loc = ember$data$lib$system$store$$indexOf(typeMap.records, record);
+        var loc = ember$data$lib$system$store$$indexOf(typeMap.records, internalModel);
         typeMap.records.splice(loc, 1);
       },
 
@@ -11067,7 +11067,7 @@
 
         store._adapterRun(function () {
           if (adapterPayload) {
-            payload = serializer.extract(store, type, adapterPayload, ember$data$lib$system$store$$get(snapshot, "id"), operation);
+            payload = serializer.extract(store, type, adapterPayload, snapshot.id, operation);
           }
           store.didSaveRecord(record, payload);
         });
@@ -11075,7 +11075,7 @@
         return record;
       }, function (reason) {
         if (reason instanceof ember$data$lib$system$model$errors$invalid$$default) {
-          var errors = serializer.extractErrors(store, type, reason.errors, ember$data$lib$system$store$$get(snapshot, "id"));
+          var errors = serializer.extractErrors(store, type, reason.errors, snapshot.id);
           store.recordWasInvalid(record, errors);
           reason = new ember$data$lib$system$model$errors$invalid$$default(errors);
         } else {
