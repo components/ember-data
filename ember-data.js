@@ -4302,7 +4302,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.984d8e018a'
+      VERSION: '1.0.0-beta.19+canary.34efef04a2'
     });
 
     if (Ember.libraries) {
@@ -5626,6 +5626,9 @@
       isNew: true
     });
 
+    ember$data$lib$system$model$states$$createdState.invalid.rolledBack = function (record) {
+      record.transitionTo('deleted.saved');
+    };
     ember$data$lib$system$model$states$$createdState.uncommitted.rolledBack = function (record) {
       record.transitionTo('deleted.saved');
     };
