@@ -3458,7 +3458,6 @@
       */
       extractSingle: function (store, primaryTypeClass, rawPayload, recordId) {
         var payload = this.normalizePayload(rawPayload);
-        var primaryTypeClassName = primaryTypeClass.modelName;
         var primaryRecord;
 
         for (var prop in payload) {
@@ -3468,8 +3467,7 @@
             Ember.warn(this.warnMessageNoModelForKey(prop, typeName), false);
             continue;
           }
-          var type = store.modelFor(typeName);
-          var isPrimary = type.modelName === primaryTypeClassName;
+          var isPrimary = this.isPrimaryType(store, typeName, primaryTypeClass);
           var value = payload[prop];
 
           if (value === null) {
@@ -3482,14 +3480,10 @@
             continue;
           }
 
+          var normalizedArray = this.normalizeArray(store, typeName, value, prop);
+
           /*jshint loopfunc:true*/
-          ember$data$lib$serializers$rest$serializer$$forEach.call(value, function (hash) {
-            var typeName = this.modelNameFromPayloadKey(prop);
-            var type = store.modelFor(typeName);
-            var typeSerializer = store.serializerFor(type);
-
-            hash = typeSerializer.normalize(type, hash, prop);
-
+          ember$data$lib$serializers$rest$serializer$$forEach.call(normalizedArray, function (hash) {
             var isFirstCreatedRecord = isPrimary && !recordId && !primaryRecord;
             var isUpdatedRecord = isPrimary && ember$data$lib$serializers$rest$serializer$$coerceId(hash.id) === recordId;
 
@@ -3596,7 +3590,6 @@
       */
       extractArray: function (store, primaryTypeClass, rawPayload) {
         var payload = this.normalizePayload(rawPayload);
-        var primaryTypeClassName = primaryTypeClass.modelName;
         var primaryArray;
 
         for (var prop in payload) {
@@ -3613,14 +3606,9 @@
             Ember.warn(this.warnMessageNoModelForKey(prop, typeName), false);
             continue;
           }
-          var type = store.modelFor(typeName);
-          var typeSerializer = store.serializerFor(type);
-          var isPrimary = !forcedSecondary && type.modelName === primaryTypeClassName;
 
-          /*jshint loopfunc:true*/
-          var normalizedArray = ember$data$lib$serializers$rest$serializer$$map.call(payload[prop], function (hash) {
-            return typeSerializer.normalize(type, hash, prop);
-          }, this);
+          var normalizedArray = this.normalizeArray(store, typeName, payload[prop], prop);
+          var isPrimary = !forcedSecondary && this.isPrimaryType(store, typeName, primaryTypeClass);
 
           if (isPrimary) {
             primaryArray = normalizedArray;
@@ -3630,6 +3618,21 @@
         }
 
         return primaryArray;
+      },
+
+      normalizeArray: function (store, typeName, arrayHash, prop) {
+        var typeClass = store.modelFor(typeName);
+        var typeSerializer = store.serializerFor(typeClass);
+
+        /*jshint loopfunc:true*/
+        return ember$data$lib$serializers$rest$serializer$$map.call(arrayHash, function (hash) {
+          return typeSerializer.normalize(typeClass, hash, prop);
+        }, this);
+      },
+
+      isPrimaryType: function (store, typeName, primaryTypeClass) {
+        var typeClass = store.modelFor(typeName);
+        return typeClass.modelName === primaryTypeClass.modelName;
       },
 
       /**
@@ -4292,7 +4295,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.8edc3c4b42'
+      VERSION: '1.0.0-beta.19+canary.9efb146a76'
     });
 
     if (Ember.libraries) {
