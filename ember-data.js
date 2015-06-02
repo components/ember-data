@@ -4302,7 +4302,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.9d1b970af8'
+      VERSION: '1.0.0-beta.19+canary.37401a8380'
     });
 
     if (Ember.libraries) {
@@ -4483,8 +4483,8 @@
 
     var ember$data$lib$system$store$finders$$Promise = Ember.RSVP.Promise;
     var ember$data$lib$system$store$finders$$map = Ember.EnumerableUtils.map;
-    function ember$data$lib$system$store$finders$$_find(adapter, store, typeClass, id, record) {
-      var snapshot = record._createSnapshot();
+    function ember$data$lib$system$store$finders$$_find(adapter, store, typeClass, id, internalModel) {
+      var snapshot = internalModel.createSnapshot();
       var promise = adapter.find(store, typeClass, id, snapshot);
       var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, typeClass);
       var label = "DS: Handle Adapter#find of " + typeClass + " with id: " + id;
@@ -4502,17 +4502,17 @@
           return record._internalModel;
         });
       }, function (error) {
-        record.notFound();
-        if (record.isEmpty()) {
-          record.unloadRecord();
+        internalModel.notFound();
+        if (internalModel.isEmpty()) {
+          internalModel.unloadRecord();
         }
 
         throw error;
       }, "DS: Extract payload of '" + typeClass + "'");
     }
 
-    function ember$data$lib$system$store$finders$$_findMany(adapter, store, typeClass, ids, records) {
-      var snapshots = Ember.A(records).invoke("_createSnapshot");
+    function ember$data$lib$system$store$finders$$_findMany(adapter, store, typeClass, ids, internalModels) {
+      var snapshots = Ember.A(internalModels).invoke("createSnapshot");
       var promise = adapter.findMany(store, typeClass, ids, snapshots);
       var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, typeClass);
       var label = "DS: Handle Adapter#findMany of " + typeClass;
@@ -4539,15 +4539,15 @@
       }, null, "DS: Extract payload of " + typeClass);
     }
 
-    function ember$data$lib$system$store$finders$$_findHasMany(adapter, store, record, link, relationship) {
-      var snapshot = record._createSnapshot();
+    function ember$data$lib$system$store$finders$$_findHasMany(adapter, store, internalModel, link, relationship) {
+      var snapshot = internalModel.createSnapshot();
       var promise = adapter.findHasMany(store, snapshot, link, relationship);
       var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, relationship.type);
-      var label = "DS: Handle Adapter#findHasMany of " + record + " : " + relationship.type;
+      var label = "DS: Handle Adapter#findHasMany of " + internalModel + " : " + relationship.type;
 
       promise = ember$data$lib$system$store$finders$$Promise.cast(promise, label);
       promise = ember$data$lib$system$store$common$$_guard(promise, ember$data$lib$system$store$common$$_bind(ember$data$lib$system$store$common$$_objectIsAlive, store));
-      promise = ember$data$lib$system$store$common$$_guard(promise, ember$data$lib$system$store$common$$_bind(ember$data$lib$system$store$common$$_objectIsAlive, record));
+      promise = ember$data$lib$system$store$common$$_guard(promise, ember$data$lib$system$store$common$$_bind(ember$data$lib$system$store$common$$_objectIsAlive, internalModel));
 
       return promise.then(function (adapterPayload) {
         return store._adapterRun(function () {
@@ -4561,18 +4561,18 @@
             return record._internalModel;
           });
         });
-      }, null, "DS: Extract payload of " + record + " : hasMany " + relationship.type);
+      }, null, "DS: Extract payload of " + internalModel + " : hasMany " + relationship.type);
     }
 
-    function ember$data$lib$system$store$finders$$_findBelongsTo(adapter, store, record, link, relationship) {
-      var snapshot = record._createSnapshot();
+    function ember$data$lib$system$store$finders$$_findBelongsTo(adapter, store, internalModel, link, relationship) {
+      var snapshot = internalModel.createSnapshot();
       var promise = adapter.findBelongsTo(store, snapshot, link, relationship);
       var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, relationship.type);
-      var label = "DS: Handle Adapter#findBelongsTo of " + record + " : " + relationship.type;
+      var label = "DS: Handle Adapter#findBelongsTo of " + internalModel + " : " + relationship.type;
 
       promise = ember$data$lib$system$store$finders$$Promise.cast(promise, label);
       promise = ember$data$lib$system$store$common$$_guard(promise, ember$data$lib$system$store$common$$_bind(ember$data$lib$system$store$common$$_objectIsAlive, store));
-      promise = ember$data$lib$system$store$common$$_guard(promise, ember$data$lib$system$store$common$$_bind(ember$data$lib$system$store$common$$_objectIsAlive, record));
+      promise = ember$data$lib$system$store$common$$_guard(promise, ember$data$lib$system$store$common$$_bind(ember$data$lib$system$store$common$$_objectIsAlive, internalModel));
 
       return promise.then(function (adapterPayload) {
         return store._adapterRun(function () {
@@ -4586,7 +4586,7 @@
           //TODO Optimize
           return record._internalModel;
         });
-      }, null, "DS: Extract payload of " + record + " : " + relationship.type);
+      }, null, "DS: Extract payload of " + internalModel + " : " + relationship.type);
     }
 
     function ember$data$lib$system$store$finders$$_findAll(adapter, store, typeClass, sinceToken) {
@@ -5400,15 +5400,15 @@
       @class RootState
     */
 
-    function ember$data$lib$system$model$states$$didSetProperty(record, context) {
+    function ember$data$lib$system$model$states$$didSetProperty(internalModel, context) {
       if (context.value === context.originalValue) {
-        delete record._attributes[context.name];
-        record.send('propertyWasReset', context.name);
+        delete internalModel._attributes[context.name];
+        internalModel.send('propertyWasReset', context.name);
       } else if (context.value !== context.oldValue) {
-        record.send('becomeDirty');
+        internalModel.send('becomeDirty');
       }
 
-      record.updateRecordArraysLater();
+      internalModel.updateRecordArraysLater();
     }
 
     // Implementation notes:
@@ -5473,12 +5473,12 @@
         //loadingData event, though it seems fine?
         loadingData: Ember.K,
 
-        propertyWasReset: function (record, name) {
-          var length = Ember.keys(record._attributes).length;
+        propertyWasReset: function (internalModel, name) {
+          var length = Ember.keys(internalModel._attributes).length;
           var stillDirty = length > 0;
 
           if (!stillDirty) {
-            record.send('rolledBack');
+            internalModel.send('rolledBack');
           }
         },
 
@@ -5486,25 +5486,25 @@
 
         becomeDirty: Ember.K,
 
-        willCommit: function (record) {
-          record.transitionTo('inFlight');
+        willCommit: function (internalModel) {
+          internalModel.transitionTo('inFlight');
         },
 
-        reloadRecord: function (record, resolve) {
-          resolve(ember$data$lib$system$model$states$$get(record, 'store').reloadRecord(record));
+        reloadRecord: function (internalModel, resolve) {
+          resolve(internalModel.store.reloadRecord(internalModel));
         },
 
-        rolledBack: function (record) {
-          record.transitionTo('loaded.saved');
+        rolledBack: function (internalModel) {
+          internalModel.transitionTo('loaded.saved');
         },
 
-        becameInvalid: function (record) {
-          record.transitionTo('invalid');
+        becameInvalid: function (internalModel) {
+          internalModel.transitionTo('invalid');
         },
 
-        rollback: function (record) {
-          record.rollback();
-          record.triggerLater('ready');
+        rollback: function (internalModel) {
+          internalModel.rollback();
+          internalModel.triggerLater('ready');
         }
       },
 
@@ -5525,21 +5525,21 @@
         // TODO: More robust semantics around save-while-in-flight
         willCommit: Ember.K,
 
-        didCommit: function (record) {
+        didCommit: function (internalModel) {
           var dirtyType = ember$data$lib$system$model$states$$get(this, 'dirtyType');
 
-          record.transitionTo('saved');
-          record.send('invokeLifecycleCallbacks', dirtyType);
+          internalModel.transitionTo('saved');
+          internalModel.send('invokeLifecycleCallbacks', dirtyType);
         },
 
-        becameInvalid: function (record) {
-          record.transitionTo('invalid');
-          record.send('invokeLifecycleCallbacks');
+        becameInvalid: function (internalModel) {
+          internalModel.transitionTo('invalid');
+          internalModel.send('invokeLifecycleCallbacks');
         },
 
-        becameError: function (record) {
-          record.transitionTo('uncommitted');
-          record.triggerLater('becameError', record);
+        becameError: function (internalModel) {
+          internalModel.transitionTo('uncommitted');
+          internalModel.triggerLater('becameError', internalModel);
         }
       },
 
@@ -5550,39 +5550,39 @@
         isValid: false,
 
         // EVENTS
-        deleteRecord: function (record) {
-          record.transitionTo('deleted.uncommitted');
-          record.disconnectRelationships();
+        deleteRecord: function (internalModel) {
+          internalModel.transitionTo('deleted.uncommitted');
+          internalModel.disconnectRelationships();
         },
 
-        didSetProperty: function (record, context) {
-          record.getErrors().remove(context.name);
+        didSetProperty: function (internalModel, context) {
+          internalModel.getErrors().remove(context.name);
 
-          ember$data$lib$system$model$states$$didSetProperty(record, context);
+          ember$data$lib$system$model$states$$didSetProperty(internalModel, context);
         },
 
         becomeDirty: Ember.K,
 
-        willCommit: function (record) {
-          record.getErrors().clear();
-          record.transitionTo('inFlight');
+        willCommit: function (internalModel) {
+          internalModel.getErrors().clear();
+          internalModel.transitionTo('inFlight');
         },
 
-        rolledBack: function (record) {
-          record.getErrors().clear();
-          record.triggerLater('ready');
+        rolledBack: function (internalModel) {
+          internalModel.getErrors().clear();
+          internalModel.triggerLater('ready');
         },
 
-        becameValid: function (record) {
-          record.transitionTo('uncommitted');
+        becameValid: function (internalModel) {
+          internalModel.transitionTo('uncommitted');
         },
 
-        invokeLifecycleCallbacks: function (record) {
-          record.triggerLater('becameInvalid', record);
+        invokeLifecycleCallbacks: function (internalModel) {
+          internalModel.triggerLater('becameInvalid', internalModel);
         },
 
-        exit: function (record) {
-          record._inFlightAttributes = {};
+        exit: function (internalModel) {
+          internalModel._inFlightAttributes = Ember.create(null);
         }
       }
     };
@@ -5626,44 +5626,44 @@
       isNew: true
     });
 
-    ember$data$lib$system$model$states$$createdState.invalid.rolledBack = function (record) {
-      record.transitionTo('deleted.saved');
+    ember$data$lib$system$model$states$$createdState.invalid.rolledBack = function (internalModel) {
+      internalModel.transitionTo('deleted.saved');
     };
-    ember$data$lib$system$model$states$$createdState.uncommitted.rolledBack = function (record) {
-      record.transitionTo('deleted.saved');
+    ember$data$lib$system$model$states$$createdState.uncommitted.rolledBack = function (internalModel) {
+      internalModel.transitionTo('deleted.saved');
     };
 
     var ember$data$lib$system$model$states$$updatedState = ember$data$lib$system$model$states$$dirtyState({
       dirtyType: 'updated'
     });
 
-    ember$data$lib$system$model$states$$createdState.uncommitted.deleteRecord = function (record) {
-      record.disconnectRelationships();
-      record.transitionTo('deleted.saved');
-      record.send('invokeLifecycleCallbacks');
+    ember$data$lib$system$model$states$$createdState.uncommitted.deleteRecord = function (internalModel) {
+      internalModel.disconnectRelationships();
+      internalModel.transitionTo('deleted.saved');
+      internalModel.send('invokeLifecycleCallbacks');
     };
 
-    ember$data$lib$system$model$states$$createdState.uncommitted.rollback = function (record) {
+    ember$data$lib$system$model$states$$createdState.uncommitted.rollback = function (internalModel) {
       ember$data$lib$system$model$states$$DirtyState.uncommitted.rollback.apply(this, arguments);
-      record.transitionTo('deleted.saved');
+      internalModel.transitionTo('deleted.saved');
     };
 
-    ember$data$lib$system$model$states$$createdState.uncommitted.pushedData = function (record) {
-      record.transitionTo('loaded.updated.uncommitted');
-      record.triggerLater('didLoad');
+    ember$data$lib$system$model$states$$createdState.uncommitted.pushedData = function (internalModel) {
+      internalModel.transitionTo('loaded.updated.uncommitted');
+      internalModel.triggerLater('didLoad');
     };
 
     ember$data$lib$system$model$states$$createdState.uncommitted.propertyWasReset = Ember.K;
 
-    function ember$data$lib$system$model$states$$assertAgainstUnloadRecord(record) {
-      Ember.assert('You can only unload a record which is not inFlight. `' + Ember.inspect(record.record) + '`', false);
+    function ember$data$lib$system$model$states$$assertAgainstUnloadRecord(internalModel) {
+      Ember.assert('You can only unload a record which is not inFlight. `' + internalModel + '`', false);
     }
 
     ember$data$lib$system$model$states$$updatedState.inFlight.unloadRecord = ember$data$lib$system$model$states$$assertAgainstUnloadRecord;
 
-    ember$data$lib$system$model$states$$updatedState.uncommitted.deleteRecord = function (record) {
-      record.transitionTo('deleted.uncommitted');
-      record.disconnectRelationships();
+    ember$data$lib$system$model$states$$updatedState.uncommitted.deleteRecord = function (internalModel) {
+      internalModel.transitionTo('deleted.uncommitted');
+      internalModel.disconnectRelationships();
     };
 
     var ember$data$lib$system$model$states$$RootState = {
@@ -5684,11 +5684,11 @@
       // in-flight state, rolling back the record doesn't move
       // you out of the in-flight state.
       rolledBack: Ember.K,
-      unloadRecord: function (record) {
+      unloadRecord: function (internalModel) {
         // clear relationships before moving to deleted state
         // otherwise it fails
-        record.clearRelationships();
-        record.transitionTo('deleted.saved');
+        internalModel.clearRelationships();
+        internalModel.transitionTo('deleted.saved');
       },
 
       propertyWasReset: Ember.K,
@@ -5704,20 +5704,20 @@
         isEmpty: true,
 
         // EVENTS
-        loadingData: function (record, promise) {
-          record._loadingPromise = promise;
-          record.transitionTo('loading');
+        loadingData: function (internalModel, promise) {
+          internalModel._loadingPromise = promise;
+          internalModel.transitionTo('loading');
         },
 
-        loadedData: function (record) {
-          record.transitionTo('loaded.created.uncommitted');
-          record.triggerLater('ready');
+        loadedData: function (internalModel) {
+          internalModel.transitionTo('loaded.created.uncommitted');
+          internalModel.triggerLater('ready');
         },
 
-        pushedData: function (record) {
-          record.transitionTo('loaded.saved');
-          record.triggerLater('didLoad');
-          record.triggerLater('ready');
+        pushedData: function (internalModel) {
+          internalModel.transitionTo('loaded.saved');
+          internalModel.triggerLater('didLoad');
+          internalModel.triggerLater('ready');
         }
       },
 
@@ -5731,25 +5731,25 @@
         // FLAGS
         isLoading: true,
 
-        exit: function (record) {
-          record._loadingPromise = null;
+        exit: function (internalModel) {
+          internalModel._loadingPromise = null;
         },
 
         // EVENTS
-        pushedData: function (record) {
-          record.transitionTo('loaded.saved');
-          record.triggerLater('didLoad');
-          record.triggerLater('ready');
+        pushedData: function (internalModel) {
+          internalModel.transitionTo('loaded.saved');
+          internalModel.triggerLater('didLoad');
+          internalModel.triggerLater('ready');
           //TODO this seems out of place here
-          record.didCleanError();
+          internalModel.didCleanError();
         },
 
-        becameError: function (record) {
-          record.triggerLater('becameError', record);
+        becameError: function (internalModel) {
+          internalModel.triggerLater('becameError', internalModel);
         },
 
-        notFound: function (record) {
-          record.transitionTo('empty');
+        notFound: function (internalModel) {
+          internalModel.transitionTo('empty');
         }
       },
 
@@ -5771,12 +5771,12 @@
         // If there are no local changes to a record, it remains
         // in the `saved` state.
         saved: {
-          setup: function (record) {
-            var attrs = record._attributes;
+          setup: function (internalModel) {
+            var attrs = internalModel._attributes;
             var isDirty = Ember.keys(attrs).length > 0;
 
             if (isDirty) {
-              record.adapterDidDirty();
+              internalModel.adapterDidDirty();
             }
           },
 
@@ -5785,32 +5785,32 @@
 
           pushedData: Ember.K,
 
-          becomeDirty: function (record) {
-            record.transitionTo('updated.uncommitted');
+          becomeDirty: function (internalModel) {
+            internalModel.transitionTo('updated.uncommitted');
           },
 
-          willCommit: function (record) {
-            record.transitionTo('updated.inFlight');
+          willCommit: function (internalModel) {
+            internalModel.transitionTo('updated.inFlight');
           },
 
-          reloadRecord: function (record, resolve) {
-            resolve(ember$data$lib$system$model$states$$get(record, 'store').reloadRecord(record));
+          reloadRecord: function (internalModel, resolve) {
+            resolve(internalModel.store.reloadRecord(internalModel));
           },
 
-          deleteRecord: function (record) {
-            record.transitionTo('deleted.uncommitted');
-            record.disconnectRelationships();
+          deleteRecord: function (internalModel) {
+            internalModel.transitionTo('deleted.uncommitted');
+            internalModel.disconnectRelationships();
           },
 
-          unloadRecord: function (record) {
+          unloadRecord: function (internalModel) {
             // clear relationships before moving to deleted state
             // otherwise it fails
-            record.clearRelationships();
-            record.transitionTo('deleted.saved');
+            internalModel.clearRelationships();
+            internalModel.transitionTo('deleted.saved');
           },
 
-          didCommit: function (record) {
-            record.send('invokeLifecycleCallbacks', ember$data$lib$system$model$states$$get(record, 'lastDirtyType'));
+          didCommit: function (internalModel) {
+            internalModel.send('invokeLifecycleCallbacks', ember$data$lib$system$model$states$$get(internalModel, 'lastDirtyType'));
           },
 
           // loaded.saved.notFound would be triggered by a failed
@@ -5841,8 +5841,8 @@
         isDirty: true,
 
         // TRANSITIONS
-        setup: function (record) {
-          record.updateRecordArrays();
+        setup: function (internalModel) {
+          internalModel.updateRecordArrays();
         },
 
         // SUBSTATES
@@ -5854,22 +5854,22 @@
 
           // EVENTS
 
-          willCommit: function (record) {
-            record.transitionTo('inFlight');
+          willCommit: function (internalModel) {
+            internalModel.transitionTo('inFlight');
           },
 
-          rollback: function (record) {
-            record.rollback();
-            record.triggerLater('ready');
+          rollback: function (internalModel) {
+            internalModel.rollback();
+            internalModel.triggerLater('ready');
           },
 
           pushedData: Ember.K,
           becomeDirty: Ember.K,
           deleteRecord: Ember.K,
 
-          rolledBack: function (record) {
-            record.transitionTo('loaded.saved');
-            record.triggerLater('ready');
+          rolledBack: function (internalModel) {
+            internalModel.transitionTo('loaded.saved');
+            internalModel.triggerLater('ready');
           }
         },
 
@@ -5887,20 +5887,20 @@
 
           // TODO: More robust semantics around save-while-in-flight
           willCommit: Ember.K,
-          didCommit: function (record) {
-            record.transitionTo('saved');
+          didCommit: function (internalModel) {
+            internalModel.transitionTo('saved');
 
-            record.send('invokeLifecycleCallbacks');
+            internalModel.send('invokeLifecycleCallbacks');
           },
 
-          becameError: function (record) {
-            record.transitionTo('uncommitted');
-            record.triggerLater('becameError', record);
+          becameError: function (internalModel) {
+            internalModel.transitionTo('uncommitted');
+            internalModel.triggerLater('becameError', internalModel);
           },
 
-          becameInvalid: function (record) {
-            record.transitionTo('invalid');
-            record.triggerLater('becameInvalid', record);
+          becameInvalid: function (internalModel) {
+            internalModel.transitionTo('invalid');
+            internalModel.triggerLater('becameInvalid', internalModel);
           }
         },
 
@@ -5911,14 +5911,14 @@
           // FLAGS
           isDirty: false,
 
-          setup: function (record) {
-            var store = ember$data$lib$system$model$states$$get(record, 'store');
-            store._dematerializeRecord(record);
+          setup: function (internalModel) {
+            var store = internalModel.store;
+            store._dematerializeRecord(internalModel);
           },
 
-          invokeLifecycleCallbacks: function (record) {
-            record.triggerLater('didDelete', record);
-            record.triggerLater('didCommit', record);
+          invokeLifecycleCallbacks: function (internalModel) {
+            internalModel.triggerLater('didDelete', internalModel);
+            internalModel.triggerLater('didCommit', internalModel);
           },
 
           willCommit: Ember.K,
@@ -5929,37 +5929,37 @@
         invalid: {
           isValid: false,
 
-          didSetProperty: function (record, context) {
-            record.getErrors().remove(context.name);
+          didSetProperty: function (internalModel, context) {
+            internalModel.getErrors().remove(context.name);
 
-            ember$data$lib$system$model$states$$didSetProperty(record, context);
+            ember$data$lib$system$model$states$$didSetProperty(internalModel, context);
           },
 
           deleteRecord: Ember.K,
           becomeDirty: Ember.K,
           willCommit: Ember.K,
 
-          rolledBack: function (record) {
-            record.getErrors().clear();
-            record.transitionTo('loaded.saved');
-            record.triggerLater('ready');
+          rolledBack: function (internalModel) {
+            internalModel.getErrors().clear();
+            internalModel.transitionTo('loaded.saved');
+            internalModel.triggerLater('ready');
           },
 
-          becameValid: function (record) {
-            record.transitionTo('uncommitted');
+          becameValid: function (internalModel) {
+            internalModel.transitionTo('uncommitted');
           }
 
         }
       },
 
-      invokeLifecycleCallbacks: function (record, dirtyType) {
+      invokeLifecycleCallbacks: function (internalModel, dirtyType) {
         if (dirtyType === 'created') {
-          record.triggerLater('didCreate', record);
+          internalModel.triggerLater('didCreate', internalModel);
         } else {
-          record.triggerLater('didUpdate', record);
+          internalModel.triggerLater('didUpdate', internalModel);
         }
 
-        record.triggerLater('didCommit', record);
+        internalModel.triggerLater('didCommit', internalModel);
       }
     };
 
@@ -7033,7 +7033,7 @@
             if (id) {
               result = ember$data$lib$system$snapshot$$get(inverseRecord, 'id');
             } else {
-              result = inverseRecord._createSnapshot();
+              result = inverseRecord.createSnapshot();
             }
           } else {
             result = null;
@@ -7096,9 +7096,9 @@
           results = [];
           members.forEach(function (member) {
             if (ids) {
-              results.push(ember$data$lib$system$snapshot$$get(member, 'id'));
+              results.push(member.id);
             } else {
-              results.push(member._createSnapshot());
+              results.push(member.createSnapshot());
             }
           });
         }
@@ -7507,16 +7507,15 @@
       this.id = id;
       this.store = store;
       this.container = container;
-      this._data = data || {};
+      this._data = data || Ember.create(null);
       this.modelName = type.modelName;
       this.errors = null;
       this.dataHasInitialized = false;
       //Look into making this lazy
       this._deferredTriggers = [];
-      this._data = {};
       this._attributes = Ember.create(null);
       this._inFlightAttributes = Ember.create(null);
-      this._relationships = {};
+      this._relationships = Ember.create(null);
       this.currentState = ember$data$lib$system$model$states$$default.empty;
       this.isReloading = false;
       /*
@@ -7669,10 +7668,10 @@
       },
 
       /**
-        @method _createSnapshot
+        @method createSnapshot
         @private
       */
-      _createSnapshot: function () {
+      createSnapshot: function () {
         return new ember$data$lib$system$snapshot$$default(this);
       },
 
@@ -8118,6 +8117,14 @@
           }
         }
         this._inFlightAttributes = Ember.create(null);
+      },
+
+      toString: function () {
+        if (this.record) {
+          return this.record.toString();
+        } else {
+          return "<" + this.modelName + ":" + this.id + ">";
+        }
       }
     };
 
@@ -8471,7 +8478,7 @@
       toJSON: function (options) {
         // container is for lazy transform lookups
         var serializer = ember$data$lib$serializers$json$serializer$$default.create({ container: this.container });
-        var snapshot = this._createSnapshot();
+        var snapshot = this._internalModel.createSnapshot();
 
         return serializer.serialize(snapshot, options);
       },
@@ -8530,10 +8537,7 @@
         @private
         @type {Object}
       */
-      data: Ember.computed(function () {
-        this._data = this._data || {};
-        return this._data;
-      }).readOnly(),
+      data: Ember.computed.readOnly("_internalModel._data"),
 
       //TODO Do we want to deprecate these?
       /**
@@ -8701,7 +8705,7 @@
         @private
       */
       _createSnapshot: function () {
-        return this._internalModel._createSnapshot();
+        return this._internalModel.createSnapshot();
       },
 
       toStringExtension: function () {
@@ -9094,7 +9098,7 @@
     }
 
     function ember$data$lib$system$model$attributes$$hasValue(record, key) {
-      return key in record._attributes || key in record._inFlightAttributes || record._data.hasOwnProperty(key);
+      return key in record._attributes || key in record._inFlightAttributes || key in record._data;
     }
 
     function ember$data$lib$system$model$attributes$$getValue(record, key) {
@@ -9405,7 +9409,7 @@
         @param {Object} options an options hash
       */
       serialize: function (record, options) {
-        var snapshot = record._createSnapshot();
+        var snapshot = record._internalModel.createSnapshot();
         return this.serializerFor(snapshot.modelName).serialize(snapshot, options);
       },
 
@@ -9461,7 +9465,7 @@
       */
       createRecord: function (modelName, inputProperties) {
         var typeClass = this.modelFor(modelName);
-        var properties = ember$data$lib$system$store$$copy(inputProperties) || {};
+        var properties = ember$data$lib$system$store$$copy(inputProperties) || Ember.create(null);
 
         // If the passed properties do not include a primary key,
         // give the adapter an opportunity to generate one. Typically,
@@ -9710,7 +9714,6 @@
         @return {Promise} promise
       */
       findById: function (modelName, id, preload) {
-
         var type = this.modelFor(modelName);
         var internalModel = this._internalModelForId(type, id);
 
@@ -9756,46 +9759,43 @@
         adapter.
          @method fetchRecord
         @private
-        @param {DS.Model} record
+        @param {InternalModel} internal model
         @return {Promise} promise
       */
-      fetchRecord: function (record) {
-        var typeClass = record.type;
-        var id = ember$data$lib$system$store$$get(record, "id");
+      fetchRecord: function (internalModel) {
+        var typeClass = internalModel.type;
+        var id = internalModel.id;
         var adapter = this.adapterFor(typeClass);
 
         Ember.assert("You tried to find a record but you have no adapter (for " + typeClass + ")", adapter);
         Ember.assert("You tried to find a record but your adapter (for " + typeClass + ") does not implement 'find'", typeof adapter.find === "function");
 
-        var promise = ember$data$lib$system$store$finders$$_find(adapter, this, typeClass, id, record);
+        var promise = ember$data$lib$system$store$finders$$_find(adapter, this, typeClass, id, internalModel);
         return promise;
       },
 
       scheduleFetchMany: function (records) {
-        var internalModel = ember$data$lib$system$store$$map(records, function (record) {
+        var internalModels = ember$data$lib$system$store$$map(records, function (record) {
           return record._internalModel;
         });
-        return ember$data$lib$system$store$$Promise.all(ember$data$lib$system$store$$map(internalModel, this.scheduleFetch, this));
+        return ember$data$lib$system$store$$Promise.all(ember$data$lib$system$store$$map(internalModels, this.scheduleFetch, this));
       },
 
-      scheduleFetch: function (record) {
-        var typeClass = record.type;
+      scheduleFetch: function (internalModel) {
+        var typeClass = internalModel.type;
 
-        if (ember$data$lib$system$store$$isNone(record)) {
-          return null;
-        }
-        if (record._loadingPromise) {
-          return record._loadingPromise;
+        if (internalModel._loadingPromise) {
+          return internalModel._loadingPromise;
         }
 
-        var resolver = Ember.RSVP.defer("Fetching " + typeClass + "with id: " + record.id);
+        var resolver = Ember.RSVP.defer("Fetching " + typeClass + "with id: " + internalModel.id);
         var recordResolverPair = {
-          record: record,
+          record: internalModel,
           resolver: resolver
         };
         var promise = resolver.promise;
 
-        record.loadingData(promise);
+        internalModel.loadingData(promise);
 
         if (!this._pendingFetch.get(typeClass)) {
           this._pendingFetch.set(typeClass, [recordResolverPair]);
@@ -9881,10 +9881,10 @@
           // records from the grouped snapshots even though the _findMany() finder
           // will once again convert the records to snapshots for adapter.findMany()
 
-          var snapshots = Ember.A(records).invoke("_createSnapshot");
+          var snapshots = Ember.A(records).invoke("createSnapshot");
           var groups = adapter.groupRecordsForFindMany(this, snapshots);
           ember$data$lib$system$store$$forEach(groups, function (groupOfSnapshots) {
-            var groupOfRecords = Ember.A(groupOfSnapshots).mapBy("record._internalModel");
+            var groupOfRecords = Ember.A(groupOfSnapshots).mapBy("_internalModel");
             var requestedRecords = Ember.A(groupOfRecords);
             var ids = requestedRecords.mapBy("id");
             if (ids.length > 1) {
@@ -9934,16 +9934,16 @@
         @param {DS.Model} record
         @return {Promise} promise
       */
-      reloadRecord: function (record) {
-        var type = record.constructor;
+      reloadRecord: function (internalModel) {
+        var type = internalModel.type;
         var adapter = this.adapterFor(type);
-        var id = ember$data$lib$system$store$$get(record, "id");
+        var id = internalModel.id;
 
         Ember.assert("You cannot reload a record without an ID", id);
         Ember.assert("You tried to reload a record but you have no adapter (for " + type + ")", adapter);
         Ember.assert("You tried to reload a record but your adapter does not implement `find`", typeof adapter.find === "function");
 
-        return this.scheduleFetch(record);
+        return this.scheduleFetch(internalModel);
       },
 
       /**
@@ -10305,7 +10305,7 @@
          @method dataWasUpdated
         @private
         @param {Class} type
-        @param {InternalModel} record
+        @param {InternalModel} internal model
       */
       dataWasUpdated: function (type, internalModel) {
         this.recordArrayManager.recordDidChange(internalModel);
@@ -10321,11 +10321,11 @@
          It schedules saving to happen at the end of the run loop.
          @method scheduleSave
         @private
-        @param {InternalModel} record
+        @param {InternalModel} internal model
         @param {Resolver} resolver
       */
       scheduleSave: function (internalModel, resolver) {
-        var snapshot = internalModel._createSnapshot();
+        var snapshot = internalModel.createSnapshot();
         internalModel.flushChangedAttributes();
         internalModel.adapterWillCommit();
         this._pendingSave.push([snapshot, resolver]);
@@ -10371,7 +10371,7 @@
         update the record and the store's indexes.
          @method didSaveRecord
         @private
-        @param {InternalModel} record the in-flight record
+        @param {InternalModel} internal model the in-flight internal model
         @param {Object} data optional data (see above)
       */
       didSaveRecord: function (internalModel, data) {
@@ -10392,7 +10392,7 @@
         is rejected with a `DS.InvalidError`.
          @method recordWasInvalid
         @private
-        @param {InternalModel} record
+        @param {InternalModel} internal model
         @param {Object} errors
       */
       recordWasInvalid: function (internalModel, errors) {
@@ -10405,7 +10405,7 @@
         is rejected (with anything other than a `DS.InvalidError`).
          @method recordWasError
         @private
-        @param {InternalModel} record
+        @param {InternalModel} internal model
       */
       recordWasError: function (internalModel) {
         internalModel.adapterDidError();
@@ -10417,7 +10417,7 @@
         data.
          @method updateId
         @private
-        @param {InternalModel} record
+        @param {InternalModel} internal model
         @param {Object} data
       */
       updateId: function (internalModel, data) {
@@ -10799,7 +10799,7 @@
         @param {subclass of DS.Model} type
         @param {String} id
         @param {Object} data
-        @return {InternalModel} record
+        @return {InternalModel} internal model
       */
       buildInternalModel: function (type, id, data) {
         var typeMap = this.typeMapFor(type);
@@ -10848,7 +10848,7 @@
         removes it from any record arrays so it can be GCed.
          @method _dematerializeRecord
         @private
-        @param {InternalModel} record
+        @param {InternalModel} internal model
       */
       _dematerializeRecord: function (internalModel) {
         var type = internalModel.type;
