@@ -2153,7 +2153,7 @@ define(
 
           var postRecords = store.typeMapFor(Post).records;
           for (var i = 0; i < postRecords.length; i++) {
-            equal(post, postRecords[i], "The object in the identity map is the same");
+            equal(post, postRecords[i].getRecord(), "The object in the identity map is the same");
           }
         }));
       });
@@ -4070,7 +4070,7 @@ define(
       };
 
       var person = run(function () {
-        return store.push(Person, { id: 1, name: 'John Doe' });
+        return store.push('person', { id: 1, name: 'John Doe' });
       });
 
       run(store, 'find', 'person', 1).then(async(function (record) {
@@ -5965,7 +5965,7 @@ define(
       var person;
 
       run(function () {
-        person = env.store.createRecord(Person, { name: 'Yehuda Katz' });
+        person = env.store.createRecord('person', { name: 'Yehuda Katz' });
       });
 
       person.on('didCreate', function () {
@@ -5987,7 +5987,7 @@ define(
       var person;
 
       run(function () {
-        person = env.store.createRecord(Person, { id: 99, name: 'Yehuda Katz' });
+        person = env.store.createRecord('person', { id: 99, name: 'Yehuda Katz' });
       });
 
       person.on('didCreate', function () {
@@ -6252,17 +6252,17 @@ define(
 
       equal(filterd2Summary.called.length, 0);
 
-      equal(person._recordArrays.list.length, 2, 'expected the person to be a member of 2 recordArrays');
+      equal(person._internalModel._recordArrays.list.length, 2, 'expected the person to be a member of 2 recordArrays');
 
       Ember.run(filterd2, filterd2.destroy);
 
-      equal(person._recordArrays.list.length, 1, 'expected the person to be a member of 1 recordArrays');
+      equal(person._internalModel._recordArrays.list.length, 1, 'expected the person to be a member of 1 recordArrays');
 
       equal(filterd2Summary.called.length, 1);
 
       Ember.run(manager, manager.destroy);
 
-      equal(person._recordArrays.list.length, 0, 'expected the person to be a member of no recordArrays');
+      equal(person._internalModel._recordArrays.list.length, 0, 'expected the person to be a member of no recordArrays');
 
       equal(filterd2Summary.called.length, 1);
 
@@ -6760,19 +6760,28 @@ define(
     });
 
     test("Will resolve save on success", function () {
-      expect(1);
+      expect(4);
       var post;
       run(function () {
         post = env.store.createRecord("post", { title: "toto" });
       });
 
+      var deferred = Ember.RSVP.defer();
       env.adapter.createRecord = function (store, type, snapshot) {
-        return Ember.RSVP.resolve({ id: 123 });
+        return deferred.promise;
       };
 
       run(function () {
-        post.save().then(function () {
+        var saved = post.save();
+
+        // `save` returns a PromiseObject which allows to call get on it
+        equal(saved.get("id"), undefined);
+
+        deferred.resolve({ id: 123 });
+        saved.then(function (model) {
           ok(true, "save operation was resolved");
+          equal(saved.get("id"), 123);
+          equal(model, post, "resolves with the model");
         });
       });
     });
@@ -7706,7 +7715,7 @@ define(
 
       run(function () {
         store.find('book', 1).then(function (book) {
-          var relationship = book._relationships['author'];
+          var relationship = book._internalModel._relationships['author'];
           equal(relationship.hasData, true, 'relationship has data');
         });
       });
@@ -7721,7 +7730,7 @@ define(
 
       run(function () {
         store.find('book', 1).then(function (book) {
-          var relationship = book._relationships['author'];
+          var relationship = book._internalModel._relationships['author'];
           equal(relationship.hasData, true, 'relationship has data');
         });
       });
@@ -7740,7 +7749,7 @@ define(
 
       run(function () {
         store.find('book', 1).then(function (book) {
-          var relationship = book._relationships['author'];
+          var relationship = book._internalModel._relationships['author'];
           equal(relationship.hasData, false, 'relationship does not have data');
         });
       });
@@ -7755,7 +7764,7 @@ define(
 
       run(function () {
         store.find('book', 1).then(function (book) {
-          var relationship = book._relationships['author'];
+          var relationship = book._internalModel._relationships['author'];
           equal(relationship.hasData, false, 'relationship does not have data');
         });
       });
@@ -7770,7 +7779,7 @@ define(
 
       run(function () {
         var book = store.createRecord('book', { name: 'The Greatest Book' });
-        var relationship = book._relationships['author'];
+        var relationship = book._internalModel._relationships['author'];
         equal(relationship.hasData, true, 'relationship has data');
       });
     });
@@ -7780,7 +7789,7 @@ define(
 
       run(function () {
         var book = store.createRecord('book', { name: 'The Greatest Book' });
-        var relationship = book._relationships['author'];
+        var relationship = book._internalModel._relationships['author'];
         equal(relationship.hasData, true, 'relationship has data');
       });
     });
@@ -7926,7 +7935,7 @@ define(
     });
 
     // This tests the case where a serializer materializes a has-many
-    // relationship as a reference that it can fetch lazily. The most
+    // relationship as a internalModel that it can fetch lazily. The most
     // common use case of this is to provide a URL to a collection that
     // is loaded later.
     test('A serializer can materialize a hasMany as an opaque token that can be lazily fetched via the adapter\'s findHasMany hook', function () {
@@ -8714,7 +8723,7 @@ define(
 
           deepEqual(post, commentPost, 'expect the new comments post, to be the correct post');
           ok(postComments, 'comments should exist');
-          equal(postCommentsLength, 2, 'comment\'s post should have a reference back to comment');
+          equal(postCommentsLength, 2, 'comment\'s post should have a internalModel back to comment');
           ok(postComments && postComments.indexOf(firstComment) !== -1, 'expect to contain first comment');
           ok(postComments && postComments.indexOf(comment) !== -1, 'expected to contain the new comment');
         });
@@ -8958,7 +8967,7 @@ define(
       });
 
       run(function () {
-        post._relationships['comments'].clear();
+        post._internalModel._relationships['comments'].clear();
         var comments = Ember.A(env.store.all('comment'));
         deepEqual(comments.mapBy('post'), [null, null, null]);
       });
@@ -9079,7 +9088,7 @@ define(
 
       run(function () {
         store.find('chapter', 1).then(function (chapter) {
-          var relationship = chapter._relationships['pages'];
+          var relationship = chapter._internalModel._relationships['pages'];
           equal(relationship.hasData, true, 'relationship has data');
         });
       });
@@ -9094,7 +9103,7 @@ define(
 
       run(function () {
         store.find('chapter', 1).then(function (chapter) {
-          var relationship = chapter._relationships['pages'];
+          var relationship = chapter._internalModel._relationships['pages'];
           equal(relationship.hasData, true, 'relationship has data');
         });
       });
@@ -9113,7 +9122,7 @@ define(
 
       run(function () {
         store.find('chapter', 1).then(function (chapter) {
-          var relationship = chapter._relationships['pages'];
+          var relationship = chapter._internalModel._relationships['pages'];
           equal(relationship.hasData, false, 'relationship does not have data');
         });
       });
@@ -9128,7 +9137,7 @@ define(
 
       run(function () {
         store.find('chapter', 1).then(function (chapter) {
-          var relationship = chapter._relationships['pages'];
+          var relationship = chapter._internalModel._relationships['pages'];
           equal(relationship.hasData, false, 'relationship does not have data');
         });
       });
@@ -9143,7 +9152,7 @@ define(
 
       run(function () {
         var chapter = store.createRecord('chapter', { title: 'The Story Begins' });
-        var relationship = chapter._relationships['pages'];
+        var relationship = chapter._internalModel._relationships['pages'];
         equal(relationship.hasData, true, 'relationship has data');
       });
     });
@@ -9153,7 +9162,7 @@ define(
 
       run(function () {
         var chapter = store.createRecord('chapter', { title: 'The Story Begins' });
-        var relationship = chapter._relationships['pages'];
+        var relationship = chapter._internalModel._relationships['pages'];
         equal(relationship.hasData, true, 'relationship has data');
       });
     });
@@ -15650,17 +15659,19 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     }
   });
 
-  test('it should use `_reference` and not `reference` to store its reference', function () {
+  /*
+  test("it should use `_internalModel` and not `internalModel` to store its internalModel", function() {
     expect(1);
 
-    run(function () {
+    run(function() {
       store.push(Person, { id: 1 });
 
-      store.find(Person, 1).then(function (record) {
-        equal(record.get('reference'), undefined, 'doesn\'t shadow reference key');
+      store.find(Person, 1).then(function(record) {
+        equal(record.get('_internalModel'), undefined, "doesn't shadow internalModel key");
       });
     });
   });
+  */
 
   test('it should cache attributes', function () {
     expect(2);
@@ -15913,15 +15924,15 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
     run(function () {
       store.find(Person, 1).then(function (person) {
-        equal(person._attributes.name, undefined, 'the `_attributes` hash is clean');
+        equal(person._internalModel._attributes.name, undefined, 'the `_attributes` hash is clean');
 
         set(person, 'name', 'Niceguy Dale');
 
-        equal(person._attributes.name, 'Niceguy Dale', 'the `_attributes` hash contains the changed value');
+        equal(person._internalModel._attributes.name, 'Niceguy Dale', 'the `_attributes` hash contains the changed value');
 
         set(person, 'name', 'Scumbag Dale');
 
-        equal(person._attributes.name, undefined, 'the `_attributes` hash is reset');
+        equal(person._internalModel._attributes.name, undefined, 'the `_attributes` hash is reset');
       });
     });
   });
@@ -16393,6 +16404,38 @@ define(
 
 
 define(
+  "ember-data/tests/unit/model/internal-model-test",
+  ["exports"],
+  function(__exports__) {
+    "use strict";
+
+    function __es6_export__(name, value) {
+      __exports__[name] = value;
+    }
+
+    module("unit/model/internal-model - Internal Model");
+
+    var mockModelFactory = {
+      _create: function () {
+        return { trigger: function () {} };
+      },
+
+      eachRelationship: function () {}
+    };
+    test("Materializing a model twice errors out", function () {
+      expect(1);
+      var internalModel = new DS.InternalModel(mockModelFactory, null, null, null);
+
+      internalModel.materializeRecord();
+      expectAssertion(function () {
+        internalModel.materializeRecord();
+      }, /more than once/);
+    });
+  }
+);
+
+
+define(
   "ember-data/tests/unit/model/lifecycle-callbacks-test",
   ["exports"],
   function(__exports__) {
@@ -16433,6 +16476,32 @@ define(
           equal(person.get("id"), "1", "The person's ID is available");
           equal(person.get("name"), "Foo", "The person's properties are available");
         });
+      });
+    });
+
+    test("TEMPORARY: a record receives a didLoad callback once it materializes if it wasn't materialized when loaded", function () {
+      expect(2);
+      var didLoadCalled = 0;
+      var Person = DS.Model.extend({
+        name: DS.attr(),
+        didLoad: function () {
+          didLoadCalled++;
+        }
+      });
+
+      var store = createStore({
+        person: Person
+      });
+
+      run(function () {
+        store._pushInternalModel("person", { id: 1 });
+        equal(didLoadCalled, 0, "didLoad was not called");
+      });
+      run(function () {
+        store.getById("person", 1);
+      });
+      run(function () {
+        equal(didLoadCalled, 1, "didLoad was called");
       });
     });
 
@@ -17694,18 +17763,19 @@ define(
 
       var env = setupStore({ tag: Tag });
       var store = env.store;
-      var records, tags;
+      var records, tags, internalModel;
 
       run(function () {
         records = store.pushMany("tag", [{ id: 5, name: "friendly" }, { id: 2, name: "smarmy" }, { id: 12, name: "oohlala" }]);
-        tags = DS.RecordArray.create({ content: Ember.A(records.slice(0, 2)), store: store, type: Tag });
+        internalModel = Ember.A(records).mapBy("_internalModel");
+        tags = DS.RecordArray.create({ content: Ember.A(internalModel.slice(0, 2)), store: store, type: Tag });
       });
 
       var tag = tags.objectAt(0);
       equal(get(tag, "name"), "friendly", "precond - we're working with the right tags");
 
       run(function () {
-        set(tags, "content", Ember.A(records.slice(1, 3)));
+        set(tags, "content", Ember.A(internalModel.slice(1, 3)));
       });
 
       tag = tags.objectAt(0);
@@ -20352,7 +20422,7 @@ define(
 
         store.find(Record, 1).then(function (record) {
           record.set('title', 'toto2');
-          record.send('willCommit');
+          record._internalModel.send('willCommit');
 
           equal(get(record, 'isDirty'), true, 'record is dirty');
 
@@ -20362,7 +20432,7 @@ define(
 
           // force back into safe to unload mode.
           run(function () {
-            record.transitionTo('deleted.saved');
+            record._internalModel.transitionTo('deleted.saved');
           });
         });
       });
@@ -20826,6 +20896,13 @@ if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/lib/system/model/errors');
 test('ember-data/lib/system/model/errors/invalid.js should pass jshint', function() { 
   ok(true, 'ember-data/lib/system/model/errors/invalid.js should pass jshint.'); 
+});
+
+}
+if (!QUnit.urlParams.nojshint) {
+module('JSHint - ember-data/lib/system/model');
+test('ember-data/lib/system/model/internal-model.js should pass jshint', function() { 
+  ok(true, 'ember-data/lib/system/model/internal-model.js should pass jshint.'); 
 });
 
 }
@@ -21379,6 +21456,13 @@ if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/tests/unit/model');
 test('ember-data/tests/unit/model/errors-test.js should pass jshint', function() { 
   ok(true, 'ember-data/tests/unit/model/errors-test.js should pass jshint.'); 
+});
+
+}
+if (!QUnit.urlParams.nojshint) {
+module('JSHint - ember-data/tests/unit/model');
+test('ember-data/tests/unit/model/internal-model-test.js should pass jshint', function() { 
+  ok(true, 'ember-data/tests/unit/model/internal-model-test.js should pass jshint.'); 
 });
 
 }
