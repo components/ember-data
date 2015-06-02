@@ -4302,7 +4302,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.37401a8380'
+      VERSION: '1.0.0-beta.19+canary.4a529959e0'
     });
 
     if (Ember.libraries) {
@@ -4738,21 +4738,6 @@
         }
       },
 
-      _pushRecord: function (record) {
-        ember$data$lib$system$record$arrays$record$array$$get(this, 'content').pushObject(record);
-      },
-
-      /**
-        Adds a record to the `RecordArray`, but allows duplicates
-         @deprecated
-        @method pushRecord
-        @private
-        @param {DS.Model} record
-      */
-      pushRecord: function (record) {
-        Ember.deprecate('Usage of `recordArray.pushRecord` is deprecated, use `recordArray.addObject` instead');
-        this._pushRecord(record);
-      },
       /**
         Removes a record to the `RecordArray`.
          @method removeRecord
@@ -5062,7 +5047,7 @@
 
         if (shouldBeInArray) {
           if (!recordArrays.has(array)) {
-            array._pushRecord(record);
+            array.addRecord(record);
             recordArrays.add(array);
           }
         } else if (!shouldBeInArray) {
