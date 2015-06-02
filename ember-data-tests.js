@@ -16312,6 +16312,12 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
       equal(person.get('isNew'), false, 'push should put records into the loaded state');
     });
   });
+
+  test('A subclass of DS.Model throws an error when calling create() directly', function () {
+    throws(function () {
+      Person.create();
+    }, /You should not call `create` on a model/, 'Throws an error when calling create() on model');
+  });
 });
 
 
