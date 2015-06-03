@@ -184,7 +184,7 @@
         ```
          @method find
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {DS.Model} type
         @param {String} id
         @param {DS.Snapshot} snapshot
         @return {Promise} promise
@@ -214,7 +214,7 @@
          @private
         @method findAll
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {DS.Model} type
         @param {String} sinceToken
         @return {Promise} promise
       */
@@ -243,7 +243,7 @@
          @private
         @method findQuery
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {DS.Model} type
         @param {Object} query
         @param {DS.AdapterPopulatedRecordArray} recordArray
         @return {Promise} promise
@@ -269,10 +269,10 @@
         ```
          @method generateIdForRecord
         @param {DS.Store} store
-        @param {subclass of DS.Model} type   the DS.Model class of the record
+        @param {DS.Model} type   the DS.Model class of the record
         @param {Object} inputProperties a hash of properties to set on the
           newly created record.
-        @return {String|Number} id
+        @return {(String|Number)} id
       */
       generateIdForRecord: null,
 
@@ -325,7 +325,7 @@
         ```
          @method createRecord
         @param {DS.Store} store
-        @param {subclass of DS.Model} type   the DS.Model class of the record
+        @param {DS.Model} type   the DS.Model class of the record
         @param {DS.Snapshot} snapshot
         @return {Promise} promise
       */
@@ -360,7 +360,7 @@
         ```
          @method updateRecord
         @param {DS.Store} store
-        @param {subclass of DS.Model} type   the DS.Model class of the record
+        @param {DS.Model} type   the DS.Model class of the record
         @param {DS.Snapshot} snapshot
         @return {Promise} promise
       */
@@ -395,7 +395,7 @@
         ```
          @method deleteRecord
         @param {DS.Store} store
-        @param {subclass of DS.Model} type   the DS.Model class of the record
+        @param {DS.Model} type   the DS.Model class of the record
         @param {DS.Snapshot} snapshot
         @return {Promise} promise
       */
@@ -415,7 +415,7 @@
         Find multiple records at once if coalesceFindRequests is true
          @method findMany
         @param {DS.Store} store
-        @param {subclass of DS.Model} type   the DS.Model class of the records
+        @param {DS.Model} type   the DS.Model class of the records
         @param {Array}    ids
         @param {Array} snapshots
         @return {Promise} promise
@@ -480,7 +480,7 @@
       /**
         Implement this method in order to provide data associated with a type
          @method fixturesForType
-        @param {Subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @return {Array}
       */
       fixturesForType: function (typeClass) {
@@ -501,10 +501,10 @@
       /**
         Implement this method in order to query fixtures data
          @method queryFixtures
-        @param {Array} fixture
+        @param {Array} fixtures
         @param {Object} query
-        @param {Subclass of DS.Model} typeClass
-        @return {Promise|Array}
+        @param {DS.Model} typeClass
+        @return {(Promise|Array)}
       */
       queryFixtures: function (fixtures, query, typeClass) {
         Ember.assert("Not implemented: You must override the DS.FixtureAdapter::queryFixtures method to support querying the fixture store.");
@@ -512,7 +512,7 @@
 
       /**
         @method updateFixtures
-        @param {Subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {Array} fixture
       */
       updateFixtures: function (typeClass, fixture) {
@@ -531,7 +531,7 @@
         Implement this method in order to provide json for CRUD methods
          @method mockJSON
         @param {DS.Store} store
-        @param {Subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {DS.Snapshot} snapshot
       */
       mockJSON: function (store, typeClass, snapshot) {
@@ -541,7 +541,6 @@
       /**
         @method generateIdForRecord
         @param {DS.Store} store
-        @param {DS.Model} record
         @return {String} id
       */
       generateIdForRecord: function (store) {
@@ -551,7 +550,7 @@
       /**
         @method find
         @param {DS.Store} store
-        @param {subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {String} id
         @param {DS.Snapshot} snapshot
         @return {Promise} promise
@@ -576,7 +575,7 @@
       /**
         @method findMany
         @param {DS.Store} store
-        @param {subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {Array} ids
         @param {Array} snapshots
         @return {Promise} promise
@@ -603,8 +602,7 @@
         @private
         @method findAll
         @param {DS.Store} store
-        @param {subclass of DS.Model} typeClass
-        @param {String} sinceToken
+        @param {DS.Model} typeClass
         @return {Promise} promise
       */
       findAll: function (store, typeClass) {
@@ -621,9 +619,9 @@
         @private
         @method findQuery
         @param {DS.Store} store
-        @param {subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {Object} query
-        @param {DS.AdapterPopulatedRecordArray} recordArray
+        @param {DS.AdapterPopulatedRecordArray} array
         @return {Promise} promise
       */
       findQuery: function (store, typeClass, query, array) {
@@ -643,7 +641,7 @@
       /**
         @method createRecord
         @param {DS.Store} store
-        @param {subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {DS.Snapshot} snapshot
         @return {Promise} promise
       */
@@ -660,7 +658,7 @@
       /**
         @method updateRecord
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {DS.Model} typeClass
         @param {DS.Snapshot} snapshot
         @return {Promise} promise
       */
@@ -677,7 +675,7 @@
       /**
         @method deleteRecord
         @param {DS.Store} store
-        @param {subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {DS.Snapshot} snapshot
         @return {Promise} promise
       */
@@ -779,8 +777,8 @@
         will be arrays of ids and snapshots.
          @method buildURL
         @param {String} modelName
-        @param {String|Array|Object} id single id or array of ids or query
-        @param {DS.Snapshot|Array} snapshot single snapshot or array of snapshots
+        @param {(String|Array|Object)} id single id or array of ids or query
+        @param {(DS.Snapshot|Array)} snapshot single snapshot or array of snapshots
         @param {String} requestType
         @param {Object} query object of query parameters to send for findQuery requests.
         @return {String} url
@@ -878,7 +876,7 @@
       /**
        * @method urlForFindMany
        * @param {Array} ids
-       * @param {String} type
+       * @param {String} modelName
        * @param {Array} snapshots
        * @return {String} url
        */
@@ -942,7 +940,7 @@
         @method urlPrefix
         @private
         @param {String} path
-        @param {String} parentUrl
+        @param {String} parentURL
         @return {String} urlPrefix
       */
       urlPrefix: function (path, parentURL) {
@@ -1144,7 +1142,7 @@
          This method performs an HTTP `GET` request with the id provided as part of the query string.
          @method find
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {DS.Model} type
         @param {String} id
         @param {DS.Snapshot} snapshot
         @return {Promise} promise
@@ -1161,7 +1159,7 @@
          @private
         @method findAll
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {DS.Model} type
         @param {String} sinceToken
         @return {Promise} promise
       */
@@ -1187,7 +1185,7 @@
          @private
         @method findQuery
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {DS.Model} type
         @param {Object} query
         @return {Promise} promise
       */
@@ -1222,7 +1220,7 @@
         promise for the resulting payload.
          @method findMany
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {DS.Model} type
         @param {Array} ids
         @param {Array} snapshots
         @return {Promise} promise
@@ -1302,7 +1300,7 @@
         of a record.
          @method createRecord
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {DS.Model} type
         @param {DS.Snapshot} snapshot
         @return {Promise} promise
       */
@@ -1325,7 +1323,7 @@
         of a record.
          @method updateRecord
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {DS.Model} type
         @param {DS.Snapshot} snapshot
         @return {Promise} promise
       */
@@ -1346,7 +1344,7 @@
          The `deleteRecord` method  makes an Ajax (HTTP DELETE) request to a URL computed by `buildURL`.
          @method deleteRecord
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {DS.Model} type
         @param {DS.Snapshot} snapshot
         @return {Promise} promise
       */
@@ -2201,9 +2199,9 @@
         data source into the form that Ember Data expects.
          @method extract
         @param {DS.Store} store
-        @param {subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {Object} payload
-        @param {String|Number} id
+        @param {(String|Number)} id
         @param {String} requestType
         @return {Object}
       */
@@ -2216,7 +2214,7 @@
          - `includeId`: If this is `true`, `serialize` should include the ID
           in the serialized object it builds.
          @method serialize
-        @param {subclass of DS.Model} record
+        @param {DS.Model} record
         @param {Object} [options]
         @return {Object}
       */
@@ -2228,7 +2226,7 @@
         should override this method, munge the hash and return the normalized
         payload.
          @method normalize
-        @param {subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {Object} hash
         @return {Object}
       */
@@ -2319,7 +2317,7 @@
        serializer's `normalize` method.
         @method applyTransforms
        @private
-       @param {subclass of DS.Model} typeClass
+       @param {DS.Model} typeClass
        @param {Object} data The data to transform
        @return {Object} data The transformed data object
       */
@@ -2361,7 +2359,7 @@
         });
         ```
          @method normalize
-        @param {subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {Object} hash
         @return {Object}
       */
@@ -2688,7 +2686,7 @@
         ```
          @method serializeIntoHash
         @param {Object} hash
-        @param {subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {DS.Snapshot} snapshot
         @param {Object} options
       */
@@ -2878,9 +2876,9 @@
         ```
          @method extract
         @param {DS.Store} store
-        @param {subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {Object} payload
-        @param {String or Number} id
+        @param {(String|Number)} id
         @param {String} requestType
         @return {Object} json The deserialized payload
       */
@@ -2897,9 +2895,9 @@
         alias for [extractArray](#method_extractArray).
          @method extractFindAll
         @param {DS.Store} store
-        @param {subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {Object} payload
-        @param {String or Number} id
+        @param {(String|Number)} id
         @param {String} requestType
         @return {Array} array An array of deserialized objects
       */
@@ -2912,9 +2910,9 @@
         alias for [extractArray](#method_extractArray).
          @method extractFindQuery
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {DS.Model} typeClass
         @param {Object} payload
-        @param {String or Number} id
+        @param {(String|Number)} id
         @param {String} requestType
         @return {Array} array An array of deserialized objects
       */
@@ -2927,9 +2925,9 @@
         alias for [extractArray](#method_extractArray).
          @method extractFindMany
         @param {DS.Store} store
-        @param {subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {Object} payload
-        @param {String or Number} id
+        @param {(String|Number)} id
         @param {String} requestType
         @return {Array} array An array of deserialized objects
       */
@@ -2942,9 +2940,9 @@
         alias for [extractArray](#method_extractArray).
          @method extractFindHasMany
         @param {DS.Store} store
-        @param {subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {Object} payload
-        @param {String or Number} id
+        @param {(String|Number)} id
         @param {String} requestType
         @return {Array} array An array of deserialized objects
       */
@@ -2958,9 +2956,9 @@
         this method is alias for [extractSave](#method_extractSave).
          @method extractCreateRecord
         @param {DS.Store} store
-        @param {subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {Object} payload
-        @param {String or Number} id
+        @param {(String|Number)} id
         @param {String} requestType
         @return {Object} json The deserialized payload
       */
@@ -2973,9 +2971,9 @@
         By default this method is alias for [extractSave](#method_extractSave).
          @method extractUpdateRecord
         @param {DS.Store} store
-        @param {subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {Object} payload
-        @param {String or Number} id
+        @param {(String|Number)} id
         @param {String} requestType
         @return {Object} json The deserialized payload
       */
@@ -2988,9 +2986,9 @@
         By default this method is alias for [extractSave](#method_extractSave).
          @method extractDeleteRecord
         @param {DS.Store} store
-        @param {subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {Object} payload
-        @param {String or Number} id
+        @param {(String|Number)} id
         @param {String} requestType
         @return {Object} json The deserialized payload
       */
@@ -3004,9 +3002,9 @@
         alias for [extractSingle](#method_extractSingle).
          @method extractFind
         @param {DS.Store} store
-        @param {subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {Object} payload
-        @param {String or Number} id
+        @param {(String|Number)} id
         @param {String} requestType
         @return {Object} json The deserialized payload
       */
@@ -3019,9 +3017,9 @@
         alias for [extractSingle](#method_extractSingle).
          @method extractFindBelongsTo
         @param {DS.Store} store
-        @param {subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {Object} payload
-        @param {String or Number} id
+        @param {(String|Number)} id
         @param {String} requestType
         @return {Object} json The deserialized payload
       */
@@ -3034,9 +3032,9 @@
         for [extractSingle](#method_extractSingle).
          @method extractSave
         @param {DS.Store} store
-        @param {subclass of DS.Model} type
+        @param {DS.Model} typeClass
         @param {Object} payload
-        @param {String or Number} id
+        @param {(String|Number)} id
         @param {String} requestType
         @return {Object} json The deserialized payload
       */
@@ -3059,9 +3057,9 @@
         ```
          @method extractSingle
         @param {DS.Store} store
-        @param {subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {Object} payload
-        @param {String or Number} id
+        @param {(String|Number)} id
         @param {String} requestType
         @return {Object} json The deserialized payload
       */
@@ -3085,9 +3083,9 @@
         ```
          @method extractArray
         @param {DS.Store} store
-        @param {subclass of DS.Model} typeClass
-        @param {Object} payload
-        @param {String or Number} id
+        @param {DS.Model} typeClass
+        @param {Object} arrayPayload
+        @param {(String|Number)} id
         @param {String} requestType
         @return {Array} array An array of deserialized objects
       */
@@ -3117,7 +3115,7 @@
         ```
          @method extractMeta
         @param {DS.Store} store
-        @param {subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {Object} payload
       */
       extractMeta: function (store, typeClass, payload) {
@@ -3146,9 +3144,9 @@
         ```
          @method extractErrors
         @param {DS.Store} store
-        @param {subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {Object} payload
-        @param {String or Number} id
+        @param {(String|Number)} id
         @return {Object} json The deserialized errors
       */
       extractErrors: function (store, typeClass, payload, id) {
@@ -3193,7 +3191,7 @@
         ```
         @method keyForRelationship
        @param {String} key
-       @param {String} relationship typeClass
+       @param {String} typeClass
        @param {String} method
        @return {String} normalized key
       */
@@ -3224,7 +3222,7 @@
       require changes to other normalization hooks (such as typeForRoot).
       @method normalizeModelName
       @public
-      @param {String} type
+      @param {String} modelName
       @return {String} if the adapter can generate one, an ID
       @for DS
     */
@@ -3380,7 +3378,7 @@
          The key under `normalizeHash` is just the original key that was in the original
         payload.
          @method normalize
-        @param {subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {Object} hash
         @param {String} prop
         @return {Object}
@@ -3458,8 +3456,8 @@
         particular, it will update the properties of the record that was saved.
          @method extractSingle
         @param {DS.Store} store
-        @param {subclass of DS.Model} primaryTypeClass
-        @param {Object} payload
+        @param {DS.Model} primaryTypeClass
+        @param {Object} rawPayload
         @param {String} recordId
         @return {Object} the primary response to the original request
       */
@@ -3590,8 +3588,8 @@
         push these items into the store and will not affect the resulting query.
          @method extractArray
         @param {DS.Store} store
-        @param {subclass of DS.Model} primaryTypeClass
-        @param {Object} payload
+        @param {DS.Model} primaryTypeClass
+        @param {Object} rawPayload
         @return {Array} The primary array that was returned in response
           to the original query.
       */
@@ -3668,7 +3666,7 @@
         that fetches and saves are structured.
          @method pushPayload
         @param {DS.Store} store
-        @param {Object} payload
+        @param {Object} rawPayload
       */
       pushPayload: function (store, rawPayload) {
         var payload = this.normalizePayload(rawPayload);
@@ -3873,7 +3871,7 @@
         ```
          @method serializeIntoHash
         @param {Object} hash
-        @param {subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {DS.Snapshot} snapshot
         @param {Object} options
       */
@@ -4302,7 +4300,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.acf6ba1e7b'
+      VERSION: '1.0.0-beta.19+canary.cffafb6bbf'
     });
 
     if (Ember.libraries) {
@@ -4727,7 +4725,7 @@
          @method addRecord
         @private
         @param {DS.Model} record
-        @param {DS.Model} an optional index to insert at
+        @param {DS.Model} idx an optional index to insert at
       */
       addRecord: function (record, idx) {
         var content = ember$data$lib$system$record$arrays$record$array$$get(this, 'content');
@@ -5031,8 +5029,8 @@
          @method updateRecordArray
         @param {DS.FilteredRecordArray} array
         @param {Function} filter
-        @param {subclass of DS.Model} typeClass
-        @param {Number|String} clientId
+        @param {DS.Model} typeClass
+        @param {(Number|String)} clientId
       */
       updateRecordArray: function (array, filter, typeClass, record) {
         var shouldBeInArray;
@@ -5103,7 +5101,7 @@
       /**
         Create a `DS.FilteredRecordArray` for a type and register it for updates.
          @method createFilteredRecordArray
-        @param {subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {Function} filter
         @param {Object} query (optional
         @return {DS.FilteredRecordArray}
@@ -5126,7 +5124,7 @@
       /**
         Create a `DS.AdapterPopulatedRecordArray` for a type with given query.
          @method createAdapterPopulatedRecordArray
-        @param {subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {Object} query
         @return {DS.AdapterPopulatedRecordArray}
       */
@@ -5151,7 +5149,7 @@
         values or states.
          @method registerFilteredRecordArray
         @param {DS.RecordArray} array
-        @param {subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @param {Function} filter
       */
       registerFilteredRecordArray: function (array, typeClass, filter) {
@@ -6817,7 +6815,7 @@
       @namespace DS
       @private
       @constructor
-      @param {DS.Model} record The record to create a snapshot from
+      @param {DS.Model} internalModel The model to create a snapshot from
     */
     function ember$data$lib$system$snapshot$$Snapshot(internalModel) {
       this._attributes = Ember.create(null);
@@ -6896,9 +6894,9 @@
       record: null,
 
       /**
-        The type of the underlying record for this snapshot, as a subclass of DS.Model.
+        The type of the underlying record for this snapshot, as a DS.Model.
          @property type
-        @type {subclass of DS.Model}
+        @type {DS.Model}
       */
       type: null,
 
@@ -6988,7 +6986,7 @@
          @method belongsTo
         @param {String} keyName
         @param {Object} [options]
-        @return {DS.Snapshot|String|null|undefined} A snapshot or ID of a known
+        @return {(DS.Snapshot|String|null|undefined)} A snapshot or ID of a known
           relationship or null if the relationship is known but unset. undefined
           will be returned if the contents of the relationship is unknown.
       */
@@ -7052,7 +7050,7 @@
          @method hasMany
         @param {String} keyName
         @param {Object} [options]
-        @return {Array|undefined} An array of snapshots or IDs of a known
+        @return {(Array|undefined)} An array of snapshots or IDs of a known
           relationship or an empty array if the relationship is known but unset.
           undefined will be returned if the contents of the relationship is unknown.
       */
@@ -7329,7 +7327,7 @@
         ```
          @method add
         @param {String} attribute
-        @param {Array|String} messages
+        @param {(Array|String)} messages
       */
       add: function (attribute, messages) {
         var wasEmpty = ember$data$lib$system$model$errors$$get(this, 'isEmpty');
@@ -9283,7 +9281,7 @@
     //     not yet have an externally generated id.
     //   * +internalModel+ means a record internalModel object, which holds metadata about a
     //     record, even if it has not yet been fully materialized.
-    //   * +type+ means a subclass of DS.Model.
+    //   * +type+ means a DS.Model.
 
     /**
       The store contains all of the data for records loaded from the server.
@@ -9380,7 +9378,7 @@
         ```
          @property adapter
         @default DS.RESTAdapter
-        @type {DS.Adapter|String}
+        @type {(DS.Adapter|String)}
       */
       adapter: "-rest",
 
@@ -9446,7 +9444,7 @@
         ```
          @method createRecord
         @param {String} modelName
-        @param {Object} properties a hash of properties to set on the
+        @param {Object} inputProperties a hash of properties to set on the
           newly created record.
         @return {DS.Model} record
       */
@@ -9615,7 +9613,7 @@
         ```
          @method find
         @param {String} modelName
-        @param {Object|String|Integer|null} id
+        @param {(Object|String|Integer|null)} id
         @param {Object} preload - optional set of attributes and relationships passed in either as IDs or as actual models
         @return {Promise} promise
       */
@@ -9653,7 +9651,7 @@
         ```
          @method fetchById
         @param {String} modelName
-        @param {String|Integer} id
+        @param {(String|Integer)} id
         @param {Object} preload - optional set of attributes and relationships passed in either as IDs or as actual models
         @return {Promise} promise
       */
@@ -9681,7 +9679,7 @@
       /**
         @method fetch
         @param {String} modelName
-        @param {String|Integer} id
+        @param {(String|Integer)} id
         @param {Object} preload - optional set of attributes and relationships passed in either as IDs or as actual models
         @return {Promise} promise
         @deprecated Use [fetchById](#method_fetchById) instead
@@ -9696,7 +9694,7 @@
          @method findById
         @private
         @param {String} modelName
-        @param {String|Integer} id
+        @param {(String|Integer)} id
         @param {Object} preload - optional set of attributes and relationships passed in either as IDs or as actual models
         @return {Promise} promise
       */
@@ -9746,7 +9744,7 @@
         adapter.
          @method fetchRecord
         @private
-        @param {InternalModel} internal model
+        @param {InternalModel} internalModel model
         @return {Promise} promise
       */
       fetchRecord: function (internalModel) {
@@ -9899,9 +9897,9 @@
          post.get('id'); // 1
         ```
          @method getById
-        @param {String or subclass of DS.Model} type
-        @param {String|Integer} id
-        @return {DS.Model|null} record
+        @param {(String|DS.Model)} type
+        @param {(String|Integer)} id
+        @return {(DS.Model|null)} record
       */
       getById: function (type, id) {
         if (this.hasRecordForId(type, id)) {
@@ -9918,7 +9916,7 @@
         by the record's `reload`.
          @method reloadRecord
         @private
-        @param {DS.Model} record
+        @param {DS.Model} internalModel
         @return {Promise} promise
       */
       reloadRecord: function (internalModel) {
@@ -9936,8 +9934,8 @@
       /**
         Returns true if a record for a given type and ID is already loaded.
          @method hasRecordForId
-        @param {String or subclass of DS.Model} type
-        @param {String|Integer} id
+        @param {(String|DS.Model)} modelName
+        @param {(String|Integer)} inputId
         @return {Boolean}
       */
       hasRecordForId: function (modelName, inputId) {
@@ -9953,7 +9951,7 @@
          @method recordForId
         @private
         @param {String} modelName
-        @param {String|Integer} id
+        @param {(String|Integer)} id
         @return {DS.Model} record
       */
       recordForId: function (modelName, id) {
@@ -9998,7 +9996,7 @@
         @private
         @param {DS.Model} owner
         @param {any} link
-        @param {String or subclass of DS.Model} type
+        @param {(String|DS.Model)} type
         @return {Promise} promise
       */
       findHasMany: function (owner, link, type) {
@@ -10037,7 +10035,7 @@
         once the server returns.
          @method findQuery
         @private
-        @param {String or subclass of DS.Model} type
+        @param {(String|DS.Model)} typeName
         @param {any} query an opaque query to be used by the adapter
         @return {Promise} promise
       */
@@ -10136,7 +10134,7 @@
        store.unloadAll('post');
        ```
         @method unloadAll
-       @param {String} optional modelName
+       @param {String=} modelName
       */
       unloadAll: function (modelName) {
         if (arguments.length === 0) {
@@ -10204,7 +10202,7 @@
         });
         ```
          @method filter
-        @param {String or subclass of DS.Model} type
+        @param {(String|DS.Model)} type
         @param {Object} query optional query
         @param {Function} filter
         @return {DS.PromiseArray}
@@ -10249,7 +10247,7 @@
         });
         ```
          @method recordIsLoaded
-        @param {String or subclass of DS.Model} type
+        @param {(String|DS.Model)} type
         @param {string} id
         @return {boolean}
       */
@@ -10260,7 +10258,7 @@
       /**
         This method returns the metadata for a specific type.
          @method metadataFor
-        @param {String or subclass of DS.Model} typeName
+        @param {(String|DS.Model)} typeName
         @return {object}
       */
       metadataFor: function (typeName) {
@@ -10271,7 +10269,7 @@
       /**
         This method sets the metadata for a specific type.
          @method setMetadataFor
-        @param {String or subclass of DS.Model} typeName
+        @param {(String|DS.Model)} typeName
         @param {Object} metadata metadata to set
         @return {object}
       */
@@ -10292,7 +10290,7 @@
          @method dataWasUpdated
         @private
         @param {Class} type
-        @param {InternalModel} internal model
+        @param {InternalModel} internalModel
       */
       dataWasUpdated: function (type, internalModel) {
         this.recordArrayManager.recordDidChange(internalModel);
@@ -10308,7 +10306,7 @@
          It schedules saving to happen at the end of the run loop.
          @method scheduleSave
         @private
-        @param {InternalModel} internal model
+        @param {InternalModel} internalModel
         @param {Resolver} resolver
       */
       scheduleSave: function (internalModel, resolver) {
@@ -10358,7 +10356,7 @@
         update the record and the store's indexes.
          @method didSaveRecord
         @private
-        @param {InternalModel} internal model the in-flight internal model
+        @param {InternalModel} internalModel the in-flight internal model
         @param {Object} data optional data (see above)
       */
       didSaveRecord: function (internalModel, data) {
@@ -10379,7 +10377,7 @@
         is rejected with a `DS.InvalidError`.
          @method recordWasInvalid
         @private
-        @param {InternalModel} internal model
+        @param {InternalModel} internalModel
         @param {Object} errors
       */
       recordWasInvalid: function (internalModel, errors) {
@@ -10392,7 +10390,7 @@
         is rejected (with anything other than a `DS.InvalidError`).
          @method recordWasError
         @private
-        @param {InternalModel} internal model
+        @param {InternalModel} internalModel
       */
       recordWasError: function (internalModel) {
         internalModel.adapterDidError();
@@ -10404,7 +10402,7 @@
         data.
          @method updateId
         @private
-        @param {InternalModel} internal model
+        @param {InternalModel} internalModel
         @param {Object} data
       */
       updateId: function (internalModel, data) {
@@ -10422,7 +10420,7 @@
         Returns a map of IDs to client IDs for a given type.
          @method typeMapFor
         @private
-        @param {subclass of DS.Model} typeClass
+        @param {DS.Model} typeClass
         @return {Object} typeMap
       */
       typeMapFor: function (typeClass) {
@@ -10454,7 +10452,7 @@
         This internal method is used by `push`.
          @method _load
         @private
-        @param {String or subclass of DS.Model} type
+        @param {(String|DS.Model)} type
         @param {Object} data
       */
       _load: function (type, data) {
@@ -10506,8 +10504,8 @@
         methods that take a type key (like `find`, `createRecord`,
         etc.)
          @method modelFor
-        @param {String or subclass of DS.Model} key
-        @return {subclass of DS.Model}
+        @param {(String|DS.Model)} key
+        @return {DS.Model}
       */
       modelFor: function (key) {
         var factory;
@@ -10607,7 +10605,7 @@
          This method can be used both to push in brand new
         records, as well as to update existing records.
          @method push
-        @param {String or subclass of DS.Model} modelName
+        @param {(String|DS.Model)} modelName
         @param {Object} data
         @return {DS.Model} the record that was created or
           updated.
@@ -10694,7 +10692,7 @@
         ```
          @method pushPayload
         @param {String} type Optionally, a model used to determine which serializer will be used
-        @param {Object} payload
+        @param {Object} inputPayload
       */
       pushPayload: function (type, inputPayload) {
         var serializer;
@@ -10752,7 +10750,7 @@
         you can call `pushMany` with the Array, and it will
         call `push` repeatedly for you.
          @method pushMany
-        @param {String or subclass of DS.Model} type
+        @param {(String|DS.Model)} type
         @param {Array} datas
         @return {Array}
       */
@@ -10769,7 +10767,7 @@
 
       /**
         @method metaForType
-        @param {String or subclass of DS.Model} typeName
+        @param {(String|DS.Model)} typeName
         @param {Object} metadata
         @deprecated Use [setMetadataFor](#method_setMetadataFor) instead
       */
@@ -10783,7 +10781,7 @@
         initial data.
          @method buildRecord
         @private
-        @param {subclass of DS.Model} type
+        @param {DS.Model} type
         @param {String} id
         @param {Object} data
         @return {InternalModel} internal model
@@ -10835,7 +10833,7 @@
         removes it from any record arrays so it can be GCed.
          @method _dematerializeRecord
         @private
-        @param {InternalModel} internal model
+        @param {InternalModel} internalModel
       */
       _dematerializeRecord: function (internalModel) {
         var type = internalModel.type;
@@ -10867,7 +10865,7 @@
         the value of the `defaultAdapter`.
          @method adapterFor
         @private
-        @param {String or subclass of DS.Model} type
+        @param {(String|DS.Model)} type
         @return DS.Adapter
       */
       adapterFor: function (type) {
@@ -10902,7 +10900,7 @@
         to an instance of `DS.JSONSerializer`.
          @method serializerFor
         @private
-        @param {String or subclass of DS.Model} type the record to serialize
+        @param {(String|DS.Model)} type the record to serialize
         @return {DS.Serializer}
       */
       serializerFor: function (type) {
@@ -10932,8 +10930,8 @@
         adapters and serializers.
          @method retrieveManagedInstance
         @private
-        @param {String} type the object modelName
-        @param {String} type the object name
+        @param {String} modelName the object modelName
+        @param {String} name the object name
         @return {Ember.Object}
       */
       retrieveManagedInstance: function (modelName, name) {
@@ -11144,8 +11142,8 @@
         }
         ```
          @method serialize
-        @param {mixed} deserialized The deserialized value
-        @return {mixed} The serialized value
+        @param deserialized The deserialized value
+        @return The serialized value
       */
       serialize: null,
 
@@ -11159,8 +11157,8 @@
         }
         ```
          @method deserialize
-        @param {mixed} serialized The serialized value
-        @return {mixed} The deserialized value
+        @param serialized The serialized value
+        @return The deserialized value
       */
       deserialize: null
     });
@@ -11733,9 +11731,9 @@
         }
         ```
        @method normalize
-       @param {subclass of DS.Model} typeClass
+       @param {DS.Model} typeClass
        @param {Object} hash to be normalized
-       @param {String} key the hash has been referenced by
+       @param {String} prop the hash has been referenced by
        @return {Object} the normalized hash
       **/
       normalize: function (typeClass, hash, prop) {
@@ -12530,7 +12528,7 @@
          @method typeForRelationship
         @static
         @param {String} name the name of the relationship
-        @return {subclass of DS.Model} the type of the relationship, or undefined
+        @return {DS.Model} the type of the relationship, or undefined
       */
       typeForRelationship: function (name) {
         var relationship = ember$data$lib$system$relationships$ext$$get(this, "relationshipsByName").get(name);
