@@ -14131,6 +14131,19 @@ define(
       });
     });
 
+    test("snapshot.attr() throws an error attribute not found", function () {
+      expect(1);
+
+      run(function () {
+        var post = env.store.push("post", { id: 1, title: "Hello World" });
+        var snapshot = post._createSnapshot();
+
+        throws(function () {
+          snapshot.attr("unknown");
+        }, /has no attribute named 'unknown' defined/, "attr throws error");
+      });
+    });
+
     test("snapshot.attributes() returns a copy of all attributes for the current snapshot", function () {
       expect(1);
 
@@ -14223,6 +14236,19 @@ define(
         var relationship = snapshot.belongsTo("post");
 
         equal(relationship, undefined, "relationship is undefined");
+      });
+    });
+
+    test("snapshot.belongsTo() throws error if relation doesn't exist", function () {
+      expect(1);
+
+      run(function () {
+        var post = env.store.push("post", { id: 1, title: "Hello World" });
+        var snapshot = post._createSnapshot();
+
+        throws(function () {
+          snapshot.belongsTo("unknown");
+        }, /has no belongsTo relationship named 'unknown'/, "throws error");
       });
     });
 
@@ -14449,6 +14475,19 @@ define(
           ok(relationship instanceof Array, "relationship is an instance of Array");
           equal(relationship.length, 1, "relationship has one item");
         });
+      });
+    });
+
+    test("snapshot.hasMany() throws error if relation doesn't exist", function () {
+      expect(1);
+
+      run(function () {
+        var post = env.store.push("post", { id: 1, title: "Hello World" });
+        var snapshot = post._createSnapshot();
+
+        throws(function () {
+          snapshot.hasMany("unknown");
+        }, /has no hasMany relationship named 'unknown'/, "throws error");
       });
     });
 
