@@ -4282,7 +4282,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.cffafb6bbf'
+      VERSION: '1.0.0-beta.19+canary.27fd3f40a0'
     });
 
     if (Ember.libraries) {
@@ -5006,7 +5006,7 @@
         @param {DS.FilteredRecordArray} array
         @param {Function} filter
         @param {DS.Model} typeClass
-        @param {(Number|String)} clientId
+        @param {InternalModel} record
       */
       updateRecordArray: function (array, filter, typeClass, record) {
         var shouldBeInArray;
@@ -8698,10 +8698,9 @@
         @private
         @param {String} name
       */
-      trigger: function () {
+      trigger: function (name) {
         var length = arguments.length;
         var args = new Array(length - 1);
-        var name = arguments[0];
 
         for (var i = 1; i < length; i++) {
           args[i - 1] = arguments[i];
@@ -8952,7 +8951,7 @@
        ```
          @method eachAttribute
         @param {Function} callback The callback to execute
-        @param {Object} [target] The target object to use
+        @param {Object} [binding] the value to which the callback's `this` should be bound
         @static
       */
       eachAttribute: function (callback, binding) {
@@ -8991,7 +8990,7 @@
        ```
          @method eachTransformedAttribute
         @param {Function} callback The callback to execute
-        @param {Object} [target] The target object to use
+        @param {Object} [binding] the value to which the callback's `this` should be bound
         @static
       */
       eachTransformedAttribute: function (callback, binding) {
