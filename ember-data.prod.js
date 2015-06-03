@@ -4282,7 +4282,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.91a3b85461'
+      VERSION: '1.0.0-beta.19+canary.f40b1f9f37'
     });
 
     if (Ember.libraries) {
@@ -6673,7 +6673,7 @@
 
     ember$data$lib$system$relationships$state$belongs$to$$BelongsToRelationship.prototype.setRecordPromise = function (newPromise) {
       var content = newPromise.get && newPromise.get("content");
-            this.setRecord(content);
+            this.setRecord(content ? content._internalModel : content);
     };
 
     ember$data$lib$system$relationships$state$belongs$to$$BelongsToRelationship.prototype._super$removeRecordFromOwn = ember$data$lib$system$relationships$state$relationship$$default.prototype.removeRecordFromOwn;
@@ -6728,7 +6728,7 @@
 
         return ember$data$lib$system$promise$proxies$$PromiseObject.create({
           promise: promise,
-          content: this.inverseRecord
+          content: this.inverseRecord ? this.inverseRecord.getRecord() : null
         });
       } else {
         if (this.inverseRecord === null) {
