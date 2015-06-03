@@ -15382,7 +15382,7 @@ define(
 
 
 define(
-  "ember-data/tests/unit/adapters/rest-adapter/ajax",
+  "ember-data/tests/unit/adapters/rest-adapter/ajax-test",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -15394,7 +15394,7 @@ define(
     var Person, Place, store, adapter, env;
     var run = Ember.run;
 
-    module('integration/adapter/ajax - building requests', {
+    module('unit/adapters/rest-adapter/ajax - building requests', {
       setup: function () {
         Person = { modelName: 'person' };
         Place = { modelName: 'place' };
@@ -15429,6 +15429,7 @@ define(
         adapter.find(store, Place, 1);
       });
     });
+
     test('id\'s should be sanatized', function () {
       expect(1);
       adapter.ajax = function (url, method) {
@@ -15437,6 +15438,65 @@ define(
       };
       run(function () {
         adapter.find(store, Person, '../place/1');
+      });
+    });
+
+    test('ajaxOptions() headers are set', function () {
+      adapter.headers = { 'Content-Type': 'application/json', 'Other-key': 'Other Value' };
+      var url = 'example.com';
+      var type = 'GET';
+      var ajaxOptions = adapter.ajaxOptions(url, type, {});
+      var receivedHeaders = [];
+      var fakeXHR = {
+        setRequestHeader: function (key, value) {
+          receivedHeaders.push([key, value]);
+        }
+      };
+      ajaxOptions.beforeSend(fakeXHR);
+      deepEqual(receivedHeaders, [['Content-Type', 'application/json'], ['Other-key', 'Other Value']], 'headers assigned');
+    });
+
+    test('ajaxOptions() do not serializes data when GET', function () {
+      var url = 'example.com';
+      var type = 'GET';
+      var ajaxOptions = adapter.ajaxOptions(url, type, { data: { key: 'value' } });
+
+      deepEqual(ajaxOptions, {
+        context: adapter,
+        data: {
+          key: 'value'
+        },
+        dataType: 'json',
+        type: 'GET',
+        url: 'example.com'
+      });
+    });
+
+    test('ajaxOptions() serializes data when not GET', function () {
+      var url = 'example.com';
+      var type = 'POST';
+      var ajaxOptions = adapter.ajaxOptions(url, type, { data: { key: 'value' } });
+
+      deepEqual(ajaxOptions, {
+        contentType: 'application/json; charset=utf-8',
+        context: adapter,
+        data: '{"key":"value"}',
+        dataType: 'json',
+        type: 'POST',
+        url: 'example.com'
+      });
+    });
+
+    test('ajaxOptions() empty data', function () {
+      var url = 'example.com';
+      var type = 'POST';
+      var ajaxOptions = adapter.ajaxOptions(url, type, {});
+
+      deepEqual(ajaxOptions, {
+        context: adapter,
+        dataType: 'json',
+        type: 'POST',
+        url: 'example.com'
       });
     });
   }
@@ -21792,8 +21852,8 @@ test('ember-data/tests/unit/adapters/build-url-mixin/path-for-type-test.js shoul
 }
 if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/tests/unit/adapters/rest-adapter');
-test('ember-data/tests/unit/adapters/rest-adapter/ajax.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/adapters/rest-adapter/ajax.js should pass jshint.'); 
+test('ember-data/tests/unit/adapters/rest-adapter/ajax-test.js should pass jshint', function() { 
+  ok(true, 'ember-data/tests/unit/adapters/rest-adapter/ajax-test.js should pass jshint.'); 
 });
 
 }
