@@ -3399,52 +3399,6 @@ define(
 );
 
 
-define(
-  "ember-data/tests/integration/adapter/serialize-test",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-
-    function __es6_export__(name, value) {
-      __exports__[name] = value;
-    }
-
-    var run = Ember.run;
-    var env, store, adapter, serializer;
-
-    module('integration/adapter/serialize - DS.Adapter integration test', {
-      setup: function () {
-        var Person = DS.Model.extend({
-          name: DS.attr('string')
-        });
-
-        env = setupStore({ person: Person });
-        store = env.store;
-        adapter = env.adapter;
-        serializer = store.serializerFor('person');
-      },
-
-      teardown: function () {
-        run(env.container, 'destroy');
-      }
-    });
-
-    test('serialize() is delegated to the serializer', function () {
-      expect(1);
-
-      serializer.serialize = function (snapshot, options) {
-        deepEqual(options, { foo: 'bar' });
-      };
-
-      run(function () {
-        var person = store.createRecord('person');
-        adapter.serialize(person._createSnapshot(), { foo: 'bar' });
-      });
-    });
-  }
-);
-
-
 /*
  This is an integration test that tests the communication between a store
  and its adapter.
@@ -21672,13 +21626,6 @@ if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/tests/integration/adapter');
 test('ember-data/tests/integration/adapter/rest-adapter-test.js should pass jshint', function() { 
   ok(true, 'ember-data/tests/integration/adapter/rest-adapter-test.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/adapter');
-test('ember-data/tests/integration/adapter/serialize-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/adapter/serialize-test.js should pass jshint.'); 
 });
 
 }
