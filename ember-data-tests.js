@@ -15189,6 +15189,14 @@ define(
 
       equal(recordArray.get("length"), 2, "expected recordArray to contain exactly 2 records");
     });
+
+    test("recordArray.replace() throws error", function () {
+      var recordArray = store.recordArrayManager.createAdapterPopulatedRecordArray(Person, null);
+
+      throws(function () {
+        recordArray.replace();
+      }, Error("The result of a server query (on (subclass of DS.Model)) is immutable."), "throws error");
+    });
   }
 );
 
@@ -18726,6 +18734,33 @@ define(
 );
 
 
+define(
+  "ember-data/tests/unit/record-arrays/filtered-record-array-test",
+  ["exports"],
+  function(__exports__) {
+    "use strict";
+
+    function __es6_export__(name, value) {
+      __exports__[name] = value;
+    }
+
+    var filteredArray;
+
+    module('unit/record-arrays/filtered-record-array - DS.FilteredRecordArray', {
+      setup: function () {
+        filteredArray = DS.FilteredRecordArray.create({ type: 'recordType' });
+      }
+    });
+
+    test('recordArray.replace() throws error', function () {
+      throws(function () {
+        filteredArray.replace();
+      }, Error('The result of a client-side filter (on recordType) is immutable.'), 'throws error');
+    });
+  }
+);
+
+
 define("ember-data/tests/unit/states-test", ["exports"], function(__exports__) {
   "use strict";
 
@@ -21832,6 +21867,13 @@ if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/tests/unit');
 test('ember-data/tests/unit/record-array-test.js should pass jshint', function() { 
   ok(true, 'ember-data/tests/unit/record-array-test.js should pass jshint.'); 
+});
+
+}
+if (!QUnit.urlParams.nojshint) {
+module('JSHint - ember-data/tests/unit/record-arrays');
+test('ember-data/tests/unit/record-arrays/filtered-record-array-test.js should pass jshint', function() { 
+  ok(true, 'ember-data/tests/unit/record-arrays/filtered-record-array-test.js should pass jshint.'); 
 });
 
 }
