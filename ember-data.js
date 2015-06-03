@@ -4300,7 +4300,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.3d0aeb39da'
+      VERSION: '1.0.0-beta.19+canary.91a3b85461'
     });
 
     if (Ember.libraries) {
@@ -4725,29 +4725,29 @@
       },
 
       /**
-        Adds a record to the `RecordArray` without duplicates
-         @method addRecord
+        Adds an internal model to the `RecordArray` without duplicates
+         @method addInternalModel
         @private
-        @param {DS.Model} record
-        @param {DS.Model} idx an optional index to insert at
+        @param {InternalModel} internalModel
+        @param {number} an optional index to insert at
       */
-      addRecord: function (record, idx) {
+      addInternalModel: function (internalModel, idx) {
         var content = ember$data$lib$system$record$arrays$record$array$$get(this, 'content');
         if (idx === undefined) {
-          content.addObject(record);
-        } else if (!content.contains(record)) {
-          content.insertAt(idx, record);
+          content.addObject(internalModel);
+        } else if (!content.contains(internalModel)) {
+          content.insertAt(idx, internalModel);
         }
       },
 
       /**
-        Removes a record to the `RecordArray`.
-         @method removeRecord
+        Removes an internalModel to the `RecordArray`.
+         @method removeInternalModel
         @private
-        @param {DS.Model} record
+        @param {InternalModel} internalModel
       */
-      removeRecord: function (record) {
-        ember$data$lib$system$record$arrays$record$array$$get(this, 'content').removeObject(record);
+      removeInternalModel: function (internalModel) {
+        ember$data$lib$system$record$arrays$record$array$$get(this, 'content').removeObject(internalModel);
       },
 
       /**
@@ -4998,7 +4998,7 @@
         }
 
         recordArrays.forEach(function (array) {
-          array.removeRecord(record);
+          array.removeInternalModel(record);
         });
 
         record._recordArrays = null;
@@ -5050,12 +5050,12 @@
 
         if (shouldBeInArray) {
           if (!recordArrays.has(array)) {
-            array.addRecord(record);
+            array.addInternalModel(record);
             recordArrays.add(array);
           }
         } else if (!shouldBeInArray) {
           recordArrays["delete"](array);
-          array.removeRecord(record);
+          array.removeInternalModel(record);
         }
       },
 
