@@ -4282,7 +4282,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.d6c46d8443'
+      VERSION: '1.0.0-beta.19+canary.3897ea1ab6'
     });
 
     if (Ember.libraries) {
@@ -7104,6 +7104,15 @@
       },
 
       /**
+        @method serialize
+        @param {Object} options
+        @return {Object} an object whose values are primitive JSON values only
+       */
+      serialize: function (options) {
+        return this.record.store.serializerFor(this.modelName).serialize(this, options);
+      },
+
+      /**
         @method unknownProperty
         @param {String} keyName
         @return {Object} The property value
@@ -9326,7 +9335,7 @@
       */
       serialize: function (record, options) {
         var snapshot = record._internalModel.createSnapshot();
-        return this.serializerFor(snapshot.modelName).serialize(snapshot, options);
+        return snapshot.serialize(options);
       },
 
       /**
