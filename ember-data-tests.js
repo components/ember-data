@@ -5966,6 +5966,7 @@ define(
         var reflexiveModel;
         run(function () {
           reflexiveModel = store.push('reflexive-model', { id: 1 });
+          reflexiveModel.get('reflexiveProp');
         });
       }, /Detected a reflexive relationship by the name of 'reflexiveProp'/);
     });
@@ -7799,7 +7800,7 @@ define(
 
       run(function () {
         store.find('book', 1).then(function (book) {
-          var relationship = book._internalModel._relationships['author'];
+          var relationship = book._internalModel._relationships.get('author');
           equal(relationship.hasData, true, 'relationship has data');
         });
       });
@@ -7814,7 +7815,7 @@ define(
 
       run(function () {
         store.find('book', 1).then(function (book) {
-          var relationship = book._internalModel._relationships['author'];
+          var relationship = book._internalModel._relationships.get('author');
           equal(relationship.hasData, true, 'relationship has data');
         });
       });
@@ -7833,7 +7834,7 @@ define(
 
       run(function () {
         store.find('book', 1).then(function (book) {
-          var relationship = book._internalModel._relationships['author'];
+          var relationship = book._internalModel._relationships.get('author');
           equal(relationship.hasData, false, 'relationship does not have data');
         });
       });
@@ -7848,7 +7849,7 @@ define(
 
       run(function () {
         store.find('book', 1).then(function (book) {
-          var relationship = book._internalModel._relationships['author'];
+          var relationship = book._internalModel._relationships.get('author');
           equal(relationship.hasData, false, 'relationship does not have data');
         });
       });
@@ -7863,7 +7864,7 @@ define(
 
       run(function () {
         var book = store.createRecord('book', { name: 'The Greatest Book' });
-        var relationship = book._internalModel._relationships['author'];
+        var relationship = book._internalModel._relationships.get('author');
         equal(relationship.hasData, true, 'relationship has data');
       });
     });
@@ -7873,8 +7874,47 @@ define(
 
       run(function () {
         var book = store.createRecord('book', { name: 'The Greatest Book' });
-        var relationship = book._internalModel._relationships['author'];
+        var relationship = book._internalModel._relationships.get('author');
         equal(relationship.hasData, true, 'relationship has data');
+      });
+    });
+
+    test('Model\'s belongsTo relationship should not be created during model creation', function () {
+      var user;
+      run(function () {
+        user = env.store.push('user', { id: 1 });
+        ok(!user._internalModel._relationships.has('favouriteMessage'), 'Newly created record should not have relationships');
+      });
+    });
+
+    test('Model\'s belongsTo relationship should be created during model creation if relationship passed in constructor', function () {
+      var user, message;
+      run(function () {
+        message = env.store.createRecord('message');
+        user = env.store.createRecord('user', {
+          name: 'John Doe',
+          favouriteMessage: message
+        });
+        ok(user._internalModel._relationships.has('favouriteMessage'), 'Newly created record with relationships in params passed in its constructor should have relationships');
+      });
+    });
+
+    test('Model\'s belongsTo relationship should be created during \'set\' method', function () {
+      var user, message;
+      run(function () {
+        message = env.store.createRecord('message');
+        user = env.store.createRecord('user');
+        user.set('favouriteMessage', message);
+        ok(user._internalModel._relationships.has('favouriteMessage'), 'Newly created record with relationships in params passed in its constructor should have relationships');
+      });
+    });
+
+    test('Model\'s belongsTo relationship should be created during \'get\' method', function () {
+      var user;
+      run(function () {
+        user = env.store.createRecord('user');
+        user.get('favouriteMessage');
+        ok(user._internalModel._relationships.has('favouriteMessage'), 'Newly created record with relationships in params passed in its constructor should have relationships');
       });
     });
   }
@@ -9051,7 +9091,7 @@ define(
       });
 
       run(function () {
-        post._internalModel._relationships['comments'].clear();
+        post._internalModel._relationships.get('comments').clear();
         var comments = Ember.A(env.store.all('comment'));
         deepEqual(comments.mapBy('post'), [null, null, null]);
       });
@@ -9172,7 +9212,7 @@ define(
 
       run(function () {
         store.find('chapter', 1).then(function (chapter) {
-          var relationship = chapter._internalModel._relationships['pages'];
+          var relationship = chapter._internalModel._relationships.get('pages');
           equal(relationship.hasData, true, 'relationship has data');
         });
       });
@@ -9187,7 +9227,7 @@ define(
 
       run(function () {
         store.find('chapter', 1).then(function (chapter) {
-          var relationship = chapter._internalModel._relationships['pages'];
+          var relationship = chapter._internalModel._relationships.get('pages');
           equal(relationship.hasData, true, 'relationship has data');
         });
       });
@@ -9206,7 +9246,7 @@ define(
 
       run(function () {
         store.find('chapter', 1).then(function (chapter) {
-          var relationship = chapter._internalModel._relationships['pages'];
+          var relationship = chapter._internalModel._relationships.get('pages');
           equal(relationship.hasData, false, 'relationship does not have data');
         });
       });
@@ -9221,7 +9261,7 @@ define(
 
       run(function () {
         store.find('chapter', 1).then(function (chapter) {
-          var relationship = chapter._internalModel._relationships['pages'];
+          var relationship = chapter._internalModel._relationships.get('pages');
           equal(relationship.hasData, false, 'relationship does not have data');
         });
       });
@@ -9236,7 +9276,7 @@ define(
 
       run(function () {
         var chapter = store.createRecord('chapter', { title: 'The Story Begins' });
-        var relationship = chapter._internalModel._relationships['pages'];
+        var relationship = chapter._internalModel._relationships.get('pages');
         equal(relationship.hasData, true, 'relationship has data');
       });
     });
@@ -9246,8 +9286,25 @@ define(
 
       run(function () {
         var chapter = store.createRecord('chapter', { title: 'The Story Begins' });
-        var relationship = chapter._internalModel._relationships['pages'];
+        var relationship = chapter._internalModel._relationships.get('pages');
         equal(relationship.hasData, true, 'relationship has data');
+      });
+    });
+
+    test('Model\'s hasMany relationship should not be created during model creation', function () {
+      var user;
+      run(function () {
+        user = env.store.push('user', { id: 1 });
+        ok(!user._internalModel._relationships.has('messages'), 'Newly created record should not have relationships');
+      });
+    });
+
+    test('Model\'s belongsTo relationship should be created during \'get\' method', function () {
+      var user;
+      run(function () {
+        user = env.store.createRecord('user');
+        user.get('messages');
+        ok(user._internalModel._relationships.has('messages'), 'Newly created record with relationships in params passed in its constructor should have relationships');
       });
     });
   }
@@ -9688,14 +9745,15 @@ define(
       });
 
       var env = setupStore({ post: Post, comment: Comment, user: User });
-      var comment;
+      var comment, post;
       run(function () {
         comment = env.store.createRecord('comment');
       });
 
       expectAssertion(function () {
         run(function () {
-          env.store.createRecord('post');
+          post = env.store.createRecord('post');
+          post.get('comments');
         });
       }, /We found no inverse relationships by the name of 'testPost' on the 'comment' model/);
     });
@@ -9709,14 +9767,15 @@ define(
       });
 
       var env = setupStore({ post: Post, comment: Comment, user: User });
-      var user;
+      var user, post;
       run(function () {
         user = env.store.createRecord('user');
       });
 
       expectAssertion(function () {
         run(function () {
-          env.store.createRecord('post');
+          post = env.store.createRecord('post');
+          post.get('user');
         });
       }, /We found no inverse relationships by the name of 'testPost' on the 'user' model/);
     });

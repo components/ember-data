@@ -4300,7 +4300,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.f40b1f9f37'
+      VERSION: '1.0.0-beta.19+canary.ae6355af82'
     });
 
     if (Ember.libraries) {
@@ -6050,7 +6050,7 @@
         if (!this.canonicalMembers.has(record)) {
           this.canonicalMembers.add(record);
           if (this.inverseKey) {
-            record._relationships[this.inverseKey].addCanonicalRecord(this.record);
+            record._relationships.get(this.inverseKey).addCanonicalRecord(this.record);
           } else {
             if (!record._implicitRelationships[this.inverseKeyForImplicit]) {
               record._implicitRelationships[this.inverseKeyForImplicit] = new ember$data$lib$system$relationships$state$relationship$$Relationship(this.store, record, this.key, { options: {} });
@@ -6091,7 +6091,7 @@
           this.members.addWithIndex(record, idx);
           this.notifyRecordRelationshipAdded(record, idx);
           if (this.inverseKey) {
-            record._relationships[this.inverseKey].addRecord(this.record);
+            record._relationships.get(this.inverseKey).addRecord(this.record);
           } else {
             if (!record._implicitRelationships[this.inverseKeyForImplicit]) {
               record._implicitRelationships[this.inverseKeyForImplicit] = new ember$data$lib$system$relationships$state$relationship$$Relationship(this.store, record, this.key, { options: {} });
@@ -6118,12 +6118,12 @@
 
       addRecordToInverse: function (record) {
         if (this.inverseKey) {
-          record._relationships[this.inverseKey].addRecord(this.record);
+          record._relationships.get(this.inverseKey).addRecord(this.record);
         }
       },
 
       removeRecordFromInverse: function (record) {
-        var inverseRelationship = record._relationships[this.inverseKey];
+        var inverseRelationship = record._relationships.get(this.inverseKey);
         //Need to check for existence, as the record might unloading at the moment
         if (inverseRelationship) {
           inverseRelationship.removeRecordFromOwn(this.record);
@@ -6137,7 +6137,7 @@
       },
 
       removeCanonicalRecordFromInverse: function (record) {
-        var inverseRelationship = record._relationships[this.inverseKey];
+        var inverseRelationship = record._relationships.get(this.inverseKey);
         //Need to check for existence, as the record might unloading at the moment
         if (inverseRelationship) {
           inverseRelationship.removeCanonicalRecordFromOwn(this.record);
@@ -6794,6 +6794,8 @@
 
     var ember$data$lib$system$relationships$state$belongs$to$$default = ember$data$lib$system$relationships$state$belongs$to$$BelongsToRelationship;
 
+    var ember$data$lib$system$relationships$state$create$$get = Ember.get;
+
     var ember$data$lib$system$relationships$state$create$$createRelationshipFor = function (record, relationshipMeta, store) {
       var inverseKey;
       var inverse = record.type.inverseFor(relationshipMeta.key, store);
@@ -6809,7 +6811,25 @@
       }
     };
 
-    var ember$data$lib$system$relationships$state$create$$default = ember$data$lib$system$relationships$state$create$$createRelationshipFor;
+    var ember$data$lib$system$relationships$state$create$$Relationships = function (record) {
+      this.record = record;
+      this.initializedRelationships = Ember.create(null);
+    };
+
+    ember$data$lib$system$relationships$state$create$$Relationships.prototype.has = function (key) {
+      return !!this.initializedRelationships[key];
+    };
+
+    ember$data$lib$system$relationships$state$create$$Relationships.prototype.get = function (key) {
+      var relationships = this.initializedRelationships;
+      var relationshipsByName = ember$data$lib$system$relationships$state$create$$get(this.record.type, "relationshipsByName");
+      if (!relationships[key] && relationshipsByName.get(key)) {
+        relationships[key] = ember$data$lib$system$relationships$state$create$$createRelationshipFor(this.record, relationshipsByName.get(key), this.record.store);
+      }
+      return relationships[key];
+    };
+
+    var ember$data$lib$system$relationships$state$create$$default = ember$data$lib$system$relationships$state$create$$Relationships;
 
     var ember$data$lib$system$snapshot$$get = Ember.get;
 
@@ -7006,7 +7026,7 @@
           return this._belongsToRelationships[keyName];
         }
 
-        relationship = this._internalModel._relationships[keyName];
+        relationship = this._internalModel._relationships.get(keyName);
         if (!(relationship && relationship.relationshipMeta.kind === 'belongsTo')) {
           throw new Ember.Error('Model \'' + Ember.inspect(this.record) + '\' has no belongsTo relationship named \'' + keyName + '\' defined.');
         }
@@ -7070,7 +7090,7 @@
           return this._hasManyRelationships[keyName];
         }
 
-        relationship = this._internalModel._relationships[keyName];
+        relationship = this._internalModel._relationships.get(keyName);
         if (!(relationship && relationship.relationshipMeta.kind === 'hasMany')) {
           throw new Ember.Error('Model \'' + Ember.inspect(this.record) + '\' has no hasMany relationship named \'' + keyName + '\' defined.');
         }
@@ -7151,7 +7171,7 @@
           return this.attr(keyName);
         }
 
-        var relationship = this._internalModel._relationships[keyName];
+        var relationship = this._internalModel._relationships.get(keyName);
 
         if (relationship && relationship.relationshipMeta.kind === 'belongsTo') {
           return this.belongsTo(keyName);
@@ -7512,7 +7532,7 @@
       this._deferredTriggers = [];
       this._attributes = Ember.create(null);
       this._inFlightAttributes = Ember.create(null);
-      this._relationships = Ember.create(null);
+      this._relationships = new ember$data$lib$system$relationships$state$create$$default(this);
       this.currentState = ember$data$lib$system$model$states$$default.empty;
       this.isReloading = false;
       /*
@@ -7535,11 +7555,6 @@
         when we are deleted
       */
       this._implicitRelationships = Ember.create(null);
-      var model = this;
-      //TODO Move into a getter for better perf
-      this.eachRelationship(function (key, descriptor) {
-        model._relationships[key] = ember$data$lib$system$relationships$state$create$$default(model, descriptor, model.store);
-      });
     };
 
     ember$data$lib$system$model$internal$model$$InternalModel.prototype = {
@@ -7897,8 +7912,8 @@
       */
       clearRelationships: function () {
         this.eachRelationship(function (name, relationship) {
-          var rel = this._relationships[name];
-          if (rel) {
+          if (this._relationships.has(name)) {
+            var rel = this._relationships.get(name);
             //TODO(Igor) figure out whether we want to clear or disconnect
             rel.clear();
             rel.destroy();
@@ -7913,7 +7928,7 @@
 
       disconnectRelationships: function () {
         this.eachRelationship(function (name, relationship) {
-          this._relationships[name].disconnect();
+          this._relationships.get(name).disconnect();
         }, this);
         var model = this;
         ember$data$lib$system$model$internal$model$$forEach.call(Ember.keys(this._implicitRelationships), function (key) {
@@ -7923,7 +7938,7 @@
 
       reconnectRelationships: function () {
         this.eachRelationship(function (name, relationship) {
-          this._relationships[name].reconnect();
+          this._relationships.get(name).reconnect();
         }, this);
         var model = this;
         ember$data$lib$system$model$internal$model$$forEach.call(Ember.keys(this._implicitRelationships), function (key) {
@@ -7977,7 +7992,7 @@
         });
         //We use the pathway of setting the hasMany as if it came from the adapter
         //because the user told us that they know this relationships exists already
-        this._relationships[key].updateRecordsFromAdapter(recordsToSet);
+        this._relationships.get(key).updateRecordsFromAdapter(recordsToSet);
       },
 
       _preloadBelongsTo: function (key, preloadValue, type) {
@@ -7985,7 +8000,7 @@
 
         //We use the pathway of setting the hasMany as if it came from the adapter
         //because the user told us that they know this relationships exists already
-        this._relationships[key].setRecord(recordToSet);
+        this._relationships.get(key).setRecord(recordToSet);
       },
 
       _convertStringOrNumberIntoInternalModel: function (value, type) {
@@ -9486,7 +9501,7 @@
         record.setProperties(properties);
 
         internalModel.eachRelationship(function (key, descriptor) {
-          internalModel._relationships[key].setHasData(true);
+          internalModel._relationships.get(key).setHasData(true);
         });
 
         return record;
@@ -11118,16 +11133,19 @@
       typeClass.eachRelationship(function (key, descriptor) {
         var kind = descriptor.kind;
         var value = data[key];
-        var relationship = record._relationships[key];
+        var relationship;
 
         if (data.links && data.links[key]) {
+          relationship = record._relationships.get(key);
           relationship.updateLink(data.links[key]);
         }
 
         if (value !== undefined) {
           if (kind === "belongsTo") {
+            relationship = record._relationships.get(key);
             relationship.setCanonicalRecord(value);
           } else if (kind === "hasMany") {
+            relationship = record._relationships.get(key);
             relationship.updateRecordsFromAdapter(value);
           }
         }
@@ -12250,21 +12268,21 @@
 
       return ember$data$lib$utils$computed$polyfill$$default({
         get: function (key) {
-          return this._internalModel._relationships[key].getRecord();
+          return this._internalModel._relationships.get(key).getRecord();
         },
         set: function (key, value) {
           if (value === undefined) {
             value = null;
           }
           if (value && value.then) {
-            this._internalModel._relationships[key].setRecordPromise(value);
+            this._internalModel._relationships.get(key).setRecordPromise(value);
           } else if (value) {
-            this._internalModel._relationships[key].setRecord(value._internalModel);
+            this._internalModel._relationships.get(key).setRecord(value._internalModel);
           } else {
-            this._internalModel._relationships[key].setRecord(value);
+            this._internalModel._relationships.get(key).setRecord(value);
           }
 
-          return this._internalModel._relationships[key].getRecord();
+          return this._internalModel._relationships.get(key).getRecord();
         }
       }).meta(meta);
     }
@@ -12398,11 +12416,11 @@
 
       return ember$data$lib$utils$computed$polyfill$$default({
         get: function (key) {
-          var relationship = this._internalModel._relationships[key];
+          var relationship = this._internalModel._relationships.get(key);
           return relationship.getRecords();
         },
         set: function (key, records) {
-          var relationship = this._internalModel._relationships[key];
+          var relationship = this._internalModel._relationships.get(key);
           relationship.clear();
           Ember.assert("You must pass an array of records to set a hasMany relationship", Ember.isArray(records));
           relationship.addRecords(Ember.A(records).mapBy("_internalModel"));
