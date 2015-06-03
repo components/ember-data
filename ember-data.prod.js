@@ -4282,7 +4282,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.cf87126c1a'
+      VERSION: '1.0.0-beta.19+canary.1b20d89ac5'
     });
 
     if (Ember.libraries) {
@@ -11411,7 +11411,7 @@
           initialize: ember$data$lib$instance$initializers$initialize$store$service$$default
         });
       } else {
-        Ember.initializer({
+        Application.initializer({
           name: 'ember-data-store-service',
           after: 'ember-data',
           initialize: ember$data$lib$instance$initializers$initialize$store$service$$default
