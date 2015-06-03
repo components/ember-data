@@ -14198,6 +14198,22 @@ define(
       });
     });
 
+    test("snapshot.belongsTo() returns null if relationship is deleted", function () {
+      expect(1);
+
+      run(function () {
+        var post = env.store.push("post", { id: 1, title: "Hello World" });
+        var comment = env.store.push("comment", { id: 2, body: "This is comment", post: 1 });
+
+        post.deleteRecord();
+
+        var snapshot = comment._createSnapshot();
+        var relationship = snapshot.belongsTo("post");
+
+        equal(relationship, null, "relationship unset after deleted");
+      });
+    });
+
     test("snapshot.belongsTo() returns undefined if relationship is a link", function () {
       expect(1);
 
@@ -14278,7 +14294,7 @@ define(
       });
     });
 
-    test("snapshot.hasMany() returns ID if option.id is set", function () {
+    test("snapshot.belongsTo() returns ID if option.id is set", function () {
       expect(1);
 
       run(function () {
@@ -14288,6 +14304,22 @@ define(
         var relationship = snapshot.belongsTo("post", { id: true });
 
         equal(relationship, "1", "relationship ID correctly returned");
+      });
+    });
+
+    test("snapshot.belongsTo() returns null if option.id is set but relationship was deleted", function () {
+      expect(1);
+
+      run(function () {
+        var post = env.store.push("post", { id: 1, title: "Hello World" });
+        var comment = env.store.push("comment", { id: 2, body: "This is comment", post: 1 });
+
+        post.deleteRecord();
+
+        var snapshot = comment._createSnapshot();
+        var relationship = snapshot.belongsTo("post", { id: true });
+
+        equal(relationship, null, "relationship unset after deleted");
       });
     });
 
@@ -14338,6 +14370,25 @@ define(
       });
     });
 
+    test("snapshot.hasMany() returns empty array if relationship records are deleted", function () {
+      expect(2);
+
+      run(function () {
+        var comment1 = env.store.push("comment", { id: 1, body: "This is the first comment" });
+        var comment2 = env.store.push("comment", { id: 2, body: "This is the second comment" });
+        var post = env.store.push("post", { id: 3, title: "Hello World", comments: [1, 2] });
+
+        comment1.deleteRecord();
+        comment2.deleteRecord();
+
+        var snapshot = post._createSnapshot();
+        var relationship = snapshot.hasMany("comments");
+
+        ok(relationship instanceof Array, "relationship is an instance of Array");
+        equal(relationship.length, 0, "relationship is empty");
+      });
+    });
+
     test("snapshot.hasMany() returns array of IDs if option.ids is set", function () {
       expect(1);
 
@@ -14347,6 +14398,25 @@ define(
         var relationship = snapshot.hasMany("comments", { ids: true });
 
         deepEqual(relationship, ["2", "3"], "relationship IDs correctly returned");
+      });
+    });
+
+    test("snapshot.hasMany() returns empty array of IDs if option.ids is set but relationship records were deleted", function () {
+      expect(2);
+
+      run(function () {
+        var comment1 = env.store.push("comment", { id: 1, body: "This is the first comment" });
+        var comment2 = env.store.push("comment", { id: 2, body: "This is the second comment" });
+        var post = env.store.push("post", { id: 3, title: "Hello World", comments: [1, 1] });
+
+        comment1.deleteRecord();
+        comment2.deleteRecord();
+
+        var snapshot = post._createSnapshot();
+        var relationship = snapshot.hasMany("comments", { ids: true });
+
+        ok(relationship instanceof Array, "relationship is an instance of Array");
+        equal(relationship.length, 0, "relationship is empty");
       });
     });
 

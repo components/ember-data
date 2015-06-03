@@ -4302,7 +4302,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.58c2cf65eb'
+      VERSION: '1.0.0-beta.19+canary.6538bc2005'
     });
 
     if (Ember.libraries) {
@@ -7014,7 +7014,7 @@
         inverseRecord = ember$data$lib$system$snapshot$$get(relationship, 'inverseRecord');
 
         if (hasData) {
-          if (inverseRecord) {
+          if (inverseRecord && !inverseRecord.isDeleted()) {
             if (id) {
               result = ember$data$lib$system$snapshot$$get(inverseRecord, 'id');
             } else {
@@ -7080,10 +7080,12 @@
         if (hasData) {
           results = [];
           members.forEach(function (member) {
-            if (ids) {
-              results.push(member.id);
-            } else {
-              results.push(member.createSnapshot());
+            if (!member.isDeleted()) {
+              if (ids) {
+                results.push(member.id);
+              } else {
+                results.push(member.createSnapshot());
+              }
             }
           });
         }
