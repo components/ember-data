@@ -4300,12 +4300,17 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.556fbe4b01'
+      VERSION: '1.0.0-beta.19+canary.6925d00bbb'
     });
 
     if (Ember.libraries) {
       Ember.libraries.registerCoreLibrary('Ember Data', ember$data$lib$core$$DS.VERSION);
     }
+
+    //jshint ignore: line
+    var ember$data$lib$core$$EMBER_DATA_FEATURES = {};
+
+    Ember.merge(Ember.FEATURES, ember$data$lib$core$$EMBER_DATA_FEATURES);
 
     var ember$data$lib$core$$default = ember$data$lib$core$$DS;
     var ember$data$lib$system$promise$proxies$$Promise = Ember.RSVP.Promise;
