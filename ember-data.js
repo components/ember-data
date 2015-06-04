@@ -4300,7 +4300,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.c59972870a'
+      VERSION: '1.0.0-beta.19+canary.556fbe4b01'
     });
 
     if (Ember.libraries) {
@@ -11274,8 +11274,8 @@
         } else if (type === 'number') {
           return new Date(serialized);
         } else if (serialized === null || serialized === undefined) {
-          // if the value is not present in the data,
-          // return undefined, not null.
+          // if the value is null return null
+          // if the value is not present in the data return undefined
           return serialized;
         } else {
           return null;
