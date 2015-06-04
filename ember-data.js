@@ -4301,7 +4301,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.f4eefab748'
+      VERSION: '1.0.0-beta.19+canary.5b4509dc67'
     });
 
     if (Ember.libraries) {
@@ -11567,7 +11567,13 @@
         // an instanceInitializer. The first argument is a registy. This
         // case allows ED to support Ember pre 1.12
         registry = applicationOrRegistry;
-        container = registry.container();
+        if (registry.container) {
+          // Support Ember 1.10 - 1.11
+          container = registry.container();
+        } else {
+          // Support Ember 1.9
+          container = registry;
+        }
       }
       // Eagerly generate the store so defaultStore is populated.
       var store = container.lookup('store:application');
