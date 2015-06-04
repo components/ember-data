@@ -723,6 +723,31 @@ define(
 
 
 define(
+  "ember-data/tests/helpers/custom-adapter",
+  ["exports"],
+  function(__exports__) {
+    "use strict";
+
+    function __es6_export__(name, value) {
+      __exports__[name] = value;
+    }
+
+    __es6_export__("default", function (env, adapterDefinition) {
+      var adapter = adapterDefinition;
+      if (!DS.Adapter.detect(adapterDefinition)) {
+        adapter = DS.Adapter.extend(adapterDefinition);
+      }
+      var store = env.store;
+      env.registry.register('adapter:-custom', adapter);
+      Ember.run(function () {
+        return store.set('adapter', '-custom');
+      });
+    });
+  }
+);
+
+
+define(
   "ember-data/tests/integration/adapter/build-url-mixin-test",
   ["exports"],
   function(__exports__) {
@@ -5096,13 +5121,16 @@ define(
 
 define(
   "ember-data/tests/integration/filter-test",
-  ["exports"],
-  function(__exports__) {
+  ["ember-data/tests/helpers/custom-adapter", "exports"],
+  function(ember$data$tests$helpers$custom$adapter$$, __exports__) {
     "use strict";
 
     function __es6_export__(name, value) {
       __exports__[name] = value;
     }
+
+    var customAdapter;
+    customAdapter = ember$data$tests$helpers$custom$adapter$$["default"];
 
     var get = Ember.get;
     var set = Ember.set;
@@ -5113,23 +5141,23 @@ define(
     var Person, store, env, array, recordArray;
 
     var shouldContain = function (array, item) {
-      ok(indexOf(array, item) !== -1, "array should contain " + item.get("name"));
+      ok(indexOf(array, item) !== -1, 'array should contain ' + item.get('name'));
     };
 
     var shouldNotContain = function (array, item) {
-      ok(indexOf(array, item) === -1, "array should not contain " + item.get("name"));
+      ok(indexOf(array, item) === -1, 'array should not contain ' + item.get('name'));
     };
 
-    module("integration/filter - DS.Model updating", {
+    module('integration/filter - DS.Model updating', {
       setup: function () {
-        array = [{ id: 1, name: "Scumbag Dale", bestFriend: 2 }, { id: 2, name: "Scumbag Katz" }, { id: 3, name: "Scumbag Bryn" }];
-        Person = DS.Model.extend({ name: DS.attr("string"), bestFriend: DS.belongsTo("person", { inverse: null }) });
+        array = [{ id: 1, name: 'Scumbag Dale', bestFriend: 2 }, { id: 2, name: 'Scumbag Katz' }, { id: 3, name: 'Scumbag Bryn' }];
+        Person = DS.Model.extend({ name: DS.attr('string'), bestFriend: DS.belongsTo('person', { inverse: null }) });
 
         env = setupStore({ person: Person });
         store = env.store;
       },
       teardown: function () {
-        run(store, "destroy");
+        run(store, 'destroy');
         Person = null;
         array = null;
       }
@@ -5151,162 +5179,160 @@ define(
       return new_fn;
     }
 
-    test("when a DS.Model updates its attributes, its changes affect its filtered Array membership", function () {
+    test('when a DS.Model updates its attributes, its changes affect its filtered Array membership', function () {
       run(function () {
-        store.pushMany("person", array);
+        store.pushMany('person', array);
       });
       var people;
 
       run(function () {
-        people = store.filter("person", function (hash) {
-          if (hash.get("name").match(/Katz$/)) {
+        people = store.filter('person', function (hash) {
+          if (hash.get('name').match(/Katz$/)) {
             return true;
           }
         });
       });
 
       run(function () {
-        equal(get(people, "length"), 1, "precond - one item is in the RecordArray");
+        equal(get(people, 'length'), 1, 'precond - one item is in the RecordArray');
       });
 
       var person = people.objectAt(0);
 
-      equal(get(person, "name"), "Scumbag Katz", "precond - the item is correct");
+      equal(get(person, 'name'), 'Scumbag Katz', 'precond - the item is correct');
 
       run(function () {
-        set(person, "name", "Yehuda Katz");
+        set(person, 'name', 'Yehuda Katz');
       });
 
-      equal(get(people, "length"), 1, "there is still one item");
-      equal(get(person, "name"), "Yehuda Katz", "it has the updated item");
+      equal(get(people, 'length'), 1, 'there is still one item');
+      equal(get(person, 'name'), 'Yehuda Katz', 'it has the updated item');
 
       run(function () {
-        set(person, "name", "Yehuda Katz-Foo");
+        set(person, 'name', 'Yehuda Katz-Foo');
       });
 
-      equal(get(people, "query"), null, "expected no query object set");
-      equal(get(people, "length"), 0, "there are now no items");
+      equal(get(people, 'query'), null, 'expected no query object set');
+      equal(get(people, 'length'), 0, 'there are now no items');
     });
 
-    test("when a DS.Model updates its relationships, its changes affect its filtered Array membership", function () {
+    test('when a DS.Model updates its relationships, its changes affect its filtered Array membership', function () {
       run(function () {
-        store.pushMany("person", array);
+        store.pushMany('person', array);
       });
       var people;
 
       run(function () {
-        people = store.filter("person", function (person) {
-          if (person.get("bestFriend") && person.get("bestFriend.name").match(/Katz$/)) {
+        people = store.filter('person', function (person) {
+          if (person.get('bestFriend') && person.get('bestFriend.name').match(/Katz$/)) {
             return true;
           }
         });
       });
 
       run(function () {
-        equal(get(people, "length"), 1, "precond - one item is in the RecordArray");
+        equal(get(people, 'length'), 1, 'precond - one item is in the RecordArray');
       });
 
       var person = people.objectAt(0);
 
-      equal(get(person, "name"), "Scumbag Dale", "precond - the item is correct");
+      equal(get(person, 'name'), 'Scumbag Dale', 'precond - the item is correct');
 
       run(function () {
-        set(person, "bestFriend", null);
+        set(person, 'bestFriend', null);
       });
 
-      equal(get(people, "length"), 0, "there are now 0 items");
+      equal(get(people, 'length'), 0, 'there are now 0 items');
 
-      var erik = store.getById("person", 3);
-      var yehuda = store.getById("person", 2);
+      var erik = store.getById('person', 3);
+      var yehuda = store.getById('person', 2);
       run(function () {
-        erik.set("bestFriend", yehuda);
+        erik.set('bestFriend', yehuda);
       });
 
       person = people.objectAt(0);
-      equal(get(people, "length"), 1, "there is now 1 item");
-      equal(get(person, "name"), "Scumbag Bryn", "precond - the item is correct");
+      equal(get(people, 'length'), 1, 'there is now 1 item');
+      equal(get(person, 'name'), 'Scumbag Bryn', 'precond - the item is correct');
     });
 
-    test("a record array can have a filter on it", function () {
+    test('a record array can have a filter on it', function () {
       run(function () {
-        store.pushMany("person", array);
+        store.pushMany('person', array);
       });
       var recordArray;
 
       run(function () {
-        recordArray = store.filter("person", function (hash) {
-          if (hash.get("name").match(/Scumbag [KD]/)) {
+        recordArray = store.filter('person', function (hash) {
+          if (hash.get('name').match(/Scumbag [KD]/)) {
             return true;
           }
         });
       });
 
-      equal(get(recordArray, "length"), 2, "The Record Array should have the filtered objects on it");
+      equal(get(recordArray, 'length'), 2, 'The Record Array should have the filtered objects on it');
 
       run(function () {
-        store.push("person", { id: 4, name: "Scumbag Koz" });
+        store.push('person', { id: 4, name: 'Scumbag Koz' });
       });
 
-      equal(get(recordArray, "length"), 3, "The Record Array should be updated as new items are added to the store");
+      equal(get(recordArray, 'length'), 3, 'The Record Array should be updated as new items are added to the store');
 
       run(function () {
-        store.push("person", { id: 1, name: "Scumbag Tom" });
+        store.push('person', { id: 1, name: 'Scumbag Tom' });
       });
 
-      equal(get(recordArray, "length"), 2, "The Record Array should be updated as existing members are updated");
+      equal(get(recordArray, 'length'), 2, 'The Record Array should be updated as existing members are updated');
     });
 
-    test("a filtered record array includes created elements", function () {
+    test('a filtered record array includes created elements', function () {
       run(function () {
-        store.pushMany("person", array);
+        store.pushMany('person', array);
       });
       var recordArray;
 
       run(function () {
-        recordArray = store.filter("person", function (hash) {
-          if (hash.get("name").match(/Scumbag [KD]/)) {
+        recordArray = store.filter('person', function (hash) {
+          if (hash.get('name').match(/Scumbag [KD]/)) {
             return true;
           }
         });
       });
 
-      equal(get(recordArray, "length"), 2, "precond - The Record Array should have the filtered objects on it");
+      equal(get(recordArray, 'length'), 2, 'precond - The Record Array should have the filtered objects on it');
 
       run(function () {
-        store.createRecord("person", { name: "Scumbag Koz" });
+        store.createRecord('person', { name: 'Scumbag Koz' });
       });
 
-      equal(get(recordArray, "length"), 3, "The record array has the new object on it");
+      equal(get(recordArray, 'length'), 3, 'The record array has the new object on it');
     });
 
-    test("a Record Array can update its filter", function () {
-      run(function () {
-        set(store, "adapter", DS.Adapter.extend({
-          deleteRecord: function (store, type, snapshot) {
-            return Ember.RSVP.resolve();
-          }
-        }));
-      });
+    test('a Record Array can update its filter', function () {
+      customAdapter(env, DS.Adapter.extend({
+        deleteRecord: function (store, type, snapshot) {
+          return Ember.RSVP.resolve();
+        }
+      }));
 
       run(function () {
-        store.pushMany("person", array);
+        store.pushMany('person', array);
       });
 
       var dickens = run(function () {
-        var record = store.createRecord("person", { id: 4, name: "Scumbag Dickens" });
+        var record = store.createRecord('person', { id: 4, name: 'Scumbag Dickens' });
         record.deleteRecord();
         return record;
       });
       var asyncDale, asyncKatz, asyncBryn;
 
       run(function () {
-        asyncDale = store.find("person", 1);
-        asyncKatz = store.find("person", 2);
-        asyncBryn = store.find("person", 3);
+        asyncDale = store.find('person', 1);
+        asyncKatz = store.find('person', 2);
+        asyncBryn = store.find('person', 3);
       });
 
-      store.filter("person", function (hash) {
-        if (hash.get("name").match(/Scumbag [KD]/)) {
+      store.filter('person', function (hash) {
+        if (hash.get('name').match(/Scumbag [KD]/)) {
           return true;
         }
       }).then(async(function (recordArray) {
@@ -5318,59 +5344,57 @@ define(
           shouldNotContain(recordArray, dickens);
 
           Ember.run(function () {
-            recordArray.set("filterFunction", function (hash) {
-              if (hash.get("name").match(/Katz/)) {
+            recordArray.set('filterFunction', function (hash) {
+              if (hash.get('name').match(/Katz/)) {
                 return true;
               }
             });
           });
 
-          equal(get(recordArray, "length"), 1, "The Record Array should have one object on it");
+          equal(get(recordArray, 'length'), 1, 'The Record Array should have one object on it');
 
           Ember.run(function () {
-            store.push("person", { id: 5, name: "Other Katz" });
+            store.push('person', { id: 5, name: 'Other Katz' });
           });
 
-          equal(get(recordArray, "length"), 2, "The Record Array now has the new object matching the filter");
+          equal(get(recordArray, 'length'), 2, 'The Record Array now has the new object matching the filter');
 
           Ember.run(function () {
-            store.push("person", { id: 6, name: "Scumbag Demon" });
+            store.push('person', { id: 6, name: 'Scumbag Demon' });
           });
 
-          equal(get(recordArray, "length"), 2, "The Record Array doesn't have objects matching the old filter");
+          equal(get(recordArray, 'length'), 2, 'The Record Array doesn\'t have objects matching the old filter');
         }));
       }));
     });
 
-    test("a Record Array can update its filter and notify array observers", function () {
-      run(function () {
-        set(store, "adapter", DS.Adapter.extend({
-          deleteRecord: function (store, type, snapshot) {
-            return Ember.RSVP.resolve();
-          }
-        }));
-      });
+    test('a Record Array can update its filter and notify array observers', function () {
+      customAdapter(env, DS.Adapter.extend({
+        deleteRecord: function (store, type, snapshot) {
+          return Ember.RSVP.resolve();
+        }
+      }));
 
       run(function () {
-        store.pushMany("person", array);
+        store.pushMany('person', array);
       });
       var dickens;
 
       run(function () {
-        dickens = store.createRecord("person", { id: 4, name: "Scumbag Dickens" });
+        dickens = store.createRecord('person', { id: 4, name: 'Scumbag Dickens' });
         dickens.deleteRecord();
       });
 
       var asyncDale, asyncKatz, asyncBryn;
 
       run(function () {
-        asyncDale = store.find("person", 1);
-        asyncKatz = store.find("person", 2);
-        asyncBryn = store.find("person", 3);
+        asyncDale = store.find('person', 1);
+        asyncKatz = store.find('person', 2);
+        asyncBryn = store.find('person', 3);
       });
 
-      store.filter("person", function (hash) {
-        if (hash.get("name").match(/Scumbag [KD]/)) {
+      store.filter('person', function (hash) {
+        if (hash.get('name').match(/Scumbag [KD]/)) {
           return true;
         }
       }).then(async(function (recordArray) {
@@ -5392,192 +5416,194 @@ define(
         recordArray.addArrayObserver(arrayObserver);
 
         Ember.run(function () {
-          recordArray.set("filterFunction", function (hash) {
-            if (hash.get("name").match(/Katz/)) {
+          recordArray.set('filterFunction', function (hash) {
+            if (hash.get('name').match(/Katz/)) {
               return true;
             }
           });
         });
 
         Ember.RSVP.all([asyncDale, asyncKatz, asyncBryn]).then(async(function () {
-          equal(didChangeRemoved, 1, "removed one item from array");
+          equal(didChangeRemoved, 1, 'removed one item from array');
           didChangeRemoved = 0;
 
           Ember.run(function () {
-            store.push("person", { id: 5, name: "Other Katz" });
+            store.push('person', { id: 5, name: 'Other Katz' });
           });
 
-          equal(didChangeAdded, 1, "one item was added");
+          equal(didChangeAdded, 1, 'one item was added');
           didChangeAdded = 0;
 
-          equal(recordArray.objectAt(didChangeIdx).get("name"), "Other Katz");
+          equal(recordArray.objectAt(didChangeIdx).get('name'), 'Other Katz');
 
           Ember.run(function () {
-            store.push("person", { id: 6, name: "Scumbag Demon" });
+            store.push('person', { id: 6, name: 'Scumbag Demon' });
           });
 
-          equal(didChangeAdded, 0, "did not get called when an object that doesn't match is added");
+          equal(didChangeAdded, 0, 'did not get called when an object that doesn\'t match is added');
 
           Ember.run(function () {
-            recordArray.set("filterFunction", function (hash) {
-              if (hash.get("name").match(/Scumbag [KD]/)) {
+            recordArray.set('filterFunction', function (hash) {
+              if (hash.get('name').match(/Scumbag [KD]/)) {
                 return true;
               }
             });
           });
 
-          equal(didChangeAdded, 2, "one item is added when going back");
-          equal(recordArray.objectAt(didChangeIdx).get("name"), "Scumbag Demon");
-          equal(recordArray.objectAt(didChangeIdx - 1).get("name"), "Scumbag Dale");
+          equal(didChangeAdded, 2, 'one item is added when going back');
+          equal(recordArray.objectAt(didChangeIdx).get('name'), 'Scumbag Demon');
+          equal(recordArray.objectAt(didChangeIdx - 1).get('name'), 'Scumbag Dale');
         }));
       }));
     });
 
-    test("it is possible to filter by computed properties", function () {
+    test('it is possible to filter by computed properties', function () {
       Person.reopen({
-        name: DS.attr("string"),
+        name: DS.attr('string'),
         upperName: Ember.computed(function () {
-          return this.get("name").toUpperCase();
-        }).property("name")
+          return this.get('name').toUpperCase();
+        }).property('name')
       });
       var filter;
 
       run(function () {
-        filter = store.filter("person", function (person) {
-          return person.get("upperName") === "TOM DALE";
+        filter = store.filter('person', function (person) {
+          return person.get('upperName') === 'TOM DALE';
         });
       });
 
-      equal(filter.get("length"), 0, "precond - the filter starts empty");
+      equal(filter.get('length'), 0, 'precond - the filter starts empty');
 
       run(function () {
-        store.push("person", { id: 1, name: "Tom Dale" });
+        store.push('person', { id: 1, name: 'Tom Dale' });
       });
 
-      equal(filter.get("length"), 1, "the filter now has a record in it");
+      equal(filter.get('length'), 1, 'the filter now has a record in it');
 
-      store.find("person", 1).then(async(function (person) {
+      store.find('person', 1).then(async(function (person) {
         Ember.run(function () {
-          person.set("name", "Yehuda Katz");
+          person.set('name', 'Yehuda Katz');
         });
 
-        equal(filter.get("length"), 0, "the filter is empty again");
+        equal(filter.get('length'), 0, 'the filter is empty again');
       }));
     });
 
-    test("a filter created after a record is already loaded works", function () {
+    test('a filter created after a record is already loaded works', function () {
       Person.reopen({
-        name: DS.attr("string"),
+        name: DS.attr('string'),
         upperName: Ember.computed(function () {
-          return this.get("name").toUpperCase();
-        }).property("name")
+          return this.get('name').toUpperCase();
+        }).property('name')
       });
 
       run(function () {
-        store.push("person", { id: 1, name: "Tom Dale" });
+        store.push('person', { id: 1, name: 'Tom Dale' });
       });
       var filter;
 
       run(function () {
-        filter = store.filter("person", function (person) {
-          return person.get("upperName") === "TOM DALE";
+        filter = store.filter('person', function (person) {
+          return person.get('upperName') === 'TOM DALE';
         });
       });
 
-      equal(filter.get("length"), 1, "the filter now has a record in it");
-      asyncEqual(filter.objectAt(0), store.find("person", 1));
+      equal(filter.get('length'), 1, 'the filter now has a record in it');
+      asyncEqual(filter.objectAt(0), store.find('person', 1));
     });
 
-    test("filter with query persists query on the resulting filteredRecordArray", function () {
-      set(store, "adapter", DS.Adapter.extend({
+    test('filter with query persists query on the resulting filteredRecordArray', function () {
+      customAdapter(env, DS.Adapter.extend({
         findQuery: function (store, type, id) {
           return Ember.RSVP.resolve([{
             id: id,
-            name: "Tom Dale"
+            name: 'Tom Dale'
           }]);
         }
       }));
+
       var filter;
 
       run(function () {
-        filter = store.filter("person", { foo: 1 }, function (person) {
+        filter = store.filter('person', { foo: 1 }, function (person) {
           return true;
         });
       });
 
       Ember.run(function () {
         filter.then(function (array) {
-          deepEqual(get(array, "query"), { foo: 1 }, "has expected query");
+          deepEqual(get(array, 'query'), { foo: 1 }, 'has expected query');
         });
       });
     });
 
-    test("it is possible to filter by state flags", function () {
+    test('it is possible to filter by state flags', function () {
       var filter;
-      run(function () {
-        set(store, "adapter", DS.Adapter.extend({
-          find: function (store, type, id, snapshot) {
-            return Ember.RSVP.resolve({ id: id, name: "Tom Dale" });
-          }
-        }));
 
-        filter = store.filter("person", function (person) {
-          return person.get("isLoaded");
+      customAdapter(env, DS.Adapter.extend({
+        find: function (store, type, id, snapshot) {
+          return Ember.RSVP.resolve({ id: id, name: 'Tom Dale' });
+        }
+      }));
+
+      run(function () {
+        filter = store.filter('person', function (person) {
+          return person.get('isLoaded');
         });
       });
 
-      equal(filter.get("length"), 0, "precond - there are no records yet");
+      equal(filter.get('length'), 0, 'precond - there are no records yet');
 
       Ember.run(function () {
-        var asyncPerson = store.find("person", 1);
+        var asyncPerson = store.find('person', 1);
 
         // Ember.run will block `find` from being synchronously
         // resolved in test mode
 
-        equal(filter.get("length"), 0, "the unloaded record isn't in the filter");
+        equal(filter.get('length'), 0, 'the unloaded record isn\'t in the filter');
 
         asyncPerson.then(async(function (person) {
-          equal(filter.get("length"), 1, "the now-loaded record is in the filter");
-          asyncEqual(filter.objectAt(0), store.find("person", 1));
+          equal(filter.get('length'), 1, 'the now-loaded record is in the filter');
+          asyncEqual(filter.objectAt(0), store.find('person', 1));
         }));
       });
     });
 
-    test("it is possible to filter loaded records by dirtiness", function () {
-      set(store, "adapter", DS.Adapter.extend({
+    test('it is possible to filter loaded records by dirtiness', function () {
+      customAdapter(env, DS.Adapter.extend({
         updateRecord: function () {
           return Ember.RSVP.resolve();
         }
       }));
 
-      var filter = store.filter("person", function (person) {
-        return !person.get("isDirty");
+      var filter = store.filter('person', function (person) {
+        return !person.get('isDirty');
       });
 
       run(function () {
-        store.push("person", { id: 1, name: "Tom Dale" });
+        store.push('person', { id: 1, name: 'Tom Dale' });
       });
 
-      store.find("person", 1).then(async(function (person) {
-        equal(filter.get("length"), 1, "the clean record is in the filter");
+      store.find('person', 1).then(async(function (person) {
+        equal(filter.get('length'), 1, 'the clean record is in the filter');
 
         // Force synchronous update of the filter, even though
         // we're already inside a run loop
         Ember.run(function () {
-          person.set("name", "Yehuda Katz");
+          person.set('name', 'Yehuda Katz');
         });
 
-        equal(filter.get("length"), 0, "the now-dirty record is not in the filter");
+        equal(filter.get('length'), 0, 'the now-dirty record is not in the filter');
 
         return person.save();
       })).then(async(function (person) {
-        equal(filter.get("length"), 1, "the clean record is back in the filter");
+        equal(filter.get('length'), 1, 'the clean record is back in the filter');
       }));
     });
 
-    test("it is possible to filter created records by dirtiness", function () {
+    test('it is possible to filter created records by dirtiness', function () {
       run(function () {
-        set(store, "adapter", DS.Adapter.extend({
+        customAdapter(env, DS.Adapter.extend({
           createRecord: function () {
             return Ember.RSVP.resolve();
           }
@@ -5587,50 +5613,50 @@ define(
       var filter;
 
       run(function () {
-        filter = store.filter("person", function (person) {
-          return !person.get("isDirty");
+        filter = store.filter('person', function (person) {
+          return !person.get('isDirty');
         });
       });
 
       var person;
 
       run(function () {
-        person = store.createRecord("person", {
+        person = store.createRecord('person', {
           id: 1,
-          name: "Tom Dale"
+          name: 'Tom Dale'
         });
       });
 
-      equal(filter.get("length"), 0, "the dirty record is not in the filter");
+      equal(filter.get('length'), 0, 'the dirty record is not in the filter');
 
       run(function () {
         person.save().then(function (person) {
-          equal(filter.get("length"), 1, "the clean record is in the filter");
+          equal(filter.get('length'), 1, 'the clean record is in the filter');
         });
       });
     });
 
-    test("it is possible to filter created records by isReloading", function () {
-      set(store, "adapter", DS.Adapter.extend({
+    test('it is possible to filter created records by isReloading', function () {
+      customAdapter(env, DS.Adapter.extend({
         find: function (store, type, id, snapshot) {
           return Ember.RSVP.resolve({
             id: 1,
-            name: "Tom Dalle"
+            name: 'Tom Dalle'
           });
         }
       }));
 
-      var filter = store.filter("person", function (person) {
-        return !person.get("isReloading");
+      var filter = store.filter('person', function (person) {
+        return !person.get('isReloading');
       });
 
-      var person = store.createRecord("person", {
+      var person = store.createRecord('person', {
         id: 1,
-        name: "Tom Dale"
+        name: 'Tom Dale'
       });
 
       person.reload().then(async(function (person) {
-        equal(filter.get("length"), 1, "the filter correctly returned a reloaded object");
+        equal(filter.get('length'), 1, 'the filter correctly returned a reloaded object');
       }));
     });
 
@@ -5644,9 +5670,9 @@ define(
         // wrap in an Ember.run to guarantee coalescence of the
         // iterated `set` calls and promise resolution.
         Ember.run(function () {
-          store.find("person", id).then(function (person) {
+          store.find('person', id).then(function (person) {
             edited.push(person);
-            person.set("name", "Client-side " + id);
+            person.set('name', 'Client-side ' + id);
           });
         });
       });
@@ -5659,135 +5685,135 @@ define(
       // iterated `set` calls.
       Ember.run(function () {
         forEach(names, function (name) {
-          edited.push(store.createRecord("person", { name: "Client-side " + name }));
+          edited.push(store.createRecord('person', { name: 'Client-side ' + name }));
         });
       });
     };
 
     var serverResponds = function () {
       forEach(edited, function (person) {
-        run(person, "save");
+        run(person, 'save');
       });
     };
 
     var setup = function (serverCallbacks) {
       run(function () {
-        set(store, "adapter", DS.Adapter.extend(serverCallbacks));
+        customAdapter(env, DS.Adapter.extend(serverCallbacks));
 
-        store.pushMany("person", array);
+        store.pushMany('person', array);
 
-        recordArray = store.filter("person", function (hash) {
-          if (hash.get("name").match(/Scumbag/)) {
+        recordArray = store.filter('person', function (hash) {
+          if (hash.get('name').match(/Scumbag/)) {
             return true;
           }
         });
       });
 
-      equal(get(recordArray, "length"), 3, "The filter function should work");
+      equal(get(recordArray, 'length'), 3, 'The filter function should work');
     };
 
-    test("a Record Array can update its filter after server-side updates one record", function () {
+    test('a Record Array can update its filter after server-side updates one record', function () {
       setup({
         updateRecord: function (store, type, snapshot) {
-          return Ember.RSVP.resolve({ id: 1, name: "Scumbag Server-side Dale" });
+          return Ember.RSVP.resolve({ id: 1, name: 'Scumbag Server-side Dale' });
         }
       });
 
       clientEdits([1]);
-      equal(get(recordArray, "length"), 2, "The record array updates when the client changes records");
+      equal(get(recordArray, 'length'), 2, 'The record array updates when the client changes records');
 
       serverResponds();
-      equal(get(recordArray, "length"), 3, "The record array updates when the server changes one record");
+      equal(get(recordArray, 'length'), 3, 'The record array updates when the server changes one record');
     });
 
-    test("a Record Array can update its filter after server-side updates multiple records", function () {
+    test('a Record Array can update its filter after server-side updates multiple records', function () {
       setup({
         updateRecord: function (store, type, snapshot) {
           switch (snapshot.id) {
-            case "1":
-              return Ember.RSVP.resolve({ id: 1, name: "Scumbag Server-side Dale" });
-            case "2":
-              return Ember.RSVP.resolve({ id: 2, name: "Scumbag Server-side Katz" });
+            case '1':
+              return Ember.RSVP.resolve({ id: 1, name: 'Scumbag Server-side Dale' });
+            case '2':
+              return Ember.RSVP.resolve({ id: 2, name: 'Scumbag Server-side Katz' });
           }
         }
       });
 
       clientEdits([1, 2]);
-      equal(get(recordArray, "length"), 1, "The record array updates when the client changes records");
+      equal(get(recordArray, 'length'), 1, 'The record array updates when the client changes records');
 
       serverResponds();
-      equal(get(recordArray, "length"), 3, "The record array updates when the server changes multiple records");
+      equal(get(recordArray, 'length'), 3, 'The record array updates when the server changes multiple records');
     });
 
-    test("a Record Array can update its filter after server-side creates one record", function () {
+    test('a Record Array can update its filter after server-side creates one record', function () {
       setup({
         createRecord: function (store, type, snapshot) {
-          return Ember.RSVP.resolve({ id: 4, name: "Scumbag Server-side Tim" });
+          return Ember.RSVP.resolve({ id: 4, name: 'Scumbag Server-side Tim' });
         }
       });
 
-      clientCreates(["Tim"]);
-      equal(get(recordArray, "length"), 3, "The record array does not include non-matching records");
+      clientCreates(['Tim']);
+      equal(get(recordArray, 'length'), 3, 'The record array does not include non-matching records');
 
       serverResponds();
-      equal(get(recordArray, "length"), 4, "The record array updates when the server creates a record");
+      equal(get(recordArray, 'length'), 4, 'The record array updates when the server creates a record');
     });
 
-    test("a Record Array can update its filter after server-side creates multiple records", function () {
+    test('a Record Array can update its filter after server-side creates multiple records', function () {
       setup({
         createRecord: function (store, type, snapshot) {
-          switch (snapshot.attr("name")) {
-            case "Client-side Mike":
-              return Ember.RSVP.resolve({ id: 4, name: "Scumbag Server-side Mike" });
-            case "Client-side David":
-              return Ember.RSVP.resolve({ id: 5, name: "Scumbag Server-side David" });
+          switch (snapshot.attr('name')) {
+            case 'Client-side Mike':
+              return Ember.RSVP.resolve({ id: 4, name: 'Scumbag Server-side Mike' });
+            case 'Client-side David':
+              return Ember.RSVP.resolve({ id: 5, name: 'Scumbag Server-side David' });
           }
         }
       });
 
-      clientCreates(["Mike", "David"]);
-      equal(get(recordArray, "length"), 3, "The record array does not include non-matching records");
+      clientCreates(['Mike', 'David']);
+      equal(get(recordArray, 'length'), 3, 'The record array does not include non-matching records');
 
       serverResponds();
-      equal(get(recordArray, "length"), 5, "The record array updates when the server creates multiple records");
+      equal(get(recordArray, 'length'), 5, 'The record array updates when the server creates multiple records');
     });
 
-    test("a Record Array can update its filter after server-side creates multiple records", function () {
+    test('a Record Array can update its filter after server-side creates multiple records', function () {
       setup({
         createRecord: function (store, type, snapshot) {
-          switch (snapshot.attr("name")) {
-            case "Client-side Mike":
-              return Ember.RSVP.resolve({ id: 4, name: "Scumbag Server-side Mike" });
-            case "Client-side David":
-              return Ember.RSVP.resolve({ id: 5, name: "Scumbag Server-side David" });
+          switch (snapshot.attr('name')) {
+            case 'Client-side Mike':
+              return Ember.RSVP.resolve({ id: 4, name: 'Scumbag Server-side Mike' });
+            case 'Client-side David':
+              return Ember.RSVP.resolve({ id: 5, name: 'Scumbag Server-side David' });
           }
         }
       });
 
-      clientCreates(["Mike", "David"]);
-      equal(get(recordArray, "length"), 3, "The record array does not include non-matching records");
+      clientCreates(['Mike', 'David']);
+      equal(get(recordArray, 'length'), 3, 'The record array does not include non-matching records');
 
       serverResponds();
-      equal(get(recordArray, "length"), 5, "The record array updates when the server creates multiple records");
+      equal(get(recordArray, 'length'), 5, 'The record array updates when the server creates multiple records');
     });
 
-    test("destroying filteredRecordArray unregisters models from being filtered", function () {
+    test('destroying filteredRecordArray unregisters models from being filtered', function () {
       var filterFn = tapFn(function () {
         return true;
       });
       var person;
 
       run(function () {
-        person = store.push("person", {
+        person = store.push('person', {
           id: 1,
-          name: "Tom Dale"
+          name: 'Tom Dale'
         });
       });
 
       var recordArray;
 
       run(function () {
-        recordArray = store.filter("person", filterFn);
+        recordArray = store.filter('person', filterFn);
       });
 
       equal(filterFn.summary.called.length, 1);
@@ -5799,7 +5825,7 @@ define(
       });
       clientEdits([1]);
 
-      equal(filterFn.summary.called.length, 1, "expected the filter function not being called anymore");
+      equal(filterFn.summary.called.length, 1, 'expected the filter function not being called anymore');
     });
   }
 );
@@ -19288,17 +19314,14 @@ define(
     });
 
     test("Adapter can not be set as an instance", function () {
-      expect(5);
+      expect(1);
 
       store = DS.Store.create({
         adapter: DS.Adapter.create()
       });
-      var assert = Ember.assert;
-      Ember.assert = function () {
-        ok(true, "raises an error when passing in an instance");
-      };
-      store.get("defaultAdapter");
-      Ember.assert = assert;
+      expectAssertion(function () {
+        return store.get("defaultAdapter");
+      });
     });
 
     test("Calling Store#find invokes its adapter#find", function () {
@@ -20309,6 +20332,154 @@ define(
 
         equal(true, store.hasRecordForId('person', 1), 'hasRecordForId returns true for records loaded into the store');
       });
+    });
+  }
+);
+
+
+define(
+  "ember-data/tests/unit/store/lookup-test",
+  ["exports"],
+  function(__exports__) {
+    "use strict";
+
+    function __es6_export__(name, value) {
+      __exports__[name] = value;
+    }
+
+    var store, env, applicationAdapter, applicationSerializer, Person;
+    var run = Ember.run;
+
+    function resetStore() {
+      if (store) {
+        run(store, 'destroy');
+      }
+      env = setupStore({
+        adapter: '-rest',
+        person: Person
+      });
+
+      env.registry.unregister('adapter:application');
+      env.registry.unregister('serializer:application');
+
+      env.registry.optionsForType('serializer', { singleton: true });
+      env.registry.optionsForType('adapter', { singleton: true });
+
+      store = env.store;
+    }
+
+    function lookupAdapter(adapterName) {
+      return run(store, 'adapterFor', adapterName);
+    }
+
+    function lookupSerializer(serializerName) {
+      return run(store, 'serializerFor', serializerName);
+    }
+
+    function registerAdapter(adapterName, adapter) {
+      env.registry.register('adapter:' + adapterName, adapter);
+    }
+
+    function registerSerializer(serializerName, serializer) {
+      env.registry.register('serializer:' + serializerName, serializer);
+    }
+
+    module('unit/store/lookup - Managed Instance lookups', {
+      setup: function () {
+        Person = DS.Model.extend();
+        resetStore();
+        env.registry.register('adapter:application', DS.Adapter.extend());
+        env.registry.register('adapter:serializer', DS.Adapter.extend());
+
+        applicationAdapter = run(store, 'adapterFor', 'application');
+        applicationSerializer = run(store, 'serializerFor', 'application');
+      },
+
+      teardown: function () {
+        run(store, 'destroy');
+      }
+    });
+
+    test('when the adapter does not exist for a type, the fallback is returned', function () {
+      var personAdapter = lookupAdapter('person');
+
+      strictEqual(personAdapter, applicationAdapter);
+    });
+
+    test('when the adapter for a type exists, returns that instead of the fallback', function () {
+      registerAdapter('person', DS.Adapter.extend());
+      var personAdapter = lookupAdapter('person');
+
+      ok(personAdapter !== applicationAdapter);
+    });
+
+    test('when the serializer does not exist for a type, the fallback is returned', function () {
+      var personSerializer = lookupSerializer('person');
+
+      strictEqual(personSerializer, applicationSerializer);
+    });
+
+    test('when the serializer does exist for a type, the serializer is returned', function () {
+      registerSerializer('person', DS.Serializer.extend());
+
+      var personSerializer = lookupSerializer('person');
+
+      ok(personSerializer !== applicationSerializer);
+    });
+
+    test('adapter lookup order', function () {
+      expect(3);
+
+      resetStore();
+
+      var personAdapter = lookupAdapter('person');
+
+      strictEqual(personAdapter, lookupAdapter('-rest'), 'looks up the RESTAdapter first');
+      resetStore();
+
+      registerAdapter('application', DS.ActiveModelSerializer.extend());
+      personAdapter = lookupAdapter('person');
+
+      strictEqual(personAdapter, lookupAdapter('application'), 'looks up application adapter before RESTAdapter if it exists');
+
+      resetStore();
+
+      registerAdapter('application', DS.ActiveModelSerializer.extend());
+      registerAdapter('person', DS.ActiveModelSerializer.extend({ customThingy: true }));
+
+      ok(lookupAdapter('person').get('customThingy'), 'looks up type serializer before application');
+    });
+
+    test('serializer lookup order', function () {
+      resetStore();
+
+      var personSerializer = lookupSerializer('person');
+
+      strictEqual(personSerializer, lookupSerializer('-rest'));
+
+      resetStore();
+
+      registerSerializer('application', DS.ActiveModelSerializer.extend());
+      personSerializer = lookupSerializer('person');
+      strictEqual(personSerializer, lookupSerializer('application'), 'looks up application before default');
+
+      resetStore();
+      registerAdapter('person', DS.Adapter.extend({
+        defaultSerializer: '-active-model'
+      }));
+      personSerializer = lookupSerializer('person');
+
+      strictEqual(personSerializer, lookupSerializer('-active-model'), 'uses defaultSerializer on adapterFor("model") if application not defined');
+
+      resetStore();
+      registerAdapter('person', DS.Adapter.extend({
+        defaultSerializer: '-active-model'
+      }));
+      registerSerializer('application', DS.ActiveModelSerializer.extend());
+      registerSerializer('person', DS.JSONSerializer.extend({ customThingy: true }));
+      personSerializer = lookupSerializer('person');
+
+      ok(personSerializer.get('customThingy'), 'uses the person serializer before any fallbacks if it is defined');
     });
   }
 );
@@ -21813,6 +21984,13 @@ test('ember-data/lib/system/store/common.js should pass jshint', function() {
 }
 if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/lib/system/store');
+test('ember-data/lib/system/store/container-instance-cache.js should pass jshint', function() { 
+  ok(true, 'ember-data/lib/system/store/container-instance-cache.js should pass jshint.'); 
+});
+
+}
+if (!QUnit.urlParams.nojshint) {
+module('JSHint - ember-data/lib/system/store');
 test('ember-data/lib/system/store/finders.js should pass jshint', function() { 
   ok(true, 'ember-data/lib/system/store/finders.js should pass jshint.'); 
 });
@@ -21878,6 +22056,13 @@ if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/lib/utils');
 test('ember-data/lib/utils/supports-computed-getter-setter.js should pass jshint', function() { 
   ok(true, 'ember-data/lib/utils/supports-computed-getter-setter.js should pass jshint.'); 
+});
+
+}
+if (!QUnit.urlParams.nojshint) {
+module('JSHint - ember-data/tests/helpers');
+test('ember-data/tests/helpers/custom-adapter.js should pass jshint', function() { 
+  ok(true, 'ember-data/tests/helpers/custom-adapter.js should pass jshint.'); 
 });
 
 }
@@ -22319,6 +22504,13 @@ if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/tests/unit/store');
 test('ember-data/tests/unit/store/has_record_for_id_test.js should pass jshint', function() { 
   ok(true, 'ember-data/tests/unit/store/has_record_for_id_test.js should pass jshint.'); 
+});
+
+}
+if (!QUnit.urlParams.nojshint) {
+module('JSHint - ember-data/tests/unit/store');
+test('ember-data/tests/unit/store/lookup-test.js should pass jshint', function() { 
+  ok(true, 'ember-data/tests/unit/store/lookup-test.js should pass jshint.'); 
 });
 
 }

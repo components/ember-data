@@ -159,6 +159,7 @@
          @property defaultSerializer
         @type {String}
       */
+      defaultSerializer: '-default',
 
       /**
         The `find()` method is invoked when the store is asked for a record that
@@ -294,7 +295,7 @@
         @return {Object} serialized snapshot
       */
       serialize: function (snapshot, options) {
-        return ember$data$lib$system$adapter$$get(snapshot.record, "store").serializerFor(snapshot.modelName).serialize(snapshot, options);
+        return ember$data$lib$system$adapter$$get(snapshot.record, 'store').serializerFor(snapshot.modelName).serialize(snapshot, options);
       },
 
       /**
@@ -4282,7 +4283,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.6925d00bbb'
+      VERSION: '1.0.0-beta.19+canary.f4eefab748'
     });
 
     if (Ember.libraries) {
@@ -5180,7 +5181,93 @@
       }
 
       return result;
-    }function ember$data$lib$system$merge$$merge(original, updates) {
+    }
+
+    /**
+     * The `ContainerInstanceCache` serves as a lazy cache for looking up
+     * instances of serializers and adapters. It has some additional logic for
+     * finding the 'fallback' adapter or serializer.
+     *
+     * The 'fallback' adapter or serializer is an adapter or serializer that is looked up
+     * when the preferred lookup fails. For example, say you try to look up `adapter:post`,
+     * but there is no entry (app/adapters/post.js in EmberCLI) for `adapter:post` in the registry.
+     *
+     * The `fallbacks` array passed will then be used; the first entry in the fallbacks array
+     * that exists in the container will then be cached for `adapter:post`. So, the next time you
+     * look up `adapter:post`, you'll get the `adapter:application` instance (or whatever the fallback
+     * was if `adapter:application` doesn't exist).
+     *
+     * @private
+     * @class ContainerInstanceCache
+     *
+    */
+    function ember$data$lib$system$store$container$instance$cache$$ContainerInstanceCache(container) {
+      this._container = container;
+      this._cache = ember$lib$main$$default.create(null);
+    }
+
+    ember$data$lib$system$store$container$instance$cache$$ContainerInstanceCache.prototype = ember$lib$main$$default.create(null);
+
+    ember$lib$main$$default.merge(ember$data$lib$system$store$container$instance$cache$$ContainerInstanceCache.prototype, {
+      get: function (type, preferredKey, fallbacks) {
+        var cache = this._cache;
+        var preferredLookupKey = '' + type + ':' + preferredKey;
+
+        if (!(preferredLookupKey in cache)) {
+          var instance = this.instanceFor(preferredLookupKey) || this._findInstance(type, fallbacks);
+          if (instance) {
+            cache[preferredLookupKey] = instance;
+          }
+        }
+        return cache[preferredLookupKey];
+      },
+
+      _findInstance: function (type, fallbacks) {
+        for (var i = 0, _length = fallbacks.length; i < _length; i++) {
+          var fallback = fallbacks[i];
+          var lookupKey = '' + type + ':' + fallback;
+          var instance = this.instanceFor(lookupKey);
+
+          if (instance) {
+            return instance;
+          }
+        }
+      },
+
+      instanceFor: function (key) {
+        var cache = this._cache;
+        if (!cache[key]) {
+          var instance = this._container.lookup(key);
+          if (instance) {
+            cache[key] = instance;
+          }
+        }
+        return cache[key];
+      },
+
+      destroy: function () {
+        var cache = this._cache;
+        var cacheEntries = ember$lib$main$$default.keys(cache);
+
+        for (var i = 0, _length2 = cacheEntries.length; i < _length2; i++) {
+          var cacheKey = cacheEntries[i];
+          var cacheEntry = cache[cacheKey];
+          if (cacheEntry) {
+            cacheEntry.destroy();
+          }
+        }
+        this._container = null;
+      },
+
+      constructor: ember$data$lib$system$store$container$instance$cache$$ContainerInstanceCache,
+
+      toString: function () {
+        return 'ContainerInstanceCache';
+      }
+    });
+
+    var ember$data$lib$system$store$container$instance$cache$$default = ember$data$lib$system$store$container$instance$cache$$ContainerInstanceCache;
+    function ember$data$lib$system$merge$$merge(original, updates) {
       if (!updates || typeof updates !== 'object') {
         return original;
       }
@@ -9328,7 +9415,7 @@
           store: this
         });
         this._pendingSave = [];
-        this._containerCache = Ember.create(null);
+        this._instanceCache = new ember$data$lib$system$store$container$instance$cache$$default(this.container);
         //Used to keep track of all the find requests that need to be coalesced
         this._pendingFetch = ember$data$lib$system$map$$Map.create();
       },
@@ -9378,16 +9465,7 @@
         var adapter = ember$data$lib$system$store$$get(this, "adapter");
 
         
-        if (typeof adapter === "string") {
-          adapter = this.container.lookup("adapter:" + adapter) || this.container.lookup("adapter:application") || this.container.lookup("adapter:-rest");
-        }
-
-        if (DS.Adapter.detect(adapter)) {
-          adapter = adapter.create({
-            container: this.container,
-            store: this
-          });
-        }
+        adapter = this.retrieveManagedInstance("adapter", adapter);
 
         return adapter;
       }),
@@ -10797,9 +10875,7 @@
           modelName = modelOrClass;
         }
 
-        var adapter = this.lookupAdapter(modelName) || this.lookupAdapter("application");
-
-        return adapter || ember$data$lib$system$store$$get(this, "defaultAdapter");
+        return this.lookupAdapter(modelName);
       },
 
       _adapterRun: function (fn) {
@@ -10836,17 +10912,9 @@
           modelName = modelOrClass;
         }
 
-        var serializer = this.lookupSerializer(modelName) || this.lookupSerializer("application");
+        var fallbacks = ["application", this.adapterFor(modelName).get("defaultSerializer"), "-default"];
 
-        if (!serializer) {
-          var adapter = this.adapterFor(modelName);
-          serializer = this.lookupSerializer(ember$data$lib$system$store$$get(adapter, "defaultSerializer"));
-        }
-
-        if (!serializer) {
-          serializer = this.lookupSerializer("-default");
-        }
-
+        var serializer = this.lookupSerializer(modelName, fallbacks);
         return serializer;
       },
 
@@ -10860,30 +10928,28 @@
         @private
         @param {String} modelName the object modelName
         @param {String} name the object name
+        @param {Array} fallbacks the fallback objects to lookup if the lookup for modelName or 'application' fails
         @return {Ember.Object}
       */
-      retrieveManagedInstance: function (modelName, name) {
-        var normalizedTypeKey = ember$data$lib$system$normalize$model$name$$default(modelName);
-        var key = normalizedTypeKey + ":" + name;
+      retrieveManagedInstance: function (type, modelName, fallbacks) {
+        var normalizedModelName = ember$data$lib$system$normalize$model$name$$default(modelName);
 
-        if (!this._containerCache[key]) {
-          var instance = this.container.lookup(key);
-
-          if (instance) {
-            ember$data$lib$system$store$$set(instance, "store", this);
-            this._containerCache[key] = instance;
-          }
-        }
-
-        return this._containerCache[key];
+        var instance = this._instanceCache.get(type, normalizedModelName, fallbacks);
+        ember$data$lib$system$store$$set(instance, "store", this);
+        return instance;
       },
 
       lookupAdapter: function (name) {
-        return this.retrieveManagedInstance("adapter", name);
+        return this.retrieveManagedInstance("adapter", name, this.get("_adapterFallbacks"));
       },
 
-      lookupSerializer: function (name) {
-        return this.retrieveManagedInstance("serializer", name);
+      _adapterFallbacks: Ember.computed("adapter", function () {
+        var adapter = this.get("adapter");
+        return ["application", adapter, "-rest"];
+      }),
+
+      lookupSerializer: function (name, fallbacks) {
+        return this.retrieveManagedInstance("serializer", name, fallbacks);
       },
 
       willDestroy: function () {
