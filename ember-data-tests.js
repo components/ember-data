@@ -15759,7 +15759,7 @@ define(
             }).join('&');
             var fullUrl = url + '?' + queryString;
 
-            maxLength = this.get('maxUrlLength');
+            maxLength = this.get('maxURLLength');
             lengths.push(fullUrl.length);
 
             var testRecords = options.data.ids.map(function (id) {
