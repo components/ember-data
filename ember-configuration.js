@@ -1,6 +1,6 @@
 /* globals ENV, QUnit */
 
-(function (){
+(function () {
   window.Ember = window.Ember || {};
 
   Ember.config = {};
@@ -11,6 +11,9 @@
 
   var extendPrototypes = QUnit.urlParams.extendprototypes;
   ENV['EXTEND_PROTOTYPES'] = !!extendPrototypes;
+
+  // Handle testing feature flags
+  ENV['ENABLE_OPTIONAL_FEATURES'] = !!QUnit.urlParams.enableoptionalfeatures;
 
   window.async = function(callback, timeout) {
     var timer;
@@ -34,7 +37,7 @@
   };
 
   window.asyncEqual = function(a, b, message) {
-    Ember.RSVP.all([ Ember.RSVP.resolve(a), Ember.RSVP.resolve(b) ]).then(async(function(array) {
+    Ember.RSVP.all([Ember.RSVP.resolve(a), Ember.RSVP.resolve(b)]).then(async(function(array) {
       /*globals QUnit*/
       QUnit.push(array[0] === array[1], array[0], array[1], message);
     }));
@@ -65,10 +68,15 @@
       } else {
         env.container.normalize = fn;
       }
-    }
+    };
 
-    var adapter = env.adapter = (options.adapter || DS.Adapter);
+    var adapter = env.adapter = (options.adapter || '-default');
     delete options.adapter;
+
+    if (typeof adapter !== 'string') {
+      env.registry.register('adapter:-ember-data-test-custom', adapter);
+      adapter = '-ember-data-test-custom';
+    }
 
     for (var prop in options) {
       registry.register('model:' + Ember.String.dasherize(prop), options[prop]);
@@ -80,9 +88,12 @@
 
     registry.optionsForType('serializer', { singleton: false });
     registry.optionsForType('adapter', { singleton: false });
+    registry.register('adapter:-default', DS.Adapter);
 
     registry.register('serializer:-default', DS.JSONSerializer);
     registry.register('serializer:-rest', DS.RESTSerializer);
+    registry.register('adapter:-active-model', DS.ActiveModelAdapter);
+    registry.register('serializer:-active-model', DS.ActiveModelSerializer);
     registry.register('adapter:-rest', DS.RESTAdapter);
 
     registry.injection('serializer', 'store', 'store:main');
@@ -99,7 +110,7 @@
     return setupStore(options).store;
   };
 
-  QUnit.begin(function(){
+  QUnit.begin(function() {
     Ember.RSVP.configure('onerror', function(reason) {
       // only print error messages if they're exceptions;
       // otherwise, let a future turn of the event loop
@@ -130,10 +141,10 @@
   // to make the QUnit global check run clean
   jQuery(window).data('testing', true);
 
-  window.warns = function(callback, regex){
+  window.warns = function(callback, regex) {
     var warnWasCalled = false;
     var oldWarn = Ember.warn;
-    Ember.warn = function Ember_assertWarning(message, test){
+    Ember.warn = function Ember_assertWarning(message, test) {
       if (!test) {
         warnWasCalled = true;
         if (regex) {
@@ -149,10 +160,10 @@
     }
   };
 
-  window.noWarns = function(callback){
+  window.noWarns = function(callback) {
     var oldWarn = Ember.warn;
     var warnWasCalled = false;
-    Ember.warn = function Ember_noWarn(message, test){
+    Ember.warn = function Ember_noWarn(message, test) {
       warnWasCalled = !test;
     };
     try {

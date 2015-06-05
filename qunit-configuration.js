@@ -1,85 +1,88 @@
 (function() {
+  /*global namespace: true */
+
   window.EmberDev = window.EmberDev || {};
 
   EmberDev.afterEach = function() {
-      if (Ember && Ember.View) {
-        var viewIds = [], id;
-        for (id in Ember.View.views) {
-          if (Ember.View.views[id] != null) {
-            viewIds.push(id);
-          }
-        }
-
-        if (viewIds.length > 0) {
-          deepEqual(viewIds, [], "Ember.View.views should be empty");
-          Ember.View.views = [];
+    if (Ember && Ember.View) {
+      var viewIds = [];
+      for (var id in Ember.View.views) {
+        if (Ember.View.views[id] != null) {
+          viewIds.push(id);
         }
       }
 
-      if (Ember && Ember.TEMPLATES) {
-        var templateNames = [], name;
-        for (name in Ember.TEMPLATES) {
-          if (Ember.TEMPLATES[name] != null) {
-            templateNames.push(name);
-          }
-        }
+      if (viewIds.length > 0) {
+        deepEqual(viewIds, [], "Ember.View.views should be empty");
+        Ember.View.views = [];
+      }
+    }
 
-        if (templateNames.length > 0) {
-          deepEqual(templateNames, [], "Ember.TEMPLATES should be empty");
-          Ember.TEMPLATES = {};
+    if (Ember && Ember.TEMPLATES) {
+      var templateNames = [];
+      for (var name in Ember.TEMPLATES) {
+        if (Ember.TEMPLATES[name] != null) {
+          templateNames.push(name);
         }
       }
+
+      if (templateNames.length > 0) {
+        deepEqual(templateNames, [], "Ember.TEMPLATES should be empty");
+        Ember.TEMPLATES = {};
+      }
+    }
+  };
+
+  window.globalFailedTests  = [];
+  window.globalTestResults = null;
+  window.lastAssertionTime = new Date().getTime();
+
+  var currentTest, assertCount;
+
+  QUnit.testStart(function(data) {
+    // Reset the assertion count
+    assertCount = 0;
+
+    currentTest = {
+      name: data.name,
+      failedAssertions: [],
+      total: 0,
+      passed: 0,
+      failed: 0,
+      start: new Date(),
+      time: 0
     };
 
-   window.globalFailedTests  = [];
-      window.globalTestResults = null;
-      window.lastAssertionTime = new Date().getTime();
+  });
 
-      var currentTest, assertCount;
+  QUnit.log(function(data) {
+    assertCount++;
+    lastAssertionTime = new Date().getTime();
 
-      QUnit.testStart(function(data) {
-        // Reset the assertion count
-        assertCount = 0;
+    // Ignore passing assertions
+    if (!data.result) {
+      currentTest.failedAssertions.push(data);
+    }
+  });
 
-        currentTest = {
-          name: data.name,
-          failedAssertions: [],
-          total: 0,
-          passed: 0,
-          failed: 0,
-          start: new Date(),
-          time: 0
-        };
+  QUnit.testDone(function(data) {
+    currentTest.time = (new Date()).getTime() - currentTest.start.getTime();  // ms
+    currentTest.total = data.total;
+    currentTest.passed = data.passed;
+    currentTest.failed = data.failed;
 
-      })
+    if (currentTest.failed > 0) {
+      window.globalFailedTests.push(currentTest);
+    }
 
-      QUnit.log(function(data) {
-        assertCount++;
-        lastAssertionTime = new Date().getTime();
+    currentTest = null;
+  });
 
-        // Ignore passing assertions
-        if (!data.result) {
-          currentTest.failedAssertions.push(data);
-        }
-      });
+  QUnit.done(function( details ) {
+    details.failedTests = globalFailedTests;
 
-      QUnit.testDone(function(data) {
-        currentTest.time = (new Date()).getTime() - currentTest.start.getTime();  // ms
-        currentTest.total = data.total;
-        currentTest.passed = data.passed;
-        currentTest.failed = data.failed;
-
-        if (currentTest.failed > 0)
-          window.globalFailedTests.push(currentTest)
-
-        currentTest = null;
-      });
-
-      QUnit.done(function( details ) {
-        details.failedTests = globalFailedTests;
-
-        window.globalTestResults = details;
-      });
+    window.globalTestResults = details;
+  });
 
   // hack qunit to not suck for Ember objects
   var originalTypeof = QUnit.jsDump.typeOf;
@@ -142,9 +145,9 @@
   EmberDev.jsHintReporter = function (file, errors) {
     if (!errors) { return ''; }
 
-    var len = errors.length,
-        str = '',
-        error, idx;
+    var len = errors.length;
+    var str = '';
+    var error, idx;
 
     if (len === 0) { return ''; }
 
@@ -157,8 +160,8 @@
     return str + "\n" + len + ' error' + ((len === 1) ? '' : 's');
   };
 
-  var o_create = Object.create || (function(){
-    function F(){}
+  var o_create = Object.create || (function() {
+    function F() {}
 
     return function(o) {
       if (arguments.length !== 1) {
@@ -169,29 +172,32 @@
     };
   }());
 
+  // Handle testing feature flags
+  QUnit.config.urlConfig.push({ id: 'enableoptionalfeatures', label: "Enable Opt Features" });
+
   // A light class for stubbing
   //
-  function MethodCallExpectation(target, property){
+  function MethodCallExpectation(target, property) {
     this.target = target;
     this.property = property;
-  };
+  }
 
   MethodCallExpectation.prototype = {
-    handleCall: function(){
+    handleCall: function() {
       this.sawCall = true;
       return this.originalMethod.apply(this.target, arguments);
     },
-    stubMethod: function(fn){
+    stubMethod: function(fn) {
       var context = this;
       this.originalMethod = this.target[this.property];
-      this.target[this.property] = function(){
+      this.target[this.property] = function() {
         return context.handleCall.apply(context, arguments);
       };
     },
-    restoreMethod: function(){
+    restoreMethod: function() {
       this.target[this.property] = this.originalMethod;
     },
-    runWithStub: function(fn){
+    runWithStub: function(fn) {
       try {
         this.stubMethod();
         fn();
@@ -205,25 +211,27 @@
     }
   };
 
-  function AssertExpectation(message){
+  function AssertExpectation(message) {
     MethodCallExpectation.call(this, Ember, 'assert');
     this.expectedMessage = message;
-  };
-  AssertExpectation.Error = function(){};
+  }
+
+  AssertExpectation.Error = function() {};
   AssertExpectation.prototype = o_create(MethodCallExpectation.prototype);
-  AssertExpectation.prototype.handleCall = function(message, test){
+  AssertExpectation.prototype.handleCall = function(message, test) {
     this.sawCall = true;
-    if (test) return; // Only get message for failures
+    if (test) { return; } // Only get message for failures
     this.actualMessage = message;
     // Halt execution
     throw new AssertExpectation.Error();
   };
-  AssertExpectation.prototype.assert = function(fn){
+  AssertExpectation.prototype.assert = function(fn) {
     try {
       this.runWithStub(fn);
     } catch (e) {
-      if (!(e instanceof AssertExpectation.Error))
+      if (!(e instanceof AssertExpectation.Error)) {
         throw e;
+      }
     }
 
     // Run assertions in an order that is useful when debugging a test failure.
@@ -252,7 +260,7 @@
   //   Ember.assert("Homie don't roll like that");
   // } /* , optionalMessageStringOrRegex */);
   //
-  window.expectAssertion = function expectAssertion(fn, message){
+  window.expectAssertion = function expectAssertion(fn, message) {
     (new AssertExpectation(message)).assert(fn);
   };
 
@@ -260,7 +268,7 @@
     NONE: 99, // 99 problems and a deprecation ain't one
     expecteds: null,
     actuals: null,
-    stubEmber: function(){
+    stubEmber: function() {
       if (!EmberDev.deprecations.originalEmberDeprecate && Ember.deprecate !== EmberDev.deprecations.originalEmberDeprecate) {
         EmberDev.deprecations.originalEmberDeprecate = Ember.deprecate;
       }
@@ -269,7 +277,7 @@
         EmberDev.deprecations.actuals.push([msg, test]);
       };
     },
-    restoreEmber: function(){
+    restoreEmber: function() {
       Ember.deprecate = EmberDev.deprecations.originalEmberDeprecate;
     }
   };
@@ -281,7 +289,7 @@
   // Ember.deprecate("Old And Busted");
   //
   window.expectNoDeprecation = function(message) {
-    if (typeof EmberDev.deprecations.expecteds === 'array') {
+    if (Ember.isArray(EmberDev.deprecations.expecteds)) {
       throw("No deprecation was expected after expectDeprecation was called!");
     }
     EmberDev.deprecations.stubEmber();
@@ -331,8 +339,8 @@
   // without explicit asserts.
   //
   window.assertDeprecation = function() {
-    var expecteds = EmberDev.deprecations.expecteds,
-        actuals   = EmberDev.deprecations.actuals || [];
+    var expecteds = EmberDev.deprecations.expecteds;
+    var actuals   = EmberDev.deprecations.actuals || [];
     if (!expecteds) {
       EmberDev.deprecations.actuals = null;
       return;
@@ -344,15 +352,16 @@
 
     if (expecteds === EmberDev.deprecations.NONE) {
       var actualMessages = [];
-      for (var actual in actuals) {
-        actualMessages.push(actual[0]);
+      for (var _actual in actuals) {
+        actualMessages.push(_actual[0]);
       }
       ok(actuals.length === 0, "Expected no deprecation call, got: "+actualMessages.join(', '));
     } else {
       for (var o=0;o < expecteds.length; o++) {
-        var expected = expecteds[o], match;
-        for (var i=0;i < actuals.length; i++) {
-          var actual = actuals[i];
+        var expected = expecteds[o];
+        var match, actual;
+        for (var i = 0; i < actuals.length; i++) {
+          actual = actuals[i];
           if (!actual[1]) {
             if (expected instanceof RegExp) {
               if (expected.test(actual[0])) {
@@ -368,16 +377,17 @@
           }
         }
 
-        if (!actual)
-          ok(false, "Recieved no deprecate calls at all, expecting: "+expected);
-        else if (match && !match[1])
-          ok(true, "Recieved failing deprecation with message: "+match[0]);
-        else if (match && match[1])
-          ok(false, "Expected failing deprecation, got succeeding with message: "+match[0]);
-        else if (actual[1])
-          ok(false, "Did not receive failing deprecation matching '"+expected+"', last was success with '"+actual[0]+"'");
-        else if (!actual[1])
-          ok(false, "Did not receive failing deprecation matching '"+expected+"', last was failure with '"+actual[0]+"'");
+        if (!actual) {
+          ok(false, "Recieved no deprecate calls at all, expecting: " + expected);
+        } else if (match && !match[1]) {
+          ok(true, "Recieved failing deprecation with message: " + match[0]);
+        } else if (match && match[1]) {
+          ok(false, "Expected failing deprecation, got succeeding with message: " + match[0]);
+        } else if (actual[1]) {
+          ok(false, "Did not receive failing deprecation matching '" + expected + "', last was success with '" + actual[0] + "'");
+        } else if (!actual[1]) {
+          ok(false, "Did not receive failing deprecation matching '" + expected + "', last was failure with '" + actual[0] + "'");
+        }
       }
     }
   };
