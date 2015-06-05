@@ -4473,7 +4473,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.1e0229c459'
+      VERSION: '1.0.0-beta.19+canary.54eaf1458c'
     });
 
     if (Ember.libraries) {
@@ -8441,9 +8441,9 @@
 
     var ember$data$lib$system$model$model$$get = Ember.get;
     var ember$data$lib$system$model$model$$intersection = Ember.EnumerableUtils.intersection;
-    var ember$data$lib$system$model$model$$RESERVED_MODEL_PROPS = ["currentState", "data", "store"];
+    var ember$data$lib$system$model$model$$RESERVED_MODEL_PROPS = ['currentState', 'data', 'store'];
 
-    var ember$data$lib$system$model$model$$retrieveFromCurrentState = Ember.computed("currentState", function (key) {
+    var ember$data$lib$system$model$model$$retrieveFromCurrentState = Ember.computed('currentState', function (key) {
       return ember$data$lib$system$model$model$$get(this._internalModel.currentState, key);
     }).readOnly();
 
@@ -8755,7 +8755,7 @@
       */
       toJSON: function (options) {
         // container is for lazy transform lookups
-        var serializer = ember$data$lib$serializers$json$serializer$$default.create({ container: this.container });
+        var serializer = this.store.serializerFor('-default');
         var snapshot = this._internalModel.createSnapshot();
 
         return serializer.serialize(snapshot, options);
@@ -8815,7 +8815,7 @@
         @private
         @type {Object}
       */
-      data: Ember.computed.readOnly("_internalModel._data"),
+      data: Ember.computed.readOnly('_internalModel._data'),
 
       //TODO Do we want to deprecate these?
       /**
@@ -8932,8 +8932,8 @@
           and value is an [oldProp, newProp] array.
       */
       changedAttributes: function () {
-        var oldData = ember$data$lib$system$model$model$$get(this._internalModel, "_data");
-        var newData = ember$data$lib$system$model$model$$get(this._internalModel, "_attributes");
+        var oldData = ember$data$lib$system$model$model$$get(this._internalModel, '_data');
+        var newData = ember$data$lib$system$model$model$$get(this._internalModel, '_attributes');
         var diffData = Ember.create(null);
         var prop;
 
@@ -8987,7 +8987,7 @@
       },
 
       toStringExtension: function () {
-        return ember$data$lib$system$model$model$$get(this, "id");
+        return ember$data$lib$system$model$model$$get(this, 'id');
       },
 
       /**
@@ -9077,19 +9077,19 @@
       // rely on the data property.
       willMergeMixin: function (props) {
         var constructor = this.constructor;
-        Ember.assert("`" + ember$data$lib$system$model$model$$intersection(Ember.keys(props), ember$data$lib$system$model$model$$RESERVED_MODEL_PROPS)[0] + "` is a reserved property name on DS.Model objects. Please choose a different property name for " + constructor.toString(), !ember$data$lib$system$model$model$$intersection(Ember.keys(props), ember$data$lib$system$model$model$$RESERVED_MODEL_PROPS)[0]);
+        Ember.assert('`' + ember$data$lib$system$model$model$$intersection(Ember.keys(props), ember$data$lib$system$model$model$$RESERVED_MODEL_PROPS)[0] + '` is a reserved property name on DS.Model objects. Please choose a different property name for ' + constructor.toString(), !ember$data$lib$system$model$model$$intersection(Ember.keys(props), ember$data$lib$system$model$model$$RESERVED_MODEL_PROPS)[0]);
       },
 
       attr: function () {
-        Ember.assert("The `attr` method is not available on DS.Model, a DS.Snapshot was probably expected. Are you passing a DS.Model instead of a DS.Snapshot to your serializer?", false);
+        Ember.assert('The `attr` method is not available on DS.Model, a DS.Snapshot was probably expected. Are you passing a DS.Model instead of a DS.Snapshot to your serializer?', false);
       },
 
       belongsTo: function () {
-        Ember.assert("The `belongsTo` method is not available on DS.Model, a DS.Snapshot was probably expected. Are you passing a DS.Model instead of a DS.Snapshot to your serializer?", false);
+        Ember.assert('The `belongsTo` method is not available on DS.Model, a DS.Snapshot was probably expected. Are you passing a DS.Model instead of a DS.Snapshot to your serializer?', false);
       },
 
       hasMany: function () {
-        Ember.assert("The `hasMany` method is not available on DS.Model, a DS.Snapshot was probably expected. Are you passing a DS.Model instead of a DS.Snapshot to your serializer?", false);
+        Ember.assert('The `hasMany` method is not available on DS.Model, a DS.Snapshot was probably expected. Are you passing a DS.Model instead of a DS.Snapshot to your serializer?', false);
       }
     });
 
@@ -9115,7 +9115,7 @@
         @static
       */
       create: function () {
-        throw new Ember.Error("You should not call `create` on a model. Instead, call `store.createRecord` with the attributes you would like to set.");
+        throw new Ember.Error('You should not call `create` on a model. Instead, call `store.createRecord` with the attributes you would like to set.');
       },
 
       /**
