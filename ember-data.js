@@ -17,8 +17,10 @@
       namespaced under a key that matches the property name. For example
       if you had a Post model that looked like this.
 
-      ```js
-      App.Post = DS.Model.extend({
+      ```app/models/post.js
+      import DS from 'ember-data';
+
+      export default DS.Model.extend({
         title: DS.attr('string'),
         content: DS.attr('string')
       });
@@ -28,8 +30,11 @@
       `content` properties your adapter could return a promise that
       rejects with a `DS.InvalidError` object that looks like this:
 
-      ```js
-      App.PostAdapter = DS.RESTAdapter.extend({
+      ```app/adapters/post.js
+      import Ember from 'ember';
+      import DS from 'ember-data';
+
+      export default DS.RESTAdapter.extend({
         updateRecord: function() {
           // Fictional adapter that always rejects
           return Ember.RSVP.reject(new DS.InvalidError({
@@ -48,8 +53,11 @@
 
       Example
 
-      ```javascript
-      App.ApplicationAdapter = DS.RESTAdapter.extend({
+      ```app/adapters/application.js
+      import Ember from 'ember';
+      import DS from 'ember-data';
+
+      export default DS.RESTAdapter.extend({
         ajaxError: function(jqXHR) {
           var error = this._super(jqXHR);
 
@@ -95,26 +103,25 @@
 
       ### Creating an Adapter
 
-      Create a new subclass of `DS.Adapter`, then assign
-      it to the `ApplicationAdapter` property of the application.
+      Create a new subclass of `DS.Adapter` in the `app/adapters` folder:
 
-      ```javascript
-      var MyAdapter = DS.Adapter.extend({
+      ```app/adapters/application.js
+      import DS from 'ember-data';
+
+      export default DS.Adapter.extend({
         // ...your code here
       });
-
-      App.ApplicationAdapter = MyAdapter;
       ```
 
-      Model-specific adapters can be created by assigning your adapter
-      class to the `ModelName` + `Adapter` property of the application.
+      Model-specific adapters can be created by putting your adapter
+      class in an `app/adapters/` + `model-name` + `.js` file of the application.
 
-      ```javascript
-      var MyPostAdapter = DS.Adapter.extend({
+      ```app/adapters/post.js
+      import DS from 'ember-data';
+
+      export default DS.Adapter.extend({
         // ...Post-specific adapter code goes here
       });
-
-      App.PostAdapter = MyPostAdapter;
       ```
 
       `DS.Adapter` is an abstract base class that you should override in your
@@ -151,8 +158,9 @@
          Note the `defaultSerializer` serializer has a lower priority than
         a model specific serializer (i.e. `PostSerializer`) or the
         `application` serializer.
-         ```javascript
-        var DjangoAdapter = DS.Adapter.extend({
+         ```app/adapters/django.js
+        import DS from 'ember-data';
+         export default DS.Adapter.extend({
           defaultSerializer: 'django'
         });
         ```
@@ -168,8 +176,9 @@
         found, you can asynchronously call the store's `push()` method to push
         the record into the store.
          Here is an example `find` implementation:
-         ```javascript
-        App.ApplicationAdapter = DS.Adapter.extend({
+         ```app/adapters/application.js
+        import DS from 'ember-data';
+         export default DS.Adapter.extend({
           find: function(store, type, id, snapshot) {
             var url = [type.modelName, id].join('/');
              return new Ember.RSVP.Promise(function(resolve, reject) {
@@ -196,8 +205,9 @@
         The `findAll()` method is called when you call `find` on the store
         without an ID (i.e. `store.find('post')`).
          Example
-         ```javascript
-        App.ApplicationAdapter = DS.Adapter.extend({
+         ```app/adapters/application.js
+        import DS from 'ember-data';
+         export default DS.Adapter.extend({
           findAll: function(store, type, sinceToken) {
             var url = type;
             var query = { since: sinceToken };
@@ -226,8 +236,9 @@
         query object as the second parameter (i.e. `store.find('person', {
         page: 1 })`).
          Example
-         ```javascript
-        App.ApplicationAdapter = DS.Adapter.extend({
+         ```app/adapters/application.js
+        import DS from 'ember-data';
+         export default DS.Adapter.extend({
           findQuery: function(store, type, query) {
             var url = type;
             return new Ember.RSVP.Promise(function(resolve, reject) {
@@ -280,8 +291,9 @@
       /**
         Proxies to the serializer's `serialize` method.
          Example
-         ```javascript
-        App.ApplicationAdapter = DS.Adapter.extend({
+         ```app/adapters/application.js
+        import DS from 'ember-data';
+         export default DS.Adapter.extend({
           createRecord: function(store, type, snapshot) {
             var data = this.serialize(snapshot, { includeId: true });
             var url = type;
@@ -303,8 +315,9 @@
         new records.
          Serializes the record and send it to the server.
          Example
-         ```javascript
-        App.ApplicationAdapter = DS.Adapter.extend({
+         ```app/adapters/application.js
+        import DS from 'ember-data';
+         export default DS.Adapter.extend({
           createRecord: function(store, type, snapshot) {
             var data = this.serialize(snapshot, { includeId: true });
             var url = type;
@@ -337,8 +350,9 @@
         a record.
          Serializes the record update and send it to the server.
          Example
-         ```javascript
-        App.ApplicationAdapter = DS.Adapter.extend({
+         ```app/adapters/application.js
+        import DS from 'ember-data';
+         export default DS.Adapter.extend({
           updateRecord: function(store, type, snapshot) {
             var data = this.serialize(snapshot, { includeId: true });
             var id = snapshot.id;
@@ -372,8 +386,9 @@
         a record.
          Sends a delete request for the record to the server.
          Example
-         ```javascript
-        App.ApplicationAdapter = DS.Adapter.extend({
+         ```app/adapters/application.js
+        import DS from 'ember-data';
+         export default DS.Adapter.extend({
           deleteRecord: function(store, type, snapshot) {
             var data = this.serialize(snapshot, { includeId: true });
             var id = snapshot.id;
@@ -985,8 +1000,9 @@
          ### Pathname customization
          For example if you have an object LineItem with an
         endpoint of "/line_items/".
-         ```js
-        App.ApplicationAdapter = DS.RESTAdapter.extend({
+         ```app/adapters/application.js
+        import DS from 'ember-data';
+         export default DS.RESTAdapter.extend({
           pathForType: function(modelName) {
             var decamelized = Ember.String.decamelize(modelName);
             return Ember.String.pluralize(decamelized);
@@ -1061,8 +1077,10 @@
     
       For example, if you have a `Person` model:
     
-      ```js
-      App.Person = DS.Model.extend({
+      ```app/models/person.js
+      import DS from 'ember-data';
+    
+      export default DS.Model.extend({
         firstName: DS.attr('string'),
         lastName: DS.attr('string'),
         occupation: DS.attr('string')
@@ -1089,8 +1107,10 @@
       Endpoint paths can be prefixed with a `namespace` by setting the namespace
       property on the adapter:
     
-      ```js
-      App.ApplicationAdapter = DS.RESTAdapter.extend({
+      ```app/adapters/application.js
+      import DS from 'ember-data';
+    
+      export default DS.RESTAdapter.extend({
         namespace: 'api/1'
       });
       ```
@@ -1100,8 +1120,10 @@
     
       An adapter can target other hosts by setting the `host` property.
     
-      ```js
-      App.ApplicationAdapter = DS.RESTAdapter.extend({
+      ```app/adapters/application.js
+      import DS from 'ember-data';
+    
+      export default DS.RESTAdapter.extend({
         host: 'https://api.example.com'
       });
       ```
@@ -1113,8 +1135,10 @@
       object and Ember Data will send them along with each ajax request.
     
     
-      ```js
-      App.ApplicationAdapter = DS.RESTAdapter.extend({
+      ```app/adapters/application.js
+      import DS from 'ember-data';
+    
+      export default DS.RESTAdapter.extend({
         headers: {
           "API_KEY": "secret key",
           "ANOTHER_HEADER": "Some header value"
@@ -1126,8 +1150,10 @@
       headers. In the example below, the `session` object has been
       injected into an adapter by Ember's container.
     
-      ```js
-      App.ApplicationAdapter = DS.RESTAdapter.extend({
+      ```app/adapters/application.js
+      import DS from 'ember-data';
+    
+      export default DS.RESTAdapter.extend({
         headers: function() {
           return {
             "API_KEY": this.get("session.authToken"),
@@ -1144,8 +1170,10 @@
       function to set the property into a non-cached mode causing the headers to
       be recomputed with every request.
     
-      ```js
-      App.ApplicationAdapter = DS.RESTAdapter.extend({
+      ```app/adapters/application.js
+      import DS from 'ember-data';
+    
+      export default DS.RESTAdapter.extend({
         headers: function() {
           return {
             "API_KEY": Ember.get(document.cookie.match(/apiKey\=([^;]*)/), "1"),
@@ -1178,8 +1206,9 @@
          Setting `sortQueryParams` to a falsey value will respect the original order.
          In case you want to sort the query parameters with a different criteria, set
         `sortQueryParams` to your custom sort function.
-         ```js
-        export default DS.RESTAdapter.extend({
+         ```app/adapters/application.js
+        import DS from 'ember-data';
+         export default DS.RESTAdapter.extend({
           sortQueryParams: function(params) {
             var sortedKeys = Object.keys(params).sort().reverse();
             var len = sortedKeys.length, newParams = {};
@@ -1250,8 +1279,9 @@
       /**
         Endpoint paths can be prefixed with a `namespace` by setting the namespace
         property on the adapter:
-         ```javascript
-        App.ApplicationAdapter = DS.RESTAdapter.extend({
+         ```app/adapters/application.js
+        import DS from 'ember-data';
+         export default DS.RESTAdapter.extend({
           namespace: 'api/1'
         });
         ```
@@ -1262,8 +1292,9 @@
 
       /**
         An adapter can target other hosts by setting the `host` property.
-         ```javascript
-        App.ApplicationAdapter = DS.RESTAdapter.extend({
+         ```app/adapters/application.js
+        import DS from 'ember-data';
+         export default DS.RESTAdapter.extend({
           host: 'https://api.example.com'
         });
         ```
@@ -1278,8 +1309,9 @@
         `RESTAdapter`'s `headers` object and Ember Data will send them
         along with each ajax request. For dynamic headers see [headers
         customization](/api/data/classes/DS.RESTAdapter.html#toc_headers-customization).
-         ```javascript
-        App.ApplicationAdapter = DS.RESTAdapter.extend({
+         ```app/adapters/application.js
+        import DS from 'ember-data';
+         export default DS.RESTAdapter.extend({
           headers: {
             "API_KEY": "secret key",
             "ANOTHER_HEADER": "Some header value"
@@ -1603,8 +1635,9 @@
         returned from the server using the serializer's `extractErrors`
         method.
          Example
-         ```javascript
-        App.ApplicationAdapter = DS.RESTAdapter.extend({
+         ```app/adapters/application.js
+        import DS from 'ember-data';
+         export default DS.RESTAdapter.extend({
           ajaxError: function(jqXHR) {
             var error = this._super(jqXHR);
              if (jqXHR && jqXHR.status === 422) {
@@ -2425,8 +2458,9 @@
         primaryKey property to match the primaryKey of your external
         store.
          Example
-         ```javascript
-        App.ApplicationSerializer = DS.JSONSerializer.extend({
+         ```app/serializers/application.js
+        import DS from 'ember-data';
+         export default DS.JSONSerializer.extend({
           primaryKey: '_id'
         });
         ```
@@ -2443,14 +2477,18 @@
         property `key` can also be used to designate the attribute's key on
         the response payload.
          Example
-         ```javascript
-        App.Person = DS.Model.extend({
+         ```app/models/person.js
+        import DS from 'ember-data';
+         export default DS.Model.extend({
           firstName: DS.attr('string'),
           lastName: DS.attr('string'),
           occupation: DS.attr('string'),
           admin: DS.attr('boolean')
         });
-         App.PersonSerializer = DS.JSONSerializer.extend({
+        ```
+         ```app/serializers/person.js
+        import DS from 'ember-data';
+         export default DS.JSONSerializer.extend({
           attrs: {
             admin: 'is_admin',
             occupation: {key: 'career'}
@@ -2460,8 +2498,9 @@
          You can also remove attributes by setting the `serialize` key to
         false in your mapping object.
          Example
-         ```javascript
-        App.PersonSerializer = DS.JSONSerializer.extend({
+         ```app/serializers/person.js
+        import DS from 'ember-data';
+         export default DS.JSONSerializer.extend({
           attrs: {
             admin: {serialize: false},
             occupation: {key: 'career'}
@@ -2517,8 +2556,9 @@
          You can use this method, for example, to normalize underscored keys to camelized
         or other general-purpose normalizations.
          Example
-         ```javascript
-        App.ApplicationSerializer = DS.JSONSerializer.extend({
+         ```app/serializers/application.js
+        import DS from 'ember-data';
+         export default DS.JSONSerializer.extend({
           normalize: function(typeClass, hash) {
             var fields = Ember.get(typeClass, 'fields');
             fields.forEach(function(field) {
@@ -2554,8 +2594,9 @@
         You can use this method to normalize all payloads, regardless of whether they
         represent single records or an array.
          For example, you might want to remove some extraneous data from the payload:
-         ```js
-        App.ApplicationSerializer = DS.JSONSerializer.extend({
+         ```app/serializers/application.js
+        import DS from 'ember-data';
+         export default DS.JSONSerializer.extend({
           normalizePayload: function(payload) {
             delete payload.version;
             delete payload.status;
@@ -2713,8 +2754,9 @@
          By default, it creates a JSON object with a key for
         each attribute and belongsTo relationship.
          For example, consider this model:
-         ```javascript
-        App.Comment = DS.Model.extend({
+         ```app/models/comment.js
+        import DS from 'ember-data';
+         export default DS.Model.extend({
           title: DS.attr(),
           body: DS.attr(),
            author: DS.belongsTo('user')
@@ -2745,8 +2787,9 @@
         built-in serialization format.
          In that case, you can implement `serialize` yourself and
         return a JSON hash of your choosing.
-         ```javascript
-        App.PostSerializer = DS.JSONSerializer.extend({
+         ```app/serializers/post.js
+        import DS from 'ember-data';
+         export default DS.JSONSerializer.extend({
           serialize: function(snapshot, options) {
             var json = {
               POST_TTL: snapshot.attr('title'),
@@ -2764,8 +2807,9 @@
          If you want to define a serializer for your entire
         application, you'll probably want to use `eachAttribute`
         and `eachRelationship` on the record.
-         ```javascript
-        App.ApplicationSerializer = DS.JSONSerializer.extend({
+         ```app/serializers/application.js
+        import DS from 'ember-data';
+         export default DS.JSONSerializer.extend({
           serialize: function(snapshot, options) {
             var json = {};
              snapshot.eachAttribute(function(name) {
@@ -2801,8 +2845,9 @@
          If you just want to do some small tweaks on the default JSON,
         you can call super first and make the tweaks on the returned
         JSON.
-         ```javascript
-        App.PostSerializer = DS.JSONSerializer.extend({
+         ```app/serializers/post.js
+        import DS from 'ember-data';
+         export default DS.JSONSerializer.extend({
           serialize: function(snapshot, options) {
             var json = this._super.apply(this, arguments);
              json.subject = json.title;
@@ -2849,8 +2894,9 @@
         If your server expects namespaced keys, you should consider using the RESTSerializer.
         Otherwise you can override this method to customize how the record is added to the hash.
          For example, your server may expect underscored root objects.
-         ```js
-        App.ApplicationSerializer = DS.RESTSerializer.extend({
+         ```app/serializers/application.js
+        import DS from 'ember-data';
+         export default DS.RESTSerializer.extend({
           serializeIntoHash: function(data, type, snapshot, options) {
             var root = Ember.String.decamelize(type.modelName);
             data[root] = this.serialize(snapshot, options);
@@ -2873,8 +2919,9 @@
         For example if you wanted to ensure all your attributes were always
        serialized as properties on an `attributes` object you could
        write:
-        ```javascript
-       App.ApplicationSerializer = DS.JSONSerializer.extend({
+        ```app/serializers/application.js
+       import DS from 'ember-data';
+        export default DS.JSONSerializer.extend({
          serializeAttribute: function(snapshot, json, key, attributes) {
            json.attributes = json.attributes || {};
            this._super(snapshot, json.attributes, key, attributes);
@@ -2913,8 +2960,9 @@
        `serializeBelongsTo` can be used to customize how `DS.belongsTo`
        properties are serialized.
         Example
-        ```javascript
-       App.PostSerializer = DS.JSONSerializer.extend({
+        ```app/serializers/post.js
+       import DS from 'ember-data';
+        export default DS.JSONSerializer.extend({
          serializeBelongsTo: function(snapshot, json, relationship) {
            var key = relationship.key;
             var belongsTo = snapshot.belongsTo(key);
@@ -2958,8 +3006,9 @@
        `serializeHasMany` can be used to customize how `DS.hasMany`
        properties are serialized.
         Example
-        ```javascript
-       App.PostSerializer = DS.JSONSerializer.extend({
+        ```app/serializers/post.js
+       import DS from 'ember-data';
+        export default DS.JSONSerializer.extend({
          serializeHasMany: function(snapshot, json, relationship) {
            var key = relationship.key;
            if (key === 'comments') {
@@ -3003,8 +3052,9 @@
         `{polymorphic: true}` is pass as the second argument to the
         `DS.belongsTo` function.
          Example
-         ```javascript
-        App.CommentSerializer = DS.JSONSerializer.extend({
+         ```app/serializers/comment.js
+        import DS from 'ember-data';
+         export default DS.JSONSerializer.extend({
           serializePolymorphicType: function(snapshot, json, relationship) {
             var key = relationship.key,
                 belongsTo = snapshot.belongsTo(key);
@@ -3016,7 +3066,7 @@
             }
           }
         });
-       ```
+        ```
          @method serializePolymorphicType
         @param {DS.Snapshot} snapshot
         @param {Object} json
@@ -3219,8 +3269,9 @@
         `extractSingle` is used to deserialize a single record returned
         from the adapter.
          Example
-         ```javascript
-        App.PostSerializer = DS.JSONSerializer.extend({
+         ```app/serializers/post.js
+        import DS from 'ember-data';
+         export default DS.JSONSerializer.extend({
           extractSingle: function(store, typeClass, payload) {
             payload.comments = payload._embedded.comment;
             delete payload._embedded;
@@ -3245,8 +3296,9 @@
         `extractArray` is used to deserialize an array of records
         returned from the adapter.
          Example
-         ```javascript
-        App.PostSerializer = DS.JSONSerializer.extend({
+         ```app/serializers/post.js
+        import DS from 'ember-data';
+         export default DS.JSONSerializer.extend({
           extractArray: function(store, typeClass, payload) {
             return payload.map(function(json) {
               return this.extractSingle(store, typeClass, json);
@@ -3276,8 +3328,9 @@
         adapter payload. By default Ember Data expects meta information to
         be located on the `meta` property of the payload object.
          Example
-         ```javascript
-        App.PostSerializer = DS.JSONSerializer.extend({
+         ```app/serializers/post.js
+        import DS from 'ember-data';
+         export default DS.JSONSerializer.extend({
           extractMeta: function(store, typeClass, payload) {
             if (payload && payload._pagination) {
               store.setMetadataFor(typeClass, payload._pagination);
@@ -3304,8 +3357,9 @@
         Ember Data expects error information to be located on the `errors`
         property of the payload object.
          Example
-         ```javascript
-        App.PostSerializer = DS.JSONSerializer.extend({
+         ```app/serializers/post.js
+        import DS from 'ember-data';
+         export default DS.JSONSerializer.extend({
           extractErrors: function(store, typeClass, payload, id) {
             if (payload && typeof payload === 'object' && payload._problems) {
               payload = payload._problems;
@@ -3334,8 +3388,9 @@
        `keyForAttribute` can be used to define rules for how to convert an
        attribute name in your model to a key in your JSON.
         Example
-        ```javascript
-       App.ApplicationSerializer = DS.RESTSerializer.extend({
+        ```app/serializers/application.js
+       import DS from 'ember-data';
+        export default DS.RESTSerializer.extend({
          keyForAttribute: function(attr, method) {
            return Ember.String.underscore(attr).toUpperCase();
          }
@@ -3355,8 +3410,9 @@
        serializing and deserializing relationship properties. By default
        `JSONSerializer` does not provide an implementation of this method.
         Example
-         ```javascript
-        App.PostSerializer = DS.JSONSerializer.extend({
+         ```app/serializers/post.js
+        import DS from 'ember-data';
+         export default DS.JSONSerializer.extend({
           keyForRelationship: function(key, relationship, method) {
             return 'rel_' + Ember.String.underscore(key);
           }
@@ -3442,8 +3498,10 @@
       can implement across-the-board rules for how to convert an attribute
       name in your model to a key in your JSON.
 
-      ```js
-      App.ApplicationSerializer = DS.RESTSerializer.extend({
+      ```app/serializers/application.js
+      import DS from 'ember-data';
+
+      export default DS.RESTSerializer.extend({
         keyForAttribute: function(attr, method) {
           return Ember.String.underscore(attr).toUpperCase();
         }
@@ -3482,8 +3540,9 @@
         }
         ```
          You use `normalizeHash` to normalize just the comments:
-         ```javascript
-        App.PostSerializer = DS.RESTSerializer.extend({
+         ```app/serializers/post.js
+        import DS from 'ember-data';
+         export default DS.RESTSerializer.extend({
           normalizeHash: {
             comments: function(hash) {
               hash.id = hash._id;
@@ -3537,8 +3596,9 @@
         can specify those under `normalizeHash`.
          For example, if the `IDs` under `"comments"` are provided as `_id` instead of
         `id`, you can specify how to normalize just the comments:
-         ```js
-        App.PostSerializer = DS.RESTSerializer.extend({
+         ```app/serializers/post.js
+        import DS from 'ember-data';
+         export default DS.RESTSerializer.extend({
           normalizeHash: {
             comments: function(hash) {
               hash.id = hash._id;
@@ -3597,8 +3657,9 @@
         ```
          You could implement a serializer that looks like this to get your payload
         into shape:
-         ```js
-        App.PostSerializer = DS.RESTSerializer.extend({
+         ```app/serializers/post.js
+        import DS from 'ember-data';
+         export default DS.RESTSerializer.extend({
           // First, restructure the top-level so it's organized by type
           extractSingle: function(store, typeClass, payload, id) {
             var comments = payload._embedded.comment;
@@ -3715,8 +3776,9 @@
         ```
          You could implement a serializer that looks like this to get your payload
         into shape:
-         ```js
-        App.PostSerializer = DS.RESTSerializer.extend({
+         ```app/serializers/post.js
+        import DS from 'ember-data';
+         export default DS.RESTSerializer.extend({
           // First, restructure the top-level so it's organized by type
           // and the comments are listed under a post's `comments` key.
           extractArray: function(store, type, payload) {
@@ -3869,10 +3931,10 @@
          For example, your server may send a model name that does not correspond with
         the name of the model in your app. Let's take a look at an example model,
         and an example payload:
-         ```javascript
-        // Located in the file app/models/post.js
+         ```app/models/post.js
         import DS from 'ember-data';
-        export default var Post = DS.Model.extend();
+         export default DS.Model.extend({
+        });
         ```
          ```javascript
           {
@@ -3887,8 +3949,7 @@
         because it cannot find the "blog/post" model.
          Since we want to remove this namespace, we can define a serializer for the application that will
         remove "blog/" from the payload key whenver it's encountered by Ember Data:
-         ```javascript
-        // located in app/serializers/application.js
+         ```app/serializers/application.js
         import DS from 'ember-data';
          export default DS.RESTSerializer.extend({
           modelNameFromPayloadKey: function(payloadKey) {
@@ -3922,8 +3983,9 @@
          By default, it creates a JSON object with a key for
         each attribute and belongsTo relationship.
          For example, consider this model:
-         ```js
-        App.Comment = DS.Model.extend({
+         ```app/models/comment.js
+        import DS from 'ember-data';
+         export default DS.Model.extend({
           title: DS.attr(),
           body: DS.attr(),
            author: DS.belongsTo('user')
@@ -3954,8 +4016,9 @@
         built-in serialization format.
          In that case, you can implement `serialize` yourself and
         return a JSON hash of your choosing.
-         ```js
-        App.PostSerializer = DS.RESTSerializer.extend({
+         ```app/serializers/post.js
+        import DS from 'ember-data';
+         export default DS.RESTSerializer.extend({
           serialize: function(snapshot, options) {
             var json = {
               POST_TTL: snapshot.attr('title'),
@@ -3973,8 +4036,9 @@
          If you want to define a serializer for your entire
         application, you'll probably want to use `eachAttribute`
         and `eachRelationship` on the record.
-         ```js
-        App.ApplicationSerializer = DS.RESTSerializer.extend({
+         ```app/serializers/application.js
+        import DS from 'ember-data';
+         export default DS.RESTSerializer.extend({
           serialize: function(snapshot, options) {
             var json = {};
              snapshot.eachAttribute(function(name) {
@@ -4010,8 +4074,9 @@
          If you just want to do some small tweaks on the default JSON,
         you can call super first and make the tweaks on the returned
         JSON.
-         ```js
-        App.PostSerializer = DS.RESTSerializer.extend({
+         ```app/serializers/post.js
+        import DS from 'ember-data';
+         export default DS.RESTSerializer.extend({
           serialize: function(snapshot, options) {
             var json = this._super(snapshot, options);
              json.subject = json.title;
@@ -4034,8 +4099,9 @@
         By default the REST Serializer sends the modelName of a model, which is a camelized
         version of the name.
          For example, your server may expect underscored root objects.
-         ```js
-        App.ApplicationSerializer = DS.RESTSerializer.extend({
+         ```app/serializers/application.js
+        import DS from 'ember-data';
+         export default DS.RESTSerializer.extend({
           serializeIntoHash: function(data, type, record, options) {
             var root = Ember.String.decamelize(type.modelName);
             data[root] = this.serialize(record, options);
@@ -4068,8 +4134,9 @@
         }
         ```
          For example, your server may expect dasherized root objects:
-         ```js
-        App.ApplicationSerializer = DS.RESTSerializer.extend({
+         ```app/serializers/application.js
+        import DS from 'ember-data';
+         export default DS.RESTSerializer.extend({
           payloadKeyFromModelName: function(modelName) {
             return Ember.String.dasherize(modelName);
           }
@@ -4473,7 +4540,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.54eaf1458c'
+      VERSION: '1.0.0-beta.19+canary.6a03323d27'
     });
 
     if (Ember.libraries) {
@@ -7660,13 +7727,17 @@
         Removes all error messages from the given attribute and sends
         `becameValid` event to the record if there no more errors left.
          Example:
-         ```javascript
-        App.User = DS.Model.extend({
+         ```app/models/user.js
+        import DS from 'ember-data';
+         export default DS.Model.extend({
           email: DS.attr('string'),
           twoFactorAuth: DS.attr('boolean'),
           phone: DS.attr('string')
         });
-         App.UserEditRoute = Ember.Route.extend({
+        ```
+         ```app/routes/user/edit.js
+        import Ember from 'ember';
+         export default Ember.Route.extend({
           actions: {
             save: function(user) {
                if (!user.get('twoFactorAuth')) {
@@ -7700,8 +7771,9 @@
         Removes all error messages and sends `becameValid` event
         to the record.
          Example:
-         ```javascript
-        App.UserEditRoute = Ember.Route.extend({
+         ```app/routes/user/edit.js
+        import Ember from 'ember';
+         export default Ember.Route.extend({
           actions: {
             retrySave: function(user) {
                user.get('errors').clear();
@@ -7725,8 +7797,9 @@
 
       /**
         Checks if there is error messages for the given attribute.
-         ```javascript
-        App.UserEditRoute = Ember.Route.extend({
+         ```app/routes/user/edit.js
+        import Ember from 'ember';
+         export default Ember.Route.extend({
           actions: {
             save: function(user) {
                if (user.get('errors').has('email')) {
@@ -7805,17 +7878,19 @@
         implicit relationships are relationship which have not been declared but the inverse side exists on
         another record somewhere
         For example if there was
+         ```app/models/comment.js
+        import DS from 'ember-data';
+         export default DS.Model.extend({
+          name: DS.attr()
+        })
         ```
-          App.Comment = DS.Model.extend({
-            name: DS.attr()
-          })
-        ```
-        but there is also
-        ```
-          App.Post = DS.Model.extend({
-            name: DS.attr(),
-            comments: DS.hasMany('comment')
-          })
+         but there is also
+         ```app/models/post.js
+        import DS from 'ember-data';
+         export default DS.Model.extend({
+          name: DS.attr(),
+          comments: DS.hasMany('comment')
+        })
         ```
          would have a implicit post relationship in order to be do things like remove ourselves from the post
         when we are deleted
@@ -8843,8 +8918,9 @@
         method if you want to allow the user to still `rollback()` a
         delete after it was made.
          Example
-         ```javascript
-        App.ModelDeleteRoute = Ember.Route.extend({
+         ```app/routes/model/delete.js
+        import Ember from 'ember';
+         export default Ember.Route.extend({
           actions: {
             softDelete: function() {
               this.controller.get('model').deleteRecord();
@@ -8867,8 +8943,9 @@
       /**
         Same as `deleteRecord`, but saves the record immediately.
          Example
-         ```javascript
-        App.ModelDeleteRoute = Ember.Route.extend({
+         ```app/routes/model/delete.js
+        import Ember from 'ember';
+         export default Ember.Route.extend({
           actions: {
             delete: function() {
               var controller = this.controller;
@@ -8917,12 +8994,14 @@
         Returns an object, whose keys are changed properties, and value is
         an [oldProp, newProp] array.
          Example
-         ```javascript
-        var attr = DS.attr;
-        App.Mascot = DS.Model.extend({
+         ```app/models/mascot.js
+        import DS from 'ember-data';
+         export default DS.Model.extend({
           name: attr('string')
         });
-         var mascot = store.createRecord('mascot');
+        ```
+         ```javascript
+        var mascot = store.createRecord('mascot');
         mascot.changedAttributes(); // {}
         mascot.set('name', 'Tomster');
         mascot.changedAttributes(); // {name: [undefined, 'Tomster']}
@@ -9021,8 +9100,9 @@
         and has not yet been modified (`isLoaded` but not `isDirty`,
         or `isSaving`).
          Example
-         ```javascript
-        App.ModelViewRoute = Ember.Route.extend({
+         ```app/routes/model/view.js
+        import Ember from 'ember';
+         export default Ember.Route.extend({
           actions: {
             reload: function() {
               this.controller.get('model').reload().then(function(model) {
@@ -9210,13 +9290,18 @@
         described by DS.attr) and whose values are the meta object for the
         property.
          Example
-         ```javascript
-         App.Person = DS.Model.extend({
+         ```app/models/person.js
+        import DS from 'ember-data';
+         export default DS.Model.extend({
           firstName: attr('string'),
           lastName: attr('string'),
           birthday: attr('date')
         });
-         var attributes = Ember.get(App.Person, 'attributes')
+        ```
+         ```javascript
+        import Ember from 'ember';
+        import Person from 'app/models/person';
+         var attributes = Ember.get(Person, 'attributes')
          attributes.forEach(function(name, meta) {
           console.log(name, meta);
         });
@@ -9251,13 +9336,18 @@
         applied to each attribute. This map does not include any
         attributes that do not have an transformation type.
          Example
-         ```javascript
-        App.Person = DS.Model.extend({
+         ```app/models/person.js
+        import DS from 'ember-data';
+         export default DS.Model.extend({
           firstName: attr(),
           lastName: attr('string'),
           birthday: attr('date')
         });
-         var transformedAttributes = Ember.get(App.Person, 'transformedAttributes')
+        ```
+         ```javascript
+        import Ember from 'ember';
+        import Person from 'app/models/person';
+         var transformedAttributes = Ember.get(Person, 'transformedAttributes')
          transformedAttributes.forEach(function(field, type) {
           console.log(field, type);
         });
@@ -9296,12 +9386,13 @@
         object that will be set as `this` on the context.
          Example
          ```javascript
-        App.Person = DS.Model.extend({
+        import DS from 'ember-data';
+         var Person = DS.Model.extend({
           firstName: attr('string'),
           lastName: attr('string'),
           birthday: attr('date')
         });
-         App.Person.eachAttribute(function(name, meta) {
+         Person.eachAttribute(function(name, meta) {
           console.log(name, meta);
         });
          // prints:
@@ -9336,12 +9427,13 @@
         object that will be set as `this` on the context.
          Example
          ```javascript
-        App.Person = DS.Model.extend({
+        import DS from 'ember-data';
+         var Person = DS.Model.extend({
           firstName: attr(),
           lastName: attr('string'),
           birthday: attr('date')
         });
-         App.Person.eachTransformedAttribute(function(name, type) {
+         Person.eachTransformedAttribute(function(name, type) {
           console.log(name, type);
         });
          // prints:
@@ -9406,23 +9498,23 @@
 
       Example
 
-      ```javascript
-      var attr = DS.attr;
+      ```app/models/user.js
+      import DS from 'ember-data';
 
-      App.User = DS.Model.extend({
-        username: attr('string'),
-        email: attr('string'),
-        verified: attr('boolean', {defaultValue: false})
+      export default DS.Model.extend({
+        username: DS.attr('string'),
+        email: DS.attr('string'),
+        verified: DS.attr('boolean', {defaultValue: false})
       });
       ```
 
       Default value can also be a function. This is useful it you want to return
       a new object for each attribute.
 
-      ```javascript
-      var attr = DS.attr;
+      ```app/models/user.js
+      import DS from 'ember-data';
 
-      App.User = DS.Model.extend({
+      export default DS.Model.extend({
         username: attr('string'),
         email: attr('string'),
         settings: attr({defaultValue: function() {
@@ -9582,8 +9674,11 @@
 
       Define your application's store like this:
 
-      ```javascript
-      MyApp.ApplicationStore = DS.Store.extend();
+      ```app/stores/application.js
+      import DS from 'ember-data';
+
+      export default DS.Store.extend({
+      });
       ```
 
       Most Ember.js applications will only have a single `DS.Store` that is
@@ -9601,8 +9696,11 @@
       REST mechanism. You can customize how the store talks to your
       backend by specifying a custom adapter:
 
-      ```javascript
-      MyApp.ApplicationAdapter = MyApp.CustomAdapter
+      ```app/adapters/application.js
+      import DS from 'ember-data';
+
+      export default DS.Adapter.extend({
+      });
       ```
 
       You can learn more about writing a custom adapter by reading the `DS.Adapter`
@@ -9663,7 +9761,7 @@
       /**
         The adapter to use to communicate to a backend server or other persistence layer.
          This can be specified as an instance, class, or string.
-         If you want to specify `App.CustomAdapter` as a string, do:
+         If you want to specify `app/adapters/custom.js` as a string, do:
          ```js
         adapter: 'custom'
         ```
@@ -9926,8 +10024,9 @@
         If there's no record corresponding in the store it will simply call
         `store.find`.
          Example
-         ```javascript
-        App.PostRoute = Ember.Route.extend({
+         ```app/routes/post.js
+        import Ember from 'ember';
+         export default Ember.Route.extend({
           model: function(params) {
             return this.store.fetchById('post', params.post_id);
           }
@@ -10859,8 +10958,9 @@
           * represented as model instances
           * represented as URLs, under the `links` key
          For this model:
-         ```js
-        App.Person = DS.Model.extend({
+         ```app/models/person.js
+        import DS from 'ember-data';
+         export default DS.Model.extend({
           firstName: DS.attr(),
           lastName: DS.attr(),
            children: DS.hasMany('person')
@@ -10958,9 +11058,12 @@
         can push in more than one type of object at once.
         All objects should be in the format expected by the
         serializer.
+         ```app/serializers/application.js
+        import DS from 'ember-data';
+         export default DS.ActiveModelSerializer;
+        ```
          ```js
-        App.ApplicationSerializer = DS.ActiveModelSerializer;
-         var pushData = {
+        var pushData = {
           posts: [
             {id: 1, post_title: "Great post", comment_ids: [2]}
           ],
@@ -10977,11 +11080,17 @@
         However, the serializer itself (processing this data via
         `normalizePayload`) will not know which model it is
         deserializing.
+         ```app/serializers/application.js
+        import DS from 'ember-data';
+         export default DS.ActiveModelSerializer;
+        ```
+         ```app/serializers/post.js
+        import DS from 'ember-data';
+         export default DS.JSONSerializer;
+        ```
          ```js
-        App.ApplicationSerializer = DS.ActiveModelSerializer;
-        App.PostSerializer = DS.JSONSerializer;
-        store.pushPayload('comment', pushData); // Will use the ApplicationSerializer
-        store.pushPayload('post', pushData); // Will use the PostSerializer
+        store.pushPayload('comment', pushData); // Will use the application serializer
+        store.pushPayload('post', pushData); // Will use the post serializer
         ```
          @method pushPayload
         @param {String} modelName Optionally, a model type used to determine which serializer will be used
@@ -11990,8 +12099,10 @@
 
       Below is an example of a per-type serializer ('post' type).
 
-      ```js
-      App.PostSerializer = DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+      ```app/serializers/post.js
+      import DS from 'ember-data';
+
+      export default DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           author: { embedded: 'always' },
           comments: { serialize: 'ids' }
@@ -12123,8 +12234,9 @@
         });
         ```
          Use a custom (type) serializer for the post model to configure embedded author
-         ```js
-        App.PostSerializer = DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+         ```app/serializers/post.js
+        import DS from 'ember-data;
+         export default DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
           attrs: {
             author: {embedded: 'always'}
           }
@@ -12192,8 +12304,9 @@
         });
         ```
          Use a custom (type) serializer for the post model to configure embedded comments
-         ```js
-        App.PostSerializer = DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+         ```app/serializers/post.js
+        import DS from 'ember-data;
+         export default DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
           attrs: {
             comments: {embedded: 'always'}
           }
@@ -12223,8 +12336,9 @@
          So `{embedded: 'always'}` is shorthand for:
         `{serialize: 'records', deserialize: 'records'}`
          To embed the `ids` for a related object (using a hasMany relationship):
-         ```js
-        App.PostSerializer = DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+         ```app/serializers/post.js
+        import DS from 'ember-data;
+         export default DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
           attrs: {
             comments: {serialize: 'ids', deserialize: 'records'}
           }
@@ -12458,12 +12572,18 @@
       To declare a one-to-one relationship between two models, use
       `DS.belongsTo`:
 
-      ```javascript
-      App.User = DS.Model.extend({
+      ```app/models/user.js
+      import DS from 'ember-data';
+
+      export default DS.Model.extend({
         profile: DS.belongsTo('profile')
       });
+      ```
 
-      App.Profile = DS.Model.extend({
+      ```app/models/profile.js
+      import DS from 'ember-data';
+
+      export default DS.Model.extend({
         user: DS.belongsTo('user')
       });
       ```
@@ -12472,12 +12592,18 @@
       To declare a one-to-many relationship between two models, use
       `DS.belongsTo` in combination with `DS.hasMany`, like this:
 
-      ```javascript
-      App.Post = DS.Model.extend({
+      ```app/models/post.js
+      import DS from 'ember-data';
+
+      export default DS.Model.extend({
         comments: DS.hasMany('comment')
       });
+      ```
 
-      App.Comment = DS.Model.extend({
+      ```app/models/comment.js
+      import DS from 'ember-data';
+
+      export default DS.Model.extend({
         post: DS.belongsTo('post')
       });
       ```
@@ -12485,8 +12611,10 @@
       You can avoid passing a string as the first parameter. In that case Ember Data
       will infer the type from the key name.
 
-      ```javascript
-      App.Comment = DS.Model.extend({
+      ```app/models/comment.js
+      import DS from 'ember-data';
+
+      export default DS.Model.extend({
         post: DS.belongsTo()
       });
       ```
@@ -12573,12 +12701,18 @@
       To declare a one-to-many relationship between two models, use
       `DS.belongsTo` in combination with `DS.hasMany`, like this:
 
-      ```javascript
-      App.Post = DS.Model.extend({
+      ```app/models/post.js
+      import DS from 'ember-data';
+
+      export default DS.Model.extend({
         comments: DS.hasMany('comment')
       });
+      ```
 
-      App.Comment = DS.Model.extend({
+      ```app/models/comment.js
+      import DS from 'ember-data';
+
+      export default DS.Model.extend({
         post: DS.belongsTo('post')
       });
       ```
@@ -12587,12 +12721,18 @@
       To declare a many-to-many relationship between two models, use
       `DS.hasMany`:
 
-      ```javascript
-      App.Post = DS.Model.extend({
+      ```app/models/post.js
+      import DS from 'ember-data';
+
+      export default DS.Model.extend({
         tags: DS.hasMany('tag')
       });
+      ```
 
-      App.Tag = DS.Model.extend({
+      ```app/models/tag.js
+      import DS from 'ember-data';
+
+      export default DS.Model.extend({
         posts: DS.hasMany('post')
       });
       ```
@@ -12600,8 +12740,10 @@
       You can avoid passing a string as the first parameter. In that case Ember Data
       will infer the type from the singularized key name.
 
-      ```javascript
-      App.Post = DS.Model.extend({
+      ```app/models/post.js
+      import DS from 'ember-data';
+
+      export default DS.Model.extend({
         tags: DS.hasMany()
       });
       ```
@@ -12620,19 +12762,22 @@
       same type. You can specify which property on the related model is
       the inverse using `DS.hasMany`'s `inverse` option:
 
-      ```javascript
-      var belongsTo = DS.belongsTo,
-          hasMany = DS.hasMany;
+      ```app/models/comment.js
+      import DS from 'ember-data';
 
-      App.Comment = DS.Model.extend({
-        onePost: belongsTo('post'),
-        twoPost: belongsTo('post'),
-        redPost: belongsTo('post'),
-        bluePost: belongsTo('post')
+      export default DS.Model.extend({
+        onePost: DS.belongsTo('post'),
+        twoPost: DS.belongsTo('post'),
+        redPost: DS.belongsTo('post'),
+        bluePost: DS.belongsTo('post')
       });
+      ```
 
-      App.Post = DS.Model.extend({
-        comments: hasMany('comment', {
+      ```app/models/post.js
+      import DS from 'ember-data';
+
+      export default DS.Model.extend({
+        comments: DS.hasMany('comment', {
           inverse: 'redPost'
         })
       });
@@ -12873,8 +13018,9 @@
       /**
         For a given relationship name, returns the model type of the relationship.
          For example, if you define a model like this:
-        ```javascript
-        App.Post = DS.Model.extend({
+         ```app/models/post.js
+        import DS from 'ember-data';
+         export default DS.Model.extend({
           comments: DS.hasMany('comment')
         });
        ```
@@ -12897,13 +13043,17 @@
       /**
         Find the relationship which is the inverse of the one asked for.
          For example, if you define models like this:
-        ```javascript
-          App.Post = DS.Model.extend({
-            comments: DS.hasMany('message')
-          });
-           App.Message = DS.Model.extend({
-            owner: DS.belongsTo('post')
-          });
+         ```app/models/post.js
+        import DS from 'ember-data';
+         export default DS.Model.extend({
+          comments: DS.hasMany('message')
+        });
+        ```
+         ```app/models/message.js
+        import DS from 'ember-data';
+         export default DS.Model.extend({
+          owner: DS.belongsTo('post')
+        });
         ```
          App.Post.inverseFor('comments') -> {type: App.Message, name:'owner', kind:'belongsTo'}
         App.Message.inverseFor('owner') -> {type: App.Post, name:'comments', kind:'hasMany'}
@@ -13020,8 +13170,9 @@
         for each relationship with that type, describing the name of the relationship
         as well as the type.
          For example, given the following model definition:
-         ```javascript
-        App.Blog = DS.Model.extend({
+         ```app/models/blog.js
+        import DS from 'ember-data';
+         export default DS.Model.extend({
           users: DS.hasMany('user'),
           owner: DS.belongsTo('user'),
           posts: DS.hasMany('post')
@@ -13030,7 +13181,9 @@
          This computed property would return a map describing these
         relationships, like this:
          ```javascript
-        var relationships = Ember.get(App.Blog, 'relationships');
+        import Ember from 'ember';
+        import Blog from 'app/models/blog';
+         var relationships = Ember.get(Blog, 'relationships');
         relationships.get(App.User);
         //=> [ { name: 'users', kind: 'hasMany' },
         //     { name: 'owner', kind: 'belongsTo' } ]
@@ -13049,8 +13202,9 @@
         A hash containing lists of the model's relationships, grouped
         by the relationship kind. For example, given a model with this
         definition:
-         ```javascript
-        App.Blog = DS.Model.extend({
+         ```app/models/blog.js
+        import DS from 'ember-data';
+         export default DS.Model.extend({
           users: DS.hasMany('user'),
           owner: DS.belongsTo('user'),
            posts: DS.hasMany('post')
@@ -13058,7 +13212,9 @@
         ```
          This property would contain the following:
          ```javascript
-        var relationshipNames = Ember.get(App.Blog, 'relationshipNames');
+        import Ember from 'ember';
+        import Blog from 'app/models/blog';
+         var relationshipNames = Ember.get(Blog, 'relationshipNames');
         relationshipNames.hasMany;
         //=> ['users', 'posts']
         relationshipNames.belongsTo;
@@ -13089,8 +13245,9 @@
         included once, regardless of the number of relationships it has with
         the model.
          For example, given a model with this definition:
-         ```javascript
-        App.Blog = DS.Model.extend({
+         ```app/models/blog.js
+        import DS from 'ember-data';
+         export default DS.Model.extend({
           users: DS.hasMany('user'),
           owner: DS.belongsTo('user'),
            posts: DS.hasMany('post')
@@ -13098,7 +13255,9 @@
         ```
          This property would contain the following:
          ```javascript
-        var relatedTypes = Ember.get(App.Blog, 'relatedTypes');
+        import Ember from 'ember';
+        import Blog from 'app/models/blog';
+         var relatedTypes = Ember.get(Blog, 'relatedTypes');
         //=> [ App.User, App.Post ]
         ```
          @property relatedTypes
@@ -13113,8 +13272,9 @@
         relationship descriptors.
          For example, given a model with this
         definition:
-         ```javascript
-        App.Blog = DS.Model.extend({
+         ```app/models/blog.js
+        import DS from 'ember-data';
+         export default DS.Model.extend({
           users: DS.hasMany('user'),
           owner: DS.belongsTo('user'),
            posts: DS.hasMany('post')
@@ -13122,7 +13282,9 @@
         ```
          This property would contain the following:
          ```javascript
-        var relationshipsByName = Ember.get(App.Blog, 'relationshipsByName');
+        import Ember from 'ember';
+        import Blog from 'app/models/blog';
+         var relationshipsByName = Ember.get(Blog, 'relationshipsByName');
         relationshipsByName.get('users');
         //=> { key: 'users', kind: 'hasMany', type: App.User }
         relationshipsByName.get('owner');
@@ -13140,14 +13302,19 @@
         describing the kind of the field. A model's fields are the union of all of its
         attributes and relationships.
          For example:
-         ```javascript
-         App.Blog = DS.Model.extend({
+         ```app/models/blog.js
+        import DS from 'ember-data';
+         export default DS.Model.extend({
           users: DS.hasMany('user'),
           owner: DS.belongsTo('user'),
            posts: DS.hasMany('post'),
            title: DS.attr('string')
         });
-         var fields = Ember.get(App.Blog, 'fields');
+        ```
+         ```js
+        import Ember from 'ember';
+        import Blog from 'app/models/blog';
+         var fields = Ember.get(Blog, 'fields');
         fields.forEach(function(kind, field) {
           console.log(field, kind);
         });
@@ -13250,8 +13417,9 @@
          Note that in addition to a callback, you can also pass an optional target
         object that will be set as `this` on the context.
          Example
-         ```javascript
-        App.ApplicationSerializer = DS.JSONSerializer.extend({
+         ```app/serializers/application.js
+        import DS from 'ember-data';
+         export default DS.JSONSerializer.extend({
           serialize: function(record, options) {
             var json = {};
              record.eachRelationship(function(name, descriptor) {
