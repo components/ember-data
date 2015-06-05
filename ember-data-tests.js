@@ -5018,8 +5018,10 @@ define(
           App.Post = DS.Model.extend({
             title: DS.attr('string')
           });
+
+          // TODO: Remove this when Ember is upgraded to >= 1.13
           App.Post.reopenClass({
-            modelName: 'post'
+            _debugContainerKey: 'model:post'
           });
         });
 
@@ -5028,7 +5030,7 @@ define(
 
         debugAdapter.reopen({
           getModelTypes: function () {
-            return Ember.A([{ klass: App.__container__.lookupFactory('model:post'), name: 'App.Post' }]);
+            return Ember.A([{ klass: App.__container__.lookupFactory('model:post'), name: 'post' }]);
           }
         });
       },
@@ -5042,7 +5044,7 @@ define(
 
       var added = function (types) {
         equal(types.length, 1);
-        equal(types[0].name, 'App.Post');
+        equal(types[0].name, 'post');
         equal(types[0].count, 0);
         strictEqual(types[0].object, store.modelFor('post'));
       };
@@ -5076,7 +5078,13 @@ define(
         removedCount = count;
       };
 
-      debugAdapter.watchRecords(App.__container__.lookupFactory('model:post'), recordsAdded, recordsUpdated, recordsRemoved);
+      var modelClassOrName = undefined;
+      if (debugAdapter.get('acceptsModelName')) {
+        modelClassOrName = 'post';
+      } else {
+        modelClassOrName = App.__container__.lookupFactory('model:post');
+      }
+      debugAdapter.watchRecords(modelClassOrName, recordsAdded, recordsUpdated, recordsRemoved);
 
       equal(get(addedRecords, 'length'), 1);
       record = addedRecords[0];

@@ -4473,7 +4473,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19+canary.5541109e5f'
+      VERSION: '1.0.0-beta.19+canary.c9c5629a8f'
     });
 
     if (Ember.libraries) {
@@ -11596,6 +11596,8 @@
     var ember$data$lib$system$debug$debug$adapter$$get = Ember.get;
     var ember$data$lib$system$debug$debug$adapter$$capitalize = Ember.String.capitalize;
     var ember$data$lib$system$debug$debug$adapter$$underscore = Ember.String.underscore;
+    var ember$data$lib$system$debug$debug$adapter$$_Ember = Ember;
+    var ember$data$lib$system$debug$debug$adapter$$assert = ember$data$lib$system$debug$debug$adapter$$_Ember.assert;
 
     var ember$data$lib$system$debug$debug$adapter$$default = Ember.DataAdapter.extend({
       getFilters: function () {
@@ -11623,11 +11625,18 @@
         return columns;
       },
 
-      getRecords: function (modelNameOrFactory) {
-        // TODO: Ask Teddy what we should do here.
-        // Ideally this should always get passed a string.
-
-        var modelName = typeof modelNameOrFactory === 'string' ? modelNameOrFactory : modelNameOrFactory.modelName;
+      getRecords: function (modelClass, modelName) {
+        if (arguments.length < 2) {
+          // Legacy Ember.js < 1.13 support
+          var containerKey = modelClass._debugContainerKey;
+          if (containerKey) {
+            var match = containerKey.match(/model:(.*)/);
+            if (match) {
+              modelName = match[1];
+            }
+          }
+        }
+        ember$data$lib$system$debug$debug$adapter$$assert('Cannot find model name. Please upgrade to Ember.js >= 1.13 for Ember Inspector support', !!modelName);
         return this.get('store').all(modelName);
       },
 
