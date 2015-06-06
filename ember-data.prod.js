@@ -5431,7 +5431,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.4371049876'
+      VERSION: '1.0.0-beta.20+canary.482891b5b5'
     });
 
     if (Ember.libraries) {
@@ -10863,7 +10863,7 @@
           return this.findQuery(modelName, id);
         }
 
-        return this.findById(modelName, ember$data$lib$system$coerce$id$$default(id), preload);
+        return this.findByRecord(modelName, ember$data$lib$system$coerce$id$$default(id), preload);
       },
 
       /**
@@ -10932,6 +10932,19 @@
         @return {Promise} promise
       */
       findById: function (modelName, id, preload) {
+                return this.findByRecord(modelName, id, preload);
+      },
+
+      /**
+        This method returns a record for a given type and id combination.
+         @method findByRecord
+        @private
+        @param {String} modelName
+        @param {(String|Integer)} id
+        @param {Object} preload - optional set of attributes and relationships passed in either as IDs or as actual models
+        @return {Promise} promise
+      */
+      findByRecord: function (modelName, id, preload) {
                 var internalModel = this._internalModelForId(modelName, id);
 
         return this._findByInternalModel(internalModel, preload);
@@ -10966,12 +10979,12 @@
                 var store = this;
 
         return ember$data$lib$system$promise$proxies$$promiseArray(Ember.RSVP.all(ember$data$lib$system$store$$map(ids, function (id) {
-          return store.findById(modelName, id);
+          return store.findByRecord(modelName, id);
         })).then(Ember.A, null, "DS: Store#findByIds of " + modelName + " complete"));
       },
 
       /**
-        This method is called by `findById` if it discovers that a particular
+        This method is called by `findByRecord` if it discovers that a particular
         type/id pair hasn't been loaded yet to kick off a request to the
         adapter.
          @method fetchRecord

@@ -17435,6 +17435,21 @@ define(
       equal(filterdPeopleWillDestroy.called.length, 1, 'expected filterdPeople.willDestroy to have been called once');
     });
 
+    module('integration/store - findById() [deprecated]', {
+      setup: function () {
+        initializeStore(DS.RESTAdapter.extend());
+      }
+    });
+
+    test('store.findById() is deprecated', function () {
+      expectDeprecation(function () {
+        run(function () {
+          store.push('person', { id: 1, name: 'Tomster' });
+          store.findById('person', 1);
+        });
+      }, 'Using store.findById() has been deprecated. Use store.findByRecord() to return a record for a given type and id combination.');
+    });
+
     module('integration/store - fetch', {
       setup: function () {
         initializeStore(DS.RESTAdapter.extend());
@@ -21725,7 +21740,7 @@ define(
       });
     });
 
-    test("Calling Store#findById multiple times coalesces the calls into a adapter#findMany call", function () {
+    test("Calling Store#findByRecord multiple times coalesces the calls into a adapter#findMany call", function () {
       expect(2);
 
       var adapter = TestAdapter.extend({
