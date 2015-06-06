@@ -5456,7 +5456,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.482891b5b5'
+      VERSION: '1.0.0-beta.20+canary.6a4b20c357'
     });
 
     if (Ember.libraries) {
@@ -5945,7 +5945,7 @@
       */
       _unregisterFromManager: function () {
         var manager = ember$data$lib$system$record$arrays$record$array$$get(this, 'manager');
-        manager.unregisterFilteredRecordArray(this);
+        manager.unregisterRecordArray(this);
       },
 
       willDestroy: function () {
@@ -6115,9 +6115,17 @@
 
     var ember$data$lib$system$record$array$manager$$default = Ember.Object.extend({
       init: function () {
+        var _this = this;
+
         this.filteredRecordArrays = ember$data$lib$system$map$$MapWithDefault.create({
           defaultValue: function () {
             return [];
+          }
+        });
+
+        this.liveRecordArrays = ember$data$lib$system$map$$MapWithDefault.create({
+          defaultValue: function (typeClass) {
+            return _this.createRecordArray(typeClass);
           }
         });
 
@@ -6171,7 +6179,6 @@
         record._recordArrays = null;
       },
 
-      //Don't need to update non filtered arrays on simple changes
       _recordWasChanged: function (record) {
         var typeClass = record.type;
         var recordArrays = this.filteredRecordArrays.get(typeClass);
@@ -6179,9 +6186,7 @@
 
         ember$data$lib$system$record$array$manager$$forEach(recordArrays, function (array) {
           filter = ember$data$lib$system$record$array$manager$$get(array, "filterFunction");
-          if (filter) {
-            this.updateRecordArray(array, filter, typeClass, record);
-          }
+          this.updateFilterRecordArray(array, filter, typeClass, record);
         }, this);
       },
 
@@ -6193,36 +6198,53 @@
 
         ember$data$lib$system$record$array$manager$$forEach(recordArrays, function (array) {
           filter = ember$data$lib$system$record$array$manager$$get(array, "filterFunction");
-          this.updateRecordArray(array, filter, typeClass, record);
+          this.updateFilterRecordArray(array, filter, typeClass, record);
         }, this);
+
+        if (this.liveRecordArrays.has(typeClass)) {
+          var liveRecordArray = this.liveRecordArrays.get(typeClass);
+          this._addRecordToRecordArray(liveRecordArray, record);
+        }
       },
       /**
         Update an individual filter.
-         @method updateRecordArray
+         @method updateFilterRecordArray
         @param {DS.FilteredRecordArray} array
         @param {Function} filter
         @param {DS.Model} typeClass
         @param {InternalModel} record
       */
-      updateRecordArray: function (array, filter, typeClass, record) {
-        var shouldBeInArray;
-
-        if (!filter) {
-          shouldBeInArray = true;
-        } else {
-          shouldBeInArray = filter(record.getRecord());
-        }
-
+      updateFilterRecordArray: function (array, filter, typeClass, record) {
+        var shouldBeInArray = filter(record.getRecord());
         var recordArrays = this.recordArraysForRecord(record);
 
         if (shouldBeInArray) {
-          if (!recordArrays.has(array)) {
-            array.addInternalModel(record);
-            recordArrays.add(array);
-          }
-        } else if (!shouldBeInArray) {
+          this._addRecordToRecordArray(array, record);
+        } else {
           recordArrays["delete"](array);
           array.removeInternalModel(record);
+        }
+      },
+
+      _addRecordToRecordArray: function (array, record) {
+        var recordArrays = this.recordArraysForRecord(record);
+        if (!recordArrays.has(array)) {
+          array.addInternalModel(record);
+          recordArrays.add(array);
+        }
+      },
+
+      populateLiveRecordArray: function (array, modelName) {
+        var typeMap = this.store.typeMapFor(modelName);
+        var records = typeMap.records;
+        var record;
+
+        for (var i = 0, l = records.length; i < l; i++) {
+          record = records[i];
+
+          if (!record.isDeleted() && !record.isEmpty()) {
+            this._addRecordToRecordArray(array, record);
+          }
         }
       },
 
@@ -6245,13 +6267,24 @@
           record = records[i];
 
           if (!record.isDeleted() && !record.isEmpty()) {
-            this.updateRecordArray(array, filter, modelName, record);
+            this.updateFilterRecordArray(array, filter, modelName, record);
           }
         }
       },
 
       /**
-        Create a `DS.RecordArray` for a type and register it for updates.
+        Get the `DS.RecordArray` for a type, which contains all loaded records of
+        given type.
+         @method liveRecordArrayFor
+        @param {Class} typeClass
+        @return {DS.RecordArray}
+      */
+      liveRecordArrayFor: function (typeClass) {
+        return this.liveRecordArrays.get(typeClass);
+      },
+
+      /**
+        Create a `DS.RecordArray` for a type.
          @method createRecordArray
         @param {Class} typeClass
         @return {DS.RecordArray}
@@ -6264,8 +6297,6 @@
           isLoaded: true,
           manager: this
         });
-
-        this.registerFilteredRecordArray(array, typeClass);
 
         return array;
       },
@@ -6332,15 +6363,27 @@
       },
 
       /**
-        Unregister a FilteredRecordArray.
+        Unregister a RecordArray.
         So manager will not update this array.
-         @method unregisterFilteredRecordArray
+         @method unregisterRecordArray
         @param {DS.RecordArray} array
       */
-      unregisterFilteredRecordArray: function (array) {
-        var recordArrays = this.filteredRecordArrays.get(array.type);
+      unregisterRecordArray: function (array) {
+        var typeClass = array.type;
+
+        // unregister filtered record array
+        var recordArrays = this.filteredRecordArrays.get(typeClass);
         var index = ember$data$lib$system$record$array$manager$$indexOf(recordArrays, array);
-        recordArrays.splice(index, 1);
+        if (index !== -1) {
+          recordArrays.splice(index, 1);
+
+          // unregister live record array
+        } else if (this.liveRecordArrays.has(typeClass)) {
+          var liveRecordArrayForType = this.liveRecordArrayFor(typeClass);
+          if (array === liveRecordArrayForType) {
+            this.liveRecordArrays.remove(typeClass);
+          }
+        }
       },
 
       willDestroy: function () {
@@ -6349,6 +6392,7 @@
         this.filteredRecordArrays.forEach(function (value) {
           ember$data$lib$system$record$array$manager$$forEach(ember$data$lib$system$record$array$manager$$flatten(value), ember$data$lib$system$record$array$manager$$destroy);
         });
+        ember$data$lib$system$record$array$manager$$forEach(this.liveRecordArrays, ember$data$lib$system$record$array$manager$$destroy);
         ember$data$lib$system$record$array$manager$$forEach(this._adapterPopulatedRecordArrays, ember$data$lib$system$record$array$manager$$destroy);
       }
     });
@@ -11420,8 +11464,8 @@
         @private
       */
       didUpdateAll: function (typeClass) {
-        var findAllCache = this.typeMapFor(typeClass).findAllCache;
-        ember$data$lib$system$store$$set(findAllCache, "isUpdating", false);
+        var liveRecordArray = this.recordArrayManager.liveRecordArrayFor(typeClass);
+        ember$data$lib$system$store$$set(liveRecordArray, "isUpdating", false);
       },
 
       /**
@@ -11445,18 +11489,11 @@
       all: function (modelName) {
         Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string");
         var typeClass = this.modelFor(modelName);
-        var typeMap = this.typeMapFor(typeClass);
-        var findAllCache = typeMap.findAllCache;
 
-        if (findAllCache) {
-          this.recordArrayManager.updateFilter(findAllCache, typeClass);
-          return findAllCache;
-        }
+        var liveRecordArray = this.recordArrayManager.liveRecordArrayFor(typeClass);
+        this.recordArrayManager.populateLiveRecordArray(liveRecordArray, typeClass);
 
-        var array = this.recordArrayManager.createRecordArray(typeClass);
-
-        typeMap.findAllCache = array;
-        return array;
+        return liveRecordArray;
       },
 
       /**
@@ -11490,7 +11527,6 @@
             record.destroy(); // maybe within unloadRecord
           }
 
-          typeMap.findAllCache = null;
           typeMap.metadata = Ember.create(null);
         }
 
