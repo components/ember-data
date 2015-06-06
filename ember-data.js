@@ -2806,7 +2806,11 @@
           included: []
         };
 
-        payload = this.normalizePayload(payload);
+        var meta = this.extractMeta(store, primaryModelClass, payload);
+        if (meta) {
+          Ember.assert("The `meta` returned from `extractMeta` has to be an object, not \"" + Ember.typeOf(meta) + "\".", Ember.typeOf(meta) === "object");
+          documentHash.meta = meta;
+        }
 
         if (isSingle) {
           var _normalize = this.normalize(primaryModelClass, payload);
@@ -3734,6 +3738,10 @@
         @param {Object} payload
       */
       extractMeta: function (store, typeClass, payload) {
+        if (Ember.FEATURES.isEnabled("ds-new-serializer-api") && this.get("isNewSerializerAPI")) {
+          return ember$data$lib$serializers$json$serializer$$_newExtractMeta.apply(this, arguments);
+        }
+
         if (payload && payload.meta) {
           store.setMetadataFor(typeClass, payload.meta);
           delete payload.meta;
@@ -3869,6 +3877,22 @@
       }
 
       return { data: data };
+    }
+
+    /*
+      @method _newExtractMeta
+      @param {DS.Store} store
+      @param {DS.Model} modelClass
+      @param {Object} payload
+      @return {Object}
+      @private
+    */
+    function ember$data$lib$serializers$json$serializer$$_newExtractMeta(store, modelClass, payload) {
+      if (payload && payload.hasOwnProperty("meta")) {
+        var meta = payload.meta;
+        delete payload.meta;
+        return meta;
+      }
     }
     var ember$data$lib$system$normalize$model$name$$default = ember$data$lib$system$normalize$model$name$$normalizeModelName;
     /**
@@ -4342,13 +4366,19 @@
       _normalizeResponse: function (store, primaryModelClass, payload, id, requestType, isSingle) {
         var _this = this;
 
-        var document = {
+        var documentHash = {
           data: null,
           included: []
         };
 
+        var meta = this.extractMeta(store, primaryModelClass, payload);
+        if (meta) {
+          Ember.assert("The `meta` returned from `extractMeta` has to be an object, not \"" + Ember.typeOf(meta) + "\".", Ember.typeOf(meta) === "object");
+          documentHash.meta = meta;
+        }
+
         Ember.keys(payload).forEach(function (prop) {
-          var _document$included2;
+          var _documentHash$included3;
 
           var modelName = prop;
           var forcedSecondary = false;
@@ -4398,15 +4428,15 @@
             ```
            */
           if (isPrimary && Ember.typeOf(value) !== "array") {
-            var _document$included;
+            var _documentHash$included2;
 
             var _normalize = _this.normalize(primaryModelClass, value, prop);
 
             var _data = _normalize.data;
             var _included = _normalize.included;
 
-            document.data = _data;
-            (_document$included = document.included).push.apply(_document$included, _included);
+            documentHash.data = _data;
+            (_documentHash$included2 = documentHash.included).push.apply(_documentHash$included2, _included);
             return;
           }
 
@@ -4415,7 +4445,7 @@
           var data = _normalizeArray.data;
           var included = _normalizeArray.included;
 
-          (_document$included2 = document.included).push.apply(_document$included2, included);
+          (_documentHash$included3 = documentHash.included).push.apply(_documentHash$included3, included);
 
           if (isSingle) {
             /*jshint loopfunc:true*/
@@ -4429,26 +4459,26 @@
                    in the array
                */
               var isUpdatedRecord = isPrimary && ember$data$lib$system$coerce$id$$default(resource.id) === id;
-              var isFirstCreatedRecord = isPrimary && !id && !document.data;
+              var isFirstCreatedRecord = isPrimary && !id && !documentHash.data;
 
               if (isFirstCreatedRecord || isUpdatedRecord) {
-                document.data = resource;
+                documentHash.data = resource;
               } else {
-                document.included.push(resource);
+                documentHash.included.push(resource);
               }
             });
           } else {
             if (isPrimary) {
-              document.data = data;
+              documentHash.data = data;
             } else {
-              var _document$included3;
+              var _documentHash$included4;
 
-              (_document$included3 = document.included).push.apply(_document$included3, data);
+              (_documentHash$included4 = documentHash.included).push.apply(_documentHash$included4, data);
             }
           }
         });
 
-        return document;
+        return documentHash;
       },
 
       /**
@@ -5064,7 +5094,7 @@
 
         /*jshint loopfunc:true*/
         ember$data$lib$serializers$rest$serializer$$forEach.call(Ember.makeArray(payload[prop]), function (hash) {
-          var _documentHash$included2;
+          var _documentHash$included5;
 
           var _typeSerializer$normalize = typeSerializer.normalize(type, hash, prop);
 
@@ -5072,7 +5102,7 @@
           var included = _typeSerializer$normalize.included;
 
           documentHash.data.push(data);
-          (_documentHash$included2 = documentHash.included).push.apply(_documentHash$included2, included);
+          (_documentHash$included5 = documentHash.included).push.apply(_documentHash$included5, included);
         }, this);
       }
 
@@ -5426,7 +5456,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.4f0176fa0d'
+      VERSION: '1.0.0-beta.20+canary.de27c9d90e'
     });
 
     if (Ember.libraries) {
