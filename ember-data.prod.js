@@ -5429,7 +5429,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.2b0d42a14d'
+      VERSION: '1.0.0-beta.20+canary.18742edc26'
     });
 
     if (Ember.libraries) {
@@ -10875,7 +10875,7 @@
                     return this.query(modelName, id);
         }
 
-        return this.findByRecord(modelName, ember$data$lib$system$coerce$id$$default(id), preload);
+        return this.findRecord(modelName, ember$data$lib$system$coerce$id$$default(id), preload);
       },
 
       /**
@@ -10944,19 +10944,18 @@
         @return {Promise} promise
       */
       findById: function (modelName, id, preload) {
-                return this.findByRecord(modelName, id, preload);
+                return this.findRecord(modelName, id, preload);
       },
 
       /**
         This method returns a record for a given type and id combination.
-         @method findByRecord
-        @private
+         @method findRecord
         @param {String} modelName
         @param {(String|Integer)} id
         @param {Object} preload - optional set of attributes and relationships passed in either as IDs or as actual models
         @return {Promise} promise
       */
-      findByRecord: function (modelName, id, preload) {
+      findRecord: function (modelName, id, preload) {
                 var internalModel = this._internalModelForId(modelName, id);
 
         return this._findByInternalModel(internalModel, preload);
@@ -10976,7 +10975,7 @@
           fetchedInternalModel = internalModel._loadingPromise;
         }
 
-        return ember$data$lib$system$store$$promiseRecord(fetchedInternalModel || internalModel, "DS: Store#findByRecord " + internalModel.typeKey + " with id: " + ember$data$lib$system$store$$get(internalModel, "id"));
+        return ember$data$lib$system$store$$promiseRecord(fetchedInternalModel || internalModel, "DS: Store#findRecord " + internalModel.typeKey + " with id: " + ember$data$lib$system$store$$get(internalModel, "id"));
       },
       /**
         This method makes a series of requests to the adapter's `find` method
@@ -10991,12 +10990,12 @@
                 var store = this;
 
         return ember$data$lib$system$promise$proxies$$promiseArray(Ember.RSVP.all(ember$data$lib$system$store$$map(ids, function (id) {
-          return store.findByRecord(modelName, id);
+          return store.findRecord(modelName, id);
         })).then(Ember.A, null, "DS: Store#findByIds of " + modelName + " complete"));
       },
 
       /**
-        This method is called by `findByRecord` if it discovers that a particular
+        This method is called by `findRecord` if it discovers that a particular
         type/id pair hasn't been loaded yet to kick off a request to the
         adapter.
          @method fetchRecord

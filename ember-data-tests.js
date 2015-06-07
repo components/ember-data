@@ -17481,7 +17481,7 @@ define(
           store.push('person', { id: 1, name: 'Tomster' });
           store.findById('person', 1);
         });
-      }, 'Using store.findById() has been deprecated. Use store.findByRecord() to return a record for a given type and id combination.');
+      }, 'Using store.findById() has been deprecated. Use store.findRecord() to return a record for a given type and id combination.');
     });
 
     module('integration/store - fetch', {
@@ -21774,7 +21774,7 @@ define(
       });
     });
 
-    test("Calling Store#findByRecord multiple times coalesces the calls into a adapter#findMany call", function () {
+    test("Calling Store#findRecord multiple times coalesces the calls into a adapter#findMany call", function () {
       expect(2);
 
       var adapter = TestAdapter.extend({
