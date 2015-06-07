@@ -5454,7 +5454,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.3a4f84a948'
+      VERSION: '1.0.0-beta.20+canary.2b0d42a14d'
     });
 
     if (Ember.libraries) {
@@ -10544,7 +10544,7 @@
     }
     var ember$data$lib$system$model$$default = ember$data$lib$system$model$model$$default;
 
-    var ember$data$lib$system$store$$Backburner = Ember.Backburner || Ember.__loader.require("backburner")["default"] || Ember.__loader.require("backburner")["Backburner"];
+    var ember$data$lib$system$store$$Backburner = Ember._Backburner || Ember.Backburner || Ember.__loader.require("backburner")["default"] || Ember.__loader.require("backburner")["Backburner"];
 
     //Shim Backburner.join
     if (!ember$data$lib$system$store$$Backburner.prototype.join) {
