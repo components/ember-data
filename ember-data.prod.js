@@ -232,9 +232,7 @@
       findAll: null,
 
       /**
-        This method is called when you call `find` on the store with a
-        query object as the second parameter (i.e. `store.find('person', {
-        page: 1 })`).
+        This method is called when you call `query` on the store.
          Example
          ```app/adapters/application.js
         import DS from 'ember-data';
@@ -1192,7 +1190,7 @@
         server.
          For example:
          ```js
-          store.find('posts', {sort: 'price', category: 'pets'});
+          store.query('posts', {sort: 'price', category: 'pets'});
         ```
          will generate a requests like this `/posts?category=pets&sort=price`, even if the
         parameters were specified in a different order.
@@ -5431,7 +5429,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.dfd692a410'
+      VERSION: '1.0.0-beta.20+canary.3a4f84a948'
     });
 
     if (Ember.libraries) {
@@ -5739,7 +5737,7 @@
       }, null, "DS: Extract payload of findAll " + typeClass);
     }
 
-    function ember$data$lib$system$store$finders$$_findQuery(adapter, store, typeClass, query, recordArray) {
+    function ember$data$lib$system$store$finders$$_query(adapter, store, typeClass, query, recordArray) {
       var modelName = typeClass.modelName;
       var promise = adapter.findQuery(store, typeClass, query, recordArray);
       var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, modelName);
@@ -10860,36 +10858,6 @@
         given type, and return a promise that will be resolved once the server
         returns the values. The promise will resolve into all records of this type
         present in the store, even if the server only returns a subset of them.
-         ---
-         To find a record by a query, call `find` with a hash as the second
-        parameter:
-         ```javascript
-        store.find('person', { page: 1 });
-        ```
-         By passing an object `{page: 1}` as an argument to the find method, it
-        delegates to the adapter's findQuery method. The adapter then makes
-        a call to the server, transforming the object `{page: 1}` as parameters
-        that are sent along, and will return a RecordArray when the promise
-        resolves.
-         Exposing queries this way seems preferable to creating an abstract query
-        language for all server-side queries, and then require all adapters to
-        implement them.
-         The call made to the server, using a Rails backend, will look something like this:
-         ```
-        Started GET "/api/v1/person?page=1"
-        Processing by Api::V1::PersonsController#index as HTML
-        Parameters: {"page"=>"1"}
-        ```
-         If you do something like this:
-         ```javascript
-        store.find('person', {ids: [1, 2, 3]});
-        ```
-         The call to the server, using a Rails backend, will look something like this:
-         ```
-        Started GET "/api/v1/person?ids%5B%5D=1&ids%5B%5D=2&ids%5B%5D=3"
-        Processing by Api::V1::PersonsController#index as HTML
-        Parameters: {"ids"=>["1", "2", "3"]}
-        ```
          @method find
         @param {String} modelName
         @param {(Object|String|Integer|null)} id
@@ -10904,7 +10872,7 @@
 
         // We are passed a query instead of an id.
         if (Ember.typeOf(id) === "object") {
-          return this.findQuery(modelName, id);
+                    return this.query(modelName, id);
         }
 
         return this.findByRecord(modelName, ember$data$lib$system$coerce$id$$default(id), preload);
@@ -11309,22 +11277,55 @@
          Exposing queries this way seems preferable to creating an abstract query
         language for all server-side queries, and then require all adapters to
         implement them.
+         The call made to the server, using a Rails backend, will look something like this:
+         ```
+        Started GET "/api/v1/person?page=1"
+        Processing by Api::V1::PersonsController#index as HTML
+        Parameters: {"page"=>"1"}
+        ```
+         If you do something like this:
+         ```javascript
+        store.query('person', {ids: [1, 2, 3]});
+        ```
+         The call to the server, using a Rails backend, will look something like this:
+         ```
+        Started GET "/api/v1/person?ids%5B%5D=1&ids%5B%5D=2&ids%5B%5D=3"
+        Processing by Api::V1::PersonsController#index as HTML
+        Parameters: {"ids"=>["1", "2", "3"]}
+        ```
          This method returns a promise, which is resolved with a `RecordArray`
         once the server returns.
-         @method findQuery
-        @private
+         @method query
         @param {String} modelName
         @param {any} query an opaque query to be used by the adapter
         @return {Promise} promise
       */
-      findQuery: function (modelName, query) {
+      query: function (modelName, query) {
                 var typeClass = this.modelFor(modelName);
         var array = this.recordArrayManager.createAdapterPopulatedRecordArray(typeClass, query);
 
         var adapter = this.adapterFor(modelName);
 
                 
-        return ember$data$lib$system$promise$proxies$$promiseArray(ember$data$lib$system$store$finders$$_findQuery(adapter, this, typeClass, query, array));
+        return ember$data$lib$system$promise$proxies$$promiseArray(ember$data$lib$system$store$finders$$_query(adapter, this, typeClass, query, array));
+      },
+
+      /**
+        This method delegates a query to the adapter. This is the one place where
+        adapter-level semantics are exposed to the application.
+         Exposing queries this way seems preferable to creating an abstract query
+        language for all server-side queries, and then require all adapters to
+        implement them.
+         This method returns a promise, which is resolved with a `RecordArray`
+        once the server returns.
+         @method query
+        @param {String} modelName
+        @param {any} query an opaque query to be used by the adapter
+        @return {Promise} promise
+        @deprecated Use `store.query instead`
+      */
+      findQuery: function (modelName, query) {
+                return this.query(modelName, query);
       },
 
       /**
@@ -11482,7 +11483,7 @@
 
         // allow an optional server query
         if (hasQuery) {
-          promise = this.findQuery(modelName, query);
+          promise = this.query(modelName, query);
         } else if (arguments.length === 2) {
           filter = query;
         }

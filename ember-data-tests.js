@@ -1930,7 +1930,7 @@ define(
         return Ember.RSVP.resolve([{ id: 1, name: 'Peter Wagenet' }, { id: 2, name: 'Brohuda Katz' }]);
       };
 
-      store.find('person', { page: 1 }).then(async(function (queryResults) {
+      store.query('person', { page: 1 }).then(async(function (queryResults) {
         equal(get(queryResults, 'length'), 2, 'the record array has a length of 2 after the results are loaded');
         equal(get(queryResults, 'isLoaded'), true, 'the record array\'s `isLoaded` property should be true');
 
@@ -3128,7 +3128,7 @@ define(
         return run(Ember.RSVP, "resolve", { posts: [{ id: 1, name: "Rails is very expensive sushi" }] });
       };
 
-      store.findQuery("post", { "params": 1, "in": 2, "wrong": 3, "order": 4 }).then(async(function () {}));
+      store.query("post", { "params": 1, "in": 2, "wrong": 3, "order": 4 }).then(async(function () {}));
     });
 
     test("findQuery - passes buildURL the requestType", function () {
@@ -3142,7 +3142,7 @@ define(
         return run(Ember.RSVP, "resolve", { posts: [{ id: 1, name: "Rails is very expensive sushi" }] });
       };
 
-      store.findQuery("post", { "params": 1, "in": 2, "wrong": 3, "order": 4 }).then(async(function () {}));
+      store.query("post", { "params": 1, "in": 2, "wrong": 3, "order": 4 }).then(async(function () {}));
     });
 
     test("findQuery - if `sortQueryParams` is falsey, query params are not sorted at all", function () {
@@ -3158,7 +3158,7 @@ define(
 
       adapter.sortQueryParams = null;
 
-      store.findQuery("post", { "params": 1, "in": 2, "wrong": 3, "order": 4 }).then(async(function () {}));
+      store.query("post", { "params": 1, "in": 2, "wrong": 3, "order": 4 }).then(async(function () {}));
     });
 
     test("findQuery - if `sortQueryParams` is a custom function, query params passed through that function", function () {
@@ -3183,7 +3183,7 @@ define(
         return newQueryParams;
       };
 
-      store.findQuery("post", { "params": 1, "in": 2, "wrong": 3, "order": 4 }).then(async(function () {}));
+      store.query("post", { "params": 1, "in": 2, "wrong": 3, "order": 4 }).then(async(function () {}));
     });
 
     test("findQuery - payload 'meta' is accessible on the record array", function () {
@@ -3192,7 +3192,7 @@ define(
         posts: [{ id: 1, name: "Rails is very expensive sushi" }]
       });
 
-      store.findQuery("post", { page: 2 }).then(async(function (posts) {
+      store.query("post", { page: 2 }).then(async(function (posts) {
         equal(posts.get("meta.offset"), 5, "Reponse metadata can be accessed with recordArray.meta");
       }));
     });
@@ -3203,13 +3203,13 @@ define(
         posts: [{ id: 1, name: "Rails is very expensive sushi" }]
       });
 
-      store.findQuery("post", { page: 2 }).then(async(function (posts) {
+      store.query("post", { page: 2 }).then(async(function (posts) {
         equal(posts.get("meta.offset"), 5, "Reponse metadata can be accessed with recordArray.meta");
         ajaxResponse({
           meta: { offset: 1 },
           posts: [{ id: 1, name: "Rails is very expensive sushi" }]
         });
-        store.findQuery("post", { page: 1 }).then(async(function (newPosts) {
+        store.query("post", { page: 1 }).then(async(function (newPosts) {
           equal(newPosts.get("meta.offset"), 1, "new array has correct metadata");
           equal(posts.get("meta.offset"), 5, "metadata on the old array hasnt been clobbered");
         }));
@@ -3221,7 +3221,7 @@ define(
         posts: [{ id: 1, name: "Rails is omakase" }, { id: 2, name: "The Parley Letter" }]
       });
 
-      store.findQuery("post", { page: 1 }).then(async(function (posts) {
+      store.query("post", { page: 1 }).then(async(function (posts) {
         equal(passedUrl, "/posts");
         equal(passedVerb, "GET");
         deepEqual(passedHash.data, { page: 1 });
@@ -3244,7 +3244,7 @@ define(
         comments: [{ id: 1, name: "FIRST" }]
       });
 
-      store.findQuery("post", { page: 1 }).then(async(function (posts) {
+      store.query("post", { page: 1 }).then(async(function (posts) {
         var comment = store.getById("comment", 1);
 
         deepEqual(comment.getProperties("id", "name"), { id: "1", name: "FIRST" });
@@ -3261,7 +3261,7 @@ define(
         posts: [{ _ID_: 1, _NAME_: "Rails is omakase" }, { _ID_: 2, _NAME_: "The Parley Letter" }]
       });
 
-      store.findQuery("post", { page: 1 }).then(async(function (posts) {
+      store.query("post", { page: 1 }).then(async(function (posts) {
         var post1 = store.getById("post", 1);
         var post2 = store.getById("post", 2);
 
@@ -4078,8 +4078,8 @@ define(
         }]);
       };
 
-      run(store, 'findQuery', 'person', { q: 'bla' }).then(async(function (people) {
-        var people2 = store.findQuery('person', { q: 'bla2' });
+      run(store, 'query', 'person', { q: 'bla' }).then(async(function (people) {
+        var people2 = store.query('person', { q: 'bla2' });
 
         return Ember.RSVP.hash({ people: people, people2: people2 });
       })).then(async(function (results) {
@@ -17428,7 +17428,7 @@ define(
       var adapterPopulatedPeople, filterdPeople;
 
       run(function () {
-        adapterPopulatedPeople = store.find('person', {
+        adapterPopulatedPeople = store.query('person', {
           someCrazy: 'query'
         });
       });
@@ -21548,7 +21548,7 @@ define(
       };
 
       run(function () {
-        store.find("person", { page: 1 }).then(function (people) {
+        store.query("person", { page: 1 }).then(function (people) {
           equal(get(people, "isLoaded"), true, "The array is now loaded");
         });
       });
@@ -21928,7 +21928,7 @@ define(
       });
 
       run(function () {
-        store.find("person", passedQuery);
+        store.query("person", passedQuery);
       });
     });
 
@@ -21963,7 +21963,7 @@ define(
       env.registry.register("serializer:application", ApplicationSerializer);
 
       run(function () {
-        store.find("person", passedQuery);
+        store.query("person", passedQuery);
       });
       equal(callCount, 1, "extractFindQuery was called");
     });
