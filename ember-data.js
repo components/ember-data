@@ -4573,7 +4573,7 @@
           ember$data$lib$serializers$rest$serializer$$forEach.call(value, function (hash) {
             var typeName = this.modelNameFromPayloadKey(prop);
             var type = store.modelFor(typeName);
-            var typeSerializer = store.serializerFor(type);
+            var typeSerializer = store.serializerFor(type.modelName);
 
             hash = typeSerializer.normalize(type, hash, prop);
 
@@ -5456,7 +5456,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.af60175476'
+      VERSION: '1.0.0-beta.20+canary.2616143844'
     });
 
     if (Ember.libraries) {
