@@ -5456,7 +5456,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.6a4b20c357'
+      VERSION: '1.0.0-beta.20+canary.af60175476'
     });
 
     if (Ember.libraries) {
@@ -6381,7 +6381,7 @@
         } else if (this.liveRecordArrays.has(typeClass)) {
           var liveRecordArrayForType = this.liveRecordArrayFor(typeClass);
           if (array === liveRecordArrayForType) {
-            this.liveRecordArrays.remove(typeClass);
+            this.liveRecordArrays["delete"](typeClass);
           }
         }
       },
