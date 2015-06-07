@@ -4701,7 +4701,7 @@
             continue;
           }
           var type = store.modelFor(typeName);
-          var typeSerializer = store.serializerFor(type);
+          var typeSerializer = store.serializerFor(type.modelName);
           var isPrimary = !forcedSecondary && this.isPrimaryType(store, typeName, primaryTypeClass);
 
           /*jshint loopfunc:true*/
@@ -5090,7 +5090,7 @@
           continue;
         }
         var type = store.modelFor(modelName);
-        var typeSerializer = store.serializerFor(type);
+        var typeSerializer = store.serializerFor(type.modelName);
 
         /*jshint loopfunc:true*/
         ember$data$lib$serializers$rest$serializer$$forEach.call(Ember.makeArray(payload[prop]), function (hash) {
@@ -5456,7 +5456,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.ab8125168f'
+      VERSION: '1.0.0-beta.20+canary.dfd692a410'
     });
 
     if (Ember.libraries) {
