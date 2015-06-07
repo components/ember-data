@@ -2219,6 +2219,7 @@ define(
     var env, store, adapter, Post, Comment, SuperUser;
     var passedUrl, passedVerb, passedHash;
     var run = Ember.run;
+    var get = Ember.get;
 
     module("integration/adapter/rest_adapter - REST Adapter", {
       setup: function () {
@@ -3938,6 +3939,32 @@ define(
       } finally {
         Ember.$.ajax = originalAjax;
       }
+    });
+
+    test("findAll resolves with a collection of DS.Models, not DS.InternalModels", function () {
+      expect(4);
+
+      ajaxResponse({
+        posts: [{
+          id: 1,
+          name: "dhh lol"
+        }, {
+          id: 2,
+          name: "james mickens is rad"
+        }, {
+          id: 3,
+          name: "in the name of love"
+        }]
+      });
+
+      run(function () {
+        store.findAll("post").then(async(function (posts) {
+          equal(get(posts, "length"), 3);
+          posts.forEach(function (post) {
+            return ok(post instanceof DS.Model);
+          });
+        }));
+      });
     });
   }
 );
