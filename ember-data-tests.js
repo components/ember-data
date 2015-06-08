@@ -24480,20 +24480,6 @@ test('ember-data/lib/transforms/string.js should pass jshint', function() {
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/utils');
-test('ember-data/lib/utils/computed-polyfill.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/utils/computed-polyfill.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/utils');
-test('ember-data/lib/utils/supports-computed-getter-setter.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/utils/supports-computed-getter-setter.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/tests/helpers');
 test('ember-data/tests/helpers/custom-adapter.js should pass jshint', function() { 
   ok(true, 'ember-data/tests/helpers/custom-adapter.js should pass jshint.'); 

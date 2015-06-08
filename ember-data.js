@@ -5454,7 +5454,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.18742edc26'
+      VERSION: '1.0.0-beta.20+canary.698d4806f3'
     });
 
     if (Ember.libraries) {
@@ -10191,28 +10191,29 @@
     });
 
     var ember$data$lib$system$model$model$$default = ember$data$lib$system$model$model$$Model;
-    var ember$data$lib$utils$supports$computed$getter$setter$$supportsComputedGetterSetter;
+    var ember$new$computed$lib$utils$can$use$new$syntax$$supportsSetterGetter;
 
     try {
-      Ember.computed({
-        get: function () {},
-        set: function () {}
+      ember$lib$main$$default.computed({
+        set: function () {},
+        get: function () {}
       });
-      ember$data$lib$utils$supports$computed$getter$setter$$supportsComputedGetterSetter = true;
+      ember$new$computed$lib$utils$can$use$new$syntax$$supportsSetterGetter = true;
     } catch (e) {
-      ember$data$lib$utils$supports$computed$getter$setter$$supportsComputedGetterSetter = false;
+      ember$new$computed$lib$utils$can$use$new$syntax$$supportsSetterGetter = false;
     }
 
-    var ember$data$lib$utils$supports$computed$getter$setter$$default = ember$data$lib$utils$supports$computed$getter$setter$$supportsComputedGetterSetter;
+    var ember$new$computed$lib$utils$can$use$new$syntax$$default = ember$new$computed$lib$utils$can$use$new$syntax$$supportsSetterGetter;
+    var ember$new$computed$lib$main$$default = ember$new$computed$lib$main$$newComputed;
 
-    var ember$data$lib$utils$computed$polyfill$$computed = Ember.computed;
+    var ember$new$computed$lib$main$$computed = ember$lib$main$$default.computed;
 
-    var ember$data$lib$utils$computed$polyfill$$default = function () {
+    function ember$new$computed$lib$main$$newComputed() {
       var polyfillArguments = [];
       var config = arguments[arguments.length - 1];
 
-      if (typeof config === 'function' || ember$data$lib$utils$supports$computed$getter$setter$$default) {
-        return ember$data$lib$utils$computed$polyfill$$computed.apply(null, arguments);
+      if (typeof config === 'function' || ember$new$computed$lib$utils$can$use$new$syntax$$default) {
+        return ember$new$computed$lib$main$$computed.apply(undefined, arguments);
       }
 
       for (var i = 0, l = arguments.length - 1; i < l; i++) {
@@ -10236,9 +10237,14 @@
 
       polyfillArguments.push(func);
 
-      return ember$data$lib$utils$computed$polyfill$$computed.apply(null, polyfillArguments);
-    };
+      return ember$new$computed$lib$main$$computed.apply(undefined, polyfillArguments);
+    }
 
+    var ember$new$computed$lib$main$$computedKeys = ember$lib$main$$default.keys(ember$new$computed$lib$main$$computed);
+
+    for (var ember$new$computed$lib$main$$i = 0, ember$new$computed$lib$main$$l = ember$new$computed$lib$main$$computedKeys.length; ember$new$computed$lib$main$$i < ember$new$computed$lib$main$$l; ember$new$computed$lib$main$$i++) {
+      ember$new$computed$lib$main$$newComputed[ember$new$computed$lib$main$$computedKeys[ember$new$computed$lib$main$$i]] = ember$new$computed$lib$main$$computed[ember$new$computed$lib$main$$computedKeys[ember$new$computed$lib$main$$i]];
+    }
     var ember$data$lib$system$model$attributes$$default = ember$data$lib$system$model$attributes$$attr;
 
     /**
@@ -10511,7 +10517,7 @@
         options: options
       };
 
-      return ember$data$lib$utils$computed$polyfill$$default({
+      return ember$new$computed$lib$main$$default({
         get: function (key) {
           var internalModel = this._internalModel;
           if (ember$data$lib$system$model$attributes$$hasValue(internalModel, key)) {
@@ -13763,7 +13769,7 @@
         key: null
       };
 
-      return ember$data$lib$utils$computed$polyfill$$default({
+      return ember$new$computed$lib$main$$default({
         get: function (key) {
           return this._internalModel._relationships.get(key).getRecord();
         },
@@ -13928,7 +13934,7 @@
         key: null
       };
 
-      return ember$data$lib$utils$computed$polyfill$$default({
+      return ember$new$computed$lib$main$$default({
         get: function (key) {
           var relationship = this._internalModel._relationships.get(key);
           return relationship.getRecords();
