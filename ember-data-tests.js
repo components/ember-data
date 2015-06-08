@@ -5475,7 +5475,7 @@ define(
     }
 
     var get = Ember.get;
-    var Post, Comment, env;
+    var Post, Comment, Misc, env;
     var run = Ember.run;
 
     module('integration/client_id_generation - Client-side ID Generation', {
@@ -5488,9 +5488,14 @@ define(
           comments: DS.hasMany('comment')
         });
 
+        Misc = DS.Model.extend({
+          foo: DS.attr('string')
+        });
+
         env = setupStore({
           post: Post,
-          comment: Comment
+          comment: Comment,
+          misc: Misc
         });
       },
 
@@ -5528,6 +5533,38 @@ define(
 
       equal(get(comment, 'id'), 'id-1', 'comment is assigned id \'id-1\'');
       equal(get(post, 'id'), 'id-2', 'post is assigned id \'id-2\'');
+
+      // Despite client-generated IDs, calling commit() on the store should still
+      // invoke the adapter's `createRecord` method.
+      run(function () {
+        comment.save();
+        post.save();
+      });
+    });
+
+    test('empty string and undefined ids should coerce to null', function () {
+      expect(6);
+      var comment, post;
+      var idCount = 0;
+      var ids = [undefined, ''];
+      env.adapter.generateIdForRecord = function (passedStore, record) {
+        equal(env.store, passedStore, 'store is the first parameter');
+
+        return ids[idCount++];
+      };
+
+      env.adapter.createRecord = function (store, type, record) {
+        equal(typeof get(record, 'id'), 'object', 'correct type');
+        return Ember.RSVP.resolve();
+      };
+
+      run(function () {
+        comment = env.store.createRecord('misc');
+        post = env.store.createRecord('misc');
+      });
+
+      equal(get(comment, 'id'), null, 'comment is assigned id \'null\'');
+      equal(get(post, 'id'), null, 'post is assigned id \'null\'');
 
       // Despite client-generated IDs, calling commit() on the store should still
       // invoke the adapter's `createRecord` method.

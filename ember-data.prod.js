@@ -2466,7 +2466,7 @@
     // corresponding record, we will not know if it is a string or a number.
 
     function ember$data$lib$system$coerce$id$$coerceId(id) {
-      return id == null ? null : id + '';
+      return id == null || id === '' ? null : id + '';
     }
 
     var ember$data$lib$serializers$json$serializer$$get = Ember.get;
@@ -5429,7 +5429,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.698d4806f3'
+      VERSION: '1.0.0-beta.20+canary.2d5c6b188d'
     });
 
     if (Ember.libraries) {
