@@ -1647,7 +1647,7 @@ define(
       var allRecords;
 
       run(function () {
-        store.find('person').then(function (all) {
+        store.findAll('person').then(function (all) {
           allRecords = all;
           equal(get(all, 'length'), 1, 'the record array\'s length is 1 after a record is loaded into it');
           equal(all.objectAt(0).get('name'), 'Braaaahm Dale', 'the first item in the record array is Braaaahm Dale');
@@ -1655,7 +1655,7 @@ define(
       });
 
       run(function () {
-        store.find('person').then(function (all) {
+        store.findAll('person').then(function (all) {
           // Only one record array per type should ever be created (identity map)
           strictEqual(allRecords, all, 'the same record array is returned every time all records of a type are requested');
         });
@@ -1682,9 +1682,9 @@ define(
       var allRecords;
 
       run(function () {
-        store.find('person').then(null, function () {
+        store.findAll('person').then(null, function () {
           ok(true, 'The rejection should get here');
-          return store.find('person');
+          return store.findAll('person');
         }).then(function (all) {
           allRecords = all;
           equal(get(all, 'length'), 1, 'the record array\'s length is 1 after a record is loaded into it');
@@ -1771,14 +1771,12 @@ define(
     });
 
     test('It raises an assertion when no type is passed', function () {
-
       expectAssertion(function () {
         store.find();
       }, 'You need to pass a type to the store\'s find method');
     });
 
     test('It raises an assertion when `undefined` is passed as id (#1705)', function () {
-
       expectAssertion(function () {
         store.find('person', undefined);
       }, 'You may not pass `undefined` as id to the store\'s find method');
@@ -1786,6 +1784,20 @@ define(
       expectAssertion(function () {
         store.find('person', null);
       }, 'You may not pass `null` as id to the store\'s find method');
+    });
+
+    test('store.find(type) is deprecated', function () {
+      env.registry.register('adapter:person', DS.Adapter.extend({
+        findAll: function (store, typeClass) {
+          return [];
+        }
+      }));
+
+      expectDeprecation(function () {
+        run(function () {
+          store.find('person');
+        });
+      }, 'Using store.find(type) has been deprecated. Use store.findAll(type) to retrieve all records for a given type.');
     });
 
     test('When a single record is requested, the adapter\'s find method should be called unless it\'s loaded.', function () {
@@ -17605,13 +17617,25 @@ define(
       });
     });
 
-    module('integration/store - fetchAll', {
+    module('integration/store - findAll', {
       setup: function () {
         initializeStore(DS.RESTAdapter.extend());
       }
     });
 
-    test('Using store#fetchAll with no records triggers a query', function () {
+    test('store#fetchAll() is deprecated', function () {
+      ajaxResponse({
+        cars: []
+      });
+
+      expectDeprecation(function () {
+        run(function () {
+          store.fetchAll('car');
+        });
+      }, 'Using store.fetchAll(type) has been deprecated. Use store.findAll(type) to retrieve all records for a given type.');
+    });
+
+    test('Using store#findAll with no records triggers a query', function () {
       expect(2);
 
       ajaxResponse({
@@ -17630,13 +17654,13 @@ define(
       ok(!cars.get('length'), 'There is no cars in the store');
 
       run(function () {
-        store.fetchAll('car').then(function (cars) {
+        store.findAll('car').then(function (cars) {
           equal(cars.get('length'), 2, 'Two car were fetched');
         });
       });
     });
 
-    test('Using store#fetchAll with existing records performs a query, updating existing records and returning new ones', function () {
+    test('Using store#findAll with existing records performs a query, updating existing records and returning new ones', function () {
       expect(3);
 
       run(function () {
@@ -17663,7 +17687,7 @@ define(
       equal(cars.get('length'), 1, 'There is one car in the store');
 
       run(function () {
-        store.fetchAll('car').then(function (cars) {
+        store.findAll('car').then(function (cars) {
           equal(cars.get('length'), 2, 'There is 2 cars in the store now');
           var mini = cars.findBy('id', '1');
           equal(mini.get('model'), 'New Mini', 'Existing records have been updated');
@@ -17671,7 +17695,7 @@ define(
       });
     });
 
-    test('store#fetchAll should return all known records even if they are not in the adapter response', function () {
+    test('store#findAll should return all known records even if they are not in the adapter response', function () {
       expect(4);
 
       run(function () {
@@ -17691,7 +17715,7 @@ define(
       equal(cars.get('length'), 2, 'There is two cars in the store');
 
       run(function () {
-        store.fetchAll('car').then(function (cars) {
+        store.findAll('car').then(function (cars) {
           equal(cars.get('length'), 2, 'It returns all cars');
           var mini = cars.findBy('id', '1');
           equal(mini.get('model'), 'New Mini', 'Existing records have been updated');

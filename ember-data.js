@@ -202,8 +202,7 @@
       find: null,
 
       /**
-        The `findAll()` method is called when you call `find` on the store
-        without an ID (i.e. `store.find('post')`).
+        The `findAll()` method is used to retrieve all records for a given type.
          Example
          ```app/adapters/application.js
         import DS from 'ember-data';
@@ -222,8 +221,7 @@
           }
         });
         ```
-         @private
-        @method findAll
+         @method findAll
         @param {DS.Store} store
         @param {DS.Model} type
         @param {String} sinceToken
@@ -5454,7 +5452,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.7d2f84853f'
+      VERSION: '1.0.0-beta.20+canary.8d7bcc0f88'
     });
 
     if (Ember.libraries) {
@@ -10927,9 +10925,9 @@
         relationship on the record and construct the nested URL without having to first
         fetch the post.
          ---
-         To find all records for a type, call `find` with no additional parameters:
+         To find all records for a type, call `findAll`:
          ```javascript
-        store.find('person');
+        store.findAll('person');
         ```
          This will ask the adapter's `findAll` method to find the records for the
         given type, and return a promise that will be resolved once the server
@@ -10947,6 +10945,7 @@
         Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string");
 
         if (arguments.length === 1) {
+          Ember.deprecate("Using store.find(type) has been deprecated. Use store.findAll(type) to retrieve all records for a given type.");
           return this.findAll(modelName);
         }
 
@@ -10999,10 +10998,8 @@
         @return {Promise} promise
       */
       fetchAll: function (modelName) {
-        Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string");
-        var typeClass = this.modelFor(modelName);
-
-        return this._fetchAll(typeClass, this.all(modelName));
+        Ember.deprecate("Using store.fetchAll(type) has been deprecated. Use store.findAll(type) to retrieve all records for a given type.");
+        return this.findAll(modelName);
       },
 
       /**
@@ -11438,13 +11435,14 @@
         It triggers the adapter's `findAll` method to give it an opportunity to populate
         the array with records of that type.
          @method findAll
-        @private
         @param {String} modelName
         @return {DS.AdapterPopulatedRecordArray}
       */
       findAll: function (modelName) {
         Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string");
-        return this.fetchAll(modelName);
+        var typeClass = this.modelFor(modelName);
+
+        return this._fetchAll(typeClass, this.all(modelName));
       },
 
       /**
