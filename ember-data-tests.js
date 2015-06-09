@@ -19545,7 +19545,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     });
     var store = env.store;
 
-    run(function (_) {
+    run(function () {
       return store.createRecord('person');
     });
   });
