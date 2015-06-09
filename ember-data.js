@@ -4128,21 +4128,24 @@
         links: {}
       };
 
-      var attributeKeys = Ember.keys(payload.attributes);
-      ember$data$lib$system$store$serializer$response$$forEach(attributeKeys, function (key) {
-        var attribute = payload.attributes[key];
-        data[key] = attribute;
-      });
-
-      var relationshipKeys = Ember.keys(payload.relationships);
-      ember$data$lib$system$store$serializer$response$$forEach(relationshipKeys, function (key) {
-        var relationship = payload.relationships[key];
-        if (relationship.hasOwnProperty('data')) {
-          data[key] = relationship.data;
-        } else if (relationship.links && relationship.links.related) {
-          data.links[key] = relationship.links.related;
-        }
-      });
+      if (payload.attributes) {
+        var attributeKeys = Ember.keys(payload.attributes);
+        ember$data$lib$system$store$serializer$response$$forEach(attributeKeys, function (key) {
+          var attribute = payload.attributes[key];
+          data[key] = attribute;
+        });
+      }
+      if (payload.relationships) {
+        var relationshipKeys = Ember.keys(payload.relationships);
+        ember$data$lib$system$store$serializer$response$$forEach(relationshipKeys, function (key) {
+          var relationship = payload.relationships[key];
+          if (relationship.hasOwnProperty('data')) {
+            data[key] = relationship.data;
+          } else if (relationship.links && relationship.links.related) {
+            data.links[key] = relationship.links.related;
+          }
+        });
+      }
       return data;
     }
 
@@ -5452,7 +5455,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.2c2b0d4e90'
+      VERSION: '1.0.0-beta.20+canary.f93f61f01e'
     });
 
     if (Ember.libraries) {
@@ -12087,7 +12090,14 @@
 
       _pushInternalModel: function (modelName, data) {
         if (Ember.typeOf(modelName) === "object" && Ember.typeOf(data) === "undefined") {
-          return ember$data$lib$system$store$serializer$response$$pushPayload(this, modelName);
+          //TODO Remove once the transition is complete
+          var result = ember$data$lib$system$store$serializer$response$$pushPayload(this, modelName);
+          if (Ember.isArray(result)) {
+            return ember$data$lib$system$store$$map(result, function (item) {
+              return item._internalModel;
+            });
+          }
+          return result._internalModel;
         }
         Ember.assert("Expected an object as `data` in a call to `push` for " + modelName + " , but was " + Ember.typeOf(data), Ember.typeOf(data) === "object");
         Ember.assert("You must include an `id` for " + modelName + " in an object passed to `push`", data.id != null && data.id !== "");
