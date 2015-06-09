@@ -4540,7 +4540,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19'
+      VERSION: '1.0.0-beta.19.1'
     });
 
     if (Ember.libraries) {
@@ -7917,9 +7917,9 @@
         this.record = this.type._create({
           id: this.id,
           store: this.store,
-          container: this.container
+          container: this.container,
+          _internalModel: this
         });
-        this.record._internalModel = this;
         this._triggerDeferredTriggers();
       },
 
@@ -8538,6 +8538,7 @@
     var ember$data$lib$system$model$model$$Model = Ember.Object.extend(Ember.Evented, {
       _recordArrays: undefined,
       _relationships: undefined,
+      _internalModel: null,
 
       store: null,
 
@@ -12402,7 +12403,7 @@
         if (relationship.kind === 'hasMany') {
           return;
         } else if (relationship.kind === 'belongsTo') {
-          var parentRecord = snapshot.type.inverseFor(relationship.key);
+          var parentRecord = snapshot.type.inverseFor(relationship.key, this.store);
           if (parentRecord) {
             var name = parentRecord.name;
             var embeddedSerializer = this.store.serializerFor(embeddedSnapshot.modelName);
