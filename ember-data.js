@@ -1193,7 +1193,7 @@
         server.
          For example:
          ```js
-          store.query('posts', {sort: 'price', category: 'pets'});
+          store.query('posts', { sort: 'price', category: 'pets' });
         ```
          will generate a requests like this `/posts?category=pets&sort=price`, even if the
         parameters were specified in a different order.
@@ -2522,7 +2522,7 @@
          export default DS.JSONSerializer.extend({
           attrs: {
             admin: 'is_admin',
-            occupation: {key: 'career'}
+            occupation: { key: 'career' }
           }
         });
         ```
@@ -2534,7 +2534,7 @@
          export default DS.JSONSerializer.extend({
           attrs: {
             admin: {serialize: false},
-            occupation: {key: 'career'}
+            occupation: { key: 'career' }
           }
         });
         ```
@@ -3109,8 +3109,8 @@
         var mappedKey;
         if (attrs && attrs[key]) {
           mappedKey = attrs[key];
-          //We need to account for both the {title: 'post_title'} and
-          //{title: {key: 'post_title'}} forms
+          //We need to account for both the { title: 'post_title' } and
+          //{ title: { key: 'post_title' }} forms
           if (mappedKey.key) {
             mappedKey = mappedKey.key;
           }
@@ -3438,7 +3438,7 @@
       /**
         You can use this method to customize how polymorphic objects are
         serialized. Objects are considered to be polymorphic if
-        `{polymorphic: true}` is pass as the second argument to the
+        `{ polymorphic: true }` is pass as the second argument to the
         `DS.belongsTo` function.
          Example
          ```app/serializers/comment.js
@@ -5452,7 +5452,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.5eaf2f045c'
+      VERSION: '1.0.0-beta.20+canary.ca43880042'
     });
 
     if (Ember.libraries) {
@@ -10513,7 +10513,7 @@
       export default DS.Model.extend({
         username: DS.attr('string'),
         email: DS.attr('string'),
-        verified: DS.attr('boolean', {defaultValue: false})
+        verified: DS.attr('boolean', { defaultValue: false })
       });
       ```
 
@@ -10951,7 +10951,7 @@
         for the comment also looks like `/posts/1/comments/2` if you want to fetch the comment
         without fetching the post you can pass in the post to the `find` call:
          ```javascript
-        store.find('comment', 2, {post: 1});
+        store.find('comment', 2, { post: 1 });
         ```
          If you have access to the post model you can also pass the model itself:
          ```javascript
@@ -12092,10 +12092,10 @@
          ```js
         var pushData = {
           posts: [
-            {id: 1, post_title: "Great post", comment_ids: [2]}
+            { id: 1, post_title: "Great post", comment_ids: [2] }
           ],
           comments: [
-            {id: 2, comment_body: "Insightful comment"}
+            { id: 2, comment_body: "Insightful comment" }
           ]
         }
          store.pushPayload(pushData);
@@ -13267,7 +13267,7 @@
         import DS from 'ember-data;
          export default DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
           attrs: {
-            author: {embedded: 'always'}
+            author: { embedded: 'always' }
           }
         })
         ```
@@ -13362,14 +13362,14 @@
          The attrs options object can use more specific instruction for extracting and
         serializing. When serializing, an option to embed `ids` or `records` can be set.
         When extracting the only option is `records`.
-         So `{embedded: 'always'}` is shorthand for:
-        `{serialize: 'records', deserialize: 'records'}`
+         So `{ embedded: 'always' }` is shorthand for:
+        `{ serialize: 'records', deserialize: 'records' }`
          To embed the `ids` for a related object (using a hasMany relationship):
          ```app/serializers/post.js
         import DS from 'ember-data;
          export default DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
           attrs: {
-            comments: {serialize: 'ids', deserialize: 'records'}
+            comments: { serialize: 'ids', deserialize: 'records' }
           }
         })
         ```
@@ -14206,8 +14206,8 @@
           owner: DS.belongsTo('post')
         });
         ```
-         App.Post.inverseFor('comments') -> {type: App.Message, name:'owner', kind:'belongsTo'}
-        App.Message.inverseFor('owner') -> {type: App.Post, name:'comments', kind:'hasMany'}
+         App.Post.inverseFor('comments') -> { type: App.Message, name: 'owner', kind: 'belongsTo' }
+        App.Message.inverseFor('owner') -> { type: App.Post, name: 'comments', kind: 'hasMany' }
          @method inverseFor
         @static
         @param {String} name the name of the relationship
@@ -14233,7 +14233,7 @@
         }
 
         var propertyMeta = this.metaForProperty(name);
-        //If inverse is manually specified to be null, like  `comments: DS.hasMany('message', {inverse: null})`
+        //If inverse is manually specified to be null, like  `comments: DS.hasMany('message', { inverse: null })`
         var options = propertyMeta.options;
         if (options.inverse === null) {
           return null;
