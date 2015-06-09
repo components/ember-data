@@ -5430,7 +5430,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.b4b35a1bf8'
+      VERSION: '1.0.0-beta.20+canary.19fa1d0675'
     });
 
     if (Ember.libraries) {
@@ -13357,7 +13357,7 @@
         if (relationship.kind === 'hasMany') {
           return;
         } else if (relationship.kind === 'belongsTo') {
-          var parentRecord = snapshot.type.inverseFor(relationship.key);
+          var parentRecord = snapshot.type.inverseFor(relationship.key, this.store);
           if (parentRecord) {
             var name = parentRecord.name;
             var embeddedSerializer = this.store.serializerFor(embeddedSnapshot.modelName);
