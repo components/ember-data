@@ -12992,6 +12992,41 @@ define(
       ok(calledSerializeBelongsTo);
       ok(calledSerializeHasMany);
     });
+
+    test('serializing belongsTo correctly removes embedded foreign key', function () {
+      SecretWeapon.reopen({
+        superVillain: null
+      });
+      EvilMinion.reopen({
+        secretWeapon: DS.belongsTo('secret-weapon'),
+        superVillain: null
+      });
+
+      run(function () {
+        secretWeapon = env.store.createRecord('secret-weapon', { name: 'Secret Weapon' });
+        evilMinion = env.store.createRecord('evil-minion', { name: 'Evil Minion', secretWeapon: secretWeapon });
+      });
+
+      env.registry.register('serializer:evil-minion', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          secretWeapon: { embedded: 'always' }
+        }
+      }));
+
+      var serializer = env.container.lookup('serializer:evil-minion');
+      var json;
+
+      run(function () {
+        json = serializer.serialize(evilMinion._createSnapshot());
+      });
+
+      deepEqual(json, {
+        name: 'Evil Minion',
+        secretWeapon: {
+          name: 'Secret Weapon'
+        }
+      });
+    });
   }
 );
 
@@ -16860,6 +16895,27 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
     ok(!errorThrown, 'error not thrown due to missing store');
     deepEqual(json, {});
+  });
+
+  test('accessing attributes in the initializer should not throw an error', function () {
+    expect(1);
+    var Person = DS.Model.extend({
+      name: DS.attr('string'),
+
+      init: function () {
+        this._super.apply(this, arguments);
+        ok(!this.get('name'));
+      }
+    });
+
+    var env = setupStore({
+      person: Person
+    });
+    var store = env.store;
+
+    run(function () {
+      return store.createRecord('person');
+    });
   });
 });
 
