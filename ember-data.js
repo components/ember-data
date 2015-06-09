@@ -5452,7 +5452,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.ca43880042'
+      VERSION: '1.0.0-beta.20+canary.2c2b0d4e90'
     });
 
     if (Ember.libraries) {
@@ -5708,9 +5708,13 @@
           var payload = ember$data$lib$system$store$serializer$response$$normalizeResponseHelper(serializer, store, typeClass, adapterPayload, null, "findHasMany");
           //TODO Use a non record creating push
           var records = ember$data$lib$system$store$serializer$response$$pushPayload(store, payload);
-          return ember$data$lib$system$store$finders$$map(records, function (record) {
+          var recordArray = ember$data$lib$system$store$finders$$map(records, function (record) {
             return record._internalModel;
           });
+          if (Ember.FEATURES.isEnabled("ds-new-serializer-api") && serializer.get("isNewSerializerAPI")) {
+            recordArray.meta = payload.meta;
+          }
+          return recordArray;
         });
       }, null, "DS: Extract payload of " + internalModel + " : hasMany " + relationship.type);
     }
@@ -6002,19 +6006,21 @@
       }, "filterFunction")
     });
 
-    /**
-      @module ember-data
-    */
+    var ember$data$lib$system$clone$null$$default = ember$data$lib$system$clone$null$$cloneNull;
 
-    var ember$data$lib$system$record$arrays$adapter$populated$record$array$$get = Ember.get;
-
-    function ember$data$lib$system$record$arrays$adapter$populated$record$array$$cloneNull(source) {
+    function ember$data$lib$system$clone$null$$cloneNull(source) {
       var clone = Ember.create(null);
       for (var key in source) {
         clone[key] = source[key];
       }
       return clone;
     }
+
+    /**
+      @module ember-data
+    */
+
+    var ember$data$lib$system$record$arrays$adapter$populated$record$array$$get = Ember.get;
 
     var ember$data$lib$system$record$arrays$adapter$populated$record$array$$default = ember$data$lib$system$record$arrays$record$array$$default.extend({
       query: null,
@@ -6054,7 +6060,7 @@
         this.setProperties({
           content: Ember.A(internalModels),
           isLoaded: true,
-          meta: ember$data$lib$system$record$arrays$adapter$populated$record$array$$cloneNull(meta)
+          meta: ember$data$lib$system$clone$null$$default(meta)
         });
 
         internalModels.forEach(function (record) {
@@ -7287,6 +7293,7 @@
       //multiple possible modelNames
       this.inverseKeyForImplicit = this.record.constructor.modelName + this.key;
       this.linkPromise = null;
+      this.meta = null;
       this.hasData = false;
     }
 
@@ -7294,6 +7301,10 @@
       constructor: ember$data$lib$system$relationships$state$relationship$$Relationship,
 
       destroy: Ember.K,
+
+      updateMeta: function (meta) {
+        this.meta = meta;
+      },
 
       clear: function () {
         var members = this.members.list;
@@ -7581,6 +7592,38 @@
       */
       relationship: null,
 
+      /**
+        Metadata associated with the request for async hasMany relationships.
+         Example
+         Given that the server returns the following JSON payload when fetching a
+        hasMany relationship:
+         ```js
+        {
+          "comments": [{
+            "id": 1,
+            "comment": "This is the first comment",
+          }, {
+            // ...
+          }],
+           "meta": {
+            "page": 1,
+            "total": 5
+          }
+        }
+        ```
+         You can then access the metadata via the `meta` property:
+         ```js
+        post.get('comments').then(function(comments) {
+          var meta = comments.get('meta');
+           // meta.page => 1
+          // meta.total => 5
+        });
+        ```
+         @property {Object} meta
+        @public
+      */
+      meta: null,
+
       internalReplace: function (idx, amt, objects) {
         if (!objects) {
           objects = [];
@@ -7754,6 +7797,12 @@
       this.manyArray.destroy();
     };
 
+    ember$data$lib$system$relationships$state$has$many$$ManyRelationship.prototype._super$updateMeta = ember$data$lib$system$relationships$state$relationship$$default.prototype.updateMeta;
+    ember$data$lib$system$relationships$state$has$many$$ManyRelationship.prototype.updateMeta = function (meta) {
+      this._super$updateMeta(meta);
+      this.manyArray.set("meta", meta);
+    };
+
     ember$data$lib$system$relationships$state$has$many$$ManyRelationship.prototype._super$addCanonicalRecord = ember$data$lib$system$relationships$state$relationship$$default.prototype.addCanonicalRecord;
     ember$data$lib$system$relationships$state$has$many$$ManyRelationship.prototype.addCanonicalRecord = function (record, idx) {
       if (this.canonicalMembers.has(record)) {
@@ -7872,12 +7921,16 @@
     };
 
     ember$data$lib$system$relationships$state$has$many$$ManyRelationship.prototype.fetchLink = function () {
-      var self = this;
+      var _this = this;
+
       return this.store.findHasMany(this.record, this.link, this.relationshipMeta).then(function (records) {
-        self.store._backburner.join(function () {
-          self.updateRecordsFromAdapter(records);
+        if (records.hasOwnProperty("meta")) {
+          _this.updateMeta(records.meta);
+        }
+        _this.store._backburner.join(function () {
+          _this.updateRecordsFromAdapter(records);
         });
-        return self.manyArray;
+        return _this.manyArray;
       });
     };
 
@@ -12519,6 +12572,11 @@
         if (data.links && data.links[key]) {
           relationship = record._relationships.get(key);
           relationship.updateLink(data.links[key]);
+        }
+
+        if (data.meta && data.meta.hasOwnProperty(key)) {
+          relationship = record._relationships.get(key);
+          relationship.updateMeta(data.meta[key]);
         }
 
         if (value !== undefined) {
