@@ -5455,7 +5455,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.144ae4f29b'
+      VERSION: '1.0.0-beta.20+canary.a356c82df7'
     });
 
     if (Ember.libraries) {
@@ -12124,7 +12124,7 @@
           updated.
       */
       push: function (modelName, data) {
-        Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string");
+        Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string" || typeof data === "undefined");
         var internalModel = this._pushInternalModel(modelName, data);
         if (Ember.isArray(internalModel)) {
           return ember$data$lib$system$store$$map(internalModel, function (item) {
