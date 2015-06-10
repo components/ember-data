@@ -5430,7 +5430,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.60c01a3f30'
+      VERSION: '1.0.0-beta.20+canary.3d7dba530e'
     });
 
     if (Ember.libraries) {
@@ -10936,7 +10936,7 @@
         for the comment also looks like `/posts/1/comments/2` if you want to fetch the comment
         without fetching the post you can pass in the post to the `find` call:
          ```javascript
-        store.find('comment', 2, { post: 1 });
+        store.find('comment', 2, { preload: { post: 1 } });
         ```
          If you have access to the post model you can also pass the model itself:
          ```javascript
@@ -10959,7 +10959,7 @@
          @method find
         @param {String} modelName
         @param {(Object|String|Integer|null)} id
-        @param {Object} preload - optional set of attributes and relationships passed in either as IDs or as actual models
+        @param {Object} options
         @return {Promise} promise
       */
       find: function (modelName, id, preload) {
@@ -10972,8 +10972,8 @@
         if (Ember.typeOf(id) === "object") {
                     return this.query(modelName, id);
         }
-
-        return this.findRecord(modelName, ember$data$lib$system$coerce$id$$default(id), preload);
+        var options = ember$data$lib$system$store$$deprecatePreload(preload, this.modelFor(modelName), "find");
+        return this.findRecord(modelName, ember$data$lib$system$coerce$id$$default(id), options);
       },
 
       /**
@@ -10996,14 +10996,15 @@
          @method fetchById
         @param {String} modelName
         @param {(String|Integer)} id
-        @param {Object} preload - optional set of attributes and relationships passed in either as IDs or as actual models
+        @param {Object} options
         @return {Promise} promise
       */
       fetchById: function (modelName, id, preload) {
-                if (this.hasRecordForId(modelName, id)) {
+                var options = ember$data$lib$system$store$$deprecatePreload(preload, this.modelFor(modelName), "fetchById");
+        if (this.hasRecordForId(modelName, id)) {
           return this.getById(modelName, id).reload();
         } else {
-          return this.find(modelName, id, preload);
+          return this.findRecord(modelName, id, options);
         }
       },
 
@@ -11036,11 +11037,12 @@
         @private
         @param {String} modelName
         @param {(String|Integer)} id
-        @param {Object} preload - optional set of attributes and relationships passed in either as IDs or as actual models
+        @param {Object} options
         @return {Promise} promise
       */
       findById: function (modelName, id, preload) {
-                return this.findRecord(modelName, id, preload);
+                var options = ember$data$lib$system$store$$deprecatePreload(preload, this.modelFor(modelName), "findById");
+        return this.findRecord(modelName, id, options);
       },
 
       /**
@@ -11048,20 +11050,21 @@
          @method findRecord
         @param {String} modelName
         @param {(String|Integer)} id
-        @param {Object} preload - optional set of attributes and relationships passed in either as IDs or as actual models
+        @param {Object} options
         @return {Promise} promise
       */
-      findRecord: function (modelName, id, preload) {
+      findRecord: function (modelName, id, options) {
                 var internalModel = this._internalModelForId(modelName, id);
 
-        return this._findByInternalModel(internalModel, preload);
+        return this._findByInternalModel(internalModel, options);
       },
 
-      _findByInternalModel: function (internalModel, preload) {
+      _findByInternalModel: function (internalModel, options) {
         var fetchedInternalModel;
+        options = options || {};
 
-        if (preload) {
-          internalModel._preloadData(preload);
+        if (options.preload) {
+          internalModel._preloadData(options.preload);
         }
 
         if (internalModel.isEmpty()) {
@@ -12459,6 +12462,26 @@
           }
         }
       });
+    }
+
+    function ember$data$lib$system$store$$deprecatePreload(preloadOrOptions, type, methodName) {
+      if (preloadOrOptions) {
+        var modelProperties = [];
+        var fields = Ember.get(type, "fields");
+        fields.forEach(function (fieldType, key) {
+          modelProperties.push(key);
+        });
+        var preloadDetected = modelProperties.reduce(function (memo, key) {
+          return typeof preloadOrOptions[key] !== "undefined" || memo;
+        }, false);
+        if (preloadDetected) {
+                    var preload = preloadOrOptions;
+          return {
+            preload: preload
+          };
+        }
+      }
+      return preloadOrOptions;
     }
 
     var ember$data$lib$system$store$$default = ember$data$lib$system$store$$Store;
