@@ -1707,7 +1707,7 @@ define(
         store.createRecord('person', { name: 'Alex MacCaw' });
       });
 
-      allRecords = store.all('person');
+      allRecords = store.peekAll('person');
 
       equal(get(allRecords, 'length'), 2, 'the record array\'s length is 2');
       equal(allRecords.objectAt(0).get('name'), 'Jeremy Ashkenas', 'the first item in the record array is Jeremy Ashkenas');
@@ -1722,7 +1722,7 @@ define(
         person: Person
       });
 
-      allRecords = store.all('person');
+      allRecords = store.peekAll('person');
 
       equal(get(allRecords, 'length'), 0, 'precond - the record array\'s length is zero before any records are loaded');
 
@@ -2324,7 +2324,7 @@ define(
         equal(post.get("id"), "1");
         equal(post.get("name"), "Rails is omakase");
 
-        var post2 = store.getById("post", 2);
+        var post2 = store.peekRecord("post", 2);
         equal(post2.get("id"), "2");
         equal(post2.get("name"), "The Parley Letter");
       }));
@@ -2344,7 +2344,7 @@ define(
         equal(post.get("id"), "1");
         equal(post.get("name"), "Rails is omakase");
 
-        var comment = store.getById("comment", 1);
+        var comment = store.peekRecord("comment", 1);
         equal(comment.get("id"), "1");
         equal(comment.get("name"), "FIRST");
       }));
@@ -2470,7 +2470,7 @@ define(
       run(function () {
         store.push("post", { id: 1, name: "Rails is omakase", comments: [] });
       });
-      var post = store.getById("post", 1);
+      var post = store.peekRecord("post", 1);
 
       run(function () {
         comment = store.createRecord("comment", { name: "The Parley Letter" });
@@ -2636,7 +2636,7 @@ define(
         store.push("comment", { id: 1, name: "Dat Parlay Letter", post: 1 });
       });
 
-      var post = store.getById("post", 1);
+      var post = store.peekRecord("post", 1);
       var commentCount = post.get("comments.length");
       equal(commentCount, 1, "the post starts life with a comment");
 
@@ -2671,8 +2671,8 @@ define(
 
       run(function () {
         post.save().then(async(function (record) {
-          equal(store.getById("post", 1).get("comment.isLoaded"), true, "post's comment isLoaded (via store)");
-          equal(store.getById("comment", 1).get("post.isLoaded"), true, "comment's post isLoaded (via store)");
+          equal(store.peekRecord("post", 1).get("comment.isLoaded"), true, "post's comment isLoaded (via store)");
+          equal(store.peekRecord("comment", 1).get("post.isLoaded"), true, "comment's post isLoaded (via store)");
           equal(record.get("comment.isLoaded"), true, "post's comment isLoaded (via record)");
           equal(record.get("comment.post.isLoaded"), true, "post's comment's post isLoaded (via record)");
         }));
@@ -2841,7 +2841,7 @@ define(
           equal(post.get("isDirty"), false, "the post isn't dirty anymore");
           equal(post.get("name"), "Dat Parley Letter", "the post was updated");
 
-          var comment = store.getById("comment", 1);
+          var comment = store.peekRecord("comment", 1);
           equal(comment.get("name"), "FIRST", "The comment was sideloaded");
         }));
       });
@@ -2868,7 +2868,7 @@ define(
         equal(post.get("isDirty"), false, "the post isn't dirty anymore");
         equal(post.get("name"), "Dat Parley Letter", "the post was updated");
 
-        var comment = store.getById("comment", 1);
+        var comment = store.peekRecord("comment", 1);
         equal(comment.get("name"), "FIRST", "The comment was sideloaded");
       }));
     });
@@ -2912,7 +2912,7 @@ define(
       store.find("comment", 2).then(async(function () {
         return store.find("post", 1);
       })).then(async(function (post) {
-        var newComment = store.getById("comment", 2);
+        var newComment = store.peekRecord("comment", 2);
         var comments = post.get("comments");
 
         // Replace the comment with a new one
@@ -2983,7 +2983,7 @@ define(
         equal(post.get("isDirty"), false, "the post isn't dirty anymore");
         equal(post.get("isDeleted"), true, "the post is now deleted");
 
-        var comment = store.getById("comment", 1);
+        var comment = store.peekRecord("comment", 1);
         equal(comment.get("name"), "FIRST", "The comment was sideloaded");
       }));
     });
@@ -3006,7 +3006,7 @@ define(
         equal(post.get("isDirty"), false, "the original post isn't dirty anymore");
         equal(post.get("isDeleted"), true, "the original post is now deleted");
 
-        var newPost = store.getById("post", 2);
+        var newPost = store.peekRecord("post", 2);
         equal(newPost.get("name"), "The Parley Letter", "The new post was added to the store");
       }));
     });
@@ -3040,8 +3040,8 @@ define(
         equal(passedVerb, "GET");
         equal(passedHash.data, undefined);
 
-        var post1 = store.getById("post", 1);
-        var post2 = store.getById("post", 2);
+        var post1 = store.peekRecord("post", 1);
+        var post2 = store.peekRecord("post", 2);
 
         deepEqual(post1.getProperties("id", "name"), { id: "1", name: "Rails is omakase" }, "Post 1 is loaded");
 
@@ -3073,7 +3073,7 @@ define(
         comments: [{ id: 1, name: "FIRST" }] });
 
       store.findAll("post").then(async(function (posts) {
-        var comment = store.getById("comment", 1);
+        var comment = store.peekRecord("comment", 1);
 
         deepEqual(comment.getProperties("id", "name"), { id: "1", name: "FIRST" });
       }));
@@ -3090,8 +3090,8 @@ define(
       });
 
       store.findAll("post").then(async(function (posts) {
-        var post1 = store.getById("post", 1);
-        var post2 = store.getById("post", 2);
+        var post1 = store.peekRecord("post", 1);
+        var post2 = store.peekRecord("post", 2);
 
         deepEqual(post1.getProperties("id", "name"), { id: "1", name: "Rails is omakase" }, "Post 1 is loaded");
         deepEqual(post2.getProperties("id", "name"), { id: "2", name: "The Parley Letter" }, "Post 2 is loaded");
@@ -3238,8 +3238,8 @@ define(
         equal(passedVerb, "GET");
         deepEqual(passedHash.data, { page: 1 });
 
-        var post1 = store.getById("post", 1);
-        var post2 = store.getById("post", 2);
+        var post1 = store.peekRecord("post", 1);
+        var post2 = store.peekRecord("post", 2);
 
         deepEqual(post1.getProperties("id", "name"), { id: "1", name: "Rails is omakase" }, "Post 1 is loaded");
         deepEqual(post2.getProperties("id", "name"), { id: "2", name: "The Parley Letter" }, "Post 2 is loaded");
@@ -3257,7 +3257,7 @@ define(
       });
 
       store.query("post", { page: 1 }).then(async(function (posts) {
-        var comment = store.getById("comment", 1);
+        var comment = store.peekRecord("comment", 1);
 
         deepEqual(comment.getProperties("id", "name"), { id: "1", name: "FIRST" });
       }));
@@ -3274,8 +3274,8 @@ define(
       });
 
       store.query("post", { page: 1 }).then(async(function (posts) {
-        var post1 = store.getById("post", 1);
-        var post2 = store.getById("post", 2);
+        var post1 = store.peekRecord("post", 1);
+        var post2 = store.peekRecord("post", 2);
 
         deepEqual(post1.getProperties("id", "name"), { id: "1", name: "Rails is omakase" }, "Post 1 is loaded");
 
@@ -3295,7 +3295,7 @@ define(
         store.push("post", { id: 1, name: "Rails is omakase", comments: [1, 2, 3] });
       });
 
-      var post = store.getById("post", 1);
+      var post = store.peekRecord("post", 1);
       ajaxResponse({
         comments: [{ id: 1, name: "FIRST" }, { id: 2, name: "Rails is unagi" }, { id: 3, name: "What is omakase?" }]
       });
@@ -3317,7 +3317,7 @@ define(
         store.push("post", { id: 1, name: "Rails is omakase", comments: [1, 2, 3] });
       });
 
-      var post = store.getById("post", 1);
+      var post = store.peekRecord("post", 1);
       ajaxResponse({
         comments: [{ id: 1, name: "FIRST" }, { id: 2, name: "Rails is unagi" }, { id: 3, name: "What is omakase?" }]
       });
@@ -3333,7 +3333,7 @@ define(
         store.push("post", { id: 1, name: "Rails is omakase", comments: [1, 2, 3] });
       });
 
-      var post = store.getById("post", 1);
+      var post = store.peekRecord("post", 1);
       //It's still ok to return this even without coalescing  because RESTSerializer supports sideloading
       ajaxResponse({
         comments: [{ id: 1, name: "FIRST" }, { id: 2, name: "Rails is unagi" }, { id: 3, name: "What is omakase?" }]
@@ -3359,9 +3359,9 @@ define(
 
         return post.get("comments");
       })).then(async(function (comments) {
-        var comment1 = store.getById("comment", 1);
-        var comment2 = store.getById("comment", 2);
-        var comment3 = store.getById("comment", 3);
+        var comment1 = store.peekRecord("comment", 1);
+        var comment2 = store.peekRecord("comment", 2);
+        var comment3 = store.peekRecord("comment", 3);
 
         deepEqual(comment1.getProperties("id", "name"), { id: "1", name: "FIRST" });
         deepEqual(comment2.getProperties("id", "name"), { id: "2", name: "Rails is unagi" });
@@ -3387,11 +3387,11 @@ define(
 
         return post.get("comments");
       })).then(async(function (comments) {
-        var comment1 = store.getById("comment", 1);
-        var comment2 = store.getById("comment", 2);
-        var comment3 = store.getById("comment", 3);
-        var comment4 = store.getById("comment", 4);
-        var post2 = store.getById("post", 2);
+        var comment1 = store.peekRecord("comment", 1);
+        var comment2 = store.peekRecord("comment", 2);
+        var comment3 = store.peekRecord("comment", 3);
+        var comment4 = store.peekRecord("comment", 4);
+        var post2 = store.peekRecord("post", 2);
 
         deepEqual(comments.toArray(), [comment1, comment2, comment3], "The correct records are in the array");
 
@@ -3425,9 +3425,9 @@ define(
 
         return post.get("comments");
       })).then(async(function (comments) {
-        var comment1 = store.getById("comment", 1);
-        var comment2 = store.getById("comment", 2);
-        var comment3 = store.getById("comment", 3);
+        var comment1 = store.peekRecord("comment", 1);
+        var comment2 = store.peekRecord("comment", 2);
+        var comment3 = store.peekRecord("comment", 3);
 
         deepEqual(comment1.getProperties("id", "name"), { id: "1", name: "FIRST" });
         deepEqual(comment2.getProperties("id", "name"), { id: "2", name: "Rails is unagi" });
@@ -3459,9 +3459,9 @@ define(
         equal(passedVerb, "GET");
         equal(passedHash, undefined);
 
-        var comment1 = store.getById("comment", 1);
-        var comment2 = store.getById("comment", 2);
-        var comment3 = store.getById("comment", 3);
+        var comment1 = store.peekRecord("comment", 1);
+        var comment2 = store.peekRecord("comment", 2);
+        var comment3 = store.peekRecord("comment", 3);
 
         deepEqual(comment1.getProperties("id", "name"), { id: "1", name: "FIRST" });
         deepEqual(comment2.getProperties("id", "name"), { id: "2", name: "Rails is unagi" });
@@ -3515,10 +3515,10 @@ define(
 
         return post.get("comments");
       })).then(async(function (comments) {
-        var comment1 = store.getById("comment", 1);
-        var comment2 = store.getById("comment", 2);
-        var comment3 = store.getById("comment", 3);
-        var post2 = store.getById("post", 2);
+        var comment1 = store.peekRecord("comment", 1);
+        var comment2 = store.peekRecord("comment", 2);
+        var comment3 = store.peekRecord("comment", 3);
+        var post2 = store.peekRecord("post", 2);
 
         deepEqual(comments.toArray(), [comment1, comment2, comment3], "The correct records are in the array");
 
@@ -3553,9 +3553,9 @@ define(
         });
         return post.get("comments");
       })).then(async(function (comments) {
-        var comment1 = store.getById("comment", 1);
-        var comment2 = store.getById("comment", 2);
-        var comment3 = store.getById("comment", 3);
+        var comment1 = store.peekRecord("comment", 1);
+        var comment2 = store.peekRecord("comment", 2);
+        var comment3 = store.peekRecord("comment", 3);
 
         deepEqual(comment1.getProperties("id", "name"), { id: "1", name: "FIRST" });
         deepEqual(comment2.getProperties("id", "name"), { id: "2", name: "Rails is unagi" });
@@ -4984,75 +4984,6 @@ define(
 
 
 define(
-  "ember-data/tests/integration/all-test",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-
-    function __es6_export__(name, value) {
-      __exports__[name] = value;
-    }
-
-    var get = Ember.get;
-    var run = Ember.run;
-
-    var Person, store, array, moreArray;
-
-    module("integration/all - DS.Store#all()", {
-      setup: function () {
-        array = [{ id: 1, name: "Scumbag Dale" }, { id: 2, name: "Scumbag Katz" }];
-        moreArray = [{ id: 3, name: "Scumbag Bryn" }];
-        Person = DS.Model.extend({ name: DS.attr("string") });
-
-        store = createStore({ person: Person });
-      },
-      teardown: function () {
-        run(store, "destroy");
-        Person = null;
-        array = null;
-      }
-    });
-
-    test("store.all('person') should return all records and should update with new ones", function () {
-      run(function () {
-        store.pushMany("person", array);
-      });
-
-      var all = store.all("person");
-      equal(get(all, "length"), 2);
-
-      run(function () {
-        store.pushMany("person", moreArray);
-      });
-
-      equal(get(all, "length"), 3);
-    });
-
-    test("Calling store.all() multiple times should update immediately inside the runloop", function () {
-      expect(3);
-
-      Ember.run(function () {
-        equal(get(store.all("person"), "length"), 0, "should initially be empty");
-        store.createRecord("person", { name: "Tomster" });
-        equal(get(store.all("person"), "length"), 1, "should contain one person");
-        store.push("person", { id: 1, name: "Tomster's friend" });
-        equal(get(store.all("person"), "length"), 2, "should contain two people");
-      });
-    });
-
-    test("Calling store.all() after creating a record should return correct data", function () {
-      expect(1);
-
-      Ember.run(function () {
-        store.createRecord("person", { name: "Tomster" });
-        equal(get(store.all("person"), "length"), 1, "should contain one person");
-      });
-    });
-  }
-);
-
-
-define(
   "ember-data/tests/integration/application-test",
   ["exports"],
   function(__exports__) {
@@ -5446,7 +5377,7 @@ define(
 
       run(function () {
         store.find('postNote', 1).then(function (postNote) {
-          equal(postNote.get('notePost'), store.getById('notePost', 1));
+          equal(postNote.get('notePost'), store.peekRecord('notePost', 1));
         });
       });
     });
@@ -5468,7 +5399,7 @@ define(
 
       run(function () {
         store.find('long_model_name', 1).then(function (longModelName) {
-          deepEqual(longModelName.get('postNotes').toArray(), [store.getById('postNote', 1)]);
+          deepEqual(longModelName.get('postNotes').toArray(), [store.peekRecord('postNote', 1)]);
         });
       });
     });
@@ -5852,8 +5783,8 @@ define(
 
       equal(get(people, 'length'), 0, 'there are now 0 items');
 
-      var erik = store.getById('person', 3);
-      var yehuda = store.getById('person', 2);
+      var erik = store.peekRecord('person', 3);
+      var yehuda = store.peekRecord('person', 2);
       run(function () {
         erik.set('bestFriend', yehuda);
       });
@@ -6832,6 +6763,83 @@ define(
 
 
 define(
+  "ember-data/tests/integration/peek-all-test",
+  ["exports"],
+  function(__exports__) {
+    "use strict";
+
+    function __es6_export__(name, value) {
+      __exports__[name] = value;
+    }
+
+    var get = Ember.get;
+    var run = Ember.run;
+
+    var Person, store, array, moreArray;
+
+    module("integration/peek_all - DS.Store#peekAll()", {
+      setup: function () {
+        array = [{ id: 1, name: "Scumbag Dale" }, { id: 2, name: "Scumbag Katz" }];
+        moreArray = [{ id: 3, name: "Scumbag Bryn" }];
+        Person = DS.Model.extend({ name: DS.attr("string") });
+
+        store = createStore({ person: Person });
+      },
+      teardown: function () {
+        run(store, "destroy");
+        Person = null;
+        array = null;
+      }
+    });
+
+    test("store.peekAll('person') should return all records and should update with new ones", function () {
+      run(function () {
+        store.pushMany("person", array);
+      });
+
+      var all = store.peekAll("person");
+      equal(get(all, "length"), 2);
+
+      run(function () {
+        store.pushMany("person", moreArray);
+      });
+
+      equal(get(all, "length"), 3);
+    });
+
+    test("Calling store.peekAll() multiple times should update immediately inside the runloop", function () {
+      expect(3);
+
+      Ember.run(function () {
+        equal(get(store.peekAll("person"), "length"), 0, "should initially be empty");
+        store.createRecord("person", { name: "Tomster" });
+        equal(get(store.peekAll("person"), "length"), 1, "should contain one person");
+        store.push("person", { id: 1, name: "Tomster's friend" });
+        equal(get(store.peekAll("person"), "length"), 2, "should contain two people");
+      });
+    });
+
+    test("Calling store.peekAll() after creating a record should return correct data", function () {
+      expect(1);
+
+      Ember.run(function () {
+        store.createRecord("person", { name: "Tomster" });
+        equal(get(store.peekAll("person"), "length"), 1, "should contain one person");
+      });
+    });
+
+    test("store.all() is deprecated", function () {
+      expectDeprecation(function () {
+        run(function () {
+          store.all("person");
+        });
+      }, "Using store.all() has been deprecated. Use store.peekAll() to get all records by a given type without triggering a fetch.");
+    });
+  }
+);
+
+
+define(
   "ember-data/tests/integration/record-array-manager-test",
   ["exports"],
   function(__exports__) {
@@ -6956,13 +6964,13 @@ define(
       equal(adapterPopulatedSummary.called.length, 1);
     });
 
-    test('Should not filter a store.all() array when a record property is changed', function () {
+    test('Should not filter a store.peekAll() array when a record property is changed', function () {
       var car;
 
       var populateLiveRecordArray = tap(store.recordArrayManager, 'populateLiveRecordArray');
       var updateFilterRecordArray = tap(store.recordArrayManager, 'updateFilterRecordArray');
 
-      store.all('car');
+      store.peekAll('car');
 
       run(function () {
         car = store.push('car', {
@@ -7025,7 +7033,7 @@ define(
         env.store.createRecord("post", { title: "World" });
       });
 
-      var posts = env.store.all("post");
+      var posts = env.store.peekAll("post");
 
       env.adapter.createRecord = function (store, type, snapshot) {
         return Ember.RSVP.resolve({ id: 123 });
@@ -7044,7 +7052,7 @@ define(
         env.store.createRecord("post", { title: "World" });
       });
 
-      var posts = env.store.all("post");
+      var posts = env.store.peekAll("post");
 
       env.adapter.createRecord = function (store, type, snapshot) {
         return Ember.RSVP.reject();
@@ -7063,7 +7071,7 @@ define(
         env.store.createRecord("post", { title: "World" });
       });
 
-      var posts = env.store.all("post");
+      var posts = env.store.peekAll("post");
 
       var count = 0;
 
@@ -7095,7 +7103,7 @@ define(
         env.store.createRecord("post", { title: "World" });
       });
 
-      var posts = env.store.all("post");
+      var posts = env.store.peekAll("post");
 
       env.adapter.createRecord = function (store, type, snapshot) {
         return Ember.RSVP.reject({ title: "invalid" });
@@ -7153,7 +7161,7 @@ define(
         adam = env.store.push("person", { id: 1, name: "Adam Sunderland" });
         dave = env.store.push("person", { id: 2, name: "Dave Sunderland" });
       });
-      var all = env.store.all("person");
+      var all = env.store.peekAll("person");
 
       // pre-condition
       equal(all.get("length"), 2, "expected 2 records");
@@ -7174,7 +7182,7 @@ define(
         jaime = env.store.push("person", { id: 1, name: "Jaime Lannister" });
         cersei = env.store.push("person", { id: 2, name: "Cersei Lannister" });
       });
-      var all = env.store.all("person");
+      var all = env.store.peekAll("person");
       var filtered;
       run(function () {
         filtered = env.store.filter("person", function () {
@@ -7793,7 +7801,7 @@ define(
         adam.unloadRecord();
       });
 
-      equal(env.store.all('person').get('length'), 0);
+      equal(env.store.peekAll('person').get('length'), 0);
     });
 
     test('can unload all records for a given type', function () {
@@ -7816,8 +7824,8 @@ define(
         env.store.unloadAll('person');
       });
 
-      equal(env.store.all('person').get('length'), 0);
-      equal(env.store.all('car').get('length'), 1);
+      equal(env.store.peekAll('person').get('length'), 0);
+      equal(env.store.peekAll('car').get('length'), 1);
     });
 
     test('can unload all records', function () {
@@ -7840,8 +7848,8 @@ define(
         env.store.unloadAll();
       });
 
-      equal(env.store.all('person').get('length'), 0);
-      equal(env.store.all('car').get('length'), 0);
+      equal(env.store.peekAll('person').get('length'), 0);
+      equal(env.store.peekAll('car').get('length'), 0);
     });
 
     test('Unloading all records for a given type clears saved meta data.', function () {
@@ -7869,20 +7877,20 @@ define(
       });
 
       Ember.run(function () {
-        env.store.all('person');
+        env.store.peekAll('person');
         env.store.unloadAll('person');
       });
 
-      equal(env.store.all('person').get('length'), 0);
+      equal(env.store.peekAll('person').get('length'), 0);
     });
 
-    test('unloading all records also updates record array from all()', function () {
+    test('unloading all records also updates record array from peekAll()', function () {
       var adam, bob;
       run(function () {
         adam = env.store.push('person', { id: 1, name: 'Adam Sunderland' });
         bob = env.store.push('person', { id: 2, name: 'Bob Bobson' });
       });
-      var all = env.store.all('person');
+      var all = env.store.peekAll('person');
 
       equal(all.get('length'), 2);
 
@@ -7944,7 +7952,7 @@ define(
       run(function () {
         env.store.find('group', 1).then(function (group) {
           equal(group.get('people.length'), 1, 'The inital length of people is correct');
-          var person = env.store.getById('person', 1);
+          var person = env.store.peekRecord('person', 1);
           run(function () {
             person.unloadRecord();
           });
@@ -9895,7 +9903,7 @@ define(
 
       run(function () {
         post._internalModel._relationships.get('comments').clear();
-        var comments = Ember.A(env.store.all('comment'));
+        var comments = Ember.A(env.store.peekAll('comment'));
         deepEqual(comments.mapBy('post'), [null, null, null]);
       });
     });
@@ -16410,7 +16418,7 @@ define(
         }, /Encountered "home_planet" in payload, but no model was found for model name "garbage"/);
 
         // assert non-warned records get pushed into store correctly
-        var superVillain = env.store.getById('super-villain', '1');
+        var superVillain = env.store.peekRecord('super-villain', '1');
         equal(get(superVillain, 'firstName'), 'Stanley');
 
         // Serializers are singletons, so that"s why we use the store which
@@ -16430,7 +16438,7 @@ define(
         noWarns(function () {
           run(function () {
             env.store.pushPayload('home-planet', jsonHash);
-            homePlanet = env.store.getById('home-planet', '1');
+            homePlanet = env.store.peekRecord('home-planet', '1');
           });
         });
 
@@ -16467,7 +16475,7 @@ define(
         }, /Encountered "home_planets" in payload, but no model was found for model name "garbage"/);
 
         // assert non-warned records get pushed into store correctly
-        var superVillain = env.store.getById('super-villain', '1');
+        var superVillain = env.store.peekRecord('super-villain', '1');
         equal(get(superVillain, 'firstName'), 'Stanley');
 
         // Serializers are singletons, so that"s why we use the store which
@@ -16487,7 +16495,7 @@ define(
         noWarns(function () {
           run(function () {
             env.store.pushPayload('home-planet', jsonHash);
-            homePlanet = env.store.getById('home-planet', '1');
+            homePlanet = env.store.peekRecord('home-planet', '1');
           });
         });
 
@@ -17936,7 +17944,7 @@ define(
         }]
       });
 
-      var cars = store.all('car');
+      var cars = store.peekAll('car');
       ok(!cars.get('length'), 'There is no cars in the store');
 
       run(function () {
@@ -17969,7 +17977,7 @@ define(
         }]
       });
 
-      var cars = store.all('car');
+      var cars = store.peekAll('car');
       equal(cars.get('length'), 1, 'There is one car in the store');
 
       run(function () {
@@ -17997,7 +18005,7 @@ define(
         }]
       });
 
-      var cars = store.all('car');
+      var cars = store.peekAll('car');
       equal(cars.get('length'), 2, 'There is two cars in the store');
 
       run(function () {
@@ -18006,7 +18014,7 @@ define(
           var mini = cars.findBy('id', '1');
           equal(mini.get('model'), 'New Mini', 'Existing records have been updated');
 
-          var carsInStore = store.all('car');
+          var carsInStore = store.peekAll('car');
           equal(carsInStore.get('length'), 2, 'There is 2 cars in the store');
         });
       });
@@ -19796,7 +19804,7 @@ define(
         equal(didLoadCalled, 0, "didLoad was not called");
       });
       run(function () {
-        store.getById("person", 1);
+        store.peekRecord("person", 1);
       });
       run(function () {
         equal(didLoadCalled, 1, "didLoad was called");
@@ -20050,7 +20058,7 @@ define(
         store.push("person", { id: 0, name: "Tom Dale" });
       });
 
-      equal(store.all("person").objectAt(0).get("name"), "Tom Dale", "found record with id 0");
+      equal(store.peekAll("person").objectAt(0).get("name"), "Tom Dale", "found record with id 0");
     });
   }
 );
@@ -20601,7 +20609,7 @@ define(
       });
 
       run(function () {
-        store.getById("person", 1).get("occupation");
+        store.peekRecord("person", 1).get("occupation");
       });
     });
 
@@ -21038,15 +21046,15 @@ define(
       var tom, sylvain;
 
       run(function () {
-        tom = store.getById("person", "1");
-        sylvain = store.getById("person", "2");
+        tom = store.peekRecord("person", "1");
+        sylvain = store.peekRecord("person", "2");
         // Test that since sylvain.get('tags') instanceof DS.ManyArray,
         // addRecords on Relationship iterates correctly.
         tom.get("tags").setObjects(sylvain.get("tags"));
       });
 
       equal(tom.get("tags.length"), 1);
-      equal(tom.get("tags.firstObject"), store.getById("tag", 2));
+      equal(tom.get("tags.firstObject"), store.peekRecord("tag", 2));
     });
 
     test("it is possible to remove an item from a relationship", function () {
@@ -21344,7 +21352,7 @@ define(
 
       run(function () {
         person = store.push("person", { id: 1, firstName: "Tom", lastName: "Dale" });
-        people = store.all("person");
+        people = store.peekAll("person");
       });
 
       run(function () {
@@ -21435,7 +21443,7 @@ define(
 
       run(function () {
         person = store.push("person", { id: 1 });
-        people = store.all("person");
+        people = store.peekAll("person");
         person.deleteRecord();
       });
 
@@ -21691,7 +21699,7 @@ define(
       var store = createStore({
         person: Person
       });
-      var recordArray = store.all("person");
+      var recordArray = store.peekAll("person");
       run(function () {
         store.push("person", { id: 1, name: "wycats" });
       });
@@ -21714,7 +21722,7 @@ define(
       // is on the release branch
       var emptyLength = Ember.meta(store).descs ? undefined : 0;
 
-      var recordArray = store.all("person");
+      var recordArray = store.peekAll("person");
       run(function () {
         store.push("person", { id: 1, name: "wycats" });
       });
@@ -21841,7 +21849,7 @@ define(
       var store = createStore({
         person: Person
       });
-      var recordArray = store.all("person");
+      var recordArray = store.peekAll("person");
       var scumbag;
 
       run(function () {
@@ -21884,7 +21892,7 @@ define(
         store.pushMany("person", array);
       });
 
-      var recordArray = store.all("person");
+      var recordArray = store.peekAll("person");
 
       strictEqual(recordArray.objectAt(20), undefined, "objects outside of the range just return undefined");
     });
@@ -21898,7 +21906,7 @@ define(
         store.pushMany("person", array);
       });
 
-      var recordArray = store.all("person");
+      var recordArray = store.peekAll("person");
 
       equal(get(recordArray.objectAt(2), "id"), 3, "should retrieve correct record at index 2");
       equal(get(recordArray.objectAt(1), "id"), 2, "should retrieve correct record at index 1");
@@ -21931,7 +21939,7 @@ define(
         return Ember.RSVP.resolve(array);
       };
 
-      recordArray = store.all("person");
+      recordArray = store.peekAll("person");
       run(function () {
         promise = recordArray.update();
       });
@@ -22336,7 +22344,7 @@ define(
       equal(callCount, 1, "extractFindQuery was called");
     });
 
-    test("all(type) returns a record array of all records of a specific type", function () {
+    test("peekAll(type) returns a record array of all records of a specific type", function () {
       var Person = DS.Model.extend({
         name: DS.attr("string")
       });
@@ -22349,7 +22357,7 @@ define(
         store.push("person", { id: 1, name: "Tom Dale" });
       });
 
-      var results = store.all("person");
+      var results = store.peekAll("person");
       equal(get(results, "length"), 1, "record array should have the original object");
       equal(get(results.objectAt(0), "name"), "Tom Dale", "record has the correct information");
 
@@ -22359,7 +22367,7 @@ define(
       equal(get(results, "length"), 2, "record array should have the new object");
       equal(get(results.objectAt(1), "name"), "Yehuda Katz", "record has the correct information");
 
-      strictEqual(results, store.all("person"), "subsequent calls to all return the same recordArray)");
+      strictEqual(results, store.peekAll("person"), "subsequent calls to peekAll return the same recordArray)");
     });
 
     test("a new record of a particular type is created via store.createRecord(type)", function () {
@@ -22527,7 +22535,7 @@ define(
 
       run(function () {
         store.find("person", 1, { preload: { friend: 2 } }).then(async(function () {
-          store.getById("person", 1).get("friend").then(async(function (friend) {
+          store.peekRecord("person", 1).get("friend").then(async(function (friend) {
             equal(friend.get("id"), "2", "Preloaded belongsTo set");
           }));
         }));
@@ -22608,7 +22616,7 @@ define(
         person: Person
       });
 
-      var people = store.all("person");
+      var people = store.peekAll("person");
       var tom, yehuda;
 
       run(function () {
@@ -23080,55 +23088,6 @@ define(
 
 
 define(
-  "ember-data/tests/unit/store/get-by-id-test",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-
-    function __es6_export__(name, value) {
-      __exports__[name] = value;
-    }
-
-    var env, store, Person;
-    var run = Ember.run;
-
-    module('unit/store/getById - Store getById', {
-      setup: function () {
-
-        Person = DS.Model.extend();
-        Person.toString = function () {
-          return 'Person';
-        };
-
-        env = setupStore({
-          person: Person
-        });
-        store = env.store;
-      },
-
-      teardown: function () {
-        Ember.run(store, 'destroy');
-      }
-    });
-
-    test('getById should return the record if it is in the store ', function () {
-
-      run(function () {
-        var person = store.push('person', { id: 1 });
-        equal(person, store.getById('person', 1), 'getById only return the corresponding record in the store');
-      });
-    });
-
-    test('getById should return null if the record is not in the store ', function () {
-      run(function () {
-        equal(null, store.getById('person', 1), 'getById returns null if the corresponding record is not in the store');
-      });
-    });
-  }
-);
-
-
-define(
   "ember-data/tests/unit/store/has_record_for_id_test",
   ["exports"],
   function(__exports__) {
@@ -23486,6 +23445,63 @@ define(
 
 
 define(
+  "ember-data/tests/unit/store/peek-by-id-test",
+  ["exports"],
+  function(__exports__) {
+    "use strict";
+
+    function __es6_export__(name, value) {
+      __exports__[name] = value;
+    }
+
+    var env, store, Person;
+    var run = Ember.run;
+
+    module('unit/store/peekRecord - Store peekRecord', {
+      setup: function () {
+
+        Person = DS.Model.extend();
+        Person.toString = function () {
+          return 'Person';
+        };
+
+        env = setupStore({
+          person: Person
+        });
+        store = env.store;
+      },
+
+      teardown: function () {
+        Ember.run(store, 'destroy');
+      }
+    });
+
+    test('peekRecord should return the record if it is in the store ', function () {
+      run(function () {
+        var person = store.push('person', { id: 1 });
+        equal(person, store.peekRecord('person', 1), 'peekRecord only return the corresponding record in the store');
+      });
+    });
+
+    test('peekRecord should return null if the record is not in the store ', function () {
+      run(function () {
+        equal(null, store.peekRecord('person', 1), 'peekRecord returns null if the corresponding record is not in the store');
+      });
+    });
+
+    test('getById is deprecated', function () {
+      expectDeprecation(function () {
+        run(function () {
+          store.push('person', { id: 1 });
+          store.getById('person', 1);
+        });
+      }, 'Using store.getById() has been deprecated. Use store.peekRecord to get a record by a given type and ID without triggering a fetch.');
+    });
+  }
+);
+
+
+define(
   "ember-data/tests/unit/store/push-test",
   ["exports"],
   function(__exports__) {
@@ -23746,7 +23762,7 @@ define(
         });
       });
 
-      var post = store.getById('post', 1);
+      var post = store.peekRecord('post', 1);
 
       equal(post.get('postTitle'), 'Ember rocks', 'you can push raw JSON into the store');
 
@@ -23772,7 +23788,7 @@ define(
         });
       });
 
-      var post = store.getById('post', 1);
+      var post = store.peekRecord('post', 1);
 
       equal(post.get('postTitle'), 'Ember rocks', 'you can push raw JSON into the store');
 
@@ -23816,11 +23832,11 @@ define(
         });
       });
 
-      var post = store.getById('post', 1);
+      var post = store.peekRecord('post', 1);
 
       equal(post.get('postTitle'), 'Ember rocks', 'you can push raw JSON into the store');
 
-      var person = store.getById('person', 2);
+      var person = store.peekRecord('person', 2);
 
       equal(person.get('firstName'), 'Yehuda', 'you can push raw JSON into the store');
     });
@@ -23872,11 +23888,11 @@ define(
         });
       });
 
-      var post = store.getById('post', 1);
+      var post = store.peekRecord('post', 1);
 
       equal(post.get('postTitle'), 'Ember rocks', 'you can push raw JSON into the store');
 
-      var person = store.getById('person', 2);
+      var person = store.peekRecord('person', 2);
 
       equal(person.get('firstName'), 'Yehuda', 'you can push raw JSON into the store');
     });
@@ -23896,7 +23912,7 @@ define(
         });
       });
 
-      person = store.getById('person', 1);
+      person = store.peekRecord('person', 1);
 
       equal(person.get('firstName'), 'Robert', 'you can push raw JSON into the store');
       equal(person.get('lastName'), 'Jackson', 'you can push raw JSON into the store');
@@ -23975,7 +23991,7 @@ define(
         });
       });
 
-      var person = store.getById('person', 1);
+      var person = store.peekRecord('person', 1);
 
       equal(person.get('firstName'), 'Tan', 'you can use links that contain null as a value');
     });
@@ -24965,13 +24981,6 @@ test('ember-data/tests/integration/adapter/store-adapter-test.js should pass jsh
 }
 if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/tests/integration');
-test('ember-data/tests/integration/all-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/all-test.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration');
 test('ember-data/tests/integration/application-test.js should pass jshint', function() { 
   ok(true, 'ember-data/tests/integration/application-test.js should pass jshint.'); 
 });
@@ -25030,6 +25039,13 @@ if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/tests/integration');
 test('ember-data/tests/integration/multiple_stores_test.js should pass jshint', function() { 
   ok(true, 'ember-data/tests/integration/multiple_stores_test.js should pass jshint.'); 
+});
+
+}
+if (!QUnit.urlParams.nojshint) {
+module('JSHint - ember-data/tests/integration');
+test('ember-data/tests/integration/peek-all-test.js should pass jshint', function() { 
+  ok(true, 'ember-data/tests/integration/peek-all-test.js should pass jshint.'); 
 });
 
 }
@@ -25364,13 +25380,6 @@ test('ember-data/tests/unit/store/create-record-test.js should pass jshint', fun
 }
 if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/tests/unit/store');
-test('ember-data/tests/unit/store/get-by-id-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/store/get-by-id-test.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/store');
 test('ember-data/tests/unit/store/has_record_for_id_test.js should pass jshint', function() { 
   ok(true, 'ember-data/tests/unit/store/has_record_for_id_test.js should pass jshint.'); 
 });
@@ -25394,6 +25403,13 @@ if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/tests/unit/store');
 test('ember-data/tests/unit/store/model-for-test.js should pass jshint', function() { 
   ok(true, 'ember-data/tests/unit/store/model-for-test.js should pass jshint.'); 
+});
+
+}
+if (!QUnit.urlParams.nojshint) {
+module('JSHint - ember-data/tests/unit/store');
+test('ember-data/tests/unit/store/peek-by-id-test.js should pass jshint', function() { 
+  ok(true, 'ember-data/tests/unit/store/peek-by-id-test.js should pass jshint.'); 
 });
 
 }

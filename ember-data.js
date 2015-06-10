@@ -5455,7 +5455,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.3d7dba530e'
+      VERSION: '1.0.0-beta.20+canary.d4f6050679'
     });
 
     if (Ember.libraries) {
@@ -5765,7 +5765,7 @@
         });
 
         store.didUpdateAll(typeClass);
-        return store.all(modelName);
+        return store.peekAll(modelName);
       }, null, "DS: Extract payload of findAll " + typeClass);
     }
 
@@ -5816,7 +5816,7 @@
         The flag to signal a `RecordArray` is finished loading data.
          Example
          ```javascript
-        var people = store.all('person');
+        var people = store.peekAll('person');
         people.get('isLoaded'); // true
         ```
          @property isLoaded
@@ -5827,7 +5827,7 @@
         The flag to signal a `RecordArray` is currently loading data.
          Example
          ```javascript
-        var people = store.all('person');
+        var people = store.peekAll('person');
         people.get('isUpdating'); // false
         people.update();
         people.get('isUpdating'); // true
@@ -5863,7 +5863,7 @@
         from the adapter.
          Example
          ```javascript
-        var people = store.all('person');
+        var people = store.peekAll('person');
         people.get('isUpdating'); // false
         people.update();
         people.get('isUpdating'); // true
@@ -5911,7 +5911,7 @@
         Saves all of the records in the `RecordArray`.
          Example
          ```javascript
-        var messages = store.all('message');
+        var messages = store.peekAll('message');
         messages.forEach(function(message) {
           message.set('hasBeenSeen', true);
         });
@@ -5971,7 +5971,7 @@
         determine if they should be part of the record array.
          Example
          ```javascript
-        var allPeople = store.all('person');
+        var allPeople = store.peekAll('person');
         allPeople.mapBy('name'); // ["Tom Dale", "Yehuda Katz", "Trek Glowacki"]
          var people = store.filter('person', function(person) {
           if (person.get('name').match(/Katz$/)) { return true; }
@@ -10795,7 +10795,7 @@
 
       Note: When creating a new record using any of the above methods
       Ember Data will update `DS.RecordArray`s such as those returned by
-      `store#all()`, `store#findAll()` or `store#filter()`. This means any
+      `store#peekAll()`, `store#findAll()` or `store#filter()`. This means any
       data bindings or computed properties that depend on the RecordArray
       will automatically be synced to include the new or updated record
       values.
@@ -11079,7 +11079,7 @@
         Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string");
         var options = ember$data$lib$system$store$$deprecatePreload(preload, this.modelFor(modelName), "fetchById");
         if (this.hasRecordForId(modelName, id)) {
-          return this.getById(modelName, id).reload();
+          return this.peekRecord(modelName, id).reload();
         } else {
           return this.findRecord(modelName, id, options);
         }
@@ -11340,6 +11340,26 @@
         @return {DS.Model|null} record
       */
       getById: function (modelName, id) {
+        Ember.deprecate("Using store.getById() has been deprecated. Use store.peekRecord to get a record by a given type and ID without triggering a fetch.");
+        return this.peekRecord(modelName, id);
+      },
+
+      /**
+        Get a record by a given type and ID without triggering a fetch.
+         This method will synchronously return the record if it is available in the store,
+        otherwise it will return `null`. A record is available if it has been fetched earlier, or
+        pushed manually into the store.
+         _Note: This is an synchronous method and does not return a promise._
+         ```js
+        var post = store.peekRecord('post', 1);
+         post.get('id'); // 1
+        ```
+         @method peekRecord
+        @param {String} modelName
+        @param {String|Integer} id
+        @return {DS.Model|null} record
+      */
+      peekRecord: function (modelName, id) {
         Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string");
         if (this.hasRecordForId(modelName, id)) {
           return this._internalModelForId(modelName, id).getRecord();
@@ -11539,7 +11559,7 @@
         Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string");
         var typeClass = this.modelFor(modelName);
 
-        return this._fetchAll(typeClass, this.all(modelName));
+        return this._fetchAll(typeClass, this.peekAll(modelName));
       },
 
       /**
@@ -11590,6 +11610,29 @@
         @return {DS.RecordArray}
       */
       all: function (modelName) {
+        Ember.deprecate("Using store.all() has been deprecated. Use store.peekAll() to get all records by a given type without triggering a fetch.");
+        return this.peekAll(modelName);
+      },
+
+      /**
+        This method returns a filtered array that contains all of the
+        known records for a given type in the store.
+         Note that because it's just a filter, the result will contain any
+        locally created records of the type, however, it will not make a
+        request to the backend to retrieve additional records. If you
+        would like to request all the records from the backend please use
+        [store.find](#method_find).
+         Also note that multiple calls to `peekAll` for a given type will always
+        return the same `RecordArray`.
+         Example
+         ```javascript
+        var localPosts = store.peekAll('post');
+        ```
+         @method peekAll
+        @param {String} modelName
+        @return {DS.RecordArray}
+      */
+      peekAll: function (modelName) {
         Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string");
         var typeClass = this.modelFor(modelName);
 
@@ -12867,7 +12910,7 @@
           }
         }
         ember$data$lib$system$debug$debug$adapter$$assert('Cannot find model name. Please upgrade to Ember.js >= 1.13 for Ember Inspector support', !!modelName);
-        return this.get('store').all(modelName);
+        return this.get('store').peekAll(modelName);
       },
 
       getRecordColumnValues: function (record) {
