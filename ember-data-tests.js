@@ -6931,7 +6931,7 @@ define(
       var filterd2 = manager.createFilteredRecordArray(Person, function () {
         return true;
       });
-      var all = store.all('person');
+      var all = store.peekAll('person');
       var adapterPopulated = manager.createAdapterPopulatedRecordArray(Person, query);
 
       var filterdSummary = tap(filterd, 'willDestroy');
