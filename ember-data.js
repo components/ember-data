@@ -3136,6 +3136,38 @@
         return !attrs || !attrs[key] || attrs[key].serialize !== false;
       },
 
+      /**
+        When attrs.key.serialize is set to true then
+        it takes priority over the other checks and the related
+        attribute/relationship will be serialized
+         @method _mustSerialize
+        @private
+        @param {String} key
+        @return {boolean} true if the key must be serialized
+      */
+      _mustSerialize: function (key) {
+        var attrs = ember$data$lib$serializers$json$serializer$$get(this, "attrs");
+
+        return attrs && attrs[key] && attrs[key].serialize === true;
+      },
+
+      /**
+        Check if the given hasMany relationship should be serialized
+         @method _shouldSerializeHasMany
+        @private
+        @param {DS.Snapshot} snapshot
+        @param {String} key
+        @param {String} relationshipType
+        @return {boolean} true if the hasMany relationship should be serialized
+      */
+      _shouldSerializeHasMany: function (snapshot, key, relationship) {
+        var relationshipType = snapshot.type.determineRelationshipType(relationship, this.store);
+        if (this._mustSerialize(key)) {
+          return true;
+        }
+        return this._canSerialize(key) && (relationshipType === "manyToNone" || relationshipType === "manyToMany");
+      },
+
       // SERIALIZE
       /**
         Called when a record is saved in order to convert the
@@ -3416,7 +3448,7 @@
       serializeHasMany: function (snapshot, json, relationship) {
         var key = relationship.key;
 
-        if (this._canSerialize(key)) {
+        if (this._shouldSerializeHasMany(snapshot, key, relationship)) {
           var payloadKey;
 
           // if provided, use the mapping provided by `attrs` in
@@ -3425,13 +3457,8 @@
           if (payloadKey === key && this.keyForRelationship) {
             payloadKey = this.keyForRelationship(key, "hasMany", "serialize");
           }
-
-          var relationshipType = snapshot.type.determineRelationshipType(relationship, this.store);
-
-          if (relationshipType === "manyToNone" || relationshipType === "manyToMany") {
-            json[payloadKey] = snapshot.hasMany(key, { ids: true });
-            // TODO support for polymorphic manyToNone and manyToMany relationships
-          }
+          json[payloadKey] = snapshot.hasMany(key, { ids: true });
+          // TODO support for polymorphic manyToNone and manyToMany relationships
         }
       },
 
@@ -5455,7 +5482,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.a356c82df7'
+      VERSION: '1.0.0-beta.20+canary.43ff3a5ca5'
     });
 
     if (Ember.libraries) {
