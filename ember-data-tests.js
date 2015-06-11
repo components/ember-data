@@ -8030,7 +8030,7 @@ define(
 
         Chapter = DS.Model.extend({
           title: attr('string'),
-          belongsTo: belongsTo('book')
+          book: belongsTo('book')
         });
 
         Author = DS.Model.extend({
