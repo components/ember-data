@@ -5457,7 +5457,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.90ad21ce18'
+      VERSION: '1.0.0-beta.20+canary.354c6d7925'
     });
 
     if (Ember.libraries) {
@@ -13824,6 +13824,7 @@
 
       return ember$new$computed$lib$main$$default({
         get: function (key) {
+                    
           return this._internalModel._relationships.get(key).getRecord();
         },
         set: function (key, value) {

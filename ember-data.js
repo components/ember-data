@@ -5482,7 +5482,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.90ad21ce18'
+      VERSION: '1.0.0-beta.20+canary.354c6d7925'
     });
 
     if (Ember.libraries) {
@@ -13970,6 +13970,9 @@
 
       return ember$new$computed$lib$main$$default({
         get: function (key) {
+          Ember.warn("You provided a serialize option on the \"" + key + "\" property in the \"" + this._internalModel.modelName + "\" class, this belongs in the serializer. See DS.Serializer and it's implementations http://emberjs.com/api/data/classes/DS.Serializer.html", !opts.hasOwnProperty("serialize"));
+          Ember.warn("You provided an embedded option on the \"" + key + "\" property in the \"" + this._internalModel.modelName + "\" class, this belongs in the serializer. See DS.EmbeddedRecordsMixin http://emberjs.com/api/data/classes/DS.EmbeddedRecordsMixin.html", !opts.hasOwnProperty("embedded"));
+
           return this._internalModel._relationships.get(key).getRecord();
         },
         set: function (key, value) {
