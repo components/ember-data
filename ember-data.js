@@ -5482,7 +5482,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.43ff3a5ca5'
+      VERSION: '1.0.0-beta.20+canary.90ad21ce18'
     });
 
     if (Ember.libraries) {
@@ -5905,7 +5905,8 @@
         var store = ember$data$lib$system$record$arrays$record$array$$get(this, 'store');
         var modelName = ember$data$lib$system$record$arrays$record$array$$get(this, 'type.modelName');
 
-        return store.fetchAll(modelName, this);
+        // TODO change this to store.findAll(modelName, { reload: true });
+        return store.findAll(modelName);
       },
 
       /**
