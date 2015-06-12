@@ -5457,7 +5457,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.9bc0f6863b'
+      VERSION: '1.0.0-beta.20+canary.56196f656b'
     });
 
     if (Ember.libraries) {
@@ -8905,7 +8905,8 @@
           id: this.id,
           store: this.store,
           container: this.container,
-          _internalModel: this
+          _internalModel: this,
+          currentState: ember$data$lib$system$model$internal$model$$get(this, "currentState")
         });
         this._triggerDeferredTriggers();
       },

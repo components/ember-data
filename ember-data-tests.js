@@ -19085,6 +19085,15 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     });
   });
 
+  test('currentState is accessible when the record is created', function () {
+    var record;
+    var hash = { id: 1 };
+    run(function () {
+      record = store.push('person', hash);
+      equal(get(record, 'currentState.stateName'), 'root.loaded.saved', 'records pushed into the store start in the loaded state');
+    });
+  });
+
   module('unit/model - DS.Model updating', {
     setup: function () {
       array = [{ id: 1, name: 'Scumbag Dale' }, { id: 2, name: 'Scumbag Katz' }, { id: 3, name: 'Scumbag Bryn' }];
