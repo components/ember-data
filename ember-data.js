@@ -1805,8 +1805,8 @@
     var ember$inflector$lib$lib$system$inflector$$capitalize = ember$lib$main$$default.String.capitalize;
 
     var ember$inflector$lib$lib$system$inflector$$BLANK_REGEX = /^\s*$/;
-    var ember$inflector$lib$lib$system$inflector$$LAST_WORD_DASHED_REGEX = /(\w+[_-])([a-z\d]+$)/;
-    var ember$inflector$lib$lib$system$inflector$$LAST_WORD_CAMELIZED_REGEX = /(\w+)([A-Z][a-z\d]*$)/;
+    var ember$inflector$lib$lib$system$inflector$$LAST_WORD_DASHED_REGEX = /([\w/-]+[_/-])([a-z\d]+$)/;
+    var ember$inflector$lib$lib$system$inflector$$LAST_WORD_CAMELIZED_REGEX = /([\w/-]+)([A-Z][a-z\d]*$)/;
     var ember$inflector$lib$lib$system$inflector$$CAMELIZED_REGEX = /[A-Z][a-z\d]*$/;
 
     function ember$inflector$lib$lib$system$inflector$$loadUncountable(rules, uncountable) {
@@ -4540,7 +4540,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.19.1'
+      VERSION: '1.0.0-beta.19.2'
     });
 
     if (Ember.libraries) {
@@ -4553,7 +4553,205 @@
     Ember.merge(Ember.FEATURES, ember$data$lib$core$$EMBER_DATA_FEATURES);
 
     var ember$data$lib$core$$default = ember$data$lib$core$$DS;
-    var ember$data$lib$system$promise$proxies$$Promise = Ember.RSVP.Promise;
+    var ember$data$lib$initializers$store$$default = ember$data$lib$initializers$store$$initializeStore;
+
+    /**
+      Configures a registry for use with an Ember-Data
+      store. Accepts an optional namespace argument.
+
+      @method initializeStore
+      @param {Ember.Registry} registry
+      @param {Object} [application] an application namespace
+    */
+    function ember$data$lib$initializers$store$$initializeStore(registry, application) {
+      Ember.deprecate("Specifying a custom Store for Ember Data on your global namespace as `App.Store` " + "has been deprecated. Please use `App.ApplicationStore` instead.", !(application && application.Store));
+
+      registry.optionsForType("serializer", { singleton: false });
+      registry.optionsForType("adapter", { singleton: false });
+
+      if (application && application.Store) {
+        registry.register("store:application", application.Store);
+      }
+
+      // allow older names to be looked up
+
+      var proxy = new ember$data$lib$system$container$proxy$$default(registry);
+      proxy.registerDeprecations([{ deprecated: "serializer:_default", valid: "serializer:-default" }, { deprecated: "serializer:_rest", valid: "serializer:-rest" }, { deprecated: "adapter:_rest", valid: "adapter:-rest" }]);
+
+      // new go forward paths
+      registry.register("serializer:-default", ember$data$lib$serializers$json$serializer$$default);
+      registry.register("serializer:-rest", ember$data$lib$serializers$rest$serializer$$default);
+      registry.register("adapter:-rest", ember$data$lib$adapters$rest$adapter$$default);
+    }
+
+    var ember$data$lib$transforms$base$$default = Ember.Object.extend({
+      /**
+        When given a deserialized value from a record attribute this
+        method must return the serialized value.
+         Example
+         ```javascript
+        serialize: function(deserialized) {
+          return Ember.isEmpty(deserialized) ? null : Number(deserialized);
+        }
+        ```
+         @method serialize
+        @param deserialized The deserialized value
+        @return The serialized value
+      */
+      serialize: null,
+
+      /**
+        When given a serialize value from a JSON object this method must
+        return the deserialized value for the record attribute.
+         Example
+         ```javascript
+        deserialize: function(serialized) {
+          return empty(serialized) ? null : Number(serialized);
+        }
+        ```
+         @method deserialize
+        @param serialized The serialized value
+        @return The deserialized value
+      */
+      deserialize: null
+    });
+
+    var ember$data$lib$transforms$number$$empty = Ember.isEmpty;
+
+    function ember$data$lib$transforms$number$$isNumber(value) {
+      return value === value && value !== Infinity && value !== -Infinity;
+    }
+
+    var ember$data$lib$transforms$number$$default = ember$data$lib$transforms$base$$default.extend({
+      deserialize: function (serialized) {
+        var transformed;
+
+        if (ember$data$lib$transforms$number$$empty(serialized)) {
+          return null;
+        } else {
+          transformed = Number(serialized);
+
+          return ember$data$lib$transforms$number$$isNumber(transformed) ? transformed : null;
+        }
+      },
+
+      serialize: function (deserialized) {
+        var transformed;
+
+        if (ember$data$lib$transforms$number$$empty(deserialized)) {
+          return null;
+        } else {
+          transformed = Number(deserialized);
+
+          return ember$data$lib$transforms$number$$isNumber(transformed) ? transformed : null;
+        }
+      }
+    });
+
+    // Date.prototype.toISOString shim
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString
+    var ember$data$lib$transforms$date$$toISOString = Date.prototype.toISOString || function () {
+      function pad(number) {
+        if (number < 10) {
+          return '0' + number;
+        }
+        return number;
+      }
+
+      return this.getUTCFullYear() + '-' + pad(this.getUTCMonth() + 1) + '-' + pad(this.getUTCDate()) + 'T' + pad(this.getUTCHours()) + ':' + pad(this.getUTCMinutes()) + ':' + pad(this.getUTCSeconds()) + '.' + (this.getUTCMilliseconds() / 1000).toFixed(3).slice(2, 5) + 'Z';
+    };
+
+    if (Ember.SHIM_ES5) {
+      if (!Date.prototype.toISOString) {
+        Date.prototype.toISOString = ember$data$lib$transforms$date$$toISOString;
+      }
+    }
+
+    var ember$data$lib$transforms$date$$default = ember$data$lib$transforms$base$$default.extend({
+      deserialize: function (serialized) {
+        var type = typeof serialized;
+
+        if (type === 'string') {
+          return new Date(Ember.Date.parse(serialized));
+        } else if (type === 'number') {
+          return new Date(serialized);
+        } else if (serialized === null || serialized === undefined) {
+          // if the value is null return null
+          // if the value is not present in the data return undefined
+          return serialized;
+        } else {
+          return null;
+        }
+      },
+
+      serialize: function (date) {
+        if (date instanceof Date) {
+          return ember$data$lib$transforms$date$$toISOString.call(date);
+        } else {
+          return null;
+        }
+      }
+    });
+
+    var ember$data$lib$transforms$string$$none = Ember.isNone;
+
+    var ember$data$lib$transforms$string$$default = ember$data$lib$transforms$base$$default.extend({
+      deserialize: function (serialized) {
+        return ember$data$lib$transforms$string$$none(serialized) ? null : String(serialized);
+      },
+      serialize: function (deserialized) {
+        return ember$data$lib$transforms$string$$none(deserialized) ? null : String(deserialized);
+      }
+    });
+
+    var ember$data$lib$transforms$boolean$$default = ember$data$lib$transforms$base$$default.extend({
+      deserialize: function (serialized) {
+        var type = typeof serialized;
+
+        if (type === "boolean") {
+          return serialized;
+        } else if (type === "string") {
+          return serialized.match(/^true$|^t$|^1$/i) !== null;
+        } else if (type === "number") {
+          return serialized === 1;
+        } else {
+          return false;
+        }
+      },
+
+      serialize: function (deserialized) {
+        return Boolean(deserialized);
+      }
+    });
+
+    var ember$data$lib$initializers$transforms$$default = ember$data$lib$initializers$transforms$$initializeTransforms;
+
+    /**
+      Configures a registry for use with Ember-Data
+      transforms.
+
+      @method initializeTransforms
+      @param {Ember.Registry} registry
+    */
+    function ember$data$lib$initializers$transforms$$initializeTransforms(registry) {
+      registry.register('transform:boolean', ember$data$lib$transforms$boolean$$default);
+      registry.register('transform:date', ember$data$lib$transforms$date$$default);
+      registry.register('transform:number', ember$data$lib$transforms$number$$default);
+      registry.register('transform:string', ember$data$lib$transforms$string$$default);
+    }
+    var ember$data$lib$initializers$store$injections$$default = ember$data$lib$initializers$store$injections$$initializeStoreInjections;
+    /**
+      Configures a registry with injections on Ember applications
+      for the Ember-Data store. Accepts an optional namespace argument.
+
+      @method initializeStoreInjections
+      @param {Ember.Registry} registry
+    */
+    function ember$data$lib$initializers$store$injections$$initializeStoreInjections(registry) {
+      registry.injection('controller', 'store', 'store:main');
+      registry.injection('route', 'store', 'store:main');
+      registry.injection('data-adapter', 'store', 'store:main');
+    }var ember$data$lib$system$promise$proxies$$Promise = Ember.RSVP.Promise;
     var ember$data$lib$system$promise$proxies$$get = Ember.get;
 
     /**
@@ -4683,6 +4881,2227 @@
       });
     };
 
+    /**
+      @module ember-data
+    */
+
+    var ember$data$lib$system$model$model$$get = Ember.get;
+    var ember$data$lib$system$model$model$$intersection = Ember.EnumerableUtils.intersection;
+    var ember$data$lib$system$model$model$$RESERVED_MODEL_PROPS = ['currentState', 'data', 'store'];
+
+    var ember$data$lib$system$model$model$$retrieveFromCurrentState = Ember.computed('currentState', function (key) {
+      return ember$data$lib$system$model$model$$get(this._internalModel.currentState, key);
+    }).readOnly();
+
+    /**
+
+      The model class that all Ember Data records descend from.
+      This is the public API of Ember Data models. If you are using Ember Data
+      in your application, this is the class you should use.
+      If you are working on Ember Data internals, you most likely want to be dealing
+      with `InternalModel`
+
+      @class Model
+      @namespace DS
+      @extends Ember.Object
+      @uses Ember.Evented
+    */
+    var ember$data$lib$system$model$model$$Model = Ember.Object.extend(Ember.Evented, {
+      _recordArrays: undefined,
+      _relationships: undefined,
+      _internalModel: null,
+
+      store: null,
+
+      /**
+        If this property is `true` the record is in the `empty`
+        state. Empty is the first state all records enter after they have
+        been created. Most records created by the store will quickly
+        transition to the `loading` state if data needs to be fetched from
+        the server or the `created` state if the record is created on the
+        client. A record can also enter the empty state if the adapter is
+        unable to locate the record.
+         @property isEmpty
+        @type {Boolean}
+        @readOnly
+      */
+      isEmpty: ember$data$lib$system$model$model$$retrieveFromCurrentState,
+      /**
+        If this property is `true` the record is in the `loading` state. A
+        record enters this state when the store asks the adapter for its
+        data. It remains in this state until the adapter provides the
+        requested data.
+         @property isLoading
+        @type {Boolean}
+        @readOnly
+      */
+      isLoading: ember$data$lib$system$model$model$$retrieveFromCurrentState,
+      /**
+        If this property is `true` the record is in the `loaded` state. A
+        record enters this state when its data is populated. Most of a
+        record's lifecycle is spent inside substates of the `loaded`
+        state.
+         Example
+         ```javascript
+        var record = store.createRecord('model');
+        record.get('isLoaded'); // true
+         store.find('model', 1).then(function(model) {
+          model.get('isLoaded'); // true
+        });
+        ```
+         @property isLoaded
+        @type {Boolean}
+        @readOnly
+      */
+      isLoaded: ember$data$lib$system$model$model$$retrieveFromCurrentState,
+      /**
+        If this property is `true` the record is in the `dirty` state. The
+        record has local changes that have not yet been saved by the
+        adapter. This includes records that have been created (but not yet
+        saved) or deleted.
+         Example
+         ```javascript
+        var record = store.createRecord('model');
+        record.get('isDirty'); // true
+         store.find('model', 1).then(function(model) {
+          model.get('isDirty'); // false
+          model.set('foo', 'some value');
+          model.get('isDirty'); // true
+        });
+        ```
+         @property isDirty
+        @type {Boolean}
+        @readOnly
+      */
+      isDirty: ember$data$lib$system$model$model$$retrieveFromCurrentState,
+      /**
+        If this property is `true` the record is in the `saving` state. A
+        record enters the saving state when `save` is called, but the
+        adapter has not yet acknowledged that the changes have been
+        persisted to the backend.
+         Example
+         ```javascript
+        var record = store.createRecord('model');
+        record.get('isSaving'); // false
+        var promise = record.save();
+        record.get('isSaving'); // true
+        promise.then(function() {
+          record.get('isSaving'); // false
+        });
+        ```
+         @property isSaving
+        @type {Boolean}
+        @readOnly
+      */
+      isSaving: ember$data$lib$system$model$model$$retrieveFromCurrentState,
+      /**
+        If this property is `true` the record is in the `deleted` state
+        and has been marked for deletion. When `isDeleted` is true and
+        `isDirty` is true, the record is deleted locally but the deletion
+        was not yet persisted. When `isSaving` is true, the change is
+        in-flight. When both `isDirty` and `isSaving` are false, the
+        change has persisted.
+         Example
+         ```javascript
+        var record = store.createRecord('model');
+        record.get('isDeleted');    // false
+        record.deleteRecord();
+         // Locally deleted
+        record.get('isDeleted');    // true
+        record.get('isDirty');      // true
+        record.get('isSaving');     // false
+         // Persisting the deletion
+        var promise = record.save();
+        record.get('isDeleted');    // true
+        record.get('isSaving');     // true
+         // Deletion Persisted
+        promise.then(function() {
+          record.get('isDeleted');  // true
+          record.get('isSaving');   // false
+          record.get('isDirty');    // false
+        });
+        ```
+         @property isDeleted
+        @type {Boolean}
+        @readOnly
+      */
+      isDeleted: ember$data$lib$system$model$model$$retrieveFromCurrentState,
+      /**
+        If this property is `true` the record is in the `new` state. A
+        record will be in the `new` state when it has been created on the
+        client and the adapter has not yet report that it was successfully
+        saved.
+         Example
+         ```javascript
+        var record = store.createRecord('model');
+        record.get('isNew'); // true
+         record.save().then(function(model) {
+          model.get('isNew'); // false
+        });
+        ```
+         @property isNew
+        @type {Boolean}
+        @readOnly
+      */
+      isNew: ember$data$lib$system$model$model$$retrieveFromCurrentState,
+      /**
+        If this property is `true` the record is in the `valid` state.
+         A record will be in the `valid` state when the adapter did not report any
+        server-side validation failures.
+         @property isValid
+        @type {Boolean}
+        @readOnly
+      */
+      isValid: ember$data$lib$system$model$model$$retrieveFromCurrentState,
+      /**
+        If the record is in the dirty state this property will report what
+        kind of change has caused it to move into the dirty
+        state. Possible values are:
+         - `created` The record has been created by the client and not yet saved to the adapter.
+        - `updated` The record has been updated by the client and not yet saved to the adapter.
+        - `deleted` The record has been deleted by the client and not yet saved to the adapter.
+         Example
+         ```javascript
+        var record = store.createRecord('model');
+        record.get('dirtyType'); // 'created'
+        ```
+         @property dirtyType
+        @type {String}
+        @readOnly
+      */
+      dirtyType: ember$data$lib$system$model$model$$retrieveFromCurrentState,
+
+      /**
+        If `true` the adapter reported that it was unable to save local
+        changes to the backend for any reason other than a server-side
+        validation error.
+         Example
+         ```javascript
+        record.get('isError'); // false
+        record.set('foo', 'valid value');
+        record.save().then(null, function() {
+          record.get('isError'); // true
+        });
+        ```
+         @property isError
+        @type {Boolean}
+        @readOnly
+      */
+      isError: false,
+
+      /**
+        If `true` the store is attempting to reload the record form the adapter.
+         Example
+         ```javascript
+        record.get('isReloading'); // false
+        record.reload();
+        record.get('isReloading'); // true
+        ```
+         @property isReloading
+        @type {Boolean}
+        @readOnly
+      */
+      isReloading: false,
+
+      /**
+        All ember models have an id property. This is an identifier
+        managed by an external source. These are always coerced to be
+        strings before being used internally. Note when declaring the
+        attributes for a model it is an error to declare an id
+        attribute.
+         ```javascript
+        var record = store.createRecord('model');
+        record.get('id'); // null
+         store.find('model', 1).then(function(model) {
+          model.get('id'); // '1'
+        });
+        ```
+         @property id
+        @type {String}
+      */
+      id: null,
+
+      /**
+        @property currentState
+        @private
+        @type {Object}
+      */
+
+      /**
+        When the record is in the `invalid` state this object will contain
+        any errors returned by the adapter. When present the errors hash
+        contains keys corresponding to the invalid property names
+        and values which are arrays of Javascript objects with two keys:
+         - `message` A string containing the error message from the backend
+        - `attribute` The name of the property associated with this error message
+         ```javascript
+        record.get('errors.length'); // 0
+        record.set('foo', 'invalid value');
+        record.save().catch(function() {
+          record.get('errors').get('foo');
+          // [{message: 'foo should be a number.', attribute: 'foo'}]
+        });
+        ```
+         The `errors` property us useful for displaying error messages to
+        the user.
+         ```handlebars
+        <label>Username: {{input value=username}} </label>
+        {{#each model.errors.username as |error|}}
+          <div class="error">
+            {{error.message}}
+          </div>
+        {{/each}}
+        <label>Email: {{input value=email}} </label>
+        {{#each model.errors.email as |error|}}
+          <div class="error">
+            {{error.message}}
+          </div>
+        {{/each}}
+        ```
+          You can also access the special `messages` property on the error
+        object to get an array of all the error strings.
+         ```handlebars
+        {{#each model.errors.messages as |message|}}
+          <div class="error">
+            {{message}}
+          </div>
+        {{/each}}
+        ```
+         @property errors
+        @type {DS.Errors}
+      */
+      errors: Ember.computed(function () {
+        return this._internalModel.getErrors();
+      }).readOnly(),
+
+      /**
+        Create a JSON representation of the record, using the serialization
+        strategy of the store's adapter.
+        `serialize` takes an optional hash as a parameter, currently
+        supported options are:
+        - `includeId`: `true` if the record's ID should be included in the
+          JSON representation.
+         @method serialize
+        @param {Object} options
+        @return {Object} an object whose values are primitive JSON values only
+      */
+      serialize: function (options) {
+        return this.store.serialize(this, options);
+      },
+
+      /**
+        Use [DS.JSONSerializer](DS.JSONSerializer.html) to
+        get the JSON representation of a record.
+         `toJSON` takes an optional hash as a parameter, currently
+        supported options are:
+         - `includeId`: `true` if the record's ID should be included in the
+          JSON representation.
+         @method toJSON
+        @param {Object} options
+        @return {Object} A JSON representation of the object.
+      */
+      toJSON: function (options) {
+        // container is for lazy transform lookups
+        var serializer = this.store.serializerFor('-default');
+        var snapshot = this._internalModel.createSnapshot();
+
+        return serializer.serialize(snapshot, options);
+      },
+
+      /**
+        Fired when the record is ready to be interacted with,
+        that is either loaded from the server or created locally.
+         @event ready
+      */
+      ready: Ember.K,
+
+      /**
+        Fired when the record is loaded from the server.
+         @event didLoad
+      */
+      didLoad: Ember.K,
+
+      /**
+        Fired when the record is updated.
+         @event didUpdate
+      */
+      didUpdate: Ember.K,
+
+      /**
+        Fired when a new record is commited to the server.
+         @event didCreate
+      */
+      didCreate: Ember.K,
+
+      /**
+        Fired when the record is deleted.
+         @event didDelete
+      */
+      didDelete: Ember.K,
+
+      /**
+        Fired when the record becomes invalid.
+         @event becameInvalid
+      */
+      becameInvalid: Ember.K,
+
+      /**
+        Fired when the record enters the error state.
+         @event becameError
+      */
+      becameError: Ember.K,
+
+      /**
+        Fired when the record is rolled back.
+         @event rolledBack
+      */
+      rolledBack: Ember.K,
+
+      /**
+        @property data
+        @private
+        @type {Object}
+      */
+      data: Ember.computed.readOnly('_internalModel._data'),
+
+      //TODO Do we want to deprecate these?
+      /**
+        @method send
+        @private
+        @param {String} name
+        @param {Object} context
+      */
+      send: function (name, context) {
+        return this._internalModel.send(name, context);
+      },
+
+      /**
+        @method transitionTo
+        @private
+        @param {String} name
+      */
+      transitionTo: function (name) {
+        return this._internalModel.transitionTo(name);
+      },
+
+      /**
+        Marks the record as deleted but does not save it. You must call
+        `save` afterwards if you want to persist it. You might use this
+        method if you want to allow the user to still `rollback()` a
+        delete after it was made.
+         Example
+         ```app/routes/model/delete.js
+        import Ember from 'ember';
+         export default Ember.Route.extend({
+          actions: {
+            softDelete: function() {
+              this.controller.get('model').deleteRecord();
+            },
+            confirm: function() {
+              this.controller.get('model').save();
+            },
+            undo: function() {
+              this.controller.get('model').rollback();
+            }
+          }
+        });
+        ```
+         @method deleteRecord
+      */
+      deleteRecord: function () {
+        this._internalModel.deleteRecord();
+      },
+
+      /**
+        Same as `deleteRecord`, but saves the record immediately.
+         Example
+         ```app/routes/model/delete.js
+        import Ember from 'ember';
+         export default Ember.Route.extend({
+          actions: {
+            delete: function() {
+              var controller = this.controller;
+              controller.get('model').destroyRecord().then(function() {
+                controller.transitionToRoute('model.index');
+              });
+            }
+          }
+        });
+        ```
+         @method destroyRecord
+        @return {Promise} a promise that will be resolved when the adapter returns
+        successfully or rejected if the adapter returns with an error.
+      */
+      destroyRecord: function () {
+        this.deleteRecord();
+        return this.save();
+      },
+
+      /**
+        @method unloadRecord
+        @private
+      */
+      unloadRecord: function () {
+        if (this.isDestroyed) {
+          return;
+        }
+        this._internalModel.unloadRecord();
+      },
+
+      /**
+        @method _notifyProperties
+        @private
+      */
+      _notifyProperties: function (keys) {
+        Ember.beginPropertyChanges();
+        var key;
+        for (var i = 0, length = keys.length; i < length; i++) {
+          key = keys[i];
+          this.notifyPropertyChange(key);
+        }
+        Ember.endPropertyChanges();
+      },
+
+      /**
+        Returns an object, whose keys are changed properties, and value is
+        an [oldProp, newProp] array.
+         Example
+         ```app/models/mascot.js
+        import DS from 'ember-data';
+         export default DS.Model.extend({
+          name: attr('string')
+        });
+        ```
+         ```javascript
+        var mascot = store.createRecord('mascot');
+        mascot.changedAttributes(); // {}
+        mascot.set('name', 'Tomster');
+        mascot.changedAttributes(); // {name: [undefined, 'Tomster']}
+        ```
+         @method changedAttributes
+        @return {Object} an object, whose keys are changed properties,
+          and value is an [oldProp, newProp] array.
+      */
+      changedAttributes: function () {
+        var oldData = ember$data$lib$system$model$model$$get(this._internalModel, '_data');
+        var newData = ember$data$lib$system$model$model$$get(this._internalModel, '_attributes');
+        var diffData = Ember.create(null);
+        var prop;
+
+        for (prop in newData) {
+          diffData[prop] = [oldData[prop], newData[prop]];
+        }
+
+        return diffData;
+      },
+
+      //TODO discuss with tomhuda about events/hooks
+      //Bring back as hooks?
+      /**
+        @method adapterWillCommit
+        @private
+      adapterWillCommit: function() {
+        this.send('willCommit');
+      },
+       /**
+        @method adapterDidDirty
+        @private
+      adapterDidDirty: function() {
+        this.send('becomeDirty');
+        this.updateRecordArraysLater();
+      },
+      */
+
+      /**
+        If the model `isDirty` this function will discard any unsaved
+        changes. If the model `isNew` it will be removed from the store.
+         Example
+         ```javascript
+        record.get('name'); // 'Untitled Document'
+        record.set('name', 'Doc 1');
+        record.get('name'); // 'Doc 1'
+        record.rollback();
+        record.get('name'); // 'Untitled Document'
+        ```
+         @method rollback
+      */
+      rollback: function () {
+        this._internalModel.rollback();
+      },
+
+      /*
+        @method _createSnapshot
+        @private
+      */
+      _createSnapshot: function () {
+        return this._internalModel.createSnapshot();
+      },
+
+      toStringExtension: function () {
+        return ember$data$lib$system$model$model$$get(this, 'id');
+      },
+
+      /**
+        Save the record and persist any changes to the record to an
+        external source via the adapter.
+         Example
+         ```javascript
+        record.set('name', 'Tomster');
+        record.save().then(function() {
+          // Success callback
+        }, function() {
+          // Error callback
+        });
+        ```
+        @method save
+        @return {Promise} a promise that will be resolved when the adapter returns
+        successfully or rejected if the adapter returns with an error.
+      */
+      save: function () {
+        var model = this;
+        return ember$data$lib$system$promise$proxies$$PromiseObject.create({
+          promise: this._internalModel.save().then(function () {
+            return model;
+          })
+        });
+      },
+
+      /**
+        Reload the record from the adapter.
+         This will only work if the record has already finished loading
+        and has not yet been modified (`isLoaded` but not `isDirty`,
+        or `isSaving`).
+         Example
+         ```app/routes/model/view.js
+        import Ember from 'ember';
+         export default Ember.Route.extend({
+          actions: {
+            reload: function() {
+              this.controller.get('model').reload().then(function(model) {
+                // do something with the reloaded model
+              });
+            }
+          }
+        });
+        ```
+         @method reload
+        @return {Promise} a promise that will be resolved with the record when the
+        adapter returns successfully or rejected if the adapter returns
+        with an error.
+      */
+      reload: function () {
+        var model = this;
+        return ember$data$lib$system$promise$proxies$$PromiseObject.create({
+          promise: this._internalModel.reload().then(function () {
+            return model;
+          })
+        });
+      },
+
+      /**
+        Override the default event firing from Ember.Evented to
+        also call methods with the given name.
+         @method trigger
+        @private
+        @param {String} name
+      */
+      trigger: function (name) {
+        var length = arguments.length;
+        var args = new Array(length - 1);
+
+        for (var i = 1; i < length; i++) {
+          args[i - 1] = arguments[i];
+        }
+
+        Ember.tryInvoke(this, name, args);
+        this._super.apply(this, arguments);
+      },
+
+      willDestroy: function () {
+        //TODO Move!
+        this._internalModel.clearRelationships();
+        this._internalModel.recordObjectWillDestroy();
+        this._super.apply(this, arguments);
+        //TODO should we set internalModel to null here?
+      },
+
+      // This is a temporary solution until we refactor DS.Model to not
+      // rely on the data property.
+      willMergeMixin: function (props) {
+        var constructor = this.constructor;
+        Ember.assert('`' + ember$data$lib$system$model$model$$intersection(Ember.keys(props), ember$data$lib$system$model$model$$RESERVED_MODEL_PROPS)[0] + '` is a reserved property name on DS.Model objects. Please choose a different property name for ' + constructor.toString(), !ember$data$lib$system$model$model$$intersection(Ember.keys(props), ember$data$lib$system$model$model$$RESERVED_MODEL_PROPS)[0]);
+      },
+
+      attr: function () {
+        Ember.assert('The `attr` method is not available on DS.Model, a DS.Snapshot was probably expected. Are you passing a DS.Model instead of a DS.Snapshot to your serializer?', false);
+      },
+
+      belongsTo: function () {
+        Ember.assert('The `belongsTo` method is not available on DS.Model, a DS.Snapshot was probably expected. Are you passing a DS.Model instead of a DS.Snapshot to your serializer?', false);
+      },
+
+      hasMany: function () {
+        Ember.assert('The `hasMany` method is not available on DS.Model, a DS.Snapshot was probably expected. Are you passing a DS.Model instead of a DS.Snapshot to your serializer?', false);
+      }
+    });
+
+    ember$data$lib$system$model$model$$Model.reopenClass({
+      /**
+        Alias DS.Model's `create` method to `_create`. This allows us to create DS.Model
+        instances from within the store, but if end users accidentally call `create()`
+        (instead of `createRecord()`), we can raise an error.
+         @method _create
+        @private
+        @static
+      */
+      _create: ember$data$lib$system$model$model$$Model.create,
+
+      /**
+        Override the class' `create()` method to raise an error. This
+        prevents end users from inadvertently calling `create()` instead
+        of `createRecord()`. The store is still able to create instances
+        by calling the `_create()` method. To create an instance of a
+        `DS.Model` use [store.createRecord](DS.Store.html#method_createRecord).
+         @method create
+        @private
+        @static
+      */
+      create: function () {
+        throw new Ember.Error('You should not call `create` on a model. Instead, call `store.createRecord` with the attributes you would like to set.');
+      },
+
+      /**
+       Represents the model's class name as a string. This can be used to look up the model through
+       DS.Store's modelFor method.
+        `modelName` is generated for you by Ember Data. It will be a lowercased, dasherized string.
+       For example:
+        ```javascript
+       store.modelFor('post').modelName; // 'post'
+       store.modelFor('blog-post').modelName; // 'blog-post'
+       ```
+        The most common place you'll want to access `modelName` is in your serializer's `payloadKeyFromModelName` method. For example, to change payload
+       keys to underscore (instead of dasherized), you might use the following code:
+        ```javascript
+       export default var PostSerializer = DS.RESTSerializer.extend({
+         payloadKeyFromModelName: function(modelName) {
+           return Ember.String.underscore(modelName);
+         }
+       });
+       ```
+       @property
+       @type String
+       @readonly
+      */
+      modelName: null
+    });
+
+    var ember$data$lib$system$model$model$$default = ember$data$lib$system$model$model$$Model;
+    var ember$data$lib$utils$supports$computed$getter$setter$$supportsComputedGetterSetter;
+
+    try {
+      Ember.computed({
+        get: function () {},
+        set: function () {}
+      });
+      ember$data$lib$utils$supports$computed$getter$setter$$supportsComputedGetterSetter = true;
+    } catch (e) {
+      ember$data$lib$utils$supports$computed$getter$setter$$supportsComputedGetterSetter = false;
+    }
+
+    var ember$data$lib$utils$supports$computed$getter$setter$$default = ember$data$lib$utils$supports$computed$getter$setter$$supportsComputedGetterSetter;
+
+    var ember$data$lib$utils$computed$polyfill$$computed = Ember.computed;
+
+    var ember$data$lib$utils$computed$polyfill$$default = function () {
+      var polyfillArguments = [];
+      var config = arguments[arguments.length - 1];
+
+      if (typeof config === 'function' || ember$data$lib$utils$supports$computed$getter$setter$$default) {
+        return ember$data$lib$utils$computed$polyfill$$computed.apply(null, arguments);
+      }
+
+      for (var i = 0, l = arguments.length - 1; i < l; i++) {
+        polyfillArguments.push(arguments[i]);
+      }
+
+      var func;
+      if (config.set) {
+        func = function (key, value) {
+          if (arguments.length > 1) {
+            return config.set.call(this, key, value);
+          } else {
+            return config.get.call(this, key);
+          }
+        };
+      } else {
+        func = function (key) {
+          return config.get.call(this, key);
+        };
+      }
+
+      polyfillArguments.push(func);
+
+      return ember$data$lib$utils$computed$polyfill$$computed.apply(null, polyfillArguments);
+    };
+
+    var ember$data$lib$system$model$attributes$$default = ember$data$lib$system$model$attributes$$attr;
+
+    /**
+      @module ember-data
+    */
+
+    var ember$data$lib$system$model$attributes$$get = Ember.get;
+
+    /**
+      @class Model
+      @namespace DS
+    */
+    ember$data$lib$system$model$model$$default.reopenClass({
+      /**
+        A map whose keys are the attributes of the model (properties
+        described by DS.attr) and whose values are the meta object for the
+        property.
+         Example
+         ```app/models/person.js
+        import DS from 'ember-data';
+         export default DS.Model.extend({
+          firstName: attr('string'),
+          lastName: attr('string'),
+          birthday: attr('date')
+        });
+        ```
+         ```javascript
+        import Ember from 'ember';
+        import Person from 'app/models/person';
+         var attributes = Ember.get(Person, 'attributes')
+         attributes.forEach(function(name, meta) {
+          console.log(name, meta);
+        });
+         // prints:
+        // firstName {type: "string", isAttribute: true, options: Object, parentType: function, name: "firstName"}
+        // lastName {type: "string", isAttribute: true, options: Object, parentType: function, name: "lastName"}
+        // birthday {type: "date", isAttribute: true, options: Object, parentType: function, name: "birthday"}
+        ```
+         @property attributes
+        @static
+        @type {Ember.Map}
+        @readOnly
+      */
+      attributes: Ember.computed(function () {
+        var map = ember$data$lib$system$map$$Map.create();
+
+        this.eachComputedProperty(function (name, meta) {
+          if (meta.isAttribute) {
+            Ember.assert("You may not set `id` as an attribute on your model. Please remove any lines that look like: `id: DS.attr('<type>')` from " + this.toString(), name !== "id");
+
+            meta.name = name;
+            map.set(name, meta);
+          }
+        });
+
+        return map;
+      }).readOnly(),
+
+      /**
+        A map whose keys are the attributes of the model (properties
+        described by DS.attr) and whose values are type of transformation
+        applied to each attribute. This map does not include any
+        attributes that do not have an transformation type.
+         Example
+         ```app/models/person.js
+        import DS from 'ember-data';
+         export default DS.Model.extend({
+          firstName: attr(),
+          lastName: attr('string'),
+          birthday: attr('date')
+        });
+        ```
+         ```javascript
+        import Ember from 'ember';
+        import Person from 'app/models/person';
+         var transformedAttributes = Ember.get(Person, 'transformedAttributes')
+         transformedAttributes.forEach(function(field, type) {
+          console.log(field, type);
+        });
+         // prints:
+        // lastName string
+        // birthday date
+        ```
+         @property transformedAttributes
+        @static
+        @type {Ember.Map}
+        @readOnly
+      */
+      transformedAttributes: Ember.computed(function () {
+        var map = ember$data$lib$system$map$$Map.create();
+
+        this.eachAttribute(function (key, meta) {
+          if (meta.type) {
+            map.set(key, meta.type);
+          }
+        });
+
+        return map;
+      }).readOnly(),
+
+      /**
+        Iterates through the attributes of the model, calling the passed function on each
+        attribute.
+         The callback method you provide should have the following signature (all
+        parameters are optional):
+         ```javascript
+        function(name, meta);
+        ```
+         - `name` the name of the current property in the iteration
+        - `meta` the meta object for the attribute property in the iteration
+         Note that in addition to a callback, you can also pass an optional target
+        object that will be set as `this` on the context.
+         Example
+         ```javascript
+        import DS from 'ember-data';
+         var Person = DS.Model.extend({
+          firstName: attr('string'),
+          lastName: attr('string'),
+          birthday: attr('date')
+        });
+         Person.eachAttribute(function(name, meta) {
+          console.log(name, meta);
+        });
+         // prints:
+        // firstName {type: "string", isAttribute: true, options: Object, parentType: function, name: "firstName"}
+        // lastName {type: "string", isAttribute: true, options: Object, parentType: function, name: "lastName"}
+        // birthday {type: "date", isAttribute: true, options: Object, parentType: function, name: "birthday"}
+       ```
+         @method eachAttribute
+        @param {Function} callback The callback to execute
+        @param {Object} [binding] the value to which the callback's `this` should be bound
+        @static
+      */
+      eachAttribute: function (callback, binding) {
+        ember$data$lib$system$model$attributes$$get(this, "attributes").forEach(function (meta, name) {
+          callback.call(binding, name, meta);
+        }, binding);
+      },
+
+      /**
+        Iterates through the transformedAttributes of the model, calling
+        the passed function on each attribute. Note the callback will not be
+        called for any attributes that do not have an transformation type.
+         The callback method you provide should have the following signature (all
+        parameters are optional):
+         ```javascript
+        function(name, type);
+        ```
+         - `name` the name of the current property in the iteration
+        - `type` a string containing the name of the type of transformed
+          applied to the attribute
+         Note that in addition to a callback, you can also pass an optional target
+        object that will be set as `this` on the context.
+         Example
+         ```javascript
+        import DS from 'ember-data';
+         var Person = DS.Model.extend({
+          firstName: attr(),
+          lastName: attr('string'),
+          birthday: attr('date')
+        });
+         Person.eachTransformedAttribute(function(name, type) {
+          console.log(name, type);
+        });
+         // prints:
+        // lastName string
+        // birthday date
+       ```
+         @method eachTransformedAttribute
+        @param {Function} callback The callback to execute
+        @param {Object} [binding] the value to which the callback's `this` should be bound
+        @static
+      */
+      eachTransformedAttribute: function (callback, binding) {
+        ember$data$lib$system$model$attributes$$get(this, "transformedAttributes").forEach(function (type, name) {
+          callback.call(binding, name, type);
+        });
+      }
+    });
+
+    ember$data$lib$system$model$model$$default.reopen({
+      eachAttribute: function (callback, binding) {
+        this.constructor.eachAttribute(callback, binding);
+      }
+    });
+
+    function ember$data$lib$system$model$attributes$$getDefaultValue(record, options, key) {
+      if (typeof options.defaultValue === "function") {
+        return options.defaultValue.apply(null, arguments);
+      } else {
+        return options.defaultValue;
+      }
+    }
+
+    function ember$data$lib$system$model$attributes$$hasValue(record, key) {
+      return key in record._attributes || key in record._inFlightAttributes || key in record._data;
+    }
+
+    function ember$data$lib$system$model$attributes$$getValue(record, key) {
+      if (key in record._attributes) {
+        return record._attributes[key];
+      } else if (key in record._inFlightAttributes) {
+        return record._inFlightAttributes[key];
+      } else {
+        return record._data[key];
+      }
+    }
+
+    /**
+      `DS.attr` defines an attribute on a [DS.Model](/api/data/classes/DS.Model.html).
+      By default, attributes are passed through as-is, however you can specify an
+      optional type to have the value automatically transformed.
+      Ember Data ships with four basic transform types: `string`, `number`,
+      `boolean` and `date`. You can define your own transforms by subclassing
+      [DS.Transform](/api/data/classes/DS.Transform.html).
+
+      Note that you cannot use `attr` to define an attribute of `id`.
+
+      `DS.attr` takes an optional hash as a second parameter, currently
+      supported options are:
+
+      - `defaultValue`: Pass a string or a function to be called to set the attribute
+                        to a default value if none is supplied.
+
+      Example
+
+      ```app/models/user.js
+      import DS from 'ember-data';
+
+      export default DS.Model.extend({
+        username: DS.attr('string'),
+        email: DS.attr('string'),
+        verified: DS.attr('boolean', {defaultValue: false})
+      });
+      ```
+
+      Default value can also be a function. This is useful it you want to return
+      a new object for each attribute.
+
+      ```app/models/user.js
+      import DS from 'ember-data';
+
+      export default DS.Model.extend({
+        username: attr('string'),
+        email: attr('string'),
+        settings: attr({defaultValue: function() {
+          return {};
+        }})
+      });
+      ```
+
+      @namespace
+      @method attr
+      @for DS
+      @param {String} type the attribute type
+      @param {Object} options a hash of options
+      @return {Attribute}
+    */
+    function ember$data$lib$system$model$attributes$$attr(type, options) {
+      if (typeof type === "object") {
+        options = type;
+        type = undefined;
+      } else {
+        options = options || {};
+      }
+
+      var meta = {
+        type: type,
+        isAttribute: true,
+        options: options
+      };
+
+      return ember$data$lib$utils$computed$polyfill$$default({
+        get: function (key) {
+          var internalModel = this._internalModel;
+          if (ember$data$lib$system$model$attributes$$hasValue(internalModel, key)) {
+            return ember$data$lib$system$model$attributes$$getValue(internalModel, key);
+          } else {
+            return ember$data$lib$system$model$attributes$$getDefaultValue(this, options, key);
+          }
+        },
+        set: function (key, value) {
+          Ember.assert("You may not set `id` as an attribute on your model. Please remove any lines that look like: `id: DS.attr('<type>')` from " + this.constructor.toString(), key !== "id");
+          var internalModel = this._internalModel;
+          var oldValue = ember$data$lib$system$model$attributes$$getValue(internalModel, key);
+
+          if (value !== oldValue) {
+            // Add the new value to the changed attributes hash; it will get deleted by
+            // the 'didSetProperty' handler if it is no different from the original value
+            internalModel._attributes[key] = value;
+
+            this._internalModel.send("didSetProperty", {
+              name: key,
+              oldValue: oldValue,
+              originalValue: internalModel._data[key],
+              value: value
+            });
+          }
+
+          return value;
+        }
+      }).meta(meta);
+    }
+
+    var ember$data$lib$system$model$states$$get = Ember.get;
+    /*
+      This file encapsulates the various states that a record can transition
+      through during its lifecycle.
+    */
+    /**
+      ### State
+
+      Each record has a `currentState` property that explicitly tracks what
+      state a record is in at any given time. For instance, if a record is
+      newly created and has not yet been sent to the adapter to be saved,
+      it would be in the `root.loaded.created.uncommitted` state.  If a
+      record has had local modifications made to it that are in the
+      process of being saved, the record would be in the
+      `root.loaded.updated.inFlight` state. (This state paths will be
+      explained in more detail below.)
+
+      Events are sent by the record or its store to the record's
+      `currentState` property. How the state reacts to these events is
+      dependent on which state it is in. In some states, certain events
+      will be invalid and will cause an exception to be raised.
+
+      States are hierarchical and every state is a substate of the
+      `RootState`. For example, a record can be in the
+      `root.deleted.uncommitted` state, then transition into the
+      `root.deleted.inFlight` state. If a child state does not implement
+      an event handler, the state manager will attempt to invoke the event
+      on all parent states until the root state is reached. The state
+      hierarchy of a record is described in terms of a path string. You
+      can determine a record's current state by getting the state's
+      `stateName` property:
+
+      ```javascript
+      record.get('currentState.stateName');
+      //=> "root.created.uncommitted"
+       ```
+
+      The hierarchy of valid states that ship with ember data looks like
+      this:
+
+      ```text
+      * root
+        * deleted
+          * saved
+          * uncommitted
+          * inFlight
+        * empty
+        * loaded
+          * created
+            * uncommitted
+            * inFlight
+          * saved
+          * updated
+            * uncommitted
+            * inFlight
+        * loading
+      ```
+
+      The `DS.Model` states are themselves stateless. What that means is
+      that, the hierarchical states that each of *those* points to is a
+      shared data structure. For performance reasons, instead of each
+      record getting its own copy of the hierarchy of states, each record
+      points to this global, immutable shared instance. How does a state
+      know which record it should be acting on? We pass the record
+      instance into the state's event handlers as the first argument.
+
+      The record passed as the first parameter is where you should stash
+      state about the record if needed; you should never store data on the state
+      object itself.
+
+      ### Events and Flags
+
+      A state may implement zero or more events and flags.
+
+      #### Events
+
+      Events are named functions that are invoked when sent to a record. The
+      record will first look for a method with the given name on the
+      current state. If no method is found, it will search the current
+      state's parent, and then its grandparent, and so on until reaching
+      the top of the hierarchy. If the root is reached without an event
+      handler being found, an exception will be raised. This can be very
+      helpful when debugging new features.
+
+      Here's an example implementation of a state with a `myEvent` event handler:
+
+      ```javascript
+      aState: DS.State.create({
+        myEvent: function(manager, param) {
+          console.log("Received myEvent with", param);
+        }
+      })
+      ```
+
+      To trigger this event:
+
+      ```javascript
+      record.send('myEvent', 'foo');
+      //=> "Received myEvent with foo"
+      ```
+
+      Note that an optional parameter can be sent to a record's `send()` method,
+      which will be passed as the second parameter to the event handler.
+
+      Events should transition to a different state if appropriate. This can be
+      done by calling the record's `transitionTo()` method with a path to the
+      desired state. The state manager will attempt to resolve the state path
+      relative to the current state. If no state is found at that path, it will
+      attempt to resolve it relative to the current state's parent, and then its
+      parent, and so on until the root is reached. For example, imagine a hierarchy
+      like this:
+
+          * created
+            * uncommitted <-- currentState
+            * inFlight
+          * updated
+            * inFlight
+
+      If we are currently in the `uncommitted` state, calling
+      `transitionTo('inFlight')` would transition to the `created.inFlight` state,
+      while calling `transitionTo('updated.inFlight')` would transition to
+      the `updated.inFlight` state.
+
+      Remember that *only events* should ever cause a state transition. You should
+      never call `transitionTo()` from outside a state's event handler. If you are
+      tempted to do so, create a new event and send that to the state manager.
+
+      #### Flags
+
+      Flags are Boolean values that can be used to introspect a record's current
+      state in a more user-friendly way than examining its state path. For example,
+      instead of doing this:
+
+      ```javascript
+      var statePath = record.get('stateManager.currentPath');
+      if (statePath === 'created.inFlight') {
+        doSomething();
+      }
+      ```
+
+      You can say:
+
+      ```javascript
+      if (record.get('isNew') && record.get('isSaving')) {
+        doSomething();
+      }
+      ```
+
+      If your state does not set a value for a given flag, the value will
+      be inherited from its parent (or the first place in the state hierarchy
+      where it is defined).
+
+      The current set of flags are defined below. If you want to add a new flag,
+      in addition to the area below, you will also need to declare it in the
+      `DS.Model` class.
+
+
+       * [isEmpty](DS.Model.html#property_isEmpty)
+       * [isLoading](DS.Model.html#property_isLoading)
+       * [isLoaded](DS.Model.html#property_isLoaded)
+       * [isDirty](DS.Model.html#property_isDirty)
+       * [isSaving](DS.Model.html#property_isSaving)
+       * [isDeleted](DS.Model.html#property_isDeleted)
+       * [isNew](DS.Model.html#property_isNew)
+       * [isValid](DS.Model.html#property_isValid)
+
+      @namespace DS
+      @class RootState
+    */
+
+    function ember$data$lib$system$model$states$$didSetProperty(internalModel, context) {
+      if (context.value === context.originalValue) {
+        delete internalModel._attributes[context.name];
+        internalModel.send('propertyWasReset', context.name);
+      } else if (context.value !== context.oldValue) {
+        internalModel.send('becomeDirty');
+      }
+
+      internalModel.updateRecordArraysLater();
+    }
+
+    // Implementation notes:
+    //
+    // Each state has a boolean value for all of the following flags:
+    //
+    // * isLoaded: The record has a populated `data` property. When a
+    //   record is loaded via `store.find`, `isLoaded` is false
+    //   until the adapter sets it. When a record is created locally,
+    //   its `isLoaded` property is always true.
+    // * isDirty: The record has local changes that have not yet been
+    //   saved by the adapter. This includes records that have been
+    //   created (but not yet saved) or deleted.
+    // * isSaving: The record has been committed, but
+    //   the adapter has not yet acknowledged that the changes have
+    //   been persisted to the backend.
+    // * isDeleted: The record was marked for deletion. When `isDeleted`
+    //   is true and `isDirty` is true, the record is deleted locally
+    //   but the deletion was not yet persisted. When `isSaving` is
+    //   true, the change is in-flight. When both `isDirty` and
+    //   `isSaving` are false, the change has persisted.
+    // * isError: The adapter reported that it was unable to save
+    //   local changes to the backend. This may also result in the
+    //   record having its `isValid` property become false if the
+    //   adapter reported that server-side validations failed.
+    // * isNew: The record was created on the client and the adapter
+    //   did not yet report that it was successfully saved.
+    // * isValid: The adapter did not report any server-side validation
+    //   failures.
+
+    // The dirty state is a abstract state whose functionality is
+    // shared between the `created` and `updated` states.
+    //
+    // The deleted state shares the `isDirty` flag with the
+    // subclasses of `DirtyState`, but with a very different
+    // implementation.
+    //
+    // Dirty states have three child states:
+    //
+    // `uncommitted`: the store has not yet handed off the record
+    //   to be saved.
+    // `inFlight`: the store has handed off the record to be saved,
+    //   but the adapter has not yet acknowledged success.
+    // `invalid`: the record has invalid information and cannot be
+    //   send to the adapter yet.
+    var ember$data$lib$system$model$states$$DirtyState = {
+      initialState: 'uncommitted',
+
+      // FLAGS
+      isDirty: true,
+
+      // SUBSTATES
+
+      // When a record first becomes dirty, it is `uncommitted`.
+      // This means that there are local pending changes, but they
+      // have not yet begun to be saved, and are not invalid.
+      uncommitted: {
+        // EVENTS
+        didSetProperty: ember$data$lib$system$model$states$$didSetProperty,
+
+        //TODO(Igor) reloading now triggers a
+        //loadingData event, though it seems fine?
+        loadingData: Ember.K,
+
+        propertyWasReset: function (internalModel, name) {
+          var length = Ember.keys(internalModel._attributes).length;
+          var stillDirty = length > 0;
+
+          if (!stillDirty) {
+            internalModel.send('rolledBack');
+          }
+        },
+
+        pushedData: Ember.K,
+
+        becomeDirty: Ember.K,
+
+        willCommit: function (internalModel) {
+          internalModel.transitionTo('inFlight');
+        },
+
+        reloadRecord: function (internalModel, resolve) {
+          resolve(internalModel.store.reloadRecord(internalModel));
+        },
+
+        rolledBack: function (internalModel) {
+          internalModel.transitionTo('loaded.saved');
+        },
+
+        becameInvalid: function (internalModel) {
+          internalModel.transitionTo('invalid');
+        },
+
+        rollback: function (internalModel) {
+          internalModel.rollback();
+          internalModel.triggerLater('ready');
+        }
+      },
+
+      // Once a record has been handed off to the adapter to be
+      // saved, it is in the 'in flight' state. Changes to the
+      // record cannot be made during this window.
+      inFlight: {
+        // FLAGS
+        isSaving: true,
+
+        // EVENTS
+        didSetProperty: ember$data$lib$system$model$states$$didSetProperty,
+        becomeDirty: Ember.K,
+        pushedData: Ember.K,
+
+        unloadRecord: ember$data$lib$system$model$states$$assertAgainstUnloadRecord,
+
+        // TODO: More robust semantics around save-while-in-flight
+        willCommit: Ember.K,
+
+        didCommit: function (internalModel) {
+          var dirtyType = ember$data$lib$system$model$states$$get(this, 'dirtyType');
+
+          internalModel.transitionTo('saved');
+          internalModel.send('invokeLifecycleCallbacks', dirtyType);
+        },
+
+        becameInvalid: function (internalModel) {
+          internalModel.transitionTo('invalid');
+          internalModel.send('invokeLifecycleCallbacks');
+        },
+
+        becameError: function (internalModel) {
+          internalModel.transitionTo('uncommitted');
+          internalModel.triggerLater('becameError', internalModel);
+        }
+      },
+
+      // A record is in the `invalid` if the adapter has indicated
+      // the the record failed server-side invalidations.
+      invalid: {
+        // FLAGS
+        isValid: false,
+
+        // EVENTS
+        deleteRecord: function (internalModel) {
+          internalModel.transitionTo('deleted.uncommitted');
+          internalModel.disconnectRelationships();
+        },
+
+        didSetProperty: function (internalModel, context) {
+          internalModel.getErrors().remove(context.name);
+
+          ember$data$lib$system$model$states$$didSetProperty(internalModel, context);
+        },
+
+        becomeDirty: Ember.K,
+
+        pushedData: Ember.K,
+
+        willCommit: function (internalModel) {
+          internalModel.getErrors().clear();
+          internalModel.transitionTo('inFlight');
+        },
+
+        rolledBack: function (internalModel) {
+          internalModel.getErrors().clear();
+          internalModel.triggerLater('ready');
+        },
+
+        becameValid: function (internalModel) {
+          internalModel.transitionTo('uncommitted');
+        },
+
+        invokeLifecycleCallbacks: function (internalModel) {
+          internalModel.triggerLater('becameInvalid', internalModel);
+        },
+
+        exit: function (internalModel) {
+          internalModel._inFlightAttributes = Ember.create(null);
+        }
+      }
+    };
+
+    // The created and updated states are created outside the state
+    // chart so we can reopen their substates and add mixins as
+    // necessary.
+
+    function ember$data$lib$system$model$states$$deepClone(object) {
+      var clone = {};
+      var value;
+
+      for (var prop in object) {
+        value = object[prop];
+        if (value && typeof value === 'object') {
+          clone[prop] = ember$data$lib$system$model$states$$deepClone(value);
+        } else {
+          clone[prop] = value;
+        }
+      }
+
+      return clone;
+    }
+
+    function ember$data$lib$system$model$states$$mixin(original, hash) {
+      for (var prop in hash) {
+        original[prop] = hash[prop];
+      }
+
+      return original;
+    }
+
+    function ember$data$lib$system$model$states$$dirtyState(options) {
+      var newState = ember$data$lib$system$model$states$$deepClone(ember$data$lib$system$model$states$$DirtyState);
+      return ember$data$lib$system$model$states$$mixin(newState, options);
+    }
+
+    var ember$data$lib$system$model$states$$createdState = ember$data$lib$system$model$states$$dirtyState({
+      dirtyType: 'created',
+      // FLAGS
+      isNew: true
+    });
+
+    ember$data$lib$system$model$states$$createdState.invalid.rolledBack = function (internalModel) {
+      internalModel.transitionTo('deleted.saved');
+    };
+    ember$data$lib$system$model$states$$createdState.uncommitted.rolledBack = function (internalModel) {
+      internalModel.transitionTo('deleted.saved');
+    };
+
+    var ember$data$lib$system$model$states$$updatedState = ember$data$lib$system$model$states$$dirtyState({
+      dirtyType: 'updated'
+    });
+
+    ember$data$lib$system$model$states$$createdState.uncommitted.deleteRecord = function (internalModel) {
+      internalModel.disconnectRelationships();
+      internalModel.transitionTo('deleted.saved');
+      internalModel.send('invokeLifecycleCallbacks');
+    };
+
+    ember$data$lib$system$model$states$$createdState.uncommitted.rollback = function (internalModel) {
+      ember$data$lib$system$model$states$$DirtyState.uncommitted.rollback.apply(this, arguments);
+      internalModel.transitionTo('deleted.saved');
+    };
+
+    ember$data$lib$system$model$states$$createdState.uncommitted.pushedData = function (internalModel) {
+      internalModel.transitionTo('loaded.updated.uncommitted');
+      internalModel.triggerLater('didLoad');
+    };
+
+    ember$data$lib$system$model$states$$createdState.uncommitted.propertyWasReset = Ember.K;
+
+    function ember$data$lib$system$model$states$$assertAgainstUnloadRecord(internalModel) {
+      Ember.assert('You can only unload a record which is not inFlight. `' + internalModel + '`', false);
+    }
+
+    ember$data$lib$system$model$states$$updatedState.inFlight.unloadRecord = ember$data$lib$system$model$states$$assertAgainstUnloadRecord;
+
+    ember$data$lib$system$model$states$$updatedState.uncommitted.deleteRecord = function (internalModel) {
+      internalModel.transitionTo('deleted.uncommitted');
+      internalModel.disconnectRelationships();
+    };
+
+    var ember$data$lib$system$model$states$$RootState = {
+      // FLAGS
+      isEmpty: false,
+      isLoading: false,
+      isLoaded: false,
+      isDirty: false,
+      isSaving: false,
+      isDeleted: false,
+      isNew: false,
+      isValid: true,
+
+      // DEFAULT EVENTS
+
+      // Trying to roll back if you're not in the dirty state
+      // doesn't change your state. For example, if you're in the
+      // in-flight state, rolling back the record doesn't move
+      // you out of the in-flight state.
+      rolledBack: Ember.K,
+      unloadRecord: function (internalModel) {
+        // clear relationships before moving to deleted state
+        // otherwise it fails
+        internalModel.clearRelationships();
+        internalModel.transitionTo('deleted.saved');
+      },
+
+      propertyWasReset: Ember.K,
+
+      // SUBSTATES
+
+      // A record begins its lifecycle in the `empty` state.
+      // If its data will come from the adapter, it will
+      // transition into the `loading` state. Otherwise, if
+      // the record is being created on the client, it will
+      // transition into the `created` state.
+      empty: {
+        isEmpty: true,
+
+        // EVENTS
+        loadingData: function (internalModel, promise) {
+          internalModel._loadingPromise = promise;
+          internalModel.transitionTo('loading');
+        },
+
+        loadedData: function (internalModel) {
+          internalModel.transitionTo('loaded.created.uncommitted');
+          internalModel.triggerLater('ready');
+        },
+
+        pushedData: function (internalModel) {
+          internalModel.transitionTo('loaded.saved');
+          internalModel.triggerLater('didLoad');
+          internalModel.triggerLater('ready');
+        }
+      },
+
+      // A record enters this state when the store asks
+      // the adapter for its data. It remains in this state
+      // until the adapter provides the requested data.
+      //
+      // Usually, this process is asynchronous, using an
+      // XHR to retrieve the data.
+      loading: {
+        // FLAGS
+        isLoading: true,
+
+        exit: function (internalModel) {
+          internalModel._loadingPromise = null;
+        },
+
+        // EVENTS
+        pushedData: function (internalModel) {
+          internalModel.transitionTo('loaded.saved');
+          internalModel.triggerLater('didLoad');
+          internalModel.triggerLater('ready');
+          //TODO this seems out of place here
+          internalModel.didCleanError();
+        },
+
+        becameError: function (internalModel) {
+          internalModel.triggerLater('becameError', internalModel);
+        },
+
+        notFound: function (internalModel) {
+          internalModel.transitionTo('empty');
+        }
+      },
+
+      // A record enters this state when its data is populated.
+      // Most of a record's lifecycle is spent inside substates
+      // of the `loaded` state.
+      loaded: {
+        initialState: 'saved',
+
+        // FLAGS
+        isLoaded: true,
+
+        //TODO(Igor) Reloading now triggers a loadingData event,
+        //but it should be ok?
+        loadingData: Ember.K,
+
+        // SUBSTATES
+
+        // If there are no local changes to a record, it remains
+        // in the `saved` state.
+        saved: {
+          setup: function (internalModel) {
+            var attrs = internalModel._attributes;
+            var isDirty = Ember.keys(attrs).length > 0;
+
+            if (isDirty) {
+              internalModel.adapterDidDirty();
+            }
+          },
+
+          // EVENTS
+          didSetProperty: ember$data$lib$system$model$states$$didSetProperty,
+
+          pushedData: Ember.K,
+
+          becomeDirty: function (internalModel) {
+            internalModel.transitionTo('updated.uncommitted');
+          },
+
+          willCommit: function (internalModel) {
+            internalModel.transitionTo('updated.inFlight');
+          },
+
+          reloadRecord: function (internalModel, resolve) {
+            resolve(internalModel.store.reloadRecord(internalModel));
+          },
+
+          deleteRecord: function (internalModel) {
+            internalModel.transitionTo('deleted.uncommitted');
+            internalModel.disconnectRelationships();
+          },
+
+          unloadRecord: function (internalModel) {
+            // clear relationships before moving to deleted state
+            // otherwise it fails
+            internalModel.clearRelationships();
+            internalModel.transitionTo('deleted.saved');
+          },
+
+          didCommit: function (internalModel) {
+            internalModel.send('invokeLifecycleCallbacks', ember$data$lib$system$model$states$$get(internalModel, 'lastDirtyType'));
+          },
+
+          // loaded.saved.notFound would be triggered by a failed
+          // `reload()` on an unchanged record
+          notFound: Ember.K
+
+        },
+
+        // A record is in this state after it has been locally
+        // created but before the adapter has indicated that
+        // it has been saved.
+        created: ember$data$lib$system$model$states$$createdState,
+
+        // A record is in this state if it has already been
+        // saved to the server, but there are new local changes
+        // that have not yet been saved.
+        updated: ember$data$lib$system$model$states$$updatedState
+      },
+
+      // A record is in this state if it was deleted from the store.
+      deleted: {
+        initialState: 'uncommitted',
+        dirtyType: 'deleted',
+
+        // FLAGS
+        isDeleted: true,
+        isLoaded: true,
+        isDirty: true,
+
+        // TRANSITIONS
+        setup: function (internalModel) {
+          internalModel.updateRecordArrays();
+        },
+
+        // SUBSTATES
+
+        // When a record is deleted, it enters the `start`
+        // state. It will exit this state when the record
+        // starts to commit.
+        uncommitted: {
+
+          // EVENTS
+
+          willCommit: function (internalModel) {
+            internalModel.transitionTo('inFlight');
+          },
+
+          rollback: function (internalModel) {
+            internalModel.rollback();
+            internalModel.triggerLater('ready');
+          },
+
+          pushedData: Ember.K,
+          becomeDirty: Ember.K,
+          deleteRecord: Ember.K,
+
+          rolledBack: function (internalModel) {
+            internalModel.transitionTo('loaded.saved');
+            internalModel.triggerLater('ready');
+          }
+        },
+
+        // After a record starts committing, but
+        // before the adapter indicates that the deletion
+        // has saved to the server, a record is in the
+        // `inFlight` substate of `deleted`.
+        inFlight: {
+          // FLAGS
+          isSaving: true,
+
+          // EVENTS
+
+          unloadRecord: ember$data$lib$system$model$states$$assertAgainstUnloadRecord,
+
+          // TODO: More robust semantics around save-while-in-flight
+          willCommit: Ember.K,
+          didCommit: function (internalModel) {
+            internalModel.transitionTo('saved');
+
+            internalModel.send('invokeLifecycleCallbacks');
+          },
+
+          becameError: function (internalModel) {
+            internalModel.transitionTo('uncommitted');
+            internalModel.triggerLater('becameError', internalModel);
+          },
+
+          becameInvalid: function (internalModel) {
+            internalModel.transitionTo('invalid');
+            internalModel.triggerLater('becameInvalid', internalModel);
+          }
+        },
+
+        // Once the adapter indicates that the deletion has
+        // been saved, the record enters the `saved` substate
+        // of `deleted`.
+        saved: {
+          // FLAGS
+          isDirty: false,
+
+          setup: function (internalModel) {
+            var store = internalModel.store;
+            store._dematerializeRecord(internalModel);
+          },
+
+          invokeLifecycleCallbacks: function (internalModel) {
+            internalModel.triggerLater('didDelete', internalModel);
+            internalModel.triggerLater('didCommit', internalModel);
+          },
+
+          willCommit: Ember.K,
+
+          didCommit: Ember.K
+        },
+
+        invalid: {
+          isValid: false,
+
+          didSetProperty: function (internalModel, context) {
+            internalModel.getErrors().remove(context.name);
+
+            ember$data$lib$system$model$states$$didSetProperty(internalModel, context);
+          },
+
+          deleteRecord: Ember.K,
+          becomeDirty: Ember.K,
+          willCommit: Ember.K,
+
+          rolledBack: function (internalModel) {
+            internalModel.getErrors().clear();
+            internalModel.transitionTo('loaded.saved');
+            internalModel.triggerLater('ready');
+          },
+
+          becameValid: function (internalModel) {
+            internalModel.transitionTo('uncommitted');
+          }
+
+        }
+      },
+
+      invokeLifecycleCallbacks: function (internalModel, dirtyType) {
+        if (dirtyType === 'created') {
+          internalModel.triggerLater('didCreate', internalModel);
+        } else {
+          internalModel.triggerLater('didUpdate', internalModel);
+        }
+
+        internalModel.triggerLater('didCommit', internalModel);
+      }
+    };
+
+    function ember$data$lib$system$model$states$$wireState(object, parent, name) {
+      /*jshint proto:true*/
+      // TODO: Use Object.create and copy instead
+      object = ember$data$lib$system$model$states$$mixin(parent ? Ember.create(parent) : {}, object);
+      object.parentState = parent;
+      object.stateName = name;
+
+      for (var prop in object) {
+        if (!object.hasOwnProperty(prop) || prop === 'parentState' || prop === 'stateName') {
+          continue;
+        }
+        if (typeof object[prop] === 'object') {
+          object[prop] = ember$data$lib$system$model$states$$wireState(object[prop], object, name + '.' + prop);
+        }
+      }
+
+      return object;
+    }
+
+    ember$data$lib$system$model$states$$RootState = ember$data$lib$system$model$states$$wireState(ember$data$lib$system$model$states$$RootState, null, 'root');
+
+    var ember$data$lib$system$model$states$$default = ember$data$lib$system$model$states$$RootState;
+
+    var ember$data$lib$system$model$errors$$get = Ember.get;
+    var ember$data$lib$system$model$errors$$isEmpty = Ember.isEmpty;
+    var ember$data$lib$system$model$errors$$map = Ember.EnumerableUtils.map;
+
+    var ember$data$lib$system$model$errors$$default = Ember.Object.extend(Ember.Enumerable, Ember.Evented, {
+      /**
+        Register with target handler
+         @method registerHandlers
+        @param {Object} target
+        @param {Function} becameInvalid
+        @param {Function} becameValid
+      */
+      registerHandlers: function (target, becameInvalid, becameValid) {
+        this.on('becameInvalid', target, becameInvalid);
+        this.on('becameValid', target, becameValid);
+      },
+
+      /**
+        @property errorsByAttributeName
+        @type {Ember.MapWithDefault}
+        @private
+      */
+      errorsByAttributeName: Ember.reduceComputed('content', {
+        initialValue: function () {
+          return ember$data$lib$system$map$$MapWithDefault.create({
+            defaultValue: function () {
+              return Ember.A();
+            }
+          });
+        },
+
+        addedItem: function (errors, error) {
+          errors.get(error.attribute).pushObject(error);
+
+          return errors;
+        },
+
+        removedItem: function (errors, error) {
+          errors.get(error.attribute).removeObject(error);
+
+          return errors;
+        }
+      }),
+
+      /**
+        Returns errors for a given attribute
+         ```javascript
+        var user = store.createRecord('user', {
+          username: 'tomster',
+          email: 'invalidEmail'
+        });
+        user.save().catch(function(){
+          user.get('errors').errorsFor('email'); // returns:
+          // [{attribute: "email", message: "Doesn't look like a valid email."}]
+        });
+        ```
+         @method errorsFor
+        @param {String} attribute
+        @return {Array}
+      */
+      errorsFor: function (attribute) {
+        return ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName').get(attribute);
+      },
+
+      /**
+        An array containing all of the error messages for this
+        record. This is useful for displaying all errors to the user.
+         ```handlebars
+        {{#each model.errors.messages as |message|}}
+          <div class="error">
+            {{message}}
+          </div>
+        {{/each}}
+        ```
+         @property messages
+        @type {Array}
+      */
+      messages: Ember.computed.mapBy('content', 'message'),
+
+      /**
+        @property content
+        @type {Array}
+        @private
+      */
+      content: Ember.computed(function () {
+        return Ember.A();
+      }),
+
+      /**
+        @method unknownProperty
+        @private
+      */
+      unknownProperty: function (attribute) {
+        var errors = this.errorsFor(attribute);
+        if (ember$data$lib$system$model$errors$$isEmpty(errors)) {
+          return null;
+        }
+        return errors;
+      },
+
+      /**
+        @method nextObject
+        @private
+      */
+      nextObject: function (index, previousObject, context) {
+        return ember$data$lib$system$model$errors$$get(this, 'content').objectAt(index);
+      },
+
+      /**
+        Total number of errors.
+         @property length
+        @type {Number}
+        @readOnly
+      */
+      length: Ember.computed.oneWay('content.length').readOnly(),
+
+      /**
+        @property isEmpty
+        @type {Boolean}
+        @readOnly
+      */
+      isEmpty: Ember.computed.not('length').readOnly(),
+
+      /**
+        Adds error messages to a given attribute and sends
+        `becameInvalid` event to the record.
+         Example:
+         ```javascript
+        if (!user.get('username') {
+          user.get('errors').add('username', 'This field is required');
+        }
+        ```
+         @method add
+        @param {String} attribute
+        @param {(Array|String)} messages
+      */
+      add: function (attribute, messages) {
+        var wasEmpty = ember$data$lib$system$model$errors$$get(this, 'isEmpty');
+
+        messages = this._findOrCreateMessages(attribute, messages);
+        ember$data$lib$system$model$errors$$get(this, 'content').addObjects(messages);
+
+        this.notifyPropertyChange(attribute);
+        this.enumerableContentDidChange();
+
+        if (wasEmpty && !ember$data$lib$system$model$errors$$get(this, 'isEmpty')) {
+          this.trigger('becameInvalid');
+        }
+      },
+
+      /**
+        @method _findOrCreateMessages
+        @private
+      */
+      _findOrCreateMessages: function (attribute, messages) {
+        var errors = this.errorsFor(attribute);
+
+        return ember$data$lib$system$model$errors$$map(Ember.makeArray(messages), function (message) {
+          return errors.findBy('message', message) || {
+            attribute: attribute,
+            message: message
+          };
+        });
+      },
+
+      /**
+        Removes all error messages from the given attribute and sends
+        `becameValid` event to the record if there no more errors left.
+         Example:
+         ```app/models/user.js
+        import DS from 'ember-data';
+         export default DS.Model.extend({
+          email: DS.attr('string'),
+          twoFactorAuth: DS.attr('boolean'),
+          phone: DS.attr('string')
+        });
+        ```
+         ```app/routes/user/edit.js
+        import Ember from 'ember';
+         export default Ember.Route.extend({
+          actions: {
+            save: function(user) {
+               if (!user.get('twoFactorAuth')) {
+                 user.get('errors').remove('phone');
+               }
+               user.save();
+             }
+          }
+        });
+        ```
+         @method remove
+        @param {String} attribute
+      */
+      remove: function (attribute) {
+        if (ember$data$lib$system$model$errors$$get(this, 'isEmpty')) {
+          return;
+        }
+
+        var content = ember$data$lib$system$model$errors$$get(this, 'content').rejectBy('attribute', attribute);
+        ember$data$lib$system$model$errors$$get(this, 'content').setObjects(content);
+
+        this.notifyPropertyChange(attribute);
+        this.enumerableContentDidChange();
+
+        if (ember$data$lib$system$model$errors$$get(this, 'isEmpty')) {
+          this.trigger('becameValid');
+        }
+      },
+
+      /**
+        Removes all error messages and sends `becameValid` event
+        to the record.
+         Example:
+         ```app/routes/user/edit.js
+        import Ember from 'ember';
+         export default Ember.Route.extend({
+          actions: {
+            retrySave: function(user) {
+               user.get('errors').clear();
+               user.save();
+             }
+          }
+        });
+        ```
+         @method clear
+      */
+      clear: function () {
+        if (ember$data$lib$system$model$errors$$get(this, 'isEmpty')) {
+          return;
+        }
+
+        ember$data$lib$system$model$errors$$get(this, 'content').clear();
+        this.enumerableContentDidChange();
+
+        this.trigger('becameValid');
+      },
+
+      /**
+        Checks if there is error messages for the given attribute.
+         ```app/routes/user/edit.js
+        import Ember from 'ember';
+         export default Ember.Route.extend({
+          actions: {
+            save: function(user) {
+               if (user.get('errors').has('email')) {
+                 return alert('Please update your email before attempting to save.');
+               }
+               user.save();
+             }
+          }
+        });
+        ```
+         @method has
+        @param {String} attribute
+        @return {Boolean} true if there some errors on given attribute
+      */
+      has: function (attribute) {
+        return !ember$data$lib$system$model$errors$$isEmpty(this.errorsFor(attribute));
+      }
+    });
+
+    var ember$data$lib$system$model$$default = ember$data$lib$system$model$model$$default;
+    var ember$data$lib$system$debug$debug$adapter$$get = Ember.get;
+    var ember$data$lib$system$debug$debug$adapter$$capitalize = Ember.String.capitalize;
+    var ember$data$lib$system$debug$debug$adapter$$underscore = Ember.String.underscore;
+    var ember$data$lib$system$debug$debug$adapter$$_Ember = Ember;
+    var ember$data$lib$system$debug$debug$adapter$$assert = ember$data$lib$system$debug$debug$adapter$$_Ember.assert;
+
+    var ember$data$lib$system$debug$debug$adapter$$default = Ember.DataAdapter.extend({
+      getFilters: function () {
+        return [{ name: 'isNew', desc: 'New' }, { name: 'isModified', desc: 'Modified' }, { name: 'isClean', desc: 'Clean' }];
+      },
+
+      detect: function (typeClass) {
+        return typeClass !== ember$data$lib$system$model$$default && ember$data$lib$system$model$$default.detect(typeClass);
+      },
+
+      columnsForType: function (typeClass) {
+        var columns = [{
+          name: 'id',
+          desc: 'Id'
+        }];
+        var count = 0;
+        var self = this;
+        ember$data$lib$system$debug$debug$adapter$$get(typeClass, 'attributes').forEach(function (meta, name) {
+          if (count++ > self.attributeLimit) {
+            return false;
+          }
+          var desc = ember$data$lib$system$debug$debug$adapter$$capitalize(ember$data$lib$system$debug$debug$adapter$$underscore(name).replace('_', ' '));
+          columns.push({ name: name, desc: desc });
+        });
+        return columns;
+      },
+
+      getRecords: function (modelClass, modelName) {
+        if (arguments.length < 2) {
+          // Legacy Ember.js < 1.13 support
+          var containerKey = modelClass._debugContainerKey;
+          if (containerKey) {
+            var match = containerKey.match(/model:(.*)/);
+            if (match) {
+              modelName = match[1];
+            }
+          }
+        }
+        ember$data$lib$system$debug$debug$adapter$$assert('Cannot find model name. Please upgrade to Ember.js >= 1.13 for Ember Inspector support', !!modelName);
+        return this.get('store').all(modelName);
+      },
+
+      getRecordColumnValues: function (record) {
+        var self = this;
+        var count = 0;
+        var columnValues = { id: ember$data$lib$system$debug$debug$adapter$$get(record, 'id') };
+
+        record.eachAttribute(function (key) {
+          if (count++ > self.attributeLimit) {
+            return false;
+          }
+          var value = ember$data$lib$system$debug$debug$adapter$$get(record, key);
+          columnValues[key] = value;
+        });
+        return columnValues;
+      },
+
+      getRecordKeywords: function (record) {
+        var keywords = [];
+        var keys = Ember.A(['id']);
+        record.eachAttribute(function (key) {
+          keys.push(key);
+        });
+        keys.forEach(function (key) {
+          keywords.push(ember$data$lib$system$debug$debug$adapter$$get(record, key));
+        });
+        return keywords;
+      },
+
+      getRecordFilterValues: function (record) {
+        return {
+          isNew: record.get('isNew'),
+          isModified: record.get('isDirty') && !record.get('isNew'),
+          isClean: !record.get('isDirty')
+        };
+      },
+
+      getRecordColor: function (record) {
+        var color = 'black';
+        if (record.get('isNew')) {
+          color = 'green';
+        } else if (record.get('isDirty')) {
+          color = 'blue';
+        }
+        return color;
+      },
+
+      observeRecord: function (record, recordUpdated) {
+        var releaseMethods = Ember.A();
+        var self = this;
+        var keysToObserve = Ember.A(['id', 'isNew', 'isDirty']);
+
+        record.eachAttribute(function (key) {
+          keysToObserve.push(key);
+        });
+
+        keysToObserve.forEach(function (key) {
+          var handler = function () {
+            recordUpdated(self.wrapRecord(record));
+          };
+          Ember.addObserver(record, key, handler);
+          releaseMethods.push(function () {
+            Ember.removeObserver(record, key, handler);
+          });
+        });
+
+        var release = function () {
+          releaseMethods.forEach(function (fn) {
+            fn();
+          });
+        };
+
+        return release;
+      }
+
+    });
+
+    var ember$data$lib$initializers$data$adapter$$default = ember$data$lib$initializers$data$adapter$$initializeDebugAdapter;
+
+    /**
+      Configures a registry with injections on Ember applications
+      for the Ember-Data store. Accepts an optional namespace argument.
+
+      @method initializeStoreInjections
+      @param {Ember.Registry} registry
+    */
+    function ember$data$lib$initializers$data$adapter$$initializeDebugAdapter(registry) {
+      registry.register("data-adapter:main", ember$data$lib$system$debug$debug$adapter$$default);
+    }
     var ember$data$lib$system$store$common$$get = Ember.get;
     function ember$data$lib$system$store$common$$_bind(fn) {
       var args = Array.prototype.slice.call(arguments, 1);
@@ -5548,764 +7967,6 @@
     }
 
     var ember$data$lib$system$merge$$default = ember$data$lib$system$merge$$merge;
-
-    var ember$data$lib$system$model$states$$get = Ember.get;
-    /*
-      This file encapsulates the various states that a record can transition
-      through during its lifecycle.
-    */
-    /**
-      ### State
-
-      Each record has a `currentState` property that explicitly tracks what
-      state a record is in at any given time. For instance, if a record is
-      newly created and has not yet been sent to the adapter to be saved,
-      it would be in the `root.loaded.created.uncommitted` state.  If a
-      record has had local modifications made to it that are in the
-      process of being saved, the record would be in the
-      `root.loaded.updated.inFlight` state. (This state paths will be
-      explained in more detail below.)
-
-      Events are sent by the record or its store to the record's
-      `currentState` property. How the state reacts to these events is
-      dependent on which state it is in. In some states, certain events
-      will be invalid and will cause an exception to be raised.
-
-      States are hierarchical and every state is a substate of the
-      `RootState`. For example, a record can be in the
-      `root.deleted.uncommitted` state, then transition into the
-      `root.deleted.inFlight` state. If a child state does not implement
-      an event handler, the state manager will attempt to invoke the event
-      on all parent states until the root state is reached. The state
-      hierarchy of a record is described in terms of a path string. You
-      can determine a record's current state by getting the state's
-      `stateName` property:
-
-      ```javascript
-      record.get('currentState.stateName');
-      //=> "root.created.uncommitted"
-       ```
-
-      The hierarchy of valid states that ship with ember data looks like
-      this:
-
-      ```text
-      * root
-        * deleted
-          * saved
-          * uncommitted
-          * inFlight
-        * empty
-        * loaded
-          * created
-            * uncommitted
-            * inFlight
-          * saved
-          * updated
-            * uncommitted
-            * inFlight
-        * loading
-      ```
-
-      The `DS.Model` states are themselves stateless. What that means is
-      that, the hierarchical states that each of *those* points to is a
-      shared data structure. For performance reasons, instead of each
-      record getting its own copy of the hierarchy of states, each record
-      points to this global, immutable shared instance. How does a state
-      know which record it should be acting on? We pass the record
-      instance into the state's event handlers as the first argument.
-
-      The record passed as the first parameter is where you should stash
-      state about the record if needed; you should never store data on the state
-      object itself.
-
-      ### Events and Flags
-
-      A state may implement zero or more events and flags.
-
-      #### Events
-
-      Events are named functions that are invoked when sent to a record. The
-      record will first look for a method with the given name on the
-      current state. If no method is found, it will search the current
-      state's parent, and then its grandparent, and so on until reaching
-      the top of the hierarchy. If the root is reached without an event
-      handler being found, an exception will be raised. This can be very
-      helpful when debugging new features.
-
-      Here's an example implementation of a state with a `myEvent` event handler:
-
-      ```javascript
-      aState: DS.State.create({
-        myEvent: function(manager, param) {
-          console.log("Received myEvent with", param);
-        }
-      })
-      ```
-
-      To trigger this event:
-
-      ```javascript
-      record.send('myEvent', 'foo');
-      //=> "Received myEvent with foo"
-      ```
-
-      Note that an optional parameter can be sent to a record's `send()` method,
-      which will be passed as the second parameter to the event handler.
-
-      Events should transition to a different state if appropriate. This can be
-      done by calling the record's `transitionTo()` method with a path to the
-      desired state. The state manager will attempt to resolve the state path
-      relative to the current state. If no state is found at that path, it will
-      attempt to resolve it relative to the current state's parent, and then its
-      parent, and so on until the root is reached. For example, imagine a hierarchy
-      like this:
-
-          * created
-            * uncommitted <-- currentState
-            * inFlight
-          * updated
-            * inFlight
-
-      If we are currently in the `uncommitted` state, calling
-      `transitionTo('inFlight')` would transition to the `created.inFlight` state,
-      while calling `transitionTo('updated.inFlight')` would transition to
-      the `updated.inFlight` state.
-
-      Remember that *only events* should ever cause a state transition. You should
-      never call `transitionTo()` from outside a state's event handler. If you are
-      tempted to do so, create a new event and send that to the state manager.
-
-      #### Flags
-
-      Flags are Boolean values that can be used to introspect a record's current
-      state in a more user-friendly way than examining its state path. For example,
-      instead of doing this:
-
-      ```javascript
-      var statePath = record.get('stateManager.currentPath');
-      if (statePath === 'created.inFlight') {
-        doSomething();
-      }
-      ```
-
-      You can say:
-
-      ```javascript
-      if (record.get('isNew') && record.get('isSaving')) {
-        doSomething();
-      }
-      ```
-
-      If your state does not set a value for a given flag, the value will
-      be inherited from its parent (or the first place in the state hierarchy
-      where it is defined).
-
-      The current set of flags are defined below. If you want to add a new flag,
-      in addition to the area below, you will also need to declare it in the
-      `DS.Model` class.
-
-
-       * [isEmpty](DS.Model.html#property_isEmpty)
-       * [isLoading](DS.Model.html#property_isLoading)
-       * [isLoaded](DS.Model.html#property_isLoaded)
-       * [isDirty](DS.Model.html#property_isDirty)
-       * [isSaving](DS.Model.html#property_isSaving)
-       * [isDeleted](DS.Model.html#property_isDeleted)
-       * [isNew](DS.Model.html#property_isNew)
-       * [isValid](DS.Model.html#property_isValid)
-
-      @namespace DS
-      @class RootState
-    */
-
-    function ember$data$lib$system$model$states$$didSetProperty(internalModel, context) {
-      if (context.value === context.originalValue) {
-        delete internalModel._attributes[context.name];
-        internalModel.send('propertyWasReset', context.name);
-      } else if (context.value !== context.oldValue) {
-        internalModel.send('becomeDirty');
-      }
-
-      internalModel.updateRecordArraysLater();
-    }
-
-    // Implementation notes:
-    //
-    // Each state has a boolean value for all of the following flags:
-    //
-    // * isLoaded: The record has a populated `data` property. When a
-    //   record is loaded via `store.find`, `isLoaded` is false
-    //   until the adapter sets it. When a record is created locally,
-    //   its `isLoaded` property is always true.
-    // * isDirty: The record has local changes that have not yet been
-    //   saved by the adapter. This includes records that have been
-    //   created (but not yet saved) or deleted.
-    // * isSaving: The record has been committed, but
-    //   the adapter has not yet acknowledged that the changes have
-    //   been persisted to the backend.
-    // * isDeleted: The record was marked for deletion. When `isDeleted`
-    //   is true and `isDirty` is true, the record is deleted locally
-    //   but the deletion was not yet persisted. When `isSaving` is
-    //   true, the change is in-flight. When both `isDirty` and
-    //   `isSaving` are false, the change has persisted.
-    // * isError: The adapter reported that it was unable to save
-    //   local changes to the backend. This may also result in the
-    //   record having its `isValid` property become false if the
-    //   adapter reported that server-side validations failed.
-    // * isNew: The record was created on the client and the adapter
-    //   did not yet report that it was successfully saved.
-    // * isValid: The adapter did not report any server-side validation
-    //   failures.
-
-    // The dirty state is a abstract state whose functionality is
-    // shared between the `created` and `updated` states.
-    //
-    // The deleted state shares the `isDirty` flag with the
-    // subclasses of `DirtyState`, but with a very different
-    // implementation.
-    //
-    // Dirty states have three child states:
-    //
-    // `uncommitted`: the store has not yet handed off the record
-    //   to be saved.
-    // `inFlight`: the store has handed off the record to be saved,
-    //   but the adapter has not yet acknowledged success.
-    // `invalid`: the record has invalid information and cannot be
-    //   send to the adapter yet.
-    var ember$data$lib$system$model$states$$DirtyState = {
-      initialState: 'uncommitted',
-
-      // FLAGS
-      isDirty: true,
-
-      // SUBSTATES
-
-      // When a record first becomes dirty, it is `uncommitted`.
-      // This means that there are local pending changes, but they
-      // have not yet begun to be saved, and are not invalid.
-      uncommitted: {
-        // EVENTS
-        didSetProperty: ember$data$lib$system$model$states$$didSetProperty,
-
-        //TODO(Igor) reloading now triggers a
-        //loadingData event, though it seems fine?
-        loadingData: Ember.K,
-
-        propertyWasReset: function (internalModel, name) {
-          var length = Ember.keys(internalModel._attributes).length;
-          var stillDirty = length > 0;
-
-          if (!stillDirty) {
-            internalModel.send('rolledBack');
-          }
-        },
-
-        pushedData: Ember.K,
-
-        becomeDirty: Ember.K,
-
-        willCommit: function (internalModel) {
-          internalModel.transitionTo('inFlight');
-        },
-
-        reloadRecord: function (internalModel, resolve) {
-          resolve(internalModel.store.reloadRecord(internalModel));
-        },
-
-        rolledBack: function (internalModel) {
-          internalModel.transitionTo('loaded.saved');
-        },
-
-        becameInvalid: function (internalModel) {
-          internalModel.transitionTo('invalid');
-        },
-
-        rollback: function (internalModel) {
-          internalModel.rollback();
-          internalModel.triggerLater('ready');
-        }
-      },
-
-      // Once a record has been handed off to the adapter to be
-      // saved, it is in the 'in flight' state. Changes to the
-      // record cannot be made during this window.
-      inFlight: {
-        // FLAGS
-        isSaving: true,
-
-        // EVENTS
-        didSetProperty: ember$data$lib$system$model$states$$didSetProperty,
-        becomeDirty: Ember.K,
-        pushedData: Ember.K,
-
-        unloadRecord: ember$data$lib$system$model$states$$assertAgainstUnloadRecord,
-
-        // TODO: More robust semantics around save-while-in-flight
-        willCommit: Ember.K,
-
-        didCommit: function (internalModel) {
-          var dirtyType = ember$data$lib$system$model$states$$get(this, 'dirtyType');
-
-          internalModel.transitionTo('saved');
-          internalModel.send('invokeLifecycleCallbacks', dirtyType);
-        },
-
-        becameInvalid: function (internalModel) {
-          internalModel.transitionTo('invalid');
-          internalModel.send('invokeLifecycleCallbacks');
-        },
-
-        becameError: function (internalModel) {
-          internalModel.transitionTo('uncommitted');
-          internalModel.triggerLater('becameError', internalModel);
-        }
-      },
-
-      // A record is in the `invalid` if the adapter has indicated
-      // the the record failed server-side invalidations.
-      invalid: {
-        // FLAGS
-        isValid: false,
-
-        // EVENTS
-        deleteRecord: function (internalModel) {
-          internalModel.transitionTo('deleted.uncommitted');
-          internalModel.disconnectRelationships();
-        },
-
-        didSetProperty: function (internalModel, context) {
-          internalModel.getErrors().remove(context.name);
-
-          ember$data$lib$system$model$states$$didSetProperty(internalModel, context);
-        },
-
-        becomeDirty: Ember.K,
-
-        pushedData: Ember.K,
-
-        willCommit: function (internalModel) {
-          internalModel.getErrors().clear();
-          internalModel.transitionTo('inFlight');
-        },
-
-        rolledBack: function (internalModel) {
-          internalModel.getErrors().clear();
-          internalModel.triggerLater('ready');
-        },
-
-        becameValid: function (internalModel) {
-          internalModel.transitionTo('uncommitted');
-        },
-
-        invokeLifecycleCallbacks: function (internalModel) {
-          internalModel.triggerLater('becameInvalid', internalModel);
-        },
-
-        exit: function (internalModel) {
-          internalModel._inFlightAttributes = Ember.create(null);
-        }
-      }
-    };
-
-    // The created and updated states are created outside the state
-    // chart so we can reopen their substates and add mixins as
-    // necessary.
-
-    function ember$data$lib$system$model$states$$deepClone(object) {
-      var clone = {};
-      var value;
-
-      for (var prop in object) {
-        value = object[prop];
-        if (value && typeof value === 'object') {
-          clone[prop] = ember$data$lib$system$model$states$$deepClone(value);
-        } else {
-          clone[prop] = value;
-        }
-      }
-
-      return clone;
-    }
-
-    function ember$data$lib$system$model$states$$mixin(original, hash) {
-      for (var prop in hash) {
-        original[prop] = hash[prop];
-      }
-
-      return original;
-    }
-
-    function ember$data$lib$system$model$states$$dirtyState(options) {
-      var newState = ember$data$lib$system$model$states$$deepClone(ember$data$lib$system$model$states$$DirtyState);
-      return ember$data$lib$system$model$states$$mixin(newState, options);
-    }
-
-    var ember$data$lib$system$model$states$$createdState = ember$data$lib$system$model$states$$dirtyState({
-      dirtyType: 'created',
-      // FLAGS
-      isNew: true
-    });
-
-    ember$data$lib$system$model$states$$createdState.invalid.rolledBack = function (internalModel) {
-      internalModel.transitionTo('deleted.saved');
-    };
-    ember$data$lib$system$model$states$$createdState.uncommitted.rolledBack = function (internalModel) {
-      internalModel.transitionTo('deleted.saved');
-    };
-
-    var ember$data$lib$system$model$states$$updatedState = ember$data$lib$system$model$states$$dirtyState({
-      dirtyType: 'updated'
-    });
-
-    ember$data$lib$system$model$states$$createdState.uncommitted.deleteRecord = function (internalModel) {
-      internalModel.disconnectRelationships();
-      internalModel.transitionTo('deleted.saved');
-      internalModel.send('invokeLifecycleCallbacks');
-    };
-
-    ember$data$lib$system$model$states$$createdState.uncommitted.rollback = function (internalModel) {
-      ember$data$lib$system$model$states$$DirtyState.uncommitted.rollback.apply(this, arguments);
-      internalModel.transitionTo('deleted.saved');
-    };
-
-    ember$data$lib$system$model$states$$createdState.uncommitted.pushedData = function (internalModel) {
-      internalModel.transitionTo('loaded.updated.uncommitted');
-      internalModel.triggerLater('didLoad');
-    };
-
-    ember$data$lib$system$model$states$$createdState.uncommitted.propertyWasReset = Ember.K;
-
-    function ember$data$lib$system$model$states$$assertAgainstUnloadRecord(internalModel) {
-      Ember.assert('You can only unload a record which is not inFlight. `' + internalModel + '`', false);
-    }
-
-    ember$data$lib$system$model$states$$updatedState.inFlight.unloadRecord = ember$data$lib$system$model$states$$assertAgainstUnloadRecord;
-
-    ember$data$lib$system$model$states$$updatedState.uncommitted.deleteRecord = function (internalModel) {
-      internalModel.transitionTo('deleted.uncommitted');
-      internalModel.disconnectRelationships();
-    };
-
-    var ember$data$lib$system$model$states$$RootState = {
-      // FLAGS
-      isEmpty: false,
-      isLoading: false,
-      isLoaded: false,
-      isDirty: false,
-      isSaving: false,
-      isDeleted: false,
-      isNew: false,
-      isValid: true,
-
-      // DEFAULT EVENTS
-
-      // Trying to roll back if you're not in the dirty state
-      // doesn't change your state. For example, if you're in the
-      // in-flight state, rolling back the record doesn't move
-      // you out of the in-flight state.
-      rolledBack: Ember.K,
-      unloadRecord: function (internalModel) {
-        // clear relationships before moving to deleted state
-        // otherwise it fails
-        internalModel.clearRelationships();
-        internalModel.transitionTo('deleted.saved');
-      },
-
-      propertyWasReset: Ember.K,
-
-      // SUBSTATES
-
-      // A record begins its lifecycle in the `empty` state.
-      // If its data will come from the adapter, it will
-      // transition into the `loading` state. Otherwise, if
-      // the record is being created on the client, it will
-      // transition into the `created` state.
-      empty: {
-        isEmpty: true,
-
-        // EVENTS
-        loadingData: function (internalModel, promise) {
-          internalModel._loadingPromise = promise;
-          internalModel.transitionTo('loading');
-        },
-
-        loadedData: function (internalModel) {
-          internalModel.transitionTo('loaded.created.uncommitted');
-          internalModel.triggerLater('ready');
-        },
-
-        pushedData: function (internalModel) {
-          internalModel.transitionTo('loaded.saved');
-          internalModel.triggerLater('didLoad');
-          internalModel.triggerLater('ready');
-        }
-      },
-
-      // A record enters this state when the store asks
-      // the adapter for its data. It remains in this state
-      // until the adapter provides the requested data.
-      //
-      // Usually, this process is asynchronous, using an
-      // XHR to retrieve the data.
-      loading: {
-        // FLAGS
-        isLoading: true,
-
-        exit: function (internalModel) {
-          internalModel._loadingPromise = null;
-        },
-
-        // EVENTS
-        pushedData: function (internalModel) {
-          internalModel.transitionTo('loaded.saved');
-          internalModel.triggerLater('didLoad');
-          internalModel.triggerLater('ready');
-          //TODO this seems out of place here
-          internalModel.didCleanError();
-        },
-
-        becameError: function (internalModel) {
-          internalModel.triggerLater('becameError', internalModel);
-        },
-
-        notFound: function (internalModel) {
-          internalModel.transitionTo('empty');
-        }
-      },
-
-      // A record enters this state when its data is populated.
-      // Most of a record's lifecycle is spent inside substates
-      // of the `loaded` state.
-      loaded: {
-        initialState: 'saved',
-
-        // FLAGS
-        isLoaded: true,
-
-        //TODO(Igor) Reloading now triggers a loadingData event,
-        //but it should be ok?
-        loadingData: Ember.K,
-
-        // SUBSTATES
-
-        // If there are no local changes to a record, it remains
-        // in the `saved` state.
-        saved: {
-          setup: function (internalModel) {
-            var attrs = internalModel._attributes;
-            var isDirty = Ember.keys(attrs).length > 0;
-
-            if (isDirty) {
-              internalModel.adapterDidDirty();
-            }
-          },
-
-          // EVENTS
-          didSetProperty: ember$data$lib$system$model$states$$didSetProperty,
-
-          pushedData: Ember.K,
-
-          becomeDirty: function (internalModel) {
-            internalModel.transitionTo('updated.uncommitted');
-          },
-
-          willCommit: function (internalModel) {
-            internalModel.transitionTo('updated.inFlight');
-          },
-
-          reloadRecord: function (internalModel, resolve) {
-            resolve(internalModel.store.reloadRecord(internalModel));
-          },
-
-          deleteRecord: function (internalModel) {
-            internalModel.transitionTo('deleted.uncommitted');
-            internalModel.disconnectRelationships();
-          },
-
-          unloadRecord: function (internalModel) {
-            // clear relationships before moving to deleted state
-            // otherwise it fails
-            internalModel.clearRelationships();
-            internalModel.transitionTo('deleted.saved');
-          },
-
-          didCommit: function (internalModel) {
-            internalModel.send('invokeLifecycleCallbacks', ember$data$lib$system$model$states$$get(internalModel, 'lastDirtyType'));
-          },
-
-          // loaded.saved.notFound would be triggered by a failed
-          // `reload()` on an unchanged record
-          notFound: Ember.K
-
-        },
-
-        // A record is in this state after it has been locally
-        // created but before the adapter has indicated that
-        // it has been saved.
-        created: ember$data$lib$system$model$states$$createdState,
-
-        // A record is in this state if it has already been
-        // saved to the server, but there are new local changes
-        // that have not yet been saved.
-        updated: ember$data$lib$system$model$states$$updatedState
-      },
-
-      // A record is in this state if it was deleted from the store.
-      deleted: {
-        initialState: 'uncommitted',
-        dirtyType: 'deleted',
-
-        // FLAGS
-        isDeleted: true,
-        isLoaded: true,
-        isDirty: true,
-
-        // TRANSITIONS
-        setup: function (internalModel) {
-          internalModel.updateRecordArrays();
-        },
-
-        // SUBSTATES
-
-        // When a record is deleted, it enters the `start`
-        // state. It will exit this state when the record
-        // starts to commit.
-        uncommitted: {
-
-          // EVENTS
-
-          willCommit: function (internalModel) {
-            internalModel.transitionTo('inFlight');
-          },
-
-          rollback: function (internalModel) {
-            internalModel.rollback();
-            internalModel.triggerLater('ready');
-          },
-
-          pushedData: Ember.K,
-          becomeDirty: Ember.K,
-          deleteRecord: Ember.K,
-
-          rolledBack: function (internalModel) {
-            internalModel.transitionTo('loaded.saved');
-            internalModel.triggerLater('ready');
-          }
-        },
-
-        // After a record starts committing, but
-        // before the adapter indicates that the deletion
-        // has saved to the server, a record is in the
-        // `inFlight` substate of `deleted`.
-        inFlight: {
-          // FLAGS
-          isSaving: true,
-
-          // EVENTS
-
-          unloadRecord: ember$data$lib$system$model$states$$assertAgainstUnloadRecord,
-
-          // TODO: More robust semantics around save-while-in-flight
-          willCommit: Ember.K,
-          didCommit: function (internalModel) {
-            internalModel.transitionTo('saved');
-
-            internalModel.send('invokeLifecycleCallbacks');
-          },
-
-          becameError: function (internalModel) {
-            internalModel.transitionTo('uncommitted');
-            internalModel.triggerLater('becameError', internalModel);
-          },
-
-          becameInvalid: function (internalModel) {
-            internalModel.transitionTo('invalid');
-            internalModel.triggerLater('becameInvalid', internalModel);
-          }
-        },
-
-        // Once the adapter indicates that the deletion has
-        // been saved, the record enters the `saved` substate
-        // of `deleted`.
-        saved: {
-          // FLAGS
-          isDirty: false,
-
-          setup: function (internalModel) {
-            var store = internalModel.store;
-            store._dematerializeRecord(internalModel);
-          },
-
-          invokeLifecycleCallbacks: function (internalModel) {
-            internalModel.triggerLater('didDelete', internalModel);
-            internalModel.triggerLater('didCommit', internalModel);
-          },
-
-          willCommit: Ember.K,
-
-          didCommit: Ember.K
-        },
-
-        invalid: {
-          isValid: false,
-
-          didSetProperty: function (internalModel, context) {
-            internalModel.getErrors().remove(context.name);
-
-            ember$data$lib$system$model$states$$didSetProperty(internalModel, context);
-          },
-
-          deleteRecord: Ember.K,
-          becomeDirty: Ember.K,
-          willCommit: Ember.K,
-
-          rolledBack: function (internalModel) {
-            internalModel.getErrors().clear();
-            internalModel.transitionTo('loaded.saved');
-            internalModel.triggerLater('ready');
-          },
-
-          becameValid: function (internalModel) {
-            internalModel.transitionTo('uncommitted');
-          }
-
-        }
-      },
-
-      invokeLifecycleCallbacks: function (internalModel, dirtyType) {
-        if (dirtyType === 'created') {
-          internalModel.triggerLater('didCreate', internalModel);
-        } else {
-          internalModel.triggerLater('didUpdate', internalModel);
-        }
-
-        internalModel.triggerLater('didCommit', internalModel);
-      }
-    };
-
-    function ember$data$lib$system$model$states$$wireState(object, parent, name) {
-      /*jshint proto:true*/
-      // TODO: Use Object.create and copy instead
-      object = ember$data$lib$system$model$states$$mixin(parent ? Ember.create(parent) : {}, object);
-      object.parentState = parent;
-      object.stateName = name;
-
-      for (var prop in object) {
-        if (!object.hasOwnProperty(prop) || prop === 'parentState' || prop === 'stateName') {
-          continue;
-        }
-        if (typeof object[prop] === 'object') {
-          object[prop] = ember$data$lib$system$model$states$$wireState(object[prop], object, name + '.' + prop);
-        }
-      }
-
-      return object;
-    }
-
-    ember$data$lib$system$model$states$$RootState = ember$data$lib$system$model$states$$wireState(ember$data$lib$system$model$states$$RootState, null, 'root');
-
-    var ember$data$lib$system$model$states$$default = ember$data$lib$system$model$states$$RootState;
 
     var ember$data$lib$system$relationships$state$relationship$$forEach = Ember.EnumerableUtils.forEach;
 
@@ -7558,267 +9219,6 @@
 
     var ember$data$lib$system$snapshot$$default = ember$data$lib$system$snapshot$$Snapshot;
 
-    var ember$data$lib$system$model$errors$$get = Ember.get;
-    var ember$data$lib$system$model$errors$$isEmpty = Ember.isEmpty;
-    var ember$data$lib$system$model$errors$$map = Ember.EnumerableUtils.map;
-
-    var ember$data$lib$system$model$errors$$default = Ember.Object.extend(Ember.Enumerable, Ember.Evented, {
-      /**
-        Register with target handler
-         @method registerHandlers
-        @param {Object} target
-        @param {Function} becameInvalid
-        @param {Function} becameValid
-      */
-      registerHandlers: function (target, becameInvalid, becameValid) {
-        this.on('becameInvalid', target, becameInvalid);
-        this.on('becameValid', target, becameValid);
-      },
-
-      /**
-        @property errorsByAttributeName
-        @type {Ember.MapWithDefault}
-        @private
-      */
-      errorsByAttributeName: Ember.reduceComputed('content', {
-        initialValue: function () {
-          return ember$data$lib$system$map$$MapWithDefault.create({
-            defaultValue: function () {
-              return Ember.A();
-            }
-          });
-        },
-
-        addedItem: function (errors, error) {
-          errors.get(error.attribute).pushObject(error);
-
-          return errors;
-        },
-
-        removedItem: function (errors, error) {
-          errors.get(error.attribute).removeObject(error);
-
-          return errors;
-        }
-      }),
-
-      /**
-        Returns errors for a given attribute
-         ```javascript
-        var user = store.createRecord('user', {
-          username: 'tomster',
-          email: 'invalidEmail'
-        });
-        user.save().catch(function(){
-          user.get('errors').errorsFor('email'); // returns:
-          // [{attribute: "email", message: "Doesn't look like a valid email."}]
-        });
-        ```
-         @method errorsFor
-        @param {String} attribute
-        @return {Array}
-      */
-      errorsFor: function (attribute) {
-        return ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName').get(attribute);
-      },
-
-      /**
-        An array containing all of the error messages for this
-        record. This is useful for displaying all errors to the user.
-         ```handlebars
-        {{#each model.errors.messages as |message|}}
-          <div class="error">
-            {{message}}
-          </div>
-        {{/each}}
-        ```
-         @property messages
-        @type {Array}
-      */
-      messages: Ember.computed.mapBy('content', 'message'),
-
-      /**
-        @property content
-        @type {Array}
-        @private
-      */
-      content: Ember.computed(function () {
-        return Ember.A();
-      }),
-
-      /**
-        @method unknownProperty
-        @private
-      */
-      unknownProperty: function (attribute) {
-        var errors = this.errorsFor(attribute);
-        if (ember$data$lib$system$model$errors$$isEmpty(errors)) {
-          return null;
-        }
-        return errors;
-      },
-
-      /**
-        @method nextObject
-        @private
-      */
-      nextObject: function (index, previousObject, context) {
-        return ember$data$lib$system$model$errors$$get(this, 'content').objectAt(index);
-      },
-
-      /**
-        Total number of errors.
-         @property length
-        @type {Number}
-        @readOnly
-      */
-      length: Ember.computed.oneWay('content.length').readOnly(),
-
-      /**
-        @property isEmpty
-        @type {Boolean}
-        @readOnly
-      */
-      isEmpty: Ember.computed.not('length').readOnly(),
-
-      /**
-        Adds error messages to a given attribute and sends
-        `becameInvalid` event to the record.
-         Example:
-         ```javascript
-        if (!user.get('username') {
-          user.get('errors').add('username', 'This field is required');
-        }
-        ```
-         @method add
-        @param {String} attribute
-        @param {(Array|String)} messages
-      */
-      add: function (attribute, messages) {
-        var wasEmpty = ember$data$lib$system$model$errors$$get(this, 'isEmpty');
-
-        messages = this._findOrCreateMessages(attribute, messages);
-        ember$data$lib$system$model$errors$$get(this, 'content').addObjects(messages);
-
-        this.notifyPropertyChange(attribute);
-        this.enumerableContentDidChange();
-
-        if (wasEmpty && !ember$data$lib$system$model$errors$$get(this, 'isEmpty')) {
-          this.trigger('becameInvalid');
-        }
-      },
-
-      /**
-        @method _findOrCreateMessages
-        @private
-      */
-      _findOrCreateMessages: function (attribute, messages) {
-        var errors = this.errorsFor(attribute);
-
-        return ember$data$lib$system$model$errors$$map(Ember.makeArray(messages), function (message) {
-          return errors.findBy('message', message) || {
-            attribute: attribute,
-            message: message
-          };
-        });
-      },
-
-      /**
-        Removes all error messages from the given attribute and sends
-        `becameValid` event to the record if there no more errors left.
-         Example:
-         ```app/models/user.js
-        import DS from 'ember-data';
-         export default DS.Model.extend({
-          email: DS.attr('string'),
-          twoFactorAuth: DS.attr('boolean'),
-          phone: DS.attr('string')
-        });
-        ```
-         ```app/routes/user/edit.js
-        import Ember from 'ember';
-         export default Ember.Route.extend({
-          actions: {
-            save: function(user) {
-               if (!user.get('twoFactorAuth')) {
-                 user.get('errors').remove('phone');
-               }
-               user.save();
-             }
-          }
-        });
-        ```
-         @method remove
-        @param {String} attribute
-      */
-      remove: function (attribute) {
-        if (ember$data$lib$system$model$errors$$get(this, 'isEmpty')) {
-          return;
-        }
-
-        var content = ember$data$lib$system$model$errors$$get(this, 'content').rejectBy('attribute', attribute);
-        ember$data$lib$system$model$errors$$get(this, 'content').setObjects(content);
-
-        this.notifyPropertyChange(attribute);
-        this.enumerableContentDidChange();
-
-        if (ember$data$lib$system$model$errors$$get(this, 'isEmpty')) {
-          this.trigger('becameValid');
-        }
-      },
-
-      /**
-        Removes all error messages and sends `becameValid` event
-        to the record.
-         Example:
-         ```app/routes/user/edit.js
-        import Ember from 'ember';
-         export default Ember.Route.extend({
-          actions: {
-            retrySave: function(user) {
-               user.get('errors').clear();
-               user.save();
-             }
-          }
-        });
-        ```
-         @method clear
-      */
-      clear: function () {
-        if (ember$data$lib$system$model$errors$$get(this, 'isEmpty')) {
-          return;
-        }
-
-        ember$data$lib$system$model$errors$$get(this, 'content').clear();
-        this.enumerableContentDidChange();
-
-        this.trigger('becameValid');
-      },
-
-      /**
-        Checks if there is error messages for the given attribute.
-         ```app/routes/user/edit.js
-        import Ember from 'ember';
-         export default Ember.Route.extend({
-          actions: {
-            save: function(user) {
-               if (user.get('errors').has('email')) {
-                 return alert('Please update your email before attempting to save.');
-               }
-               user.save();
-             }
-          }
-        });
-        ```
-         @method has
-        @param {String} attribute
-        @return {Boolean} true if there some errors on given attribute
-      */
-      has: function (attribute) {
-        return !ember$data$lib$system$model$errors$$isEmpty(this.errorsFor(attribute));
-      }
-    });
-
     var ember$data$lib$system$model$internal$model$$Promise = Ember.RSVP.Promise;
     var ember$data$lib$system$model$internal$model$$get = Ember.get;
     var ember$data$lib$system$model$internal$model$$set = Ember.set;
@@ -7918,7 +9318,8 @@
           id: this.id,
           store: this.store,
           container: this.container,
-          _internalModel: this
+          _internalModel: this,
+          currentState: ember$data$lib$system$model$internal$model$$get(this, "currentState")
         });
         this._triggerDeferredTriggers();
       },
@@ -8509,1074 +9910,6 @@
     }
 
     var ember$data$lib$system$model$internal$model$$default = ember$data$lib$system$model$internal$model$$InternalModel;
-
-    /**
-      @module ember-data
-    */
-
-    var ember$data$lib$system$model$model$$get = Ember.get;
-    var ember$data$lib$system$model$model$$intersection = Ember.EnumerableUtils.intersection;
-    var ember$data$lib$system$model$model$$RESERVED_MODEL_PROPS = ['currentState', 'data', 'store'];
-
-    var ember$data$lib$system$model$model$$retrieveFromCurrentState = Ember.computed('currentState', function (key) {
-      return ember$data$lib$system$model$model$$get(this._internalModel.currentState, key);
-    }).readOnly();
-
-    /**
-
-      The model class that all Ember Data records descend from.
-      This is the public API of Ember Data models. If you are using Ember Data
-      in your application, this is the class you should use.
-      If you are working on Ember Data internals, you most likely want to be dealing
-      with `InternalModel`
-
-      @class Model
-      @namespace DS
-      @extends Ember.Object
-      @uses Ember.Evented
-    */
-    var ember$data$lib$system$model$model$$Model = Ember.Object.extend(Ember.Evented, {
-      _recordArrays: undefined,
-      _relationships: undefined,
-      _internalModel: null,
-
-      store: null,
-
-      /**
-        If this property is `true` the record is in the `empty`
-        state. Empty is the first state all records enter after they have
-        been created. Most records created by the store will quickly
-        transition to the `loading` state if data needs to be fetched from
-        the server or the `created` state if the record is created on the
-        client. A record can also enter the empty state if the adapter is
-        unable to locate the record.
-         @property isEmpty
-        @type {Boolean}
-        @readOnly
-      */
-      isEmpty: ember$data$lib$system$model$model$$retrieveFromCurrentState,
-      /**
-        If this property is `true` the record is in the `loading` state. A
-        record enters this state when the store asks the adapter for its
-        data. It remains in this state until the adapter provides the
-        requested data.
-         @property isLoading
-        @type {Boolean}
-        @readOnly
-      */
-      isLoading: ember$data$lib$system$model$model$$retrieveFromCurrentState,
-      /**
-        If this property is `true` the record is in the `loaded` state. A
-        record enters this state when its data is populated. Most of a
-        record's lifecycle is spent inside substates of the `loaded`
-        state.
-         Example
-         ```javascript
-        var record = store.createRecord('model');
-        record.get('isLoaded'); // true
-         store.find('model', 1).then(function(model) {
-          model.get('isLoaded'); // true
-        });
-        ```
-         @property isLoaded
-        @type {Boolean}
-        @readOnly
-      */
-      isLoaded: ember$data$lib$system$model$model$$retrieveFromCurrentState,
-      /**
-        If this property is `true` the record is in the `dirty` state. The
-        record has local changes that have not yet been saved by the
-        adapter. This includes records that have been created (but not yet
-        saved) or deleted.
-         Example
-         ```javascript
-        var record = store.createRecord('model');
-        record.get('isDirty'); // true
-         store.find('model', 1).then(function(model) {
-          model.get('isDirty'); // false
-          model.set('foo', 'some value');
-          model.get('isDirty'); // true
-        });
-        ```
-         @property isDirty
-        @type {Boolean}
-        @readOnly
-      */
-      isDirty: ember$data$lib$system$model$model$$retrieveFromCurrentState,
-      /**
-        If this property is `true` the record is in the `saving` state. A
-        record enters the saving state when `save` is called, but the
-        adapter has not yet acknowledged that the changes have been
-        persisted to the backend.
-         Example
-         ```javascript
-        var record = store.createRecord('model');
-        record.get('isSaving'); // false
-        var promise = record.save();
-        record.get('isSaving'); // true
-        promise.then(function() {
-          record.get('isSaving'); // false
-        });
-        ```
-         @property isSaving
-        @type {Boolean}
-        @readOnly
-      */
-      isSaving: ember$data$lib$system$model$model$$retrieveFromCurrentState,
-      /**
-        If this property is `true` the record is in the `deleted` state
-        and has been marked for deletion. When `isDeleted` is true and
-        `isDirty` is true, the record is deleted locally but the deletion
-        was not yet persisted. When `isSaving` is true, the change is
-        in-flight. When both `isDirty` and `isSaving` are false, the
-        change has persisted.
-         Example
-         ```javascript
-        var record = store.createRecord('model');
-        record.get('isDeleted');    // false
-        record.deleteRecord();
-         // Locally deleted
-        record.get('isDeleted');    // true
-        record.get('isDirty');      // true
-        record.get('isSaving');     // false
-         // Persisting the deletion
-        var promise = record.save();
-        record.get('isDeleted');    // true
-        record.get('isSaving');     // true
-         // Deletion Persisted
-        promise.then(function() {
-          record.get('isDeleted');  // true
-          record.get('isSaving');   // false
-          record.get('isDirty');    // false
-        });
-        ```
-         @property isDeleted
-        @type {Boolean}
-        @readOnly
-      */
-      isDeleted: ember$data$lib$system$model$model$$retrieveFromCurrentState,
-      /**
-        If this property is `true` the record is in the `new` state. A
-        record will be in the `new` state when it has been created on the
-        client and the adapter has not yet report that it was successfully
-        saved.
-         Example
-         ```javascript
-        var record = store.createRecord('model');
-        record.get('isNew'); // true
-         record.save().then(function(model) {
-          model.get('isNew'); // false
-        });
-        ```
-         @property isNew
-        @type {Boolean}
-        @readOnly
-      */
-      isNew: ember$data$lib$system$model$model$$retrieveFromCurrentState,
-      /**
-        If this property is `true` the record is in the `valid` state.
-         A record will be in the `valid` state when the adapter did not report any
-        server-side validation failures.
-         @property isValid
-        @type {Boolean}
-        @readOnly
-      */
-      isValid: ember$data$lib$system$model$model$$retrieveFromCurrentState,
-      /**
-        If the record is in the dirty state this property will report what
-        kind of change has caused it to move into the dirty
-        state. Possible values are:
-         - `created` The record has been created by the client and not yet saved to the adapter.
-        - `updated` The record has been updated by the client and not yet saved to the adapter.
-        - `deleted` The record has been deleted by the client and not yet saved to the adapter.
-         Example
-         ```javascript
-        var record = store.createRecord('model');
-        record.get('dirtyType'); // 'created'
-        ```
-         @property dirtyType
-        @type {String}
-        @readOnly
-      */
-      dirtyType: ember$data$lib$system$model$model$$retrieveFromCurrentState,
-
-      /**
-        If `true` the adapter reported that it was unable to save local
-        changes to the backend for any reason other than a server-side
-        validation error.
-         Example
-         ```javascript
-        record.get('isError'); // false
-        record.set('foo', 'valid value');
-        record.save().then(null, function() {
-          record.get('isError'); // true
-        });
-        ```
-         @property isError
-        @type {Boolean}
-        @readOnly
-      */
-      isError: false,
-
-      /**
-        If `true` the store is attempting to reload the record form the adapter.
-         Example
-         ```javascript
-        record.get('isReloading'); // false
-        record.reload();
-        record.get('isReloading'); // true
-        ```
-         @property isReloading
-        @type {Boolean}
-        @readOnly
-      */
-      isReloading: false,
-
-      /**
-        All ember models have an id property. This is an identifier
-        managed by an external source. These are always coerced to be
-        strings before being used internally. Note when declaring the
-        attributes for a model it is an error to declare an id
-        attribute.
-         ```javascript
-        var record = store.createRecord('model');
-        record.get('id'); // null
-         store.find('model', 1).then(function(model) {
-          model.get('id'); // '1'
-        });
-        ```
-         @property id
-        @type {String}
-      */
-      id: null,
-
-      /**
-        @property currentState
-        @private
-        @type {Object}
-      */
-
-      /**
-        When the record is in the `invalid` state this object will contain
-        any errors returned by the adapter. When present the errors hash
-        contains keys corresponding to the invalid property names
-        and values which are arrays of Javascript objects with two keys:
-         - `message` A string containing the error message from the backend
-        - `attribute` The name of the property associated with this error message
-         ```javascript
-        record.get('errors.length'); // 0
-        record.set('foo', 'invalid value');
-        record.save().catch(function() {
-          record.get('errors').get('foo');
-          // [{message: 'foo should be a number.', attribute: 'foo'}]
-        });
-        ```
-         The `errors` property us useful for displaying error messages to
-        the user.
-         ```handlebars
-        <label>Username: {{input value=username}} </label>
-        {{#each model.errors.username as |error|}}
-          <div class="error">
-            {{error.message}}
-          </div>
-        {{/each}}
-        <label>Email: {{input value=email}} </label>
-        {{#each model.errors.email as |error|}}
-          <div class="error">
-            {{error.message}}
-          </div>
-        {{/each}}
-        ```
-          You can also access the special `messages` property on the error
-        object to get an array of all the error strings.
-         ```handlebars
-        {{#each model.errors.messages as |message|}}
-          <div class="error">
-            {{message}}
-          </div>
-        {{/each}}
-        ```
-         @property errors
-        @type {DS.Errors}
-      */
-      errors: Ember.computed(function () {
-        return this._internalModel.getErrors();
-      }).readOnly(),
-
-      /**
-        Create a JSON representation of the record, using the serialization
-        strategy of the store's adapter.
-        `serialize` takes an optional hash as a parameter, currently
-        supported options are:
-        - `includeId`: `true` if the record's ID should be included in the
-          JSON representation.
-         @method serialize
-        @param {Object} options
-        @return {Object} an object whose values are primitive JSON values only
-      */
-      serialize: function (options) {
-        return this.store.serialize(this, options);
-      },
-
-      /**
-        Use [DS.JSONSerializer](DS.JSONSerializer.html) to
-        get the JSON representation of a record.
-         `toJSON` takes an optional hash as a parameter, currently
-        supported options are:
-         - `includeId`: `true` if the record's ID should be included in the
-          JSON representation.
-         @method toJSON
-        @param {Object} options
-        @return {Object} A JSON representation of the object.
-      */
-      toJSON: function (options) {
-        // container is for lazy transform lookups
-        var serializer = this.store.serializerFor('-default');
-        var snapshot = this._internalModel.createSnapshot();
-
-        return serializer.serialize(snapshot, options);
-      },
-
-      /**
-        Fired when the record is ready to be interacted with,
-        that is either loaded from the server or created locally.
-         @event ready
-      */
-      ready: Ember.K,
-
-      /**
-        Fired when the record is loaded from the server.
-         @event didLoad
-      */
-      didLoad: Ember.K,
-
-      /**
-        Fired when the record is updated.
-         @event didUpdate
-      */
-      didUpdate: Ember.K,
-
-      /**
-        Fired when a new record is commited to the server.
-         @event didCreate
-      */
-      didCreate: Ember.K,
-
-      /**
-        Fired when the record is deleted.
-         @event didDelete
-      */
-      didDelete: Ember.K,
-
-      /**
-        Fired when the record becomes invalid.
-         @event becameInvalid
-      */
-      becameInvalid: Ember.K,
-
-      /**
-        Fired when the record enters the error state.
-         @event becameError
-      */
-      becameError: Ember.K,
-
-      /**
-        Fired when the record is rolled back.
-         @event rolledBack
-      */
-      rolledBack: Ember.K,
-
-      /**
-        @property data
-        @private
-        @type {Object}
-      */
-      data: Ember.computed.readOnly('_internalModel._data'),
-
-      //TODO Do we want to deprecate these?
-      /**
-        @method send
-        @private
-        @param {String} name
-        @param {Object} context
-      */
-      send: function (name, context) {
-        return this._internalModel.send(name, context);
-      },
-
-      /**
-        @method transitionTo
-        @private
-        @param {String} name
-      */
-      transitionTo: function (name) {
-        return this._internalModel.transitionTo(name);
-      },
-
-      /**
-        Marks the record as deleted but does not save it. You must call
-        `save` afterwards if you want to persist it. You might use this
-        method if you want to allow the user to still `rollback()` a
-        delete after it was made.
-         Example
-         ```app/routes/model/delete.js
-        import Ember from 'ember';
-         export default Ember.Route.extend({
-          actions: {
-            softDelete: function() {
-              this.controller.get('model').deleteRecord();
-            },
-            confirm: function() {
-              this.controller.get('model').save();
-            },
-            undo: function() {
-              this.controller.get('model').rollback();
-            }
-          }
-        });
-        ```
-         @method deleteRecord
-      */
-      deleteRecord: function () {
-        this._internalModel.deleteRecord();
-      },
-
-      /**
-        Same as `deleteRecord`, but saves the record immediately.
-         Example
-         ```app/routes/model/delete.js
-        import Ember from 'ember';
-         export default Ember.Route.extend({
-          actions: {
-            delete: function() {
-              var controller = this.controller;
-              controller.get('model').destroyRecord().then(function() {
-                controller.transitionToRoute('model.index');
-              });
-            }
-          }
-        });
-        ```
-         @method destroyRecord
-        @return {Promise} a promise that will be resolved when the adapter returns
-        successfully or rejected if the adapter returns with an error.
-      */
-      destroyRecord: function () {
-        this.deleteRecord();
-        return this.save();
-      },
-
-      /**
-        @method unloadRecord
-        @private
-      */
-      unloadRecord: function () {
-        if (this.isDestroyed) {
-          return;
-        }
-        this._internalModel.unloadRecord();
-      },
-
-      /**
-        @method _notifyProperties
-        @private
-      */
-      _notifyProperties: function (keys) {
-        Ember.beginPropertyChanges();
-        var key;
-        for (var i = 0, length = keys.length; i < length; i++) {
-          key = keys[i];
-          this.notifyPropertyChange(key);
-        }
-        Ember.endPropertyChanges();
-      },
-
-      /**
-        Returns an object, whose keys are changed properties, and value is
-        an [oldProp, newProp] array.
-         Example
-         ```app/models/mascot.js
-        import DS from 'ember-data';
-         export default DS.Model.extend({
-          name: attr('string')
-        });
-        ```
-         ```javascript
-        var mascot = store.createRecord('mascot');
-        mascot.changedAttributes(); // {}
-        mascot.set('name', 'Tomster');
-        mascot.changedAttributes(); // {name: [undefined, 'Tomster']}
-        ```
-         @method changedAttributes
-        @return {Object} an object, whose keys are changed properties,
-          and value is an [oldProp, newProp] array.
-      */
-      changedAttributes: function () {
-        var oldData = ember$data$lib$system$model$model$$get(this._internalModel, '_data');
-        var newData = ember$data$lib$system$model$model$$get(this._internalModel, '_attributes');
-        var diffData = Ember.create(null);
-        var prop;
-
-        for (prop in newData) {
-          diffData[prop] = [oldData[prop], newData[prop]];
-        }
-
-        return diffData;
-      },
-
-      //TODO discuss with tomhuda about events/hooks
-      //Bring back as hooks?
-      /**
-        @method adapterWillCommit
-        @private
-      adapterWillCommit: function() {
-        this.send('willCommit');
-      },
-       /**
-        @method adapterDidDirty
-        @private
-      adapterDidDirty: function() {
-        this.send('becomeDirty');
-        this.updateRecordArraysLater();
-      },
-      */
-
-      /**
-        If the model `isDirty` this function will discard any unsaved
-        changes. If the model `isNew` it will be removed from the store.
-         Example
-         ```javascript
-        record.get('name'); // 'Untitled Document'
-        record.set('name', 'Doc 1');
-        record.get('name'); // 'Doc 1'
-        record.rollback();
-        record.get('name'); // 'Untitled Document'
-        ```
-         @method rollback
-      */
-      rollback: function () {
-        this._internalModel.rollback();
-      },
-
-      /*
-        @method _createSnapshot
-        @private
-      */
-      _createSnapshot: function () {
-        return this._internalModel.createSnapshot();
-      },
-
-      toStringExtension: function () {
-        return ember$data$lib$system$model$model$$get(this, 'id');
-      },
-
-      /**
-        Save the record and persist any changes to the record to an
-        external source via the adapter.
-         Example
-         ```javascript
-        record.set('name', 'Tomster');
-        record.save().then(function() {
-          // Success callback
-        }, function() {
-          // Error callback
-        });
-        ```
-        @method save
-        @return {Promise} a promise that will be resolved when the adapter returns
-        successfully or rejected if the adapter returns with an error.
-      */
-      save: function () {
-        var model = this;
-        return ember$data$lib$system$promise$proxies$$PromiseObject.create({
-          promise: this._internalModel.save().then(function () {
-            return model;
-          })
-        });
-      },
-
-      /**
-        Reload the record from the adapter.
-         This will only work if the record has already finished loading
-        and has not yet been modified (`isLoaded` but not `isDirty`,
-        or `isSaving`).
-         Example
-         ```app/routes/model/view.js
-        import Ember from 'ember';
-         export default Ember.Route.extend({
-          actions: {
-            reload: function() {
-              this.controller.get('model').reload().then(function(model) {
-                // do something with the reloaded model
-              });
-            }
-          }
-        });
-        ```
-         @method reload
-        @return {Promise} a promise that will be resolved with the record when the
-        adapter returns successfully or rejected if the adapter returns
-        with an error.
-      */
-      reload: function () {
-        var model = this;
-        return ember$data$lib$system$promise$proxies$$PromiseObject.create({
-          promise: this._internalModel.reload().then(function () {
-            return model;
-          })
-        });
-      },
-
-      /**
-        Override the default event firing from Ember.Evented to
-        also call methods with the given name.
-         @method trigger
-        @private
-        @param {String} name
-      */
-      trigger: function (name) {
-        var length = arguments.length;
-        var args = new Array(length - 1);
-
-        for (var i = 1; i < length; i++) {
-          args[i - 1] = arguments[i];
-        }
-
-        Ember.tryInvoke(this, name, args);
-        this._super.apply(this, arguments);
-      },
-
-      willDestroy: function () {
-        //TODO Move!
-        this._internalModel.clearRelationships();
-        this._internalModel.recordObjectWillDestroy();
-        this._super.apply(this, arguments);
-        //TODO should we set internalModel to null here?
-      },
-
-      // This is a temporary solution until we refactor DS.Model to not
-      // rely on the data property.
-      willMergeMixin: function (props) {
-        var constructor = this.constructor;
-        Ember.assert('`' + ember$data$lib$system$model$model$$intersection(Ember.keys(props), ember$data$lib$system$model$model$$RESERVED_MODEL_PROPS)[0] + '` is a reserved property name on DS.Model objects. Please choose a different property name for ' + constructor.toString(), !ember$data$lib$system$model$model$$intersection(Ember.keys(props), ember$data$lib$system$model$model$$RESERVED_MODEL_PROPS)[0]);
-      },
-
-      attr: function () {
-        Ember.assert('The `attr` method is not available on DS.Model, a DS.Snapshot was probably expected. Are you passing a DS.Model instead of a DS.Snapshot to your serializer?', false);
-      },
-
-      belongsTo: function () {
-        Ember.assert('The `belongsTo` method is not available on DS.Model, a DS.Snapshot was probably expected. Are you passing a DS.Model instead of a DS.Snapshot to your serializer?', false);
-      },
-
-      hasMany: function () {
-        Ember.assert('The `hasMany` method is not available on DS.Model, a DS.Snapshot was probably expected. Are you passing a DS.Model instead of a DS.Snapshot to your serializer?', false);
-      }
-    });
-
-    ember$data$lib$system$model$model$$Model.reopenClass({
-      /**
-        Alias DS.Model's `create` method to `_create`. This allows us to create DS.Model
-        instances from within the store, but if end users accidentally call `create()`
-        (instead of `createRecord()`), we can raise an error.
-         @method _create
-        @private
-        @static
-      */
-      _create: ember$data$lib$system$model$model$$Model.create,
-
-      /**
-        Override the class' `create()` method to raise an error. This
-        prevents end users from inadvertently calling `create()` instead
-        of `createRecord()`. The store is still able to create instances
-        by calling the `_create()` method. To create an instance of a
-        `DS.Model` use [store.createRecord](DS.Store.html#method_createRecord).
-         @method create
-        @private
-        @static
-      */
-      create: function () {
-        throw new Ember.Error('You should not call `create` on a model. Instead, call `store.createRecord` with the attributes you would like to set.');
-      },
-
-      /**
-       Represents the model's class name as a string. This can be used to look up the model through
-       DS.Store's modelFor method.
-        `modelName` is generated for you by Ember Data. It will be a lowercased, dasherized string.
-       For example:
-        ```javascript
-       store.modelFor('post').modelName; // 'post'
-       store.modelFor('blog-post').modelName; // 'blog-post'
-       ```
-        The most common place you'll want to access `modelName` is in your serializer's `payloadKeyFromModelName` method. For example, to change payload
-       keys to underscore (instead of dasherized), you might use the following code:
-        ```javascript
-       export default var PostSerializer = DS.RESTSerializer.extend({
-         payloadKeyFromModelName: function(modelName) {
-           return Ember.String.underscore(modelName);
-         }
-       });
-       ```
-       @property
-       @type String
-       @readonly
-      */
-      modelName: null
-    });
-
-    var ember$data$lib$system$model$model$$default = ember$data$lib$system$model$model$$Model;
-    var ember$data$lib$utils$supports$computed$getter$setter$$supportsComputedGetterSetter;
-
-    try {
-      Ember.computed({
-        get: function () {},
-        set: function () {}
-      });
-      ember$data$lib$utils$supports$computed$getter$setter$$supportsComputedGetterSetter = true;
-    } catch (e) {
-      ember$data$lib$utils$supports$computed$getter$setter$$supportsComputedGetterSetter = false;
-    }
-
-    var ember$data$lib$utils$supports$computed$getter$setter$$default = ember$data$lib$utils$supports$computed$getter$setter$$supportsComputedGetterSetter;
-
-    var ember$data$lib$utils$computed$polyfill$$computed = Ember.computed;
-
-    var ember$data$lib$utils$computed$polyfill$$default = function () {
-      var polyfillArguments = [];
-      var config = arguments[arguments.length - 1];
-
-      if (typeof config === 'function' || ember$data$lib$utils$supports$computed$getter$setter$$default) {
-        return ember$data$lib$utils$computed$polyfill$$computed.apply(null, arguments);
-      }
-
-      for (var i = 0, l = arguments.length - 1; i < l; i++) {
-        polyfillArguments.push(arguments[i]);
-      }
-
-      var func;
-      if (config.set) {
-        func = function (key, value) {
-          if (arguments.length > 1) {
-            return config.set.call(this, key, value);
-          } else {
-            return config.get.call(this, key);
-          }
-        };
-      } else {
-        func = function (key) {
-          return config.get.call(this, key);
-        };
-      }
-
-      polyfillArguments.push(func);
-
-      return ember$data$lib$utils$computed$polyfill$$computed.apply(null, polyfillArguments);
-    };
-
-    var ember$data$lib$system$model$attributes$$default = ember$data$lib$system$model$attributes$$attr;
-
-    /**
-      @module ember-data
-    */
-
-    var ember$data$lib$system$model$attributes$$get = Ember.get;
-
-    /**
-      @class Model
-      @namespace DS
-    */
-    ember$data$lib$system$model$model$$default.reopenClass({
-      /**
-        A map whose keys are the attributes of the model (properties
-        described by DS.attr) and whose values are the meta object for the
-        property.
-         Example
-         ```app/models/person.js
-        import DS from 'ember-data';
-         export default DS.Model.extend({
-          firstName: attr('string'),
-          lastName: attr('string'),
-          birthday: attr('date')
-        });
-        ```
-         ```javascript
-        import Ember from 'ember';
-        import Person from 'app/models/person';
-         var attributes = Ember.get(Person, 'attributes')
-         attributes.forEach(function(name, meta) {
-          console.log(name, meta);
-        });
-         // prints:
-        // firstName {type: "string", isAttribute: true, options: Object, parentType: function, name: "firstName"}
-        // lastName {type: "string", isAttribute: true, options: Object, parentType: function, name: "lastName"}
-        // birthday {type: "date", isAttribute: true, options: Object, parentType: function, name: "birthday"}
-        ```
-         @property attributes
-        @static
-        @type {Ember.Map}
-        @readOnly
-      */
-      attributes: Ember.computed(function () {
-        var map = ember$data$lib$system$map$$Map.create();
-
-        this.eachComputedProperty(function (name, meta) {
-          if (meta.isAttribute) {
-            Ember.assert("You may not set `id` as an attribute on your model. Please remove any lines that look like: `id: DS.attr('<type>')` from " + this.toString(), name !== "id");
-
-            meta.name = name;
-            map.set(name, meta);
-          }
-        });
-
-        return map;
-      }).readOnly(),
-
-      /**
-        A map whose keys are the attributes of the model (properties
-        described by DS.attr) and whose values are type of transformation
-        applied to each attribute. This map does not include any
-        attributes that do not have an transformation type.
-         Example
-         ```app/models/person.js
-        import DS from 'ember-data';
-         export default DS.Model.extend({
-          firstName: attr(),
-          lastName: attr('string'),
-          birthday: attr('date')
-        });
-        ```
-         ```javascript
-        import Ember from 'ember';
-        import Person from 'app/models/person';
-         var transformedAttributes = Ember.get(Person, 'transformedAttributes')
-         transformedAttributes.forEach(function(field, type) {
-          console.log(field, type);
-        });
-         // prints:
-        // lastName string
-        // birthday date
-        ```
-         @property transformedAttributes
-        @static
-        @type {Ember.Map}
-        @readOnly
-      */
-      transformedAttributes: Ember.computed(function () {
-        var map = ember$data$lib$system$map$$Map.create();
-
-        this.eachAttribute(function (key, meta) {
-          if (meta.type) {
-            map.set(key, meta.type);
-          }
-        });
-
-        return map;
-      }).readOnly(),
-
-      /**
-        Iterates through the attributes of the model, calling the passed function on each
-        attribute.
-         The callback method you provide should have the following signature (all
-        parameters are optional):
-         ```javascript
-        function(name, meta);
-        ```
-         - `name` the name of the current property in the iteration
-        - `meta` the meta object for the attribute property in the iteration
-         Note that in addition to a callback, you can also pass an optional target
-        object that will be set as `this` on the context.
-         Example
-         ```javascript
-        import DS from 'ember-data';
-         var Person = DS.Model.extend({
-          firstName: attr('string'),
-          lastName: attr('string'),
-          birthday: attr('date')
-        });
-         Person.eachAttribute(function(name, meta) {
-          console.log(name, meta);
-        });
-         // prints:
-        // firstName {type: "string", isAttribute: true, options: Object, parentType: function, name: "firstName"}
-        // lastName {type: "string", isAttribute: true, options: Object, parentType: function, name: "lastName"}
-        // birthday {type: "date", isAttribute: true, options: Object, parentType: function, name: "birthday"}
-       ```
-         @method eachAttribute
-        @param {Function} callback The callback to execute
-        @param {Object} [binding] the value to which the callback's `this` should be bound
-        @static
-      */
-      eachAttribute: function (callback, binding) {
-        ember$data$lib$system$model$attributes$$get(this, "attributes").forEach(function (meta, name) {
-          callback.call(binding, name, meta);
-        }, binding);
-      },
-
-      /**
-        Iterates through the transformedAttributes of the model, calling
-        the passed function on each attribute. Note the callback will not be
-        called for any attributes that do not have an transformation type.
-         The callback method you provide should have the following signature (all
-        parameters are optional):
-         ```javascript
-        function(name, type);
-        ```
-         - `name` the name of the current property in the iteration
-        - `type` a string containing the name of the type of transformed
-          applied to the attribute
-         Note that in addition to a callback, you can also pass an optional target
-        object that will be set as `this` on the context.
-         Example
-         ```javascript
-        import DS from 'ember-data';
-         var Person = DS.Model.extend({
-          firstName: attr(),
-          lastName: attr('string'),
-          birthday: attr('date')
-        });
-         Person.eachTransformedAttribute(function(name, type) {
-          console.log(name, type);
-        });
-         // prints:
-        // lastName string
-        // birthday date
-       ```
-         @method eachTransformedAttribute
-        @param {Function} callback The callback to execute
-        @param {Object} [binding] the value to which the callback's `this` should be bound
-        @static
-      */
-      eachTransformedAttribute: function (callback, binding) {
-        ember$data$lib$system$model$attributes$$get(this, "transformedAttributes").forEach(function (type, name) {
-          callback.call(binding, name, type);
-        });
-      }
-    });
-
-    ember$data$lib$system$model$model$$default.reopen({
-      eachAttribute: function (callback, binding) {
-        this.constructor.eachAttribute(callback, binding);
-      }
-    });
-
-    function ember$data$lib$system$model$attributes$$getDefaultValue(record, options, key) {
-      if (typeof options.defaultValue === "function") {
-        return options.defaultValue.apply(null, arguments);
-      } else {
-        return options.defaultValue;
-      }
-    }
-
-    function ember$data$lib$system$model$attributes$$hasValue(record, key) {
-      return key in record._attributes || key in record._inFlightAttributes || key in record._data;
-    }
-
-    function ember$data$lib$system$model$attributes$$getValue(record, key) {
-      if (key in record._attributes) {
-        return record._attributes[key];
-      } else if (key in record._inFlightAttributes) {
-        return record._inFlightAttributes[key];
-      } else {
-        return record._data[key];
-      }
-    }
-
-    /**
-      `DS.attr` defines an attribute on a [DS.Model](/api/data/classes/DS.Model.html).
-      By default, attributes are passed through as-is, however you can specify an
-      optional type to have the value automatically transformed.
-      Ember Data ships with four basic transform types: `string`, `number`,
-      `boolean` and `date`. You can define your own transforms by subclassing
-      [DS.Transform](/api/data/classes/DS.Transform.html).
-
-      Note that you cannot use `attr` to define an attribute of `id`.
-
-      `DS.attr` takes an optional hash as a second parameter, currently
-      supported options are:
-
-      - `defaultValue`: Pass a string or a function to be called to set the attribute
-                        to a default value if none is supplied.
-
-      Example
-
-      ```app/models/user.js
-      import DS from 'ember-data';
-
-      export default DS.Model.extend({
-        username: DS.attr('string'),
-        email: DS.attr('string'),
-        verified: DS.attr('boolean', {defaultValue: false})
-      });
-      ```
-
-      Default value can also be a function. This is useful it you want to return
-      a new object for each attribute.
-
-      ```app/models/user.js
-      import DS from 'ember-data';
-
-      export default DS.Model.extend({
-        username: attr('string'),
-        email: attr('string'),
-        settings: attr({defaultValue: function() {
-          return {};
-        }})
-      });
-      ```
-
-      @namespace
-      @method attr
-      @for DS
-      @param {String} type the attribute type
-      @param {Object} options a hash of options
-      @return {Attribute}
-    */
-    function ember$data$lib$system$model$attributes$$attr(type, options) {
-      if (typeof type === "object") {
-        options = type;
-        type = undefined;
-      } else {
-        options = options || {};
-      }
-
-      var meta = {
-        type: type,
-        isAttribute: true,
-        options: options
-      };
-
-      return ember$data$lib$utils$computed$polyfill$$default({
-        get: function (key) {
-          var internalModel = this._internalModel;
-          if (ember$data$lib$system$model$attributes$$hasValue(internalModel, key)) {
-            return ember$data$lib$system$model$attributes$$getValue(internalModel, key);
-          } else {
-            return ember$data$lib$system$model$attributes$$getDefaultValue(this, options, key);
-          }
-        },
-        set: function (key, value) {
-          Ember.assert("You may not set `id` as an attribute on your model. Please remove any lines that look like: `id: DS.attr('<type>')` from " + this.constructor.toString(), key !== "id");
-          var internalModel = this._internalModel;
-          var oldValue = ember$data$lib$system$model$attributes$$getValue(internalModel, key);
-
-          if (value !== oldValue) {
-            // Add the new value to the changed attributes hash; it will get deleted by
-            // the 'didSetProperty' handler if it is no different from the original value
-            internalModel._attributes[key] = value;
-
-            this._internalModel.send("didSetProperty", {
-              name: key,
-              oldValue: oldValue,
-              originalValue: internalModel._data[key],
-              value: value
-            });
-          }
-
-          return value;
-        }
-      }).meta(meta);
-    }
-    var ember$data$lib$system$model$$default = ember$data$lib$system$model$model$$default;
 
     var ember$data$lib$system$store$$Backburner = Ember.Backburner || Ember.__loader.require("backburner")["default"] || Ember.__loader.require("backburner")["Backburner"];
 
@@ -11508,337 +11841,6 @@
     }
 
     var ember$data$lib$system$store$$default = ember$data$lib$system$store$$Store;
-    var ember$data$lib$initializers$store$$default = ember$data$lib$initializers$store$$initializeStore;
-
-    /**
-      Configures a registry for use with an Ember-Data
-      store. Accepts an optional namespace argument.
-
-      @method initializeStore
-      @param {Ember.Registry} registry
-      @param {Object} [application] an application namespace
-    */
-    function ember$data$lib$initializers$store$$initializeStore(registry, application) {
-      Ember.deprecate("Specifying a custom Store for Ember Data on your global namespace as `App.Store` " + "has been deprecated. Please use `App.ApplicationStore` instead.", !(application && application.Store));
-
-      registry.optionsForType("serializer", { singleton: false });
-      registry.optionsForType("adapter", { singleton: false });
-
-      registry.register("store:application", application && application.Store || ember$data$lib$system$store$$default);
-
-      // allow older names to be looked up
-
-      var proxy = new ember$data$lib$system$container$proxy$$default(registry);
-      proxy.registerDeprecations([{ deprecated: "serializer:_default", valid: "serializer:-default" }, { deprecated: "serializer:_rest", valid: "serializer:-rest" }, { deprecated: "adapter:_rest", valid: "adapter:-rest" }, { deprecated: "store:main", valid: "store:application" }]);
-
-      // new go forward paths
-      registry.register("serializer:-default", ember$data$lib$serializers$json$serializer$$default);
-      registry.register("serializer:-rest", ember$data$lib$serializers$rest$serializer$$default);
-      registry.register("adapter:-rest", ember$data$lib$adapters$rest$adapter$$default);
-    }
-
-    var ember$data$lib$transforms$base$$default = Ember.Object.extend({
-      /**
-        When given a deserialized value from a record attribute this
-        method must return the serialized value.
-         Example
-         ```javascript
-        serialize: function(deserialized) {
-          return Ember.isEmpty(deserialized) ? null : Number(deserialized);
-        }
-        ```
-         @method serialize
-        @param deserialized The deserialized value
-        @return The serialized value
-      */
-      serialize: null,
-
-      /**
-        When given a serialize value from a JSON object this method must
-        return the deserialized value for the record attribute.
-         Example
-         ```javascript
-        deserialize: function(serialized) {
-          return empty(serialized) ? null : Number(serialized);
-        }
-        ```
-         @method deserialize
-        @param serialized The serialized value
-        @return The deserialized value
-      */
-      deserialize: null
-    });
-
-    var ember$data$lib$transforms$number$$empty = Ember.isEmpty;
-
-    function ember$data$lib$transforms$number$$isNumber(value) {
-      return value === value && value !== Infinity && value !== -Infinity;
-    }
-
-    var ember$data$lib$transforms$number$$default = ember$data$lib$transforms$base$$default.extend({
-      deserialize: function (serialized) {
-        var transformed;
-
-        if (ember$data$lib$transforms$number$$empty(serialized)) {
-          return null;
-        } else {
-          transformed = Number(serialized);
-
-          return ember$data$lib$transforms$number$$isNumber(transformed) ? transformed : null;
-        }
-      },
-
-      serialize: function (deserialized) {
-        var transformed;
-
-        if (ember$data$lib$transforms$number$$empty(deserialized)) {
-          return null;
-        } else {
-          transformed = Number(deserialized);
-
-          return ember$data$lib$transforms$number$$isNumber(transformed) ? transformed : null;
-        }
-      }
-    });
-
-    // Date.prototype.toISOString shim
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString
-    var ember$data$lib$transforms$date$$toISOString = Date.prototype.toISOString || function () {
-      function pad(number) {
-        if (number < 10) {
-          return '0' + number;
-        }
-        return number;
-      }
-
-      return this.getUTCFullYear() + '-' + pad(this.getUTCMonth() + 1) + '-' + pad(this.getUTCDate()) + 'T' + pad(this.getUTCHours()) + ':' + pad(this.getUTCMinutes()) + ':' + pad(this.getUTCSeconds()) + '.' + (this.getUTCMilliseconds() / 1000).toFixed(3).slice(2, 5) + 'Z';
-    };
-
-    if (Ember.SHIM_ES5) {
-      if (!Date.prototype.toISOString) {
-        Date.prototype.toISOString = ember$data$lib$transforms$date$$toISOString;
-      }
-    }
-
-    var ember$data$lib$transforms$date$$default = ember$data$lib$transforms$base$$default.extend({
-      deserialize: function (serialized) {
-        var type = typeof serialized;
-
-        if (type === 'string') {
-          return new Date(Ember.Date.parse(serialized));
-        } else if (type === 'number') {
-          return new Date(serialized);
-        } else if (serialized === null || serialized === undefined) {
-          // if the value is null return null
-          // if the value is not present in the data return undefined
-          return serialized;
-        } else {
-          return null;
-        }
-      },
-
-      serialize: function (date) {
-        if (date instanceof Date) {
-          return ember$data$lib$transforms$date$$toISOString.call(date);
-        } else {
-          return null;
-        }
-      }
-    });
-
-    var ember$data$lib$transforms$string$$none = Ember.isNone;
-
-    var ember$data$lib$transforms$string$$default = ember$data$lib$transforms$base$$default.extend({
-      deserialize: function (serialized) {
-        return ember$data$lib$transforms$string$$none(serialized) ? null : String(serialized);
-      },
-      serialize: function (deserialized) {
-        return ember$data$lib$transforms$string$$none(deserialized) ? null : String(deserialized);
-      }
-    });
-
-    var ember$data$lib$transforms$boolean$$default = ember$data$lib$transforms$base$$default.extend({
-      deserialize: function (serialized) {
-        var type = typeof serialized;
-
-        if (type === "boolean") {
-          return serialized;
-        } else if (type === "string") {
-          return serialized.match(/^true$|^t$|^1$/i) !== null;
-        } else if (type === "number") {
-          return serialized === 1;
-        } else {
-          return false;
-        }
-      },
-
-      serialize: function (deserialized) {
-        return Boolean(deserialized);
-      }
-    });
-
-    var ember$data$lib$initializers$transforms$$default = ember$data$lib$initializers$transforms$$initializeTransforms;
-
-    /**
-      Configures a registry for use with Ember-Data
-      transforms.
-
-      @method initializeTransforms
-      @param {Ember.Registry} registry
-    */
-    function ember$data$lib$initializers$transforms$$initializeTransforms(registry) {
-      registry.register('transform:boolean', ember$data$lib$transforms$boolean$$default);
-      registry.register('transform:date', ember$data$lib$transforms$date$$default);
-      registry.register('transform:number', ember$data$lib$transforms$number$$default);
-      registry.register('transform:string', ember$data$lib$transforms$string$$default);
-    }
-    var ember$data$lib$initializers$store$injections$$default = ember$data$lib$initializers$store$injections$$initializeStoreInjections;
-    /**
-      Configures a registry with injections on Ember applications
-      for the Ember-Data store. Accepts an optional namespace argument.
-
-      @method initializeStoreInjections
-      @param {Ember.Registry} registry
-    */
-    function ember$data$lib$initializers$store$injections$$initializeStoreInjections(registry) {
-      registry.injection('controller', 'store', 'store:application');
-      registry.injection('route', 'store', 'store:application');
-      registry.injection('data-adapter', 'store', 'store:application');
-    }
-    var ember$data$lib$system$debug$debug$adapter$$get = Ember.get;
-    var ember$data$lib$system$debug$debug$adapter$$capitalize = Ember.String.capitalize;
-    var ember$data$lib$system$debug$debug$adapter$$underscore = Ember.String.underscore;
-    var ember$data$lib$system$debug$debug$adapter$$_Ember = Ember;
-    var ember$data$lib$system$debug$debug$adapter$$assert = ember$data$lib$system$debug$debug$adapter$$_Ember.assert;
-
-    var ember$data$lib$system$debug$debug$adapter$$default = Ember.DataAdapter.extend({
-      getFilters: function () {
-        return [{ name: 'isNew', desc: 'New' }, { name: 'isModified', desc: 'Modified' }, { name: 'isClean', desc: 'Clean' }];
-      },
-
-      detect: function (typeClass) {
-        return typeClass !== ember$data$lib$system$model$$default && ember$data$lib$system$model$$default.detect(typeClass);
-      },
-
-      columnsForType: function (typeClass) {
-        var columns = [{
-          name: 'id',
-          desc: 'Id'
-        }];
-        var count = 0;
-        var self = this;
-        ember$data$lib$system$debug$debug$adapter$$get(typeClass, 'attributes').forEach(function (meta, name) {
-          if (count++ > self.attributeLimit) {
-            return false;
-          }
-          var desc = ember$data$lib$system$debug$debug$adapter$$capitalize(ember$data$lib$system$debug$debug$adapter$$underscore(name).replace('_', ' '));
-          columns.push({ name: name, desc: desc });
-        });
-        return columns;
-      },
-
-      getRecords: function (modelClass, modelName) {
-        if (arguments.length < 2) {
-          // Legacy Ember.js < 1.13 support
-          var containerKey = modelClass._debugContainerKey;
-          if (containerKey) {
-            var match = containerKey.match(/model:(.*)/);
-            if (match) {
-              modelName = match[1];
-            }
-          }
-        }
-        ember$data$lib$system$debug$debug$adapter$$assert('Cannot find model name. Please upgrade to Ember.js >= 1.13 for Ember Inspector support', !!modelName);
-        return this.get('store').all(modelName);
-      },
-
-      getRecordColumnValues: function (record) {
-        var self = this;
-        var count = 0;
-        var columnValues = { id: ember$data$lib$system$debug$debug$adapter$$get(record, 'id') };
-
-        record.eachAttribute(function (key) {
-          if (count++ > self.attributeLimit) {
-            return false;
-          }
-          var value = ember$data$lib$system$debug$debug$adapter$$get(record, key);
-          columnValues[key] = value;
-        });
-        return columnValues;
-      },
-
-      getRecordKeywords: function (record) {
-        var keywords = [];
-        var keys = Ember.A(['id']);
-        record.eachAttribute(function (key) {
-          keys.push(key);
-        });
-        keys.forEach(function (key) {
-          keywords.push(ember$data$lib$system$debug$debug$adapter$$get(record, key));
-        });
-        return keywords;
-      },
-
-      getRecordFilterValues: function (record) {
-        return {
-          isNew: record.get('isNew'),
-          isModified: record.get('isDirty') && !record.get('isNew'),
-          isClean: !record.get('isDirty')
-        };
-      },
-
-      getRecordColor: function (record) {
-        var color = 'black';
-        if (record.get('isNew')) {
-          color = 'green';
-        } else if (record.get('isDirty')) {
-          color = 'blue';
-        }
-        return color;
-      },
-
-      observeRecord: function (record, recordUpdated) {
-        var releaseMethods = Ember.A();
-        var self = this;
-        var keysToObserve = Ember.A(['id', 'isNew', 'isDirty']);
-
-        record.eachAttribute(function (key) {
-          keysToObserve.push(key);
-        });
-
-        keysToObserve.forEach(function (key) {
-          var handler = function () {
-            recordUpdated(self.wrapRecord(record));
-          };
-          Ember.addObserver(record, key, handler);
-          releaseMethods.push(function () {
-            Ember.removeObserver(record, key, handler);
-          });
-        });
-
-        var release = function () {
-          releaseMethods.forEach(function (fn) {
-            fn();
-          });
-        };
-
-        return release;
-      }
-
-    });
-
-    var ember$data$lib$initializers$data$adapter$$default = ember$data$lib$initializers$data$adapter$$initializeDebugAdapter;
-
-    /**
-      Configures a registry with injections on Ember applications
-      for the Ember-Data store. Accepts an optional namespace argument.
-
-      @method initializeStoreInjections
-      @param {Ember.Registry} registry
-    */
-    function ember$data$lib$initializers$data$adapter$$initializeDebugAdapter(registry) {
-      registry.register("data-adapter:main", ember$data$lib$system$debug$debug$adapter$$default);
-    }
     var ember$data$lib$instance$initializers$initialize$store$service$$default = ember$data$lib$instance$initializers$initialize$store$service$$initializeStoreService;
     /**
      Configures a registry for use with an Ember-Data
@@ -11868,8 +11870,15 @@
           container = registry;
         }
       }
+      if (registry.has('store:application')) {
+        var customStoreFactory = container.lookupFactory('store:application');
+        registry.register('store:main', customStoreFactory);
+      } else {
+        registry.register('store:main', ember$data$lib$system$store$$default);
+      }
+
       // Eagerly generate the store so defaultStore is populated.
-      var store = container.lookup('store:application');
+      var store = container.lookup('store:main');
       registry.register('service:store', store, { instantiate: false });
     }
     var ember$data$lib$setup$container$$default = ember$data$lib$setup$container$$setupContainer;
@@ -13459,6 +13468,10 @@
 
     if (Ember.VERSION.match(/^1\.[0-7]\./)) {
       throw new Ember.Error("Ember Data requires at least Ember 1.8.0, but you have " + Ember.VERSION + ". Please upgrade your version of Ember, then upgrade Ember Data");
+    }
+
+    if (Ember.VERSION.match(/^1\.12\.0/)) {
+      throw new Ember.Error("Ember Data does not work with Ember 1.12.0. Please upgrade to Ember 1.12.1 or higher.");
     }
 
     // support RSVP 2.x via resolve,  but prefer RSVP 3.x's Promise.cast
