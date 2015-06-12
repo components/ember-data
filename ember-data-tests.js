@@ -7195,7 +7195,7 @@ define(
 
       run(function () {
         jaime.deleteRecord();
-        jaime.rollback();
+        jaime.rollbackAttributes();
       });
       equal(all.get("length"), 2, "record was not removed");
       equal(filtered.get("length"), 2, "record was not removed");
@@ -8555,7 +8555,7 @@ define(
       }, /You looked up the 'user' relationship on a 'message' with id 1 but some of the associated records were not loaded. Either make sure they are all loaded together with the parent record, or specify that the relationship is async \(`DS.belongsTo\({ async: true }\)`\)/);
     });
 
-    test('Rollbacking a deleted record restores implicit relationship - async', function () {
+    test('Rollbacking attributes for a deleted record restores implicit relationship - async', function () {
       Book.reopen({
         author: DS.belongsTo('author', { async: true })
       });
@@ -8566,14 +8566,14 @@ define(
       });
       run(function () {
         author.deleteRecord();
-        author.rollback();
+        author.rollbackAttributes();
         book.get('author').then(function (fetchedAuthor) {
-          equal(fetchedAuthor, author, 'Book has an author after rollback');
+          equal(fetchedAuthor, author, 'Book has an author after rollback attributes');
         });
       });
     });
 
-    test('Rollbacking a deleted record restores implicit relationship - sync', function () {
+    test('Rollbacking attributes for a deleted record restores implicit relationship - sync', function () {
       var book, author;
       run(function () {
         book = env.store.push('book', { id: 1, name: 'Stanley\'s Amazing Adventures', author: 2 });
@@ -8581,9 +8581,9 @@ define(
       });
       run(function () {
         author.deleteRecord();
-        author.rollback();
+        author.rollbackAttributes();
       });
-      equal(book.get('author'), author, 'Book has an author after rollback');
+      equal(book.get('author'), author, 'Book has an author after rollback attributes');
     });
 
     test('Passing a model as type to belongsTo should not work', function () {
@@ -9748,7 +9748,7 @@ define(
       deepEqual(post.get('comments').toArray(), [comment4, comment2, comment3, comment1], 'Updated ordering is correct');
     });
 
-    test('Rollbacking a deleted record restores implicit relationship correctly when the hasMany side has been deleted - async', function () {
+    test('Rollbacking attributes for deleted record restores implicit relationship correctly when the hasMany side has been deleted - async', function () {
       var book, chapter;
       run(function () {
         book = env.store.push('book', { id: 1, title: 'Stanley\'s Amazing Adventures', chapters: [2] });
@@ -9756,16 +9756,16 @@ define(
       });
       run(function () {
         chapter.deleteRecord();
-        chapter.rollback();
+        chapter.rollbackAttributes();
       });
       run(function () {
         book.get('chapters').then(function (fetchedChapters) {
-          equal(fetchedChapters.objectAt(0), chapter, 'Book has a chapter after rollback');
+          equal(fetchedChapters.objectAt(0), chapter, 'Book has a chapter after rollback attributes');
         });
       });
     });
 
-    test('Rollbacking a deleted record restores implicit relationship correctly when the hasMany side has been deleted - sync', function () {
+    test('Rollbacking attributes for deleted record restores implicit relationship correctly when the hasMany side has been deleted - sync', function () {
       var book, chapter;
       run(function () {
         book = env.store.push('book', { id: 1, title: 'Stanley\'s Amazing Adventures', chapters: [2] });
@@ -9773,14 +9773,14 @@ define(
       });
       run(function () {
         chapter.deleteRecord();
-        chapter.rollback();
+        chapter.rollbackAttributes();
       });
       run(function () {
-        equal(book.get('chapters.firstObject'), chapter, 'Book has a chapter after rollback');
+        equal(book.get('chapters.firstObject'), chapter, 'Book has a chapter after rollback attributes');
       });
     });
 
-    test('Rollbacking a deleted record restores implicit relationship correctly when the belongsTo side has been deleted - async', function () {
+    test('Rollbacking attributes for deleted record restores implicit relationship correctly when the belongsTo side has been deleted - async', function () {
       Page.reopen({
         chapter: DS.belongsTo('chapter', { async: true })
       });
@@ -9791,16 +9791,16 @@ define(
       });
       run(function () {
         chapter.deleteRecord();
-        chapter.rollback();
+        chapter.rollbackAttributes();
       });
       run(function () {
         page.get('chapter').then(function (fetchedChapter) {
-          equal(fetchedChapter, chapter, 'Page has a chapter after rollback');
+          equal(fetchedChapter, chapter, 'Page has a chapter after rollback attributes');
         });
       });
     });
 
-    test('Rollbacking a deleted record restores implicit relationship correctly when the belongsTo side has been deleted - sync', function () {
+    test('Rollbacking attributes for deleted record restores implicit relationship correctly when the belongsTo side has been deleted - sync', function () {
       var chapter, page;
       run(function () {
         chapter = env.store.push('chapter', { id: 2, title: 'Sailing the Seven Seas' });
@@ -9808,10 +9808,10 @@ define(
       });
       run(function () {
         chapter.deleteRecord();
-        chapter.rollback();
+        chapter.rollbackAttributes();
       });
       run(function () {
-        equal(page.get('chapter'), chapter, 'Page has a chapter after rollback');
+        equal(page.get('chapter'), chapter, 'Page has a chapter after rollback attributes');
       });
     });
 
@@ -10901,10 +10901,10 @@ define(
     });
 
     /*
-      Rollback tests
+      Rollback Attributes tests
     */
 
-    test('Rollbacking a deleted record that has a ManyToMany relationship works correctly - async', function () {
+    test('Rollbacking attributes for a deleted record that has a ManyToMany relationship works correctly - async', function () {
       var user, topic;
       run(function () {
         user = store.push('user', { id: 1, name: 'Stanley', topics: [2] });
@@ -10912,7 +10912,7 @@ define(
       });
       run(function () {
         topic.deleteRecord();
-        topic.rollback();
+        topic.rollbackAttributes();
       });
       run(function () {
         topic.get('users').then(async(function (fetchedUsers) {
@@ -10932,13 +10932,13 @@ define(
       });
       run(function () {
         account.deleteRecord();
-        account.rollback();
+        account.rollbackAttributes();
       });
       equal(account.get('users.length'), 1, 'Users are still there');
       equal(user.get('accounts.length'), 1, 'Account got rolledback correctly into the user');
     });
 
-    test('Rollbacking a created record that has a ManyToMany relationship works correctly - async', function () {
+    test('Rollbacking attributes for a created record that has a ManyToMany relationship works correctly - async', function () {
       var user, topic;
       run(function () {
         user = store.push('user', { id: 1, name: 'Stanley' });
@@ -10947,7 +10947,7 @@ define(
       run(function () {
         user.get('topics').then(async(function (fetchedTopics) {
           fetchedTopics.pushObject(topic);
-          topic.rollback();
+          topic.rollbackAttributes();
           topic.get('users').then(async(function (fetchedUsers) {
             equal(fetchedUsers.get('length'), 0, 'Users got removed');
             equal(fetchedUsers.objectAt(0), null, 'User can\'t be fetched');
@@ -10968,7 +10968,7 @@ define(
       });
       run(function () {
         account.get('users').pushObject(user);
-        user.rollback();
+        user.rollbackAttributes();
       });
       equal(account.get('users.length'), 0, 'Users got removed');
       equal(user.get('accounts.length'), undefined, 'Accounts got rolledback correctly');
@@ -11449,10 +11449,10 @@ define(
     });
 
     /*
-    Rollback from deleted state
+    Rollback attributes from deleted state
     */
 
-    test('Rollbacking a deleted record works correctly when the hasMany side has been deleted - async', function () {
+    test('Rollbacking attributes of a deleted record works correctly when the hasMany side has been deleted - async', function () {
       var user, message;
       run(function () {
         user = store.push('user', { id: 1, name: 'Stanley', messages: [2] });
@@ -11460,7 +11460,7 @@ define(
       });
       run(function () {
         message.deleteRecord();
-        message.rollback();
+        message.rollbackAttributes();
       });
       run(function () {
         message.get('user').then(function (fetchedUser) {
@@ -11472,7 +11472,7 @@ define(
       });
     });
 
-    test('Rollbacking a deleted record works correctly when the hasMany side has been deleted - sync', function () {
+    test('Rollbacking attributes of a deleted record works correctly when the hasMany side has been deleted - sync', function () {
       var account, user;
       run(function () {
         account = store.push('account', { id: 2, state: 'lonely' });
@@ -11480,13 +11480,13 @@ define(
       });
       run(function () {
         account.deleteRecord();
-        account.rollback();
+        account.rollbackAttributes();
       });
       equal(user.get('accounts.length'), 1, 'Accounts are rolled back');
       equal(account.get('user'), user, 'Account still has the user');
     });
 
-    test('Rollbacking a deleted record works correctly when the belongsTo side has been deleted - async', function () {
+    test('Rollbacking attributes of deleted record works correctly when the belongsTo side has been deleted - async', function () {
       var user, message;
       run(function () {
         user = store.push('user', { id: 1, name: 'Stanley', messages: [2] });
@@ -11494,7 +11494,7 @@ define(
       });
       run(function () {
         user.deleteRecord();
-        user.rollback();
+        user.rollbackAttributes();
       });
       run(function () {
         message.get('user').then(function (fetchedUser) {
@@ -11506,7 +11506,7 @@ define(
       });
     });
 
-    test('Rollbacking a deleted record works correctly when the belongsTo side has been deleted - sync', function () {
+    test('Rollbacking attributes of a deleted record works correctly when the belongsTo side has been deleted - sync', function () {
       var account, user;
       run(function () {
         account = store.push('account', { id: 2, state: 'lonely' });
@@ -11514,23 +11514,23 @@ define(
       });
       run(function () {
         user.deleteRecord();
-        user.rollback();
+        user.rollbackAttributes();
       });
       equal(user.get('accounts.length'), 1, 'User still has the accounts');
       equal(account.get('user'), user, 'Account has the user again');
     });
 
     /*
-    Rollback from created state
+    Rollback attributes from created state
     */
 
-    test('Rollbacking a created record works correctly when the hasMany side has been created - async', function () {
+    test('Rollbacking attributes of a created record works correctly when the hasMany side has been created - async', function () {
       var user, message;
       run(function () {
         user = store.push('user', { id: 1, name: 'Stanley' });
         message = store.createRecord('message', { user: user });
       });
-      run(message, 'rollback');
+      run(message, 'rollbackAttributes');
       run(function () {
         message.get('user').then(function (fetchedUser) {
           equal(fetchedUser, null, 'Message does not have the user anymore');
@@ -11542,18 +11542,18 @@ define(
       });
     });
 
-    test('Rollbacking a created record works correctly when the hasMany side has been created - sync', function () {
+    test('Rollbacking attributes of a created record works correctly when the hasMany side has been created - sync', function () {
       var user, account;
       run(function () {
         user = store.push('user', { id: 1, name: 'Stanley' });
         account = store.createRecord('account', { user: user });
       });
-      run(account, 'rollback');
+      run(account, 'rollbackAttributes');
       equal(user.get('accounts.length'), 0, 'Accounts are rolled back');
       equal(account.get('user'), null, 'Account does not have the user anymore');
     });
 
-    test('Rollbacking a created record works correctly when the belongsTo side has been created - async', function () {
+    test('Rollbacking attributes of a created record works correctly when the belongsTo side has been created - async', function () {
       var message, user;
       run(function () {
         message = store.push('message', { id: 2, title: 'EmberFest was great' });
@@ -11562,7 +11562,7 @@ define(
       run(function () {
         user.get('messages').then(function (messages) {
           messages.pushObject(message);
-          user.rollback();
+          user.rollbackAttributes();
           message.get('user').then(function (fetchedUser) {
             equal(fetchedUser, null, 'Message does not have the user anymore');
           });
@@ -11574,7 +11574,7 @@ define(
       });
     });
 
-    test('Rollbacking a created record works correctly when the belongsTo side has been created - sync', function () {
+    test('Rollbacking attributes of a created record works correctly when the belongsTo side has been created - sync', function () {
       var account, user;
       run(function () {
         account = store.push('account', { id: 2, state: 'lonely' });
@@ -11583,7 +11583,7 @@ define(
       run(function () {
         user.get('accounts').pushObject(account);
       });
-      run(user, 'rollback');
+      run(user, 'rollbackAttributes');
       equal(user.get('accounts.length'), undefined, 'User does not have the account anymore');
       equal(account.get('user'), null, 'Account does not have the user anymore');
     });
@@ -11952,10 +11952,10 @@ define(
     });
 
     /*
-    Rollback tests
+    Rollback attributes tests
     */
 
-    test('Rollbacking a deleted record restores the relationship on both sides - async', function () {
+    test('Rollbacking attributes of deleted record restores the relationship on both sides - async', function () {
       var stanley, stanleysFriend;
       run(function () {
         stanley = store.push('user', { id: 1, name: 'Stanley', bestFriend: 2 });
@@ -11965,7 +11965,7 @@ define(
         stanley.deleteRecord();
       });
       run(function () {
-        stanley.rollback();
+        stanley.rollbackAttributes();
         stanleysFriend.get('bestFriend').then(function (fetchedUser) {
           equal(fetchedUser, stanley, 'Stanley got rollbacked correctly');
         });
@@ -11975,7 +11975,7 @@ define(
       });
     });
 
-    test('Rollbacking a deleted record restores the relationship on both sides - sync', function () {
+    test('Rollbacking attributes of deleted record restores the relationship on both sides - sync', function () {
       var job, user;
       run(function () {
         job = store.push('job', { id: 2, isGood: true });
@@ -11983,20 +11983,20 @@ define(
       });
       run(function () {
         job.deleteRecord();
-        job.rollback();
+        job.rollbackAttributes();
       });
       equal(user.get('job'), job, 'Job got rollbacked correctly');
       equal(job.get('user'), user, 'Job still has the user');
     });
 
-    test('Rollbacking a created record removes the relationship on both sides - async', function () {
+    test('Rollbacking attributes of created record removes the relationship on both sides - async', function () {
       var stanleysFriend, stanley;
       run(function () {
         stanleysFriend = store.push('user', { id: 2, name: 'Stanley\'s friend' });
         stanley = store.createRecord('user', { bestFriend: stanleysFriend });
       });
       run(function () {
-        stanley.rollback();
+        stanley.rollbackAttributes();
         stanleysFriend.get('bestFriend').then(function (fetchedUser) {
           equal(fetchedUser, null, 'Stanley got rollbacked correctly');
         });
@@ -12006,14 +12006,14 @@ define(
       });
     });
 
-    test('Rollbacking a created record removes the relationship on both sides - sync', function () {
+    test('Rollbacking attributes of created record removes the relationship on both sides - sync', function () {
       var user, job;
       run(function () {
         user = store.push('user', { id: 1, name: 'Stanley' });
         job = store.createRecord('job', { user: user });
       });
       run(function () {
-        job.rollback();
+        job.rollbackAttributes();
       });
       equal(user.get('job'), null, 'Job got rollbacked correctly');
       equal(job.get('user'), null, 'Job does not have user anymore');
@@ -19006,9 +19006,9 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     deepEqual({ name: [undefined, 'Tomster'], likes: ['JavaScript', 'Ember.js'] }, mascot.changedAttributes(), 'attributes has changed');
 
     run(function () {
-      mascot.rollback();
+      mascot.rollbackAttributes();
     });
-    deepEqual({}, mascot.changedAttributes(), 'after rollback there are no changes');
+    deepEqual({}, mascot.changedAttributes(), 'after rollback attributes there are no changes');
   });
 
   test('a DS.Model does not require an attribute type', function () {
@@ -21378,7 +21378,7 @@ define(
 
 
 define(
-  "ember-data/tests/unit/model/rollback-test",
+  "ember-data/tests/unit/model/rollback-attributes-test",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -21390,7 +21390,7 @@ define(
     var env, store, Person, Dog;
     var run = Ember.run;
 
-    module("unit/model/rollback - model.rollback()", {
+    module("unit/model/rollbackAttributes - model.rollbackAttributes()", {
       setup: function () {
         Person = DS.Model.extend({
           firstName: DS.attr(),
@@ -21412,7 +21412,7 @@ define(
       equal(person.get("firstName"), "Thomas");
 
       run(function () {
-        person.rollback();
+        person.rollbackAttributes();
       });
 
       equal(person.get("firstName"), "Tom");
@@ -21429,7 +21429,7 @@ define(
       equal(person.get("firstName"), "Thomas");
 
       run(function () {
-        person.rollback();
+        person.rollbackAttributes();
       });
 
       equal(person.get("firstName"), undefined);
@@ -21459,7 +21459,7 @@ define(
 
         equal(person.get("lastName"), "Dolly");
 
-        person.rollback();
+        person.rollbackAttributes();
 
         equal(person.get("firstName"), "Thomas");
         equal(person.get("lastName"), "Dale");
@@ -21489,7 +21489,7 @@ define(
           equal(person.get("isError"), true);
           deepEqual(person.changedAttributes(), { firstName: ["Tom", "Thomas"] });
 
-          person.rollback();
+          person.rollbackAttributes();
 
           equal(person.get("firstName"), "Tom");
           equal(person.get("isError"), false);
@@ -21498,7 +21498,7 @@ define(
       });
     });
 
-    test("a deleted record can be rollbacked if it fails to save, record arrays are updated accordingly", function () {
+    test("a deleted record's attributes can be rollbacked if it fails to save, record arrays are updated accordingly", function () {
       expect(7);
       env.adapter.deleteRecord = function (store, type, snapshot) {
         return Ember.RSVP.reject();
@@ -21521,7 +21521,7 @@ define(
           equal(person.get("isError"), true);
           equal(person.get("isDeleted"), true);
           run(function () {
-            person.rollback();
+            person.rollbackAttributes();
           });
           equal(person.get("isDeleted"), false);
           equal(person.get("isError"), false);
@@ -21531,7 +21531,7 @@ define(
       });
     });
 
-    test("new record can be rollbacked", function () {
+    test("new record's attributes can be rollbacked", function () {
       var person;
 
       run(function () {
@@ -21541,14 +21541,14 @@ define(
       equal(person.get("isNew"), true, "must be new");
       equal(person.get("isDirty"), true, "must be dirty");
 
-      Ember.run(person, "rollback");
+      Ember.run(person, "rollbackAttributes");
 
       equal(person.get("isNew"), false, "must not be new");
       equal(person.get("isDirty"), false, "must not be dirty");
       equal(person.get("isDeleted"), true, "must be deleted");
     });
 
-    test("invalid new record can be rollbacked", function () {
+    test("invalid new record's attributes can be rollbacked", function () {
       var person;
       var adapter = DS.RESTAdapter.extend({
         ajax: function (url, type, hash) {
@@ -21584,7 +21584,7 @@ define(
       run(function () {
         person.save().then(null, async(function () {
           equal(person.get("isValid"), false);
-          person.rollback();
+          person.rollbackAttributes();
 
           equal(person.get("isNew"), false, "must not be new");
           equal(person.get("isDirty"), false, "must not be dirty");
@@ -21593,7 +21593,7 @@ define(
       });
     });
 
-    test("deleted record can be rollbacked", function () {
+    test("deleted record's attributes can be rollbacked", function () {
       var person, people;
 
       run(function () {
@@ -21608,14 +21608,14 @@ define(
       equal(person.get("isDeleted"), true, "must be deleted");
 
       run(function () {
-        person.rollback();
+        person.rollbackAttributes();
       });
       equal(people.get("length"), 1, "the rollbacked record should appear again in the record array");
       equal(person.get("isDeleted"), false, "must not be deleted");
       equal(person.get("isDirty"), false, "must not be dirty");
     });
 
-    test("invalid record can be rollbacked", function () {
+    test("invalid record's attributes can be rollbacked", function () {
       Dog = DS.Model.extend({
         name: DS.attr()
       });
@@ -21651,7 +21651,7 @@ define(
 
       run(function () {
         dog.save().then(null, async(function () {
-          dog.rollback();
+          dog.rollbackAttributes();
 
           equal(dog.get("name"), "Pluto");
           ok(dog.get("isValid"));
@@ -21659,7 +21659,7 @@ define(
       });
     });
 
-    test("invalid record is rolled back to correct state after set", function () {
+    test("invalid record's attributes rolled back to correct state after set", function () {
       Dog = DS.Model.extend({
         name: DS.attr(),
         breed: DS.attr()
@@ -21708,7 +21708,7 @@ define(
           equal(dog.get("breed"), "planet");
 
           run(function () {
-            dog.rollback();
+            dog.rollbackAttributes();
           });
 
           equal(dog.get("name"), "Pluto");
@@ -21718,7 +21718,7 @@ define(
       });
     });
 
-    test("when destroying a record setup the record state to invalid, the record can be rollbacked", function () {
+    test("when destroying a record setup the record state to invalid, the record's attributes can be rollbacked", function () {
       Dog = DS.Model.extend({
         name: DS.attr()
       });
@@ -21753,14 +21753,61 @@ define(
           equal(dog.get("isValid"), false, "must not be valid");
           ok(dog.get("errors.length") > 0, "must have errors");
 
-          dog.rollback();
+          dog.rollbackAttributes();
 
-          equal(dog.get("isError"), false, "must not be error after `rollback`");
-          equal(dog.get("isDeleted"), false, "must not be deleted after `rollback`");
-          equal(dog.get("isValid"), true, "must be valid after `rollback`");
+          equal(dog.get("isError"), false, "must not be error after `rollbackAttributes`");
+          equal(dog.get("isDeleted"), false, "must not be deleted after `rollbackAttributes`");
+          equal(dog.get("isValid"), true, "must be valid after `rollbackAttributes`");
           ok(dog.get("errors.length") === 0, "must not have errors");
         }));
       });
+    });
+  }
+);
+
+
+define(
+  "ember-data/tests/unit/model/rollback-test",
+  ["exports"],
+  function(__exports__) {
+    "use strict";
+
+    function __es6_export__(name, value) {
+      __exports__[name] = value;
+    }
+
+    var env, store, Person;
+    var run = Ember.run;
+
+    module("unit/model/rollback - model.rollback() - deprecated", {
+      setup: function () {
+        Person = DS.Model.extend({
+          firstName: DS.attr(),
+          lastName: DS.attr()
+        });
+
+        env = setupStore({ person: Person });
+        store = env.store;
+      }
+    });
+
+    test("changes to attributes can be rolled back - deprecated", function () {
+      var person;
+      run(function () {
+        person = store.push("person", { id: 1, firstName: "Tom", lastName: "Dale" });
+        person.set("firstName", "Thomas");
+      });
+
+      equal(person.get("firstName"), "Thomas");
+
+      expectDeprecation(function () {
+        run(function () {
+          person.rollback();
+        });
+      }, "Using model.rollback() has been deprecated. Use model.rollbackAttributes() to discard any unsaved changes to a model.");
+
+      equal(person.get("firstName"), "Tom");
+      equal(person.get("isDirty"), false);
     });
   }
 );
@@ -25481,6 +25528,13 @@ if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/tests/unit/model/relationships');
 test('ember-data/tests/unit/model/relationships/record-array-test.js should pass jshint', function() { 
   ok(true, 'ember-data/tests/unit/model/relationships/record-array-test.js should pass jshint.'); 
+});
+
+}
+if (!QUnit.urlParams.nojshint) {
+module('JSHint - ember-data/tests/unit/model');
+test('ember-data/tests/unit/model/rollback-attributes-test.js should pass jshint', function() { 
+  ok(true, 'ember-data/tests/unit/model/rollback-attributes-test.js should pass jshint.'); 
 });
 
 }

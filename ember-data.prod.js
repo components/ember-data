@@ -5457,7 +5457,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.56196f656b'
+      VERSION: '1.0.0-beta.20+canary.1dc03cadc6'
     });
 
     if (Ember.libraries) {
@@ -6797,7 +6797,7 @@
         },
 
         rollback: function (internalModel) {
-          internalModel.rollback();
+          internalModel.rollbackAttributes();
           internalModel.triggerLater('ready');
         }
       },
@@ -7154,7 +7154,7 @@
           },
 
           rollback: function (internalModel) {
-            internalModel.rollback();
+            internalModel.rollbackAttributes();
             internalModel.triggerLater('ready');
           },
 
@@ -9113,7 +9113,7 @@
         }
       },
 
-      rollback: function () {
+      rollbackAttributes: function () {
         var dirtyKeys = Ember.keys(this._attributes);
 
         this._attributes = Ember.create(null);
@@ -9463,7 +9463,7 @@
         @method _changedKeys
          Ember Data has 3 buckets for storing the value of an attribute on an internalModel.
          `_data` holds all of the attributes that have been acknowledged by
-        a backend via the adapter. When rollback is called on a model all
+        a backend via the adapter. When rollbackAttributes is called on a model all
         attributes will revert to the record's state in `_data`.
          `_attributes` holds any change the user has made to an attribute
         that has not been acknowledged by the adapter. Any values in
@@ -9940,8 +9940,8 @@
       /**
         Marks the record as deleted but does not save it. You must call
         `save` afterwards if you want to persist it. You might use this
-        method if you want to allow the user to still `rollback()` a
-        delete after it was made.
+        method if you want to allow the user to still `rollbackAttributes()`
+        after a delete it was made.
          Example
          ```app/routes/model/delete.js
         import Ember from 'ember';
@@ -9954,7 +9954,7 @@
               this.controller.get('model').save();
             },
             undo: function() {
-              this.controller.get('model').rollback();
+              this.controller.get('model').rollbackAttributes();
             }
           }
         });
@@ -10077,9 +10077,27 @@
         record.get('name'); // 'Untitled Document'
         ```
          @method rollback
+        @deprecated Use `addAttributes()` instead
       */
       rollback: function () {
-        this._internalModel.rollback();
+                this.rollbackAttributes();
+      },
+
+      /**
+        If the model `isDirty` this function will discard any unsaved
+        changes. If the model `isNew` it will be removed from the store.
+         Example
+         ```javascript
+        record.get('name'); // 'Untitled Document'
+        record.set('name', 'Doc 1');
+        record.get('name'); // 'Doc 1'
+        record.rollbackAttributes();
+        record.get('name'); // 'Untitled Document'
+        ```
+         @method rollbackAttributes
+      */
+      rollbackAttributes: function () {
+        this._internalModel.rollbackAttributes();
       },
 
       /*
