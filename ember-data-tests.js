@@ -5008,7 +5008,7 @@ define(
     */
 
     function getStore() {
-      return lookup('store:application');
+      return lookup('store:main');
     }
 
     function lookup(thing) {
@@ -5063,7 +5063,7 @@ define(
       }, 'Specifying a custom Store for Ember Data on your global namespace as `App.Store` ' + 'has been deprecated. Please use `App.ApplicationStore` instead.');
 
       run(function () {
-        ok(lookup('store:application').get('isCustomButDeprecated'), 'the custom store was instantiated');
+        ok(lookup('store:main').get('isCustomButDeprecated'), 'the custom store was instantiated');
       });
 
       var fooController = lookup('controller:foo');
@@ -5294,7 +5294,7 @@ define(
             name: DS.attr()
           });
         });
-        store = App.__container__.lookup('store:application');
+        store = App.__container__.lookup('store:main');
       },
       teardown: function () {
         run(App, 'destroy');
@@ -5352,7 +5352,7 @@ define(
             postNotes: DS.hasMany('post_note')
           });
         });
-        store = App.__container__.lookup('store:application');
+        store = App.__container__.lookup('store:main');
       },
 
       teardown: function () {
@@ -5556,7 +5556,7 @@ define(
           });
         });
 
-        store = App.__container__.lookup('store:application');
+        store = App.__container__.lookup('store:main');
         debugAdapter = App.__container__.lookup('data-adapter:main');
 
         debugAdapter.reopen({
@@ -6745,7 +6745,7 @@ define(
 
       run(function () {
         json_main = serializer_main.extractSingle(env.store, env.store.modelFor('home-planet'), json_hash_main);
-        equal(env.store.hasRecordForId('super-villain', '1'), true, 'superVillain should exist in store:application');
+        equal(env.store.hasRecordForId('super-villain', '1'), true, 'superVillain should exist in store:main');
       });
 
       run(function () {
@@ -16943,7 +16943,7 @@ define(
     });
 
     test("The store should be registered into a container.", function () {
-      ok(container.lookup("store:application") instanceof Store, "the custom store is instantiated");
+      ok(container.lookup("store:main") instanceof Store, "the custom store is instantiated");
     });
 
     test("The store should be registered into the container as a service.", function () {
@@ -16997,16 +16997,6 @@ define(
       serializer1 = container.lookup("serializer:-rest");
       serializer2 = container.lookup("serializer:-rest");
       notEqual(serializer1, serializer2);
-    });
-
-    test("the deprecated store:main is resolved as store:application", function () {
-      var deprecated;
-      var valid = container.lookup("store:application");
-      expectDeprecation(function () {
-        deprecated = container.lookup("store:main");
-      });
-
-      ok(deprecated.constructor === valid.constructor, "they should resolve to the same thing");
     });
 
     test("adapters are not returned as singletons - each lookup should return a different instance", function () {
