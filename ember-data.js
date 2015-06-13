@@ -5482,7 +5482,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.bfda2ea746'
+      VERSION: '1.0.0-beta.20+canary.d913d2fd8a'
     });
 
     if (Ember.libraries) {
@@ -5513,6 +5513,9 @@
       registry.optionsForType("serializer", { singleton: false });
       registry.optionsForType("adapter", { singleton: false });
 
+      // This will get deprecated later in the instace
+      // initializer. However we register it here so we have access to
+      // application.Store in the instance initializer.
       if (application && application.Store) {
         registry.register("store:application", application.Store);
       }
@@ -5692,9 +5695,9 @@
       @param {Ember.Registry} registry
     */
     function ember$data$lib$initializers$store$injections$$initializeStoreInjections(registry) {
-      registry.injection('controller', 'store', 'store:main');
-      registry.injection('route', 'store', 'store:main');
-      registry.injection('data-adapter', 'store', 'store:main');
+      registry.injection('controller', 'store', 'service:store');
+      registry.injection('route', 'store', 'service:store');
+      registry.injection('data-adapter', 'store', 'service:store');
     }var ember$data$lib$system$promise$proxies$$Promise = Ember.RSVP.Promise;
     var ember$data$lib$system$promise$proxies$$get = Ember.get;
 
@@ -13075,6 +13078,7 @@
 
     var ember$data$lib$system$store$$default = ember$data$lib$system$store$$Store;
     var ember$data$lib$instance$initializers$initialize$store$service$$default = ember$data$lib$instance$initializers$initialize$store$service$$initializeStoreService;
+
     /**
      Configures a registry for use with an Ember-Data
      store.
@@ -13103,16 +13107,30 @@
           container = registry;
         }
       }
-      if (registry.has('store:application')) {
-        var customStoreFactory = container.lookupFactory('store:application');
-        registry.register('store:main', customStoreFactory);
-      } else {
-        registry.register('store:main', ember$data$lib$system$store$$default);
-      }
 
       // Eagerly generate the store so defaultStore is populated.
-      var store = container.lookup('store:main');
-      registry.register('service:store', store, { instantiate: false });
+      var store;
+      if (registry.has("store:main")) {
+        Ember.deprecate("Registering a custom store as `store:main` or defining a store in app/store.js has been deprecated. Please move you store to `service:store` or define your custom store in `app/services/store.js`");
+        store = container.lookup("store:main");
+      } else {
+        var storeMainProxy = new ember$data$lib$system$container$proxy$$default(registry);
+        storeMainProxy.registerDeprecations([{ deprecated: "store:main", valid: "service:store" }]);
+      }
+
+      if (registry.has("store:application")) {
+        Ember.deprecate("Registering a custom store as `store:application` or defining a store in app/stores/application.js has been deprecated. Please move you store to `service:store` or define your custom store in `app/services/store.js`");
+        store = container.lookup("store:application");
+      } else {
+        var storeApplicationProxy = new ember$data$lib$system$container$proxy$$default(registry);
+        storeApplicationProxy.registerDeprecations([{ deprecated: "store:application", valid: "service:store" }]);
+      }
+
+      if (store) {
+        registry.register("service:store", store, { instantiate: false });
+      } else {
+        registry.register("service:store", ember$data$lib$system$store$$default);
+      }
     }
     var ember$data$lib$setup$container$$default = ember$data$lib$setup$container$$setupContainer;
     function ember$data$lib$setup$container$$setupContainer(registry, application) {
@@ -13143,7 +13161,7 @@
       This code initializes Ember-Data onto an Ember application.
 
       If an Ember.js developer defines a subclass of DS.Store on their application,
-      as `App.ApplicationStore` (or via a module system that resolves to `store:application`)
+      as `App.StoreService` (or via a module system that resolves to `service:store`)
       this code will automatically instantiate it and make it available on the
       router.
 
@@ -13152,7 +13170,7 @@
 
       For example, imagine an Ember.js application with the following classes:
 
-      App.ApplicationStore = DS.Store.extend({
+      App.StoreService = DS.Store.extend({
         adapter: 'custom'
       });
 
