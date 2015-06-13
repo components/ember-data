@@ -5457,7 +5457,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.088f89637f'
+      VERSION: '1.0.0-beta.20+canary.bfda2ea746'
     });
 
     if (Ember.libraries) {
@@ -6343,7 +6343,7 @@
         record.get('name'); // 'Untitled Document'
         ```
          @method rollback
-        @deprecated Use `addAttributes()` instead
+        @deprecated Use `rollbackAttributes()` instead
       */
       rollback: function () {
                 this.rollbackAttributes();
