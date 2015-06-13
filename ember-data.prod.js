@@ -5458,7 +5458,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.c8f39fd439'
+      VERSION: '1.0.0-beta.20+canary.0d59b9ccac'
     });
 
     if (Ember.libraries) {
@@ -12665,7 +12665,7 @@
         @return {Array}
       */
       pushMany: function (modelName, datas) {
-                var length = datas.length;
+                        var length = datas.length;
         var result = new Array(length);
 
         for (var i = 0; i < length; i++) {
