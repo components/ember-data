@@ -225,6 +225,7 @@
         @param {DS.Store} store
         @param {DS.Model} type
         @param {String} sinceToken
+        @param {DS.SnapshotRecordArray} snapshotRecordArray
         @return {Promise} promise
       */
       findAll: null,
@@ -5482,7 +5483,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.d913d2fd8a'
+      VERSION: '1.0.0-beta.20+canary.f44a9f1ebc'
     });
 
     if (Ember.libraries) {
@@ -6276,12 +6277,13 @@
         });
         ```
          @method destroyRecord
+        @param {Object} options
         @return {Promise} a promise that will be resolved when the adapter returns
         successfully or rejected if the adapter returns with an error.
       */
-      destroyRecord: function () {
+      destroyRecord: function (options) {
         this.deleteRecord();
-        return this.save();
+        return this.save(options);
       },
 
       /**
@@ -6422,13 +6424,14 @@
         });
         ```
         @method save
+        @param {Object} options
         @return {Promise} a promise that will be resolved when the adapter returns
         successfully or rejected if the adapter returns with an error.
       */
-      save: function () {
+      save: function (options) {
         var model = this;
         return ember$data$lib$system$promise$proxies$$PromiseObject.create({
-          promise: this._internalModel.save().then(function () {
+          promise: this._internalModel.save(options).then(function () {
             return model;
           })
         });
@@ -8116,11 +8119,43 @@
 
       return serializer;
     }
+    function ember$data$lib$system$snapshot$record$array$$SnapshotRecordArray(recordArray, meta, adapterOptions) {
+      this._snapshots = null;
+      this._recordArray = recordArray;
+      this.length = recordArray.get('length');
+      this.meta = meta;
+      this.adapterOptions = adapterOptions;
+    }
+
+    /**
+      @method fromRecordArray
+      @private
+      @static
+      @param {DS.RecordArray} recordArray
+      @param {Object} adapterOptions
+      @return SnapshotRecordArray
+    */
+    ember$data$lib$system$snapshot$record$array$$SnapshotRecordArray.fromRecordArray = function (recordArray, adapterOptions) {
+      var meta = recordArray.get('meta');
+      return new ember$data$lib$system$snapshot$record$array$$SnapshotRecordArray(recordArray, meta, adapterOptions);
+    };
+
+    ember$data$lib$system$snapshot$record$array$$SnapshotRecordArray.prototype.snapshots = function () {
+      if (this._snapshots) {
+        return this._snapshots;
+      }
+      var recordArray = this._recordArray;
+      this._snapshots = recordArray.invoke('createSnapshot');
+
+      return this._snapshots;
+    };
+
+    var ember$data$lib$system$snapshot$record$array$$default = ember$data$lib$system$snapshot$record$array$$SnapshotRecordArray;
 
     var ember$data$lib$system$store$finders$$Promise = Ember.RSVP.Promise;
     var ember$data$lib$system$store$finders$$map = Ember.EnumerableUtils.map;
-    function ember$data$lib$system$store$finders$$_find(adapter, store, typeClass, id, internalModel) {
-      var snapshot = internalModel.createSnapshot();
+    function ember$data$lib$system$store$finders$$_find(adapter, store, typeClass, id, internalModel, options) {
+      var snapshot = internalModel.createSnapshot(options);
       var promise = adapter.find(store, typeClass, id, snapshot);
       var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, internalModel.type.modelName);
       var label = "DS: Handle Adapter#find of " + typeClass + " with id: " + id;
@@ -8224,9 +8259,11 @@
       }, null, "DS: Extract payload of " + internalModel + " : " + relationship.type);
     }
 
-    function ember$data$lib$system$store$finders$$_findAll(adapter, store, typeClass, sinceToken) {
-      var promise = adapter.findAll(store, typeClass, sinceToken);
+    function ember$data$lib$system$store$finders$$_findAll(adapter, store, typeClass, sinceToken, options) {
+      var adapterOptions = options && options.adapterOptions;
       var modelName = typeClass.modelName;
+      var snapshotArray = ember$data$lib$system$snapshot$record$array$$default.fromRecordArray(store.peekAll(modelName), adapterOptions);
+      var promise = adapter.findAll(store, typeClass, sinceToken, snapshotArray);
       var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, modelName);
       var label = "DS: Handle Adapter#findAll of " + typeClass;
 
@@ -10434,11 +10471,11 @@
         this.send("deleteRecord");
       },
 
-      save: function () {
+      save: function (options) {
         var promiseLabel = "DS: Model#save " + this;
         var resolver = Ember.RSVP.defer(promiseLabel);
 
-        this.store.scheduleSave(this, resolver);
+        this.store.scheduleSave(this, resolver, options);
         return resolver.promise;
       },
 
@@ -10528,8 +10565,11 @@
         @method createSnapshot
         @private
       */
-      createSnapshot: function () {
-        return new ember$data$lib$system$snapshot$$default(this);
+      createSnapshot: function (options) {
+        var adapterOptions = options && options.adapterOptions;
+        var snapshot = new ember$data$lib$system$snapshot$$default(this);
+        snapshot.adapterOptions = adapterOptions;
+        return snapshot;
       },
 
       /**
@@ -11558,7 +11598,7 @@
         }
 
         if (internalModel.isEmpty()) {
-          fetchedInternalModel = this.scheduleFetch(internalModel);
+          fetchedInternalModel = this.scheduleFetch(internalModel, options);
           //TODO double check about reloading
         } else if (internalModel.isLoading()) {
           fetchedInternalModel = internalModel._loadingPromise;
@@ -11592,8 +11632,9 @@
         @private
         @param {InternalModel} internalModel model
         @return {Promise} promise
-      */
-      fetchRecord: function (internalModel) {
+       */
+      // TODO rename this to have an underscore
+      fetchRecord: function (internalModel, options) {
         var typeClass = internalModel.type;
         var id = internalModel.id;
         var adapter = this.adapterFor(typeClass.modelName);
@@ -11601,7 +11642,7 @@
         Ember.assert("You tried to find a record but you have no adapter (for " + typeClass + ")", adapter);
         Ember.assert("You tried to find a record but your adapter (for " + typeClass + ") does not implement 'find'", typeof adapter.find === "function");
 
-        var promise = ember$data$lib$system$store$finders$$_find(adapter, this, typeClass, id, internalModel);
+        var promise = ember$data$lib$system$store$finders$$_find(adapter, this, typeClass, id, internalModel, options);
         return promise;
       },
 
@@ -11612,7 +11653,7 @@
         return ember$data$lib$system$store$$Promise.all(ember$data$lib$system$store$$map(internalModels, this.scheduleFetch, this));
       },
 
-      scheduleFetch: function (internalModel) {
+      scheduleFetch: function (internalModel, options) {
         var typeClass = internalModel.type;
 
         if (internalModel._loadingPromise) {
@@ -11620,18 +11661,19 @@
         }
 
         var resolver = Ember.RSVP.defer("Fetching " + typeClass + "with id: " + internalModel.id);
-        var recordResolverPair = {
+        var pendingFetchItem = {
           record: internalModel,
-          resolver: resolver
+          resolver: resolver,
+          options: options
         };
         var promise = resolver.promise;
 
         internalModel.loadingData(promise);
 
         if (!this._pendingFetch.get(typeClass)) {
-          this._pendingFetch.set(typeClass, [recordResolverPair]);
+          this._pendingFetch.set(typeClass, [pendingFetchItem]);
         } else {
-          this._pendingFetch.get(typeClass).push(recordResolverPair);
+          this._pendingFetch.get(typeClass).push(pendingFetchItem);
         }
         Ember.run.scheduleOnce("afterRender", this, this.flushAllPendingFetches);
 
@@ -11647,19 +11689,19 @@
         this._pendingFetch = ember$data$lib$system$map$$Map.create();
       },
 
-      _flushPendingFetchForType: function (recordResolverPairs, typeClass) {
+      _flushPendingFetchForType: function (pendingFetchItems, typeClass) {
         var store = this;
         var adapter = store.adapterFor(typeClass.modelName);
         var shouldCoalesce = !!adapter.findMany && adapter.coalesceFindRequests;
-        var records = Ember.A(recordResolverPairs).mapBy("record");
+        var records = Ember.A(pendingFetchItems).mapBy("record");
 
         function _fetchRecord(recordResolverPair) {
-          recordResolverPair.resolver.resolve(store.fetchRecord(recordResolverPair.record));
+          recordResolverPair.resolver.resolve(store.fetchRecord(recordResolverPair.record, recordResolverPair.options)); // TODO adapter options
         }
 
         function resolveFoundRecords(records) {
           ember$data$lib$system$store$$forEach(records, function (record) {
-            var pair = Ember.A(recordResolverPairs).findBy("record", record);
+            var pair = Ember.A(pendingFetchItems).findBy("record", record);
             if (pair) {
               var resolver = pair.resolver;
               resolver.resolve(record);
@@ -11689,7 +11731,7 @@
 
         function rejectRecords(records, error) {
           ember$data$lib$system$store$$forEach(records, function (record) {
-            var pair = Ember.A(recordResolverPairs).findBy("record", record);
+            var pair = Ember.A(pendingFetchItems).findBy("record", record);
             if (pair) {
               var resolver = pair.resolver;
               resolver.reject(error);
@@ -11697,8 +11739,8 @@
           });
         }
 
-        if (recordResolverPairs.length === 1) {
-          _fetchRecord(recordResolverPairs[0]);
+        if (pendingFetchItems.length === 1) {
+          _fetchRecord(pendingFetchItems[0]);
         } else if (shouldCoalesce) {
 
           // TODO: Improve records => snapshots => records => snapshots
@@ -11721,14 +11763,14 @@
             if (ids.length > 1) {
               ember$data$lib$system$store$finders$$_findMany(adapter, store, typeClass, ids, requestedRecords).then(resolveFoundRecords).then(makeMissingRecordsRejector(requestedRecords)).then(null, makeRecordsRejector(requestedRecords));
             } else if (ids.length === 1) {
-              var pair = Ember.A(recordResolverPairs).findBy("record", groupOfRecords[0]);
+              var pair = Ember.A(pendingFetchItems).findBy("record", groupOfRecords[0]);
               _fetchRecord(pair);
             } else {
               Ember.assert("You cannot return an empty array from adapter's method groupRecordsForFindMany", false);
             }
           });
         } else {
-          ember$data$lib$system$store$$forEach(recordResolverPairs, _fetchRecord);
+          ember$data$lib$system$store$$forEach(pendingFetchItems, _fetchRecord);
         }
       },
 
@@ -11961,13 +12003,14 @@
         the array with records of that type.
          @method findAll
         @param {String} modelName
+        @param {Object} options
         @return {DS.AdapterPopulatedRecordArray}
       */
-      findAll: function (modelName) {
+      findAll: function (modelName, options) {
         Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string");
         var typeClass = this.modelFor(modelName);
 
-        return this._fetchAll(typeClass, this.peekAll(modelName));
+        return this._fetchAll(typeClass, this.peekAll(modelName), options);
       },
 
       /**
@@ -11977,7 +12020,7 @@
         @param {DS.RecordArray} array
         @return {Promise} promise
       */
-      _fetchAll: function (typeClass, array) {
+      _fetchAll: function (typeClass, array, options) {
         var adapter = this.adapterFor(typeClass.modelName);
         var sinceToken = this.typeMapFor(typeClass).metadata.since;
 
@@ -11986,7 +12029,7 @@
         Ember.assert("You tried to load all records but you have no adapter (for " + typeClass + ")", adapter);
         Ember.assert("You tried to load all records but your adapter does not implement `findAll`", typeof adapter.findAll === "function");
 
-        return ember$data$lib$system$promise$proxies$$promiseArray(ember$data$lib$system$store$finders$$_findAll(adapter, this, typeClass, sinceToken));
+        return ember$data$lib$system$promise$proxies$$promiseArray(ember$data$lib$system$store$finders$$_findAll(adapter, this, typeClass, sinceToken, options));
       },
 
       /**
@@ -12236,12 +12279,16 @@
         @private
         @param {InternalModel} internalModel
         @param {Resolver} resolver
+        @param {Object} options
       */
-      scheduleSave: function (internalModel, resolver) {
-        var snapshot = internalModel.createSnapshot();
+      scheduleSave: function (internalModel, resolver, options) {
+        var snapshot = internalModel.createSnapshot(options);
         internalModel.flushChangedAttributes();
         internalModel.adapterWillCommit();
-        this._pendingSave.push([snapshot, resolver]);
+        this._pendingSave.push({
+          snapshot: snapshot,
+          resolver: resolver
+        });
         ember$data$lib$system$store$$once(this, "flushPendingSave");
       },
 
@@ -12255,9 +12302,9 @@
         var pending = this._pendingSave.slice();
         this._pendingSave = [];
 
-        ember$data$lib$system$store$$forEach(pending, function (tuple) {
-          var snapshot = tuple[0];
-          var resolver = tuple[1];
+        ember$data$lib$system$store$$forEach(pending, function (pendingItem) {
+          var snapshot = pendingItem.snapshot;
+          var resolver = pendingItem.resolver;
           var record = snapshot._internalModel;
           var adapter = this.adapterFor(record.type.modelName);
           var operation;
