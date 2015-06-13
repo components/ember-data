@@ -5258,17 +5258,19 @@ define(
       teardown: function () {}
     });
 
-    test('typeKey is deprecated', function () {
-      expectDeprecation(function () {
-        return Post.typeKey;
+    if (Ember.platform.hasPropertyAccessors) {
+      test('typeKey is deprecated', function () {
+        expectDeprecation(function () {
+          return Post.typeKey;
+        });
       });
-    });
 
-    test('setting typeKey is not allowed', function () {
-      throws(function () {
-        Post.typeKey = 'hello';
+      test('setting typeKey is not allowed', function () {
+        throws(function () {
+          Post.typeKey = 'hello';
+        });
       });
-    });
+    }
   }
 );
 
@@ -8119,7 +8121,7 @@ define(
         }).then(function (records) {
           expectAssertion(function () {
             records.post.set('user', records.comment);
-          }, /You can only add a 'user' record to this relationship/);
+          }, /You cannot add a record of type 'comment' to the 'post.user' relationship/);
         });
       });
     });
@@ -8150,7 +8152,7 @@ define(
 
           expectAssertion(function () {
             comment.set('message', records.user);
-          }, /You cannot add a 'user' record to the 'comment.message'. You can only add a 'message' record to this relationship./);
+          }, /You cannot add a record of type 'user' to the 'comment.message' relationship \(only 'message' allowed\)/);
         });
       });
     });
@@ -9471,7 +9473,7 @@ define(
         Ember.RSVP.all([env.store.find('post', 1), env.store.find('post', 2)]).then(function (records) {
           expectAssertion(function () {
             records[0].get('comments').pushObject(records[1]);
-          }, /You cannot add 'post' records to the post.comments relationship \(only 'comment' allowed\)/);
+          }, /You cannot add a record of type 'post' to the 'post.comments' relationship \(only 'comment' allowed\)/);
         });
       });
     });
@@ -9504,7 +9506,7 @@ define(
 
           expectAssertion(function () {
             records.messages.pushObject(records.anotherUser);
-          }, /You cannot add 'user' records to the user.messages relationship \(only 'message' allowed\)/);
+          }, /You cannot add a record of type 'user' to the 'user.messages' relationship \(only 'message' allowed\)/);
         });
       });
     });
@@ -12132,7 +12134,7 @@ define(
       run(function () {
         expectAssertion(function () {
           user.set('bestMessage', video);
-        }, /You can only add a 'message' record to this relationship/);
+        }, /You cannot add a record of type 'not-message' to the 'user.bestMessage' relationship \(only 'message' allowed\)/);
       });
     });
 
@@ -12176,7 +12178,7 @@ define(
         run(function () {
           expectAssertion(function () {
             user.set('bestMessage', video);
-          }, /You can only add a 'message' record to this relationship/);
+          }, /You cannot add a record of type 'not-message' to the 'user.bestMessage' relationship \(only 'message' allowed\)/);
         });
       } finally {
         Ember.MODEL_FACTORY_INJECTIONS = injectionValue;
@@ -12300,7 +12302,7 @@ define(
         user.get('messages').then(function (fetchedMessages) {
           expectAssertion(function () {
             fetchedMessages.pushObject(notMessage);
-          }, /You cannot add 'not-message' records to the user\.messages relationship \(only 'message' allowed\)/);
+          }, /You cannot add a record of type 'not-message' to the 'user.messages' relationship \(only 'message' allowed\)/);
         });
       });
     });
@@ -12347,7 +12349,7 @@ define(
           user.get('messages').then(function (fetchedMessages) {
             expectAssertion(function () {
               fetchedMessages.pushObject(notMessage);
-            }, /You cannot add 'not-message' records to the user\.messages relationship \(only 'message' allowed\)/);
+            }, /You cannot add a record of type 'not-message' to the 'user.messages' relationship \(only 'message' allowed\)/);
           });
         });
       } finally {
@@ -17087,24 +17089,26 @@ define(
       });
     });
 
-    test("snapshot.constructor is unique and deprecated", function () {
-      expect(4);
+    if (Ember.platform.hasPropertyAccessors) {
+      test("snapshot.constructor is unique and deprecated", function () {
+        expect(4);
 
-      run(function () {
-        var comment = env.store.push("comment", { id: 1, body: "This is comment" });
-        var post = env.store.push("post", { id: 2, title: "Hello World" });
-        var commentSnapshot = comment._createSnapshot();
-        var postSnapshot = post._createSnapshot();
+        run(function () {
+          var comment = env.store.push("comment", { id: 1, body: "This is comment" });
+          var post = env.store.push("post", { id: 2, title: "Hello World" });
+          var commentSnapshot = comment._createSnapshot();
+          var postSnapshot = post._createSnapshot();
 
-        expectDeprecation(function () {
-          equal(commentSnapshot.constructor.modelName, "comment", "constructor.modelName is unique per type");
-        });
+          expectDeprecation(function () {
+            equal(commentSnapshot.constructor.modelName, "comment", "constructor.modelName is unique per type");
+          });
 
-        expectDeprecation(function () {
-          equal(postSnapshot.constructor.modelName, "post", "constructor.modelName is unique per type");
+          expectDeprecation(function () {
+            equal(postSnapshot.constructor.modelName, "post", "constructor.modelName is unique per type");
+          });
         });
       });
-    });
+    }
 
     test("snapshot.attr() does not change when record changes", function () {
       expect(2);
@@ -17155,7 +17159,7 @@ define(
 
         var changes = snapshot.changedAttributes();
 
-        deepEqual(changes, { title: ["Hello World", "Hello World!"] }, "changed attributes are returned correctly");
+        deepEqual(changes.title, ["Hello World", "Hello World!"], "changed attributes are returned correctly");
       });
     });
 
@@ -17671,18 +17675,20 @@ define(
       });
     });
 
-    test("snapshot.typeKey is deprecated", function () {
-      expect(1);
+    if (Ember.platform.hasPropertyAccessors) {
+      test("snapshot.typeKey is deprecated", function () {
+        expect(1);
 
-      run(function () {
-        var post = env.store.push("post", { id: 1, title: "Hello World" });
-        var snapshot = post._createSnapshot();
+        run(function () {
+          var post = env.store.push("post", { id: 1, title: "Hello World" });
+          var snapshot = post._createSnapshot();
 
-        expectDeprecation(function () {
-          return snapshot.typeKey;
+          expectDeprecation(function () {
+            return snapshot.typeKey;
+          });
         });
       });
-    });
+    }
   }
 );
 
@@ -18969,7 +18975,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
   });
 
   test('changedAttributes() return correct values', function () {
-    expect(3);
+    expect(4);
 
     var Mascot = DS.Model.extend({
       name: DS.attr('string'),
@@ -18987,18 +18993,20 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
       mascot = store.push('mascot', { id: 1, likes: 'JavaScript', isMascot: true });
     });
 
-    deepEqual({}, mascot.changedAttributes(), 'there are no initial changes');
+    equal(Ember.keys(mascot.changedAttributes()).length, 0, 'there are no initial changes');
     run(function () {
       mascot.set('name', 'Tomster'); // new value
       mascot.set('likes', 'Ember.js'); // changed value
       mascot.set('isMascot', true); // same value
     });
-    deepEqual({ name: [undefined, 'Tomster'], likes: ['JavaScript', 'Ember.js'] }, mascot.changedAttributes(), 'attributes has changed');
+    var changedAttributes = mascot.changedAttributes();
+    deepEqual(changedAttributes.name, [undefined, 'Tomster']);
+    deepEqual(changedAttributes.likes, ['JavaScript', 'Ember.js']);
 
     run(function () {
       mascot.rollbackAttributes();
     });
-    deepEqual({}, mascot.changedAttributes(), 'after rollback attributes there are no changes');
+    equal(Ember.keys(mascot.changedAttributes()).length, 0, 'after rollback attributes there are no changes');
   });
 
   test('a DS.Model does not require an attribute type', function () {
@@ -21472,18 +21480,18 @@ define(
         person.set("firstName", "Thomas");
       });
 
-      deepEqual(person.changedAttributes(), { firstName: ["Tom", "Thomas"] });
+      deepEqual(person.changedAttributes().firstName, ["Tom", "Thomas"]);
 
       run(function () {
         person.save().then(null, function () {
           equal(person.get("isError"), true);
-          deepEqual(person.changedAttributes(), { firstName: ["Tom", "Thomas"] });
+          deepEqual(person.changedAttributes().firstName, ["Tom", "Thomas"]);
 
           person.rollbackAttributes();
 
           equal(person.get("firstName"), "Tom");
           equal(person.get("isError"), false);
-          deepEqual(person.changedAttributes(), {});
+          equal(Ember.keys(person.changedAttributes()).length, 0);
         });
       });
     });
@@ -24646,6 +24654,123 @@ define(
 );
 
 
+// TODO enable import once this is possible
+// import { assertPolymorphicType } from "ember-data/utils";
+
+define("ember-data/tests/unit/utils-test", ["exports"], function(__exports__) {
+  "use strict";
+
+  function __es6_export__(name, value) {
+    __exports__[name] = value;
+  }
+
+  var env, User, Message, Post, Person, Video, Medium;
+
+  module('unit/utils', {
+    setup: function () {
+      Person = DS.Model.extend();
+      User = DS.Model.extend({
+        messages: DS.hasMany('message')
+      });
+
+      Message = DS.Model.extend();
+      Post = Message.extend({
+        medias: DS.hasMany('medium')
+      });
+
+      Medium = Ember.Mixin.create();
+      Video = DS.Model.extend(Medium);
+
+      env = setupStore({
+        user: User,
+        person: Person,
+        message: Message,
+        post: Post,
+        video: Video
+      });
+
+      env.registry.register('mixin:medium', Medium);
+    },
+
+    teardown: function () {
+      Ember.run(env.container, 'destroy');
+    }
+  });
+
+  test('assertPolymorphicType works for subclasses', function () {
+    var user, post, person;
+
+    Ember.run(function () {
+      user = env.store.push('user', { id: 1, messages: [] });
+      post = env.store.push('post', { id: 1 });
+      person = env.store.push('person', { id: 1 });
+    });
+
+    // TODO un-comment once we test the assertPolymorphicType directly
+    // var relationship = user.relationshipFor('messages');
+    // user = user._internalModel;
+    // post = post._internalModel;
+    // person = person._internalModel;
+
+    try {
+      Ember.run(function () {
+        user.get('messages').addObject(post);
+      });
+
+      // TODO enable once we can do "import { assertPolymorphicType } from "ember-data/utils"
+      // assertPolymorphicType(user, relationship, post);
+    } catch (e) {
+      ok(false, 'should not throw an error');
+    }
+
+    expectAssertion(function () {
+      Ember.run(function () {
+        user.get('messages').addObject(person);
+      });
+
+      // TODO enable once we can do "import { assertPolymorphicType } from "ember-data/utils"
+      // assertPolymorphicType(user, relationship, person);
+    }, 'You cannot add a record of type \'person\' to the \'user.messages\' relationship (only \'message\' allowed)');
+  });
+
+  test('assertPolymorphicType works for mixins', function () {
+    var post, video, person;
+
+    Ember.run(function () {
+      post = env.store.push('post', { id: 1 });
+      video = env.store.push('video', { id: 1 });
+      person = env.store.push('person', { id: 1 });
+    });
+
+    // TODO un-comment once we test the assertPolymorphicType directly
+    // var relationship = post.relationshipFor('medias');
+    // post = post._internalModel;
+    // video = video._internalModel;
+    // person = person._internalModel;
+
+    try {
+      Ember.run(function () {
+        post.get('medias').addObject(video);
+      });
+
+      // TODO enable once we can do "import { assertPolymorphicType } from "ember-data/utils"
+      // assertPolymorphicType(post, relationship, video);
+    } catch (e) {
+      ok(false, 'should not throw an error');
+    }
+
+    expectAssertion(function () {
+      Ember.run(function () {
+        post.get('medias').addObject(person);
+      });
+
+      // TODO enable once we can do "import { assertPolymorphicType } from "ember-data/utils"
+      // assertPolymorphicType(post, relationship, person);
+    }, 'You cannot add a record of type \'person\' to the \'post.medias\' relationship (only \'medium\' allowed)');
+  });
+});
+
+
 if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/lib');
 test('ember-data/lib/adapters.js should pass jshint', function() { 
@@ -25105,6 +25230,13 @@ if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/lib/transforms');
 test('ember-data/lib/transforms/string.js should pass jshint', function() { 
   ok(true, 'ember-data/lib/transforms/string.js should pass jshint.'); 
+});
+
+}
+if (!QUnit.urlParams.nojshint) {
+module('JSHint - ember-data/lib');
+test('ember-data/lib/utils.js should pass jshint', function() { 
+  ok(true, 'ember-data/lib/utils.js should pass jshint.'); 
 });
 
 }
@@ -25658,6 +25790,13 @@ if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/tests/unit/transform');
 test('ember-data/tests/unit/transform/string-test.js should pass jshint', function() { 
   ok(true, 'ember-data/tests/unit/transform/string-test.js should pass jshint.'); 
+});
+
+}
+if (!QUnit.urlParams.nojshint) {
+module('JSHint - ember-data/tests/unit');
+test('ember-data/tests/unit/utils-test.js should pass jshint', function() { 
+  ok(true, 'ember-data/tests/unit/utils-test.js should pass jshint.'); 
 });
 
 }//# sourceMappingURL=ember-data-tests.map

@@ -5457,7 +5457,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.a8443b1189'
+      VERSION: '1.0.0-beta.20+canary.088f89637f'
     });
 
     if (Ember.libraries) {
@@ -6303,10 +6303,12 @@
         var oldData = ember$data$lib$system$model$model$$get(this._internalModel, '_data');
         var newData = ember$data$lib$system$model$model$$get(this._internalModel, '_attributes');
         var diffData = Ember.create(null);
-        var prop;
 
-        for (prop in newData) {
-          diffData[prop] = [oldData[prop], newData[prop]];
+        var newDataKeys = Ember.keys(newData);
+
+        for (var i = 0, _length = newDataKeys.length; i < _length; i++) {
+          var key = newDataKeys[i];
+          diffData[key] = [oldData[key], newData[key]];
         }
 
         return diffData;
@@ -9448,6 +9450,47 @@
       }
     });
 
+    /**
+      Assert that `addedRecord` has a valid type so it can be added to the
+      relationship of the `record`.
+
+      The assert basically checks if the `addedRecord` can be added to the
+      relationship (specified via `relationshipMeta`) of the `record`.
+
+      This utility should only be used internally, as both record parameters must
+      be an InternalModel and the `relationshipMeta` needs to be the meta
+      information about the relationship, retrieved via
+      `record.relationshipFor(key)`.
+
+      @param {InternalModel} record
+      @param {RelationshipMeta} relationshipMeta retrieved via
+             `record.relationshipFor(key)`
+      @param {InternalModel} addedRecord record which
+             should be added/set for the relationship
+    */
+    var ember$data$lib$utils$$assertPolymorphicType = function (record, relationshipMeta, addedRecord) {
+      var addedType = addedRecord.type.modelName;
+      var recordType = record.type.modelName;
+      var key = relationshipMeta.key;
+      var typeClass = record.store.modelFor(relationshipMeta.type);
+
+      var assertionMessage = 'You cannot add a record of type \'' + addedType + '\' to the \'' + recordType + '.' + key + '\' relationship (only \'' + typeClass.modelName + '\' allowed)';
+
+      ember$lib$main$$default.assert(assertionMessage, ember$data$lib$utils$$checkPolymorphic(typeClass, addedRecord));
+    };
+
+    function ember$data$lib$utils$$checkPolymorphic(typeClass, addedRecord) {
+      if (typeClass.__isMixin) {
+        //TODO Need to do this in order to support mixins, should convert to public api
+        //once it exists in Ember
+        return typeClass.__mixin.detect(addedRecord.type.PrototypeMixin);
+      }
+      if (ember$lib$main$$default.MODEL_FACTORY_INJECTIONS) {
+        typeClass = typeClass.superclass;
+      }
+      return typeClass.detect(addedRecord.type);
+    }
+
     var ember$data$lib$system$relationships$state$has$many$$map = Ember.EnumerableUtils.map;
 
     var ember$data$lib$system$relationships$state$has$many$$ManyRelationship = function (store, record, inverseKey, relationshipMeta) {
@@ -9537,8 +9580,8 @@
     };
 
     ember$data$lib$system$relationships$state$has$many$$ManyRelationship.prototype.notifyRecordRelationshipAdded = function (record, idx) {
-      var typeClass = this.store.modelFor(this.relationshipMeta.type);
-      
+      ember$data$lib$utils$$assertPolymorphicType(this.record, this.relationshipMeta, record);
+
       this.record.notifyHasManyAdded(this.key, record, idx);
     };
 
@@ -9717,8 +9760,9 @@
       if (this.members.has(newRecord)) {
         return;
       }
-      var typeClass = this.store.modelFor(this.relationshipMeta.type);
-      
+
+      ember$data$lib$utils$$assertPolymorphicType(this.record, this.relationshipMeta, newRecord);
+
       if (this.inverseRecord) {
         this.removeRecord(this.inverseRecord);
       }
@@ -9979,11 +10023,12 @@
         @return {Object} All changed attributes of the current snapshot
       */
       changedAttributes: function () {
-        var prop;
         var changedAttributes = Ember.create(null);
+        var changedAttributeKeys = Ember.keys(this._changedAttributes);
 
-        for (prop in this._changedAttributes) {
-          changedAttributes[prop] = Ember.copy(this._changedAttributes[prop]);
+        for (var i = 0, _length = changedAttributeKeys.length; i < _length; i++) {
+          var key = changedAttributeKeys[i];
+          changedAttributes[key] = Ember.copy(this._changedAttributes[key]);
         }
 
         return changedAttributes;
