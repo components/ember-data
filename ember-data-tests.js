@@ -18018,16 +18018,16 @@ define(
         run(function () {
           store.fetch('car', 1);
         });
-      }, 'Using store.fetch() has been deprecated. Use store.fetchById for fetching individual records or store.fetchAll for collections');
+      }, 'Using store.fetch() has been deprecated. Use store.findRecord for fetching individual records or store.fetchAll for collections');
     });
 
-    module('integration/store - fetchById', {
+    module('integration/store - findRecord { reload: true }', {
       setup: function () {
         initializeStore(DS.RESTAdapter.extend());
       }
     });
 
-    test('Using store#fetchById on non existing record fetches it from the server', function () {
+    test('Using store#findRecord on non existing record fetches it from the server', function () {
       expect(2);
 
       ajaxResponse({
@@ -18042,13 +18042,13 @@ define(
       ok(!car, 'Car with id=20 should not exist');
 
       run(function () {
-        store.fetchById('car', 20).then(function (car) {
+        store.findRecord('car', 20, { reload: true }).then(function (car) {
           equal(car.get('make'), 'BMCW', 'Car with id=20 is now loaded');
         });
       });
     });
 
-    test('Using store#fetchById on existing record reloads it', function () {
+    test('Using store#findRecord on existing record reloads it', function () {
       expect(2);
       var car;
 
@@ -18070,7 +18070,7 @@ define(
       equal(car.get('make'), 'BMC');
 
       run(function () {
-        store.fetchById('car', 1).then(function (car) {
+        store.findRecord('car', 1, { reload: true }).then(function (car) {
           equal(car.get('make'), 'BMCW');
         });
       });
@@ -18091,7 +18091,7 @@ define(
         run(function () {
           store.fetchAll('car');
         });
-      }, 'Using store.fetchAll(type) has been deprecated. Use store.findAll(type) to retrieve all records for a given type.');
+      }, 'Using store.fetchAll(type) has been deprecated. Use store.findAll(type, { reload: true }) to retrieve all records for a given type.');
     });
 
     test('Using store#findAll with no records triggers a query', function () {
@@ -18208,7 +18208,7 @@ define(
       ok(car.get('isEmpty'), 'Car with id=20 should be empty');
 
       run(function () {
-        store.fetchById('car', 20).then(function (car) {
+        store.findRecord('car', 20, { reload: true }).then(function (car) {
           equal(car.get('make'), 'BMCW', 'Car with id=20 is now loaded');
         });
       });
