@@ -5458,7 +5458,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.73cb924722'
+      VERSION: '1.0.0-beta.20+canary.c093d72d8c'
     });
 
     if (Ember.libraries) {
@@ -7670,26 +7670,12 @@
         @type {Ember.MapWithDefault}
         @private
       */
-      errorsByAttributeName: Ember.reduceComputed('content', {
-        initialValue: function () {
-          return ember$data$lib$system$map$$MapWithDefault.create({
-            defaultValue: function () {
-              return Ember.A();
-            }
-          });
-        },
-
-        addedItem: function (errors, error) {
-          errors.get(error.attribute).pushObject(error);
-
-          return errors;
-        },
-
-        removedItem: function (errors, error) {
-          errors.get(error.attribute).removeObject(error);
-
-          return errors;
-        }
+      errorsByAttributeName: Ember.computed(function () {
+        return ember$data$lib$system$map$$MapWithDefault.create({
+          defaultValue: function () {
+            return Ember.A();
+          }
+        });
       }),
 
       /**
@@ -7789,6 +7775,7 @@
 
         messages = this._findOrCreateMessages(attribute, messages);
         ember$data$lib$system$model$errors$$get(this, 'content').addObjects(messages);
+        ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName').get(attribute).addObjects(messages);
 
         this.notifyPropertyChange(attribute);
         this.enumerableContentDidChange();
@@ -7848,6 +7835,7 @@
 
         var content = ember$data$lib$system$model$errors$$get(this, 'content').rejectBy('attribute', attribute);
         ember$data$lib$system$model$errors$$get(this, 'content').setObjects(content);
+        ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName')["delete"](attribute);
 
         this.notifyPropertyChange(attribute);
         this.enumerableContentDidChange();
@@ -7880,6 +7868,7 @@
         }
 
         ember$data$lib$system$model$errors$$get(this, 'content').clear();
+        ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName').clear();
         this.enumerableContentDidChange();
 
         this.trigger('becameValid');
