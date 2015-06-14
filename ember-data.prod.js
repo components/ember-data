@@ -5458,7 +5458,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.c093d72d8c'
+      VERSION: '1.0.0-beta.20+canary.c4376c0744'
     });
 
     if (Ember.libraries) {
@@ -12886,7 +12886,7 @@
 
       //If record objects were given to push directly, uncommon, not sure whether we should actually support
       if (id instanceof ember$data$lib$system$model$$default) {
-        data[key] = id._internalModel;
+                data[key] = id._internalModel;
         return;
       }
 

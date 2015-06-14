@@ -5483,7 +5483,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.c093d72d8c'
+      VERSION: '1.0.0-beta.20+canary.c4376c0744'
     });
 
     if (Ember.libraries) {
@@ -13008,6 +13008,7 @@
 
       //If record objects were given to push directly, uncommon, not sure whether we should actually support
       if (id instanceof ember$data$lib$system$model$$default) {
+        Ember.deprecate("You tried to push a record '" + relationship.parentType + "'' with id '" + Ember.inspect(id) + "' and passed a DS.Model instance as a value for the relationship '" + key + "'. You should instead pass a numerical or string id to represent the record.");
         data[key] = id._internalModel;
         return;
       }
