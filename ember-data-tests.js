@@ -18265,6 +18265,83 @@ define(
 
 
 define(
+  "ember-data/tests/integration/store/query-record-test",
+  ["exports"],
+  function(__exports__) {
+    "use strict";
+
+    function __es6_export__(name, value) {
+      __exports__[name] = value;
+    }
+
+    var Person, store, env;
+    var run = Ember.run;
+
+    module('integration/store/query-record - Query one record with a query hash', {
+      setup: function () {
+        Person = DS.Model.extend({
+          updatedAt: DS.attr('string'),
+          name: DS.attr('string'),
+          firstName: DS.attr('string'),
+          lastName: DS.attr('string')
+        });
+
+        env = setupStore({
+          person: Person
+        });
+        store = env.store;
+      },
+
+      teardown: function () {
+        run(store, 'destroy');
+      }
+    });
+
+    test('It raises an assertion when no type is passed', function () {
+      expectAssertion(function () {
+        store.queryRecord();
+      }, 'You need to pass a type to the store\'s queryRecord method');
+    });
+
+    test('It raises an assertion when no query hash is passed', function () {
+      expectAssertion(function () {
+        store.queryRecord('person');
+      }, 'You need to pass a query hash to the store\'s queryRecord method');
+    });
+
+    test('When a record is requested, the adapter\'s queryRecord method should be called.', function () {
+      expect(1);
+
+      env.registry.register('adapter:person', DS.Adapter.extend({
+        queryRecord: function (store, type, query) {
+          equal(type, Person, 'the query method is called with the correct type');
+          return Ember.RSVP.resolve({ id: 1, name: 'Peter Wagenet' });
+        }
+      }));
+
+      run(function () {
+        store.queryRecord('person', { related: 'posts' });
+      });
+    });
+
+    test('When a record is requested, and the promise is rejected, .queryRecord() is rejected.', function () {
+      env.registry.register('adapter:person', DS.Adapter.extend({
+        queryRecord: function (store, type, query) {
+          return Ember.RSVP.reject();
+        }
+      }));
+
+      run(function () {
+        store.queryRecord('person', {}).then(null, async(function (reason) {
+          ok(true, 'The rejection handler was called');
+        }));
+      });
+    });
+  }
+);
+
+
+define(
   "ember-data/tests/unit/adapter-populated-record-array-test",
   ["exports"],
   function(__exports__) {
@@ -25653,6 +25730,13 @@ if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/tests/integration');
 test('ember-data/tests/integration/store-test.js should pass jshint', function() { 
   ok(true, 'ember-data/tests/integration/store-test.js should pass jshint.'); 
+});
+
+}
+if (!QUnit.urlParams.nojshint) {
+module('JSHint - ember-data/tests/integration/store');
+test('ember-data/tests/integration/store/query-record-test.js should pass jshint', function() { 
+  ok(true, 'ember-data/tests/integration/store/query-record-test.js should pass jshint.'); 
 });
 
 }

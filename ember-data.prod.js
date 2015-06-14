@@ -260,6 +260,38 @@
       findQuery: null,
 
       /**
+        The `queryRecord()` method is invoked when the store is asked for a single
+        record through a query object.
+         In response to `queryRecord()` being called, you should always fetch fresh
+        data. Once found, you can asynchronously call the store's `push()` method
+        to push the record into the store.
+         Here is an example `queryRecord` implementation:
+         Example
+         ```javascript
+        App.ApplicationAdapter = DS.Adapter.extend({
+          queryRecord: function(store, typeClass, query) {
+            var url = [type.typeKey, id].join('/');
+             return new Ember.RSVP.Promise(function(resolve, reject) {
+              jQuery.getJSON(url, query).then(function(data) {
+                Ember.run(null, resolve, data);
+              }, function(jqXHR) {
+                jqXHR.then = null; // tame jQuery's ill mannered promises
+                Ember.run(null, reject, jqXHR);
+              });
+            });
+          }
+        });
+        ```
+         @method queryRecord
+        @param {DS.Store} store
+        @param {subclass of DS.Model} type
+        @param {Object} query
+        @param {String} id
+        @return {Promise} promise
+      */
+      queryRecord: null,
+
+      /**
         If the globally unique IDs for your records should be generated on the client,
         implement the `generateIdForRecord()` method. This method will be invoked
         each time you create a new record, and the value returned from it will be
@@ -3552,6 +3584,22 @@
         return this.extractArray(store, typeClass, payload, id, requestType);
       },
       /**
+        TODO: remove this in a couple of days
+         `extractQueryRecord` is a hook into the extract method used when a
+        call is made to `DS.Store#queryRecord`. By default this method is an
+        alias for [extractSingle](#method_extractSingle).
+         @method extractQueryRecord
+        @param {DS.Store} store
+        @param {DS.Model} typeClass
+        @param {Object} payload
+        @param {(String|Number)} id
+        @param {String} requestType
+        @return {Object} object A hash of deserialized object
+      */
+      extractQueryRecord: function (store, typeClass, payload, id, requestType) {
+        return this.extractSingle(store, typeClass, payload, id, requestType);
+      },
+      /**
         `extractFindMany` is a hook into the extract method used when a
         call is made to `DS.Store#findMany`. By default this method is
         alias for [extractArray](#method_extractArray).
@@ -5458,7 +5506,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.c4376c0744'
+      VERSION: '1.0.0-beta.20+canary.c29b8fd965'
     });
 
     if (Ember.libraries) {
@@ -8255,6 +8303,27 @@
         recordArray.loadRecords(records);
         return recordArray;
       }, null, "DS: Extract payload of findQuery " + typeClass);
+    }
+
+    function ember$data$lib$system$store$finders$$_queryRecord(adapter, store, typeClass, query) {
+      var modelName = typeClass.modelName;
+      var promise = adapter.queryRecord(store, typeClass, query);
+      var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, modelName);
+      var label = "DS: Handle Adapter#queryRecord of " + typeClass;
+
+      promise = ember$data$lib$system$store$finders$$Promise.cast(promise, label);
+      promise = ember$data$lib$system$store$common$$_guard(promise, ember$data$lib$system$store$common$$_bind(ember$data$lib$system$store$common$$_objectIsAlive, store));
+
+      return promise.then(function (adapterPayload) {
+        var record;
+        store._adapterRun(function () {
+          var payload = ember$data$lib$system$store$serializer$response$$normalizeResponseHelper(serializer, store, typeClass, adapterPayload, null, "queryRecord");
+          //TODO Optimize
+          record = ember$data$lib$system$store$serializer$response$$pushPayload(store, payload);
+        });
+
+        return record;
+      }, null, "DS: Extract payload of queryRecord " + typeClass);
     }
     var ember$data$lib$system$record$arrays$record$array$$get = Ember.get;
     var ember$data$lib$system$record$arrays$record$array$$set = Ember.set;
@@ -11898,6 +11967,28 @@
 
                 
         return ember$data$lib$system$promise$proxies$$promiseArray(ember$data$lib$system$store$finders$$_query(adapter, this, typeClass, query, array));
+      },
+
+      /**
+        This method delegates a query to the adapter. This is the one place where
+        adapter-level semantics are exposed to the application.
+         Exposing queries this way seems preferable to creating an abstract query
+        language for all server-side queries, and then require all adapters to
+        implement them.
+         This method returns a promise, which is resolved with a `RecordObject`
+        once the server returns.
+         @method queryRecord
+        @param {String or subclass of DS.Model} type
+        @param {any} query an opaque query to be used by the adapter
+        @return {Promise} promise
+      */
+      queryRecord: function (modelName, query) {
+                        
+        var typeClass = this.modelFor(modelName);
+        var adapter = this.adapterFor(modelName);
+
+                
+        return ember$data$lib$system$promise$proxies$$promiseObject(ember$data$lib$system$store$finders$$_queryRecord(adapter, this, typeClass, query));
       },
 
       /**
