@@ -5531,7 +5531,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.33396f1813'
+      VERSION: '1.0.0-beta.20+canary.06ee365db6'
     });
 
     if (Ember.libraries) {
@@ -11601,7 +11601,7 @@
       */
       fetch: function (modelName, id, preload) {
         Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string");
-        Ember.deprecate("Using store.fetch() has been deprecated. Use store.findRecord for fetching individual records or store.fetchAll for collections");
+        Ember.deprecate("Using store.fetch() has been deprecated. Use store.findRecord for fetching individual records or store.findAll for collections");
         return this.findRecord(modelName, id, { reload: true, preload: preload });
       },
 
