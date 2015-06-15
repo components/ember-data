@@ -1829,6 +1829,80 @@
     }
 
     var ember$data$lib$adapters$rest$adapter$$default = ember$data$lib$adapters$rest$adapter$$RestAdapter;
+
+    var ember$data$lib$adapters$json$api$adapter$$default = ember$data$lib$adapters$rest$adapter$$default.extend({
+      defaultSerializer: '-json-api',
+
+      /**
+        @method ajaxOptions
+        @private
+        @param {String} url
+        @param {String} type The request type GET, POST, PUT, DELETE etc.
+        @param {Object} options
+        @return {Object}
+      */
+      ajaxOptions: function (url, type, options) {
+        var hash = this._super.apply(this, arguments);
+
+        if (hash.contentType) {
+          hash.contentType = 'application/vnd.api+json';
+        }
+
+        var beforeSend = hash.beforeSend;
+        hash.beforeSend = function (xhr) {
+          xhr.setRequestHeader('Accept', 'application/vnd.api+json');
+          if (beforeSend) {
+            beforeSend(xhr);
+          }
+        };
+
+        return hash;
+      },
+
+      /**
+        @method findMany
+        @param {DS.Store} store
+        @param {DS.Model} type
+        @param {Array} ids
+        @param {Array} snapshots
+        @return {Promise} promise
+      */
+      findMany: function (store, type, ids, snapshots) {
+        var url = this.buildURL(type.modelName, ids, snapshots, 'findMany');
+        return this.ajax(url, 'GET', { data: { filter: { id: ids.join(',') } } });
+      },
+
+      /**
+        @method pathForType
+        @param {String} modelName
+        @return {String} path
+      **/
+      pathForType: function (modelName) {
+        var dasherized = Ember.String.dasherize(modelName);
+        return Ember.String.pluralize(dasherized);
+      },
+
+      // TODO: Remove this once we have a better way to override HTTP verbs.
+      /**
+        @method updateRecord
+        @param {DS.Store} store
+        @param {DS.Model} type
+        @param {DS.Snapshot} snapshot
+        @return {Promise} promise
+      */
+      updateRecord: function (store, type, snapshot) {
+        var data = {};
+        var serializer = store.serializerFor(type.modelName);
+
+        serializer.serializeIntoHash(data, type, snapshot, { includeId: true });
+
+        var id = snapshot.id;
+        var url = this.buildURL(type.modelName, id, snapshot, 'updateRecord');
+
+        return this.ajax(url, 'PATCH', { data: data });
+      }
+    });
+
     var ember$lib$main$$default = Ember;
 
     var ember$inflector$lib$lib$system$inflector$$capitalize = ember$lib$main$$default.String.capitalize;
@@ -5525,7 +5599,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.b158135caa'
+      VERSION: '1.0.0-beta.20+canary.7b2c70d5e4'
     });
 
     if (Ember.libraries) {
@@ -5538,6 +5612,311 @@
     Ember.merge(Ember.FEATURES, ember$data$lib$core$$EMBER_DATA_FEATURES);
 
     var ember$data$lib$core$$default = ember$data$lib$core$$DS;
+
+    var ember$data$lib$serializers$json$api$serializer$$dasherize = Ember.String.dasherize;
+    var ember$data$lib$serializers$json$api$serializer$$map = Ember.EnumerableUtils.map;
+
+    var ember$data$lib$serializers$json$api$serializer$$default = ember$data$lib$serializers$json$serializer$$default.extend({
+
+      /*
+        @method _normalizeRelationshipDataHelper
+        @param {Object} relationshipDataHash
+        @return {Object}
+        @private
+      */
+      _normalizeRelationshipDataHelper: function (relationshipDataHash) {
+        var type = this.modelNameFromPayloadKey(relationshipDataHash.type);
+        relationshipDataHash.type = type;
+        return relationshipDataHash;
+      },
+
+      /*
+        @method _normalizeResourceHelper
+        @param {Object} resourceHash
+        @return {Object}
+        @private
+      */
+      _normalizeResourceHelper: function (resourceHash) {
+        var modelName = this.modelNameFromPayloadKey(resourceHash.type);
+        var modelClass = this.store.modelFor(modelName);
+        var serializer = this.store.serializerFor(modelName);
+
+        var _serializer$normalize = serializer.normalize(modelClass, resourceHash);
+
+        var data = _serializer$normalize.data;
+
+        return data;
+      },
+
+      /**
+        @method _normalizeResponse
+        @param {DS.Store} store
+        @param {DS.Model} primaryModelClass
+        @param {Object} payload
+        @param {String|Number} id
+        @param {String} requestType
+        @param {Boolean} isSingle
+        @return {Object} JSON-API Document
+        @private
+      */
+      _normalizeResponse: function (store, primaryModelClass, payload, id, requestType, isSingle) {
+
+        if (Ember.typeOf(payload.data) === 'object') {
+          payload.data = this._normalizeResourceHelper(payload.data);
+        } else {
+          payload.data = ember$data$lib$serializers$json$api$serializer$$map(payload.data, this._normalizeResourceHelper, this);
+        }
+
+        if (Ember.typeOf(payload.included) === 'array') {
+          payload.included = ember$data$lib$serializers$json$api$serializer$$map(payload.included, this._normalizeResourceHelper, this);
+        }
+
+        return payload;
+      },
+
+      /*
+        @method extractAttributes
+        @param {DS.Model} modelClass
+        @param {Object} resourceHash
+        @return {Object}
+      */
+      extractAttributes: function (modelClass, resourceHash) {
+        var _this = this;
+
+        var attributes = {};
+
+        if (resourceHash.attributes) {
+          modelClass.eachAttribute(function (key) {
+            var attributeKey = _this.keyForAttribute(key, 'deserialize');
+            if (resourceHash.attributes.hasOwnProperty(attributeKey)) {
+              attributes[key] = resourceHash.attributes[attributeKey];
+            }
+          });
+        }
+
+        return attributes;
+      },
+
+      /*
+        @method extractRelationship
+        @param {Object} relationshipHash
+        @return {Object}
+      */
+      extractRelationship: function (relationshipHash) {
+
+        if (Ember.typeOf(relationshipHash.data) === 'object') {
+          relationshipHash.data = this._normalizeRelationshipDataHelper(relationshipHash.data);
+        }
+
+        if (Ember.typeOf(relationshipHash.data) === 'array') {
+          relationshipHash.data = ember$data$lib$serializers$json$api$serializer$$map(relationshipHash.data, this._normalizeRelationshipDataHelper, this);
+        }
+
+        return relationshipHash;
+      },
+
+      /*
+        @method extractRelationships
+        @param {Object} modelClass
+        @param {Object} resourceHash
+        @return {Object}
+      */
+      extractRelationships: function (modelClass, resourceHash) {
+        var _this2 = this;
+
+        var relationships = {};
+
+        if (resourceHash.relationships) {
+          modelClass.eachRelationship(function (key, relationshipMeta) {
+            var relationshipKey = _this2.keyForRelationship(key, relationshipMeta.kind, 'deserialize');
+            if (resourceHash.relationships.hasOwnProperty(relationshipKey)) {
+
+              var relationshipHash = resourceHash.relationships[relationshipKey];
+              relationships[key] = _this2.extractRelationship(relationshipHash);
+            }
+          });
+        }
+
+        return relationships;
+      },
+
+      /*
+        @method extractType
+        @param {DS.Model} modelClass
+        @param {Object} resourceHash
+        @return {String}
+        @private
+      */
+      _extractType: function (modelClass, resourceHash) {
+        return this.modelNameFromPayloadKey(resourceHash.type);
+      },
+
+      /**
+        @method modelNameFromPayloadKey
+        @param {String} key
+        @return {String} the model's modelName
+      */
+      modelNameFromPayloadKey: function (key) {
+        return ember$inflector$lib$lib$system$string$$singularize(ember$data$lib$system$normalize$model$name$$default(key));
+      },
+
+      /**
+        @method payloadKeyFromModelName
+        @param {String} modelName
+        @return {String}
+      */
+      payloadKeyFromModelName: function (modelName) {
+        return ember$inflector$lib$lib$system$string$$pluralize(modelName);
+      },
+
+      /*
+        @method normalize
+        @param {DS.Model} modelClass
+        @param {Object} resourceHash
+        @return {String}
+      */
+      normalize: function (modelClass, resourceHash) {
+        this.normalizeUsingDeclaredMapping(modelClass, resourceHash);
+
+        var data = {
+          id: this.extractId(resourceHash),
+          type: this._extractType(modelClass, resourceHash),
+          attributes: this.extractAttributes(modelClass, resourceHash),
+          relationships: this.extractRelationships(modelClass, resourceHash)
+        };
+
+        this.applyTransforms(modelClass, data.attributes);
+
+        return { data: data };
+      },
+
+      /**
+       @method keyForAttribute
+       @param {String} key
+       @param {String} method
+       @return {String} normalized key
+      */
+      keyForAttribute: function (key, method) {
+        return ember$data$lib$serializers$json$api$serializer$$dasherize(key);
+      },
+
+      /**
+       @method keyForRelationship
+       @param {String} key
+       @param {String} typeClass
+       @param {String} method
+       @return {String} normalized key
+      */
+      keyForRelationship: function (key, typeClass, method) {
+        return ember$data$lib$serializers$json$api$serializer$$dasherize(key);
+      },
+
+      /**
+        @method serialize
+        @param {DS.Snapshot} snapshot
+        @param {Object} options
+        @return {Object} json
+      */
+      serialize: function (snapshot, options) {
+        var data = this._super.apply(this, arguments);
+        data.type = this.payloadKeyFromModelName(snapshot.modelName);
+        return { data: data };
+      },
+
+      /**
+       @method serializeAttribute
+       @param {DS.Snapshot} snapshot
+       @param {Object} json
+       @param {String} key
+       @param {Object} attribute
+      */
+      serializeAttribute: function (snapshot, json, key, attribute) {
+        var type = attribute.type;
+
+        if (this._canSerialize(key)) {
+          json.attributes = json.attributes || {};
+
+          var value = snapshot.attr(key);
+          if (type) {
+            var transform = this.transformFor(type);
+            value = transform.serialize(value);
+          }
+
+          var payloadKey = this._getMappedKey(key);
+          if (payloadKey === key) {
+            payloadKey = this.keyForAttribute(key, 'serialize');
+          }
+
+          json.attributes[payloadKey] = value;
+        }
+      },
+
+      /**
+       @method serializeBelongsTo
+       @param {DS.Snapshot} snapshot
+       @param {Object} json
+       @param {Object} relationship
+      */
+      serializeBelongsTo: function (snapshot, json, relationship) {
+        var key = relationship.key;
+
+        if (this._canSerialize(key)) {
+          var belongsTo = snapshot.belongsTo(key);
+          if (belongsTo !== undefined) {
+
+            json.relationships = json.relationships || {};
+
+            var payloadKey = this._getMappedKey(key);
+            if (payloadKey === key) {
+              payloadKey = this.keyForRelationship(key, 'belongsTo', 'serialize');
+            }
+
+            var data = null;
+            if (belongsTo) {
+              data = {
+                type: this.payloadKeyFromModelName(belongsTo.modelName),
+                id: belongsTo.id
+              };
+            }
+
+            json.relationships[payloadKey] = { data: data };
+          }
+        }
+      },
+
+      /**
+       @method serializeHasMany
+       @param {DS.Snapshot} snapshot
+       @param {Object} json
+       @param {Object} relationship
+      */
+      serializeHasMany: function (snapshot, json, relationship) {
+        var key = relationship.key;
+
+        if (this._shouldSerializeHasMany(snapshot, key, relationship)) {
+          var hasMany = snapshot.hasMany(key);
+          if (hasMany !== undefined) {
+
+            json.relationships = json.relationships || {};
+
+            var payloadKey = this._getMappedKey(key);
+            if (payloadKey === key && this.keyForRelationship) {
+              payloadKey = this.keyForRelationship(key, 'hasMany', 'serialize');
+            }
+
+            var data = ember$data$lib$serializers$json$api$serializer$$map(hasMany, function (item) {
+              return {
+                type: item.modelName,
+                id: item.id
+              };
+            });
+
+            json.relationships[payloadKey] = { data: data };
+          }
+        }
+      }
+    });
+
     var ember$data$lib$initializers$store$$default = ember$data$lib$initializers$store$$initializeStore;
 
     /**
@@ -5570,6 +5949,9 @@
       registry.register("serializer:-default", ember$data$lib$serializers$json$serializer$$default);
       registry.register("serializer:-rest", ember$data$lib$serializers$rest$serializer$$default);
       registry.register("adapter:-rest", ember$data$lib$adapters$rest$adapter$$default);
+
+      registry.register("adapter:-json-api", ember$data$lib$adapters$json$api$adapter$$default);
+      registry.register("serializer:-json-api", ember$data$lib$serializers$json$api$serializer$$default);
     }
 
     var ember$data$lib$transforms$base$$default = Ember.Object.extend({
@@ -15040,6 +15422,9 @@
 
     ember$data$lib$core$$default.RESTSerializer = ember$data$lib$serializers$rest$serializer$$default;
     ember$data$lib$core$$default.JSONSerializer = ember$data$lib$serializers$json$serializer$$default;
+
+    ember$data$lib$core$$default.JSONAPIAdapter = ember$data$lib$adapters$json$api$adapter$$default;
+    ember$data$lib$core$$default.JSONAPISerializer = ember$data$lib$serializers$json$api$serializer$$default;
 
     ember$data$lib$core$$default.Transform = ember$data$lib$transforms$base$$default;
     ember$data$lib$core$$default.DateTransform = ember$data$lib$transforms$date$$default;
