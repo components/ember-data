@@ -5868,7 +5868,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.aaeb60957d'
+      VERSION: '1.0.0-beta.20+canary.cbdd832522'
     });
 
     if (Ember.libraries) {
@@ -6611,8 +6611,34 @@
          @property isDirty
         @type {Boolean}
         @readOnly
+        @deprecated
       */
-      isDirty: ember$data$lib$system$model$model$$retrieveFromCurrentState,
+      isDirty: Ember.computed('currentState.isDirty', function () {
+        Ember.deprecate('DS.Model#isDirty has been deprecated please use hasDirtyAttributes instead');
+        return this.get('currentState.isDirty');
+      }),
+      /**
+        If this property is `true` the record is in the `dirty` state. The
+        record has local changes that have not yet been saved by the
+        adapter. This includes records that have been created (but not yet
+        saved) or deleted.
+         Example
+         ```javascript
+        var record = store.createRecord('model');
+        record.get('hasDirtyAttributes'); // true
+         store.find('model', 1).then(function(model) {
+          model.get('hasDirtyAttributes'); // false
+          model.set('foo', 'some value');
+          model.get('hasDirtyAttributes'); // true
+        });
+        ```
+         @property hasDirtyAttributes
+        @type {Boolean}
+        @readOnly
+      */
+      hasDirtyAttributes: Ember.computed('currentState.isDirty', function () {
+        return this.get('currentState.isDirty');
+      }),
       /**
         If this property is `true` the record is in the `saving` state. A
         record enters the saving state when `save` is called, but the
@@ -8702,8 +8728,8 @@
       getRecordFilterValues: function (record) {
         return {
           isNew: record.get('isNew'),
-          isModified: record.get('isDirty') && !record.get('isNew'),
-          isClean: !record.get('isDirty')
+          isModified: record.get('hasDirtyAttributes') && !record.get('isNew'),
+          isClean: !record.get('hasDirtyAttributes')
         };
       },
 
@@ -8711,7 +8737,7 @@
         var color = 'black';
         if (record.get('isNew')) {
           color = 'green';
-        } else if (record.get('isDirty')) {
+        } else if (record.get('hasDirtyAttributes')) {
           color = 'blue';
         }
         return color;
@@ -8720,7 +8746,7 @@
       observeRecord: function (record, recordUpdated) {
         var releaseMethods = Ember.A();
         var self = this;
-        var keysToObserve = Ember.A(['id', 'isNew', 'isDirty']);
+        var keysToObserve = Ember.A(['id', 'isNew', 'hasDirtyAttributes']);
 
         record.eachAttribute(function (key) {
           keysToObserve.push(key);
@@ -11157,7 +11183,7 @@
       isEmpty: ember$data$lib$system$model$internal$model$$retrieveFromCurrentState("isEmpty"),
       isLoading: ember$data$lib$system$model$internal$model$$retrieveFromCurrentState("isLoading"),
       isLoaded: ember$data$lib$system$model$internal$model$$retrieveFromCurrentState("isLoaded"),
-      isDirty: ember$data$lib$system$model$internal$model$$retrieveFromCurrentState("isDirty"),
+      hasDirtyAttributes: ember$data$lib$system$model$internal$model$$retrieveFromCurrentState("hasDirtyAttributes"),
       isSaving: ember$data$lib$system$model$internal$model$$retrieveFromCurrentState("isSaving"),
       isDeleted: ember$data$lib$system$model$internal$model$$retrieveFromCurrentState("isDeleted"),
       isNew: ember$data$lib$system$model$internal$model$$retrieveFromCurrentState("isNew"),
@@ -14187,7 +14213,7 @@
           expand: true
         }, {
           name: 'Flags',
-          properties: ['isLoaded', 'isDirty', 'isSaving', 'isDeleted', 'isError', 'isNew', 'isValid']
+          properties: ['isLoaded', 'hasDirtyAttributes', 'isSaving', 'isDeleted', 'isError', 'isNew', 'isValid']
         }];
 
         return {

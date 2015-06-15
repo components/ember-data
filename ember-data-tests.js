@@ -2795,7 +2795,7 @@ define(
 
     function assertClean(promise) {
       return promise.then(async(function (record) {
-        equal(record.get("isDirty"), false, "The record is now clean");
+        equal(record.get("hasDirtyAttributes"), false, "The record is now clean");
         return record;
       }));
     }
@@ -2920,8 +2920,8 @@ define(
         tom.set("name", "Michael Phelps");
         yehuda.set("name", "Usain Bolt");
 
-        ok(tom.get("isDirty"), "tom is dirty");
-        ok(yehuda.get("isDirty"), "yehuda is dirty");
+        ok(tom.get("hasDirtyAttributes"), "tom is dirty");
+        ok(yehuda.get("hasDirtyAttributes"), "yehuda is dirty");
 
         assertClean(tom.save()).then(async(function (record) {
           equal(record, tom, "The record is correct");
@@ -2974,8 +2974,8 @@ define(
         people.tom.set("name", "Tom Dale");
         people.yehuda.set("name", "Yehuda Katz");
 
-        ok(people.tom.get("isDirty"), "tom is dirty");
-        ok(people.yehuda.get("isDirty"), "yehuda is dirty");
+        ok(people.tom.get("hasDirtyAttributes"), "tom is dirty");
+        ok(people.yehuda.get("hasDirtyAttributes"), "yehuda is dirty");
 
         assertClean(people.tom.save());
         assertClean(people.yehuda.save());
@@ -3223,7 +3223,7 @@ define(
           equal(passedVerb, "POST");
           deepEqual(passedHash.data, { post: { id: "some-uuid", name: "The Parley Letter" } });
 
-          equal(post.get("isDirty"), false, "the post isn't dirty anymore");
+          equal(post.get("hasDirtyAttributes"), false, "the post isn't dirty anymore");
           equal(post.get("name"), "The Parley Letter", "the post was updated");
         }));
       });
@@ -3256,7 +3256,7 @@ define(
           deepEqual(passedHash.data, { post: { name: "The Parley Letter" } });
 
           equal(post.get("id"), "1", "the post has the updated ID");
-          equal(post.get("isDirty"), false, "the post isn't dirty anymore");
+          equal(post.get("hasDirtyAttributes"), false, "the post isn't dirty anymore");
           equal(post.get("name"), "Dat Parley Letter", "the post was updated");
         }));
       });
@@ -3275,7 +3275,7 @@ define(
         deepEqual(passedHash.data, { post: { name: "The Parley Letter" } });
 
         equal(post.get("id"), "1", "the post has the updated ID");
-        equal(post.get("isDirty"), false, "the post isn't dirty anymore");
+        equal(post.get("hasDirtyAttributes"), false, "the post isn't dirty anymore");
         equal(post.get("name"), "Dat Parley Letter", "the post was updated");
       }));
     });
@@ -3301,7 +3301,7 @@ define(
 
       run(function () {
         comment.save().then(async(function (comment) {
-          equal(comment.get("isDirty"), false, "the post isn't dirty anymore");
+          equal(comment.get("hasDirtyAttributes"), false, "the post isn't dirty anymore");
           equal(comment.get("name"), "Dat Parley Letter", "the post was updated");
           equal(comment.get("post"), post, "the post is still set");
         }));
@@ -3580,7 +3580,7 @@ define(
         equal(passedVerb, "PUT");
         deepEqual(passedHash.data, { post: { name: "The Parley Letter" } });
 
-        equal(post.get("isDirty"), false, "the post isn't dirty anymore");
+        equal(post.get("hasDirtyAttributes"), false, "the post isn't dirty anymore");
         equal(post.get("name"), "The Parley Letter", "the post was updated");
       }));
     });
@@ -3619,7 +3619,7 @@ define(
         equal(passedVerb, "PUT");
         deepEqual(passedHash.data, { post: { name: "The Parley Letter" } });
 
-        equal(post.get("isDirty"), false, "the post isn't dirty anymore");
+        equal(post.get("hasDirtyAttributes"), false, "the post isn't dirty anymore");
         equal(post.get("name"), "Dat Parley Letter", "the post was updated");
       }));
     });
@@ -3639,7 +3639,7 @@ define(
         equal(passedVerb, "PUT");
         deepEqual(passedHash.data, { post: { name: "The Parley Letter" } });
 
-        equal(post.get("isDirty"), false, "the post isn't dirty anymore");
+        equal(post.get("hasDirtyAttributes"), false, "the post isn't dirty anymore");
         equal(post.get("name"), "Dat Parley Letter", "the post was updated");
       }));
     });
@@ -3658,7 +3658,7 @@ define(
           deepEqual(passedHash.data, { post: { name: "The Parley Letter" } });
 
           equal(post.get("id"), "1", "the post has the updated ID");
-          equal(post.get("isDirty"), false, "the post isn't dirty anymore");
+          equal(post.get("hasDirtyAttributes"), false, "the post isn't dirty anymore");
           equal(post.get("name"), "Dat Parley Letter", "the post was updated");
 
           var comment = store.peekRecord("comment", 1);
@@ -3685,7 +3685,7 @@ define(
         equal(passedVerb, "PUT");
         deepEqual(passedHash.data, { post: { name: "The Parley Letter" } });
 
-        equal(post.get("isDirty"), false, "the post isn't dirty anymore");
+        equal(post.get("hasDirtyAttributes"), false, "the post isn't dirty anymore");
         equal(post.get("name"), "Dat Parley Letter", "the post was updated");
 
         var comment = store.peekRecord("comment", 1);
@@ -3761,7 +3761,7 @@ define(
         equal(passedVerb, "DELETE");
         equal(passedHash, undefined);
 
-        equal(post.get("isDirty"), false, "the post isn't dirty anymore");
+        equal(post.get("hasDirtyAttributes"), false, "the post isn't dirty anymore");
         equal(post.get("isDeleted"), true, "the post is now deleted");
       }));
     });
@@ -3800,7 +3800,7 @@ define(
         equal(passedVerb, "DELETE");
         equal(passedHash, undefined);
 
-        equal(post.get("isDirty"), false, "the post isn't dirty anymore");
+        equal(post.get("hasDirtyAttributes"), false, "the post isn't dirty anymore");
         equal(post.get("isDeleted"), true, "the post is now deleted");
 
         var comment = store.peekRecord("comment", 1);
@@ -3823,7 +3823,7 @@ define(
         equal(passedVerb, "DELETE");
         equal(passedHash, undefined);
 
-        equal(post.get("isDirty"), false, "the original post isn't dirty anymore");
+        equal(post.get("hasDirtyAttributes"), false, "the original post isn't dirty anymore");
         equal(post.get("isDeleted"), true, "the original post is now deleted");
 
         var newPost = store.peekRecord("post", 2);
@@ -5065,10 +5065,10 @@ define(
         var tom = records.tom;
         var yehuda = records.yehuda;
 
-        equal(get(tom, 'isDirty'), false, 'the record should not be dirty');
+        equal(get(tom, 'hasDirtyAttributes'), false, 'the record should not be dirty');
         equal(get(tom, 'updatedAt'), 'now', 'the hash was updated');
 
-        equal(get(yehuda, 'isDirty'), false, 'the record should not be dirty');
+        equal(get(yehuda, 'hasDirtyAttributes'), false, 'the record should not be dirty');
         equal(get(yehuda, 'updatedAt'), 'now!', 'the hash was updated');
       }));
     });
@@ -5186,12 +5186,12 @@ define(
       run(store, 'findRecord', 'person', 'deleted-record').then(async(function (tom) {
         tom.set('name', 'Tom Mothereffin\' Dale');
 
-        equal(get(tom, 'isDirty'), true, 'precond - record should be dirty after editing');
+        equal(get(tom, 'hasDirtyAttributes'), true, 'precond - record should be dirty after editing');
 
         tom.deleteRecord();
         return tom.save();
       })).then(async(function (tom) {
-        equal(get(tom, 'isDirty'), false, 'record should not be dirty');
+        equal(get(tom, 'hasDirtyAttributes'), false, 'record should not be dirty');
         equal(get(tom, 'isDeleted'), true, 'record should be considered deleted');
       }));
     });
@@ -5256,7 +5256,7 @@ define(
           set(yehuda, 'name', 'Brohuda Brokatz');
 
           equal(get(yehuda, 'isValid'), true, 'the record is no longer invalid after changing');
-          equal(get(yehuda, 'isDirty'), true, 'the record has outstanding changes');
+          equal(get(yehuda, 'hasDirtyAttributes'), true, 'the record has outstanding changes');
 
           equal(get(yehuda, 'isNew'), true, 'precond - record is still new');
 
@@ -5297,7 +5297,7 @@ define(
           set(yehuda, 'name', 'Brohuda Brokatz');
 
           equal(get(yehuda, 'isValid'), false, 'the record is still invalid as far as we know');
-          equal(get(yehuda, 'isDirty'), true, 'the record has outstanding changes');
+          equal(get(yehuda, 'hasDirtyAttributes'), true, 'the record has outstanding changes');
 
           equal(get(yehuda, 'isNew'), true, 'precond - record is still new');
 
@@ -5336,7 +5336,7 @@ define(
           equal(saveCount, 1, 'The record has been saved once');
           ok(reason.message.match('The backend rejected the commit because it was invalid'), 'It should fail due to being invalid');
           equal(get(yehuda, 'isValid'), false, 'the record is invalid');
-          equal(get(yehuda, 'isDirty'), true, 'the record has outstanding changes');
+          equal(get(yehuda, 'hasDirtyAttributes'), true, 'the record has outstanding changes');
           ok(get(yehuda, 'errors.name'), 'The errors.name property exists');
           equal(get(yehuda, 'isNew'), true, 'precond - record is still new');
           return yehuda.save();
@@ -5344,7 +5344,7 @@ define(
           equal(saveCount, 2, 'The record has been saved twice');
           ok(reason.message.match('The backend rejected the commit because it was invalid'), 'It should fail due to being invalid');
           equal(get(yehuda, 'isValid'), false, 'the record is still invalid');
-          equal(get(yehuda, 'isDirty'), true, 'the record has outstanding changes');
+          equal(get(yehuda, 'hasDirtyAttributes'), true, 'the record has outstanding changes');
           ok(get(yehuda, 'errors.name'), 'The errors.name property exists');
           equal(get(yehuda, 'isNew'), true, 'precond - record is still new');
           set(yehuda, 'name', 'Brohuda Brokatz');
@@ -5352,7 +5352,7 @@ define(
         })).then(async(function (person) {
           equal(saveCount, 3, 'The record has been saved thrice');
           equal(get(yehuda, 'isValid'), true, 'record is valid');
-          equal(get(yehuda, 'isDirty'), false, 'record is not dirty');
+          equal(get(yehuda, 'hasDirtyAttributes'), false, 'record is not dirty');
           equal(get(yehuda, 'errors.isEmpty'), true, 'record has no errors');
         }));
       });
@@ -5395,11 +5395,11 @@ define(
           set(yehuda, 'name', 'Yehuda Katz');
           equal(get(yehuda, 'isValid'), true, 'precond - the record is still valid as far as we know');
 
-          equal(get(yehuda, 'isDirty'), true, 'the record is dirty');
+          equal(get(yehuda, 'hasDirtyAttributes'), true, 'the record is dirty');
 
           return yehuda.save();
         })).then(null, async(function (reason) {
-          equal(get(yehuda, 'isDirty'), true, 'the record is still dirty');
+          equal(get(yehuda, 'hasDirtyAttributes'), true, 'the record is still dirty');
           equal(get(yehuda, 'isValid'), false, 'the record is invalid');
 
           set(yehuda, 'updatedAt', true);
@@ -5407,12 +5407,12 @@ define(
 
           set(yehuda, 'name', 'Brohuda Brokatz');
           equal(get(yehuda, 'isValid'), true, 'the record is no longer invalid after changing');
-          equal(get(yehuda, 'isDirty'), true, 'the record has outstanding changes');
+          equal(get(yehuda, 'hasDirtyAttributes'), true, 'the record has outstanding changes');
 
           return yehuda.save();
         })).then(async(function (yehuda) {
           equal(get(yehuda, 'isValid'), true, 'record remains valid after committing');
-          equal(get(yehuda, 'isDirty'), false, 'record is no longer new');
+          equal(get(yehuda, 'hasDirtyAttributes'), false, 'record is no longer new');
         }));
       });
     });
@@ -5438,11 +5438,11 @@ define(
           set(yehuda, 'name', 'Yehuda Katz');
           equal(get(yehuda, 'isValid'), true, 'precond - the record is still valid as far as we know');
 
-          equal(get(yehuda, 'isDirty'), true, 'the record is dirty');
+          equal(get(yehuda, 'hasDirtyAttributes'), true, 'the record is dirty');
 
           return yehuda.save();
         })).then(null, async(function (reason) {
-          equal(get(yehuda, 'isDirty'), true, 'the record is still dirty');
+          equal(get(yehuda, 'hasDirtyAttributes'), true, 'the record is still dirty');
           equal(get(yehuda, 'isValid'), false, 'the record is invalid');
           ok(get(yehuda, 'errors.base'), 'The errors.base property exists');
           deepEqual(get(yehuda, 'errors').errorsFor('base'), [{ attribute: 'base', message: 'is a generally unsavoury character' }]);
@@ -5452,12 +5452,12 @@ define(
 
           set(yehuda, 'name', 'Brohuda Brokatz');
           equal(get(yehuda, 'isValid'), false, 'the record is still invalid after changing (only server can know if it\'s now valid)');
-          equal(get(yehuda, 'isDirty'), true, 'the record has outstanding changes');
+          equal(get(yehuda, 'hasDirtyAttributes'), true, 'the record has outstanding changes');
 
           return yehuda.save();
         })).then(async(function (yehuda) {
           equal(get(yehuda, 'isValid'), true, 'record remains valid after committing');
-          equal(get(yehuda, 'isDirty'), false, 'record is no longer new');
+          equal(get(yehuda, 'hasDirtyAttributes'), false, 'record is no longer new');
           ok(!get(yehuda, 'errors.base'), 'The errors.base property does not exist');
           deepEqual(get(yehuda, 'errors').errorsFor('base'), []);
         }));
@@ -5488,26 +5488,26 @@ define(
           set(yehuda, 'name', 'Yehuda Katz');
           equal(get(yehuda, 'isValid'), true, 'precond - the record is still valid as far as we know');
 
-          equal(get(yehuda, 'isDirty'), true, 'the record is dirty');
+          equal(get(yehuda, 'hasDirtyAttributes'), true, 'the record is dirty');
 
           return yehuda.save();
         })).then(null, async(function (reason) {
           equal(saveCount, 1, 'The record has been saved once');
           ok(reason.message.match('The backend rejected the commit because it was invalid'), 'It should fail due to being invalid');
-          equal(get(yehuda, 'isDirty'), true, 'the record is still dirty');
+          equal(get(yehuda, 'hasDirtyAttributes'), true, 'the record is still dirty');
           equal(get(yehuda, 'isValid'), false, 'the record is invalid');
           return yehuda.save();
         })).then(null, async(function (reason) {
           equal(saveCount, 2, 'The record has been saved twice');
           ok(reason.message.match('The backend rejected the commit because it was invalid'), 'It should fail due to being invalid');
           equal(get(yehuda, 'isValid'), false, 'record is still invalid');
-          equal(get(yehuda, 'isDirty'), true, 'record is still dirty');
+          equal(get(yehuda, 'hasDirtyAttributes'), true, 'record is still dirty');
           set(yehuda, 'name', 'Brohuda Brokatz');
           return yehuda.save();
         })).then(async(function (person) {
           equal(saveCount, 3, 'The record has been saved thrice');
           equal(get(yehuda, 'isValid'), true, 'record is valid');
-          equal(get(yehuda, 'isDirty'), false, 'record is not dirty');
+          equal(get(yehuda, 'hasDirtyAttributes'), false, 'record is not dirty');
           equal(get(yehuda, 'errors.isEmpty'), true, 'record has no errors');
         }));
       });
@@ -7007,7 +7007,7 @@ define(
       }));
 
       var filter = store.filter('person', function (person) {
-        return !person.get('isDirty');
+        return !person.get('hasDirtyAttributes');
       });
 
       run(function () {
@@ -7044,7 +7044,7 @@ define(
 
       run(function () {
         filter = store.filter('person', function (person) {
-          return !person.get('isDirty');
+          return !person.get('hasDirtyAttributes');
         });
       });
 
@@ -19751,12 +19751,12 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     run(function () {
       store.push('person', { id: 1, name: 'Peter', isDrugAddict: true });
       store.findRecord('person', 1).then(function (person) {
-        equal(person.get('isDirty'), false, 'precond - person record should not be dirty');
+        equal(person.get('hasDirtyAttributes'), false, 'precond - person record should not be dirty');
 
         person.set('name', 'Peter');
         person.set('isDrugAddict', true);
 
-        equal(person.get('isDirty'), false, 'record does not become dirty after setting property to old value');
+        equal(person.get('hasDirtyAttributes'), false, 'record does not become dirty after setting property to old value');
       });
     });
   });
@@ -19767,11 +19767,11 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     run(function () {
       store.push('person', { id: 1, name: 'Peter', isDrugAddict: true });
       store.findRecord('person', 1).then(function (person) {
-        equal(person.get('isDirty'), false, 'precond - person record should not be dirty');
+        equal(person.get('hasDirtyAttributes'), false, 'precond - person record should not be dirty');
         person.set('isDrugAddict', false);
-        equal(person.get('isDirty'), true, 'record becomes dirty after setting property to a new value');
+        equal(person.get('hasDirtyAttributes'), true, 'record becomes dirty after setting property to a new value');
         person.set('isDrugAddict', true);
-        equal(person.get('isDirty'), false, 'record becomes clean after resetting property to the old value');
+        equal(person.get('hasDirtyAttributes'), false, 'record becomes clean after resetting property to the old value');
       });
     });
   });
@@ -19782,15 +19782,15 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     run(function () {
       store.push('person', { id: 1, name: 'Peter', isDrugAddict: true });
       store.findRecord('person', 1).then(function (person) {
-        equal(person.get('isDirty'), false, 'precond - person record should not be dirty');
+        equal(person.get('hasDirtyAttributes'), false, 'precond - person record should not be dirty');
         person.set('isDrugAddict', false);
-        equal(person.get('isDirty'), true, 'record becomes dirty after setting one property to a new value');
+        equal(person.get('hasDirtyAttributes'), true, 'record becomes dirty after setting one property to a new value');
         person.set('name', 'Mark');
-        equal(person.get('isDirty'), true, 'record stays dirty after setting another property to a new value');
+        equal(person.get('hasDirtyAttributes'), true, 'record stays dirty after setting another property to a new value');
         person.set('isDrugAddict', true);
-        equal(person.get('isDirty'), true, 'record stays dirty after resetting only one property to the old value');
+        equal(person.get('hasDirtyAttributes'), true, 'record stays dirty after resetting only one property to the old value');
         person.set('name', 'Peter');
-        equal(person.get('isDirty'), false, 'record becomes clean after resetting both properties to the old value');
+        equal(person.get('hasDirtyAttributes'), false, 'record becomes clean after resetting both properties to the old value');
       });
     });
   });
@@ -20603,6 +20603,25 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
       return store.createRecord('person');
     });
   });
+
+  test('isDirty should log a deprecation warning', function () {
+    expect(1);
+    var Person = DS.Model.extend({
+      name: DS.attr('string')
+    });
+
+    var env = setupStore({
+      person: Person
+    });
+    var store = env.store;
+
+    run(function () {
+      var person = store.createRecord('person');
+      expectDeprecation(function () {
+        person.get('isDirty');
+      }, /DS.Model#isDirty has been deprecated/);
+    });
+  });
 });
 
 
@@ -20834,7 +20853,7 @@ define(
         didUpdate: function () {
           callCount++;
           equal(get(this, "isSaving"), false, "record should be saving");
-          equal(get(this, "isDirty"), false, "record should not be dirty");
+          equal(get(this, "hasDirtyAttributes"), false, "record should not be dirty");
         }
       });
 
@@ -20882,7 +20901,7 @@ define(
         didCreate: function () {
           callCount++;
           equal(get(this, "isSaving"), false, "record should not be saving");
-          equal(get(this, "isDirty"), false, "record should not be dirty");
+          equal(get(this, "hasDirtyAttributes"), false, "record should not be dirty");
         }
       });
 
@@ -20926,7 +20945,7 @@ define(
           callCount++;
 
           equal(get(this, "isSaving"), false, "record should not be saving");
-          equal(get(this, "isDirty"), false, "record should not be dirty");
+          equal(get(this, "hasDirtyAttributes"), false, "record should not be dirty");
         }
       });
 
@@ -20978,7 +20997,7 @@ define(
         didDelete: function () {
           callCount++;
           equal(get(this, "isSaving"), false, "record should not be saving");
-          equal(get(this, "isDirty"), false, "record should not be dirty");
+          equal(get(this, "hasDirtyAttributes"), false, "record should not be dirty");
         }
       });
 
@@ -21014,7 +21033,7 @@ define(
           callCount++;
 
           equal(get(this, "isSaving"), false, "record should not be saving");
-          equal(get(this, "isDirty"), true, "record should be dirty");
+          equal(get(this, "hasDirtyAttributes"), true, "record should be dirty");
         }
       });
 
@@ -21124,7 +21143,7 @@ define(
         person.set("name", "Thomas Dale");
 
         promise.then(function (person) {
-          equal(person.get("isDirty"), true, "The person is still dirty");
+          equal(person.get("hasDirtyAttributes"), true, "The person is still dirty");
           equal(person.get("name"), "Thomas Dale", "The changes made still apply");
         });
       });
@@ -21159,7 +21178,7 @@ define(
         equal(person.get("name"), "Tomasz Dale", "the local changes applied on top");
 
         promise.then(async(function (person) {
-          equal(person.get("isDirty"), true, "The person is still dirty");
+          equal(person.get("hasDirtyAttributes"), true, "The person is still dirty");
           equal(person.get("name"), "Tomasz Dale", "The local changes apply");
         }));
       });
@@ -21201,7 +21220,7 @@ define(
         equal(person.get("city"), "PDX", "the pushed change is available");
 
         promise.then(async(function (person) {
-          equal(person.get("isDirty"), true, "The person is still dirty");
+          equal(person.get("hasDirtyAttributes"), true, "The person is still dirty");
           equal(person.get("name"), "Tomasz Dale", "The local changes apply");
           equal(person.get("city"), "Portland", "The updates from the server apply on top of the previous pushes");
         }));
@@ -21220,7 +21239,7 @@ define(
         person.set("name", "Tomasz Dale");
       });
 
-      equal(person.get("isDirty"), true, "the person is currently dirty");
+      equal(person.get("hasDirtyAttributes"), true, "the person is currently dirty");
       equal(person.get("name"), "Tomasz Dale", "the update was effective");
       equal(person.get("city"), "San Francisco", "the original data applies");
 
@@ -21228,7 +21247,7 @@ define(
         store.push("person", { id: 1, name: "Thomas Dale", city: "Portland" });
       });
 
-      equal(person.get("isDirty"), true, "the local changes are reapplied");
+      equal(person.get("hasDirtyAttributes"), true, "the local changes are reapplied");
       equal(person.get("name"), "Tomasz Dale", "the local changes are reapplied");
       equal(person.get("city"), "Portland", "if there are no local changes, the new data applied");
     });
@@ -21246,7 +21265,7 @@ define(
         person.send("becameInvalid");
       });
 
-      equal(person.get("isDirty"), true, "the person is currently dirty");
+      equal(person.get("hasDirtyAttributes"), true, "the person is currently dirty");
       equal(person.get("isValid"), false, "the person is currently invalid");
       equal(person.get("name"), "Brondan McLoughlin", "the update was effective");
       equal(person.get("city"), "Boston", "the original data applies");
@@ -21255,7 +21274,7 @@ define(
         store.push("person", { id: 1, name: "bmac", city: "Prague" });
       });
 
-      equal(person.get("isDirty"), true, "the local changes are reapplied");
+      equal(person.get("hasDirtyAttributes"), true, "the local changes are reapplied");
       equal(person.get("isValid"), false, "record is still invalid");
       equal(person.get("name"), "Brondan McLoughlin", "the local changes are reapplied");
       equal(person.get("city"), "Prague", "if there are no local changes, the new data applied");
@@ -21309,7 +21328,7 @@ define(
 
       run(function () {
         person.reload().then(function () {
-          equal(person.get("isDirty"), true, "the person is dirty");
+          equal(person.get("hasDirtyAttributes"), true, "the person is dirty");
           equal(person.get("name"), "Tomasz Dale", "the local changes remain");
           equal(person.get("city"), "Portland", "the new changes apply");
         });
@@ -22338,7 +22357,7 @@ define(
       });
 
       equal(person.get("firstName"), "Tom");
-      equal(person.get("isDirty"), false);
+      equal(person.get("hasDirtyAttributes"), false);
     });
 
     test("changes to unassigned attributes can be rolled back", function () {
@@ -22355,7 +22374,7 @@ define(
       });
 
       equal(person.get("firstName"), undefined);
-      equal(person.get("isDirty"), false);
+      equal(person.get("hasDirtyAttributes"), false);
     });
 
     test("changes to attributes made after a record is in-flight only rolls back the local changes", function () {
@@ -22388,7 +22407,7 @@ define(
         equal(person.get("isSaving"), true);
 
         saving.then(async(function () {
-          equal(person.get("isDirty"), false, "The person is now clean");
+          equal(person.get("hasDirtyAttributes"), false, "The person is now clean");
         }));
       });
     });
@@ -22461,12 +22480,12 @@ define(
       });
 
       equal(person.get("isNew"), true, "must be new");
-      equal(person.get("isDirty"), true, "must be dirty");
+      equal(person.get("hasDirtyAttributes"), true, "must be dirty");
 
       Ember.run(person, "rollbackAttributes");
 
       equal(person.get("isNew"), false, "must not be new");
-      equal(person.get("isDirty"), false, "must not be dirty");
+      equal(person.get("hasDirtyAttributes"), false, "must not be dirty");
       equal(person.get("isDeleted"), true, "must be deleted");
     });
 
@@ -22501,7 +22520,7 @@ define(
       });
 
       equal(person.get("isNew"), true, "must be new");
-      equal(person.get("isDirty"), true, "must be dirty");
+      equal(person.get("hasDirtyAttributes"), true, "must be dirty");
 
       run(function () {
         person.save().then(null, async(function () {
@@ -22509,7 +22528,7 @@ define(
           person.rollbackAttributes();
 
           equal(person.get("isNew"), false, "must not be new");
-          equal(person.get("isDirty"), false, "must not be dirty");
+          equal(person.get("hasDirtyAttributes"), false, "must not be dirty");
           equal(person.get("isDeleted"), true, "must be deleted");
         }));
       });
@@ -22534,7 +22553,7 @@ define(
       });
       equal(people.get("length"), 1, "the rollbacked record should appear again in the record array");
       equal(person.get("isDeleted"), false, "must not be deleted");
-      equal(person.get("isDirty"), false, "must not be dirty");
+      equal(person.get("hasDirtyAttributes"), false, "must not be dirty");
     });
 
     test("invalid record's attributes can be rollbacked", function () {
@@ -22729,7 +22748,7 @@ define(
       }, "Using model.rollback() has been deprecated. Use model.rollbackAttributes() to discard any unsaved changes to a model.");
 
       equal(person.get("firstName"), "Tom");
-      equal(person.get("isDirty"), false);
+      equal(person.get("hasDirtyAttributes"), false);
     });
   }
 );
@@ -23375,7 +23394,7 @@ define(
         store.push("person", { id: 1, name: "Tom Dale" });
 
         store.findRecord("person", 1).then(async(function (tom) {
-          equal(get(tom, "isDirty"), false, "precond - record is not dirty");
+          equal(get(tom, "hasDirtyAttributes"), false, "precond - record is not dirty");
           equal(get(tom, "name"), "Tom Dale", "returns the correct name");
 
           store.push("person", { id: 1, name: "Captain Underpants" });
@@ -23518,7 +23537,7 @@ define(
 
       equal(get(person, "isLoaded"), true, "A newly created record is loaded");
       equal(get(person, "isNew"), true, "A newly created record is new");
-      equal(get(person, "isDirty"), true, "A newly created record is dirty");
+      equal(get(person, "hasDirtyAttributes"), true, "A newly created record is dirty");
 
       run(function () {
         set(person, "name", "Braaahm Dale");
@@ -23568,7 +23587,7 @@ define(
 
       equal(get(person, "isLoaded"), true, "A newly created record is loaded");
       equal(get(person, "isNew"), true, "A newly created record is new");
-      equal(get(person, "isDirty"), true, "A newly created record is dirty");
+      equal(get(person, "hasDirtyAttributes"), true, "A newly created record is dirty");
 
       equal(get(person, "name"), "Brohuda Katz", "The initial data hash is provided");
     });
@@ -25716,7 +25735,7 @@ define(
           record.set('title', 'toto2');
           record._internalModel.send('willCommit');
 
-          equal(get(record, 'isDirty'), true, 'record is dirty');
+          equal(get(record, 'hasDirtyAttributes'), true, 'record is dirty');
 
           expectAssertion(function () {
             record.unloadRecord();
@@ -25737,13 +25756,13 @@ define(
         store.push('record', { id: 1, title: 'toto' });
         store.findRecord('record', 1).then(function (record) {
           equal(get(record, 'id'), 1, 'found record with id 1');
-          equal(get(record, 'isDirty'), false, 'record is not dirty');
+          equal(get(record, 'hasDirtyAttributes'), false, 'record is not dirty');
 
           run(function () {
             store.unloadRecord(record);
           });
 
-          equal(get(record, 'isDirty'), false, 'record is not dirty');
+          equal(get(record, 'hasDirtyAttributes'), false, 'record is not dirty');
           equal(get(record, 'isDeleted'), true, 'record is deleted');
 
           tryToFind = false;
