@@ -128,12 +128,12 @@
       application to customize it for your backend. The minimum set of methods
       that you should implement is:
 
-        * `find()`
+        * `findRecord()`
         * `createRecord()`
         * `updateRecord()`
         * `deleteRecord()`
         * `findAll()`
-        * `findQuery()`
+        * `query()`
 
       To improve the network performance of your application, you can optimize
       your adapter by overriding these lower-level methods:
@@ -170,16 +170,16 @@
       defaultSerializer: '-default',
 
       /**
-        The `find()` method is invoked when the store is asked for a record that
-        has not previously been loaded. In response to `find()` being called, you
+        The `findRecord()` method is invoked when the store is asked for a record that
+        has not previously been loaded. In response to `findRecord()` being called, you
         should query your persistence layer for a record with the given ID. Once
         found, you can asynchronously call the store's `push()` method to push
         the record into the store.
-         Here is an example `find` implementation:
+         Here is an example `findRecord` implementation:
          ```app/adapters/application.js
         import DS from 'ember-data';
          export default DS.Adapter.extend({
-          find: function(store, type, id, snapshot) {
+          findRecord: function(store, type, id, snapshot) {
             var url = [type.modelName, id].join('/');
              return new Ember.RSVP.Promise(function(resolve, reject) {
               jQuery.getJSON(url).then(function(data) {
@@ -192,14 +192,14 @@
           }
         });
         ```
-         @method find
+         @method findRecord
         @param {DS.Store} store
         @param {DS.Model} type
         @param {String} id
         @param {DS.Snapshot} snapshot
         @return {Promise} promise
       */
-      find: null,
+      findRecord: null,
 
       /**
         The `findAll()` method is used to retrieve all records for a given type.
@@ -236,7 +236,7 @@
          ```app/adapters/application.js
         import DS from 'ember-data';
          export default DS.Adapter.extend({
-          findQuery: function(store, type, query) {
+          query: function(store, type, query) {
             var url = type;
             return new Ember.RSVP.Promise(function(resolve, reject) {
               jQuery.getJSON(url, query).then(function(data) {
@@ -250,14 +250,14 @@
         });
         ```
          @private
-        @method findQuery
+        @method query
         @param {DS.Store} store
         @param {DS.Model} type
         @param {Object} query
         @param {DS.AdapterPopulatedRecordArray} recordArray
         @return {Promise} promise
       */
-      findQuery: null,
+      query: null,
 
       /**
         The `queryRecord()` method is invoked when the store is asked for a single
@@ -871,7 +871,34 @@
     var ember$data$lib$system$map$$default = ember$data$lib$system$map$$Map;
     var ember$data$lib$adapters$build$url$mixin$$get = Ember.get;
 
-    var ember$data$lib$adapters$build$url$mixin$$default = Ember.Mixin.create({
+    /**
+
+      WARNING: This interface is likely to change in order to accomodate https://github.com/emberjs/rfcs/pull/4
+
+      ## Using BuildURLMixin
+
+      To use url building, include the mixin when extending an adapter, and call `buildURL` where needed.
+      The default behaviour is designed for RESTAdapter.
+
+      ### Example
+
+      ```javascript
+      export default DS.Adapter.extend(BuildURLMixin, {
+        findRecord: function(store, type, id, snapshot) {
+          var url = this.buildURL(type.modelName, id, snapshot, 'findRecord');
+          return this.ajax(url, 'GET');
+        }
+      });
+      ```
+
+      ### Attributes
+
+      The `host` and `namespace` attributes will be used if defined, and are optional.
+
+      @class BuildURLMixin
+      @namespace DS
+    */
+    var ember$data$lib$adapters$build$url$mixin$$BuildURLMixin = Ember.Mixin.create({
       /**
         Builds a URL for a given type and optional ID.
          By default, it pluralizes the type's name (for example, 'post'
@@ -886,17 +913,23 @@
         @param {(String|Array|Object)} id single id or array of ids or query
         @param {(DS.Snapshot|Array)} snapshot single snapshot or array of snapshots
         @param {String} requestType
-        @param {Object} query object of query parameters to send for findQuery requests.
+        @param {Object} query object of query parameters to send for query requests.
         @return {String} url
       */
       buildURL: function (modelName, id, snapshot, requestType, query) {
         switch (requestType) {
           case 'find':
+            // The `find` case is deprecated
             return this.urlForFind(id, modelName, snapshot);
+          case 'findRecord':
+            return this.urlForFindRecord(id, modelName, snapshot);
           case 'findAll':
             return this.urlForFindAll(modelName);
           case 'findQuery':
+            // The `findQuery` case is deprecated
             return this.urlForFindQuery(query, modelName);
+          case 'query':
+            return this.urlForQuery(query, modelName);
           case 'findMany':
             return this.urlForFindMany(id, modelName, snapshot);
           case 'findHasMany':
@@ -955,8 +988,21 @@
        * @param {String} modelName
        * @param {DS.Snapshot} snapshot
        * @return {String} url
+       * @deprecated Use [urlForFindRecord](#method_urlForFindRecord) instead
        */
-      urlForFind: function (id, modelName, snapshot) {
+      urlForFind: ember$data$lib$adapters$build$url$mixin$$urlForFind,
+
+      /**
+       * @method urlForFind
+       * @param {String} id
+       * @param {String} modelName
+       * @param {DS.Snapshot} snapshot
+       * @return {String} url
+       */
+      urlForFindRecord: function (id, modelName, snapshot) {
+        if (this.urlForFind !== ember$data$lib$adapters$build$url$mixin$$urlForFind) {
+                    return this.urlForFind(id, modelName, snapshot);
+        }
         return this._buildURL(modelName, id);
       },
 
@@ -974,8 +1020,20 @@
        * @param {Object} query
        * @param {String} modelName
        * @return {String} url
+       * @deprecated Use [urlForQuery](#method_urlForQuery) instead
        */
-      urlForFindQuery: function (query, modelName) {
+      urlForFindQuery: ember$data$lib$adapters$build$url$mixin$$urlForFindQuery,
+
+      /**
+       * @method urlForQuery
+       * @param {Object} query
+       * @param {String} modelName
+       * @return {String} url
+       */
+      urlForQuery: function (query, modelName) {
+        if (this.urlForFindQuery !== ember$data$lib$adapters$build$url$mixin$$urlForFindQuery) {
+                    return this.urlForFindQuery(query, modelName);
+        }
         return this._buildURL(modelName);
       },
 
@@ -1108,6 +1166,16 @@
         return Ember.String.pluralize(camelized);
       }
     });
+
+    function ember$data$lib$adapters$build$url$mixin$$urlForFind(id, modelName, snapshot) {
+            return this._buildURL(modelName, id);
+    }
+
+    function ember$data$lib$adapters$build$url$mixin$$urlForFindQuery(query, modelName) {
+            return this._buildURL(modelName);
+    }
+
+    var ember$data$lib$adapters$build$url$mixin$$default = ember$data$lib$adapters$build$url$mixin$$BuildURLMixin;
 
     var ember$data$lib$adapters$rest$adapter$$get = Ember.get;
     var ember$data$lib$adapters$rest$adapter$$set = Ember.set;
@@ -1355,8 +1423,8 @@
          Setting coalesceFindRequests to `true` also works for `store.find` requests and `belongsTo`
         relationships accessed within the same runloop. If you set `coalesceFindRequests: true`
          ```javascript
-        store.find('comment', 1);
-        store.find('comment', 2);
+        store.findRecord('comment', 1);
+        store.findRecord('comment', 2);
         ```
          will also send a request to: `GET /comments?ids[]=1&ids[]=2`
          Note: Requests coalescing rely on URL building strategy. So if you override `buildURL` in your app
@@ -1410,23 +1478,40 @@
         ```
          @property headers
         @type {Object}
+       */
+
+      /**
+        @method find
+        @param {DS.Store} store
+        @param {DS.Model} type
+        @param {String} id
+        @param {DS.Snapshot} snapshot
+        @return {Promise} promise
+        @deprecated Use [findRecord](#method_findRecord) instead
       */
+      find: function (store, type, id, snapshot) {
+                return this.ajax(this.buildURL(type.modelName, id, snapshot, "find"), "GET");
+      },
 
       /**
         Called by the store in order to fetch the JSON for a given
         type and ID.
-         The `find` method makes an Ajax request to a URL computed by `buildURL`, and returns a
-        promise for the resulting payload.
+         The `findRecord` method makes an Ajax request to a URL computed by
+        `buildURL`, and returns a promise for the resulting payload.
          This method performs an HTTP `GET` request with the id provided as part of the query string.
-         @method find
+         @method findRecord
         @param {DS.Store} store
         @param {DS.Model} type
         @param {String} id
         @param {DS.Snapshot} snapshot
         @return {Promise} promise
       */
-      find: function (store, type, id, snapshot) {
-        return this.ajax(this.buildURL(type.modelName, id, snapshot, "find"), "GET");
+      findRecord: function (store, type, id, snapshot) {
+        var find = ember$data$lib$adapters$rest$adapter$$RestAdapter.prototype.find;
+        if (find !== this.find) {
+                    return this.find(store, type, id, snapshot);
+        }
+        return this.ajax(this.buildURL(type.modelName, id, snapshot, "findRecord"), "GET");
       },
 
       /**
@@ -1466,9 +1551,39 @@
         @param {DS.Model} type
         @param {Object} query
         @return {Promise} promise
+        @deprecated Use [query](#method_query) instead
       */
       findQuery: function (store, type, query) {
-        var url = this.buildURL(type.modelName, null, null, "findQuery", query);
+                var url = this.buildURL(type.modelName, null, null, "findQuery", query);
+
+        if (this.sortQueryParams) {
+          query = this.sortQueryParams(query);
+        }
+
+        return this.ajax(url, "GET", { data: query });
+      },
+
+      /**
+        Called by the store in order to fetch a JSON array for
+        the records that match a particular query.
+         The `findQuery` method makes an Ajax (HTTP GET) request to a URL computed by `buildURL`, and returns a
+        promise for the resulting payload.
+         The `query` argument is a simple JavaScript object that will be passed directly
+        to the server as parameters.
+         @private
+        @method query
+        @param {DS.Store} store
+        @param {DS.Model} type
+        @param {Object} query
+        @return {Promise} promise
+      */
+      query: function (store, type, query) {
+        var findQuery = ember$data$lib$adapters$rest$adapter$$RestAdapter.prototype.findQuery;
+        if (findQuery !== this.findQuery) {
+                    return this.findQuery(store, type, query);
+        }
+
+        var url = this.buildURL(type.modelName, null, null, "query", query);
 
         if (this.sortQueryParams) {
           query = this.sortQueryParams(query);
@@ -2642,7 +2757,82 @@
     var ember$data$lib$serializers$json$serializer$$map = Ember.ArrayPolyfills.map;
     var ember$data$lib$serializers$json$serializer$$merge = Ember.merge;
 
-    var ember$data$lib$serializers$json$serializer$$default = ember$data$lib$system$serializer$$default.extend({
+    /*
+      Ember Data 2.0 Serializer:
+
+      In Ember Data a Serializer is used to serialize and deserialize
+      records when they are transferred in and out of an external source.
+      This process involves normalizing property names, transforming
+      attribute values and serializing relationships.
+
+      By default Ember Data recommends using the JSONApiSerializer.
+
+      `JSONSerializer` is useful for simpler or legacy backends that may
+      not support the http://jsonapi.org/ spec.
+
+      `JSONSerializer` normalizes a JSON payload that looks like:
+
+      ```js
+        App.User = DS.Model.extend({
+          name: DS.attr(),
+          friends: DS.hasMany('user'),
+          house: DS.belongsTo('location'),
+        });
+      ```
+      ```js
+        { id: 1,
+          name: 'Sebastian',
+          friends: [3, 4],
+          links: {
+            house: '/houses/lefkada'
+          }
+        }
+      ```
+      to JSONApi format that the Ember Data store expects.
+
+      You can customize how JSONSerializer processes it's payload by passing options in
+      the attrs hash or by subclassing the JSONSerializer and overriding hooks:
+
+        -To customize how a single record is normalized, use the `normalize` hook
+        -To customize how JSONSerializer normalizes the whole server response, use the
+          normalizeResponse hook
+        -To customize how JSONSerializer normalizes a specific response from the server,
+          use one of the many specific normalizeResponse hooks
+        -To customize how JSONSerializer normalizes your attributes or relationships,
+          use the extractAttributes and extractRelationships hooks.
+
+      JSONSerializer normalization process follows these steps:
+        - `normalizeResponse` - entry method to the Serializer
+        - `normalizeCreateRecordResponse` - a normalizeResponse for a specific operation is called
+        - `normalizeSingleResponse`|`normalizeArrayResponse` - for methods like `createRecord` we expect
+          a single record back, while for methods like `findAll` we expect multiple methods back
+        - `normalize` - normalizeArray iterates and calls normalize for each of it's records while normalizeSingle
+          calls it once. This is the method you most likely want to subclass
+        - `extractId` | `extractAttributes` | `extractRelationships` - normalize delegates to these methods to
+          turn the record payload into the JSONApi format
+
+      @class JSONSerializer
+      @namespace DS
+      @extends DS.Serializer
+    */
+
+    /**
+      In Ember Data a Serializer is used to serialize and deserialize
+      records when they are transferred in and out of an external source.
+      This process involves normalizing property names, transforming
+      attribute values and serializing relationships.
+
+      For maximum performance Ember Data recommends you use the
+      [RESTSerializer](DS.RESTSerializer.html) or one of its subclasses.
+
+      `JSONSerializer` is useful for simpler or legacy backends that may
+      not support the http://jsonapi.org/ spec.
+
+      @class JSONSerializer
+      @namespace DS
+      @extends DS.Serializer
+    */
+    var ember$data$lib$serializers$json$serializer$$JSONSerializer = ember$data$lib$system$serializer$$default.extend({
 
       /**
         The primaryKey is used when serializing and deserializing
@@ -2769,8 +2959,8 @@
       */
       normalizeResponse: function (store, primaryModelClass, payload, id, requestType) {
         switch (requestType) {
-          case "find":
-            return this.normalizeFindResponse.apply(this, arguments);
+          case "findRecord":
+            return this.normalizeFindRecordResponse.apply(this, arguments);
           case "findAll":
             return this.normalizeFindAllResponse.apply(this, arguments);
           case "findBelongsTo":
@@ -2779,8 +2969,8 @@
             return this.normalizeFindHasManyResponse.apply(this, arguments);
           case "findMany":
             return this.normalizeFindManyResponse.apply(this, arguments);
-          case "findQuery":
-            return this.normalizeFindQueryResponse.apply(this, arguments);
+          case "query":
+            return this.normalizeQueryResponse.apply(this, arguments);
           case "createRecord":
             return this.normalizeCreateRecordResponse.apply(this, arguments);
           case "deleteRecord":
@@ -2791,7 +2981,7 @@
       },
 
       /*
-        @method normalizeFindResponse
+        @method normalizeFindRecordResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
         @param {Object} payload
@@ -2799,7 +2989,7 @@
         @param {String} requestType
         @return {Object} JSON-API Document
       */
-      normalizeFindResponse: function (store, primaryModelClass, payload, id, requestType) {
+      normalizeFindRecordResponse: function (store, primaryModelClass, payload, id, requestType) {
         return this.normalizeSingleResponse.apply(this, arguments);
       },
 
@@ -2856,7 +3046,7 @@
       },
 
       /*
-        @method normalizeFindQueryResponse
+        @method normalizeQueryResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
         @param {Object} payload
@@ -2864,7 +3054,7 @@
         @param {String} requestType
         @return {Object} JSON-API Document
       */
-      normalizeFindQueryResponse: function (store, primaryModelClass, payload, id, requestType) {
+      normalizeQueryResponse: function (store, primaryModelClass, payload, id, requestType) {
         return this.normalizeArrayResponse.apply(this, arguments);
       },
 
@@ -3828,6 +4018,7 @@
       extractFind: function (store, typeClass, payload, id, requestType) {
         return this.extractSingle(store, typeClass, payload, id, requestType);
       },
+
       /**
         `extractFindBelongsTo` is a hook into the extract method used when
         a call is made to `DS.Store#findBelongsTo`. By default this method is
@@ -4094,6 +4285,8 @@
         return meta;
       }
     }
+
+    var ember$data$lib$serializers$json$serializer$$default = ember$data$lib$serializers$json$serializer$$JSONSerializer;
     var ember$data$lib$system$normalize$model$name$$default = ember$data$lib$system$normalize$model$name$$normalizeModelName;
     /**
       All modelNames are dasherized internally. Changing this function may
@@ -5640,7 +5833,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.d6ec6f8523'
+      VERSION: '1.0.0-beta.20+canary.adb38e37a8'
     });
 
     if (Ember.libraries) {
@@ -8564,9 +8757,15 @@
 
     var ember$data$lib$system$store$finders$$Promise = Ember.RSVP.Promise;
     var ember$data$lib$system$store$finders$$map = Ember.EnumerableUtils.map;
+    var ember$data$lib$system$store$finders$$get = Ember.get;
     function ember$data$lib$system$store$finders$$_find(adapter, store, typeClass, id, internalModel, options) {
       var snapshot = internalModel.createSnapshot(options);
-      var promise = adapter.find(store, typeClass, id, snapshot);
+      var promise;
+      if (!adapter.findRecord) {
+                promise = adapter.find(store, typeClass, id, snapshot);
+      } else {
+        promise = adapter.findRecord(store, typeClass, id, snapshot);
+      }
       var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, internalModel.type.modelName);
       var label = "DS: Handle Adapter#find of " + typeClass + " with id: " + id;
 
@@ -8575,7 +8774,8 @@
 
       return promise.then(function (adapterPayload) {
                 return store._adapterRun(function () {
-          var payload = ember$data$lib$system$store$serializer$response$$normalizeResponseHelper(serializer, store, typeClass, adapterPayload, id, "find");
+          var requestType = ember$data$lib$system$store$finders$$get(serializer, "isNewSerializerAPI") ? "findRecord" : "find";
+          var payload = ember$data$lib$system$store$serializer$response$$normalizeResponseHelper(serializer, store, typeClass, adapterPayload, id, requestType);
           //TODO Optimize
           var record = ember$data$lib$system$store$serializer$response$$pushPayload(store, payload);
           return record._internalModel;
@@ -8693,7 +8893,14 @@
 
     function ember$data$lib$system$store$finders$$_query(adapter, store, typeClass, query, recordArray) {
       var modelName = typeClass.modelName;
-      var promise = adapter.findQuery(store, typeClass, query, recordArray);
+      var promise;
+
+      if (!adapter.query) {
+                promise = adapter.findQuery(store, typeClass, query, recordArray);
+      } else {
+        promise = adapter.query(store, typeClass, query, recordArray);
+      }
+
       var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, modelName);
       var label = "DS: Handle Adapter#findQuery of " + typeClass;
 
@@ -8703,7 +8910,8 @@
       return promise.then(function (adapterPayload) {
         var records;
         store._adapterRun(function () {
-          var payload = ember$data$lib$system$store$serializer$response$$normalizeResponseHelper(serializer, store, typeClass, adapterPayload, null, "findQuery");
+          var requestType = ember$data$lib$system$store$finders$$get(serializer, "isNewSerializerAPI") ? "query" : "findQuery";
+          var payload = ember$data$lib$system$store$serializer$response$$normalizeResponseHelper(serializer, store, typeClass, adapterPayload, null, requestType);
           //TODO Optimize
           records = ember$data$lib$system$store$serializer$response$$pushPayload(store, payload);
         });
