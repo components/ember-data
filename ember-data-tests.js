@@ -273,7 +273,7 @@ define(
       var json;
 
       run(function () {
-        json = env.amsSerializer.normalizeResponse(env.store, MediocreVillain, json_hash, '1', 'findRecord');
+        json = env.amsSerializer.normalizeResponse(env.store, MediocreVillain, json_hash, '1', 'find');
       });
 
       deepEqual(json, {
@@ -308,7 +308,7 @@ define(
       var json;
 
       run(function () {
-        json = env.amsSerializer.normalizeResponse(env.store, DoomsdayDevice, json_hash, '1', 'findRecord');
+        json = env.amsSerializer.normalizeResponse(env.store, DoomsdayDevice, json_hash, '1', 'find');
       });
 
       deepEqual(json, {
@@ -600,7 +600,7 @@ define(
 
       var json;
       run(function () {
-        json = env.amsSerializer.normalizeSingleResponse(env.store, HomePlanet, json_hash, '1', 'findRecord');
+        json = env.amsSerializer.normalizeSingleResponse(env.store, HomePlanet, json_hash, '1', 'find');
       });
 
       deepEqual(json, {
@@ -690,7 +690,7 @@ define(
       var json;
 
       run(function () {
-        json = env.amsSerializer.normalizeResponse(env.store, MediocreVillain, json_hash, '1', 'findRecord');
+        json = env.amsSerializer.normalizeResponse(env.store, MediocreVillain, json_hash, '1', 'find');
       });
 
       deepEqual(json, {
@@ -733,7 +733,7 @@ define(
       var json;
 
       run(function () {
-        json = env.amsSerializer.normalizeResponse(env.store, DoomsdayDevice, json_hash, '1', 'findRecord');
+        json = env.amsSerializer.normalizeResponse(env.store, DoomsdayDevice, json_hash, '1', 'find');
       });
 
       deepEqual(json, {
@@ -767,7 +767,7 @@ define(
       };
 
       run(function () {
-        json = env.amsSerializer.normalizeResponse(env.store, DoomsdayDevice, json, '1', 'findRecord');
+        json = env.amsSerializer.normalizeResponse(env.store, DoomsdayDevice, json, '1', 'find');
       });
 
       deepEqual(json, {
@@ -796,7 +796,7 @@ define(
       };
 
       run(function () {
-        json = env.amsSerializer.normalizeResponse(env.store, MediocreVillain, json, '1', 'findRecord');
+        json = env.amsSerializer.normalizeResponse(env.store, MediocreVillain, json, '1', 'find');
       });
 
       deepEqual(json, {
@@ -818,7 +818,7 @@ define(
       };
 
       run(function () {
-        json = env.amsSerializer.normalizeResponse(env.store, MediocreVillain, json, '1', 'findRecord');
+        json = env.amsSerializer.normalizeResponse(env.store, MediocreVillain, json, '1', 'find');
       });
 
       deepEqual(json, {
@@ -1007,7 +1007,7 @@ define(
       });
 
       run(function () {
-        env.store.findRecord('super-villain', 1).then(function (minion) {
+        env.store.find('super-villain', 1).then(function (minion) {
           equal(minion.get('firstName'), 'Tom');
         });
       });
@@ -1033,7 +1033,7 @@ define(
       }]);
 
       run(function () {
-        env.store.findRecord('super-villain', 1).then(function (minion) {
+        env.store.find('super-villain', 1).then(function (minion) {
           equal(minion.get('firstName'), 'Tom');
         });
       });
@@ -1331,7 +1331,7 @@ define(
 
       ajaxResponse({ posts: [{ id: 1 }] });
 
-      run(store, "findRecord", "post", 1).then(async(function (post) {
+      run(store, "find", "post", 1).then(async(function (post) {
         equal(passedUrl, "http://example.com/api/v1/posts/1");
       }));
     });
@@ -1348,7 +1348,7 @@ define(
 
       ajaxResponse({ posts: [{ id: 1, links: { comments: "comments" } }] });
 
-      run(store, "findRecord", "post", "1").then(async(function (post) {
+      run(store, "find", "post", "1").then(async(function (post) {
         ajaxResponse({ comments: [{ id: 1 }] });
         return post.get("comments");
       })).then(async(function (comments) {
@@ -1368,7 +1368,7 @@ define(
 
       ajaxResponse({ posts: [{ id: 1, links: { comments: "/api/v1/posts/1/comments" } }] });
 
-      run(store, "findRecord", "post", 1).then(async(function (post) {
+      run(store, "find", "post", 1).then(async(function (post) {
         ajaxResponse({ comments: [{ id: 1 }] });
         return post.get("comments");
       })).then(async(function (comments) {
@@ -1388,7 +1388,7 @@ define(
 
       ajaxResponse({ posts: [{ id: 1, links: { comments: "/api/v1/posts/1/comments" } }] });
 
-      run(store, "findRecord", "post", 1).then(async(function (post) {
+      run(store, "find", "post", 1).then(async(function (post) {
         ajaxResponse({ comments: [{ id: 1 }] });
         return post.get("comments");
       })).then(async(function (comments) {
@@ -1411,7 +1411,7 @@ define(
       });
 
       run(function () {
-        store.findRecord("post", 1).then(async(function (post) {
+        store.find("post", 1).then(async(function (post) {
           ajaxResponse({ comments: [{ id: 1 }] });
           return post.get("comments");
         })).then(async(function (comments) {
@@ -1431,7 +1431,7 @@ define(
       ajaxResponse({ superUsers: [{ id: 1 }] });
 
       run(function () {
-        store.findRecord("super-user", 1).then(async(function (post) {
+        store.find("super-user", 1).then(async(function (post) {
           equal(passedUrl, "/super_users/1");
         }));
       });
@@ -1451,7 +1451,7 @@ define(
       });
 
       run(function () {
-        store.findRecord("comment", 1, { preload: { post: post } }).then(async(function (post) {
+        store.find("comment", 1, { preload: { post: post } }).then(async(function (post) {
           equal(passedUrl, "/posts/2/comments/1");
         }));
       });
@@ -1504,7 +1504,7 @@ define(
       ajaxResponse({ posts: [{ id: 2 }] });
 
       run(function () {
-        store.findRecord("post", 2).then(async(function (post) {
+        store.find("post", 2).then(async(function (post) {
           equal(post.get("id"), 2);
 
           adapter.buildURL = function (type, id, snapshot) {
@@ -1576,37 +1576,9 @@ define(
 
       ajaxResponse({ posts: [{ id: 1 }] });
 
-      run(store, "findRecord", "post", 1).then(async(function (post) {
+      run(store, "find", "post", 1).then(async(function (post) {
         equal(passedUrl, "/api/v1/posts/1");
       }));
-    });
-
-    test("buildURL - urlForFindRecord calls deprecated urlForFind", function () {
-      expect(2);
-
-      var adapter = DS.RESTAdapter.extend({
-        urlForFind: function () {
-          ok(true, "urlForFind should be called");
-        }
-      }).create();
-
-      expectDeprecation(function () {
-        adapter.buildURL("post", 1, {}, "findRecord");
-      }, /urlForFindRecord/);
-    });
-
-    test("buildURL - urlForQuery calls deprecated urlForFindQuery", function () {
-      expect(2);
-
-      var adapter = DS.RESTAdapter.extend({
-        urlForFindQuery: function () {
-          ok(true, "urlForFindQuery should be called");
-        }
-      }).create();
-
-      expectDeprecation(function () {
-        adapter.buildURL("post", 1, {}, "query");
-      }, /urlForQuery/);
     });
   }
 );
@@ -1828,7 +1800,7 @@ define(
       var count = 0;
 
       env.registry.register('adapter:person', DS.Adapter.extend({
-        findRecord: function (store, type, id, snapshot) {
+        find: function (store, type, id, snapshot) {
           equal(type, Person, 'the find method is called with the correct type');
           equal(count, 0, 'the find method is only called once');
 
@@ -1838,8 +1810,8 @@ define(
       }));
 
       run(function () {
-        store.findRecord('person', 1);
-        store.findRecord('person', 1);
+        store.find('person', 1);
+        store.find('person', 1);
       });
     });
 
@@ -1847,13 +1819,13 @@ define(
       var deferred = Ember.RSVP.defer();
 
       env.registry.register('adapter:person', DS.Adapter.extend({
-        findRecord: function (store, type, id, snapshot) {
+        find: function (store, type, id, snapshot) {
           return deferred.promise;
         }
       }));
 
       run(function () {
-        store.findRecord('person', 1).then(async(function (person) {
+        store.find('person', 1).then(async(function (person) {
           equal(person.get('id'), '1');
           equal(person.get('name'), 'Braaaahm Dale');
 
@@ -1869,7 +1841,7 @@ define(
       });
 
       run(function () {
-        store.findRecord('person', 1).then(async(function (post) {
+        store.find('person', 1).then(async(function (post) {
           equal(post.get('id'), '1');
           equal(post.get('name'), 'Braaaahm Dale');
 
@@ -1891,13 +1863,13 @@ define(
 
     test('When a single record is requested, and the promise is rejected, .find() is rejected.', function () {
       env.registry.register('adapter:person', DS.Adapter.extend({
-        findRecord: function (store, type, id, snapshot) {
+        find: function (store, type, id, snapshot) {
           return Ember.RSVP.reject();
         }
       }));
 
       run(function () {
-        store.findRecord('person', 1).then(null, async(function (reason) {
+        store.find('person', 1).then(null, async(function (reason) {
           ok(true, 'The rejection handler was called');
         }));
       });
@@ -1907,13 +1879,13 @@ define(
       expect(2);
 
       env.registry.register('adapter:person', DS.Adapter.extend({
-        findRecord: function (store, type, id, snapshot) {
+        find: function (store, type, id, snapshot) {
           return Ember.RSVP.reject();
         }
       }));
 
       run(function () {
-        store.findRecord('person', 1).then(null, async(function (reason) {
+        store.find('person', 1).then(null, async(function (reason) {
           ok(true, 'The rejection handler was called');
         }));
       });
@@ -2756,7 +2728,7 @@ define(
     });
 
     test('When a query is made, the adapter should receive a record array it can populate with the results of the query.', function () {
-      adapter.query = function (store, type, query, recordArray) {
+      adapter.findQuery = function (store, type, query, recordArray) {
         equal(type, Person, 'the find method is called with the correct type');
 
         return Ember.RSVP.resolve([{ id: 1, name: 'Peter Wagenet' }, { id: 2, name: 'Brohuda Katz' }]);
@@ -3106,15 +3078,15 @@ define(
       }));
     });
 
-    test("findRecord - passes buildURL a requestType", function () {
+    test("find - passes buildURL a requestType", function () {
       adapter.buildURL = function (type, id, snapshot, requestType) {
         return "/" + requestType + "/post/" + id;
       };
 
       ajaxResponse({ posts: [{ id: 1, name: "Rails is omakase" }] });
 
-      run(store, "findRecord", "post", 1).then(async(function (post) {
-        equal(passedUrl, "/findRecord/post/1");
+      run(store, "find", "post", 1).then(async(function (post) {
+        equal(passedUrl, "/find/post/1");
       }));
     });
 
@@ -3969,7 +3941,7 @@ define(
       };
 
       adapter.ajax = function (url, verb, hash) {
-        equal(url, "/query/posts");
+        equal(url, "/findQuery/posts");
 
         return run(Ember.RSVP, "resolve", { posts: [{ id: 1, name: "Rails is very expensive sushi" }] });
       };
@@ -4435,7 +4407,7 @@ define(
         }
       };
 
-      adapter.findRecord = function (store, type, id, snapshot) {
+      adapter.find = function (store, type, id, snapshot) {
         equal(id, "1");
         return Ember.RSVP.resolve({ comments: { id: 1 } });
       };
@@ -4468,7 +4440,7 @@ define(
         }
       };
 
-      adapter.findRecord = function (store, type, id, snapshot) {
+      adapter.find = function (store, type, id, snapshot) {
         equal(id, "1");
         return Ember.RSVP.resolve({ comments: { id: 1 } });
       };
@@ -4574,7 +4546,7 @@ define(
 
       adapter.coalesceFindRequests = true;
 
-      adapter.findRecord = function (store, type, id, snapshot) {
+      adapter.find = function (store, type, id, snapshot) {
         if (id === a2000 || id === b2000) {
           ok(true, "Found " + id);
         }
@@ -4612,7 +4584,7 @@ define(
 
       adapter.coalesceFindRequests = true;
 
-      adapter.findRecord = function (store, type, id, snapshot) {
+      adapter.find = function (store, type, id, snapshot) {
         ok(false, "find should not be called - we expect 1 call to findMany for a100 and b100");
         return Ember.RSVP.reject();
       };
@@ -4900,7 +4872,7 @@ define(
     });
 
     test('Records loaded multiple times and retrieved in recordArray are ready to send state events', function () {
-      adapter.query = function (store, type, query, recordArray) {
+      adapter.findQuery = function (store, type, query, recordArray) {
         return Ember.RSVP.resolve([{
           id: 1,
           name: 'Mickael Ramírez'
@@ -4964,8 +4936,8 @@ define(
         tom = records.tom;
         yehuda = records.yehuda;
 
-        asyncEqual(tom, store.findRecord('person', 1), 'Once an ID is in, find returns the same object');
-        asyncEqual(yehuda, store.findRecord('person', 2), 'Once an ID is in, find returns the same object');
+        asyncEqual(tom, store.find('person', 1), 'Once an ID is in, find returns the same object');
+        asyncEqual(yehuda, store.find('person', 2), 'Once an ID is in, find returns the same object');
         equal(get(tom, 'updatedAt'), 'now', 'The new information is received');
         equal(get(yehuda, 'updatedAt'), 'now', 'The new information is received');
       }));
@@ -4999,8 +4971,8 @@ define(
 
       var promise = run(function () {
         return Ember.RSVP.hash({
-          tom: store.findRecord('person', 1),
-          yehuda: store.findRecord('person', 2)
+          tom: store.find('person', 1),
+          yehuda: store.find('person', 2)
         });
       });
 
@@ -5049,8 +5021,8 @@ define(
 
       var promise = run(function () {
         return Ember.RSVP.hash({
-          tom: store.findRecord('person', 1),
-          yehuda: store.findRecord('person', 2)
+          tom: store.find('person', 1),
+          yehuda: store.find('person', 2)
         });
       });
       promise.then(async(function (records) {
@@ -5101,8 +5073,8 @@ define(
 
       var promise = run(function () {
         return Ember.RSVP.hash({
-          tom: store.findRecord('person', 1),
-          yehuda: store.findRecord('person', 2)
+          tom: store.find('person', 1),
+          yehuda: store.find('person', 2)
         });
       });
 
@@ -5146,8 +5118,8 @@ define(
 
       var promise = run(function () {
         return Ember.RSVP.hash({
-          tom: store.findRecord('person', 1),
-          yehuda: store.findRecord('person', 2)
+          tom: store.find('person', 1),
+          yehuda: store.find('person', 2)
         });
       });
 
@@ -5183,7 +5155,7 @@ define(
       });
 
       // Retrieve that loaded record and edit it so it becomes dirty
-      run(store, 'findRecord', 'person', 'deleted-record').then(async(function (tom) {
+      run(store, 'find', 'person', 'deleted-record').then(async(function (tom) {
         tom.set('name', 'Tom Mothereffin\' Dale');
 
         equal(get(tom, 'isDirty'), true, 'precond - record should be dirty after editing');
@@ -5214,7 +5186,7 @@ define(
       var tom;
 
       run(function () {
-        store.findRecord('person', 'deleted-record').then(async(function (person) {
+        store.find('person', 'deleted-record').then(async(function (person) {
           tom = person;
           person.deleteRecord();
           return person.save();
@@ -5388,7 +5360,7 @@ define(
       });
 
       Ember.run(function () {
-        store.findRecord('person', 1).then(async(function (person) {
+        store.find('person', 1).then(async(function (person) {
           equal(person, yehuda, 'The same object is passed through');
 
           equal(get(yehuda, 'isValid'), true, 'precond - the record is valid');
@@ -5431,7 +5403,7 @@ define(
       });
 
       run(function () {
-        store.findRecord('person', 1).then(async(function (person) {
+        store.find('person', 1).then(async(function (person) {
           equal(person, yehuda, 'The same object is passed through');
 
           equal(get(yehuda, 'isValid'), true, 'precond - the record is valid');
@@ -5481,7 +5453,7 @@ define(
       });
 
       Ember.run(function () {
-        store.findRecord('person', 1).then(async(function (person) {
+        store.find('person', 1).then(async(function (person) {
           equal(person, yehuda, 'The same object is passed through');
 
           equal(get(yehuda, 'isValid'), true, 'precond - the record is valid');
@@ -5522,7 +5494,7 @@ define(
         return store.push('person', { id: 1, name: 'John Doe' });
       });
 
-      run(store, 'findRecord', 'person', 1).then(async(function (record) {
+      run(store, 'find', 'person', 1).then(async(function (record) {
         equal(record, person, 'The person was resolved');
         person.set('name', 'Jonathan Doe');
         return person.save();
@@ -5534,18 +5506,18 @@ define(
     test('can be created after the DS.Store', function () {
       expect(1);
 
-      adapter.findRecord = function (store, type, id, snapshot) {
+      adapter.find = function (store, type, id, snapshot) {
         equal(type, Person, 'the type is correct');
         return Ember.RSVP.resolve({ id: 1 });
       };
 
       run(function () {
-        store.findRecord('person', 1);
+        store.find('person', 1);
       });
     });
 
     test('the filter method can optionally take a server query as well', function () {
-      adapter.query = function (store, type, query, array) {
+      adapter.findQuery = function (store, type, query, array) {
         return Ember.RSVP.resolve([{ id: 1, name: 'Yehuda Katz' }, { id: 2, name: 'Tom Dale' }]);
       };
 
@@ -5557,7 +5529,7 @@ define(
 
       asyncFilter.then(async(function (filter) {
         loadedFilter = filter;
-        return store.findRecord('person', 2);
+        return store.find('person', 2);
       })).then(async(function (tom) {
         equal(get(loadedFilter, 'length'), 1, 'The filter has an item in it');
         deepEqual(loadedFilter.toArray(), [tom], 'The filter has a single entry in it');
@@ -5573,7 +5545,7 @@ define(
         store.push('dog', { id: 1, name: 'Scruffy' });
       });
 
-      adapter.findRecord = function (store, type, id, snapshot) {
+      adapter.find = function (store, type, id, snapshot) {
         return Ember.RSVP.resolve({ id: 1, name: 'Tom Dale', dogs: [1] });
       };
 
@@ -5590,8 +5562,8 @@ define(
       };
 
       run(function () {
-        store.findRecord('person', 1).then(async(function (person) {
-          return Ember.RSVP.hash({ tom: person, dog: store.findRecord('dog', 1) });
+        store.find('person', 1).then(async(function (person) {
+          return Ember.RSVP.hash({ tom: person, dog: store.find('dog', 1) });
         })).then(async(function (records) {
           records.tom.get('dogs');
           return records.dog.save();
@@ -5620,7 +5592,7 @@ define(
 
       var tom, dogs;
 
-      run(store, 'findRecord', 'person', 1).then(async(function (person) {
+      run(store, 'find', 'person', 1).then(async(function (person) {
         tom = person;
         dogs = tom.get('dogs');
         return dogs;
@@ -5719,13 +5691,13 @@ define(
     test('find receives a snapshot', function () {
       expect(1);
 
-      adapter.findRecord = function (store, type, id, snapshot) {
+      adapter.find = function (store, type, id, snapshot) {
         ok(snapshot instanceof DS.Snapshot, 'snapshot is an instance of DS.Snapshot');
         return Ember.RSVP.resolve({ id: 1 });
       };
 
       run(function () {
-        store.findRecord('person', 1);
+        store.find('person', 1);
       });
     });
 
@@ -6756,9 +6728,9 @@ define(
       var asyncDale, asyncKatz, asyncBryn;
 
       run(function () {
-        asyncDale = store.findRecord('person', 1);
-        asyncKatz = store.findRecord('person', 2);
-        asyncBryn = store.findRecord('person', 3);
+        asyncDale = store.find('person', 1);
+        asyncKatz = store.find('person', 2);
+        asyncBryn = store.find('person', 3);
       });
 
       store.filter('person', function (hash) {
@@ -6818,9 +6790,9 @@ define(
       var asyncDale, asyncKatz, asyncBryn;
 
       run(function () {
-        asyncDale = store.findRecord('person', 1);
-        asyncKatz = store.findRecord('person', 2);
-        asyncBryn = store.findRecord('person', 3);
+        asyncDale = store.find('person', 1);
+        asyncKatz = store.find('person', 2);
+        asyncBryn = store.find('person', 3);
       });
 
       store.filter('person', function (hash) {
@@ -6910,7 +6882,7 @@ define(
 
       equal(filter.get('length'), 1, 'the filter now has a record in it');
 
-      store.findRecord('person', 1).then(async(function (person) {
+      store.find('person', 1).then(async(function (person) {
         Ember.run(function () {
           person.set('name', 'Yehuda Katz');
         });
@@ -6939,12 +6911,12 @@ define(
       });
 
       equal(filter.get('length'), 1, 'the filter now has a record in it');
-      asyncEqual(filter.objectAt(0), store.findRecord('person', 1));
+      asyncEqual(filter.objectAt(0), store.find('person', 1));
     });
 
     test('filter with query persists query on the resulting filteredRecordArray', function () {
       customAdapter(env, DS.Adapter.extend({
-        query: function (store, type, id) {
+        findQuery: function (store, type, id) {
           return Ember.RSVP.resolve([{
             id: id,
             name: 'Tom Dale'
@@ -6971,7 +6943,7 @@ define(
       var filter;
 
       customAdapter(env, DS.Adapter.extend({
-        findRecord: function (store, type, id, snapshot) {
+        find: function (store, type, id, snapshot) {
           return Ember.RSVP.resolve({ id: id, name: 'Tom Dale' });
         }
       }));
@@ -6985,7 +6957,7 @@ define(
       equal(filter.get('length'), 0, 'precond - there are no records yet');
 
       Ember.run(function () {
-        var asyncPerson = store.findRecord('person', 1);
+        var asyncPerson = store.find('person', 1);
 
         // Ember.run will block `find` from being synchronously
         // resolved in test mode
@@ -6994,7 +6966,7 @@ define(
 
         asyncPerson.then(async(function (person) {
           equal(filter.get('length'), 1, 'the now-loaded record is in the filter');
-          asyncEqual(filter.objectAt(0), store.findRecord('person', 1));
+          asyncEqual(filter.objectAt(0), store.find('person', 1));
         }));
       });
     });
@@ -7014,7 +6986,7 @@ define(
         store.push('person', { id: 1, name: 'Tom Dale' });
       });
 
-      store.findRecord('person', 1).then(async(function (person) {
+      store.find('person', 1).then(async(function (person) {
         equal(filter.get('length'), 1, 'the clean record is in the filter');
 
         // Force synchronous update of the filter, even though
@@ -7068,7 +7040,7 @@ define(
 
     test('it is possible to filter created records by isReloading', function () {
       customAdapter(env, DS.Adapter.extend({
-        findRecord: function (store, type, id, snapshot) {
+        find: function (store, type, id, snapshot) {
           return Ember.RSVP.resolve({
             id: 1,
             name: 'Tom Dalle'
@@ -7100,7 +7072,7 @@ define(
         // wrap in an Ember.run to guarantee coalescence of the
         // iterated `set` calls and promise resolution.
         Ember.run(function () {
-          store.findRecord('person', id).then(function (person) {
+          store.find('person', id).then(function (person) {
             edited.push(person);
             person.set('name', 'Client-side ' + id);
           });
@@ -8133,12 +8105,12 @@ define(
     });
 
     test("When loading a record fails, the isLoading is set to false", function () {
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         return Ember.RSVP.reject();
       };
 
       run(function () {
-        env.store.findRecord("post", 1).then(null, async(function () {
+        env.store.find("post", 1).then(null, async(function () {
           // store.recordForId is private, but there is currently no other way to
           // get the specific record instance, since it is not passed to this
           // rejection handler
@@ -8353,7 +8325,7 @@ define(
     test('When a single record is requested, the adapter\'s find method should be called unless it\'s loaded.', function () {
       var count = 0;
 
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         if (count === 0) {
           count++;
           return Ember.RSVP.resolve({ id: id, name: 'Tom Dale' });
@@ -8366,7 +8338,7 @@ define(
       };
 
       run(function () {
-        env.store.findRecord('person', 1).then(function (person) {
+        env.store.find('person', 1).then(function (person) {
           equal(get(person, 'name'), 'Tom Dale', 'The person is loaded with the right name');
           equal(get(person, 'isLoaded'), true, 'The person is now loaded');
           var promise = person.reload();
@@ -8386,7 +8358,7 @@ define(
       });
 
       var count = 0;
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         equal(tom.get('isReloading'), true, 'Tom is reloading');
         if (count++ === 0) {
           return Ember.RSVP.reject();
@@ -8415,7 +8387,7 @@ define(
       });
 
       run(function () {
-        env.store.findRecord('person', 1).then(function (person) {
+        env.store.find('person', 1).then(function (person) {
           equal(get(person, 'isLoaded'), true, 'The person is loaded');
           person.addObserver('isLoaded', isLoadedDidChange);
 
@@ -8445,7 +8417,7 @@ define(
 
       var tags = { 1: 'hipster', 2: 'hair' };
 
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         switch (type.modelName) {
           case 'person':
             return Ember.RSVP.resolve({ id: 1, name: 'Tom', tags: [1, 2] });
@@ -8457,7 +8429,7 @@ define(
       var tom;
 
       run(function () {
-        env.store.findRecord('person', 1).then(function (person) {
+        env.store.find('person', 1).then(function (person) {
           tom = person;
           equal(person.get('name'), 'Tom', 'precond');
 
@@ -8974,7 +8946,7 @@ define(
         })
       });
 
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         ok(true, 'The adapter\'s find method should be called');
         return Ember.RSVP.resolve({
           id: 1
@@ -8989,7 +8961,7 @@ define(
       });
 
       run(function () {
-        env.store.findRecord('post', 1).then(function (post) {
+        env.store.find('post', 1).then(function (post) {
           post.get('user');
         });
       });
@@ -9005,8 +8977,8 @@ define(
 
       run(function () {
         hash({
-          post: store.findRecord('post', 1),
-          comment: store.findRecord('comment', 2)
+          post: store.find('post', 1),
+          comment: store.find('comment', 2)
         }).then(function (records) {
           expectAssertion(function () {
             records.post.set('user', records.comment);
@@ -9026,10 +8998,10 @@ define(
 
       run(function () {
         var asyncRecords = hash({
-          user: store.findRecord('user', 3),
-          post: store.findRecord('post', 1),
-          comment: store.findRecord('comment', 1),
-          anotherComment: store.findRecord('comment', 2)
+          user: store.find('user', 3),
+          post: store.find('post', 1),
+          comment: store.find('comment', 1),
+          anotherComment: store.find('comment', 2)
         });
 
         asyncRecords.then(function (records) {
@@ -9054,8 +9026,8 @@ define(
 
       run(function () {
         hash({
-          message: store.findRecord('post', 1),
-          comment: store.findRecord('comment', 2)
+          message: store.find('post', 1),
+          comment: store.find('comment', 2)
         }).then(function (records) {
           equal(records.comment.get('message'), records.message);
         });
@@ -9073,7 +9045,7 @@ define(
         env.store.push('post', { id: 1 });
         env.store.push('comment', { id: 2, message: 1, messageType: 'post' });
 
-        store.findRecord('comment', 2).then(function (comment) {
+        store.find('comment', 2).then(function (comment) {
           var serialized = store.serialize(comment, { includeId: true });
           equal(serialized['message'], 1);
           equal(serialized['message_type'], 'post');
@@ -9097,7 +9069,7 @@ define(
         store.push('person', { id: 1, links: { group: '/people/1/group' } });
       });
 
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         throw new Error('Adapter\'s find method should not be called');
       };
 
@@ -9110,7 +9082,7 @@ define(
       });
 
       run(function () {
-        env.store.findRecord('person', 1).then(function (person) {
+        env.store.find('person', 1).then(function (person) {
           return person.get('group');
         }).then(function (group) {
           ok(group instanceof Group, 'A group object is loaded');
@@ -9135,7 +9107,7 @@ define(
         store.push('person', { id: 1, links: { seat: '/people/1/seat' } });
       });
 
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         throw new Error('Adapter\'s find method should not be called');
       };
 
@@ -9144,7 +9116,7 @@ define(
       });
 
       run(function () {
-        env.store.findRecord('person', 1).then(function (person) {
+        env.store.find('person', 1).then(function (person) {
           person.get('seat').then(function (seat) {
             // this assertion fails too
             // ok(seat.get('person') === person, 'parent relationship should be populated');
@@ -9173,7 +9145,7 @@ define(
         store.push('person', { id: 1, links: { group: '/people/1/group' } });
       });
 
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         throw new Error('Adapter\'s find method should not be called');
       };
 
@@ -9181,7 +9153,7 @@ define(
         return Ember.RSVP.resolve(null);
       });
 
-      env.store.findRecord('person', 1).then(async(function (person) {
+      env.store.find('person', 1).then(async(function (person) {
         return person.get('group');
       })).then(async(function (group) {
         ok(group === null, 'group should be null');
@@ -9207,7 +9179,7 @@ define(
         group = store.push('group', { id: 1 });
       });
 
-      var groupPromise = store.findRecord('group', 1);
+      var groupPromise = store.find('group', 1);
       groupPromise.then(async(function (group) {
         var person = env.store.createRecord('person', {
           group: groupPromise
@@ -9417,7 +9389,7 @@ define(
         });
       });
 
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         throw new Error('Adapter\'s find method should not be called');
       };
 
@@ -9496,12 +9468,12 @@ define(
         author: belongsTo('author', { async: true })
       });
 
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         return Ember.RSVP.resolve({ id: 1, name: 'The Greatest Book', author: 2 });
       };
 
       run(function () {
-        store.findRecord('book', 1).then(function (book) {
+        store.find('book', 1).then(function (book) {
           var relationship = book._internalModel._relationships.get('author');
           equal(relationship.hasData, true, 'relationship has data');
         });
@@ -9511,12 +9483,12 @@ define(
     test('belongsTo hasData sync loaded', function () {
       expect(1);
 
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         return Ember.RSVP.resolve({ id: 1, name: 'The Greatest Book', author: 2 });
       };
 
       run(function () {
-        store.findRecord('book', 1).then(function (book) {
+        store.find('book', 1).then(function (book) {
           var relationship = book._internalModel._relationships.get('author');
           equal(relationship.hasData, true, 'relationship has data');
         });
@@ -9530,12 +9502,12 @@ define(
         author: belongsTo('author', { async: true })
       });
 
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         return Ember.RSVP.resolve({ id: 1, name: 'The Greatest Book', links: { author: 'author' } });
       };
 
       run(function () {
-        store.findRecord('book', 1).then(function (book) {
+        store.find('book', 1).then(function (book) {
           var relationship = book._internalModel._relationships.get('author');
           equal(relationship.hasData, false, 'relationship does not have data');
         });
@@ -9545,12 +9517,12 @@ define(
     test('belongsTo hasData sync not loaded', function () {
       expect(1);
 
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         return Ember.RSVP.resolve({ id: 1, name: 'The Greatest Book' });
       };
 
       run(function () {
-        store.findRecord('book', 1).then(function (book) {
+        store.find('book', 1).then(function (book) {
           var relationship = book._internalModel._relationships.get('author');
           equal(relationship.hasData, false, 'relationship does not have data');
         });
@@ -9736,7 +9708,7 @@ define(
       run(function () {
         env.store.push('post', { id: 1, comments: [1] });
         env.store.push('comment', { id: 1 });
-        env.store.findRecord('post', 1).then(function (post) {
+        env.store.find('post', 1).then(function (post) {
           return post.get('comments');
         });
       });
@@ -9754,7 +9726,7 @@ define(
 
       run(function () {
         env.store.push('book', { id: 1, chapters: [2, 3, 3] });
-        env.store.findRecord('book', 1).then(function (book) {
+        env.store.find('book', 1).then(function (book) {
           return book.get('chapters');
         });
       });
@@ -9771,7 +9743,7 @@ define(
 
       // When the store asks the adapter for the record with ID 1,
       // provide some fake data.
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         equal(type, Post, 'find type was Post');
         equal(id, '1', 'find id was 1');
 
@@ -9790,7 +9762,7 @@ define(
       };
 
       run(function () {
-        env.store.findRecord('post', 1).then(async(function (post) {
+        env.store.find('post', 1).then(async(function (post) {
           return post.get('comments');
         })).then(async(function (comments) {
           equal(comments.get('isLoaded'), true, 'comments are loaded');
@@ -9950,7 +9922,7 @@ define(
         comments: DS.hasMany('comment', { async: true })
       });
 
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         equal(type, Post, 'find type was Post');
         equal(id, '1', 'find id was 1');
 
@@ -9966,7 +9938,7 @@ define(
       };
 
       run(function () {
-        run(env.store, 'findRecord', 'post', 1).then(function (post) {
+        run(env.store, 'find', 'post', 1).then(function (post) {
           return post.get('comments');
         }).then(function (comments) {
           equal(comments.get('isLoaded'), true, 'comments are loaded');
@@ -9992,7 +9964,7 @@ define(
         comments: DS.hasMany('comment')
       });
 
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         equal(type, Post, 'find type was Post');
         equal(id, '1', 'find id was 1');
 
@@ -10002,7 +9974,7 @@ define(
       run(function () {
         env.store.pushMany('comment', [{ id: 1, body: 'First' }, { id: 2, body: 'Second' }]);
 
-        env.store.findRecord('post', '1').then(function (post) {
+        env.store.find('post', '1').then(function (post) {
           var comments = post.get('comments');
           equal(comments.get('isLoaded'), true, 'comments are loaded');
           equal(comments.get('length'), 2, 'comments have a length of 2');
@@ -10023,7 +9995,7 @@ define(
         comments: DS.hasMany('comment', { async: true })
       });
 
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         equal(type, Post, 'find type was Post');
         equal(id, '1', 'find id was 1');
 
@@ -10035,7 +10007,7 @@ define(
       };
 
       run(function () {
-        env.store.findRecord('post', 1).then(function (post) {
+        env.store.find('post', 1).then(function (post) {
           return post.get('comments');
         }).then(function (comments) {
           equal(comments.get('isLoaded'), true, 'comments are loaded');
@@ -10057,7 +10029,7 @@ define(
         comments: DS.hasMany('comment', { async: true })
       });
 
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         equal(type, Post, 'find type was Post');
         equal(id, '1', 'find id was 1');
 
@@ -10069,7 +10041,7 @@ define(
       };
 
       run(function () {
-        env.store.findRecord('post', 1).then(function (post) {
+        env.store.find('post', 1).then(function (post) {
           return post.get('comments').reload().then(function (comments) {
             equal(comments.get('isLoaded'), true, 'comments are loaded');
             equal(comments.get('length'), 2, 'comments have 2 length');
@@ -10205,7 +10177,7 @@ define(
       });
 
       run(function () {
-        env.store.findRecord('user', 1).then(function (user) {
+        env.store.find('user', 1).then(function (user) {
           var messages = user.get('messages');
           equal(messages.get('length'), 2, 'The messages are correctly loaded');
         });
@@ -10217,7 +10189,7 @@ define(
         messages: hasMany('message', { polymorphic: true, async: true })
       });
 
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         if (type === Post) {
           return Ember.RSVP.resolve({ id: 1 });
         } else if (type === Comment) {
@@ -10230,7 +10202,7 @@ define(
       });
 
       run(function () {
-        env.store.findRecord('user', 1).then(function (user) {
+        env.store.find('user', 1).then(function (user) {
           return user.get('messages');
         }).then(function (messages) {
           equal(messages.get('length'), 2, 'The messages are correctly loaded');
@@ -10265,7 +10237,7 @@ define(
         env.store.push('contact', { id: 1 });
       });
       run(function () {
-        env.store.findRecord('user', 1).then(function (user) {
+        env.store.find('user', 1).then(function (user) {
           return user.get('contacts');
         }).then(function (contacts) {
           equal(contacts.get('length'), 1, 'The contacts relationship is correctly set up');
@@ -10284,7 +10256,7 @@ define(
         env.store.push('contact', { id: 1 });
       });
       run(function () {
-        env.store.findRecord('user', 1).then(function (user) {
+        env.store.find('user', 1).then(function (user) {
           return user.get('contacts');
         }).then(function (contacts) {
           equal(contacts.get('length'), 1, 'The contacts relationship is correctly set up');
@@ -10304,7 +10276,7 @@ define(
         env.store.push('phone', { id: 2 });
       });
       run(function () {
-        env.store.findRecord('user', 1).then(function (user) {
+        env.store.find('user', 1).then(function (user) {
           return user.get('contacts');
         }).then(function (contacts) {
           equal(contacts.get('length'), 2, 'The contacts relationship is correctly set up');
@@ -10341,7 +10313,7 @@ define(
       });
 
       run(function () {
-        env.store.findRecord('user', 1).then(function (user) {
+        env.store.find('user', 1).then(function (user) {
           return user.get('messages');
         }).then(function (messages) {
           expectAssertion(function () {
@@ -10359,7 +10331,7 @@ define(
       });
 
       run(function () {
-        Ember.RSVP.all([env.store.findRecord('post', 1), env.store.findRecord('post', 2)]).then(function (records) {
+        Ember.RSVP.all([env.store.find('post', 1), env.store.find('post', 2)]).then(function (records) {
           expectAssertion(function () {
             records[0].get('comments').pushObject(records[1]);
           }, /You cannot add a record of type 'post' to the 'post.comments' relationship \(only 'comment' allowed\)/);
@@ -10379,10 +10351,10 @@ define(
 
       run(function () {
         asyncRecords = Ember.RSVP.hash({
-          user: env.store.findRecord('user', 1),
-          anotherUser: env.store.findRecord('user', 2),
-          post: env.store.findRecord('post', 1),
-          comment: env.store.findRecord('comment', 3)
+          user: env.store.find('user', 1),
+          anotherUser: env.store.find('user', 2),
+          post: env.store.find('post', 1),
+          comment: env.store.find('comment', 3)
         });
 
         asyncRecords.then(function (records) {
@@ -10411,8 +10383,8 @@ define(
 
       run(function () {
         asyncRecords = Ember.RSVP.hash({
-          user: env.store.findRecord('user', 1),
-          comment: env.store.findRecord('comment', 3)
+          user: env.store.find('user', 1),
+          comment: env.store.find('comment', 3)
         });
 
         asyncRecords.then(function (records) {
@@ -10565,7 +10537,7 @@ define(
         return resolve([{ id: 1, body: 'first' }, { id: 2, body: 'second' }]);
       };
 
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         return resolve({ id: 3, body: 'third' });
       };
       var post;
@@ -10871,7 +10843,7 @@ define(
 
       run(function () {
         stop();
-        env.store.findRecord('post', 1).then(function (post) {
+        env.store.find('post', 1).then(function (post) {
           var comments = post.get('comments');
           equal(comments.get('length'), 3, 'Initial comments count');
 
@@ -10908,12 +10880,12 @@ define(
         pages: hasMany('pages', { async: true })
       });
 
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         return Ember.RSVP.resolve({ id: 1, title: 'The Story Begins', pages: [2, 3] });
       };
 
       run(function () {
-        store.findRecord('chapter', 1).then(function (chapter) {
+        store.find('chapter', 1).then(function (chapter) {
           var relationship = chapter._internalModel._relationships.get('pages');
           equal(relationship.hasData, true, 'relationship has data');
         });
@@ -10923,12 +10895,12 @@ define(
     test('hasMany hasData sync loaded', function () {
       expect(1);
 
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         return Ember.RSVP.resolve({ id: 1, title: 'The Story Begins', pages: [2, 3] });
       };
 
       run(function () {
-        store.findRecord('chapter', 1).then(function (chapter) {
+        store.find('chapter', 1).then(function (chapter) {
           var relationship = chapter._internalModel._relationships.get('pages');
           equal(relationship.hasData, true, 'relationship has data');
         });
@@ -10942,12 +10914,12 @@ define(
         pages: hasMany('pages', { async: true })
       });
 
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         return Ember.RSVP.resolve({ id: 1, title: 'The Story Begins', links: { pages: 'pages' } });
       };
 
       run(function () {
-        store.findRecord('chapter', 1).then(function (chapter) {
+        store.find('chapter', 1).then(function (chapter) {
           var relationship = chapter._internalModel._relationships.get('pages');
           equal(relationship.hasData, false, 'relationship does not have data');
         });
@@ -10957,12 +10929,12 @@ define(
     test('hasMany hasData sync not loaded', function () {
       expect(1);
 
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         return Ember.RSVP.resolve({ id: 1, title: 'The Story Begins' });
       };
 
       run(function () {
-        store.findRecord('chapter', 1).then(function (chapter) {
+        store.find('chapter', 1).then(function (chapter) {
           var relationship = chapter._internalModel._relationships.get('pages');
           equal(relationship.hasData, false, 'relationship does not have data');
         });
@@ -12701,7 +12673,7 @@ define(
         igor = store.push('user', { id: 3, name: 'Igor', bestFriend: 5 });
         newFriend = store.push('user', { id: 7, name: 'New friend' });
       });
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         if (id === '5') {
           return Ember.RSVP.resolve({ id: 5, name: 'Igor\'s friend' });
         } else if (id === '2') {
@@ -13353,7 +13325,7 @@ define(
       var json;
 
       run(function () {
-        json = serializer.normalizeSingleResponse(env.store, HomePlanet, json_hash, '1', 'findRecord');
+        json = serializer.normalizeSingleResponse(env.store, HomePlanet, json_hash, '1', 'find');
       });
 
       deepEqual(json, {
@@ -13414,7 +13386,7 @@ define(
       var json;
 
       run(function () {
-        json = serializer.normalizeSingleResponse(env.store, HomePlanet, json_hash, '1', 'findRecord');
+        json = serializer.normalizeSingleResponse(env.store, HomePlanet, json_hash, '1', 'find');
       });
 
       deepEqual(json, {
@@ -13480,7 +13452,7 @@ define(
       };
       var json;
       run(function () {
-        json = serializer.normalizeSingleResponse(env.store, Comment, json_hash, '1', 'findRecord');
+        json = serializer.normalizeSingleResponse(env.store, Comment, json_hash, '1', 'find');
       });
 
       deepEqual(json, {
@@ -13549,7 +13521,7 @@ define(
       };
       var json;
       run(function () {
-        json = serializer.normalizeSingleResponse(env.store, Comment, json_hash, '1', 'findRecord');
+        json = serializer.normalizeSingleResponse(env.store, Comment, json_hash, '1', 'find');
       });
 
       deepEqual(json, {
@@ -13635,7 +13607,7 @@ define(
       };
       var json;
       run(function () {
-        json = serializer.normalizeSingleResponse(env.store, HomePlanet, json_hash, '1', 'findRecord');
+        json = serializer.normalizeSingleResponse(env.store, HomePlanet, json_hash, '1', 'find');
       });
 
       deepEqual(json, {
@@ -14095,7 +14067,7 @@ define(
       var json;
 
       run(function () {
-        json = serializer.normalizeSingleResponse(env.store, SuperVillain, json_hash, '1', 'findRecord');
+        json = serializer.normalizeSingleResponse(env.store, SuperVillain, json_hash, '1', 'find');
       });
 
       deepEqual(json, {
@@ -14167,7 +14139,7 @@ define(
       var json;
 
       run(function () {
-        json = serializer.normalizeSingleResponse(env.store, EvilMinion, json_hash, '1', 'findRecord');
+        json = serializer.normalizeSingleResponse(env.store, EvilMinion, json_hash, '1', 'find');
       });
 
       deepEqual(json, {
@@ -14311,7 +14283,7 @@ define(
       var json;
 
       run(function () {
-        json = serializer.normalizeSingleResponse(env.store, SuperVillain, json_hash, '1', 'findRecord');
+        json = serializer.normalizeSingleResponse(env.store, SuperVillain, json_hash, '1', 'find');
       });
 
       deepEqual(json, {
@@ -14365,7 +14337,7 @@ define(
       var json;
 
       run(function () {
-        json = serializer.normalizeResponse(env.store, EvilMinion, json_hash, '1', 'findRecord');
+        json = serializer.normalizeResponse(env.store, EvilMinion, json_hash, '1', 'find');
       });
 
       deepEqual(json, {
@@ -16874,7 +16846,7 @@ define(
       var array;
 
       run(function () {
-        array = env.container.lookup('serializer:application').normalizeSingleResponse(env.store, HomePlanet, jsonHash, '1', 'findRecord');
+        array = env.container.lookup('serializer:application').normalizeSingleResponse(env.store, HomePlanet, jsonHash, '1', 'find');
       });
 
       deepEqual(array, {
@@ -16974,7 +16946,7 @@ define(
 
       warns(Ember.run.bind(null, function () {
         run(function () {
-          env.restNewSerializer.normalizeSingleResponse(env.store, HomePlanet, jsonHash, '1', 'findRecord');
+          env.restNewSerializer.normalizeSingleResponse(env.store, HomePlanet, jsonHash, '1', 'find');
         });
       }), /Encountered "home_planet" in payload, but no model was found for model name "garbage"/);
 
@@ -16986,8 +16958,7 @@ define(
 
       noWarns(function () {
         run(function () {
-
-          homePlanet = env.restNewSerializer.normalizeSingleResponse(env.store, HomePlanet, jsonHash, 1, 'findRecord');
+          homePlanet = env.restNewSerializer.normalizeSingleResponse(env.store, HomePlanet, jsonHash, 1, 'find');
         });
       });
 
@@ -17003,7 +16974,7 @@ define(
       var array;
 
       run(function () {
-        array = env.restNewSerializer.normalizeResponse(env.store, Comment, jsonHash, '1', 'findRecord');
+        array = env.restNewSerializer.normalizeResponse(env.store, Comment, jsonHash, '1', 'find');
       });
 
       deepEqual(array, {
@@ -17060,7 +17031,7 @@ define(
       };
 
       run(function () {
-        env.restNewSerializer.normalizeSingleResponse(env.store, EvilMinion, jsonHash, '1', 'findRecord');
+        env.restNewSerializer.normalizeSingleResponse(env.store, EvilMinion, jsonHash, '1', 'find');
       });
 
       equal(superVillainNormalizeCount, 1, 'superVillain is normalized once');
@@ -17075,7 +17046,7 @@ define(
       var value;
 
       run(function () {
-        value = env.restNewSerializer.normalizeSingleResponse(env.store, EvilMinion, jsonHash, null, 'findRecord');
+        value = env.restNewSerializer.normalizeSingleResponse(env.store, EvilMinion, jsonHash, null, 'find');
       });
 
       deepEqual(value, { data: null, included: [] }, 'returned value is null');
@@ -18483,7 +18454,7 @@ define(
       expect(0);
 
       var TestAdapter = DS.Adapter.extend({
-        findRecord: function (store, type, id, snapshot) {
+        find: function (store, type, id, snapshot) {
           return new Ember.RSVP.Promise(function (resolve, reject) {
             Ember.run.next(function () {
               store.unloadAll(type.modelName);
@@ -18503,7 +18474,7 @@ define(
       }
 
       run(function () {
-        store.findRecord(type, id).then(done, done);
+        store.find(type, id).then(done, done);
       });
     });
 
@@ -18511,7 +18482,7 @@ define(
       expect(0);
 
       var TestAdapter = DS.Adapter.extend({
-        findRecord: function (store, type, id, snapshot) {
+        find: function (store, type, id, snapshot) {
           store.destroy();
           Ember.RSVP.resolve(null);
         }
@@ -18529,7 +18500,7 @@ define(
       };
 
       run(function () {
-        store.findRecord(type, id);
+        store.find(type, id);
       });
 
       setTimeout(function () {
@@ -18558,7 +18529,7 @@ define(
       var carWillDestroy = tap(car, 'willDestroy');
       var carsWillDestroy = tap(car.get('person.cars'), 'willDestroy');
 
-      env.adapter.query = function () {
+      env.adapter.findQuery = function () {
         return [{
           id: 2,
           name: 'Yehuda'
@@ -18582,7 +18553,7 @@ define(
       var adapterPopulatedPeopleWillDestroy = tap(adapterPopulatedPeople.content, 'willDestroy');
 
       run(function () {
-        store.findRecord('person', 2);
+        store.find('person', 2);
       });
 
       equal(personWillDestroy.called.length, 0, 'expected person.willDestroy to not have been called');
@@ -19083,17 +19054,17 @@ define(
       equal(adapter.buildURL('rootModel', 1), '/1');
     });
 
-    test('buildURL - find requestType delegates to urlForFindRecord', function () {
+    test('buildURL - find requestType delegates to urlForFind', function () {
       expect(4);
       var snapshotStub = { snapshot: true };
-      var originalMethod = adapter.urlForFindRecord;
-      adapter.urlForFindRecord = function (id, type, snapshot) {
+      var originalMethod = adapter.urlForFind;
+      adapter.urlForFind = function (id, type, snapshot) {
         equal(id, 1);
         equal(type, 'super-user');
         equal(snapshot, snapshotStub);
         return originalMethod.apply(this, arguments);
       };
-      equal(adapter.buildURL('super-user', 1, snapshotStub, 'findRecord'), '/superUsers/1');
+      equal(adapter.buildURL('super-user', 1, snapshotStub, 'find'), '/superUsers/1');
     });
 
     test('buildURL - findAll requestType delegates to urlForFindAll', function () {
@@ -19106,16 +19077,16 @@ define(
       equal(adapter.buildURL('super-user', null, null, 'findAll'), '/superUsers');
     });
 
-    test('buildURL - query requestType delegates to urlForQuery', function () {
+    test('buildURL - findQuery requestType delegates to urlForFindQuery', function () {
       expect(3);
-      var originalMethod = adapter.urlForQuery;
+      var originalMethod = adapter.urlForFindQuery;
       var queryStub = { limit: 10 };
-      adapter.urlForQuery = function (query, type) {
+      adapter.urlForFindQuery = function (query, type) {
         equal(query, queryStub);
         equal(type, 'super-user');
         return originalMethod.apply(this, arguments);
       };
-      equal(adapter.buildURL('super-user', null, null, 'query', queryStub), '/superUsers');
+      equal(adapter.buildURL('super-user', null, null, 'findQuery', queryStub), '/superUsers');
     });
 
     test('buildURL - findMany requestType delegates to urlForFindMany', function () {
@@ -19321,8 +19292,8 @@ define(
         return Ember.RSVP.resolve();
       };
       run(function () {
-        adapter.findRecord(store, Person, 1);
-        adapter.findRecord(store, Place, 1);
+        adapter.find(store, Person, 1);
+        adapter.find(store, Place, 1);
       });
     });
 
@@ -19333,7 +19304,7 @@ define(
         return Ember.RSVP.resolve();
       };
       run(function () {
-        adapter.findRecord(store, Person, '../place/1');
+        adapter.find(store, Person, '../place/1');
       });
     });
 
@@ -19394,54 +19365,6 @@ define(
         type: 'POST',
         url: 'example.com'
       });
-    });
-  }
-);
-
-
-define(
-  "ember-data/tests/unit/adapters/rest-adapter/deprecated-adapter-methods",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-
-    function __es6_export__(name, value) {
-      __exports__[name] = value;
-    }
-
-    var store = {};
-    var type = "post";
-    var id = 1;
-    var snapshot = {};
-
-    module("unit/adapters/rest-adapter/deprecated-adapter-methods - ");
-
-    test("`findRecord` delegates to deprecated find method if it is supplied", function () {
-      expect(2);
-
-      var adapter = DS.RESTAdapter.extend({
-        find: function () {
-          ok(true, "overridden `find` method should be called");
-        }
-      }).create();
-
-      expectDeprecation(function () {
-        adapter.findRecord(store, type, id, snapshot);
-      }, /RestAdapter#find has been deprecated and renamed to `findRecord`./);
-    });
-
-    test("`query` delegates to deprecated findQuery method if it is supplied", function () {
-      expect(2);
-
-      var adapter = DS.RESTAdapter.extend({
-        findQuery: function () {
-          ok(true, "overridden `findQuery` method should be called");
-        }
-      }).create();
-
-      expectDeprecation(function () {
-        adapter.query(store, type, id, snapshot);
-      }, /RestAdapter#findQuery has been deprecated and renamed to `query`./);
     });
   }
 );
@@ -19750,7 +19673,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
     run(function () {
       store.push('person', { id: 1, name: 'Peter', isDrugAddict: true });
-      store.findRecord('person', 1).then(function (person) {
+      store.find('person', 1).then(function (person) {
         equal(person.get('isDirty'), false, 'precond - person record should not be dirty');
 
         person.set('name', 'Peter');
@@ -19766,7 +19689,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
     run(function () {
       store.push('person', { id: 1, name: 'Peter', isDrugAddict: true });
-      store.findRecord('person', 1).then(function (person) {
+      store.find('person', 1).then(function (person) {
         equal(person.get('isDirty'), false, 'precond - person record should not be dirty');
         person.set('isDrugAddict', false);
         equal(person.get('isDirty'), true, 'record becomes dirty after setting property to a new value');
@@ -19781,7 +19704,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
     run(function () {
       store.push('person', { id: 1, name: 'Peter', isDrugAddict: true });
-      store.findRecord('person', 1).then(function (person) {
+      store.find('person', 1).then(function (person) {
         equal(person.get('isDirty'), false, 'precond - person record should not be dirty');
         person.set('isDrugAddict', false);
         equal(person.get('isDirty'), true, 'record becomes dirty after setting one property to a new value');
@@ -19800,7 +19723,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
     run(function () {
       store.push('person', { id: 1 });
-      store.findRecord('person', 1).then(function (record) {
+      store.find('person', 1).then(function (record) {
         equal(get(record, 'id'), 1, 'reports id as id by default');
       });
     });
@@ -19811,7 +19734,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
     run(function () {
       store.push('person', { id: 1 });
-      store.findRecord('person', 1).then(function (record) {
+      store.find('person', 1).then(function (record) {
         equal(record.toString(), '<(subclass of DS.Model):' + Ember.guidFor(record) + ':1>', 'reports id in toString');
       });
     });
@@ -19830,7 +19753,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     expectAssertion(function () {
       run(function () {
         store.push('person', { id: 1, name: 'Scumdale' });
-        store.findRecord('person', 1);
+        store.find('person', 1);
       });
     }, /You may not set `id`/);
   });
@@ -19845,7 +19768,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
       }
       run(function () {
         store.push('person', { id: 'watch' });
-        store.findRecord('person', 'watch').then(function (record) {
+        store.find('person', 'watch').then(function (record) {
           equal(get(record, 'id'), 'watch', 'record is successfully created and could be found by its id');
         });
       });
@@ -19863,7 +19786,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     run(function() {
       store.push('person', { id: 1 });
 
-      store.findRecord(Person, 1).then(function(record) {
+      store.find(Person, 1).then(function(record) {
         equal(record.get('_internalModel'), undefined, "doesn't shadow internalModel key");
       });
     });
@@ -19886,7 +19809,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
     run(function () {
       store.push('post', { id: 1 });
-      store.findRecord('post', 1).then(function (record) {
+      store.find('post', 1).then(function (record) {
         run(function () {
           record.set('updatedAt', date);
         });
@@ -20042,7 +19965,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     expect(1);
 
     run(function () {
-      store.findRecord('person', 2).then(function (person) {
+      store.find('person', 2).then(function (person) {
         set(person, 'name', 'Brohuda Katz');
         equal(get(person, 'name'), 'Brohuda Katz', 'setting took hold');
       });
@@ -20173,7 +20096,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     expect(3);
 
     run(function () {
-      store.findRecord('person', 1).then(function (person) {
+      store.find('person', 1).then(function (person) {
         equal(person._internalModel._attributes.name, undefined, 'the `_attributes` hash is clean');
 
         set(person, 'name', 'Niceguy Dale');
@@ -20305,7 +20228,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     run(function () {
       testStore.push('model', serializer.normalize(Model, { id: 1, name: provided }));
       testStore.push('model', serializer.normalize(Model, { id: 2 }));
-      testStore.findRecord('model', 1).then(function (record) {
+      testStore.find('model', 1).then(function (record) {
         deepEqual(get(record, 'name'), expected, type + ' coerces ' + provided + ' to ' + expected);
       });
     });
@@ -20337,7 +20260,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
     run(function () {
       testStore.push('model', serializer.normalize(Model, { id: '1', name: provided }));
-      testStore.findRecord('model', 1).then(function (record) {
+      testStore.find('model', 1).then(function (record) {
         deepEqual(get(record, 'name'), expected, type + ' coerces ' + provided + ' to ' + expected);
       });
     });
@@ -20352,7 +20275,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
     run(function () {
       testStore.push('model', { id: 2 });
-      testStore.findRecord('model', 2).then(function (record) {
+      testStore.find('model', 2).then(function (record) {
         set(record, 'name', provided);
         deepEqual(record.serialize().name, expected, type + ' saves ' + provided + ' as ' + expected);
       });
@@ -20415,7 +20338,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
     run(function () {
       store.push('person', { id: 1 });
-      store.findRecord('person', 1).then(function (record) {
+      store.find('person', 1).then(function (record) {
         run(function () {
           record.set('updatedAt', date);
         });
@@ -20450,7 +20373,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
     var store = createStore({
       adapter: DS.Adapter.extend({
-        findRecord: function (store, type, id, snapshot) {
+        find: function (store, type, id, snapshot) {
           return Ember.RSVP.resolve({ id: 1, name: 'John' });
         }
       }),
@@ -20458,7 +20381,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     });
 
     run(function () {
-      store.findRecord('person', 1).then(function (person) {
+      store.find('person', 1).then(function (person) {
         equal(get(person, 'currentState.stateName'), 'root.loaded.saved', 'model is in loaded state');
         equal(get(person, 'isLoaded'), true, 'model is loaded');
       });
@@ -20778,7 +20701,7 @@ define(
       });
 
       var adapter = DS.Adapter.extend({
-        findRecord: function (store, type, id, snapshot) {
+        find: function (store, type, id, snapshot) {
           return Ember.RSVP.resolve({ id: 1, name: "Foo" });
         }
       });
@@ -20789,7 +20712,7 @@ define(
       });
 
       run(function () {
-        store.findRecord("person", 1).then(function (person) {
+        store.find("person", 1).then(function (person) {
           equal(person.get("id"), "1", "The person's ID is available");
           equal(person.get("name"), "Foo", "The person's properties are available");
         });
@@ -20839,7 +20762,7 @@ define(
       });
 
       var adapter = DS.Adapter.extend({
-        findRecord: function (store, type, id, snapshot) {
+        find: function (store, type, id, snapshot) {
           return Ember.RSVP.resolve({ id: 1, name: "Foo" });
         },
 
@@ -20857,7 +20780,7 @@ define(
       var asyncPerson;
 
       run(function () {
-        asyncPerson = store.findRecord("person", 1);
+        asyncPerson = store.find("person", 1);
       });
       equal(callCount, 0, "precond - didUpdate callback was not called yet");
 
@@ -20931,7 +20854,7 @@ define(
       });
 
       var adapter = DS.Adapter.extend({
-        findRecord: function (store, type, id, snapshot) {
+        find: function (store, type, id, snapshot) {
           return Ember.RSVP.resolve({ id: 1, name: "Foo" });
         },
 
@@ -20949,7 +20872,7 @@ define(
       var asyncPerson;
 
       run(function () {
-        asyncPerson = store.findRecord("person", 1);
+        asyncPerson = store.find("person", 1);
       });
 
       equal(callCount, 0, "precond - didDelete callback was not called yet");
@@ -21019,7 +20942,7 @@ define(
       });
 
       var adapter = DS.Adapter.extend({
-        findRecord: function (store, type, id, snapshot) {
+        find: function (store, type, id, snapshot) {
           return Ember.RSVP.resolve({ id: 1, name: "Foo" });
         },
 
@@ -21037,7 +20960,7 @@ define(
       var asyncPerson;
 
       run(function () {
-        asyncPerson = store.findRecord("person", 1);
+        asyncPerson = store.find("person", 1);
       });
       equal(callCount, 0, "precond - becameInvalid callback was not called yet");
 
@@ -21291,7 +21214,7 @@ define(
       expect(3);
 
       var adapter = DS.Adapter.extend({
-        findRecord: function (store, type, id, snapshot) {
+        find: function (store, type, id, snapshot) {
           return Ember.RSVP.resolve({ id: 1, name: "Thomas Dale", city: "Portland" });
         }
       });
@@ -21425,14 +21348,14 @@ define(
       });
 
       run(function () {
-        store.findRecord("person", 1).then(async(function (person) {
+        store.find("person", 1).then(async(function (person) {
           equal(get(person, "name"), "Tom Dale", "precond - retrieves person record from store");
 
           equal(get(person, "tag") instanceof Tag, true, "the tag property should return a tag");
           equal(get(person, "tag.name"), "friendly", "the tag shuld have name");
 
           strictEqual(get(person, "tag"), get(person, "tag"), "the returned object is always the same");
-          asyncEqual(get(person, "tag"), store.findRecord("tag", 5), "relationship object is the same as object retrieved directly");
+          asyncEqual(get(person, "tag"), store.find("tag", 5), "relationship object is the same as object retrieved directly");
         }));
       });
     });
@@ -21452,7 +21375,7 @@ define(
       var env = setupStore({ tag: Tag, person: Person });
       var store = env.store;
 
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         if (type === Person) {
           equal(id, 1, "id should be 1");
 
@@ -21465,7 +21388,7 @@ define(
       };
 
       run(function () {
-        store.findRecord("person", 1).then(async(function (person) {
+        store.find("person", 1).then(async(function (person) {
           equal(get(person, "name"), "Tom Dale", "The person is now populated");
 
           return run(function () {
@@ -21499,7 +21422,7 @@ define(
       });
 
       run(function () {
-        store.findRecord("person", 1).then(async(function (person) {
+        store.find("person", 1).then(async(function (person) {
           equal(get(person, "name"), "Tom Dale", "The person is now populated");
           return run(function () {
             return get(person, "tag");
@@ -21532,7 +21455,7 @@ define(
       });
 
       run(function () {
-        store.findRecord("person", 1).then(async(function (person) {
+        store.find("person", 1).then(async(function (person) {
           strictEqual(person.get("tag"), null, "undefined values should return null relationships");
         }));
       });
@@ -21572,7 +21495,7 @@ define(
       });
 
       run(function () {
-        store.findRecord("person", 1).then(async(function (person) {
+        store.find("person", 1).then(async(function (person) {
           equal(get(person, "isLoaded"), true, "isLoaded should be true");
           equal(get(person, "name"), "Tom Dale", "the person is still Tom Dale");
 
@@ -21610,7 +21533,7 @@ define(
       var env = setupStore({ occupation: Occupation, person: Person });
       var store = env.store;
 
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         equal(snapshot.belongsTo("person").id, "1");
         return Ember.RSVP.resolve({ id: 5, description: "fifth" });
       };
@@ -21652,14 +21575,14 @@ define(
       });
 
       run(function () {
-        store.findRecord("person", 1).then(async(function (person) {
+        store.find("person", 1).then(async(function (person) {
           equal(get(person, "name"), "Tom Dale", "precond - retrieves person record from store");
 
           equal(get(person, "tag") instanceof Tag, true, "the tag property should return a tag");
           equal(get(person, "tag.name"), "friendly", "the tag should have name");
 
           strictEqual(get(person, "tag"), get(person, "tag"), "the returned object is always the same");
-          asyncEqual(get(person, "tag"), store.findRecord("tag", 0), "relationship object is the same as object retrieved directly");
+          asyncEqual(get(person, "tag"), store.find("tag", 0), "relationship object is the same as object retrieved directly");
         }));
       });
     });
@@ -21776,11 +21699,11 @@ define(
       env.registry.register("model:pet", Pet);
       env.registry.register("model:person", Person);
 
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         if (type === Tag && id === "12") {
           return Ember.RSVP.resolve({ id: 12, name: "oohlala" });
         } else {
-          ok(false, "findRecord() should not be called with these values");
+          ok(false, "find() should not be called with these values");
         }
       };
 
@@ -21794,7 +21717,7 @@ define(
       });
 
       run(function () {
-        store.findRecord("person", 1).then(function (person) {
+        store.find("person", 1).then(function (person) {
           equal(get(person, "name"), "Tom Dale", "precond - retrieves person record from store");
 
           var tags = get(person, "tags");
@@ -21809,20 +21732,20 @@ define(
           equal(get(get(person, "tags"), "length"), 2, "the length is updated after new data is loaded");
 
           strictEqual(get(person, "tags").objectAt(0), get(person, "tags").objectAt(0), "the returned object is always the same");
-          asyncEqual(get(person, "tags").objectAt(0), store.findRecord("tag", 5), "relationship objects are the same as objects retrieved directly");
+          asyncEqual(get(person, "tags").objectAt(0), store.find("tag", 5), "relationship objects are the same as objects retrieved directly");
 
           run(function () {
             store.push("person", { id: 3, name: "KSelden" });
           });
 
-          return store.findRecord("person", 3);
+          return store.find("person", 3);
         }).then(function (kselden) {
           equal(get(get(kselden, "tags"), "length"), 0, "a relationship that has not been supplied returns an empty array");
 
           run(function () {
             store.push("person", { id: 4, name: "Cyvid Hamluck", pets: [4] });
           });
-          return store.findRecord("person", 4);
+          return store.find("person", 4);
         }).then(function (cyvid) {
           equal(get(cyvid, "name"), "Cyvid Hamluck", "precond - retrieves person record from store");
 
@@ -21863,11 +21786,11 @@ define(
       env.registry.register("model:pet", Pet);
       env.registry.register("model:person", Person);
 
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         if (type === Tag && id === "12") {
           return Ember.RSVP.resolve({ id: 12, name: "oohlala" });
         } else {
-          ok(false, "findRecord() should not be called with these values");
+          ok(false, "find() should not be called with these values");
         }
       };
 
@@ -21883,7 +21806,7 @@ define(
       var wycats;
 
       run(function () {
-        store.findRecord("person", 2).then(function (person) {
+        store.find("person", 2).then(function (person) {
           wycats = person;
 
           equal(get(wycats, "name"), "Yehuda Katz", "precond - retrieves person record from store");
@@ -21897,7 +21820,7 @@ define(
           equal(get(records.tags.objectAt(0), "name"), "oohlala", "the first tag should be a Tag");
 
           strictEqual(records.tags.objectAt(0), records.tags.objectAt(0), "the returned object is always the same");
-          asyncEqual(records.tags.objectAt(0), store.findRecord("tag", 12), "relationship objects are the same as objects retrieved directly");
+          asyncEqual(records.tags.objectAt(0), store.find("tag", 12), "relationship objects are the same as objects retrieved directly");
 
           return get(wycats, "tags");
         }).then(function (tags) {
@@ -21997,7 +21920,7 @@ define(
       });
 
       run(function () {
-        env.store.findRecord("person", 1).then(function (person) {
+        env.store.find("person", 1).then(function (person) {
           equal(get(person, "name"), "Tom Dale", "precond - retrieves person record from store");
           equal(get(person, "tags.length"), 2, "the list of tags should have the correct length");
         });
@@ -22036,7 +21959,7 @@ define(
         return Ember.RSVP.resolve([{ id: 5, name: "friendly" }, { id: 2, name: "smarmy" }]);
       };
 
-      env.adapter.findRecord = function (store, type, id, snapshot) {
+      env.adapter.find = function (store, type, id, snapshot) {
         equal(type, Person, "type should be Person");
         equal(id, 1, "id should be 1");
 
@@ -22044,7 +21967,7 @@ define(
       };
 
       run(function () {
-        store.findRecord("person", 1).then(function (person) {
+        store.find("person", 1).then(function (person) {
           equal(get(person, "name"), "Tom Dale", "The person is now populated");
 
           return run(function () {
@@ -22084,7 +22007,7 @@ define(
       });
 
       run(function () {
-        store.findRecord("person", 1).then(function (person) {
+        store.find("person", 1).then(function (person) {
           var tag = get(person, "tags").objectAt(0);
 
           equal(get(tag, "name"), "ember", "precond - relationships work");
@@ -22156,7 +22079,7 @@ define(
       });
 
       run(function () {
-        store.findRecord("person", 1).then(async(function (person) {
+        store.find("person", 1).then(async(function (person) {
           var tag = get(person, "tags").objectAt(0);
 
           equal(get(tag, "name"), "ember", "precond - relationships work");
@@ -22286,7 +22209,7 @@ define(
       });
 
       run(function () {
-        store.findRecord("person", 1).then(async(function (person) {
+        store.find("person", 1).then(async(function (person) {
           person.get("tags").createRecord({ name: "cool" });
 
           equal(get(person, "name"), "Tom Dale", "precond - retrieves person record from store");
@@ -22888,8 +22811,8 @@ define(
 
       run(function () {
         var asyncRecords = Ember.RSVP.hash({
-          scumbag: store.findRecord("person", 1),
-          tag: store.findRecord("tag", 1)
+          scumbag: store.find("person", 1),
+          tag: store.find("tag", 1)
         });
 
         asyncRecords.then(function (records) {
@@ -23043,7 +22966,7 @@ define(
       var env = setupStore({ person: Person });
       var store = env.store;
 
-      env.adapter.query = function (store, type, query, recordArray) {
+      env.adapter.findQuery = function (store, type, query, recordArray) {
         return Ember.RSVP.resolve(array);
       };
 
@@ -23255,7 +23178,7 @@ define(
       expect(5);
 
       var adapter = TestAdapter.extend({
-        findRecord: function (store, type, id, snapshot) {
+        find: function (store, type, id, snapshot) {
           ok(true, "Adapter#find was called");
           equal(store, currentStore, "Adapter#find was called with the right store");
           equal(type, store.modelFor("test"), "Adapter#find was called with the type passed into Store#find");
@@ -23270,7 +23193,7 @@ define(
       var currentStore = createStore({ adapter: adapter, test: currentType });
 
       run(function () {
-        currentStore.findRecord("test", 1);
+        currentStore.find("test", 1);
       });
     });
 
@@ -23278,8 +23201,8 @@ define(
       expect(2);
 
       var adapter = TestAdapter.extend({
-        findRecord: function (store, type, id, snapshot) {
-          ok(false, "Adapter#findRecord was not called");
+        find: function (store, type, id, snapshot) {
+          ok(false, "Adapter#find was not called");
         },
         findMany: function (store, type, ids, snapshots) {
           start();
@@ -23295,16 +23218,16 @@ define(
 
       stop();
       run(function () {
-        currentStore.findRecord("test", 1);
-        currentStore.findRecord("test", 2);
+        currentStore.find("test", 1);
+        currentStore.find("test", 2);
       });
     });
 
-    test("Returning a promise from `findRecord` asynchronously loads data", function () {
+    test("Returning a promise from `find` asynchronously loads data", function () {
       expect(1);
 
       var adapter = TestAdapter.extend({
-        findRecord: function (store, type, id, snapshot) {
+        find: function (store, type, id, snapshot) {
           return resolve({ id: 1, name: "Scumbag Dale" });
         }
       });
@@ -23315,7 +23238,7 @@ define(
       var currentStore = createStore({ adapter: adapter, test: currentType });
 
       run(function () {
-        currentStore.findRecord("test", 1).then(async(function (object) {
+        currentStore.find("test", 1).then(async(function (object) {
           strictEqual(get(object, "name"), "Scumbag Dale", "the data was pushed");
         }));
       });
@@ -23325,7 +23248,7 @@ define(
       expect(4);
 
       var adapter = TestAdapter.extend({
-        findRecord: function (store, type, id, snapshot) {
+        find: function (store, type, id, snapshot) {
           equal(typeof id, "string", "id has been normalized to a string");
           return resolve({ id: 1, name: "Scumbag Sylvain" });
         }
@@ -23337,12 +23260,12 @@ define(
       var currentStore = createStore({ adapter: adapter, test: currentType });
 
       run(function () {
-        currentStore.findRecord("test", 1).then(async(function (object) {
+        currentStore.find("test", 1).then(async(function (object) {
           equal(typeof object.get("id"), "string", "id was coerced to a string");
           run(function () {
             currentStore.push("test", { id: 2, name: "Scumbag Sam Saffron" });
           });
-          return currentStore.findRecord("test", 2);
+          return currentStore.find("test", 2);
         })).then(async(function (object) {
           ok(object, "object was found");
           equal(typeof object.get("id"), "string", "id is a string despite being supplied and searched for as a number");
@@ -23366,7 +23289,7 @@ define(
       run(function () {
         store.push("person", { id: 1, name: "Tom Dale" });
 
-        store.findRecord("person", 1).then(async(function (tom) {
+        store.find("person", 1).then(async(function (tom) {
           equal(get(tom, "isDirty"), false, "precond - record is not dirty");
           equal(get(tom, "name"), "Tom Dale", "returns the correct name");
 
@@ -23383,7 +23306,7 @@ define(
 
       store.load(Person, { key: 1, name: "Tom Dale" });
 
-      var tom = store.findRecord(Person, 1);
+      var tom = store.find(Person, 1);
       equal(get(tom, 'name'), "Tom Dale", "the person was successfully loaded for the given ID");
     });
     */
@@ -23399,7 +23322,7 @@ define(
 
       run(function () {
         store.pushMany("person", array);
-        store.findRecord("person", 1).then(async(function (person) {
+        store.find("person", 1).then(async(function (person) {
           equal(get(person, "name"), "Scumbag Dale", "correctly extracted id for loaded data");
         }));
       });
@@ -23415,7 +23338,7 @@ define(
       });
 
       var adapter = TestAdapter.extend({
-        query: function (store, type, query) {
+        findQuery: function (store, type, query) {
           equal(type, store.modelFor("person"), "The type was Person");
           equal(query, passedQuery, "The query was passed in");
           return Ember.RSVP.resolve([]);
@@ -23440,7 +23363,7 @@ define(
       });
 
       var adapter = TestAdapter.extend({
-        query: function (store, type, query) {
+        findQuery: function (store, type, query) {
           return Ember.RSVP.resolve([]);
         }
       });
@@ -23465,7 +23388,7 @@ define(
       run(function () {
         store.query("person", passedQuery);
       });
-      equal(callCount, 1, "extractQuery was called");
+      equal(callCount, 1, "extractFindQuery was called");
     });
 
     test("peekAll(type) returns a record array of all records of a specific type", function () {
@@ -23578,7 +23501,7 @@ define(
 
       run(function () {
         person = store.createRecord("person", { id: 1, name: "Brohuda Katz" });
-        store.findRecord("person", 1).then(async(function (again) {
+        store.find("person", 1).then(async(function (again) {
           strictEqual(person, again, "the store returns the loaded object");
         }));
       });
@@ -23588,7 +23511,7 @@ define(
       expect(1);
 
       var adapter = TestAdapter.extend({
-        findRecord: function (store, type, id, snapshot) {
+        find: function (store, type, id, snapshot) {
           equal(snapshot.attr("name"), "Test", "Preloaded attribtue set");
           return Ember.RSVP.resolve({ id: "1", name: "Test" });
         }
@@ -23604,14 +23527,14 @@ define(
       });
 
       run(function () {
-        store.findRecord("test", 1, { preload: { name: "Test" } });
+        store.find("test", 1, { preload: { name: "Test" } });
       });
     });
 
     test("initial values of belongsTo can be passed in as the third argument to find as records", function () {
       expect(1);
       var adapter = TestAdapter.extend({
-        findRecord: function (store, type, id, snapshot) {
+        find: function (store, type, id, snapshot) {
           equal(snapshot.belongsTo("friend").attr("name"), "Tom", "Preloaded belongsTo set");
           return new Ember.RSVP.Promise(function () {});
         }
@@ -23632,7 +23555,7 @@ define(
 
       run(function () {
         tom = store.push("person", { id: 2, name: "Tom" });
-        store.findRecord("person", 1, { preload: { friend: tom } });
+        store.find("person", 1, { preload: { friend: tom } });
       });
     });
 
@@ -23640,7 +23563,7 @@ define(
       expect(1);
 
       var adapter = TestAdapter.extend({
-        findRecord: function (store, type, id, snapshot) {
+        find: function (store, type, id, snapshot) {
           return Ember.RSVP.Promise.resolve({ id: id });
         }
       });
@@ -23658,7 +23581,7 @@ define(
       env.registry.register("model:person", Person);
 
       run(function () {
-        store.findRecord("person", 1, { preload: { friend: 2 } }).then(async(function () {
+        store.find("person", 1, { preload: { friend: 2 } }).then(async(function () {
           store.peekRecord("person", 1).get("friend").then(async(function (friend) {
             equal(friend.get("id"), "2", "Preloaded belongsTo set");
           }));
@@ -23669,7 +23592,7 @@ define(
     test("initial values of hasMany can be passed in as the third argument to find as records", function () {
       expect(1);
       var adapter = TestAdapter.extend({
-        findRecord: function (store, type, id, snapshot) {
+        find: function (store, type, id, snapshot) {
           equal(snapshot.hasMany("friends")[0].attr("name"), "Tom", "Preloaded hasMany set");
           return new Ember.RSVP.Promise(function () {});
         }
@@ -23690,7 +23613,7 @@ define(
 
       run(function () {
         tom = store.push("person", { id: 2, name: "Tom" });
-        store.findRecord("person", 1, { preload: { friends: [tom] } });
+        store.find("person", 1, { preload: { friends: [tom] } });
       });
     });
 
@@ -23698,7 +23621,7 @@ define(
       expect(1);
 
       var adapter = TestAdapter.extend({
-        findRecord: function (store, type, id, snapshot) {
+        find: function (store, type, id, snapshot) {
           equal(snapshot.hasMany("friends")[0].id, "2", "Preloaded hasMany set");
           return Ember.RSVP.resolve({ id: id });
         }
@@ -23717,7 +23640,7 @@ define(
       env.registry.register("model:person", Person);
 
       run(function () {
-        store.findRecord("person", 1, { preload: { friends: [2] } });
+        store.find("person", 1, { preload: { friends: [2] } });
       });
     });
 
@@ -23789,7 +23712,7 @@ define(
       var Phone = DS.Model.extend();
 
       var adapter = TestAdapter.extend({
-        findRecord: function (store, type, id, snapshot) {
+        find: function (store, type, id, snapshot) {
           var wait = 5;
 
           var record = { id: id };
@@ -23846,7 +23769,7 @@ define(
           return [[snapshots[0]], [snapshots[1], snapshots[2]]];
         },
 
-        findRecord: function (store, type, id, snapshot) {
+        find: function (store, type, id, snapshot) {
           equal(id, "10", "The first group is passed to find");
           return Ember.RSVP.resolve({ id: id });
         },
@@ -23890,7 +23813,7 @@ define(
           return [[snapshots[0]], [snapshots[1]]];
         },
 
-        findRecord: function (store, type, id, snapshot) {
+        find: function (store, type, id, snapshot) {
           var record = { id: id };
 
           return new Ember.RSVP.Promise(function (resolve, reject) {
@@ -23912,8 +23835,8 @@ define(
       });
 
       run(function () {
-        var davidPromise = store.findRecord("test", "david");
-        var igorPromise = store.findRecord("test", "igor");
+        var davidPromise = store.find("test", "david");
+        var igorPromise = store.find("test", "igor");
 
         igorPromise.then(async(function () {
           equal(davidResolved, false, "Igor did not need to wait for David");
@@ -23936,7 +23859,7 @@ define(
           return [[snapshots[0]], [snapshots[1]]];
         },
 
-        findRecord: function (store, type, id, snapshot) {
+        find: function (store, type, id, snapshot) {
           var record = { id: id };
 
           return new Ember.RSVP.Promise(function (resolve, reject) {
@@ -23958,8 +23881,8 @@ define(
       });
 
       run(function () {
-        var davidPromise = store.findRecord("test", "david");
-        var igorPromise = store.findRecord("test", "igor");
+        var davidPromise = store.find("test", "david");
+        var igorPromise = store.find("test", "igor");
 
         igorPromise.then(null, async(function () {
           equal(davidResolved, false, "Igor did not need to wait for David");
@@ -23995,8 +23918,8 @@ define(
 
       warns(function () {
         run(function () {
-          var davidPromise = store.findRecord("test", "david");
-          var igorPromise = store.findRecord("test", "igor");
+          var davidPromise = store.find("test", "david");
+          var igorPromise = store.find("test", "igor");
 
           davidPromise.then(async(function () {
             ok(true, "David resolved");
@@ -24009,385 +23932,6 @@ define(
       }, /expected to find records with the following ids in the adapter response but they were missing/);
     });
 
-    test("store should not call shouldReloadRecord when the record is not in the store", function () {
-      expect(1);
-
-      var Person = DS.Model.extend({
-        name: DS.attr("string")
-      });
-
-      var TestAdapter = DS.Adapter.extend({
-        shouldReloadRecord: function (store, type, id, snapshot) {
-          ok(false, "shouldReloadRecord should not be called when the record is not loaded");
-          return false;
-        },
-        find: function () {
-          ok(true, "find is always called when the record is not in the store");
-          return { id: 1 };
-        }
-      });
-
-      store = createStore({
-        adapter: TestAdapter,
-        person: Person
-      });
-
-      run(function () {
-        store.findRecord("person", 1);
-      });
-    });
-
-    test("store should not reload record when shouldReloadRecord returns false", function () {
-      expect(1);
-
-      var Person = DS.Model.extend({
-        name: DS.attr("string")
-      });
-
-      var TestAdapter = DS.Adapter.extend({
-        shouldReloadRecord: function (store, type, id, snapshot) {
-          ok(true, "shouldReloadRecord should be called when the record is in the store");
-          return false;
-        },
-        find: function () {
-          ok(false, "find should not be called when shouldReloadRecord returns false");
-        }
-      });
-
-      store = createStore({
-        adapter: TestAdapter,
-        person: Person
-      });
-
-      run(function () {
-        store.push("person", { id: 1 });
-        store.findRecord("person", 1);
-      });
-    });
-
-    test("store should reload record when shouldReloadRecord returns true", function () {
-      expect(3);
-
-      var Person = DS.Model.extend({
-        name: DS.attr("string")
-      });
-
-      var TestAdapter = DS.Adapter.extend({
-        shouldReloadRecord: function (store, type, id, snapshot) {
-          ok(true, "shouldReloadRecord should be called when the record is in the store");
-          return true;
-        },
-        find: function () {
-          ok(true, "find should not be called when shouldReloadRecord returns false");
-          return { id: 1, name: "Tom" };
-        }
-      });
-
-      store = createStore({
-        adapter: TestAdapter,
-        person: Person
-      });
-
-      run(function () {
-        store.push("person", { id: 1 });
-        store.findRecord("person", 1).then(function (record) {
-          equal(record.get("name"), "Tom");
-        });
-      });
-    });
-
-    test("store should not call shouldBackgroundReloadRecord when the store is already loading the record", function () {
-      expect(2);
-
-      var Person = DS.Model.extend({
-        name: DS.attr("string")
-      });
-
-      var TestAdapter = DS.Adapter.extend({
-        shouldReloadRecord: function (store, type, id, snapshot) {
-          return true;
-        },
-        shouldBackgroundReloadRecord: function (store, type, id, snapshot) {
-          ok(false, "shouldBackgroundReloadRecord is not called when shouldReloadRecord returns true");
-        },
-        find: function () {
-          ok(true, "find should be called");
-          return { id: 1, name: "Tom" };
-        }
-      });
-
-      store = createStore({
-        adapter: TestAdapter,
-        person: Person
-      });
-
-      run(function () {
-        store.push("person", { id: 1 });
-        store.findRecord("person", 1).then(function (record) {
-          equal(record.get("name"), "Tom");
-        });
-      });
-    });
-
-    test("store should not reload a record when `shouldBackgroundReloadRecord` is false", function () {
-      expect(2);
-
-      var Person = DS.Model.extend({
-        name: DS.attr("string")
-      });
-
-      var TestAdapter = DS.Adapter.extend({
-        shouldBackgroundReloadRecord: function (store, type, id, snapshot) {
-          ok(true, "shouldBackgroundReloadRecord is called when record is loaded form the cache");
-          return false;
-        },
-        find: function () {
-          ok(false, "find should not be called");
-          return { id: 1, name: "Tom" };
-        }
-      });
-
-      store = createStore({
-        adapter: TestAdapter,
-        person: Person
-      });
-
-      run(function () {
-        store.push("person", { id: 1 });
-        store.findRecord("person", 1).then(function (record) {
-          equal(record.get("name"), undefined);
-        });
-      });
-    });
-
-    test("store should reload the record in the background when `shouldBackgroundReloadRecord` is true", function () {
-      expect(4);
-
-      var Person = DS.Model.extend({
-        name: DS.attr("string")
-      });
-
-      var TestAdapter = DS.Adapter.extend({
-        shouldBackgroundReloadRecord: function (store, type, id, snapshot) {
-          ok(true, "shouldBackgroundReloadRecord is called when record is loaded form the cache");
-          return true;
-        },
-        find: function () {
-          ok(true, "find should not be called");
-          return { id: 1, name: "Tom" };
-        }
-      });
-
-      store = createStore({
-        adapter: TestAdapter,
-        person: Person
-      });
-
-      run(function () {
-        store.push("person", { id: 1 });
-        store.findRecord("person", 1).then(function (record) {
-          equal(record.get("name"), undefined);
-        });
-      });
-
-      equal(store.peekRecord("person", 1).get("name"), "Tom");
-    });
-
-    test("store should not call shouldReloadAll when the recordArary is not loaded", function () {
-      expect(1);
-
-      var Person = DS.Model.extend({
-        name: DS.attr("string")
-      });
-
-      var TestAdapter = DS.Adapter.extend({
-        shouldReloadAll: function (store, type, id, snapshot) {
-          ok(false, "shouldReloadRecord should not be called when the record is not loaded");
-          return false;
-        },
-        findAll: function () {
-          ok(true, "find is always called when the record is not in the store");
-          return [{ id: 1 }];
-        }
-      });
-
-      store = createStore({
-        adapter: TestAdapter,
-        person: Person
-      });
-
-      run(function () {
-        store.findAll("person");
-      });
-    });
-
-    test("store should not reload record array when shouldReloadAll returns false", function () {
-      expect(1);
-
-      var Person = DS.Model.extend({
-        name: DS.attr("string")
-      });
-
-      var TestAdapter = DS.Adapter.extend({
-        shouldReloadAll: function (store, snapshot) {
-          ok(true, "shouldReloadAll should be called when the record is in the store");
-          return false;
-        },
-        shouldBackgroundReloadAll: function (store, snapshot) {
-          return false;
-        },
-        findAll: function () {
-          ok(false, "findAll should not be called when shouldReloadAll returns false");
-        }
-      });
-
-      store = createStore({
-        adapter: TestAdapter,
-        person: Person
-      });
-
-      run(function () {
-        store.peekAll("person").set("__isLoaded", true);
-        store.find("person");
-      });
-    });
-
-    test("store should reload all records when shouldReloadAll returns true", function () {
-      expect(3);
-
-      var Person = DS.Model.extend({
-        name: DS.attr("string")
-      });
-
-      var TestAdapter = DS.Adapter.extend({
-        shouldReloadAll: function (store, type, id, snapshot) {
-          ok(true, "shouldReloadAll should be called when the record is in the store");
-          return true;
-        },
-        findAll: function () {
-          ok(true, "findAll should be called when shouldReloadAll returns true");
-          return [{ id: 1, name: "Tom" }];
-        }
-      });
-
-      store = createStore({
-        adapter: TestAdapter,
-        person: Person
-      });
-
-      run(function () {
-        store.peekAll("person").set("__isLoaded", true);
-        store.findAll("person").then(function (records) {
-          equal(records.get("firstObject.name"), "Tom");
-        });
-      });
-    });
-
-    test("store should not call shouldBackgroundReloadAll when the store is already loading all records", function () {
-      expect(2);
-
-      var Person = DS.Model.extend({
-        name: DS.attr("string")
-      });
-
-      var TestAdapter = DS.Adapter.extend({
-        shouldReloadAll: function (store, type, id, snapshot) {
-          return true;
-        },
-        shouldBackgroundReloadAll: function (store, type, id, snapshot) {
-          ok(false, "shouldBackgroundReloadRecord is not called when shouldReloadRecord returns true");
-        },
-        findAll: function () {
-          ok(true, "find should be called");
-          return [{ id: 1, name: "Tom" }];
-        }
-      });
-
-      store = createStore({
-        adapter: TestAdapter,
-        person: Person
-      });
-
-      run(function () {
-        store.peekAll("person").set("__isLoaded", true);
-        store.findAll("person").then(function (records) {
-          equal(records.get("firstObject.name"), "Tom");
-        });
-      });
-    });
-
-    test("store should not reload all records when `shouldBackgroundReloadAll` is false", function () {
-      expect(3);
-
-      var Person = DS.Model.extend({
-        name: DS.attr("string")
-      });
-
-      var TestAdapter = DS.Adapter.extend({
-        shouldReloadAll: function (store, type, id, snapshot) {
-          ok(true, "shouldReloadAll is called when record is loaded form the cache");
-          return false;
-        },
-        shouldBackgroundReloadAll: function (store, type, id, snapshot) {
-          ok(true, "shouldBackgroundReloadAll is called when record is loaded form the cache");
-          return false;
-        },
-        findAll: function () {
-          ok(false, "findAll should not be called");
-          return [{ id: 1, name: "Tom" }];
-        }
-      });
-
-      store = createStore({
-        adapter: TestAdapter,
-        person: Person
-      });
-
-      run(function () {
-        store.peekAll("person").set("__isLoaded", true);
-        store.findAll("person").then(function (records) {
-          equal(records.get("firstObject"), undefined);
-        });
-      });
-    });
-
-    test("store should reload all records in the background when `shouldBackgroundReloadAll` is true", function () {
-      expect(5);
-
-      var Person = DS.Model.extend({
-        name: DS.attr("string")
-      });
-
-      var TestAdapter = DS.Adapter.extend({
-        shouldReloadAll: function () {
-          ok(true, "shouldReloadAll is called");
-          return false;
-        },
-        shouldBackgroundReloadAll: function (store, snapshot) {
-          ok(true, "shouldBackgroundReloadAll is called when record is loaded form the cache");
-          return true;
-        },
-        findAll: function () {
-          ok(true, "find should not be called");
-          return [{ id: 1, name: "Tom" }];
-        }
-      });
-
-      store = createStore({
-        adapter: TestAdapter,
-        person: Person
-      });
-
-      run(function () {
-        store.peekAll("person").set("__isLoaded", true);
-        store.findAll("person").then(function (records) {
-          equal(records.get("firstObject.name"), undefined);
-        });
-      });
-
-      equal(store.peekRecord("person", 1).get("name"), "Tom");
-    });
-
     module("unit/store/adapter_interop - find preload deprecations", {
       setup: function () {
         var Person = DS.Model.extend({
@@ -24395,7 +23939,7 @@ define(
         });
 
         var TestAdapter = DS.Adapter.extend({
-          findRecord: function (store, type, id, snapshot) {
+          find: function (store, type, id, snapshot) {
             equal(snapshot.attr("name"), "Tom");
             return Ember.RSVP.resolve({ id: id });
           }
@@ -25073,8 +24617,8 @@ define(
           firstName: 'Yehuda',
           lastName: 'Katz'
         });
-        store.findRecord('person', 'wat').then(function (foundPerson) {
-          equal(foundPerson, person, 'record returned via load() is the same as the record returned from findRecord()');
+        store.find('person', 'wat').then(function (foundPerson) {
+          equal(foundPerson, person, 'record returned via load() is the same as the record returned from find()');
           deepEqual(foundPerson.getProperties('id', 'firstName', 'lastName'), {
             id: 'wat',
             firstName: 'Yehuda',
@@ -25097,7 +24641,7 @@ define(
           lastName: 'Katz'
         });
 
-        store.findRecord('programmer', 'wat').then(function (foundProgrammer) {
+        store.find('programmer', 'wat').then(function (foundProgrammer) {
           deepEqual(foundProgrammer.getProperties('id', 'firstName', 'lastName'), {
             id: 'wat',
             firstName: 'Yehuda',
@@ -25148,8 +24692,8 @@ define(
           lastName: 'Katz!'
         });
 
-        store.findRecord('person', 'wat').then(function (foundPerson) {
-          equal(foundPerson, person, 'record returned via load() is the same as the record returned from findRecord()');
+        store.find('person', 'wat').then(function (foundPerson) {
+          equal(foundPerson, person, 'record returned via load() is the same as the record returned from find()');
           deepEqual(foundPerson.getProperties('id', 'firstName', 'lastName'), {
             id: 'wat',
             firstName: 'Yehuda',
@@ -25213,7 +24757,7 @@ define(
         phoneNumbers: hasMany('phone-number', { async: true })
       });
 
-      env.adapter.findRecord = function (store, type, id) {
+      env.adapter.find = function (store, type, id) {
         if (id === '1') {
           return Ember.RSVP.resolve({
             id: 1,
@@ -25670,7 +25214,7 @@ define(
         });
         store = createStore({
           adapter: DS.Adapter.extend({
-            findRecord: function (store, type, id, snapshot) {
+            find: function (store, type, id, snapshot) {
               tryToFind = true;
               return Ember.RSVP.resolve({ id: id, wasFetched: true });
             }
@@ -25693,7 +25237,7 @@ define(
           title: 'toto'
         });
 
-        store.findRecord('record', 1).then(function (record) {
+        store.find('record', 1).then(function (record) {
           record.set('title', 'toto2');
           record._internalModel.send('willCommit');
 
@@ -25716,7 +25260,7 @@ define(
 
       run(function () {
         store.push('record', { id: 1, title: 'toto' });
-        store.findRecord('record', 1).then(function (record) {
+        store.find('record', 1).then(function (record) {
           equal(get(record, 'id'), 1, 'found record with id 1');
           equal(get(record, 'isDirty'), false, 'record is not dirty');
 
@@ -25728,7 +25272,7 @@ define(
           equal(get(record, 'isDeleted'), true, 'record is deleted');
 
           tryToFind = false;
-          return store.findRecord('record', 1).then(function () {
+          return store.find('record', 1).then(function () {
             equal(tryToFind, true, 'not found record with id 1');
           });
         });
@@ -25757,7 +25301,7 @@ define(
 
       var store = createStore({
         adapter: DS.Adapter.extend({
-          findRecord: function (store, type, id, snapshot) {
+          find: function (store, type, id, snapshot) {
             return Ember.RSVP.resolve({ id: 1, description: 'cuisinart', brand: 1 });
           },
           createRecord: function (store, type, snapshot) {
@@ -25774,8 +25318,8 @@ define(
         store.push('brand', { id: 1, name: 'EmberJS' });
         store.push('product', { id: 1, description: 'toto', brand: 1 });
         asyncRecords = Ember.RSVP.hash({
-          brand: store.findRecord('brand', 1),
-          product: store.findRecord('product', 1)
+          brand: store.find('brand', 1),
+          product: store.find('product', 1)
         });
         asyncRecords.then(function (records) {
           like = store.createRecord('like', { id: 1, product: product });
@@ -25783,9 +25327,9 @@ define(
           return Ember.RSVP.hash(records);
         }).then(function (records) {
           store.unloadRecord(records.product);
-          return store.findRecord('product', 1);
+          return store.find('product', 1);
         }).then(function (product) {
-          equal(product.get('description'), 'cuisinart', 'The record was unloaded and the adapter\'s `findRecord` was called');
+          equal(product.get('description'), 'cuisinart', 'The record was unloaded and the adapter\'s `find` was called');
           store.destroy();
         });
       });
@@ -26930,13 +26474,6 @@ if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/tests/unit/adapters/rest-adapter');
 test('ember-data/tests/unit/adapters/rest-adapter/ajax-test.js should pass jshint', function() { 
   ok(true, 'ember-data/tests/unit/adapters/rest-adapter/ajax-test.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/adapters/rest-adapter');
-test('ember-data/tests/unit/adapters/rest-adapter/deprecated-adapter-methods.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/adapters/rest-adapter/deprecated-adapter-methods.js should pass jshint.'); 
 });
 
 }
