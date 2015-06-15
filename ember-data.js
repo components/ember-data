@@ -5868,7 +5868,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.e6a65aa14a'
+      VERSION: '1.0.0-beta.20+canary.aaeb60957d'
     });
 
     if (Ember.libraries) {
@@ -9697,6 +9697,10 @@
       },
 
       instanceFor: function (key) {
+        if (key === 'adapter:-rest') {
+          ember$lib$main$$default.deprecate('You are currently using the default DS.RESTAdapter adapter. For Ember 2.0 the default adapter will be DS.JSONAPIAdapter. If you would like to continue using DS.RESTAdapter please create an application adapter that extends DS.RESTAdapter.');
+        }
+
         var cache = this._cache;
         if (!cache[key]) {
           var instance = this._container.lookup(key);
