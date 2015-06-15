@@ -5531,7 +5531,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.8628ef2d39'
+      VERSION: '1.0.0-beta.20+canary.0fa435fcfa'
     });
 
     if (Ember.libraries) {
@@ -9600,6 +9600,7 @@
       information about the relationship, retrieved via
       `record.relationshipFor(key)`.
 
+      @method assertPolymorphicType
       @param {InternalModel} record
       @param {RelationshipMeta} relationshipMeta retrieved via
              `record.relationshipFor(key)`
