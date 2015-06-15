@@ -5531,7 +5531,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.0fa435fcfa'
+      VERSION: '1.0.0-beta.20+canary.e9b845022b'
     });
 
     if (Ember.libraries) {
@@ -15055,8 +15055,27 @@
     ember$data$lib$core$$default.NumberTransform = ember$data$lib$transforms$number$$default;
     ember$data$lib$core$$default.BooleanTransform = ember$data$lib$transforms$boolean$$default;
 
-    ember$data$lib$core$$default.ActiveModelAdapter = activemodel$adapter$lib$system$active$model$adapter$$default;
-    ember$data$lib$core$$default.ActiveModelSerializer = activemodel$adapter$lib$system$active$model$serializer$$default;
+    if (Ember.platform.hasPropertyAccessors) {
+      Ember.defineProperty(ember$data$lib$core$$default, "ActiveModelAdapter", {
+        get: function () {
+          Ember.deprecate("The ActiveModelAdapter has been moved into a plugin. It will not be bundled with Ember Data in 2.0", false, {
+            url: "https://github.com/ember-data/active-model-adapter"
+          });
+          return activemodel$adapter$lib$system$active$model$adapter$$default;
+        }
+      });
+      Ember.defineProperty(ember$data$lib$core$$default, "ActiveModelSerializer", {
+        get: function () {
+          Ember.deprecate("The ActiveModelSerializer has been moved into a plugin. It will not be bundled with Ember Data in 2.0", false, {
+            url: "https://github.com/ember-data/active-model-adapter"
+          });
+          return activemodel$adapter$lib$system$active$model$serializer$$default;
+        }
+      });
+    } else {
+      ember$data$lib$core$$default.ActiveModelAdapter = activemodel$adapter$lib$system$active$model$adapter$$default;
+      ember$data$lib$core$$default.ActiveModelSerializer = activemodel$adapter$lib$system$active$model$serializer$$default;
+    }
     ember$data$lib$core$$default.EmbeddedRecordsMixin = ember$data$lib$serializers$embedded$records$mixin$$default;
 
     ember$data$lib$core$$default.belongsTo = ember$data$lib$system$relationships$belongs$to$$default;
