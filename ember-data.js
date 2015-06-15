@@ -480,6 +480,74 @@
       */
       groupRecordsForFindMany: function (store, snapshots) {
         return [snapshots];
+      },
+
+      /**
+        This method is used by the store to determine if the store should
+        reload a record from the adapter when a record is requested by
+        `store.findRecord`.
+         If this method returns true the store will re fetch a record form
+        the adapter. If is method returns false the store will resolve
+        immediately using the cached record.
+         @method shouldReloadRecord
+        @param {DS.Store} store
+        @param {DS.Snapshot} snapshot
+        @return {Boolean}
+      */
+      shouldReloadRecord: function (store, snapshot) {
+        return false;
+      },
+
+      /**
+        This method is used by the store to determine if the store should
+        reload all records from the adapter when records are requested by
+        `store.findAll`.
+         If this method returns true the store will re fetch all records form
+        the adapter. If is method returns false the store will resolve
+        immediately using the cached record.
+         @method shouldReloadRecord
+        @param {DS.Store} store
+        @param {DS.SnapshotRecordArray} snapshotRecordArray
+        @return {Boolean}
+      */
+      shouldReloadAll: function (store, snapshotRecordArray) {
+        Ember.deprecate('The default behavior of `shouldBackgroundReloadAll` will change in Ember Data 2.0 to always return false. If you would like to preserve the current behavior please override `shouldReloadAll` in you adapter:application and return true.');
+        return true;
+      },
+
+      /**
+        This method is used by the store to determine if the store should
+        reload a record after the `store.findRecord` method resolves a
+        chached record.
+         This method is *only* checked by the store when the store is
+        returning a cached record.
+         If this method returns true the store will re-fetch a record form
+        the adapter.
+         @method shouldBackgroundReloadRecord
+        @param {DS.Store} store
+        @param {DS.Snapshot} snapshot
+        @return {Boolean}
+      */
+      shouldBackgroundReloadRecord: function (store, snapshot) {
+        Ember.deprecate('The default behavior of `shouldBackgroundReloadRecord` will change in Ember Data 2.0 to always return true. If you would like to preserve the current behavior please override `shouldBackgroundReloadRecord` in you adapter:application and return false.');
+        return false;
+      },
+
+      /**
+        This method is used by the store to determine if the store should
+        reload a record array after the `store.findAll` method resolves
+        with a chached record array.
+         This method is *only* checked by the store when the store is
+        returning a cached record array.
+         If this method returns true the store will re-fetch all records
+        form the adapter.
+         @method shouldBackgroundReloadAll
+        @param {DS.Store} store
+        @param {DS.SnapshotRecordArray} snapshotRecordArray
+        @return {Boolean}
+      */
+      shouldBackgroundReloadAll: function (store, snapshotRecordArray) {
+        return true;
       }
     });
 
@@ -5599,7 +5667,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.7b2c70d5e4'
+      VERSION: '1.0.0-beta.20+canary.d6ec6f8523'
     });
 
     if (Ember.libraries) {
@@ -8530,38 +8598,6 @@
 
       return serializer;
     }
-    function ember$data$lib$system$snapshot$record$array$$SnapshotRecordArray(recordArray, meta, adapterOptions) {
-      this._snapshots = null;
-      this._recordArray = recordArray;
-      this.length = recordArray.get('length');
-      this.meta = meta;
-      this.adapterOptions = adapterOptions;
-    }
-
-    /**
-      @method fromRecordArray
-      @private
-      @static
-      @param {DS.RecordArray} recordArray
-      @param {Object} adapterOptions
-      @return SnapshotRecordArray
-    */
-    ember$data$lib$system$snapshot$record$array$$SnapshotRecordArray.fromRecordArray = function (recordArray, adapterOptions) {
-      var meta = recordArray.get('meta');
-      return new ember$data$lib$system$snapshot$record$array$$SnapshotRecordArray(recordArray, meta, adapterOptions);
-    };
-
-    ember$data$lib$system$snapshot$record$array$$SnapshotRecordArray.prototype.snapshots = function () {
-      if (this._snapshots) {
-        return this._snapshots;
-      }
-      var recordArray = this._recordArray;
-      this._snapshots = recordArray.invoke('createSnapshot');
-
-      return this._snapshots;
-    };
-
-    var ember$data$lib$system$snapshot$record$array$$default = ember$data$lib$system$snapshot$record$array$$SnapshotRecordArray;
 
     var ember$data$lib$system$store$finders$$Promise = Ember.RSVP.Promise;
     var ember$data$lib$system$store$finders$$map = Ember.EnumerableUtils.map;
@@ -8671,9 +8707,9 @@
     }
 
     function ember$data$lib$system$store$finders$$_findAll(adapter, store, typeClass, sinceToken, options) {
-      var adapterOptions = options && options.adapterOptions;
       var modelName = typeClass.modelName;
-      var snapshotArray = ember$data$lib$system$snapshot$record$array$$default.fromRecordArray(store.peekAll(modelName), adapterOptions);
+      var recordArray = store.peekAll(modelName);
+      var snapshotArray = recordArray.createSnapshot(options);
       var promise = adapter.findAll(store, typeClass, sinceToken, snapshotArray);
       var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, modelName);
       var label = "DS: Handle Adapter#findAll of " + typeClass;
@@ -8735,6 +8771,26 @@
         return record;
       }, null, "DS: Extract payload of queryRecord " + typeClass);
     }
+    function ember$data$lib$system$snapshot$record$array$$SnapshotRecordArray(recordArray, meta, adapterOptions) {
+      this._snapshots = null;
+      this._recordArray = recordArray;
+      this.length = recordArray.get('length');
+      this.meta = meta;
+      this.adapterOptions = adapterOptions;
+    }
+
+    ember$data$lib$system$snapshot$record$array$$SnapshotRecordArray.prototype.snapshots = function () {
+      if (this._snapshots) {
+        return this._snapshots;
+      }
+      var recordArray = this._recordArray;
+      this._snapshots = recordArray.invoke('createSnapshot');
+
+      return this._snapshots;
+    };
+
+    var ember$data$lib$system$snapshot$record$array$$default = ember$data$lib$system$snapshot$record$array$$SnapshotRecordArray;
+
     var ember$data$lib$system$record$arrays$record$array$$get = Ember.get;
     var ember$data$lib$system$record$arrays$record$array$$set = Ember.set;
 
@@ -8798,7 +8854,7 @@
         @return {DS.Model} record
       */
       objectAtContent: function (index) {
-        var content = ember$data$lib$system$record$arrays$record$array$$get(this, 'content');
+        var content = ember$data$lib$system$record$arrays$record$array$$get(this, "content");
         var internalModel = content.objectAt(index);
         return internalModel && internalModel.getRecord();
       },
@@ -8816,12 +8872,12 @@
          @method update
       */
       update: function () {
-        if (ember$data$lib$system$record$arrays$record$array$$get(this, 'isUpdating')) {
+        if (ember$data$lib$system$record$arrays$record$array$$get(this, "isUpdating")) {
           return;
         }
 
-        var store = ember$data$lib$system$record$arrays$record$array$$get(this, 'store');
-        var modelName = ember$data$lib$system$record$arrays$record$array$$get(this, 'type.modelName');
+        var store = ember$data$lib$system$record$arrays$record$array$$get(this, "store");
+        var modelName = ember$data$lib$system$record$arrays$record$array$$get(this, "type.modelName");
 
         return store.findAll(modelName, { reload: true });
       },
@@ -8834,7 +8890,7 @@
         @param {number} an optional index to insert at
       */
       addInternalModel: function (internalModel, idx) {
-        var content = ember$data$lib$system$record$arrays$record$array$$get(this, 'content');
+        var content = ember$data$lib$system$record$arrays$record$array$$get(this, "content");
         if (idx === undefined) {
           content.addObject(internalModel);
         } else if (!content.contains(internalModel)) {
@@ -8849,7 +8905,7 @@
         @param {InternalModel} internalModel
       */
       removeInternalModel: function (internalModel) {
-        ember$data$lib$system$record$arrays$record$array$$get(this, 'content').removeObject(internalModel);
+        ember$data$lib$system$record$arrays$record$array$$get(this, "content").removeObject(internalModel);
       },
 
       /**
@@ -8867,10 +8923,10 @@
       */
       save: function () {
         var recordArray = this;
-        var promiseLabel = 'DS: RecordArray#save ' + ember$data$lib$system$record$arrays$record$array$$get(this, 'type');
-        var promise = Ember.RSVP.all(this.invoke('save'), promiseLabel).then(function (array) {
+        var promiseLabel = "DS: RecordArray#save " + ember$data$lib$system$record$arrays$record$array$$get(this, "type");
+        var promise = Ember.RSVP.all(this.invoke("save"), promiseLabel).then(function (array) {
           return recordArray;
-        }, null, 'DS: RecordArray#save return RecordArray');
+        }, null, "DS: RecordArray#save return RecordArray");
 
         return ember$data$lib$system$promise$proxies$$PromiseArray.create({ promise: promise });
       },
@@ -8878,7 +8934,7 @@
       _dissociateFromOwnRecords: function () {
         var array = this;
 
-        this.get('content').forEach(function (record) {
+        this.get("content").forEach(function (record) {
           var recordArrays = record._recordArrays;
 
           if (recordArrays) {
@@ -8892,15 +8948,21 @@
         @private
       */
       _unregisterFromManager: function () {
-        var manager = ember$data$lib$system$record$arrays$record$array$$get(this, 'manager');
+        var manager = ember$data$lib$system$record$arrays$record$array$$get(this, "manager");
         manager.unregisterRecordArray(this);
       },
 
       willDestroy: function () {
         this._unregisterFromManager();
         this._dissociateFromOwnRecords();
-        ember$data$lib$system$record$arrays$record$array$$set(this, 'content', undefined);
+        ember$data$lib$system$record$arrays$record$array$$set(this, "content", undefined);
         this._super.apply(this, arguments);
+      },
+
+      createSnapshot: function (options) {
+        var adapterOptions = options && options.adapterOptions;
+        var meta = this.get("meta");
+        return new ember$data$lib$system$snapshot$record$array$$default(this, meta, adapterOptions);
       }
     });
 
@@ -11568,15 +11630,9 @@
     //an internal model and return it in a promiseObject. Useful for returning
     //from find methods
     function ember$data$lib$system$store$$promiseRecord(internalModel, label) {
-      //TODO cleanup
-      var toReturn = internalModel;
-      if (!internalModel.then) {
-        toReturn = internalModel.getRecord();
-      } else {
-        toReturn = internalModel.then(function (model) {
-          return model.getRecord();
-        });
-      }
+      var toReturn = internalModel.then(function (model) {
+        return model.getRecord();
+      });
       return ember$data$lib$system$promise$proxies$$promiseObject(toReturn, label);
     }
 
@@ -12033,28 +12089,53 @@
         var internalModel = this._internalModelForId(modelName, id);
         options = options || {};
 
-        if (options.reload && this.hasRecordForId(modelName, id)) {
-          return this.peekRecord(modelName, id).reload();
-        }
         return this._findByInternalModel(internalModel, options);
       },
 
       _findByInternalModel: function (internalModel, options) {
-        var fetchedInternalModel;
         options = options || {};
 
         if (options.preload) {
           internalModel._preloadData(options.preload);
         }
 
+        var fetchedInternalModel = this._fetchOrResolveInternalModel(internalModel, options);
+
+        return ember$data$lib$system$store$$promiseRecord(fetchedInternalModel, "DS: Store#findRecord " + internalModel.typeKey + " with id: " + ember$data$lib$system$store$$get(internalModel, "id"));
+      },
+
+      _fetchOrResolveInternalModel: function (internalModel, options) {
+        var typeClass = internalModel.type;
+        var adapter = this.adapterFor(typeClass.modelName);
+        // Always fetch the model if it is not loaded
         if (internalModel.isEmpty()) {
-          fetchedInternalModel = this.scheduleFetch(internalModel, options);
-          //TODO double check about reloading
-        } else if (internalModel.isLoading()) {
-          fetchedInternalModel = internalModel._loadingPromise;
+          return this.scheduleFetch(internalModel, options);
         }
 
-        return ember$data$lib$system$store$$promiseRecord(fetchedInternalModel || internalModel, "DS: Store#findRecord " + internalModel.typeKey + " with id: " + ember$data$lib$system$store$$get(internalModel, "id"));
+        //TODO double check about reloading
+        if (internalModel.isLoading()) {
+          return internalModel._loadingPromise;
+        }
+
+        // Refetch if the reload option is passed
+        if (options.reload) {
+          return this.scheduleFetch(internalModel, options);
+        }
+
+        // Refetch the record if the adapter thinks the record is stale
+        var snapshot = internalModel.createSnapshot();
+        snapshot.adapterOptions = options && options.adapterOptions;
+        if (adapter.shouldReloadRecord(this, snapshot)) {
+          return this.scheduleFetch(internalModel, options);
+        }
+
+        // Trigger the background refetch if all the previous checks fail
+        if (adapter.shouldBackgroundReloadRecord(this, snapshot)) {
+          this.scheduleFetch(internalModel, options);
+        }
+
+        // Return the cached record
+        return ember$data$lib$system$store$$Promise.resolve(internalModel);
       },
       /**
         This method makes a series of requests to the adapter's `find` method
@@ -12508,6 +12589,7 @@
         @return {Promise} promise
       */
       _fetchAll: function (typeClass, array, options) {
+        options = options || {};
         var adapter = this.adapterFor(typeClass.modelName);
         var sinceToken = this.typeMapFor(typeClass).metadata.since;
 
@@ -12515,8 +12597,24 @@
 
         Ember.assert("You tried to load all records but you have no adapter (for " + typeClass + ")", adapter);
         Ember.assert("You tried to load all records but your adapter does not implement `findAll`", typeof adapter.findAll === "function");
-
-        return ember$data$lib$system$promise$proxies$$promiseArray(ember$data$lib$system$store$finders$$_findAll(adapter, this, typeClass, sinceToken, options));
+        if (!ember$data$lib$system$store$$get(array, "__isLoaded")) {
+          var arrayPromise = ember$data$lib$system$promise$proxies$$promiseArray(ember$data$lib$system$store$finders$$_findAll(adapter, this, typeClass, sinceToken, options));
+          arrayPromise.then(function () {
+            return ember$data$lib$system$store$$set(array, "__isLoaded", true);
+          });
+          return arrayPromise;
+        }
+        if (options.reload) {
+          return ember$data$lib$system$promise$proxies$$promiseArray(ember$data$lib$system$store$finders$$_findAll(adapter, this, typeClass, sinceToken, options));
+        }
+        var snapshotArray = array.createSnapshot(options);
+        if (adapter.shouldReloadAll(this, snapshotArray)) {
+          return ember$data$lib$system$promise$proxies$$promiseArray(ember$data$lib$system$store$finders$$_findAll(adapter, this, typeClass, sinceToken, options));
+        }
+        if (adapter.shouldBackgroundReloadAll(this, snapshotArray)) {
+          ember$data$lib$system$promise$proxies$$promiseArray(ember$data$lib$system$store$finders$$_findAll(adapter, this, typeClass, sinceToken, options));
+        }
+        return ember$data$lib$system$promise$proxies$$promiseArray(ember$data$lib$system$store$$Promise.resolve(array));
       },
 
       /**
