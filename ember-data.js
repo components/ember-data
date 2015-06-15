@@ -2423,9 +2423,6 @@
       /*
         This is only to be used temporarily during the transition from the old
         serializer API to the new one.
-         To activate the new Serializer API you need to enable the feature flag
-        `ds-new-serializer-api`.
-         http://guides.emberjs.com/v1.12.0/configuring-ember/feature-flags/
          This makes the store and the built-in serializers use the new Serializer API.
           ## Custom Serializers
          If you have custom serializers you need to do the following:
@@ -2891,7 +2888,7 @@
         @return {Object}
       */
       normalize: function (typeClass, hash) {
-        if (Ember.FEATURES.isEnabled("ds-new-serializer-api") && this.get("isNewSerializerAPI")) {
+        if (this.get("isNewSerializerAPI")) {
           return ember$data$lib$serializers$json$serializer$$_newNormalize.apply(this, arguments);
         }
 
@@ -3810,7 +3807,7 @@
         @param {Object} payload
       */
       extractMeta: function (store, typeClass, payload) {
-        if (Ember.FEATURES.isEnabled("ds-new-serializer-api") && this.get("isNewSerializerAPI")) {
+        if (this.get("isNewSerializerAPI")) {
           return ember$data$lib$serializers$json$serializer$$_newExtractMeta.apply(this, arguments);
         }
 
@@ -3985,9 +3982,8 @@
     /**
       This is a helper method that always returns a JSON-API Document.
 
-      If the feature flag `ds-new-serializer-api` is enabled and the current serializer
-      has `isNewSerializerAPI` set to `true` this helper calls `normalizeResponse`
-      instead of `extract`.
+      If the current serializer has `isNewSerializerAPI` set to `true`
+      this helper calls `normalizeResponse` instead of `extract`.
 
       All the built-in serializers get `isNewSerializerAPI` set to `true` automatically
       if the feature flag is enabled.
@@ -4002,12 +3998,10 @@
       @return {Object} JSON-API Document
     */
     function ember$data$lib$system$store$serializer$response$$normalizeResponseHelper(serializer, store, modelClass, payload, id, requestType) {
-      if (Ember.FEATURES.isEnabled('ds-new-serializer-api') && serializer.get('isNewSerializerAPI')) {
+      if (serializer.get('isNewSerializerAPI')) {
         return serializer.normalizeResponse(store, modelClass, payload, id, requestType);
       } else {
-        if (Ember.FEATURES.isEnabled('ds-new-serializer-api')) {
-          Ember.deprecate('Your custom serializer uses the old version of the Serializer API, with `extract` hooks. Please upgrade your serializers to the new Serializer API using `normalizeResponse` hooks instead.');
-        }
+        Ember.deprecate('Your custom serializer uses the old version of the Serializer API, with `extract` hooks. Please upgrade your serializers to the new Serializer API using `normalizeResponse` hooks instead.');
         var serializerPayload = serializer.extract(store, modelClass, payload, id, requestType);
         return ember$data$lib$system$store$serializer$response$$_normalizeSerializerPayload(modelClass, serializerPayload);
       }
@@ -4373,7 +4367,7 @@
         @return {Object}
       */
       normalize: function (typeClass, hash, prop) {
-        if (Ember.FEATURES.isEnabled("ds-new-serializer-api") && this.get("isNewSerializerAPI")) {
+        if (this.get("isNewSerializerAPI")) {
           ember$data$lib$serializers$rest$serializer$$_newNormalize.apply(this, arguments);
           return this._super.apply(this, arguments);
         }
@@ -4828,7 +4822,7 @@
         @param {Object} rawPayload
       */
       pushPayload: function (store, rawPayload) {
-        if (Ember.FEATURES.isEnabled("ds-new-serializer-api") && this.get("isNewSerializerAPI")) {
+        if (this.get("isNewSerializerAPI")) {
           ember$data$lib$serializers$rest$serializer$$_newPushPayload.apply(this, arguments);
           return;
         }
@@ -5531,7 +5525,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.06ee365db6'
+      VERSION: '1.0.0-beta.20+canary.b158135caa'
     });
 
     if (Ember.libraries) {
@@ -5539,9 +5533,7 @@
     }
 
     //jshint ignore: line
-    var ember$data$lib$core$$EMBER_DATA_FEATURES = {
-      'ds-new-serializer-api': null
-    };
+    var ember$data$lib$core$$EMBER_DATA_FEATURES = {};
 
     Ember.merge(Ember.FEATURES, ember$data$lib$core$$EMBER_DATA_FEATURES);
 
@@ -8262,7 +8254,7 @@
           var recordArray = ember$data$lib$system$store$finders$$map(records, function (record) {
             return record._internalModel;
           });
-          if (Ember.FEATURES.isEnabled("ds-new-serializer-api") && serializer.get("isNewSerializerAPI")) {
+          if (serializer.get("isNewSerializerAPI")) {
             recordArray.meta = payload.meta;
           }
           return recordArray;
@@ -13883,7 +13875,7 @@
        @private
       */
       _extractEmbeddedRecords: function (serializer, store, typeClass, partial) {
-        if (Ember.FEATURES.isEnabled('ds-new-serializer-api') && this.get('isNewSerializerAPI')) {
+        if (this.get('isNewSerializerAPI')) {
           return ember$data$lib$serializers$embedded$records$mixin$$_newExtractEmbeddedRecords.apply(this, arguments);
         }
 
@@ -13915,7 +13907,7 @@
        @private
       */
       _extractEmbeddedHasMany: function (store, key, embeddedTypeClass, hash) {
-        if (Ember.FEATURES.isEnabled('ds-new-serializer-api') && this.get('isNewSerializerAPI')) {
+        if (this.get('isNewSerializerAPI')) {
           return ember$data$lib$serializers$embedded$records$mixin$$_newExtractEmbeddedHasMany.apply(this, arguments);
         }
 
@@ -13967,7 +13959,7 @@
        @private
       */
       _extractEmbeddedBelongsTo: function (store, key, embeddedTypeClass, hash) {
-        if (Ember.FEATURES.isEnabled('ds-new-serializer-api') && this.get('isNewSerializerAPI')) {
+        if (this.get('isNewSerializerAPI')) {
           return ember$data$lib$serializers$embedded$records$mixin$$_newExtractEmbeddedBelongsTo.apply(this, arguments);
         }
 
