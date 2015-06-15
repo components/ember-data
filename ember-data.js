@@ -558,7 +558,7 @@
     */
     var ember$data$lib$adapters$fixture$adapter$$get = Ember.get;
     var ember$data$lib$adapters$fixture$adapter$$fmt = Ember.String.fmt;
-    var ember$data$lib$adapters$fixture$adapter$$indexOf = Ember.EnumerableUtils.indexOf;
+    var ember$data$lib$adapters$fixture$adapter$$indexOf = Ember.ArrayPolyfills.indexOf;
 
     var ember$data$lib$adapters$fixture$adapter$$counter = 0;
 
@@ -700,7 +700,7 @@
 
         if (fixtures) {
           fixtures = fixtures.filter(function (item) {
-            return ember$data$lib$adapters$fixture$adapter$$indexOf(ids, item.id) !== -1;
+            return ember$data$lib$adapters$fixture$adapter$$indexOf.call(ids, item.id) !== -1;
           });
         }
 
@@ -811,7 +811,7 @@
         var existingFixture = this.findExistingFixture(typeClass, snapshot);
 
         if (existingFixture) {
-          var index = ember$data$lib$adapters$fixture$adapter$$indexOf(typeClass.FIXTURES, existingFixture);
+          var index = ember$data$lib$adapters$fixture$adapter$$indexOf.call(typeClass.FIXTURES, existingFixture);
           typeClass.FIXTURES.splice(index, 1);
           return true;
         }
@@ -4319,8 +4319,8 @@
     function ember$data$lib$system$normalize$model$name$$normalizeModelName(modelName) {
       return Ember.String.dasherize(modelName);
     }
-    var ember$data$lib$system$store$serializer$response$$forEach = Ember.EnumerableUtils.forEach;
-    var ember$data$lib$system$store$serializer$response$$map = Ember.EnumerableUtils.map;
+    var ember$data$lib$system$store$serializer$response$$forEach = Ember.ArrayPolyfills.forEach;
+    var ember$data$lib$system$store$serializer$response$$map = Ember.ArrayPolyfills.map;
 
     /**
       This is a helper method that always returns a JSON-API Document.
@@ -4364,7 +4364,7 @@
 
       if (payload) {
         if (Ember.isArray(payload)) {
-          data = ember$data$lib$system$store$serializer$response$$map(payload, function (payload) {
+          data = ember$data$lib$system$store$serializer$response$$map.call(payload, function (payload) {
             return ember$data$lib$system$store$serializer$response$$_normalizeSerializerPayloadItem(modelClass, payload);
           });
         } else {
@@ -4423,7 +4423,7 @@
             if (relationshipMeta.kind === 'belongsTo') {
               relationship.data = normalizeRelationshipData(value, relationshipMeta);
             } else if (relationshipMeta.kind === 'hasMany') {
-              relationship.data = ember$data$lib$system$store$serializer$response$$map(Ember.A(value), function (item) {
+              relationship.data = ember$data$lib$system$store$serializer$response$$map.call(Ember.A(value), function (item) {
                 return normalizeRelationshipData(item, relationshipMeta);
               });
             }
@@ -4478,7 +4478,7 @@
       var result;
       if (payload && payload.data) {
         if (Ember.isArray(payload.data)) {
-          result = ember$data$lib$system$store$serializer$response$$map(payload.data, function (item) {
+          result = ember$data$lib$system$store$serializer$response$$map.call(payload.data, function (item) {
             return ember$data$lib$system$store$serializer$response$$_pushResourceObject(store, item);
           });
         } else {
@@ -4501,7 +4501,7 @@
     function ember$data$lib$system$store$serializer$response$$pushPayloadIncluded(store, payload) {
       var result;
       if (payload && payload.included && Ember.isArray(payload.included)) {
-        result = ember$data$lib$system$store$serializer$response$$map(payload.included, function (item) {
+        result = ember$data$lib$system$store$serializer$response$$map.call(payload.included, function (item) {
           return ember$data$lib$system$store$serializer$response$$_pushResourceObject(store, item);
         });
       }
@@ -4543,14 +4543,14 @@
 
       if (payload.attributes) {
         var attributeKeys = Ember.keys(payload.attributes);
-        ember$data$lib$system$store$serializer$response$$forEach(attributeKeys, function (key) {
+        ember$data$lib$system$store$serializer$response$$forEach.call(attributeKeys, function (key) {
           var attribute = payload.attributes[key];
           data[key] = attribute;
         });
       }
       if (payload.relationships) {
         var relationshipKeys = Ember.keys(payload.relationships);
-        ember$data$lib$system$store$serializer$response$$forEach(relationshipKeys, function (key) {
+        ember$data$lib$system$store$serializer$response$$forEach.call(relationshipKeys, function (key) {
           var relationship = payload.relationships[key];
           if (relationship.hasOwnProperty('data')) {
             data[key] = relationship.data;
@@ -5868,7 +5868,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.cbdd832522'
+      VERSION: '1.0.0-beta.20+canary.0948b3aa19'
     });
 
     if (Ember.libraries) {
@@ -6525,7 +6525,20 @@
     */
 
     var ember$data$lib$system$model$model$$get = Ember.get;
-    var ember$data$lib$system$model$model$$intersection = Ember.EnumerableUtils.intersection;
+    var ember$data$lib$system$model$model$$forEach = Ember.ArrayPolyfills.forEach;
+    var ember$data$lib$system$model$model$$indexOf = Ember.ArrayPolyfills.indexOf;
+
+    function ember$data$lib$system$model$model$$intersection(array1, array2) {
+      var result = [];
+      ember$data$lib$system$model$model$$forEach.call(array1, function (element) {
+        if (ember$data$lib$system$model$model$$indexOf.call(array2, element) >= 0) {
+          result.push(element);
+        }
+      });
+
+      return result;
+    }
+
     var ember$data$lib$system$model$model$$RESERVED_MODEL_PROPS = ['currentState', 'data', 'store'];
 
     var ember$data$lib$system$model$model$$retrieveFromCurrentState = Ember.computed('currentState', function (key) {
@@ -8402,7 +8415,7 @@
 
     var ember$data$lib$system$model$errors$$get = Ember.get;
     var ember$data$lib$system$model$errors$$isEmpty = Ember.isEmpty;
-    var ember$data$lib$system$model$errors$$map = Ember.EnumerableUtils.map;
+    var ember$data$lib$system$model$errors$$map = Ember.ArrayPolyfills.map;
 
     var ember$data$lib$system$model$errors$$default = Ember.Object.extend(Ember.Enumerable, Ember.Evented, {
       /**
@@ -8544,7 +8557,7 @@
       _findOrCreateMessages: function (attribute, messages) {
         var errors = this.errorsFor(attribute);
 
-        return ember$data$lib$system$model$errors$$map(Ember.makeArray(messages), function (message) {
+        return ember$data$lib$system$model$errors$$map.call(Ember.makeArray(messages), function (message) {
           return errors.findBy('message', message) || {
             attribute: attribute,
             message: message
@@ -8827,7 +8840,7 @@
     }
 
     var ember$data$lib$system$store$finders$$Promise = Ember.RSVP.Promise;
-    var ember$data$lib$system$store$finders$$map = Ember.EnumerableUtils.map;
+    var ember$data$lib$system$store$finders$$map = Ember.ArrayPolyfills.map;
     var ember$data$lib$system$store$finders$$get = Ember.get;
     function ember$data$lib$system$store$finders$$_find(adapter, store, typeClass, id, internalModel, options) {
       var snapshot = internalModel.createSnapshot(options);
@@ -8881,7 +8894,7 @@
           var payload = ember$data$lib$system$store$serializer$response$$normalizeResponseHelper(serializer, store, typeClass, adapterPayload, null, "findMany");
           //TODO Optimize, no need to materialize here
           var records = ember$data$lib$system$store$serializer$response$$pushPayload(store, payload);
-          return ember$data$lib$system$store$finders$$map(records, function (record) {
+          return ember$data$lib$system$store$finders$$map.call(records, function (record) {
             return record._internalModel;
           });
         });
@@ -8904,7 +8917,7 @@
           var payload = ember$data$lib$system$store$serializer$response$$normalizeResponseHelper(serializer, store, typeClass, adapterPayload, null, "findHasMany");
           //TODO Use a non record creating push
           var records = ember$data$lib$system$store$serializer$response$$pushPayload(store, payload);
-          var recordArray = ember$data$lib$system$store$finders$$map(records, function (record) {
+          var recordArray = ember$data$lib$system$store$finders$$map.call(records, function (record) {
             return record._internalModel;
           });
           if (serializer.get("isNewSerializerAPI")) {
@@ -9366,8 +9379,8 @@
 
     var ember$data$lib$system$ordered$set$$default = ember$data$lib$system$ordered$set$$OrderedSet;
     var ember$data$lib$system$record$array$manager$$get = Ember.get;
-    var ember$data$lib$system$record$array$manager$$forEach = Ember.EnumerableUtils.forEach;
-    var ember$data$lib$system$record$array$manager$$indexOf = Ember.EnumerableUtils.indexOf;
+    var ember$data$lib$system$record$array$manager$$forEach = Ember.ArrayPolyfills.forEach;
+    var ember$data$lib$system$record$array$manager$$indexOf = Ember.ArrayPolyfills.indexOf;
 
     var ember$data$lib$system$record$array$manager$$default = Ember.Object.extend({
       init: function () {
@@ -9410,7 +9423,7 @@
          @method updateRecordArrays
       */
       updateRecordArrays: function () {
-        ember$data$lib$system$record$array$manager$$forEach(this.changedRecords, function (record) {
+        ember$data$lib$system$record$array$manager$$forEach.call(this.changedRecords, function (record) {
           if (record.isDeleted()) {
             this._recordWasDeleted(record);
           } else {
@@ -9439,8 +9452,7 @@
         var typeClass = record.type;
         var recordArrays = this.filteredRecordArrays.get(typeClass);
         var filter;
-
-        ember$data$lib$system$record$array$manager$$forEach(recordArrays, function (array) {
+        ember$data$lib$system$record$array$manager$$forEach.call(recordArrays, function (array) {
           filter = ember$data$lib$system$record$array$manager$$get(array, "filterFunction");
           this.updateFilterRecordArray(array, filter, typeClass, record);
         }, this);
@@ -9452,7 +9464,7 @@
         var recordArrays = this.filteredRecordArrays.get(typeClass);
         var filter;
 
-        ember$data$lib$system$record$array$manager$$forEach(recordArrays, function (array) {
+        ember$data$lib$system$record$array$manager$$forEach.call(recordArrays, function (array) {
           filter = ember$data$lib$system$record$array$manager$$get(array, "filterFunction");
           this.updateFilterRecordArray(array, filter, typeClass, record);
         }, this);
@@ -9473,7 +9485,6 @@
       updateFilterRecordArray: function (array, filter, typeClass, record) {
         var shouldBeInArray = filter(record.getRecord());
         var recordArrays = this.recordArraysForRecord(record);
-
         if (shouldBeInArray) {
           this._addRecordToRecordArray(array, record);
         } else {
@@ -9629,7 +9640,7 @@
 
         // unregister filtered record array
         var recordArrays = this.filteredRecordArrays.get(typeClass);
-        var index = ember$data$lib$system$record$array$manager$$indexOf(recordArrays, array);
+        var index = ember$data$lib$system$record$array$manager$$indexOf.call(recordArrays, array);
         if (index !== -1) {
           recordArrays.splice(index, 1);
 
@@ -9646,10 +9657,10 @@
         this._super.apply(this, arguments);
 
         this.filteredRecordArrays.forEach(function (value) {
-          ember$data$lib$system$record$array$manager$$forEach(ember$data$lib$system$record$array$manager$$flatten(value), ember$data$lib$system$record$array$manager$$destroy);
+          ember$data$lib$system$record$array$manager$$forEach.call(ember$data$lib$system$record$array$manager$$flatten(value), ember$data$lib$system$record$array$manager$$destroy);
         });
-        ember$data$lib$system$record$array$manager$$forEach(this.liveRecordArrays, ember$data$lib$system$record$array$manager$$destroy);
-        ember$data$lib$system$record$array$manager$$forEach(this._adapterPopulatedRecordArrays, ember$data$lib$system$record$array$manager$$destroy);
+        ember$data$lib$system$record$array$manager$$forEach.call(this.liveRecordArrays, ember$data$lib$system$record$array$manager$$destroy);
+        ember$data$lib$system$record$array$manager$$forEach.call(this._adapterPopulatedRecordArrays, ember$data$lib$system$record$array$manager$$destroy);
       }
     });
 
@@ -9778,7 +9789,7 @@
 
     var ember$data$lib$system$merge$$default = ember$data$lib$system$merge$$merge;
 
-    var ember$data$lib$system$relationships$state$relationship$$forEach = Ember.EnumerableUtils.forEach;
+    var ember$data$lib$system$relationships$state$relationship$$forEach = Ember.ArrayPolyfills.forEach;
 
     function ember$data$lib$system$relationships$state$relationship$$Relationship(store, record, inverseKey, relationshipMeta) {
       this.members = new ember$data$lib$system$ordered$set$$default();
@@ -9830,14 +9841,14 @@
 
       removeRecords: function (records) {
         var self = this;
-        ember$data$lib$system$relationships$state$relationship$$forEach(records, function (record) {
+        ember$data$lib$system$relationships$state$relationship$$forEach.call(records, function (record) {
           self.removeRecord(record);
         });
       },
 
       addRecords: function (records, idx) {
         var self = this;
-        ember$data$lib$system$relationships$state$relationship$$forEach(records, function (record) {
+        ember$data$lib$system$relationships$state$relationship$$forEach.call(records, function (record) {
           self.addRecord(record, idx);
           if (idx !== undefined) {
             idx++;
@@ -10029,7 +10040,6 @@
     var ember$data$lib$system$many$array$$get = Ember.get;
     var ember$data$lib$system$many$array$$set = Ember.set;
     var ember$data$lib$system$many$array$$filter = Ember.ArrayPolyfills.filter;
-    var ember$data$lib$system$many$array$$map = Ember.EnumerableUtils.map;
 
     var ember$data$lib$system$many$array$$default = Ember.Object.extend(Ember.MutableArray, Ember.Evented, {
       init: function () {
@@ -10162,8 +10172,9 @@
           records = this.currentState.slice(idx, idx + amt);
           this.get('relationship').removeRecords(records);
         }
+        var map = objects.map || Ember.ArrayPolyfills.map;
         if (objects) {
-          this.get('relationship').addRecords(ember$data$lib$system$many$array$$map(objects, function (obj) {
+          this.get('relationship').addRecords(map.call(objects, function (obj) {
             return obj._internalModel;
           }), idx);
         }
@@ -10314,7 +10325,7 @@
       return typeClass.detect(addedRecord.type);
     }
 
-    var ember$data$lib$system$relationships$state$has$many$$map = Ember.EnumerableUtils.map;
+    var ember$data$lib$system$relationships$state$has$many$$map = Ember.ArrayPolyfills.map;
 
     var ember$data$lib$system$relationships$state$has$many$$ManyRelationship = function (store, record, inverseKey, relationshipMeta) {
       this._super$constructor(store, record, inverseKey, relationshipMeta);
@@ -10470,7 +10481,7 @@
     ember$data$lib$system$relationships$state$has$many$$ManyRelationship.prototype.findRecords = function () {
       var manyArray = this.manyArray;
       //TODO CLEANUP
-      return this.store.findMany(ember$data$lib$system$relationships$state$has$many$$map(manyArray.toArray(), function (rec) {
+      return this.store.findMany(ember$data$lib$system$relationships$state$has$many$$map.call(manyArray.toArray(), function (rec) {
         return rec._internalModel;
       })).then(function () {
         //Goes away after the manyArray refactor
@@ -11888,9 +11899,9 @@
     var ember$data$lib$system$store$$set = Ember.set;
     var ember$data$lib$system$store$$once = Ember.run.once;
     var ember$data$lib$system$store$$isNone = Ember.isNone;
-    var ember$data$lib$system$store$$forEach = Ember.EnumerableUtils.forEach;
-    var ember$data$lib$system$store$$indexOf = Ember.EnumerableUtils.indexOf;
-    var ember$data$lib$system$store$$map = Ember.EnumerableUtils.map;
+    var ember$data$lib$system$store$$forEach = Ember.ArrayPolyfills.forEach;
+    var ember$data$lib$system$store$$indexOf = Ember.ArrayPolyfills.indexOf;
+    var ember$data$lib$system$store$$map = Ember.ArrayPolyfills.map;
     var ember$data$lib$system$store$$Promise = Ember.RSVP.Promise;
     var ember$data$lib$system$store$$copy = Ember.copy;
     var ember$data$lib$system$store$$Store;
@@ -12398,7 +12409,7 @@
         Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string");
         var store = this;
 
-        return ember$data$lib$system$promise$proxies$$promiseArray(Ember.RSVP.all(ember$data$lib$system$store$$map(ids, function (id) {
+        return ember$data$lib$system$promise$proxies$$promiseArray(Ember.RSVP.all(ember$data$lib$system$store$$map.call(ids, function (id) {
           return store.findRecord(modelName, id);
         })).then(Ember.A, null, "DS: Store#findByIds of " + modelName + " complete"));
       },
@@ -12426,10 +12437,10 @@
       },
 
       scheduleFetchMany: function (records) {
-        var internalModels = ember$data$lib$system$store$$map(records, function (record) {
+        var internalModels = ember$data$lib$system$store$$map.call(records, function (record) {
           return record._internalModel;
         });
-        return ember$data$lib$system$store$$Promise.all(ember$data$lib$system$store$$map(internalModels, this.scheduleFetch, this));
+        return ember$data$lib$system$store$$Promise.all(ember$data$lib$system$store$$map.call(internalModels, this.scheduleFetch, this));
       },
 
       scheduleFetch: function (internalModel, options) {
@@ -12479,7 +12490,7 @@
         }
 
         function resolveFoundRecords(records) {
-          ember$data$lib$system$store$$forEach(records, function (record) {
+          ember$data$lib$system$store$$forEach.call(records, function (record) {
             var pair = Ember.A(pendingFetchItems).findBy("record", record);
             if (pair) {
               var resolver = pair.resolver;
@@ -12509,7 +12520,7 @@
         }
 
         function rejectRecords(records, error) {
-          ember$data$lib$system$store$$forEach(records, function (record) {
+          ember$data$lib$system$store$$forEach.call(records, function (record) {
             var pair = Ember.A(pendingFetchItems).findBy("record", record);
             if (pair) {
               var resolver = pair.resolver;
@@ -12535,7 +12546,7 @@
 
           var snapshots = Ember.A(records).invoke("createSnapshot");
           var groups = adapter.groupRecordsForFindMany(this, snapshots);
-          ember$data$lib$system$store$$forEach(groups, function (groupOfSnapshots) {
+          ember$data$lib$system$store$$forEach.call(groups, function (groupOfSnapshots) {
             var groupOfRecords = Ember.A(groupOfSnapshots).mapBy("_internalModel");
             var requestedRecords = Ember.A(groupOfRecords);
             var ids = requestedRecords.mapBy("id");
@@ -12549,7 +12560,7 @@
             }
           });
         } else {
-          ember$data$lib$system$store$$forEach(pendingFetchItems, _fetchRecord);
+          ember$data$lib$system$store$$forEach.call(pendingFetchItems, _fetchRecord);
         }
       },
 
@@ -12669,7 +12680,7 @@
       */
       findMany: function (internalModels) {
         var store = this;
-        return ember$data$lib$system$store$$Promise.all(ember$data$lib$system$store$$map(internalModels, function (internalModel) {
+        return ember$data$lib$system$store$$Promise.all(ember$data$lib$system$store$$map.call(internalModels, function (internalModel) {
           return store._findByInternalModel(internalModel);
         }));
       },
@@ -12942,9 +12953,9 @@
           var typeMaps = this.typeMaps;
           var keys = Ember.keys(typeMaps);
 
-          var types = ember$data$lib$system$store$$map(keys, byType);
+          var types = ember$data$lib$system$store$$map.call(keys, byType);
 
-          ember$data$lib$system$store$$forEach(types, this.unloadAll, this);
+          ember$data$lib$system$store$$forEach.call(types, this.unloadAll, this);
         } else {
           var typeClass = this.modelFor(modelName);
           var typeMap = this.typeMapFor(typeClass);
@@ -13135,7 +13146,7 @@
         var pending = this._pendingSave.slice();
         this._pendingSave = [];
 
-        ember$data$lib$system$store$$forEach(pending, function (pendingItem) {
+        ember$data$lib$system$store$$forEach.call(pending, function (pendingItem) {
           var snapshot = pendingItem.snapshot;
           var resolver = pendingItem.resolver;
           var record = snapshot._internalModel;
@@ -13415,7 +13426,7 @@
         Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string" || typeof data === "undefined");
         var internalModel = this._pushInternalModel(modelName, data);
         if (Ember.isArray(internalModel)) {
-          return ember$data$lib$system$store$$map(internalModel, function (item) {
+          return ember$data$lib$system$store$$map.call(internalModel, function (item) {
             return item.getRecord();
           });
         }
@@ -13427,7 +13438,7 @@
           //TODO Remove once the transition is complete
           var result = ember$data$lib$system$store$serializer$response$$pushPayload(this, modelName);
           if (Ember.isArray(result)) {
-            return ember$data$lib$system$store$$map(result, function (item) {
+            return ember$data$lib$system$store$$map.call(result, function (item) {
               return item._internalModel;
             });
           }
@@ -13438,14 +13449,14 @@
         Ember.deprecate("store.push(type, data) has been deprecated. Please provide a JSON-API document object as the first and only argument to store.push.");
 
         var type = this.modelFor(modelName);
-        var filter = Ember.EnumerableUtils.filter;
+        var filter = Ember.ArrayPolyfills.filter;
 
         // If Ember.ENV.DS_WARN_ON_UNKNOWN_KEYS is set to true and the payload
         // contains unknown keys, log a warning.
         if (Ember.ENV.DS_WARN_ON_UNKNOWN_KEYS) {
-          Ember.warn("The payload for '" + type.modelName + "' contains these unknown keys: " + Ember.inspect(filter(Ember.keys(data), function (key) {
+          Ember.warn("The payload for '" + type.modelName + "' contains these unknown keys: " + Ember.inspect(filter.call(Ember.keys(data), function (key) {
             return !(key === "id" || key === "links" || ember$data$lib$system$store$$get(type, "fields").has(key) || key.match(/Type$/));
-          })) + ". Make sure they've been defined in your model.", filter(Ember.keys(data), function (key) {
+          })) + ". Make sure they've been defined in your model.", filter.call(Ember.keys(data), function (key) {
             return !(key === "id" || key === "links" || ember$data$lib$system$store$$get(type, "fields").has(key) || key.match(/Type$/));
           }).length === 0);
         }
@@ -13679,7 +13690,7 @@
           delete typeMap.idToRecord[id];
         }
 
-        var loc = ember$data$lib$system$store$$indexOf(typeMap.records, internalModel);
+        var loc = ember$data$lib$system$store$$indexOf.call(typeMap.records, internalModel);
         typeMap.records.splice(loc, 1);
       },
 
@@ -14232,7 +14243,7 @@
     var ember$data$lib$system$debug$$default = ember$data$lib$system$debug$debug$adapter$$default;
     var ember$data$lib$serializers$embedded$records$mixin$$get = Ember.get;
     var ember$data$lib$serializers$embedded$records$mixin$$set = Ember.set;
-    var ember$data$lib$serializers$embedded$records$mixin$$forEach = Ember.EnumerableUtils.forEach;
+    var ember$data$lib$serializers$embedded$records$mixin$$forEach = Ember.ArrayPolyfills.forEach;
     var ember$data$lib$serializers$embedded$records$mixin$$camelize = Ember.String.camelize;
 
     /**
@@ -14647,7 +14658,7 @@
         var ids = [];
 
         var embeddedSerializer = store.serializerFor(embeddedTypeClass.modelName);
-        ember$data$lib$serializers$embedded$records$mixin$$forEach(hash[key], function (data) {
+        ember$data$lib$serializers$embedded$records$mixin$$forEach.call(hash[key], function (data) {
           var embeddedRecord = embeddedSerializer.normalize(embeddedTypeClass, data, null);
           store.push(embeddedTypeClass.modelName, embeddedRecord);
           ids.push(embeddedRecord.id);
@@ -14668,7 +14679,7 @@
 
         var ids = [];
 
-        ember$data$lib$serializers$embedded$records$mixin$$forEach(hash[key], function (data) {
+        ember$data$lib$serializers$embedded$records$mixin$$forEach.call(hash[key], function (data) {
           var modelName = data.type;
           var embeddedSerializer = store.serializerFor(modelName);
           var embeddedTypeClass = store.modelFor(modelName);

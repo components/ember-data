@@ -6564,18 +6564,18 @@ define(
 
     var get = Ember.get;
     var set = Ember.set;
-    var forEach = Ember.EnumerableUtils.forEach;
-    var indexOf = Ember.EnumerableUtils.indexOf;
+    var forEach = Ember.ArrayPolyfills.forEach;
+    var indexOf = Ember.ArrayPolyfills.indexOf;
     var run = Ember.run;
 
     var Person, store, env, array, recordArray;
 
     var shouldContain = function (array, item) {
-      ok(indexOf(array, item) !== -1, 'array should contain ' + item.get('name'));
+      ok(array.indexOf(item) !== -1, 'array should contain ' + item.get('name'));
     };
 
     var shouldNotContain = function (array, item) {
-      ok(indexOf(array, item) === -1, 'array should not contain ' + item.get('name'));
+      ok(indexOf.call(array, item) === -1, 'array should not contain ' + item.get('name'));
     };
 
     module('integration/filter - DS.Model updating', {
@@ -7096,7 +7096,7 @@ define(
     var clientEdits = function (ids) {
       edited = [];
 
-      forEach(ids, function (id) {
+      forEach.call(ids, function (id) {
         // wrap in an Ember.run to guarantee coalescence of the
         // iterated `set` calls and promise resolution.
         Ember.run(function () {
@@ -7114,14 +7114,14 @@ define(
       // wrap in an Ember.run to guarantee coalescence of the
       // iterated `set` calls.
       Ember.run(function () {
-        forEach(names, function (name) {
+        forEach.call(names, function (name) {
           edited.push(store.createRecord('person', { name: 'Client-side ' + name }));
         });
       });
     };
 
     var serverResponds = function () {
-      forEach(edited, function (person) {
+      forEach.call(edited, function (person) {
         run(person, 'save');
       });
     };
@@ -14408,7 +14408,7 @@ define(
 
     var get = Ember.get;
     var HomePlanet, SuperVillain, EvilMinion, SecretLab, SecretWeapon, BatCave, Comment, league, superVillain, evilMinion, secretWeapon, homePlanet, secretLab, env;
-    var indexOf = Ember.EnumerableUtils.indexOf;
+    var indexOf = Ember.ArrayPolyfills.indexOf;
     var run = Ember.run;
     var LightSaber;
 
@@ -15859,7 +15859,7 @@ define(
           var relationshipType = snapshot.type.determineRelationshipType(relationship);
           // "manyToOne" not supported in DS.RESTSerializer.prototype.serializeHasMany
           var relationshipTypes = Ember.String.w('manyToNone manyToMany manyToOne');
-          if (indexOf(relationshipTypes, relationshipType) > -1) {
+          if (indexOf.call(relationshipTypes, relationshipType) > -1) {
             json[payloadKey] = snapshot.hasMany(key, { ids: true });
           }
         }
@@ -25046,6 +25046,7 @@ define(
     var hasMany = DS.hasMany;
     var belongsTo = DS.belongsTo;
     var run = Ember.run;
+    var forEach = Ember.ArrayPolyfills.forEach;
 
     module('unit/store/push - DS.Store#push', {
       setup: function () {
@@ -25465,7 +25466,7 @@ define(
 
       expect(invalidValues.length);
 
-      Ember.EnumerableUtils.forEach(invalidValues, function (invalidValue) {
+      forEach.call(invalidValues, function (invalidValue) {
         throws(function () {
           run(function () {
             store.push('person', invalidValue);
@@ -25531,7 +25532,7 @@ define(
 
       expect(invalidValues.length);
 
-      Ember.EnumerableUtils.forEach(invalidValues, function (invalidValue) {
+      forEach.call(invalidValues, function (invalidValue) {
         throws(function () {
           run(function () {
             store.push('person', { id: 1, phoneNumbers: invalidValue });
@@ -25545,7 +25546,7 @@ define(
 
       expect(invalidValues.length);
 
-      Ember.EnumerableUtils.forEach(invalidValues, function (invalidValue) {
+      forEach.call(invalidValues, function (invalidValue) {
         throws(function () {
           run(function () {
             store.push('person', invalidValue);
