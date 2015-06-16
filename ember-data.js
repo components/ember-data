@@ -5756,6 +5756,8 @@
         var relationship, value;
 
         if (itemPayload.hasOwnProperty(key)) {
+          var relationshipData;
+
           (function () {
             relationship = {};
             value = itemPayload[key];
@@ -5788,7 +5790,10 @@
             } else if (relationshipMeta.kind === 'hasMany') {
               //|| [] because the hasMany could be === null
               Ember.assert('A ' + relationshipMeta.parentType + ' record was pushed into the store with the value of ' + key + ' being \'' + Ember.inspect(value) + '\', but ' + key + ' is a hasMany relationship so the value must be an array. You should probably check your data payload or serializer.', Ember.isArray(value) || value === null);
-              relationship.data = Ember.A(value || []).map(function (item) {
+
+              relationshipData = Ember.A(value || []);
+
+              relationship.data = ember$data$lib$system$store$serializer$response$$map.call(relationshipData, function (item) {
                 return normalizeRelationshipData(item, relationshipMeta);
               });
             }
@@ -6116,15 +6121,17 @@
 
         /*jshint loopfunc:true*/
         ember$data$lib$serializers$rest$serializer$$forEach.call(arrayHash, function (hash) {
-          var _documentHash$included;
-
           var _serializer$normalize = serializer.normalize(modelClass, hash, prop);
 
           var data = _serializer$normalize.data;
           var included = _serializer$normalize.included;
 
           documentHash.data.push(data);
-          (_documentHash$included = documentHash.included).push.apply(_documentHash$included, included);
+          if (included) {
+            var _documentHash$included;
+
+            (_documentHash$included = documentHash.included).push.apply(_documentHash$included, included);
+          }
         }, this);
 
         return documentHash;
@@ -6142,8 +6149,6 @@
         @private
       */
       _normalizeResponse: function (store, primaryModelClass, payload, id, requestType, isSingle) {
-        var _this = this;
-
         var documentHash = {
           data: null,
           included: []
@@ -6155,9 +6160,10 @@
           documentHash.meta = meta;
         }
 
-        Ember.keys(payload).forEach(function (prop) {
-          var _documentHash$included3;
+        var keys = Ember.keys(payload);
 
+        for (var i = 0, _length = keys.length; i < _length; i++) {
+          var prop = keys[i];
           var modelName = prop;
           var forcedSecondary = false;
 
@@ -6183,17 +6189,17 @@
             modelName = prop.substr(1);
           }
 
-          var typeName = _this.modelNameFromPayloadKey(modelName);
+          var typeName = this.modelNameFromPayloadKey(modelName);
           if (!store.modelFactoryFor(typeName)) {
-            Ember.warn(_this.warnMessageNoModelForKey(modelName, typeName), false);
-            return;
+            Ember.warn(this.warnMessageNoModelForKey(modelName, typeName), false);
+            continue;
           }
 
-          var isPrimary = !forcedSecondary && _this.isPrimaryType(store, typeName, primaryModelClass);
+          var isPrimary = !forcedSecondary && this.isPrimaryType(store, typeName, primaryModelClass);
           var value = payload[prop];
 
           if (value === null) {
-            return;
+            continue;
           }
 
           /*
@@ -6206,24 +6212,30 @@
             ```
            */
           if (isPrimary && Ember.typeOf(value) !== "array") {
-            var _documentHash$included2;
-
-            var _normalize = _this.normalize(primaryModelClass, value, prop);
+            var _normalize = this.normalize(primaryModelClass, value, prop);
 
             var _data = _normalize.data;
             var _included = _normalize.included;
 
             documentHash.data = _data;
-            (_documentHash$included2 = documentHash.included).push.apply(_documentHash$included2, _included);
-            return;
+            if (_included) {
+              var _documentHash$included2;
+
+              (_documentHash$included2 = documentHash.included).push.apply(_documentHash$included2, _included);
+            }
+            continue;
           }
 
-          var _normalizeArray = _this.normalizeArray(store, typeName, value, prop);
+          var _normalizeArray = this.normalizeArray(store, typeName, value, prop);
 
           var data = _normalizeArray.data;
           var included = _normalizeArray.included;
 
-          (_documentHash$included3 = documentHash.included).push.apply(_documentHash$included3, included);
+          if (included) {
+            var _documentHash$included3;
+
+            (_documentHash$included3 = documentHash.included).push.apply(_documentHash$included3, included);
+          }
 
           if (isSingle) {
             /*jshint loopfunc:true*/
@@ -6249,12 +6261,14 @@
             if (isPrimary) {
               documentHash.data = data;
             } else {
-              var _documentHash$included4;
+              if (data) {
+                var _documentHash$included4;
 
-              (_documentHash$included4 = documentHash.included).push.apply(_documentHash$included4, data);
+                (_documentHash$included4 = documentHash.included).push.apply(_documentHash$included4, data);
+              }
             }
           }
-        });
+        }
 
         return documentHash;
       },
@@ -6872,15 +6886,17 @@
 
         /*jshint loopfunc:true*/
         ember$data$lib$serializers$rest$serializer$$forEach.call(Ember.makeArray(payload[prop]), function (hash) {
-          var _documentHash$included5;
-
           var _typeSerializer$normalize = typeSerializer.normalize(type, hash, prop);
 
           var data = _typeSerializer$normalize.data;
           var included = _typeSerializer$normalize.included;
 
           documentHash.data.push(data);
-          (_documentHash$included5 = documentHash.included).push.apply(_documentHash$included5, included);
+          if (included) {
+            var _documentHash$included5;
+
+            (_documentHash$included5 = documentHash.included).push.apply(_documentHash$included5, included);
+          }
         }, this);
       }
 
@@ -7234,7 +7250,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.d9585c8596'
+      VERSION: '1.0.0-beta.20+canary.414c02f111'
     });
 
     if (Ember.libraries) {
@@ -13176,9 +13192,16 @@
         fields.forEach(function (fieldType, key) {
           modelProperties.push(key);
         });
-        var preloadDetected = modelProperties.reduce(function (memo, key) {
-          return typeof preloadOrOptions[key] !== "undefined" || memo;
-        }, false);
+
+        var preloadDetected = false;
+        for (var i = 0, _length = modelProperties.length; i < _length; i++) {
+          var key = modelProperties[i];
+          if (typeof preloadOrOptions[key] !== "undefined") {
+            preloadDetected = true;
+            break;
+          }
+        }
+
         if (preloadDetected) {
           Ember.deprecate("Passing a preload argument to `store." + methodName + "` is deprecated. Please move it to the preload key on the " + methodName + " `options` argument.");
           var preload = preloadOrOptions;
@@ -15005,8 +15028,6 @@
       }
 
       var hasMany = relationshipHash.map(function (item) {
-        var _hash$included;
-
         var _normalizeEmbeddedRelationship = _this2._normalizeEmbeddedRelationship(store, relationshipMeta, item);
 
         var data = _normalizeEmbeddedRelationship.data;
@@ -15014,7 +15035,11 @@
 
         hash.included = hash.included || [];
         hash.included.push(data);
-        (_hash$included = hash.included).push.apply(_hash$included, included);
+        if (included) {
+          var _hash$included;
+
+          (_hash$included = hash.included).push.apply(_hash$included, included);
+        }
 
         return { id: data.id, type: data.type };
       });
@@ -15028,8 +15053,6 @@
      @private
     */
     function ember$data$lib$serializers$embedded$records$mixin$$_newExtractEmbeddedBelongsTo(store, key, hash, relationshipMeta) {
-      var _hash$included2;
-
       var relationshipHash = ember$data$lib$serializers$embedded$records$mixin$$get(hash, 'data.relationships.' + key + '.data');
       if (!relationshipHash) {
         return;
@@ -15042,7 +15065,11 @@
 
       hash.included = hash.included || [];
       hash.included.push(data);
-      (_hash$included2 = hash.included).push.apply(_hash$included2, included);
+      if (included) {
+        var _hash$included2;
+
+        (_hash$included2 = hash.included).push.apply(_hash$included2, included);
+      }
 
       var belongsTo = { id: data.id, type: data.type };
       var relationship = { data: belongsTo };
