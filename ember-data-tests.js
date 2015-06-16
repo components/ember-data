@@ -5845,7 +5845,7 @@ define(
     test('findRecord should pass adapterOptions to the find method', function () {
       expect(1);
 
-      env.adapter.find = async(function (store, type, id, snapshot) {
+      env.adapter.findRecord = async(function (store, type, id, snapshot) {
         deepEqual(snapshot.adapterOptions, { query: { embed: true } });
         return Ember.RSVP.resolve({ id: 1 });
       });
@@ -19467,7 +19467,7 @@ define(
 
           coalesceFindRequests: true,
 
-          find: function (store, type, id, snapshot) {
+          findRecord: function (store, type, id, snapshot) {
             return Ember.RSVP.Promise.resolve({ id: id });
           },
 
@@ -24048,7 +24048,7 @@ define(
           ok(false, "shouldReloadRecord should not be called when the record is not loaded");
           return false;
         },
-        find: function () {
+        findRecord: function () {
           ok(true, "find is always called when the record is not in the store");
           return { id: 1 };
         }
@@ -24076,7 +24076,7 @@ define(
           ok(true, "shouldReloadRecord should be called when the record is in the store");
           return false;
         },
-        find: function () {
+        findRecord: function () {
           ok(false, "find should not be called when shouldReloadRecord returns false");
         }
       });
@@ -24104,7 +24104,7 @@ define(
           ok(true, "shouldReloadRecord should be called when the record is in the store");
           return true;
         },
-        find: function () {
+        findRecord: function () {
           ok(true, "find should not be called when shouldReloadRecord returns false");
           return { id: 1, name: "Tom" };
         }
@@ -24137,7 +24137,7 @@ define(
         shouldBackgroundReloadRecord: function (store, type, id, snapshot) {
           ok(false, "shouldBackgroundReloadRecord is not called when shouldReloadRecord returns true");
         },
-        find: function () {
+        findRecord: function () {
           ok(true, "find should be called");
           return { id: 1, name: "Tom" };
         }
@@ -24168,7 +24168,7 @@ define(
           ok(true, "shouldBackgroundReloadRecord is called when record is loaded form the cache");
           return false;
         },
-        find: function () {
+        findRecord: function () {
           ok(false, "find should not be called");
           return { id: 1, name: "Tom" };
         }
@@ -24199,7 +24199,7 @@ define(
           ok(true, "shouldBackgroundReloadRecord is called when record is loaded form the cache");
           return true;
         },
-        find: function () {
+        findRecord: function () {
           ok(true, "find should not be called");
           return { id: 1, name: "Tom" };
         }
