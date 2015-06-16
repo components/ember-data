@@ -5842,7 +5842,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.9571f8346f'
+      VERSION: '1.0.0-beta.20+canary.faaf4354d0'
     });
 
     if (Ember.libraries) {
@@ -9619,7 +9619,7 @@
         this.filteredRecordArrays.forEach(function (value) {
           ember$data$lib$system$record$array$manager$$forEach.call(ember$data$lib$system$record$array$manager$$flatten(value), ember$data$lib$system$record$array$manager$$destroy);
         });
-        ember$data$lib$system$record$array$manager$$forEach.call(this.liveRecordArrays, ember$data$lib$system$record$array$manager$$destroy);
+        this.liveRecordArrays.forEach(ember$data$lib$system$record$array$manager$$destroy);
         ember$data$lib$system$record$array$manager$$forEach.call(this._adapterPopulatedRecordArrays, ember$data$lib$system$record$array$manager$$destroy);
       }
     });
