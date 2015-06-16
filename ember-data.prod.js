@@ -5842,7 +5842,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.517c4e33fe'
+      VERSION: '1.0.0-beta.20+canary.9571f8346f'
     });
 
     if (Ember.libraries) {
@@ -12916,7 +12916,11 @@
         @return {DS.PromiseArray}
       */
       filter: function (modelName, query, filter) {
-                var promise;
+        
+        if (!Ember.ENV.ENABLE_DS_FILTER) {
+                  }
+
+        var promise;
         var length = arguments.length;
         var array;
         var hasQuery = length === 3;
