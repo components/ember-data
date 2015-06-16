@@ -122,6 +122,9 @@ define(
     test('errors are camelCased and are expected under the `errors` property of the payload', function () {
       var jqXHR = {
         status: 422,
+        getAllResponseHeaders: function () {
+          return '';
+        },
         responseText: JSON.stringify({
           errors: {
             first_name: ['firstName error']
@@ -182,23 +185,30 @@ define(
       equal(adapter.buildURL('superUser', 1), '/super_users/1');
     });
 
-    test('ajaxError - returns invalid error if 422 response', function () {
+    test('handleResponse - returns invalid error if 422 response', function () {
 
       var jqXHR = {
         status: 422,
-        responseText: JSON.stringify({ name: 'can\'t be blank' })
+        responseText: JSON.stringify({ errors: { name: 'can\'t be blank' } })
       };
 
-      equal(adapter.ajaxError(jqXHR).errors.name, 'can\'t be blank');
+      var json = adapter.parseErrorResponse(jqXHR.responseText);
+
+      var error = adapter.handleResponse(jqXHR.status, {}, json).errors[0];
+
+      equal(error.details, 'can\'t be blank');
+      equal(error.source.pointer, 'data/attributes/name');
     });
 
-    test('ajaxError - returns ajax response if not 422 response', function () {
+    test('handleResponse - returns ajax response if not 422 response', function () {
       var jqXHR = {
         status: 500,
         responseText: 'Something went wrong'
       };
 
-      equal(adapter.ajaxError(jqXHR), jqXHR);
+      var json = adapter.parseErrorResponse(jqXHR.responseText);
+
+      ok(adapter.handleResponse(jqXHR.status, {}, json) instanceof DS.AdapterError, 'must be a DS.AdapterError');
     });
   }
 );
@@ -1186,14 +1196,19 @@ define(
     });
 
     test('extractErrors camelizes keys', function () {
-      var payload = {
-        errors: {
-          first_name: ['firstName not evil enough']
-        }
+      var error = {
+        errors: [{
+          source: {
+            pointer: 'data/attributes/first_name'
+          },
+          details: 'firstName not evil enough'
+        }]
       };
 
+      var payload;
+
       run(function () {
-        payload = env.amsSerializer.extractErrors(env.store, SuperVillain, payload);
+        payload = env.amsSerializer.extractErrors(env.store, SuperVillain, error);
       });
 
       deepEqual(payload, {
@@ -4627,10 +4642,15 @@ define(
       });
     });
 
-    test("calls adapter.ajaxSuccess with the jqXHR and json", function () {
+    test("calls adapter.handleResponse with the jqXHR and json", function () {
       expect(2);
       var originalAjax = Ember.$.ajax;
-      var jqXHR = {};
+      var jqXHR = {
+        status: 200,
+        getAllResponseHeaders: function () {
+          return "";
+        }
+      };
       var data = {
         post: {
           id: "1",
@@ -4642,8 +4662,8 @@ define(
         hash.success(data, "ok", jqXHR);
       };
 
-      adapter.ajaxSuccess = function (xhr, json) {
-        deepEqual(jqXHR, xhr);
+      adapter.handleResponse = function (status, headers, json) {
+        deepEqual(status, 200);
         deepEqual(json, data);
         return json;
       };
@@ -4657,21 +4677,25 @@ define(
       }
     });
 
-    test("calls ajaxError with jqXHR, jqXHR.responseText", function () {
+    test("calls handleResponse with jqXHR, jqXHR.responseText", function () {
       expect(3);
       var originalAjax = Ember.$.ajax;
       var jqXHR = {
-        responseText: "Nope lol"
+        status: 400,
+        responseText: "Nope lol",
+        getAllResponseHeaders: function () {
+          return "";
+        }
       };
 
       Ember.$.ajax = function (hash) {
         hash.error(jqXHR, jqXHR.responseText);
       };
 
-      adapter.ajaxError = function (xhr, responseText) {
-        deepEqual(xhr, jqXHR);
-        deepEqual(responseText, jqXHR.responseText);
-        return new Error("nope!");
+      adapter.handleResponse = function (status, headers, json) {
+        deepEqual(status, 400);
+        deepEqual(json, jqXHR.responseText);
+        return new DS.AdapterError("nope!");
       };
 
       try {
@@ -4685,10 +4709,14 @@ define(
       }
     });
 
-    test("rejects promise if DS.InvalidError is returned from adapter.ajaxSuccess", function () {
+    test("rejects promise if DS.AdapterError is returned from adapter.handleResponse", function () {
       expect(3);
       var originalAjax = Ember.$.ajax;
-      var jqXHR = {};
+      var jqXHR = {
+        getAllResponseHeaders: function () {
+          return "";
+        }
+      };
       var data = {
         something: "is invalid"
       };
@@ -4697,27 +4725,30 @@ define(
         hash.success(data, "ok", jqXHR);
       };
 
-      adapter.ajaxSuccess = function (xhr, json) {
-        ok(true, "ajaxSuccess should be called");
-        return new DS.InvalidError(json);
+      adapter.handleResponse = function (status, headers, json) {
+        ok(true, "handleResponse should be called");
+        return new DS.AdapterError(json);
       };
 
       Ember.run(function () {
         store.find("post", "1").then(null, function (reason) {
           ok(true, "promise should be rejected");
-          ok(reason instanceof DS.InvalidError, "reason should be an instance of DS.InvalidError");
+          ok(reason instanceof DS.AdapterError, "reason should be an instance of DS.AdapterError");
         });
       });
 
       Ember.$.ajax = originalAjax;
     });
 
-    test("ajaxError appends errorThrown for sanity", function () {
-      expect(6);
+    test("on error appends errorThrown for sanity", function () {
+      expect(2);
 
       var originalAjax = Ember.$.ajax;
       var jqXHR = {
-        responseText: "Nope lol"
+        responseText: "Nope lol",
+        getAllResponseHeaders: function () {
+          return "";
+        }
       };
 
       var errorThrown = new Error("nope!");
@@ -4726,19 +4757,14 @@ define(
         hash.error(jqXHR, jqXHR.responseText, errorThrown);
       };
 
-      var originalAjaxError = adapter.ajaxError;
-      adapter.ajaxError = function (xhr, responseText, _errorThrown) {
-        deepEqual(_errorThrown, errorThrown);
-        ok(errorThrown);
-        deepEqual(xhr, jqXHR);
-        deepEqual(responseText, jqXHR.responseText);
-        return originalAjaxError.apply(adapter, arguments);
+      adapter.handleResponse = function (status, headers, payload) {
+        ok(false);
       };
 
       try {
         run(function () {
           store.find("post", "1")["catch"](function (err) {
-            equal(err.errorThrown, errorThrown);
+            equal(err, errorThrown);
             ok(err, "promise rejected");
           });
         });
@@ -4747,24 +4773,27 @@ define(
       }
     });
 
-    test("ajaxError wraps the error string in an Error object", function () {
+    test("on error wraps the error string in an DS.AdapterError object", function () {
       expect(2);
 
       var originalAjax = Ember.$.ajax;
       var jqXHR = {
-        responseText: "Nope lol"
+        responseText: "Nope lol",
+        getAllResponseHeaders: function () {
+          return "";
+        }
       };
 
       var errorThrown = "nope!";
 
       Ember.$.ajax = function (hash) {
-        hash.error(jqXHR, jqXHR.responseText, errorThrown);
+        hash.error(jqXHR, "error", errorThrown);
       };
 
       try {
         run(function () {
           store.find("post", "1")["catch"](function (err) {
-            equal(err.errorThrown.message, errorThrown);
+            equal(err.message, errorThrown);
             ok(err, "promise rejected");
           });
         });
@@ -5334,7 +5363,7 @@ define(
       Ember.run(function () {
         yehuda.save().then(null, async(function (reason) {
           equal(saveCount, 1, 'The record has been saved once');
-          ok(reason.message.match('The backend rejected the commit because it was invalid'), 'It should fail due to being invalid');
+          ok(reason.message.match('The adapter rejected the commit because it was invalid'), 'It should fail due to being invalid');
           equal(get(yehuda, 'isValid'), false, 'the record is invalid');
           equal(get(yehuda, 'hasDirtyAttributes'), true, 'the record has outstanding changes');
           ok(get(yehuda, 'errors.name'), 'The errors.name property exists');
@@ -5342,7 +5371,7 @@ define(
           return yehuda.save();
         })).then(null, async(function (reason) {
           equal(saveCount, 2, 'The record has been saved twice');
-          ok(reason.message.match('The backend rejected the commit because it was invalid'), 'It should fail due to being invalid');
+          ok(reason.message.match('The adapter rejected the commit because it was invalid'), 'It should fail due to being invalid');
           equal(get(yehuda, 'isValid'), false, 'the record is still invalid');
           equal(get(yehuda, 'hasDirtyAttributes'), true, 'the record has outstanding changes');
           ok(get(yehuda, 'errors.name'), 'The errors.name property exists');
@@ -5493,13 +5522,13 @@ define(
           return yehuda.save();
         })).then(null, async(function (reason) {
           equal(saveCount, 1, 'The record has been saved once');
-          ok(reason.message.match('The backend rejected the commit because it was invalid'), 'It should fail due to being invalid');
+          ok(reason.message.match('The adapter rejected the commit because it was invalid'), 'It should fail due to being invalid');
           equal(get(yehuda, 'hasDirtyAttributes'), true, 'the record is still dirty');
           equal(get(yehuda, 'isValid'), false, 'the record is invalid');
           return yehuda.save();
         })).then(null, async(function (reason) {
           equal(saveCount, 2, 'The record has been saved twice');
-          ok(reason.message.match('The backend rejected the commit because it was invalid'), 'It should fail due to being invalid');
+          ok(reason.message.match('The adapter rejected the commit because it was invalid'), 'It should fail due to being invalid');
           equal(get(yehuda, 'isValid'), false, 'record is still invalid');
           equal(get(yehuda, 'hasDirtyAttributes'), true, 'record is still dirty');
           set(yehuda, 'name', 'Brohuda Brokatz');
@@ -16747,10 +16776,13 @@ define(
       }));
 
       var payload = {
-        errors: {
-          le_title: ['title errors'],
-          my_comments: ['comments errors']
-        }
+        errors: [{
+          source: { pointer: 'data/attributes/le_title' },
+          details: 'title errors'
+        }, {
+          source: { pointer: 'data/attributes/my_comments' },
+          details: 'comments errors'
+        }]
       };
 
       var errors = env.container.lookup('serializer:post').extractErrors(env.store, Post, payload);
@@ -16766,9 +16798,10 @@ define(
 
       var payload = {
         attributeWhichWillBeRemovedinExtractErrors: ['true'],
-        errors: {
-          title: ['title errors']
-        }
+        errors: [{
+          source: { pointer: 'data/attributes/title' },
+          details: 'title errors'
+        }]
       };
 
       var errors = env.container.lookup('serializer:post').extractErrors(env.store, Post, payload);
@@ -18968,6 +19001,88 @@ define(
           ok(true, 'The rejection handler was called');
         }));
       });
+    });
+  }
+);
+
+
+define(
+  "ember-data/tests/unit/adapter-errors-test",
+  ["exports"],
+  function(__exports__) {
+    "use strict";
+
+    function __es6_export__(name, value) {
+      __exports__[name] = value;
+    }
+
+    module("unit/adapter/errors - DS.AdapterError");
+
+    test("DS.AdapterError", function () {
+      var error = new DS.AdapterError();
+      ok(error instanceof Error);
+      ok(error instanceof Ember.Error);
+    });
+
+    test("DS.InvalidError", function () {
+      var error = new DS.InvalidError();
+      ok(error instanceof Error);
+      ok(error instanceof DS.AdapterError);
+    });
+
+    test("DS.TimeoutError", function () {
+      var error = new DS.TimeoutError();
+      ok(error instanceof Error);
+      ok(error instanceof DS.AdapterError);
+    });
+
+    test("DS.AbortError", function () {
+      var error = new DS.AbortError();
+      ok(error instanceof Error);
+      ok(error instanceof DS.AdapterError);
+    });
+
+    var errorsHash = {
+      name: ["is invalid", "must be a string"],
+      age: ["must be a number"]
+    };
+
+    var errorsArray = [{
+      title: "Invalid Attribute",
+      details: "is invalid",
+      source: { pointer: "data/attributes/name" }
+    }, {
+      title: "Invalid Attribute",
+      details: "must be a string",
+      source: { pointer: "data/attributes/name" }
+    }, {
+      title: "Invalid Attribute",
+      details: "must be a number",
+      source: { pointer: "data/attributes/age" }
+    }];
+
+    test("errorsHashToArray", function () {
+      var result = DS.errorsHashToArray(errorsHash);
+      deepEqual(result, errorsArray);
+    });
+
+    test("errorsArrayToHash", function () {
+      var result = DS.errorsArrayToHash(errorsArray);
+      deepEqual(result, errorsHash);
+    });
+
+    test("DS.InvalidError will normalize errors hash with deprecation", function () {
+      var error;
+
+      expectDeprecation(function () {
+        error = new DS.InvalidError({ name: ["is invalid"] });
+      }, /expects json-api formatted errors/);
+
+      deepEqual(error.errors, [{
+        title: "Invalid Attribute",
+        details: "is invalid",
+        source: { pointer: "data/attributes/name" }
+      }]);
     });
   }
 );
@@ -26144,6 +26259,13 @@ test('ember-data/lib/adapters/build-url-mixin.js should pass jshint', function()
 }
 if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/lib/adapters');
+test('ember-data/lib/adapters/errors.js should pass jshint', function() { 
+  ok(true, 'ember-data/lib/adapters/errors.js should pass jshint.'); 
+});
+
+}
+if (!QUnit.urlParams.nojshint) {
+module('JSHint - ember-data/lib/adapters');
 test('ember-data/lib/adapters/fixture-adapter.js should pass jshint', function() { 
   ok(true, 'ember-data/lib/adapters/fixture-adapter.js should pass jshint.'); 
 });
@@ -26356,13 +26478,6 @@ if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/lib/system/model');
 test('ember-data/lib/system/model/errors.js should pass jshint', function() { 
   ok(true, 'ember-data/lib/system/model/errors.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/model/errors');
-test('ember-data/lib/system/model/errors/invalid.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/model/errors/invalid.js should pass jshint.'); 
 });
 
 }
@@ -26944,6 +27059,13 @@ if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/tests/integration/store');
 test('ember-data/tests/integration/store/query-record-test.js should pass jshint', function() { 
   ok(true, 'ember-data/tests/integration/store/query-record-test.js should pass jshint.'); 
+});
+
+}
+if (!QUnit.urlParams.nojshint) {
+module('JSHint - ember-data/tests/unit');
+test('ember-data/tests/unit/adapter-errors-test.js should pass jshint', function() { 
+  ok(true, 'ember-data/tests/unit/adapter-errors-test.js should pass jshint.'); 
 });
 
 }

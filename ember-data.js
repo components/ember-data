@@ -1,95 +1,5 @@
 (function() {
     "use strict";
-    var ember$data$lib$system$model$errors$invalid$$create = Ember.create;
-    var ember$data$lib$system$model$errors$invalid$$EmberError = Ember.Error;
-
-    /**
-      A `DS.InvalidError` is used by an adapter to signal the external API
-      was unable to process a request because the content was not
-      semantically correct or meaningful per the API. Usually this means a
-      record failed some form of server side validation. When a promise
-      from an adapter is rejected with a `DS.InvalidError` the record will
-      transition to the `invalid` state and the errors will be set to the
-      `errors` property on the record.
-
-      For Ember Data to correctly map errors to their corresponding
-      properties on the model, Ember Data expects each error to be
-      namespaced under a key that matches the property name. For example
-      if you had a Post model that looked like this.
-
-      ```app/models/post.js
-      import DS from 'ember-data';
-
-      export default DS.Model.extend({
-        title: DS.attr('string'),
-        content: DS.attr('string')
-      });
-      ```
-
-      To show an error from the server related to the `title` and
-      `content` properties your adapter could return a promise that
-      rejects with a `DS.InvalidError` object that looks like this:
-
-      ```app/adapters/post.js
-      import Ember from 'ember';
-      import DS from 'ember-data';
-
-      export default DS.RESTAdapter.extend({
-        updateRecord: function() {
-          // Fictional adapter that always rejects
-          return Ember.RSVP.reject(new DS.InvalidError({
-            title: ['Must be unique'],
-            content: ['Must not be blank'],
-          }));
-        }
-      });
-      ```
-
-      Your backend may use different property names for your records the
-      store will attempt extract and normalize the errors using the
-      serializer's `extractErrors` method before the errors get added to
-      the the model. As a result, it is safe for the `InvalidError` to
-      wrap the error payload unaltered.
-
-      Example
-
-      ```app/adapters/application.js
-      import Ember from 'ember';
-      import DS from 'ember-data';
-
-      export default DS.RESTAdapter.extend({
-        ajaxError: function(jqXHR) {
-          var error = this._super(jqXHR);
-
-          // 422 is used by this fictional server to signal a validation error
-          if (jqXHR && jqXHR.status === 422) {
-            var jsonErrors = Ember.$.parseJSON(jqXHR.responseText);
-            return new DS.InvalidError(jsonErrors);
-          } else {
-            // The ajax request failed however it is not a result of this
-            // record being in an invalid state so we do not return a
-            // `InvalidError` object.
-            return error;
-          }
-        }
-      });
-      ```
-
-      @class InvalidError
-      @namespace DS
-    */
-    function ember$data$lib$system$model$errors$invalid$$InvalidError(errors) {
-      ember$data$lib$system$model$errors$invalid$$EmberError.call(this, "The backend rejected the commit because it was invalid: " + Ember.inspect(errors));
-      this.errors = errors;
-    }
-
-    ember$data$lib$system$model$errors$invalid$$InvalidError.prototype = ember$data$lib$system$model$errors$invalid$$create(ember$data$lib$system$model$errors$invalid$$EmberError.prototype);
-
-    var ember$data$lib$system$model$errors$invalid$$default = ember$data$lib$system$model$errors$invalid$$InvalidError;
-
-    /**
-      @module ember-data
-    */
 
     var ember$data$lib$system$adapter$$get = Ember.get;
 
@@ -872,6 +782,160 @@
       }
     });
 
+    var ember$data$lib$adapters$errors$$EmberError = Ember.Error;
+    var ember$data$lib$adapters$errors$$create = Ember.create;
+
+    var ember$data$lib$adapters$errors$$forEach = Ember.ArrayPolyfills.forEach;
+    var ember$data$lib$adapters$errors$$SOURCE_POINTER_REGEXP = /data\/(attributes|relationships)\/(.*)/;
+
+    /**
+      @class AdapterError
+      @namespace DS
+    */
+    function ember$data$lib$adapters$errors$$AdapterError(errors, message) {
+      message = message || "Adapter operation failed";
+
+      ember$data$lib$adapters$errors$$EmberError.call(this, message);
+
+      this.errors = errors || [{
+        title: "Adapter Error",
+        details: message
+      }];
+    }
+
+    ember$data$lib$adapters$errors$$AdapterError.prototype = ember$data$lib$adapters$errors$$create(ember$data$lib$adapters$errors$$EmberError.prototype);
+
+    /**
+      A `DS.InvalidError` is used by an adapter to signal the external API
+      was unable to process a request because the content was not
+      semantically correct or meaningful per the API. Usually this means a
+      record failed some form of server side validation. When a promise
+      from an adapter is rejected with a `DS.InvalidError` the record will
+      transition to the `invalid` state and the errors will be set to the
+      `errors` property on the record.
+
+      For Ember Data to correctly map errors to their corresponding
+      properties on the model, Ember Data expects each error to be
+      a valid json-api error object with a `source/pointer` that matches
+      the property name. For example if you had a Post model that
+      looked like this.
+
+      ```app/models/post.js
+      import DS from 'ember-data';
+
+      export default DS.Model.extend({
+        title: DS.attr('string'),
+        content: DS.attr('string')
+      });
+      ```
+
+      To show an error from the server related to the `title` and
+      `content` properties your adapter could return a promise that
+      rejects with a `DS.InvalidError` object that looks like this:
+
+      ```app/adapters/post.js
+      import Ember from 'ember';
+      import DS from 'ember-data';
+
+      export default DS.RESTAdapter.extend({
+        updateRecord: function() {
+          // Fictional adapter that always rejects
+          return Ember.RSVP.reject(new DS.InvalidError([
+            {
+              details: 'Must be unique',
+              source: { pointer: 'data/attributes/title' }
+            },
+            {
+              details: 'Must not be blank',
+              source: { pointer: 'data/attributes/content'}
+            }
+          ]));
+        }
+      });
+      ```
+
+      Your backend may use different property names for your records the
+      store will attempt extract and normalize the errors using the
+      serializer's `extractErrors` method before the errors get added to
+      the the model. As a result, it is safe for the `InvalidError` to
+      wrap the error payload unaltered.
+
+      @class InvalidError
+      @namespace DS
+    */
+    function ember$data$lib$adapters$errors$$InvalidError(errors) {
+      if (!Ember.isArray(errors)) {
+        Ember.deprecate("`InvalidError` expects json-api formatted errors.");
+        errors = ember$data$lib$adapters$errors$$errorsHashToArray(errors);
+      }
+      ember$data$lib$adapters$errors$$AdapterError.call(this, errors, "The adapter rejected the commit because it was invalid");
+    }
+
+    ember$data$lib$adapters$errors$$InvalidError.prototype = ember$data$lib$adapters$errors$$create(ember$data$lib$adapters$errors$$AdapterError.prototype);
+
+    /**
+      @class TimeoutError
+      @namespace DS
+    */
+    function ember$data$lib$adapters$errors$$TimeoutError() {
+      ember$data$lib$adapters$errors$$AdapterError.call(this, null, "The adapter operation timed out");
+    }
+
+    ember$data$lib$adapters$errors$$TimeoutError.prototype = ember$data$lib$adapters$errors$$create(ember$data$lib$adapters$errors$$AdapterError.prototype);
+
+    /**
+      @class AbortError
+      @namespace DS
+    */
+    function ember$data$lib$adapters$errors$$AbortError() {
+      ember$data$lib$adapters$errors$$AdapterError.call(this, null, "The adapter operation was aborted");
+    }
+
+    ember$data$lib$adapters$errors$$AbortError.prototype = ember$data$lib$adapters$errors$$create(ember$data$lib$adapters$errors$$AdapterError.prototype);
+
+    /**
+      @private
+    */
+    function ember$data$lib$adapters$errors$$errorsHashToArray(errors) {
+      var out = [];
+
+      if (Ember.isPresent(errors)) {
+        ember$data$lib$adapters$errors$$forEach.call(Ember.keys(errors), function (key) {
+          var messages = Ember.makeArray(errors[key]);
+          for (var i = 0; i < messages.length; i++) {
+            out.push({
+              title: "Invalid Attribute",
+              details: messages[i],
+              source: {
+                pointer: "data/attributes/" + key
+              }
+            });
+          }
+        });
+      }
+
+      return out;
+    }
+
+    function ember$data$lib$adapters$errors$$errorsArrayToHash(errors) {
+      var out = {};
+
+      if (Ember.isPresent(errors)) {
+        ember$data$lib$adapters$errors$$forEach.call(errors, function (error) {
+          if (error.source && error.source.pointer) {
+            var key = error.source.pointer.match(ember$data$lib$adapters$errors$$SOURCE_POINTER_REGEXP);
+
+            if (key) {
+              key = key[2];
+              out[key] = out[key] || [];
+              out[key].push(error.details || error.title);
+            }
+          }
+        });
+      }
+
+      return out;
+    }
     var ember$data$lib$system$map$$Map = Ember.Map;
     var ember$data$lib$system$map$$MapWithDefault = Ember.MapWithDefault;
 
@@ -1358,7 +1422,7 @@
       @extends DS.Adapter
       @uses DS.BuildURLMixin
     */
-    var ember$data$lib$adapters$rest$adapter$$RestAdapter = ember$data$lib$system$adapter$$Adapter.extend(ember$data$lib$adapters$build$url$mixin$$default, {
+    var ember$data$lib$adapters$rest$adapter$$RestAdapter = ember$data$lib$system$adapter$$default.extend(ember$data$lib$adapters$build$url$mixin$$default, {
       defaultSerializer: "-rest",
 
       /**
@@ -1848,75 +1912,81 @@
 
       /**
         Takes an ajax response, and returns an error payload.
-         Returning a `DS.InvalidError` from this method will cause the
-        record to transition into the `invalid` state and make the
-        `errors` object available on the record. When returning an
-        `InvalidError` the store will attempt to normalize the error data
-        returned from the server using the serializer's `extractErrors`
-        method.
-         Example
-         ```app/adapters/application.js
-        import DS from 'ember-data';
-         export default DS.RESTAdapter.extend({
-          ajaxError: function(jqXHR) {
-            var error = this._super(jqXHR);
-             if (jqXHR && jqXHR.status === 422) {
-              var jsonErrors = Ember.$.parseJSON(jqXHR.responseText);
-               return new DS.InvalidError(jsonErrors);
-            } else {
-              return error;
-            }
-          }
-        });
-        ```
-         Note: As a correctness optimization, the default implementation of
-        the `ajaxError` method strips out the `then` method from jquery's
-        ajax response (jqXHR). This is important because the jqXHR's
-        `then` method fulfills the promise with itself resulting in a
-        circular "thenable" chain which may cause problems for some
-        promise libraries.
          @method ajaxError
+        @deprecated Use [handleResponse](#method_handleResponse) instead
         @param  {Object} jqXHR
         @param  {Object} responseText
         @param  {Object} errorThrown
         @return {Object} jqXHR
       */
-      ajaxError: function (jqXHR, responseText, errorThrown) {
-        var isObject = jqXHR !== null && typeof jqXHR === "object";
-
-        if (isObject) {
-          jqXHR.then = null;
-          if (!jqXHR.errorThrown) {
-            if (typeof errorThrown === "string") {
-              jqXHR.errorThrown = new Error(errorThrown);
-            } else {
-              jqXHR.errorThrown = errorThrown;
-            }
-          }
-        }
-
-        return jqXHR;
-      },
 
       /**
         Takes an ajax response, and returns the json payload.
-         By default this hook just returns the jsonPayload passed to it.
-        You might want to override it in two cases:
-         1. Your API might return useful results in the request headers.
-        If you need to access these, you can override this hook to copy them
-        from jqXHR to the payload object so they can be processed in you serializer.
-         2. Your API might return errors as successful responses with status code
-        200 and an Errors text or object. You can return a DS.InvalidError from
-        this hook and it will automatically reject the promise and put your record
-        into the invalid state.
          @method ajaxSuccess
+        @deprecated Use [handleResponse](#method_handleResponse) instead
         @param  {Object} jqXHR
         @param  {Object} jsonPayload
         @return {Object} jsonPayload
       */
 
-      ajaxSuccess: function (jqXHR, jsonPayload) {
-        return jsonPayload;
+      /**
+        Takes an ajax response, and returns the json payload or an error.
+         By default this hook just returns the json payload passed to it.
+        You might want to override it in two cases:
+         1. Your API might return useful results in the response headers.
+        Response headers are passed in as the second argument.
+         2. Your API might return errors as successful responses with status code
+        200 and an Errors text or object. You can return a `DS.InvalidError` or a
+        `DS.AdapterError` (or a sub class) from this hook and it will automatically
+        reject the promise and put your record into the invalid or error state.
+         Returning a `DS.InvalidError` from this method will cause the
+        record to transition into the `invalid` state and make the
+        `errors` object available on the record. When returning an
+        `DS.InvalidError` the store will attempt to normalize the error data
+        returned from the server using the serializer's `extractErrors`
+        method.
+         @method handleResponse
+        @param  {Number} status
+        @param  {Object} headers
+        @param  {Object} payload
+        @return {Object | DS.AdapterError} response
+      */
+      handleResponse: function (status, headers, payload) {
+        if (this.isSuccess(status, headers, payload)) {
+          return payload;
+        } else if (this.isInvalid(status, headers, payload)) {
+          return new ember$data$lib$adapters$errors$$InvalidError(payload.errors);
+        }
+
+        var errors = this.normalizeErrorResponse(status, headers, payload);
+
+        return new ember$data$lib$adapters$errors$$AdapterError(errors);
+      },
+
+      /**
+        Default `handleResponse` implementation uses this hook to decide if the
+        response is a success.
+         @method isSuccess
+        @param  {Number} status
+        @param  {Object} headers
+        @param  {Object} payload
+        @return {Boolean}
+      */
+      isSuccess: function (status, headers, payload) {
+        return status >= 200 && status < 300 || status === 304;
+      },
+
+      /**
+        Default `handleResponse` implementation uses this hook to decide if the
+        response is a an invalid error.
+         @method isInvalid
+        @param  {Number} status
+        @param  {Object} headers
+        @param  {Object} payload
+        @return {Boolean}
+      */
+      isInvalid: function (status, headers, payload) {
+        return status === 422;
       },
 
       /**
@@ -1945,17 +2015,50 @@
         return new Ember.RSVP.Promise(function (resolve, reject) {
           var hash = adapter.ajaxOptions(url, type, options);
 
-          hash.success = function (json, textStatus, jqXHR) {
-            json = adapter.ajaxSuccess(jqXHR, json);
-            if (json instanceof ember$data$lib$system$model$errors$invalid$$default) {
-              Ember.run(null, reject, json);
+          hash.success = function (payload, textStatus, jqXHR) {
+            var response = undefined;
+
+            if (adapter.ajaxSuccess) {
+              Ember.deprecate("`ajaxSuccess` has been deprecated. Use `isSuccess`, `isInvalid` or `handleResponse` instead.");
+              response = adapter.ajaxSuccess(jqXHR, payload);
+            }
+
+            if (!(response instanceof ember$data$lib$adapters$errors$$AdapterError)) {
+              response = adapter.handleResponse(jqXHR.status, ember$data$lib$adapters$rest$adapter$$parseResponseHeaders(jqXHR.getAllResponseHeaders()), response || payload);
+            }
+
+            if (response instanceof ember$data$lib$adapters$errors$$AdapterError) {
+              Ember.run(null, reject, response);
             } else {
-              Ember.run(null, resolve, json);
+              Ember.run(null, resolve, response);
             }
           };
 
           hash.error = function (jqXHR, textStatus, errorThrown) {
-            Ember.run(null, reject, adapter.ajaxError(jqXHR, jqXHR.responseText, errorThrown));
+            var error = undefined;
+
+            if (adapter.ajaxError) {
+              Ember.deprecate("`ajaxError` has been deprecated. Use `isSuccess`, `isInvalid` or `handleResponse` instead.");
+              error = adapter.ajaxError(jqXHR, textStatus, errorThrown);
+            }
+
+            if (typeof errorThrown === "string") {
+              errorThrown = new Error(errorThrown);
+            }
+
+            if (!(error instanceof Error)) {
+              if (errorThrown instanceof Error) {
+                error = errorThrown;
+              } else if (textStatus === "timeout") {
+                error = new ember$data$lib$adapters$errors$$TimeoutError();
+              } else if (textStatus === "abort") {
+                error = new ember$data$lib$adapters$errors$$AbortError();
+              } else {
+                error = adapter.handleResponse(jqXHR.status, ember$data$lib$adapters$rest$adapter$$parseResponseHeaders(jqXHR.getAllResponseHeaders()), adapter.parseErrorResponse(jqXHR.responseText));
+              }
+            }
+
+            Ember.run(null, reject, error);
           };
 
           Ember.$.ajax(hash);
@@ -1992,8 +2095,66 @@
         }
 
         return hash;
+      },
+
+      /**
+        @method parseErrorResponse
+        @private
+        @param {String} responseText
+        @return {Object}
+      */
+      parseErrorResponse: function (responseText) {
+        var json = responseText;
+
+        try {
+          json = Ember.$.parseJSON(responseText);
+        } catch (e) {}
+
+        return json;
+      },
+
+      /**
+        @method normalizeErrorResponse
+        @private
+        @param  {Number} status
+        @param  {Object} headers
+        @param  {Object} payload
+        @return {Object} errors payload
+      */
+      normalizeErrorResponse: function (status, headers, payload) {
+        if (payload && typeof payload === "object" && payload.errors) {
+          return payload.errors;
+        } else {
+          return [{
+            status: "" + status,
+            title: "The backend responded with an error",
+            details: "" + payload
+          }];
+        }
       }
     });
+
+    function ember$data$lib$adapters$rest$adapter$$parseResponseHeaders(headerStr) {
+      var headers = Ember.create(null);
+      if (!headerStr) {
+        return headers;
+      }
+
+      var headerPairs = headerStr.split("\r\n");
+      for (var i = 0; i < headerPairs.length; i++) {
+        var headerPair = headerPairs[i];
+        // Can't use split() here because it does the wrong thing
+        // if the header value has the string ": " in it.
+        var index = headerPair.indexOf(": ");
+        if (index > 0) {
+          var key = headerPair.substring(0, index);
+          var val = headerPair.substring(index + 2);
+          headers[key] = val;
+        }
+      }
+
+      return headers;
+    }
 
     //From http://stackoverflow.com/questions/280634/endswith-in-javascript
     function ember$data$lib$adapters$rest$adapter$$endsWith(string, suffix) {
@@ -2657,9 +2818,9 @@
       },
 
       /**
-        The ActiveModelAdapter overrides the `ajaxError` method
-        to return a DS.InvalidError for all 422 Unprocessable Entity
-        responses.
+        The ActiveModelAdapter overrides the `handleResponse` method
+        to format errors passed to a DS.InvalidError for all
+        422 Unprocessable Entity responses.
          A 422 HTTP response from the server generally implies that the request
         was well formed but the API was unable to process it because the
         content was not semantically correct or meaningful per the API.
@@ -2669,14 +2830,13 @@
         @param {Object} jqXHR
         @return error
       */
-      ajaxError: function (jqXHR) {
-        var error = this._super.apply(this, arguments);
+      handleResponse: function (status, headers, payload) {
+        if (this.isInvalid(status, headers, payload)) {
+          var errors = ember$data$lib$adapters$errors$$errorsHashToArray(payload.errors);
 
-        if (jqXHR && jqXHR.status === 422) {
-          var response = Ember.$.parseJSON(jqXHR.responseText);
-          return new ember$data$lib$system$model$errors$invalid$$default(response);
+          return new ember$data$lib$adapters$errors$$InvalidError(errors);
         } else {
-          return error;
+          return this._super.apply(this, arguments);
         }
       }
     });
@@ -4207,9 +4367,10 @@
       */
       extractErrors: function (store, typeClass, payload, id) {
         if (payload && typeof payload === "object" && payload.errors) {
-          payload = payload.errors;
+          payload = ember$data$lib$adapters$errors$$errorsArrayToHash(payload.errors);
           this.normalizeErrors(typeClass, payload);
         }
+
         return payload;
       },
 
@@ -4458,6 +4619,256 @@
       });
     };
 
+    var ember$data$lib$system$model$errors$$get = Ember.get;
+    var ember$data$lib$system$model$errors$$isEmpty = Ember.isEmpty;
+    var ember$data$lib$system$model$errors$$map = Ember.ArrayPolyfills.map;
+
+    var ember$data$lib$system$model$errors$$default = Ember.Object.extend(Ember.Enumerable, Ember.Evented, {
+      /**
+        Register with target handler
+         @method registerHandlers
+        @param {Object} target
+        @param {Function} becameInvalid
+        @param {Function} becameValid
+      */
+      registerHandlers: function (target, becameInvalid, becameValid) {
+        this.on('becameInvalid', target, becameInvalid);
+        this.on('becameValid', target, becameValid);
+      },
+
+      /**
+        @property errorsByAttributeName
+        @type {Ember.MapWithDefault}
+        @private
+      */
+      errorsByAttributeName: Ember.computed(function () {
+        return ember$data$lib$system$map$$MapWithDefault.create({
+          defaultValue: function () {
+            return Ember.A();
+          }
+        });
+      }),
+
+      /**
+        Returns errors for a given attribute
+         ```javascript
+        var user = store.createRecord('user', {
+          username: 'tomster',
+          email: 'invalidEmail'
+        });
+        user.save().catch(function(){
+          user.get('errors').errorsFor('email'); // returns:
+          // [{attribute: "email", message: "Doesn't look like a valid email."}]
+        });
+        ```
+         @method errorsFor
+        @param {String} attribute
+        @return {Array}
+      */
+      errorsFor: function (attribute) {
+        return ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName').get(attribute);
+      },
+
+      /**
+        An array containing all of the error messages for this
+        record. This is useful for displaying all errors to the user.
+         ```handlebars
+        {{#each model.errors.messages as |message|}}
+          <div class="error">
+            {{message}}
+          </div>
+        {{/each}}
+        ```
+         @property messages
+        @type {Array}
+      */
+      messages: Ember.computed.mapBy('content', 'message'),
+
+      /**
+        @property content
+        @type {Array}
+        @private
+      */
+      content: Ember.computed(function () {
+        return Ember.A();
+      }),
+
+      /**
+        @method unknownProperty
+        @private
+      */
+      unknownProperty: function (attribute) {
+        var errors = this.errorsFor(attribute);
+        if (ember$data$lib$system$model$errors$$isEmpty(errors)) {
+          return null;
+        }
+        return errors;
+      },
+
+      /**
+        @method nextObject
+        @private
+      */
+      nextObject: function (index, previousObject, context) {
+        return ember$data$lib$system$model$errors$$get(this, 'content').objectAt(index);
+      },
+
+      /**
+        Total number of errors.
+         @property length
+        @type {Number}
+        @readOnly
+      */
+      length: Ember.computed.oneWay('content.length').readOnly(),
+
+      /**
+        @property isEmpty
+        @type {Boolean}
+        @readOnly
+      */
+      isEmpty: Ember.computed.not('length').readOnly(),
+
+      /**
+        Adds error messages to a given attribute and sends
+        `becameInvalid` event to the record.
+         Example:
+         ```javascript
+        if (!user.get('username') {
+          user.get('errors').add('username', 'This field is required');
+        }
+        ```
+         @method add
+        @param {String} attribute
+        @param {(Array|String)} messages
+      */
+      add: function (attribute, messages) {
+        var wasEmpty = ember$data$lib$system$model$errors$$get(this, 'isEmpty');
+
+        messages = this._findOrCreateMessages(attribute, messages);
+        ember$data$lib$system$model$errors$$get(this, 'content').addObjects(messages);
+        ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName').get(attribute).addObjects(messages);
+
+        this.notifyPropertyChange(attribute);
+        this.enumerableContentDidChange();
+
+        if (wasEmpty && !ember$data$lib$system$model$errors$$get(this, 'isEmpty')) {
+          this.trigger('becameInvalid');
+        }
+      },
+
+      /**
+        @method _findOrCreateMessages
+        @private
+      */
+      _findOrCreateMessages: function (attribute, messages) {
+        var errors = this.errorsFor(attribute);
+
+        return ember$data$lib$system$model$errors$$map.call(Ember.makeArray(messages), function (message) {
+          return errors.findBy('message', message) || {
+            attribute: attribute,
+            message: message
+          };
+        });
+      },
+
+      /**
+        Removes all error messages from the given attribute and sends
+        `becameValid` event to the record if there no more errors left.
+         Example:
+         ```app/models/user.js
+        import DS from 'ember-data';
+         export default DS.Model.extend({
+          email: DS.attr('string'),
+          twoFactorAuth: DS.attr('boolean'),
+          phone: DS.attr('string')
+        });
+        ```
+         ```app/routes/user/edit.js
+        import Ember from 'ember';
+         export default Ember.Route.extend({
+          actions: {
+            save: function(user) {
+               if (!user.get('twoFactorAuth')) {
+                 user.get('errors').remove('phone');
+               }
+               user.save();
+             }
+          }
+        });
+        ```
+         @method remove
+        @param {String} attribute
+      */
+      remove: function (attribute) {
+        if (ember$data$lib$system$model$errors$$get(this, 'isEmpty')) {
+          return;
+        }
+
+        var content = ember$data$lib$system$model$errors$$get(this, 'content').rejectBy('attribute', attribute);
+        ember$data$lib$system$model$errors$$get(this, 'content').setObjects(content);
+        ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName')["delete"](attribute);
+
+        this.notifyPropertyChange(attribute);
+        this.enumerableContentDidChange();
+
+        if (ember$data$lib$system$model$errors$$get(this, 'isEmpty')) {
+          this.trigger('becameValid');
+        }
+      },
+
+      /**
+        Removes all error messages and sends `becameValid` event
+        to the record.
+         Example:
+         ```app/routes/user/edit.js
+        import Ember from 'ember';
+         export default Ember.Route.extend({
+          actions: {
+            retrySave: function(user) {
+               user.get('errors').clear();
+               user.save();
+             }
+          }
+        });
+        ```
+         @method clear
+      */
+      clear: function () {
+        if (ember$data$lib$system$model$errors$$get(this, 'isEmpty')) {
+          return;
+        }
+
+        ember$data$lib$system$model$errors$$get(this, 'content').clear();
+        ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName').clear();
+        this.enumerableContentDidChange();
+
+        this.trigger('becameValid');
+      },
+
+      /**
+        Checks if there is error messages for the given attribute.
+         ```app/routes/user/edit.js
+        import Ember from 'ember';
+         export default Ember.Route.extend({
+          actions: {
+            save: function(user) {
+               if (user.get('errors').has('email')) {
+                 return alert('Please update your email before attempting to save.');
+               }
+               user.save();
+             }
+          }
+        });
+        ```
+         @method has
+        @param {String} attribute
+        @return {Boolean} true if there some errors on given attribute
+      */
+      has: function (attribute) {
+        return !ember$data$lib$system$model$errors$$isEmpty(this.errorsFor(attribute));
+      }
+    });
+
     /**
       @module ember-data
     */
@@ -4477,9 +4888,9 @@
       return result;
     }
 
-    var ember$data$lib$system$model$model$$RESERVED_MODEL_PROPS = ['currentState', 'data', 'store'];
+    var ember$data$lib$system$model$model$$RESERVED_MODEL_PROPS = ["currentState", "data", "store"];
 
-    var ember$data$lib$system$model$model$$retrieveFromCurrentState = Ember.computed('currentState', function (key) {
+    var ember$data$lib$system$model$model$$retrieveFromCurrentState = Ember.computed("currentState", function (key) {
       return ember$data$lib$system$model$model$$get(this._internalModel.currentState, key);
     }).readOnly();
 
@@ -4564,9 +4975,9 @@
         @readOnly
         @deprecated
       */
-      isDirty: Ember.computed('currentState.isDirty', function () {
-        Ember.deprecate('DS.Model#isDirty has been deprecated please use hasDirtyAttributes instead');
-        return this.get('currentState.isDirty');
+      isDirty: Ember.computed("currentState.isDirty", function () {
+        Ember.deprecate("DS.Model#isDirty has been deprecated please use hasDirtyAttributes instead");
+        return this.get("currentState.isDirty");
       }),
       /**
         If this property is `true` the record is in the `dirty` state. The
@@ -4587,8 +4998,8 @@
         @type {Boolean}
         @readOnly
       */
-      hasDirtyAttributes: Ember.computed('currentState.isDirty', function () {
-        return this.get('currentState.isDirty');
+      hasDirtyAttributes: Ember.computed("currentState.isDirty", function () {
+        return this.get("currentState.isDirty");
       }),
       /**
         If this property is `true` the record is in the `saving` state. A
@@ -4787,7 +5198,15 @@
         @type {DS.Errors}
       */
       errors: Ember.computed(function () {
-        return this._internalModel.getErrors();
+        var errors = ember$data$lib$system$model$errors$$default.create();
+
+        errors.registerHandlers(this._internalModel, function () {
+          this.send("becameInvalid");
+        }, function () {
+          this.send("becameValid");
+        });
+
+        return errors;
       }).readOnly(),
 
       /**
@@ -4818,7 +5237,7 @@
       */
       toJSON: function (options) {
         // container is for lazy transform lookups
-        var serializer = this.store.serializerFor('-default');
+        var serializer = this.store.serializerFor("-default");
         var snapshot = this._internalModel.createSnapshot();
 
         return serializer.serialize(snapshot, options);
@@ -4878,7 +5297,7 @@
         @private
         @type {Object}
       */
-      data: Ember.computed.readOnly('_internalModel._data'),
+      data: Ember.computed.readOnly("_internalModel._data"),
 
       //TODO Do we want to deprecate these?
       /**
@@ -5000,8 +5419,8 @@
           and value is an [oldProp, newProp] array.
       */
       changedAttributes: function () {
-        var oldData = ember$data$lib$system$model$model$$get(this._internalModel, '_data');
-        var newData = ember$data$lib$system$model$model$$get(this._internalModel, '_attributes');
+        var oldData = ember$data$lib$system$model$model$$get(this._internalModel, "_data");
+        var newData = ember$data$lib$system$model$model$$get(this._internalModel, "_attributes");
         var diffData = Ember.create(null);
 
         var newDataKeys = Ember.keys(newData);
@@ -5046,7 +5465,7 @@
         @deprecated Use `rollbackAttributes()` instead
       */
       rollback: function () {
-        Ember.deprecate('Using model.rollback() has been deprecated. Use model.rollbackAttributes() to discard any unsaved changes to a model.');
+        Ember.deprecate("Using model.rollback() has been deprecated. Use model.rollbackAttributes() to discard any unsaved changes to a model.");
         this.rollbackAttributes();
       },
 
@@ -5076,7 +5495,7 @@
       },
 
       toStringExtension: function () {
-        return ember$data$lib$system$model$model$$get(this, 'id');
+        return ember$data$lib$system$model$model$$get(this, "id");
       },
 
       /**
@@ -5168,19 +5587,19 @@
       // rely on the data property.
       willMergeMixin: function (props) {
         var constructor = this.constructor;
-        Ember.assert('`' + ember$data$lib$system$model$model$$intersection(Ember.keys(props), ember$data$lib$system$model$model$$RESERVED_MODEL_PROPS)[0] + '` is a reserved property name on DS.Model objects. Please choose a different property name for ' + constructor.toString(), !ember$data$lib$system$model$model$$intersection(Ember.keys(props), ember$data$lib$system$model$model$$RESERVED_MODEL_PROPS)[0]);
+        Ember.assert("`" + ember$data$lib$system$model$model$$intersection(Ember.keys(props), ember$data$lib$system$model$model$$RESERVED_MODEL_PROPS)[0] + "` is a reserved property name on DS.Model objects. Please choose a different property name for " + constructor.toString(), !ember$data$lib$system$model$model$$intersection(Ember.keys(props), ember$data$lib$system$model$model$$RESERVED_MODEL_PROPS)[0]);
       },
 
       attr: function () {
-        Ember.assert('The `attr` method is not available on DS.Model, a DS.Snapshot was probably expected. Are you passing a DS.Model instead of a DS.Snapshot to your serializer?', false);
+        Ember.assert("The `attr` method is not available on DS.Model, a DS.Snapshot was probably expected. Are you passing a DS.Model instead of a DS.Snapshot to your serializer?", false);
       },
 
       belongsTo: function () {
-        Ember.assert('The `belongsTo` method is not available on DS.Model, a DS.Snapshot was probably expected. Are you passing a DS.Model instead of a DS.Snapshot to your serializer?', false);
+        Ember.assert("The `belongsTo` method is not available on DS.Model, a DS.Snapshot was probably expected. Are you passing a DS.Model instead of a DS.Snapshot to your serializer?", false);
       },
 
       hasMany: function () {
-        Ember.assert('The `hasMany` method is not available on DS.Model, a DS.Snapshot was probably expected. Are you passing a DS.Model instead of a DS.Snapshot to your serializer?', false);
+        Ember.assert("The `hasMany` method is not available on DS.Model, a DS.Snapshot was probably expected. Are you passing a DS.Model instead of a DS.Snapshot to your serializer?", false);
       }
     });
 
@@ -5206,7 +5625,7 @@
         @static
       */
       create: function () {
-        throw new Ember.Error('You should not call `create` on a model. Instead, call `store.createRecord` with the attributes you would like to set.');
+        throw new Ember.Error("You should not call `create` on a model. Instead, call `store.createRecord` with the attributes you would like to set.");
       },
 
       /**
@@ -6799,7 +7218,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.974b6ffd8c'
+      VERSION: '1.0.0-beta.20+canary.dd672e266f'
     });
 
     if (Ember.libraries) {
@@ -8006,7 +8425,7 @@
         },
 
         didSetProperty: function (internalModel, context) {
-          internalModel.getErrors().remove(context.name);
+          internalModel.removeErrorMessageFromAttribute(context.name);
 
           ember$data$lib$system$model$states$$didSetProperty(internalModel, context);
         },
@@ -8016,12 +8435,12 @@
         pushedData: Ember.K,
 
         willCommit: function (internalModel) {
-          internalModel.getErrors().clear();
+          internalModel.clearErrorMessages();
           internalModel.transitionTo('inFlight');
         },
 
         rolledBack: function (internalModel) {
-          internalModel.getErrors().clear();
+          internalModel.clearErrorMessages();
           internalModel.triggerLater('ready');
         },
 
@@ -8382,7 +8801,7 @@
           isValid: false,
 
           didSetProperty: function (internalModel, context) {
-            internalModel.getErrors().remove(context.name);
+            internalModel.removeErrorMessageFromAttribute(context.name);
 
             ember$data$lib$system$model$states$$didSetProperty(internalModel, context);
           },
@@ -8392,7 +8811,7 @@
           willCommit: Ember.K,
 
           rolledBack: function (internalModel) {
-            internalModel.getErrors().clear();
+            internalModel.clearErrorMessages();
             internalModel.transitionTo('loaded.saved');
             internalModel.triggerLater('ready');
           },
@@ -8437,257 +8856,6 @@
     ember$data$lib$system$model$states$$RootState = ember$data$lib$system$model$states$$wireState(ember$data$lib$system$model$states$$RootState, null, 'root');
 
     var ember$data$lib$system$model$states$$default = ember$data$lib$system$model$states$$RootState;
-
-    var ember$data$lib$system$model$errors$$get = Ember.get;
-    var ember$data$lib$system$model$errors$$isEmpty = Ember.isEmpty;
-    var ember$data$lib$system$model$errors$$map = Ember.ArrayPolyfills.map;
-
-    var ember$data$lib$system$model$errors$$default = Ember.Object.extend(Ember.Enumerable, Ember.Evented, {
-      /**
-        Register with target handler
-         @method registerHandlers
-        @param {Object} target
-        @param {Function} becameInvalid
-        @param {Function} becameValid
-      */
-      registerHandlers: function (target, becameInvalid, becameValid) {
-        this.on('becameInvalid', target, becameInvalid);
-        this.on('becameValid', target, becameValid);
-      },
-
-      /**
-        @property errorsByAttributeName
-        @type {Ember.MapWithDefault}
-        @private
-      */
-      errorsByAttributeName: Ember.computed(function () {
-        return ember$data$lib$system$map$$MapWithDefault.create({
-          defaultValue: function () {
-            return Ember.A();
-          }
-        });
-      }),
-
-      /**
-        Returns errors for a given attribute
-         ```javascript
-        var user = store.createRecord('user', {
-          username: 'tomster',
-          email: 'invalidEmail'
-        });
-        user.save().catch(function(){
-          user.get('errors').errorsFor('email'); // returns:
-          // [{attribute: "email", message: "Doesn't look like a valid email."}]
-        });
-        ```
-         @method errorsFor
-        @param {String} attribute
-        @return {Array}
-      */
-      errorsFor: function (attribute) {
-        return ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName').get(attribute);
-      },
-
-      /**
-        An array containing all of the error messages for this
-        record. This is useful for displaying all errors to the user.
-         ```handlebars
-        {{#each model.errors.messages as |message|}}
-          <div class="error">
-            {{message}}
-          </div>
-        {{/each}}
-        ```
-         @property messages
-        @type {Array}
-      */
-      messages: Ember.computed.mapBy('content', 'message'),
-
-      /**
-        @property content
-        @type {Array}
-        @private
-      */
-      content: Ember.computed(function () {
-        return Ember.A();
-      }),
-
-      /**
-        @method unknownProperty
-        @private
-      */
-      unknownProperty: function (attribute) {
-        var errors = this.errorsFor(attribute);
-        if (ember$data$lib$system$model$errors$$isEmpty(errors)) {
-          return null;
-        }
-        return errors;
-      },
-
-      /**
-        @method nextObject
-        @private
-      */
-      nextObject: function (index, previousObject, context) {
-        return ember$data$lib$system$model$errors$$get(this, 'content').objectAt(index);
-      },
-
-      /**
-        Total number of errors.
-         @property length
-        @type {Number}
-        @readOnly
-      */
-      length: Ember.computed.oneWay('content.length').readOnly(),
-
-      /**
-        @property isEmpty
-        @type {Boolean}
-        @readOnly
-      */
-      isEmpty: Ember.computed.not('length').readOnly(),
-
-      /**
-        Adds error messages to a given attribute and sends
-        `becameInvalid` event to the record.
-         Example:
-         ```javascript
-        if (!user.get('username') {
-          user.get('errors').add('username', 'This field is required');
-        }
-        ```
-         @method add
-        @param {String} attribute
-        @param {(Array|String)} messages
-      */
-      add: function (attribute, messages) {
-        var wasEmpty = ember$data$lib$system$model$errors$$get(this, 'isEmpty');
-
-        messages = this._findOrCreateMessages(attribute, messages);
-        ember$data$lib$system$model$errors$$get(this, 'content').addObjects(messages);
-        ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName').get(attribute).addObjects(messages);
-
-        this.notifyPropertyChange(attribute);
-        this.enumerableContentDidChange();
-
-        if (wasEmpty && !ember$data$lib$system$model$errors$$get(this, 'isEmpty')) {
-          this.trigger('becameInvalid');
-        }
-      },
-
-      /**
-        @method _findOrCreateMessages
-        @private
-      */
-      _findOrCreateMessages: function (attribute, messages) {
-        var errors = this.errorsFor(attribute);
-
-        return ember$data$lib$system$model$errors$$map.call(Ember.makeArray(messages), function (message) {
-          return errors.findBy('message', message) || {
-            attribute: attribute,
-            message: message
-          };
-        });
-      },
-
-      /**
-        Removes all error messages from the given attribute and sends
-        `becameValid` event to the record if there no more errors left.
-         Example:
-         ```app/models/user.js
-        import DS from 'ember-data';
-         export default DS.Model.extend({
-          email: DS.attr('string'),
-          twoFactorAuth: DS.attr('boolean'),
-          phone: DS.attr('string')
-        });
-        ```
-         ```app/routes/user/edit.js
-        import Ember from 'ember';
-         export default Ember.Route.extend({
-          actions: {
-            save: function(user) {
-               if (!user.get('twoFactorAuth')) {
-                 user.get('errors').remove('phone');
-               }
-               user.save();
-             }
-          }
-        });
-        ```
-         @method remove
-        @param {String} attribute
-      */
-      remove: function (attribute) {
-        if (ember$data$lib$system$model$errors$$get(this, 'isEmpty')) {
-          return;
-        }
-
-        var content = ember$data$lib$system$model$errors$$get(this, 'content').rejectBy('attribute', attribute);
-        ember$data$lib$system$model$errors$$get(this, 'content').setObjects(content);
-        ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName')["delete"](attribute);
-
-        this.notifyPropertyChange(attribute);
-        this.enumerableContentDidChange();
-
-        if (ember$data$lib$system$model$errors$$get(this, 'isEmpty')) {
-          this.trigger('becameValid');
-        }
-      },
-
-      /**
-        Removes all error messages and sends `becameValid` event
-        to the record.
-         Example:
-         ```app/routes/user/edit.js
-        import Ember from 'ember';
-         export default Ember.Route.extend({
-          actions: {
-            retrySave: function(user) {
-               user.get('errors').clear();
-               user.save();
-             }
-          }
-        });
-        ```
-         @method clear
-      */
-      clear: function () {
-        if (ember$data$lib$system$model$errors$$get(this, 'isEmpty')) {
-          return;
-        }
-
-        ember$data$lib$system$model$errors$$get(this, 'content').clear();
-        ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName').clear();
-        this.enumerableContentDidChange();
-
-        this.trigger('becameValid');
-      },
-
-      /**
-        Checks if there is error messages for the given attribute.
-         ```app/routes/user/edit.js
-        import Ember from 'ember';
-         export default Ember.Route.extend({
-          actions: {
-            save: function(user) {
-               if (user.get('errors').has('email')) {
-                 return alert('Please update your email before attempting to save.');
-               }
-               user.save();
-             }
-          }
-        });
-        ```
-         @method has
-        @param {String} attribute
-        @return {Boolean} true if there some errors on given attribute
-      */
-      has: function (attribute) {
-        return !ember$data$lib$system$model$errors$$isEmpty(this.errorsFor(attribute));
-      }
-    });
-
     var ember$data$lib$system$model$$default = ember$data$lib$system$model$model$$default;
     var ember$data$lib$system$debug$debug$adapter$$get = Ember.get;
     var ember$data$lib$system$debug$debug$adapter$$capitalize = Ember.String.capitalize;
@@ -11179,7 +11347,6 @@
       this.container = container;
       this._data = data || Ember.create(null);
       this.modelName = type.modelName;
-      this.errors = null;
       this.dataHasInitialized = false;
       //Look into making this lazy
       this._deferredTriggers = [];
@@ -11188,6 +11355,8 @@
       this._relationships = new ember$data$lib$system$relationships$state$create$$default(this);
       this.currentState = ember$data$lib$system$model$states$$default.empty;
       this.isReloading = false;
+      this.isError = false;
+      this.error = null;
       /*
         implicit relationships are relationship which have not been declared but the inverse side exists on
         another record somewhere
@@ -11233,7 +11402,9 @@
           store: this.store,
           container: this.container,
           _internalModel: this,
-          currentState: ember$data$lib$system$model$internal$model$$get(this, "currentState")
+          currentState: ember$data$lib$system$model$internal$model$$get(this, "currentState"),
+          isError: this.isError,
+          error: this.error
         });
         this._triggerDeferredTriggers();
       },
@@ -11277,9 +11448,9 @@
         }, promiseLabel).then(function () {
           record.didCleanError();
           return record;
-        }, function (reason) {
-          record.didError();
-          throw reason;
+        }, function (error) {
+          record.didError(error);
+          throw error;
         }, "DS: Model#reload complete, update flags")["finally"](function () {
           record.finishedReloading();
           record.updateRecordArrays();
@@ -11688,17 +11859,25 @@
         ember$data$lib$system$model$internal$model$$set(this.record, "id", id);
       },
 
-      didError: function () {
+      didError: function (error) {
+        this.error = error;
         this.isError = true;
+
         if (this.record) {
-          this.record.set("isError", true);
+          this.record.setProperties({
+            isError: true,
+            error: error
+          });
         }
       },
 
       didCleanError: function () {
         this.isError = false;
         if (this.record) {
-          this.record.set("isError", false);
+          this.record.setProperties({
+            isError: false,
+            error: null
+          });
         }
       },
       /**
@@ -11745,21 +11924,21 @@
         Ember.run.schedule("actions", this, this.updateRecordArrays);
       },
 
-      getErrors: function () {
-        if (this.errors) {
-          return this.errors;
-        }
-        var errors = ember$data$lib$system$model$errors$$default.create();
-
-        errors.registerHandlers(this, function () {
-          this.send("becameInvalid");
-        }, function () {
-          this.send("becameValid");
-        });
-
-        this.errors = errors;
-        return errors;
+      addErrorMessageToAttribute: function (attribute, message) {
+        var record = this.getRecord();
+        ember$data$lib$system$model$internal$model$$get(record, "errors").add(attribute, message);
       },
+
+      removeErrorMessageFromAttribute: function (attribute) {
+        var record = this.getRecord();
+        ember$data$lib$system$model$internal$model$$get(record, "errors").remove(attribute);
+      },
+
+      clearErrorMessages: function () {
+        var record = this.getRecord();
+        ember$data$lib$system$model$internal$model$$get(record, "errors").clear();
+      },
+
       // FOR USE DURING COMMIT PROCESS
 
       /**
@@ -11767,10 +11946,14 @@
         @private
       */
       adapterDidInvalidate: function (errors) {
-        var recordErrors = this.getErrors();
-        ember$data$lib$system$model$internal$model$$forEach.call(Ember.keys(errors), function (key) {
-          recordErrors.add(key, errors[key]);
-        });
+        var attribute;
+
+        for (attribute in errors) {
+          if (errors.hasOwnProperty(attribute)) {
+            this.addErrorMessageToAttribute(attribute, errors[attribute]);
+          }
+        }
+
         this._saveWasRejected();
       },
 
@@ -11778,9 +11961,9 @@
         @method adapterDidError
         @private
       */
-      adapterDidError: function () {
+      adapterDidError: function (error) {
         this.send("becameError");
-        this.didError();
+        this.didError(error);
         this._saveWasRejected();
       },
 
@@ -13247,9 +13430,10 @@
          @method recordWasError
         @private
         @param {InternalModel} internalModel
+        @param {Error} error
       */
-      recordWasError: function (internalModel) {
-        internalModel.adapterDidError();
+      recordWasError: function (internalModel, error) {
+        internalModel.adapterDidError(error);
       },
 
       /**
@@ -13904,40 +14088,39 @@
     }
 
     function ember$data$lib$system$store$$_commit(adapter, store, operation, snapshot) {
-      var record = snapshot._internalModel;
+      var internalModel = snapshot._internalModel;
       var modelName = snapshot.modelName;
-      var type = store.modelFor(modelName);
-      var promise = adapter[operation](store, type, snapshot);
+      var typeClass = store.modelFor(modelName);
+      var promise = adapter[operation](store, typeClass, snapshot);
       var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, modelName);
-      var label = "DS: Extract and notify about " + operation + " completion of " + record;
+      var label = "DS: Extract and notify about " + operation + " completion of " + internalModel;
 
       Ember.assert("Your adapter's '" + operation + "' method must return a value, but it returned `undefined", promise !== undefined);
 
       promise = ember$data$lib$system$store$$Promise.cast(promise, label);
       promise = ember$data$lib$system$store$common$$_guard(promise, ember$data$lib$system$store$common$$_bind(ember$data$lib$system$store$common$$_objectIsAlive, store));
-      promise = ember$data$lib$system$store$common$$_guard(promise, ember$data$lib$system$store$common$$_bind(ember$data$lib$system$store$common$$_objectIsAlive, record));
+      promise = ember$data$lib$system$store$common$$_guard(promise, ember$data$lib$system$store$common$$_bind(ember$data$lib$system$store$common$$_objectIsAlive, internalModel));
 
       return promise.then(function (adapterPayload) {
         store._adapterRun(function () {
           var payload, data;
           if (adapterPayload) {
-            payload = ember$data$lib$system$store$serializer$response$$normalizeResponseHelper(serializer, store, type, adapterPayload, snapshot.id, operation);
+            payload = ember$data$lib$system$store$serializer$response$$normalizeResponseHelper(serializer, store, typeClass, adapterPayload, snapshot.id, operation);
             data = ember$data$lib$system$store$serializer$response$$convertResourceObject(payload.data);
           }
-          store.didSaveRecord(record, ember$data$lib$system$store$serializer$response$$_normalizeSerializerPayload(record.type, data));
+          store.didSaveRecord(internalModel, ember$data$lib$system$store$serializer$response$$_normalizeSerializerPayload(internalModel.type, data));
         });
 
-        return record;
-      }, function (reason) {
-        if (reason instanceof ember$data$lib$system$model$errors$invalid$$default) {
-          var errors = serializer.extractErrors(store, type, reason.errors, snapshot.id);
-          store.recordWasInvalid(record, errors);
-          reason = new ember$data$lib$system$model$errors$invalid$$default(errors);
+        return internalModel;
+      }, function (error) {
+        if (error instanceof ember$data$lib$adapters$errors$$InvalidError) {
+          var errors = serializer.extractErrors(store, typeClass, error, snapshot.id);
+          store.recordWasInvalid(internalModel, errors);
         } else {
-          store.recordWasError(record, reason);
+          store.recordWasError(internalModel, error);
         }
 
-        throw reason;
+        throw error;
       }, label);
     }
 
@@ -15790,8 +15973,15 @@
     ember$data$lib$core$$default.InternalModel = ember$data$lib$system$model$internal$model$$default;
     ember$data$lib$core$$default.Snapshot = ember$data$lib$system$snapshot$$default;
 
-    ember$data$lib$core$$default.Adapter = ember$data$lib$system$adapter$$Adapter;
-    ember$data$lib$core$$default.InvalidError = ember$data$lib$system$model$errors$invalid$$default;
+    ember$data$lib$core$$default.Adapter = ember$data$lib$system$adapter$$default;
+
+    ember$data$lib$core$$default.AdapterError = ember$data$lib$adapters$errors$$AdapterError;
+    ember$data$lib$core$$default.InvalidError = ember$data$lib$adapters$errors$$InvalidError;
+    ember$data$lib$core$$default.TimeoutError = ember$data$lib$adapters$errors$$TimeoutError;
+    ember$data$lib$core$$default.AbortError = ember$data$lib$adapters$errors$$AbortError;
+
+    ember$data$lib$core$$default.errorsHashToArray = ember$data$lib$adapters$errors$$errorsHashToArray;
+    ember$data$lib$core$$default.errorsArrayToHash = ember$data$lib$adapters$errors$$errorsArrayToHash;
 
     ember$data$lib$core$$default.Serializer = ember$data$lib$system$serializer$$default;
 
