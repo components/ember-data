@@ -18661,6 +18661,7 @@ define(
     test('Using store#findRecord on non existing record fetches it from the server', function () {
       expect(2);
 
+      env.registry.register('serializer:application', DS.RESTSerializer.extend({ isNewSerializerAPI: true }));
       ajaxResponse({
         cars: [{
           id: 20,
@@ -20830,7 +20831,7 @@ define(
       });
 
       run(function () {
-        store._pushInternalModel("person", { id: 1 });
+        store._pushInternalModel({ id: 1, type: "person" });
         equal(didLoadCalled, 0, "didLoad was not called");
       });
       run(function () {
@@ -25464,7 +25465,7 @@ define(
     });
 
     test('calling push without data argument as an object raises an error', function () {
-      var invalidValues = [undefined, null, 1, 'string', Ember.Object.create(), Ember.Object.extend(), true];
+      var invalidValues = [null, 1, 'string', Ember.Object.create(), Ember.Object.extend(), true];
 
       expect(invalidValues.length);
 
