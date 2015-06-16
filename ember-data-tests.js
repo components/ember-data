@@ -24721,6 +24721,8 @@ define(
       env.registry.unregister('adapter:application');
       env.registry.unregister('serializer:application');
 
+      env.registry.register('serializer:-active-model', DS.ActiveModelSerializer);
+
       env.registry.optionsForType('serializer', { singleton: true });
       env.registry.optionsForType('adapter', { singleton: true });
 
