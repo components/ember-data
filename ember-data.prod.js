@@ -7170,7 +7170,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.0ce3ea7c8e'
+      VERSION: '1.0.0-beta.20+canary.605fd1a1fe'
     });
 
     if (Ember.libraries) {
@@ -14970,17 +14970,27 @@
       
       opts = opts || {};
 
+      var shouldWarnAsync = false;
+      if (typeof opts.async === "undefined") {
+        shouldWarnAsync = true;
+      }
+
       var meta = {
         type: userEnteredModelName,
         isRelationship: true,
         options: opts,
         kind: "belongsTo",
-        key: null
+        key: null,
+        shouldWarnAsync: shouldWarnAsync
       };
 
       return ember$new$computed$lib$main$$default({
         get: function (key) {
                     
+          if (meta.shouldWarnAsync) {
+                        meta.shouldWarnAsycn = false;
+          }
+
           return this._internalModel._relationships.get(key).getRecord();
         },
         set: function (key, value) {
@@ -15127,6 +15137,11 @@
       
       options = options || {};
 
+      var shouldWarnAsync = false;
+      if (typeof options.async === "undefined") {
+        shouldWarnAsync = true;
+      }
+
       if (typeof type === "string") {
         type = ember$data$lib$system$normalize$model$name$$default(type);
       }
@@ -15140,11 +15155,15 @@
         isRelationship: true,
         options: options,
         kind: "hasMany",
-        key: null
+        key: null,
+        shouldWarnAsync: shouldWarnAsync
       };
 
       return ember$new$computed$lib$main$$default({
         get: function (key) {
+          if (meta.shouldWarnAsync) {
+                        meta.shouldWarnAsync = false;
+          }
           var relationship = this._internalModel._relationships.get(key);
           return relationship.getRecords();
         },

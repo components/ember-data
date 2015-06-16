@@ -1359,7 +1359,7 @@ define(
         });
       });
       Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
-      Comment.reopen({ post: DS.belongsTo("post") });
+      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
 
       ajaxResponse({ posts: [{ id: 1, links: { comments: "comments" } }] });
 
@@ -1379,7 +1379,7 @@ define(
         });
       });
       Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
-      Comment.reopen({ post: DS.belongsTo("post") });
+      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
 
       ajaxResponse({ posts: [{ id: 1, links: { comments: "/api/v1/posts/1/comments" } }] });
 
@@ -1399,7 +1399,7 @@ define(
         });
       });
       Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
-      Comment.reopen({ post: DS.belongsTo("post") });
+      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
 
       ajaxResponse({ posts: [{ id: 1, links: { comments: "/api/v1/posts/1/comments" } }] });
 
@@ -1417,7 +1417,7 @@ define(
         namespace: "api/v1"
       });
       Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
-      Comment.reopen({ post: DS.belongsTo("post") });
+      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
 
       ajaxResponse({
         posts: [{ id: 1,
@@ -1453,7 +1453,7 @@ define(
     });
 
     test("buildURL - buildURL takes a record from find", function () {
-      Comment.reopen({ post: DS.belongsTo("post") });
+      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
       adapter.buildURL = function (type, id, snapshot) {
         return "/posts/" + snapshot.belongsTo("post", { id: true }) + "/comments/" + snapshot.id;
       };
@@ -1473,7 +1473,7 @@ define(
     });
 
     test("buildURL - buildURL takes the records from findMany", function () {
-      Comment.reopen({ post: DS.belongsTo("post") });
+      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
       Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
 
       adapter.buildURL = function (type, ids, snapshots) {
@@ -1496,7 +1496,7 @@ define(
     });
 
     test("buildURL - buildURL takes a record from create", function () {
-      Comment.reopen({ post: DS.belongsTo("post") });
+      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
       adapter.buildURL = function (type, id, snapshot) {
         return "/posts/" + snapshot.belongsTo("post", { id: true }) + "/comments/";
       };
@@ -1538,7 +1538,7 @@ define(
     });
 
     test("buildURL - buildURL takes a record from update", function () {
-      Comment.reopen({ post: DS.belongsTo("post") });
+      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
       adapter.buildURL = function (type, id, snapshot) {
         return "/posts/" + snapshot.belongsTo("post", { id: true }) + "/comments/" + snapshot.id;
       };
@@ -1559,8 +1559,8 @@ define(
     });
 
     test("buildURL - buildURL takes a record from delete", function () {
-      Comment.reopen({ post: DS.belongsTo("post") });
-      Post.reopen({ comments: DS.hasMany("comment") });
+      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
+      Post.reopen({ comments: DS.hasMany("comment", { async: false }) });
       adapter.buildURL = function (type, id, snapshot) {
         return "posts/" + snapshot.belongsTo("post", { id: true }) + "/comments/" + snapshot.id;
       };
@@ -3300,7 +3300,7 @@ define(
       var comment;
 
       Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
-      Comment.reopen({ post: DS.belongsTo("post") });
+      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
 
       run(function () {
         store.push("post", { id: 1, name: "Rails is omakase", comments: [] });
@@ -3400,7 +3400,7 @@ define(
 
       ajaxResponse();
 
-      Comment.reopen({ post: DS.belongsTo("post") });
+      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
 
       run(function () {
         var post = store.createRecord("post", { id: "a-post-id", name: "The Parley Letter" });
@@ -3425,7 +3425,7 @@ define(
 
       ajaxResponse();
 
-      Post.reopen({ comments: DS.hasMany("comment") });
+      Post.reopen({ comments: DS.hasMany("comment", { async: false }) });
 
       run(function () {
         var comment = store.createRecord("comment", { id: "a-comment-id", name: "First!" });
@@ -3463,8 +3463,8 @@ define(
         // }
       });
 
-      Post.reopen({ comments: DS.hasMany("comment") });
-      Comment.reopen({ post: DS.belongsTo("post") });
+      Post.reopen({ comments: DS.hasMany("comment", { async: false }) });
+      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
 
       run(function () {
         store.push("post", { id: 1, name: "Rails is omakase", comments: [1] });
@@ -3492,8 +3492,8 @@ define(
       expect(4);
       var post;
 
-      Post.reopen({ comment: DS.belongsTo("comment") });
-      Comment.reopen({ post: DS.belongsTo("post") });
+      Post.reopen({ comment: DS.belongsTo("comment", { async: false }) });
+      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
 
       run(function () {
         post = store.createRecord("post", { name: "man" });
@@ -3530,8 +3530,8 @@ define(
         }]
       });
 
-      Post.reopen({ comments: DS.hasMany("comment") });
-      Comment.reopen({ post: DS.belongsTo("post") });
+      Post.reopen({ comments: DS.hasMany("comment", { async: false }) });
+      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
 
       var post;
       run(function () {
@@ -3554,8 +3554,8 @@ define(
     test("create - relationships are not duplicated", function () {
       var post, comment;
 
-      Post.reopen({ comments: DS.hasMany("comment") });
-      Comment.reopen({ post: DS.belongsTo("post") });
+      Post.reopen({ comments: DS.hasMany("comment", { async: false }) });
+      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
 
       run(function () {
         post = store.createRecord("post", { name: "Tomtomhuda" });
@@ -3731,8 +3731,8 @@ define(
     });
 
     test("update - hasMany relationships faithfully reflect simultaneous adds and removes", function () {
-      Post.reopen({ comments: DS.hasMany("comment") });
-      Comment.reopen({ post: DS.belongsTo("post") });
+      Post.reopen({ comments: DS.hasMany("comment", { async: false }) });
+      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
 
       run(function () {
         store.push("post", { id: 1, name: "Not everyone uses Rails", comments: [1] });
@@ -4421,7 +4421,7 @@ define(
     });
 
     test("coalesceFindRequests warns if the expected records are not returned in the coalesced request", function () {
-      Comment.reopen({ post: DS.belongsTo("post") });
+      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
       Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
 
       adapter.coalesceFindRequests = true;
@@ -4438,7 +4438,7 @@ define(
     });
 
     test("groupRecordsForFindMany groups records based on their url", function () {
-      Comment.reopen({ post: DS.belongsTo("post") });
+      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
       Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
       adapter.coalesceFindRequests = true;
 
@@ -4471,7 +4471,7 @@ define(
     });
 
     test("groupRecordsForFindMany groups records correctly when singular URLs are encoded as query params", function () {
-      Comment.reopen({ post: DS.belongsTo("post") });
+      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
       Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
       adapter.coalesceFindRequests = true;
 
@@ -4525,8 +4525,8 @@ define(
       env.registry.register("model:post", DS.Model.extend({
         name: DS.attr(),
         authorName: DS.attr(),
-        author: DS.belongsTo("user"),
-        comments: DS.hasMany("comment")
+        author: DS.belongsTo("user", { async: false }),
+        comments: DS.hasMany("comment", { async: false })
       }));
 
       env.registry.register("model:user", DS.Model.extend({
@@ -4571,7 +4571,7 @@ define(
     });
 
     test("groupRecordsForFindMany splits up calls for large ids", function () {
-      Comment.reopen({ post: DS.belongsTo("post") });
+      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
       Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
 
       expect(2);
@@ -4608,7 +4608,7 @@ define(
     });
 
     test("groupRecordsForFindMany groups calls for small ids", function () {
-      Comment.reopen({ post: DS.belongsTo("post") });
+      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
       Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
 
       expect(1);
@@ -5595,7 +5595,7 @@ define(
 
     test('relationships returned via `commit` do not trigger additional findManys', function () {
       Person.reopen({
-        dogs: DS.hasMany()
+        dogs: DS.hasMany('dog', { async: false })
       });
 
       run(function () {
@@ -6262,14 +6262,14 @@ define(
         run(function () {
           App = Ember.Application.create();
           App.PostNote = DS.Model.extend({
-            notePost: DS.belongsTo('notePost'),
+            notePost: DS.belongsTo('notePost', { async: false }),
             name: DS.attr()
           });
           App.NotePost = DS.Model.extend({
             name: DS.attr()
           });
           App.LongModelName = DS.Model.extend({
-            postNotes: DS.hasMany('post_note')
+            postNotes: DS.hasMany('post_note', { async: false })
           });
         });
         store = App.__container__.lookup('service:store');
@@ -6344,11 +6344,11 @@ define(
     module('integration/client_id_generation - Client-side ID Generation', {
       setup: function () {
         Comment = DS.Model.extend({
-          post: DS.belongsTo('post')
+          post: DS.belongsTo('post', { async: false })
         });
 
         Post = DS.Model.extend({
-          comments: DS.hasMany('comment')
+          comments: DS.hasMany('comment', { async: false })
         });
 
         Misc = DS.Model.extend({
@@ -6610,7 +6610,7 @@ define(
     module('integration/filter - DS.Model updating', {
       setup: function () {
         array = [{ id: 1, name: 'Scumbag Dale', bestFriend: 2 }, { id: 2, name: 'Scumbag Katz' }, { id: 3, name: 'Scumbag Bryn' }];
-        Person = DS.Model.extend({ name: DS.attr('string'), bestFriend: DS.belongsTo('person', { inverse: null }) });
+        Person = DS.Model.extend({ name: DS.attr('string'), bestFriend: DS.belongsTo('person', { inverse: null, async: false }) });
 
         env = setupStore({ person: Person });
         store = env.store;
@@ -7317,20 +7317,20 @@ define(
         User = DS.Model.extend({
           name: attr('string'),
           bestFriend: belongsTo('user', { async: true, inverse: null }),
-          job: belongsTo('job')
+          job: belongsTo('job', { async: false })
         });
 
         User.toString = stringify('user');
 
         Job = DS.Model.extend({
           isGood: attr(),
-          user: belongsTo('user')
+          user: belongsTo('user', { async: false })
         });
 
         Job.toString = stringify('job');
 
         ReflexiveModel = DS.Model.extend({
-          reflexiveProp: belongsTo('reflexive-model')
+          reflexiveProp: belongsTo('reflexive-model', { async: false })
         });
 
         ReflexiveModel.toString = stringify('reflexiveModel');
@@ -7366,11 +7366,11 @@ define(
 
     test('Finds the inverse when only one side has defined it manually', function () {
       Job.reopen({
-        owner: belongsTo('user', { inverse: 'previousJob' })
+        owner: belongsTo('user', { inverse: 'previousJob', async: false })
       });
 
       User.reopen({
-        previousJob: belongsTo('job')
+        previousJob: belongsTo('job', { async: false })
       });
 
       //Maybe store is evaluated lazily, so we need this :(
@@ -7395,11 +7395,11 @@ define(
 
     test('Returns null if inverse relationship it is manually set with a different relationship key', function () {
       Job.reopen({
-        user: belongsTo('user', { inverse: 'previousJob' })
+        user: belongsTo('user', { inverse: 'previousJob', async: false })
       });
 
       User.reopen({
-        job: belongsTo('job')
+        job: belongsTo('job', { async: false })
       });
       //Maybe store is evaluated lazily, so we need this :(
       var user;
@@ -7412,12 +7412,12 @@ define(
 
     test('Errors out if you define 2 inverses to the same model', function () {
       Job.reopen({
-        user: belongsTo('user', { inverse: 'job' }),
-        owner: belongsTo('user', { inverse: 'job' })
+        user: belongsTo('user', { inverse: 'job', async: false }),
+        owner: belongsTo('user', { inverse: 'job', async: false })
       });
 
       User.reopen({
-        job: belongsTo('job')
+        job: belongsTo('job', { async: false })
       });
 
       //Maybe store is evaluated lazily, so we need this :(
@@ -7555,15 +7555,15 @@ define(
         SuperVillain = DS.Model.extend({
           firstName: DS.attr('string'),
           lastName: DS.attr('string'),
-          homePlanet: DS.belongsTo('home-planet', { inverse: 'villains' }),
-          evilMinions: DS.hasMany('evil-minion')
+          homePlanet: DS.belongsTo('home-planet', { inverse: 'villains', async: false }),
+          evilMinions: DS.hasMany('evil-minion', { async: false })
         });
         HomePlanet = DS.Model.extend({
           name: DS.attr('string'),
-          villains: DS.hasMany('super-villain', { inverse: 'homePlanet' })
+          villains: DS.hasMany('super-villain', { inverse: 'homePlanet', async: false })
         });
         EvilMinion = DS.Model.extend({
-          superVillain: DS.belongsTo('super-villain'),
+          superVillain: DS.belongsTo('super-villain', { async: false }),
           name: DS.attr('string')
         });
 
@@ -7774,7 +7774,7 @@ define(
 
     var Person = DS.Model.extend({
       name: DS.attr('string'),
-      cars: DS.hasMany('car')
+      cars: DS.hasMany('car', { async: false })
     });
 
     Person.toString = function () {
@@ -7784,7 +7784,7 @@ define(
     var Car = DS.Model.extend({
       make: DS.attr('string'),
       model: DS.attr('string'),
-      person: DS.belongsTo('person')
+      person: DS.belongsTo('person', { async: false })
     });
 
     Car.toString = function () {
@@ -8670,7 +8670,7 @@ define(
 
     var Person = DS.Model.extend({
       name: attr('string'),
-      cars: hasMany('car')
+      cars: hasMany('car', { async: false })
     });
 
     Person.toString = function () {
@@ -8678,7 +8678,7 @@ define(
     };
 
     var Group = DS.Model.extend({
-      people: hasMany('person')
+      people: hasMany('person', { async: false })
     });
 
     Group.toString = function () {
@@ -8688,7 +8688,7 @@ define(
     var Car = DS.Model.extend({
       make: attr('string'),
       model: attr('string'),
-      person: belongsTo('person')
+      person: belongsTo('person', { async: false })
     });
 
     Car.toString = function () {
@@ -8923,39 +8923,39 @@ define(
       setup: function () {
         User = DS.Model.extend({
           name: attr('string'),
-          messages: hasMany('message', { polymorphic: true }),
-          favouriteMessage: belongsTo('message', { polymorphic: true, inverse: null })
+          messages: hasMany('message', { polymorphic: true, async: false }),
+          favouriteMessage: belongsTo('message', { polymorphic: true, inverse: null, async: false })
         });
 
         Message = DS.Model.extend({
-          user: belongsTo('user', { inverse: 'messages' }),
+          user: belongsTo('user', { inverse: 'messages', async: false }),
           created_at: attr('date')
         });
 
         Post = Message.extend({
           title: attr('string'),
-          comments: hasMany('comment')
+          comments: hasMany('comment', { async: false })
         });
 
         Comment = Message.extend({
           body: DS.attr('string'),
-          message: DS.belongsTo('message', { polymorphic: true })
+          message: DS.belongsTo('message', { polymorphic: true, async: false })
         });
 
         Book = DS.Model.extend({
           name: attr('string'),
-          author: belongsTo('author'),
-          chapters: hasMany('chapters')
+          author: belongsTo('author', { async: false }),
+          chapters: hasMany('chapters', { async: false })
         });
 
         Chapter = DS.Model.extend({
           title: attr('string'),
-          book: belongsTo('book')
+          book: belongsTo('book', { async: false })
         });
 
         Author = DS.Model.extend({
           name: attr('string'),
-          books: hasMany('books')
+          books: hasMany('books', { async: false })
         });
 
         env = setupStore({
@@ -9112,7 +9112,7 @@ define(
 
     test('A serializer can materialize a belongsTo as a link that gets sent back to findBelongsTo', function () {
       var Group = DS.Model.extend({
-        people: DS.hasMany()
+        people: DS.hasMany('person', { async: false })
       });
 
       var Person = DS.Model.extend({
@@ -9150,7 +9150,7 @@ define(
 
     test('A record with an async belongsTo relationship always returns a promise for that relationship', function () {
       var Seat = DS.Model.extend({
-        person: DS.belongsTo('person')
+        person: DS.belongsTo('person', { async: false })
       });
 
       var Person = DS.Model.extend({
@@ -9188,7 +9188,7 @@ define(
       expect(1);
 
       var Group = DS.Model.extend({
-        people: DS.hasMany()
+        people: DS.hasMany('person', { async: false })
       });
 
       var Person = DS.Model.extend({
@@ -9221,7 +9221,7 @@ define(
       expect(1);
 
       var Group = DS.Model.extend({
-        people: DS.hasMany()
+        people: DS.hasMany('person', { async: false })
       });
 
       var Person = DS.Model.extend({
@@ -9394,7 +9394,7 @@ define(
       });
 
       env.store.modelFor('comment').reopen({
-        post: DS.belongsTo('post', {})
+        post: DS.belongsTo('post', { async: false })
       });
       var post, comment;
       run(function () {
@@ -9513,7 +9513,7 @@ define(
         User = DS.Model.extend();
 
         Contact = DS.Model.extend({
-          user: belongsTo(User)
+          user: belongsTo(User, { async: false })
         });
       }, /The first argument to DS.belongsTo must be a string/);
     });
@@ -9682,12 +9682,12 @@ define(
       setup: function () {
         User = DS.Model.extend({
           name: attr('string'),
-          messages: hasMany('message', { polymorphic: true }),
-          contacts: hasMany('user', { inverse: null })
+          messages: hasMany('message', { polymorphic: true, async: false }),
+          contacts: hasMany('user', { inverse: null, async: false })
         });
 
         Contact = DS.Model.extend({
-          user: belongsTo('user')
+          user: belongsTo('user', { async: false })
         });
 
         Email = Contact.extend({
@@ -9699,20 +9699,20 @@ define(
         });
 
         Message = DS.Model.extend({
-          user: belongsTo('user'),
+          user: belongsTo('user', { async: false }),
           created_at: attr('date')
         });
         Message.toString = stringify('Message');
 
         Post = Message.extend({
           title: attr('string'),
-          comments: hasMany('comment')
+          comments: hasMany('comment', { async: false })
         });
         Post.toString = stringify('Post');
 
         Comment = Message.extend({
           body: DS.attr('string'),
-          message: DS.belongsTo('post', { polymorphic: true })
+          message: DS.belongsTo('post', { polymorphic: true, async: true })
         });
         Comment.toString = stringify('Comment');
 
@@ -9724,13 +9724,13 @@ define(
 
         Chapter = DS.Model.extend({
           title: attr(),
-          pages: hasMany('page')
+          pages: hasMany('page', { async: false })
         });
         Chapter.toString = stringify('Chapter');
 
         Page = DS.Model.extend({
           number: attr('number'),
-          chapter: belongsTo('chapter')
+          chapter: belongsTo('chapter', { async: false })
         });
         Page.toString = stringify('Page');
 
@@ -10018,7 +10018,7 @@ define(
 
     test('A sync hasMany relationship can be reloaded if it was fetched via ids', function () {
       Post.reopen({
-        comments: DS.hasMany('comment')
+        comments: DS.hasMany('comment', { async: false })
       });
 
       env.adapter.findRecord = function (store, type, id, snapshot) {
@@ -10323,7 +10323,7 @@ define(
 
     test('Polymorphic relationships work with a hasMany whose type is inferred', function () {
       User.reopen({
-        contacts: DS.hasMany({ polymorphic: true })
+        contacts: DS.hasMany({ polymorphic: true, async: false })
       });
 
       expect(1);
@@ -10345,11 +10345,11 @@ define(
       expect(2);
 
       Contact.reopen({
-        posts: DS.hasMany('post')
+        posts: DS.hasMany('post', { async: false })
       });
 
       Post.reopen({
-        contact: DS.belongsTo('contact', { polymorphic: true })
+        contact: DS.belongsTo('contact', { polymorphic: true, async: false })
       });
       var email, post;
 
@@ -10551,11 +10551,11 @@ define(
 
     test('dual non-async HM <-> BT', function () {
       Post.reopen({
-        comments: DS.hasMany('comment', { inverse: 'post' })
+        comments: DS.hasMany('comment', { inverse: 'post', async: false })
       });
 
       Comment.reopen({
-        post: DS.belongsTo('post')
+        post: DS.belongsTo('post', { async: false })
       });
 
       env.adapter.createRecord = function (store, type, snapshot) {
@@ -10800,7 +10800,7 @@ define(
         User = DS.Model.extend();
 
         Contact = DS.Model.extend({
-          users: hasMany(User)
+          users: hasMany(User, { async: false })
         });
       }, /The first argument to DS.hasMany must be a string/);
     });
@@ -10809,11 +10809,11 @@ define(
       var post;
 
       Comment.reopen({
-        post: DS.belongsTo('post')
+        post: DS.belongsTo('post', { async: false })
       });
 
       Post.reopen({
-        comments: DS.hasMany('comment', { inverse: 'post' })
+        comments: DS.hasMany('comment', { inverse: 'post', async: false })
       });
 
       run(function () {
@@ -10832,11 +10832,11 @@ define(
       var post;
 
       Comment.reopen({
-        post: DS.belongsTo('post')
+        post: DS.belongsTo('post', { async: false })
       });
 
       Post.reopen({
-        comments: DS.hasMany('comment', { inverse: 'post' })
+        comments: DS.hasMany('comment', { inverse: 'post', async: false })
       });
 
       run(function () {
@@ -10870,7 +10870,7 @@ define(
       var POST_FIXTURES = [{ id: 1, comments: [1, 2, 3] }];
 
       var Comment = DS.Model.extend({
-        post: DS.belongsTo('post')
+        post: DS.belongsTo('post', { async: false })
       });
 
       var COMMENT_FIXTURES = [{ id: 1 }, { id: 2 }, { id: 3 }];
@@ -11145,11 +11145,11 @@ define(
 
     test('When a record is added to a has-many relationship, the inverse belongsTo is determined automatically', function () {
       Post = DS.Model.extend({
-        comments: DS.hasMany('comment')
+        comments: DS.hasMany('comment', { async: false })
       });
 
       Comment = DS.Model.extend({
-        post: DS.belongsTo('post')
+        post: DS.belongsTo('post', { async: false })
       });
 
       var env = setupStore({ post: Post, comment: Comment });
@@ -11173,12 +11173,12 @@ define(
       User = DS.Model.extend();
 
       Post = DS.Model.extend({
-        lastParticipant: DS.belongsTo('user', { inverse: null }),
-        participants: DS.hasMany('user', { inverse: 'posts' })
+        lastParticipant: DS.belongsTo('user', { inverse: null, async: false }),
+        participants: DS.hasMany('user', { inverse: 'posts', async: false })
       });
 
       User.reopen({
-        posts: DS.hasMany('post', { inverse: 'participants' })
+        posts: DS.hasMany('post', { inverse: 'participants', async: false })
       });
 
       var store = createStore({
@@ -11199,14 +11199,14 @@ define(
 
     test('When a record is added to a has-many relationship, the inverse belongsTo can be set explicitly', function () {
       Post = DS.Model.extend({
-        comments: DS.hasMany('comment', { inverse: 'redPost' })
+        comments: DS.hasMany('comment', { inverse: 'redPost', async: false })
       });
 
       Comment = DS.Model.extend({
-        onePost: DS.belongsTo('post'),
-        twoPost: DS.belongsTo('post'),
-        redPost: DS.belongsTo('post'),
-        bluePost: DS.belongsTo('post')
+        onePost: DS.belongsTo('post', { async: false }),
+        twoPost: DS.belongsTo('post', { async: false }),
+        redPost: DS.belongsTo('post', { async: false }),
+        bluePost: DS.belongsTo('post', { async: false })
       });
 
       var env = setupStore({ post: Post, comment: Comment });
@@ -11235,13 +11235,13 @@ define(
 
     test('When a record\'s belongsTo relationship is set, it can specify the inverse hasMany to which the new child should be added', function () {
       Post = DS.Model.extend({
-        meComments: DS.hasMany('comment'),
-        youComments: DS.hasMany('comment'),
-        everyoneWeKnowComments: DS.hasMany('comment')
+        meComments: DS.hasMany('comment', { async: false }),
+        youComments: DS.hasMany('comment', { async: false }),
+        everyoneWeKnowComments: DS.hasMany('comment', { async: false })
       });
 
       Comment = DS.Model.extend({
-        post: DS.belongsTo('post', { inverse: 'youComments' })
+        post: DS.belongsTo('post', { inverse: 'youComments', async: false })
       });
 
       var env = setupStore({ post: Post, comment: Comment });
@@ -11270,11 +11270,11 @@ define(
 
     test('When setting a belongsTo, the OneToOne invariant is respected even when other records have been previously used', function () {
       Post = DS.Model.extend({
-        bestComment: DS.belongsTo('comment')
+        bestComment: DS.belongsTo('comment', { async: false })
       });
 
       Comment = DS.Model.extend({
-        post: DS.belongsTo('post')
+        post: DS.belongsTo('post', { async: false })
       });
 
       var env = setupStore({ post: Post, comment: Comment });
@@ -11306,11 +11306,11 @@ define(
 
     test('When setting a belongsTo, the OneToOne invariant is transitive', function () {
       Post = DS.Model.extend({
-        bestComment: DS.belongsTo('comment')
+        bestComment: DS.belongsTo('comment', { async: false })
       });
 
       Comment = DS.Model.extend({
-        post: DS.belongsTo('post')
+        post: DS.belongsTo('post', { async: false })
       });
 
       var store = createStore({
@@ -11344,11 +11344,11 @@ define(
 
     test('When setting a belongsTo, the OneToOne invariant is commutative', function () {
       Post = DS.Model.extend({
-        bestComment: DS.belongsTo('comment')
+        bestComment: DS.belongsTo('comment', { async: false })
       });
 
       Comment = DS.Model.extend({
-        post: DS.belongsTo('post')
+        post: DS.belongsTo('post', { async: false })
       });
 
       var store = createStore({
@@ -11385,7 +11385,7 @@ define(
       });
 
       Comment = DS.Model.extend({
-        post: DS.belongsTo('post')
+        post: DS.belongsTo('post', { async: false })
       });
 
       var env = setupStore({ post: Post, comment: Comment });
@@ -11417,16 +11417,17 @@ define(
     test('When a record is added to or removed from a polymorphic has-many relationship, the inverse belongsTo can be set explicitly', function () {
       User = DS.Model.extend({
         messages: DS.hasMany('message', {
+          async: false,
           inverse: 'redUser',
           polymorphic: true
         })
       });
 
       Message = DS.Model.extend({
-        oneUser: DS.belongsTo('user'),
-        twoUser: DS.belongsTo('user'),
-        redUser: DS.belongsTo('user'),
-        blueUser: DS.belongsTo('user')
+        oneUser: DS.belongsTo('user', { async: false }),
+        twoUser: DS.belongsTo('user', { async: false }),
+        redUser: DS.belongsTo('user', { async: false }),
+        blueUser: DS.belongsTo('user', { async: false })
       });
 
       Post = Message.extend();
@@ -11466,13 +11467,13 @@ define(
 
     test('When a record\'s belongsTo relationship is set, it can specify the inverse polymorphic hasMany to which the new child should be added or removed', function () {
       User = DS.Model.extend({
-        meMessages: DS.hasMany('message', { polymorphic: true }),
-        youMessages: DS.hasMany('message', { polymorphic: true }),
-        everyoneWeKnowMessages: DS.hasMany('message', { polymorphic: true })
+        meMessages: DS.hasMany('message', { polymorphic: true, async: false }),
+        youMessages: DS.hasMany('message', { polymorphic: true, async: false }),
+        everyoneWeKnowMessages: DS.hasMany('message', { polymorphic: true, async: false })
       });
 
       Message = DS.Model.extend({
-        user: DS.belongsTo('user', { inverse: 'youMessages' })
+        user: DS.belongsTo('user', { inverse: 'youMessages', async: false })
       });
 
       Post = Message.extend();
@@ -11509,15 +11510,16 @@ define(
 
     test('When a record\'s polymorphic belongsTo relationship is set, it can specify the inverse hasMany to which the new child should be added', function () {
       Message = DS.Model.extend({
-        meMessages: DS.hasMany('comment', { inverse: null }),
-        youMessages: DS.hasMany('comment', { inverse: 'message' }),
-        everyoneWeKnowMessages: DS.hasMany('comment', { inverse: null })
+        meMessages: DS.hasMany('comment', { inverse: null, async: false }),
+        youMessages: DS.hasMany('comment', { inverse: 'message', async: false }),
+        everyoneWeKnowMessages: DS.hasMany('comment', { inverse: null, async: false })
       });
 
       Post = Message.extend();
 
       Comment = Message.extend({
         message: DS.belongsTo('message', {
+          async: false,
           polymorphic: true,
           inverse: 'youMessages'
         })
@@ -11558,7 +11560,7 @@ define(
       Comment = DS.Model.extend();
 
       Post = DS.Model.extend({
-        comments: DS.hasMany('comment', { inverse: 'testPost' })
+        comments: DS.hasMany('comment', { inverse: 'testPost', async: false })
       });
 
       var env = setupStore({ post: Post, comment: Comment, user: User });
@@ -11580,7 +11582,7 @@ define(
       Comment = DS.Model.extend();
 
       Post = DS.Model.extend({
-        user: DS.belongsTo('user', { inverse: 'testPost' })
+        user: DS.belongsTo('user', { inverse: 'testPost', async: false })
       });
 
       var env = setupStore({ post: Post, comment: Comment, user: User });
@@ -11627,14 +11629,14 @@ define(
         User = DS.Model.extend({
           name: attr('string'),
           topics: hasMany('topic', { async: true }),
-          accounts: hasMany('account')
+          accounts: hasMany('account', { async: false })
         });
 
         User.toString = stringify('User');
 
         Account = DS.Model.extend({
           state: attr(),
-          users: hasMany('user')
+          users: hasMany('user', { async: false })
         });
 
         Account.toString = stringify('Account');
@@ -11936,13 +11938,13 @@ define(
         User = DS.Model.extend({
           name: attr('string'),
           messages: hasMany('message', { async: true }),
-          accounts: hasMany('account')
+          accounts: hasMany('account', { async: false })
         });
         User.toString = stringify('User');
 
         Account = DS.Model.extend({
           state: attr(),
-          user: belongsTo('user')
+          user: belongsTo('user', { async: false })
         });
         Account.toString = stringify('Account');
 
@@ -12535,13 +12537,13 @@ define(
         User = DS.Model.extend({
           name: attr('string'),
           bestFriend: belongsTo('user', { async: true, inverse: 'bestFriend' }),
-          job: belongsTo('job')
+          job: belongsTo('job', { async: false })
         });
         User.toString = stringify('User');
 
         Job = DS.Model.extend({
           isGood: attr(),
-          user: belongsTo('user')
+          user: belongsTo('user', { async: false })
         });
         Job.toString = stringify('Job');
 
@@ -13295,38 +13297,38 @@ define(
         SuperVillain = DS.Model.extend({
           firstName: DS.attr('string'),
           lastName: DS.attr('string'),
-          homePlanet: DS.belongsTo('homePlanet', { inverse: 'villains' }),
-          secretLab: DS.belongsTo('secretLab'),
-          secretWeapons: DS.hasMany('secretWeapon'),
-          evilMinions: DS.hasMany('evilMinion')
+          homePlanet: DS.belongsTo('homePlanet', { inverse: 'villains', async: true }),
+          secretLab: DS.belongsTo('secretLab', { async: false }),
+          secretWeapons: DS.hasMany('secretWeapon', { async: false }),
+          evilMinions: DS.hasMany('evilMinion', { async: false })
         });
         HomePlanet = DS.Model.extend({
           name: DS.attr('string'),
-          villains: DS.hasMany('superVillain', { inverse: 'homePlanet' })
+          villains: DS.hasMany('superVillain', { inverse: 'homePlanet', async: false })
         });
         SecretLab = DS.Model.extend({
           minionCapacity: DS.attr('number'),
           vicinity: DS.attr('string'),
-          superVillain: DS.belongsTo('superVillain')
+          superVillain: DS.belongsTo('superVillain', { async: false })
         });
         BatCave = SecretLab.extend({
           infiltrated: DS.attr('boolean')
         });
         SecretWeapon = DS.Model.extend({
           name: DS.attr('string'),
-          superVillain: DS.belongsTo('superVillain')
+          superVillain: DS.belongsTo('superVillain', { async: false })
         });
         LightSaber = SecretWeapon.extend({
           color: DS.attr('string')
         });
         EvilMinion = DS.Model.extend({
-          superVillain: DS.belongsTo('superVillain'),
+          superVillain: DS.belongsTo('superVillain', { async: false }),
           name: DS.attr('string')
         });
         Comment = DS.Model.extend({
           body: DS.attr('string'),
           root: DS.attr('boolean'),
-          children: DS.hasMany('comment', { inverse: null })
+          children: DS.hasMany('comment', { inverse: null, async: false })
         });
         TestSerializer = DS.RESTSerializer.extend({
           isNewSerializerAPI: true
@@ -13629,7 +13631,7 @@ define(
 
     test('normalizeSingleResponse with embedded objects of same type, but from separate attributes', function () {
       HomePlanet.reopen({
-        reformedVillains: DS.hasMany('superVillain', { inverse: null })
+        reformedVillains: DS.hasMany('superVillain', { inverse: null, async: false })
       });
 
       env.registry.register('adapter:home-planet', DS.RESTAdapter);
@@ -13949,7 +13951,7 @@ define(
 
     test('normalizeArrayResponse with embedded objects of same type, but from separate attributes', function () {
       HomePlanet.reopen({
-        reformedVillains: DS.hasMany('superVillain')
+        reformedVillains: DS.hasMany('superVillain', { async: false })
       });
 
       env.registry.register('adapter:home-planet', DS.RESTAdapter);
@@ -14244,7 +14246,7 @@ define(
 
     test('normalizeSingleResponse with polymorphic hasMany', function () {
       SuperVillain.reopen({
-        secretWeapons: DS.hasMany('secretWeapon', { polymorphic: true })
+        secretWeapons: DS.hasMany('secretWeapon', { polymorphic: true, async: false })
       });
 
       env.registry.register('adapter:super-villain', DS.RESTAdapter);
@@ -14313,7 +14315,7 @@ define(
 
     test('normalizeSingleResponse with polymorphic belongsTo', function () {
       SuperVillain.reopen({
-        secretLab: DS.belongsTo('secretLab', { polymorphic: true })
+        secretLab: DS.belongsTo('secretLab', { polymorphic: true, async: true })
       });
 
       env.registry.register('adapter:super-villain', DS.RESTAdapter);
@@ -14446,38 +14448,38 @@ define(
         SuperVillain = DS.Model.extend({
           firstName: DS.attr('string'),
           lastName: DS.attr('string'),
-          homePlanet: DS.belongsTo('home-planet', { inverse: 'villains' }),
-          secretLab: DS.belongsTo('secret-lab'),
-          secretWeapons: DS.hasMany('secret-weapon'),
-          evilMinions: DS.hasMany('evil-minion')
+          homePlanet: DS.belongsTo('home-planet', { inverse: 'villains', async: true }),
+          secretLab: DS.belongsTo('secret-lab', { async: false }),
+          secretWeapons: DS.hasMany('secret-weapon', { async: false }),
+          evilMinions: DS.hasMany('evil-minion', { async: false })
         });
         HomePlanet = DS.Model.extend({
           name: DS.attr('string'),
-          villains: DS.hasMany('super-villain', { inverse: 'homePlanet' })
+          villains: DS.hasMany('super-villain', { inverse: 'homePlanet', async: false })
         });
         SecretLab = DS.Model.extend({
           minionCapacity: DS.attr('number'),
           vicinity: DS.attr('string'),
-          superVillain: DS.belongsTo('super-villain')
+          superVillain: DS.belongsTo('super-villain', { async: false })
         });
         BatCave = SecretLab.extend({
           infiltrated: DS.attr('boolean')
         });
         SecretWeapon = DS.Model.extend({
           name: DS.attr('string'),
-          superVillain: DS.belongsTo('super-villain')
+          superVillain: DS.belongsTo('super-villain', { async: false })
         });
         LightSaber = SecretWeapon.extend({
           color: DS.attr('string')
         });
         EvilMinion = DS.Model.extend({
-          superVillain: DS.belongsTo('super-villain'),
+          superVillain: DS.belongsTo('super-villain', { async: false }),
           name: DS.attr('string')
         });
         Comment = DS.Model.extend({
           body: DS.attr('string'),
           root: DS.attr('boolean'),
-          children: DS.hasMany('comment', { inverse: null })
+          children: DS.hasMany('comment', { inverse: null, async: false })
         });
         env = setupStore({
           superVillain: SuperVillain,
@@ -14689,7 +14691,7 @@ define(
 
     test('extractSingle with embedded objects of same type, but from separate attributes', function () {
       HomePlanet.reopen({
-        reformedVillains: DS.hasMany('super-villain', { inverse: null })
+        reformedVillains: DS.hasMany('super-villain', { inverse: null, async: false })
       });
 
       env.registry.register('adapter:home-planet', DS.ActiveModelAdapter);
@@ -14912,7 +14914,7 @@ define(
 
     test('extractArray with embedded objects of same type, but from separate attributes', function () {
       HomePlanet.reopen({
-        reformedVillains: DS.hasMany('super-villain')
+        reformedVillains: DS.hasMany('super-villain', { async: false })
       });
 
       env.registry.register('adapter:home-planet', DS.ActiveModelAdapter);
@@ -15544,7 +15546,7 @@ define(
 
     test('extractSingle with polymorphic hasMany', function () {
       SuperVillain.reopen({
-        secretWeapons: DS.hasMany('secret-weapon', { polymorphic: true })
+        secretWeapons: DS.hasMany('secret-weapon', { polymorphic: true, async: false })
       });
 
       env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
@@ -15591,7 +15593,7 @@ define(
 
     test('extractSingle with polymorphic hasMany and custom primary key', function () {
       SuperVillain.reopen({
-        secretWeapons: DS.hasMany('secretWeapon', { polymorphic: true })
+        secretWeapons: DS.hasMany('secretWeapon', { polymorphic: true, async: false })
       });
 
       env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
@@ -15643,7 +15645,7 @@ define(
       expect(2);
 
       SuperVillain.reopen({
-        secretLab: DS.belongsTo('secret-lab', { polymorphic: true })
+        secretLab: DS.belongsTo('secret-lab', { polymorphic: true, async: true })
       });
 
       env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
@@ -15688,7 +15690,7 @@ define(
       expect(2);
 
       SuperVillain.reopen({
-        secretLab: DS.belongsTo('secretLab', { polymorphic: true })
+        secretLab: DS.belongsTo('secretLab', { polymorphic: true, async: true })
       });
 
       env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
@@ -15736,7 +15738,7 @@ define(
       expect(2);
 
       SuperVillain.reopen({
-        secretLab: DS.belongsTo('secretLab', { polymorphic: true })
+        secretLab: DS.belongsTo('secretLab', { polymorphic: true, async: true })
       });
 
       env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
@@ -15931,7 +15933,7 @@ define(
         superVillain: null
       });
       EvilMinion.reopen({
-        secretWeapon: DS.belongsTo('secret-weapon'),
+        secretWeapon: DS.belongsTo('secret-weapon', { async: false }),
         superVillain: null
       });
 
@@ -16011,11 +16013,11 @@ define(
       setup: function () {
         Post = DS.Model.extend({
           title: DS.attr('string'),
-          comments: DS.hasMany('comment', { inverse: null })
+          comments: DS.hasMany('comment', { inverse: null, async: false })
         });
         Comment = DS.Model.extend({
           body: DS.attr('string'),
-          post: DS.belongsTo('post')
+          post: DS.belongsTo('post', { async: false })
         });
         Favorite = DS.Model.extend({
           post: DS.belongsTo('post', { async: true, polymorphic: true })
@@ -16147,7 +16149,7 @@ define(
     test('Calling normalize should normalize the payload (only the passed keys)', function () {
       expect(1);
       var Person = DS.Model.extend({
-        posts: DS.hasMany('post')
+        posts: DS.hasMany('post', { async: false })
       });
       env.registry.register('serializer:post', TestSerializer.extend({
         attrs: {
@@ -16160,7 +16162,7 @@ define(
 
       Post.reopen({
         content: DS.attr('string'),
-        author: DS.belongsTo('person'),
+        author: DS.belongsTo('person', { async: false }),
         notInHash: DS.attr('string'),
         inHash: DS.attr('string')
       });
@@ -16209,11 +16211,11 @@ define(
       setup: function () {
         Post = DS.Model.extend({
           title: DS.attr('string'),
-          comments: DS.hasMany('comment', { inverse: null })
+          comments: DS.hasMany('comment', { inverse: null, async: false })
         });
         Comment = DS.Model.extend({
           body: DS.attr('string'),
-          post: DS.belongsTo('post')
+          post: DS.belongsTo('post', { async: false })
         });
         Favorite = DS.Model.extend({
           post: DS.belongsTo('post', { async: true, polymorphic: true })
@@ -16440,7 +16442,7 @@ define(
 
     test('Serializer should respect the attrs hash when serializing records', function () {
       Post.reopen({
-        parentPost: DS.belongsTo('post', { inverse: null })
+        parentPost: DS.belongsTo('post', { inverse: null, async: true })
       });
       env.registry.register('serializer:post', DS.JSONSerializer.extend({
         attrs: {
@@ -16713,7 +16715,7 @@ define(
     test('Calling normalize should normalize the payload (only the passed keys)', function () {
       expect(1);
       var Person = DS.Model.extend({
-        posts: DS.hasMany('post')
+        posts: DS.hasMany('post', { async: false })
       });
       env.registry.register('serializer:post', DS.JSONSerializer.extend({
         attrs: {
@@ -16726,7 +16728,7 @@ define(
 
       Post.reopen({
         content: DS.attr('string'),
-        author: DS.belongsTo('person'),
+        author: DS.belongsTo('person', { async: false }),
         notInHash: DS.attr('string'),
         inHash: DS.attr('string')
       });
@@ -16841,27 +16843,27 @@ define(
       setup: function () {
         HomePlanet = DS.Model.extend({
           name: DS.attr('string'),
-          superVillains: DS.hasMany('superVillain')
+          superVillains: DS.hasMany('superVillain', { async: false })
         });
         SuperVillain = DS.Model.extend({
           firstName: DS.attr('string'),
           lastName: DS.attr('string'),
-          homePlanet: DS.belongsTo('homePlanet'),
-          evilMinions: DS.hasMany('evilMinion')
+          homePlanet: DS.belongsTo('homePlanet', { async: false }),
+          evilMinions: DS.hasMany('evilMinion', { async: false })
         });
         EvilMinion = DS.Model.extend({
-          superVillain: DS.belongsTo('superVillain'),
+          superVillain: DS.belongsTo('superVillain', { async: false }),
           name: DS.attr('string')
         });
         YellowMinion = EvilMinion.extend();
         DoomsdayDevice = DS.Model.extend({
           name: DS.attr('string'),
-          evilMinion: DS.belongsTo('evilMinion', { polymorphic: true })
+          evilMinion: DS.belongsTo('evilMinion', { polymorphic: true, async: true })
         });
         Comment = DS.Model.extend({
           body: DS.attr('string'),
           root: DS.attr('boolean'),
-          children: DS.hasMany('comment', { inverse: null })
+          children: DS.hasMany('comment', { inverse: null, async: false })
         });
         TestSerializer = DS.RESTSerializer.extend({
           isNewSerializerAPI: true
@@ -17258,27 +17260,27 @@ define(
       setup: function () {
         HomePlanet = DS.Model.extend({
           name: DS.attr('string'),
-          superVillains: DS.hasMany('super-villain')
+          superVillains: DS.hasMany('super-villain', { async: false })
         });
         SuperVillain = DS.Model.extend({
           firstName: DS.attr('string'),
           lastName: DS.attr('string'),
-          homePlanet: DS.belongsTo('home-planet'),
-          evilMinions: DS.hasMany('evil-minion')
+          homePlanet: DS.belongsTo('home-planet', { async: false }),
+          evilMinions: DS.hasMany('evil-minion', { async: false })
         });
         EvilMinion = DS.Model.extend({
-          superVillain: DS.belongsTo('super-villain'),
+          superVillain: DS.belongsTo('super-villain', { async: false }),
           name: DS.attr('string')
         });
         YellowMinion = EvilMinion.extend();
         DoomsdayDevice = DS.Model.extend({
           name: DS.attr('string'),
-          evilMinion: DS.belongsTo('evil-minion', { polymorphic: true })
+          evilMinion: DS.belongsTo('evil-minion', { polymorphic: true, async: true })
         });
         Comment = DS.Model.extend({
           body: DS.attr('string'),
           root: DS.attr('boolean'),
-          children: DS.hasMany('comment', { inverse: null })
+          children: DS.hasMany('comment', { inverse: null, async: false })
         });
         env = setupStore({
           superVillain: SuperVillain,
@@ -18460,7 +18462,7 @@ define(
 
     var Person = DS.Model.extend({
       name: DS.attr('string'),
-      cars: DS.hasMany('car')
+      cars: DS.hasMany('car', { async: false })
     });
 
     var run = Ember.run;
@@ -18472,7 +18474,7 @@ define(
     var Car = DS.Model.extend({
       make: DS.attr('string'),
       model: DS.attr('string'),
-      person: DS.belongsTo('person')
+      person: DS.belongsTo('person', { async: false })
     });
 
     Car.toString = function () {
@@ -19652,8 +19654,8 @@ define("ember-data/tests/unit/debug-test", ["exports"], function(__exports__) {
     var User = DS.Model.extend({
       name: DS.attr("string"),
       isDrugAddict: DS.attr("boolean"),
-      maritalStatus: DS.belongsTo("marital-status"),
-      posts: DS.hasMany("post")
+      maritalStatus: DS.belongsTo("marital-status", { async: false }),
+      posts: DS.hasMany("post", { async: false })
     });
 
     var store = createStore({
@@ -19700,7 +19702,7 @@ define(
       setup: function () {
         Post = DS.Model.extend({
           title: attr('string'),
-          tags: hasMany('tag')
+          tags: hasMany('tag', { async: false })
         });
         Post.toString = function () {
           return 'Post';
@@ -19708,7 +19710,7 @@ define(
 
         Tag = DS.Model.extend({
           name: attr('string'),
-          post: belongsTo('post')
+          post: belongsTo('post', { async: false })
         });
         Tag.toString = function () {
           return 'Tag';
@@ -20665,10 +20667,10 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
   test('toJSON looks up the JSONSerializer using the store instead of using JSONSerializer.create', function () {
     var Person = DS.Model.extend({
-      posts: DS.hasMany('post')
+      posts: DS.hasMany('post', { async: false })
     });
     var Post = DS.Model.extend({
-      person: DS.belongsTo('person')
+      person: DS.belongsTo('person', { async: false })
     });
 
     var env = setupStore({
@@ -21473,9 +21475,9 @@ define(
         Occupation = DS.Model.extend();
 
         Person = DS.Model.extend({
-          occupations: DS.hasMany('occupation'),
-          people: DS.hasMany('person', { inverse: 'parent' }),
-          parent: DS.belongsTo('person', { inverse: 'people' })
+          occupations: DS.hasMany('occupation', { async: false }),
+          people: DS.hasMany('person', { inverse: 'parent', async: false }),
+          parent: DS.belongsTo('person', { inverse: 'people', async: false })
         });
 
         store = createStore({
@@ -21537,7 +21539,7 @@ define(
 
       var Tag = DS.Model.extend({
         name: DS.attr("string"),
-        people: DS.hasMany("person")
+        people: DS.hasMany("person", { async: false })
       });
       Tag.toString = function () {
         return "Tag";
@@ -21545,7 +21547,7 @@ define(
 
       var Person = DS.Model.extend({
         name: DS.attr("string"),
-        tag: DS.belongsTo("tag")
+        tag: DS.belongsTo("tag", { async: false })
       });
       Person.toString = function () {
         return "Person";
@@ -21651,12 +21653,12 @@ define(
 
       var Tag = DS.Model.extend({
         name: DS.attr("string"),
-        person: DS.belongsTo("person")
+        person: DS.belongsTo("person", { async: false })
       });
 
       var Person = DS.Model.extend({
         name: DS.attr("string"),
-        tag: DS.belongsTo("tag")
+        tag: DS.belongsTo("tag", { async: false })
       });
 
       var env = setupStore({ tag: Tag, person: Person });
@@ -21676,7 +21678,7 @@ define(
     test("When finding a hasMany relationship the inverse belongsTo relationship is available immediately", function () {
       var Occupation = DS.Model.extend({
         description: DS.attr("string"),
-        person: DS.belongsTo("person")
+        person: DS.belongsTo("person", { async: false })
       });
 
       Occupation.toString = function () {
@@ -21726,7 +21728,7 @@ define(
 
       var Occupation = DS.Model.extend({
         description: DS.attr("string"),
-        person: DS.belongsTo("person")
+        person: DS.belongsTo("person", { async: false })
       });
 
       Occupation.toString = function () {
@@ -21764,7 +21766,7 @@ define(
 
       var Tag = DS.Model.extend({
         name: DS.attr("string"),
-        people: DS.hasMany("person")
+        people: DS.hasMany("person", { async: false })
       });
       Tag.toString = function () {
         return "Tag";
@@ -21772,7 +21774,7 @@ define(
 
       var Person = DS.Model.extend({
         name: DS.attr("string"),
-        tag: DS.belongsTo("tag")
+        tag: DS.belongsTo("tag", { async: false })
       });
       Person.toString = function () {
         return "Person";
@@ -21809,7 +21811,7 @@ define(
 
       var Person = DS.Model.extend({
         name: DS.attr("string"),
-        hobby: DS.belongsTo("hobby", { serialize: true })
+        hobby: DS.belongsTo("hobby", { serialize: true, async: true })
       });
       Person.toString = function () {
         return "Person";
@@ -21842,7 +21844,7 @@ define(
 
       var Person = DS.Model.extend({
         name: DS.attr("string"),
-        hobby: DS.belongsTo("hobby", { embedded: true })
+        hobby: DS.belongsTo("hobby", { embedded: true, async: true })
       });
       Person.toString = function () {
         return "Person";
@@ -21863,6 +21865,33 @@ define(
           }));
         });
       }, /You provided an embedded option on the "hobby" property in the "person" class, this belongs in the serializer. See DS.EmbeddedRecordsMixin/);
+    });
+
+    module("unit/model/relationships - DS.belongsTo async by default deprecations", {
+      setup: function () {
+        setupStore();
+      }
+    });
+
+    test("setting DS.belongsTo without async false triggers deprecation", function () {
+      var Tag = DS.Model.extend({
+        name: DS.attr("string"),
+        people: DS.hasMany("person", { async: false })
+      });
+
+      var Person = DS.Model.extend({
+        name: DS.attr("string"),
+        tag: DS.belongsTo("tag")
+      });
+
+      var env = setupStore({ tag: Tag, person: Person });
+      var store = env.store;
+
+      expectDeprecation(function () {
+        run(function () {
+          store.createRecord("person").get("tag");
+        });
+      }, /In Ember Data 2.0, relationships will be asynchronous by default. You must set `tag: DS.belongsTo\('tag', { async: false }\)`/);
     });
   }
 );
@@ -21893,18 +21922,18 @@ define(
 
       var Tag = DS.Model.extend({
         name: DS.attr("string"),
-        person: DS.belongsTo("person")
+        person: DS.belongsTo("person", { async: false })
       });
 
       var Pet = DS.Model.extend({
         name: DS.attr("string"),
-        person: DS.belongsTo("person")
+        person: DS.belongsTo("person", { async: false })
       });
 
       var Person = DS.Model.extend({
         name: DS.attr("string"),
-        tags: DS.hasMany("tag"),
-        pets: DS.hasMany("pet")
+        tags: DS.hasMany("tag", { async: false }),
+        pets: DS.hasMany("pet", { async: false })
       });
 
       env.registry.register("model:tag", Tag);
@@ -21980,18 +22009,18 @@ define(
 
       var Tag = DS.Model.extend({
         name: DS.attr("string"),
-        person: DS.belongsTo("person")
+        person: DS.belongsTo("person", { async: false })
       });
 
       var Pet = DS.Model.extend({
         name: DS.attr("string"),
-        person: DS.belongsTo("person")
+        person: DS.belongsTo("person", { async: false })
       });
 
       var Person = DS.Model.extend({
         name: DS.attr("string"),
         tags: DS.hasMany("tag", { async: true }),
-        pets: DS.hasMany("pet")
+        pets: DS.hasMany("pet", { async: false })
       });
 
       env.registry.register("model:tag", Tag);
@@ -22049,7 +22078,8 @@ define(
       var Tag = DS.Model.extend({});
 
       var Person = DS.Model.extend({
-        tags: DS.hasMany()
+        tags: DS.hasMany("tag", { async: false })
+
       });
 
       var env = setupStore({
@@ -22064,7 +22094,7 @@ define(
       var Tag = DS.Model.extend({});
 
       var Person = DS.Model.extend({
-        tags: DS.hasMany("tag")
+        tags: DS.hasMany("tag", { async: false })
       });
 
       var env = setupStore({
@@ -22079,7 +22109,7 @@ define(
       var Tag = DS.Model.extend({});
 
       var Person = DS.Model.extend({
-        tag: DS.belongsTo()
+        tag: DS.belongsTo("tag", { async: false })
       });
 
       var env = setupStore({
@@ -22096,7 +22126,7 @@ define(
       });
 
       var Person = DS.Model.extend({
-        tags: DS.belongsTo("tag")
+        tags: DS.belongsTo("tag", { async: false })
       });
 
       var env = setupStore({
@@ -22114,7 +22144,7 @@ define(
 
       var Person = DS.Model.extend({
         name: DS.attr("string"),
-        tags: DS.hasMany("tag")
+        tags: DS.hasMany("tag", { async: false })
       });
 
       var Tag = DS.Model.extend({
@@ -22144,7 +22174,7 @@ define(
 
       var Tag = DS.Model.extend({
         name: DS.attr("string"),
-        person: DS.belongsTo("person")
+        person: DS.belongsTo("person", { async: false })
       });
 
       Tag.toString = function () {
@@ -22198,12 +22228,12 @@ define(
 
       var Tag = DS.Model.extend({
         name: DS.attr("string"),
-        people: DS.belongsTo("person")
+        people: DS.belongsTo("person", { async: false })
       });
 
       var Person = DS.Model.extend({
         name: DS.attr("string"),
-        tags: DS.hasMany("tag")
+        tags: DS.hasMany("tag", { async: false })
       });
 
       var env = setupStore({
@@ -22237,12 +22267,12 @@ define(
 
       var Tag = DS.Model.extend({
         name: DS.attr("string"),
-        person: DS.belongsTo("person")
+        person: DS.belongsTo("person", { async: false })
       });
 
       var Person = DS.Model.extend({
         name: DS.attr("string"),
-        tags: DS.hasMany("tag")
+        tags: DS.hasMany("tag", { async: false })
       });
 
       var env = setupStore({ tag: Tag, person: Person });
@@ -22274,12 +22304,12 @@ define(
 
       var Tag = DS.Model.extend({
         name: DS.attr("string"),
-        person: DS.belongsTo("person")
+        person: DS.belongsTo("person", { async: false })
       });
 
       var Person = DS.Model.extend({
         name: DS.attr("string"),
-        tags: DS.hasMany("tag")
+        tags: DS.hasMany("tag", { async: false })
       });
 
       var env = setupStore({ tag: Tag, person: Person });
@@ -22308,12 +22338,12 @@ define(
     test("it is possible to add an item to a relationship, remove it, then add it again", function () {
       var Tag = DS.Model.extend({
         name: DS.attr("string"),
-        person: DS.belongsTo("person")
+        person: DS.belongsTo("person", { async: false })
       });
 
       var Person = DS.Model.extend({
         name: DS.attr("string"),
-        tags: DS.hasMany("tag")
+        tags: DS.hasMany("tag", { async: false })
       });
 
       Tag.toString = function () {
@@ -22353,6 +22383,33 @@ define(
       equal(tags.objectAt(0), tag2);
       equal(tags.objectAt(1), tag1);
       equal(tags.objectAt(2), tag3);
+    });
+
+    module("unit/model/relationships - DS.hasMany async by default deprecations", {
+      setup: function () {
+        env = setupStore();
+      }
+    });
+
+    test("setting DS.hasMany without async false triggers deprecation", function () {
+      var Tag = DS.Model.extend({
+        name: DS.attr("string"),
+        people: DS.hasMany("person")
+      });
+
+      var Person = DS.Model.extend({
+        name: DS.attr("string"),
+        tag: DS.belongsTo("tag", { async: false })
+      });
+
+      var env = setupStore({ tag: Tag, person: Person });
+      var store = env.store;
+
+      expectDeprecation(function () {
+        run(function () {
+          store.createRecord("tag").get("people");
+        });
+      }, /In Ember Data 2.0, relationships will be asynchronous by default. You must set `people: DS.hasMany\('person', { async: false }\)/);
     });
   }
 );
@@ -22405,12 +22462,12 @@ define(
 
       var Tag = DS.Model.extend({
         name: DS.attr("string"),
-        person: DS.belongsTo("person")
+        person: DS.belongsTo("person", { async: false })
       });
 
       var Person = DS.Model.extend({
         name: DS.attr("string"),
-        tags: DS.hasMany("tag")
+        tags: DS.hasMany("tag", { async: false })
       });
 
       var env = setupStore({ tag: Tag, person: Person });
@@ -23003,11 +23060,11 @@ define(
       expect(4);
 
       var Tag = DS.Model.extend({
-        people: DS.hasMany("person")
+        people: DS.hasMany("person", { async: false })
       });
 
       Person.reopen({
-        tag: DS.belongsTo("tag")
+        tag: DS.belongsTo("tag", { async: false })
       });
 
       var env = setupStore({
@@ -23050,7 +23107,7 @@ define(
 
     test("a loaded record is removed from a record array when it is deleted even if the belongsTo side isn't defined", function () {
       var Tag = DS.Model.extend({
-        people: DS.hasMany("person")
+        people: DS.hasMany("person", { async: false })
       });
 
       var env = setupStore({
@@ -23071,11 +23128,11 @@ define(
 
     test("a loaded record is removed both from the record array and from the belongs to, even if the belongsTo side isn't defined", function () {
       var Tag = DS.Model.extend({
-        people: DS.hasMany("person")
+        people: DS.hasMany("person", { async: false })
       });
 
       var Tool = DS.Model.extend({
-        person: DS.belongsTo("person")
+        person: DS.belongsTo("person", { async: false })
       });
 
       var env = setupStore({
@@ -23767,7 +23824,7 @@ define(
 
       var Person = DS.Model.extend({
         name: DS.attr("string"),
-        friend: DS.belongsTo("person", { inverse: null })
+        friend: DS.belongsTo("person", { inverse: null, async: true })
       });
 
       env.registry.register("model:person", Person);
@@ -23825,7 +23882,7 @@ define(
 
       var Person = DS.Model.extend({
         name: DS.attr("string"),
-        friends: DS.hasMany("person", { inverse: null })
+        friends: DS.hasMany("person", { inverse: null, async: true })
       });
 
       env.registry.register("model:person", Person);
@@ -24630,7 +24687,7 @@ define(
 
         Storage = DS.Model.extend({
           name: DS.attr('name'),
-          records: DS.hasMany('record')
+          records: DS.hasMany('record', { async: false })
         });
 
         store = createStore({
@@ -24755,7 +24812,7 @@ define(
         Person = DS.Model.extend({
           firstName: attr('string'),
           lastName: attr('string'),
-          phoneNumbers: hasMany('phone-number')
+          phoneNumbers: hasMany('phone-number', { async: false })
         });
         Person.toString = function () {
           return 'Person';
@@ -24763,7 +24820,7 @@ define(
 
         PhoneNumber = DS.Model.extend({
           number: attr('string'),
-          person: belongsTo('person')
+          person: belongsTo('person', { async: false })
         });
         PhoneNumber.toString = function () {
           return 'PhoneNumber';
@@ -25171,7 +25228,7 @@ define(
         Person = DS.Model.extend({
           firstName: attr('string'),
           lastName: attr('string'),
-          phoneNumbers: hasMany('phone-number')
+          phoneNumbers: hasMany('phone-number', { async: false })
         });
         Person.toString = function () {
           return 'Person';
@@ -25179,7 +25236,7 @@ define(
 
         PhoneNumber = DS.Model.extend({
           number: attr('string'),
-          person: belongsTo('person')
+          person: belongsTo('person', { async: false })
         });
         PhoneNumber.toString = function () {
           return 'PhoneNumber';
@@ -25905,11 +25962,11 @@ define(
 
       var Product = DS.Model.extend({
         description: DS.attr('string'),
-        brand: DS.belongsTo('brand')
+        brand: DS.belongsTo('brand', { async: false })
       });
 
       var Like = DS.Model.extend({
-        product: DS.belongsTo('product')
+        product: DS.belongsTo('product', { async: false })
       });
 
       var store = createStore({
@@ -26142,12 +26199,12 @@ define("ember-data/tests/unit/utils-test", ["exports"], function(__exports__) {
     setup: function () {
       Person = DS.Model.extend();
       User = DS.Model.extend({
-        messages: DS.hasMany('message')
+        messages: DS.hasMany('message', { async: false })
       });
 
       Message = DS.Model.extend();
       Post = Message.extend({
-        medias: DS.hasMany('medium')
+        medias: DS.hasMany('medium', { async: false })
       });
 
       Medium = Ember.Mixin.create();
