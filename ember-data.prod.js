@@ -5833,7 +5833,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.5ccad0796c'
+      VERSION: '1.0.0-beta.20+canary.900d378dee'
     });
 
     if (Ember.libraries) {
@@ -6179,8 +6179,8 @@
       proxy.registerDeprecations([{ deprecated: "serializer:_default", valid: "serializer:-default" }, { deprecated: "serializer:_rest", valid: "serializer:-rest" }, { deprecated: "adapter:_rest", valid: "adapter:-rest" }]);
 
       // new go forward paths
-      registry.register("serializer:-default", ember$data$lib$serializers$json$serializer$$default);
-      registry.register("serializer:-rest", ember$data$lib$serializers$rest$serializer$$default);
+      registry.register("serializer:-default", ember$data$lib$serializers$json$serializer$$default.extend({ isNewSerializerAPI: true }));
+      registry.register("serializer:-rest", ember$data$lib$serializers$rest$serializer$$default.extend({ isNewSerializerAPI: true }));
       registry.register("adapter:-rest", ember$data$lib$adapters$rest$adapter$$default);
 
       registry.register("adapter:-json-api", ember$data$lib$adapters$json$api$adapter$$default);
@@ -9676,9 +9676,6 @@
           var instance = this.instanceFor(lookupKey);
 
           if (instance) {
-            if (fallback === '-default') {
-              instance.set('isNewSerializerAPI', true);
-            }
             return instance;
           }
         }
