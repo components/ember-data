@@ -421,7 +421,8 @@
         @return {Boolean}
       */
       shouldReloadAll: function (store, snapshotRecordArray) {
-        Ember.deprecate('The default behavior of `shouldBackgroundReloadAll` will change in Ember Data 2.0 to always return false. If you would like to preserve the current behavior please override `shouldReloadAll` in you adapter:application and return true.');
+        var modelName = snapshotRecordArray.type.modelName;
+        Ember.deprecate('The default behavior of shouldBackgroundReloadAll will change in Ember Data 2.0 to always return false when there is at least one "' + modelName + '" record in the store. If you would like to preserve the current behavior please override shouldReloadAll in you adapter:application and return true.');
         return true;
       },
 
@@ -7233,7 +7234,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.b40d526ef4'
+      VERSION: '1.0.0-beta.20+canary.d9585c8596'
     });
 
     if (Ember.libraries) {
@@ -7480,6 +7481,7 @@
       this._snapshots = null;
       this._recordArray = recordArray;
       this.length = recordArray.get('length');
+      this.type = recordArray.get('type');
       this.meta = meta;
       this.adapterOptions = adapterOptions;
     }
@@ -12078,13 +12080,6 @@
 
         Ember.assert("You tried to load all records but you have no adapter (for " + typeClass + ")", adapter);
         Ember.assert("You tried to load all records but your adapter does not implement `findAll`", typeof adapter.findAll === "function");
-        if (!ember$data$lib$system$store$$get(array, "__isLoaded")) {
-          var arrayPromise = ember$data$lib$system$promise$proxies$$promiseArray(ember$data$lib$system$store$finders$$_findAll(adapter, this, typeClass, sinceToken, options));
-          arrayPromise.then(function () {
-            return ember$data$lib$system$store$$set(array, "__isLoaded", true);
-          });
-          return arrayPromise;
-        }
         if (options.reload) {
           return ember$data$lib$system$promise$proxies$$promiseArray(ember$data$lib$system$store$finders$$_findAll(adapter, this, typeClass, sinceToken, options));
         }

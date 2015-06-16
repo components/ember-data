@@ -24426,34 +24426,6 @@ define(
       equal(store.peekRecord("person", 1).get("name"), "Tom");
     });
 
-    test("store should not call shouldReloadAll when the recordArary is not loaded", function () {
-      expect(1);
-
-      var Person = DS.Model.extend({
-        name: DS.attr("string")
-      });
-
-      var TestAdapter = DS.Adapter.extend({
-        shouldReloadAll: function (store, type, id, snapshot) {
-          ok(false, "shouldReloadRecord should not be called when the record is not loaded");
-          return false;
-        },
-        findAll: function () {
-          ok(true, "find is always called when the record is not in the store");
-          return [{ id: 1 }];
-        }
-      });
-
-      store = createStore({
-        adapter: TestAdapter,
-        person: Person
-      });
-
-      run(function () {
-        store.findAll("person");
-      });
-    });
-
     test("store should not reload record array when shouldReloadAll returns false", function () {
       expect(1);
 
@@ -24480,7 +24452,6 @@ define(
       });
 
       run(function () {
-        store.peekAll("person").set("__isLoaded", true);
         store.find("person");
       });
     });
@@ -24509,7 +24480,6 @@ define(
       });
 
       run(function () {
-        store.peekAll("person").set("__isLoaded", true);
         store.findAll("person").then(function (records) {
           equal(records.get("firstObject.name"), "Tom");
         });
@@ -24542,7 +24512,6 @@ define(
       });
 
       run(function () {
-        store.peekAll("person").set("__isLoaded", true);
         store.findAll("person").then(function (records) {
           equal(records.get("firstObject.name"), "Tom");
         });
@@ -24577,7 +24546,6 @@ define(
       });
 
       run(function () {
-        store.peekAll("person").set("__isLoaded", true);
         store.findAll("person").then(function (records) {
           equal(records.get("firstObject"), undefined);
         });
@@ -24612,7 +24580,6 @@ define(
       });
 
       run(function () {
-        store.peekAll("person").set("__isLoaded", true);
         store.findAll("person").then(function (records) {
           equal(records.get("firstObject.name"), undefined);
         });
