@@ -2768,6 +2768,19 @@
     function ember$data$lib$system$coerce$id$$coerceId(id) {
       return id == null || id === '' ? null : id + '';
     }
+    var ember$data$lib$system$normalize$model$name$$default = ember$data$lib$system$normalize$model$name$$normalizeModelName;
+    /**
+      All modelNames are dasherized internally. Changing this function may
+      require changes to other normalization hooks (such as typeForRoot).
+      @method normalizeModelName
+      @public
+      @param {String} modelName
+      @return {String} if the adapter can generate one, an ID
+      @for DS
+    */
+    function ember$data$lib$system$normalize$model$name$$normalizeModelName(modelName) {
+      return Ember.String.dasherize(modelName);
+    }
 
     var ember$data$lib$serializers$json$serializer$$get = Ember.get;
     var ember$data$lib$serializers$json$serializer$$isNone = Ember.isNone;
@@ -3347,6 +3360,15 @@
         }, this);
 
         return relationships;
+      },
+
+      /**
+        @method modelNameFromPayloadKey
+        @param {String} key
+        @return {String} the model's modelName
+      */
+      modelNameFromPayloadKey: function (key) {
+        return ember$data$lib$system$normalize$model$name$$default(key);
       },
 
       /**
@@ -4306,19 +4328,6 @@
     }
 
     var ember$data$lib$serializers$json$serializer$$default = ember$data$lib$serializers$json$serializer$$JSONSerializer;
-    var ember$data$lib$system$normalize$model$name$$default = ember$data$lib$system$normalize$model$name$$normalizeModelName;
-    /**
-      All modelNames are dasherized internally. Changing this function may
-      require changes to other normalization hooks (such as typeForRoot).
-      @method normalizeModelName
-      @public
-      @param {String} modelName
-      @return {String} if the adapter can generate one, an ID
-      @for DS
-    */
-    function ember$data$lib$system$normalize$model$name$$normalizeModelName(modelName) {
-      return Ember.String.dasherize(modelName);
-    }
     var ember$data$lib$system$store$serializer$response$$forEach = Ember.ArrayPolyfills.forEach;
     var ember$data$lib$system$store$serializer$response$$map = Ember.ArrayPolyfills.map;
 
@@ -5868,7 +5877,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.900d378dee'
+      VERSION: '1.0.0-beta.20+canary.517c4e33fe'
     });
 
     if (Ember.libraries) {
