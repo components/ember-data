@@ -3151,6 +3151,8 @@
         switch (requestType) {
           case "findRecord":
             return this.normalizeFindRecordResponse.apply(this, arguments);
+          case "queryRecord":
+            return this.normalizeQueryRecordResponse.apply(this, arguments);
           case "findAll":
             return this.normalizeFindAllResponse.apply(this, arguments);
           case "findBelongsTo":
@@ -3180,6 +3182,19 @@
         @return {Object} JSON-API Document
       */
       normalizeFindRecordResponse: function (store, primaryModelClass, payload, id, requestType) {
+        return this.normalizeSingleResponse.apply(this, arguments);
+      },
+
+      /*
+        @method normalizeQueryRecordResponse
+        @param {DS.Store} store
+        @param {DS.Model} primaryModelClass
+        @param {Object} payload
+        @param {String|Number} id
+        @param {String} requestType
+        @return {Object} JSON-API Document
+      */
+      normalizeQueryRecordResponse: function (store, primaryModelClass, payload, id, requestType) {
         return this.normalizeSingleResponse.apply(this, arguments);
       },
 
@@ -7218,7 +7233,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.0.0-beta.20+canary.605fd1a1fe'
+      VERSION: '1.0.0-beta.20+canary.4ef1da60cd'
     });
 
     if (Ember.libraries) {

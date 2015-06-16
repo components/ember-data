@@ -18941,7 +18941,7 @@ define(
       __exports__[name] = value;
     }
 
-    var Person, store, env;
+    var Person, store, env, TestSerializer;
     var run = Ember.run;
 
     module('integration/store/query-record - Query one record with a query hash', {
@@ -18957,6 +18957,10 @@ define(
           person: Person
         });
         store = env.store;
+
+        TestSerializer = DS.JSONAPISerializer.extend({
+          isNewSerializerAPI: true
+        });
       },
 
       teardown: function () {
@@ -19002,6 +19006,35 @@ define(
         store.queryRecord('person', {}).then(null, async(function (reason) {
           ok(true, 'The rejection handler was called');
         }));
+      });
+    });
+
+    test('When a record is requested, the serializer\'s normalizeQueryRecordResponse method should be called.', function () {
+      expect(1);
+
+      env.registry.register('serializer:person', TestSerializer.extend({
+        normalizeQueryRecordResponse: function (store, primaryModelClass, payload, id, requestType) {
+          equal(payload.data.id, '1', 'the normalizeQueryRecordResponse method was called with the right payload');
+          return this._super.apply(this, arguments);
+        }
+      }));
+
+      env.registry.register('adapter:person', DS.Adapter.extend({
+        queryRecord: function (store, type, query) {
+          return Ember.RSVP.resolve({
+            data: {
+              id: '1',
+              type: 'person',
+              attributes: {
+                name: 'Peter Wagenet'
+              }
+            }
+          });
+        }
+      }));
+
+      run(function () {
+        store.queryRecord('person', { related: 'posts' });
       });
     });
   }
