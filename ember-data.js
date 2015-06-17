@@ -422,7 +422,7 @@
       */
       shouldReloadAll: function (store, snapshotRecordArray) {
         var modelName = snapshotRecordArray.type.modelName;
-        Ember.deprecate('The default behavior of shouldBackgroundReloadAll will change in Ember Data 2.0 to always return false when there is at least one "' + modelName + '" record in the store. If you would like to preserve the current behavior please override shouldReloadAll in you adapter:application and return true.');
+        Ember.deprecate('The default behavior of shouldReloadAll will change in Ember Data 2.0 to always return false when there is at least one "' + modelName + '" record in the store. If you would like to preserve the current behavior please override shouldReloadAll in you adapter:application and return true.');
         return true;
       },
 
@@ -7250,7 +7250,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.a299328283'
+      VERSION: '2.0.0+canary.f3eb9b254b'
     });
 
     if (Ember.libraries) {
