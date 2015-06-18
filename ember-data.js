@@ -7246,7 +7246,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.c57f030725'
+      VERSION: '2.0.0+canary.111a002fe4'
     });
 
     if (Ember.libraries) {
@@ -12664,26 +12664,38 @@
           updated.
       */
       push: function (modelNameArg, dataArg) {
+        var _this = this;
+
         var data, modelName;
 
         if (Ember.typeOf(modelNameArg) === "object" && Ember.typeOf(dataArg) === "undefined") {
           data = modelNameArg;
-          modelName = data.data.type;
         } else {
           Ember.assert("Expected an object as `data` in a call to `push` for " + modelNameArg + " , but was " + Ember.typeOf(dataArg), Ember.typeOf(dataArg) === "object");
           Ember.assert("You must include an `id` for " + modelNameArg + " in an object passed to `push`", dataArg.id != null && dataArg.id !== "");
           data = ember$data$lib$system$store$serializer$response$$_normalizeSerializerPayload(this.modelFor(modelNameArg), dataArg);
           modelName = modelNameArg;
           Ember.deprecate("store.push(type, data) has been deprecated. Please provide a JSON-API document object as the first and only argument to store.push.");
+          Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string" || typeof data === "undefined");
         }
 
-        Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string" || typeof data === "undefined");
-        var internalModel = this._pushInternalModel(data.data || data);
-        if (Ember.isArray(internalModel)) {
-          return ember$data$lib$system$store$$map.call(internalModel, function (item) {
-            return item.getRecord();
+        if (data.included) {
+          ember$data$lib$system$store$$forEach.call(data.included, function (recordData) {
+            return _this._pushInternalModel(recordData);
           });
         }
+
+        if (Ember.typeOf(data.data) === "array") {
+          var internalModels = ember$data$lib$system$store$$map.call(data.data, function (recordData) {
+            return _this._pushInternalModel(recordData);
+          });
+          return ember$data$lib$system$store$$map.call(internalModels, function (internalModel) {
+            return internalModel.getRecord();
+          });
+        }
+
+        var internalModel = this._pushInternalModel(data.data || data);
+
         return internalModel.getRecord();
       },
 
