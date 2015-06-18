@@ -7246,7 +7246,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.64550b4032'
+      VERSION: '2.0.0+canary.382e4a6e81'
     });
 
     if (Ember.libraries) {
@@ -13215,6 +13215,14 @@
     var ember$data$lib$serializers$json$api$serializer$$map = Ember.EnumerableUtils.map;
 
     var ember$data$lib$serializers$json$api$serializer$$default = ember$data$lib$serializers$json$serializer$$default.extend({
+
+      /*
+        This is only to be used temporarily during the transition from the old
+        serializer API to the new one.
+         `JSONAPISerializer` only supports the new Serializer API.
+         @property isNewSerializerAPI
+      */
+      isNewSerializerAPI: true,
 
       /*
         @method _normalizeRelationshipDataHelper
