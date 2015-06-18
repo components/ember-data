@@ -6605,8 +6605,6 @@ define(
 
     var get = Ember.get;
     var set = Ember.set;
-    var forEach = Ember.ArrayPolyfills.forEach;
-    var indexOf = Ember.ArrayPolyfills.indexOf;
     var run = Ember.run;
 
     var Person, store, env, array, recordArray;
@@ -6616,7 +6614,7 @@ define(
     };
 
     var shouldNotContain = function (array, item) {
-      ok(indexOf.call(array, item) === -1, 'array should not contain ' + item.get('name'));
+      ok(array.indexOf(item) === -1, 'array should not contain ' + item.get('name'));
     };
 
     module('integration/filter - DS.Model updating', {
@@ -7137,7 +7135,7 @@ define(
     var clientEdits = function (ids) {
       edited = [];
 
-      forEach.call(ids, function (id) {
+      ids.forEach(function (id) {
         // wrap in an Ember.run to guarantee coalescence of the
         // iterated `set` calls and promise resolution.
         Ember.run(function () {
@@ -7155,14 +7153,14 @@ define(
       // wrap in an Ember.run to guarantee coalescence of the
       // iterated `set` calls.
       Ember.run(function () {
-        forEach.call(names, function (name) {
+        names.forEach(function (name) {
           edited.push(store.createRecord('person', { name: 'Client-side ' + name }));
         });
       });
     };
 
     var serverResponds = function () {
-      forEach.call(edited, function (person) {
+      edited.forEach(function (person) {
         run(person, 'save');
       });
     };
@@ -14451,7 +14449,6 @@ define(
 
     var get = Ember.get;
     var HomePlanet, SuperVillain, EvilMinion, SecretLab, SecretWeapon, BatCave, Comment, league, superVillain, evilMinion, secretWeapon, homePlanet, secretLab, env;
-    var indexOf = Ember.ArrayPolyfills.indexOf;
     var run = Ember.run;
     var LightSaber;
 
@@ -15902,7 +15899,7 @@ define(
           var relationshipType = snapshot.type.determineRelationshipType(relationship);
           // "manyToOne" not supported in DS.RESTSerializer.prototype.serializeHasMany
           var relationshipTypes = Ember.String.w('manyToNone manyToMany manyToOne');
-          if (indexOf.call(relationshipTypes, relationshipType) > -1) {
+          if (relationshipTypes.indexOf(relationshipType) > -1) {
             json[payloadKey] = snapshot.hasMany(key, { ids: true });
           }
         }
@@ -25233,7 +25230,6 @@ define(
     var hasMany = DS.hasMany;
     var belongsTo = DS.belongsTo;
     var run = Ember.run;
-    var forEach = Ember.ArrayPolyfills.forEach;
 
     module('unit/store/push - DS.Store#push', {
       setup: function () {
@@ -25653,7 +25649,7 @@ define(
 
       expect(invalidValues.length);
 
-      forEach.call(invalidValues, function (invalidValue) {
+      invalidValues.forEach(function (invalidValue) {
         throws(function () {
           run(function () {
             store.push('person', invalidValue);
@@ -25719,7 +25715,7 @@ define(
 
       expect(invalidValues.length);
 
-      forEach.call(invalidValues, function (invalidValue) {
+      invalidValues.forEach(function (invalidValue) {
         throws(function () {
           run(function () {
             store.push('person', { id: 1, phoneNumbers: invalidValue });
@@ -25733,7 +25729,7 @@ define(
 
       expect(invalidValues.length);
 
-      forEach.call(invalidValues, function (invalidValue) {
+      invalidValues.forEach(function (invalidValue) {
         throws(function () {
           run(function () {
             store.push('person', invalidValue);
@@ -26655,6 +26651,13 @@ if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/lib/system/model');
 test('ember-data/lib/system/model/errors.js should pass jshint', function() { 
   ok(true, 'ember-data/lib/system/model/errors.js should pass jshint.'); 
+});
+
+}
+if (!QUnit.urlParams.nojshint) {
+module('JSHint - ember-data/lib/system/model/errors');
+test('ember-data/lib/system/model/errors/invalid.js should pass jshint', function() { 
+  ok(true, 'ember-data/lib/system/model/errors/invalid.js should pass jshint.'); 
 });
 
 }
