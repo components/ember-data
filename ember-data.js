@@ -7246,7 +7246,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.13.1'
+      VERSION: '1.13.2'
     });
 
     if (Ember.libraries) {
@@ -16056,21 +16056,34 @@
     ember$data$lib$core$$default.NumberTransform = ember$data$lib$transforms$number$$default;
     ember$data$lib$core$$default.BooleanTransform = ember$data$lib$transforms$boolean$$default;
 
+    var ember$data$lib$main$$_ActiveModelAdapter = activemodel$adapter$lib$system$active$model$adapter$$default;
+    var ember$data$lib$main$$_ActiveModelSerializer = activemodel$adapter$lib$system$active$model$serializer$$default;
+
     if (Ember.platform.hasPropertyAccessors) {
       Ember.defineProperty(ember$data$lib$core$$default, "ActiveModelAdapter", {
         get: function () {
-          Ember.deprecate("The ActiveModelAdapter has been moved into a plugin. It will not be bundled with Ember Data in 2.0", false, {
-            url: "https://github.com/ember-data/active-model-adapter"
-          });
-          return activemodel$adapter$lib$system$active$model$adapter$$default;
+          if (ember$data$lib$main$$_ActiveModelSerializer === activemodel$adapter$lib$system$active$model$adapter$$default) {
+            Ember.deprecate("The ActiveModelAdapter has been moved into a plugin. It will not be bundled with Ember Data in 2.0", false, {
+              url: "https://github.com/ember-data/active-model-adapter"
+            });
+          }
+          return ember$data$lib$main$$_ActiveModelAdapter;
+        },
+        set: function (ActiveModelAdapter) {
+          ember$data$lib$main$$_ActiveModelAdapter = ActiveModelAdapter;
         }
       });
       Ember.defineProperty(ember$data$lib$core$$default, "ActiveModelSerializer", {
         get: function () {
-          Ember.deprecate("The ActiveModelSerializer has been moved into a plugin. It will not be bundled with Ember Data in 2.0", false, {
-            url: "https://github.com/ember-data/active-model-adapter"
-          });
-          return activemodel$adapter$lib$system$active$model$serializer$$default;
+          if (ember$data$lib$main$$_ActiveModelSerializer === activemodel$adapter$lib$system$active$model$serializer$$default) {
+            Ember.deprecate("The ActiveModelSerializer has been moved into a plugin. It will not be bundled with Ember Data in 2.0", false, {
+              url: "https://github.com/ember-data/active-model-adapter"
+            });
+          }
+          return ember$data$lib$main$$_ActiveModelSerializer;
+        },
+        set: function (ActiveModelSerializer) {
+          ember$data$lib$main$$_ActiveModelSerializer = ActiveModelSerializer;
         }
       });
     } else {
@@ -16095,16 +16108,18 @@
       value: ember$data$lib$system$normalize$model$name$$default
     });
 
-    var ember$data$lib$main$$fixtureAdapterWasDeprecated = false;
+    var ember$data$lib$main$$_FixtureAdapter = ember$data$lib$adapters$fixture$adapter$$default;
 
     if (Ember.platform.hasPropertyAccessors) {
       Ember.defineProperty(ember$data$lib$core$$default, "FixtureAdapter", {
         get: function () {
-          if (!ember$data$lib$main$$fixtureAdapterWasDeprecated) {
+          if (ember$data$lib$main$$_FixtureAdapter === ember$data$lib$adapters$fixture$adapter$$default) {
             Ember.deprecate("DS.FixtureAdapter has been deprecated and moved into an unsupported addon: https://github.com/emberjs/ember-data-fixture-adapter/tree/master");
-            ember$data$lib$main$$fixtureAdapterWasDeprecated = true;
           }
-          return ember$data$lib$adapters$fixture$adapter$$default;
+          return ember$data$lib$main$$_FixtureAdapter;
+        },
+        set: function (FixtureAdapter) {
+          ember$data$lib$main$$_FixtureAdapter = FixtureAdapter;
         }
       });
     } else {

@@ -7198,7 +7198,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.13.1'
+      VERSION: '1.13.2'
     });
 
     if (Ember.libraries) {
@@ -15884,15 +15884,28 @@
     ember$data$lib$core$$default.NumberTransform = ember$data$lib$transforms$number$$default;
     ember$data$lib$core$$default.BooleanTransform = ember$data$lib$transforms$boolean$$default;
 
+    var ember$data$lib$main$$_ActiveModelAdapter = activemodel$adapter$lib$system$active$model$adapter$$default;
+    var ember$data$lib$main$$_ActiveModelSerializer = activemodel$adapter$lib$system$active$model$serializer$$default;
+
     if (Ember.platform.hasPropertyAccessors) {
       Ember.defineProperty(ember$data$lib$core$$default, "ActiveModelAdapter", {
         get: function () {
-                    return activemodel$adapter$lib$system$active$model$adapter$$default;
+          if (ember$data$lib$main$$_ActiveModelSerializer === activemodel$adapter$lib$system$active$model$adapter$$default) {
+                      }
+          return ember$data$lib$main$$_ActiveModelAdapter;
+        },
+        set: function (ActiveModelAdapter) {
+          ember$data$lib$main$$_ActiveModelAdapter = ActiveModelAdapter;
         }
       });
       Ember.defineProperty(ember$data$lib$core$$default, "ActiveModelSerializer", {
         get: function () {
-                    return activemodel$adapter$lib$system$active$model$serializer$$default;
+          if (ember$data$lib$main$$_ActiveModelSerializer === activemodel$adapter$lib$system$active$model$serializer$$default) {
+                      }
+          return ember$data$lib$main$$_ActiveModelSerializer;
+        },
+        set: function (ActiveModelSerializer) {
+          ember$data$lib$main$$_ActiveModelSerializer = ActiveModelSerializer;
         }
       });
     } else {
@@ -15917,15 +15930,17 @@
       value: ember$data$lib$system$normalize$model$name$$default
     });
 
-    var ember$data$lib$main$$fixtureAdapterWasDeprecated = false;
+    var ember$data$lib$main$$_FixtureAdapter = ember$data$lib$adapters$fixture$adapter$$default;
 
     if (Ember.platform.hasPropertyAccessors) {
       Ember.defineProperty(ember$data$lib$core$$default, "FixtureAdapter", {
         get: function () {
-          if (!ember$data$lib$main$$fixtureAdapterWasDeprecated) {
-                        ember$data$lib$main$$fixtureAdapterWasDeprecated = true;
-          }
-          return ember$data$lib$adapters$fixture$adapter$$default;
+          if (ember$data$lib$main$$_FixtureAdapter === ember$data$lib$adapters$fixture$adapter$$default) {
+                      }
+          return ember$data$lib$main$$_FixtureAdapter;
+        },
+        set: function (FixtureAdapter) {
+          ember$data$lib$main$$_FixtureAdapter = FixtureAdapter;
         }
       });
     } else {
