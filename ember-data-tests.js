@@ -4701,7 +4701,7 @@ define(
       };
 
       Ember.$.ajax = function (hash) {
-        hash.error(jqXHR, jqXHR.responseText);
+        hash.error(jqXHR, jqXHR.responseText, "Bad Request");
       };
 
       adapter.handleResponse = function (status, headers, json) {
@@ -4790,7 +4790,7 @@ define(
 
       var originalAjax = Ember.$.ajax;
       var jqXHR = {
-        responseText: "Nope lol",
+        responseText: "",
         getAllResponseHeaders: function () {
           return "";
         }
@@ -4805,7 +4805,7 @@ define(
       try {
         run(function () {
           store.find("post", "1")["catch"](function (err) {
-            equal(err.message, errorThrown);
+            equal(err.errors[0].details, errorThrown);
             ok(err, "promise rejected");
           });
         });
