@@ -2025,10 +2025,6 @@
                             error = adapter.ajaxError(jqXHR, textStatus, errorThrown);
             }
 
-            if (typeof errorThrown === "string") {
-              errorThrown = new Error(errorThrown);
-            }
-
             if (!(error instanceof Error)) {
               if (errorThrown instanceof Error) {
                 error = errorThrown;
@@ -2037,7 +2033,7 @@
               } else if (textStatus === "abort") {
                 error = new ember$data$lib$adapters$errors$$AbortError();
               } else {
-                error = adapter.handleResponse(jqXHR.status, ember$data$lib$adapters$rest$adapter$$parseResponseHeaders(jqXHR.getAllResponseHeaders()), adapter.parseErrorResponse(jqXHR.responseText));
+                error = adapter.handleResponse(jqXHR.status, ember$data$lib$adapters$rest$adapter$$parseResponseHeaders(jqXHR.getAllResponseHeaders()), adapter.parseErrorResponse(jqXHR.responseText) || errorThrown);
               }
             }
 
@@ -7202,7 +7198,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.13.0'
+      VERSION: '1.13.1'
     });
 
     if (Ember.libraries) {
