@@ -5861,6 +5861,7 @@
     }
 
     var ember$data$lib$serializers$rest$serializer$$camelize = Ember.String.camelize;
+    var ember$data$lib$serializers$rest$serializer$$get = Ember.get;
 
     /**
       Normally, applications will use the `RESTSerializer` by implementing
@@ -6044,6 +6045,7 @@
         var modelClass = store.modelFor(modelName);
         var serializer = store.serializerFor(modelName);
 
+        
         arrayHash.forEach(function (hash) {
           var _serializer$normalize = serializer.normalize(modelClass, hash, prop);
 
@@ -7169,7 +7171,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.2fed854925'
+      VERSION: '2.0.0+canary.2b361f9837'
     });
 
     if (Ember.libraries) {
