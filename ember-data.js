@@ -7242,11 +7242,11 @@
       var proxy = new ember$data$lib$system$container$proxy$$default(registry);
       proxy.registerDeprecations([{ deprecated: "serializer:_ams", valid: "serializer:-active-model" }, { deprecated: "adapter:_ams", valid: "adapter:-active-model" }]);
 
-      registry.register("serializer:-active-model", activemodel$adapter$lib$system$active$model$serializer$$default);
+      registry.register("serializer:-active-model", activemodel$adapter$lib$system$active$model$serializer$$default.extend({ isNewSerializerAPI: true }));
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.111a002fe4'
+      VERSION: '2.0.0+canary.72df0449d7'
     });
 
     if (Ember.libraries) {
