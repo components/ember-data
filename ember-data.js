@@ -7216,7 +7216,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.10bec5d2dc'
+      VERSION: '2.0.0+canary.2af2e4e45d'
     });
 
     if (Ember.libraries) {
@@ -12837,6 +12837,7 @@
         @param {String} modelName
         @param {Array} datas
         @return {Array}
+        @deprecated Use [push](#method_push) instead
       */
       pushMany: function (modelName, datas) {
         Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string");
