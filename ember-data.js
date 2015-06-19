@@ -7216,7 +7216,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.2af2e4e45d'
+      VERSION: '2.0.0+canary.84bffcb089'
     });
 
     if (Ember.libraries) {
@@ -12657,11 +12657,11 @@
         if (Ember.typeOf(modelNameArg) === "object" && Ember.typeOf(dataArg) === "undefined") {
           data = modelNameArg;
         } else {
+          Ember.deprecate("store.push(type, data) has been deprecated. Please provide a JSON-API document object as the first and only argument to store.push.");
           Ember.assert("Expected an object as `data` in a call to `push` for " + modelNameArg + " , but was " + Ember.typeOf(dataArg), Ember.typeOf(dataArg) === "object");
           Ember.assert("You must include an `id` for " + modelNameArg + " in an object passed to `push`", dataArg.id != null && dataArg.id !== "");
           data = ember$data$lib$system$store$serializer$response$$_normalizeSerializerPayload(this.modelFor(modelNameArg), dataArg);
           modelName = modelNameArg;
-          Ember.deprecate("store.push(type, data) has been deprecated. Please provide a JSON-API document object as the first and only argument to store.push.");
           Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string" || typeof data === "undefined");
         }
 
