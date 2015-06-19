@@ -6986,9 +6986,7 @@
         if (Ember.isNone(belongsTo)) {
           json[jsonKey] = null;
         } else {
-          json[jsonKey] = activemodel$adapter$lib$system$active$model$serializer$$classify(belongsTo.modelName).replace(/(\/)([a-z])/g, function (match, separator, chr) {
-            return match.toUpperCase();
-          }).replace("/", "::");
+          json[jsonKey] = activemodel$adapter$lib$system$active$model$serializer$$classify(belongsTo.modelName).replace("/", "::");
         }
       },
 
@@ -7102,9 +7100,7 @@
         }
       },
       modelNameFromPayloadKey: function (key) {
-        var convertedFromRubyModule = activemodel$adapter$lib$system$active$model$serializer$$camelize(ember$inflector$lib$lib$system$string$$singularize(key)).replace(/(^|\:)([A-Z])/g, function (match, separator, chr) {
-          return match.toLowerCase();
-        }).replace("::", "/");
+        var convertedFromRubyModule = ember$inflector$lib$lib$system$string$$singularize(key.replace("::", "/"));
         return ember$data$lib$system$normalize$model$name$$default(convertedFromRubyModule);
       }
     });
@@ -7171,7 +7167,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.c04913b282'
+      VERSION: '2.0.0+canary.cafddd175f'
     });
 
     if (Ember.libraries) {
