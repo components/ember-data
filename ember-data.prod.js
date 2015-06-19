@@ -5899,6 +5899,7 @@
     var ember$data$lib$serializers$rest$serializer$$forEach = Ember.ArrayPolyfills.forEach;
     var ember$data$lib$serializers$rest$serializer$$map = Ember.ArrayPolyfills.map;
     var ember$data$lib$serializers$rest$serializer$$camelize = Ember.String.camelize;
+    var ember$data$lib$serializers$rest$serializer$$get = Ember.get;
 
     /**
       Normally, applications will use the `RESTSerializer` by implementing
@@ -6082,6 +6083,7 @@
         var modelClass = store.modelFor(modelName);
         var serializer = store.serializerFor(modelName);
 
+        
         /*jshint loopfunc:true*/
         ember$data$lib$serializers$rest$serializer$$forEach.call(arrayHash, function (hash) {
           var _serializer$normalize = serializer.normalize(modelClass, hash, prop);
@@ -7194,11 +7196,11 @@
       var proxy = new ember$data$lib$system$container$proxy$$default(registry);
       proxy.registerDeprecations([{ deprecated: "serializer:_ams", valid: "serializer:-active-model" }, { deprecated: "adapter:_ams", valid: "adapter:-active-model" }]);
 
-      registry.register("serializer:-active-model", activemodel$adapter$lib$system$active$model$serializer$$default);
+      registry.register("serializer:-active-model", activemodel$adapter$lib$system$active$model$serializer$$default.extend({ isNewSerializerAPI: true }));
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.13.2'
+      VERSION: '1.13.3'
     });
 
     if (Ember.libraries) {
@@ -12540,22 +12542,34 @@
           updated.
       */
       push: function (modelNameArg, dataArg) {
+        var _this = this;
+
         var data, modelName;
 
         if (Ember.typeOf(modelNameArg) === "object" && Ember.typeOf(dataArg) === "undefined") {
           data = modelNameArg;
-          modelName = data.data.type;
         } else {
                               data = ember$data$lib$system$store$serializer$response$$_normalizeSerializerPayload(this.modelFor(modelNameArg), dataArg);
           modelName = modelNameArg;
-                  }
+                            }
 
-                var internalModel = this._pushInternalModel(data.data || data);
-        if (Ember.isArray(internalModel)) {
-          return ember$data$lib$system$store$$map.call(internalModel, function (item) {
-            return item.getRecord();
+        if (data.included) {
+          ember$data$lib$system$store$$forEach.call(data.included, function (recordData) {
+            return _this._pushInternalModel(recordData);
           });
         }
+
+        if (Ember.typeOf(data.data) === "array") {
+          var internalModels = ember$data$lib$system$store$$map.call(data.data, function (recordData) {
+            return _this._pushInternalModel(recordData);
+          });
+          return ember$data$lib$system$store$$map.call(internalModels, function (internalModel) {
+            return internalModel.getRecord();
+          });
+        }
+
+        var internalModel = this._pushInternalModel(data.data || data);
+
         return internalModel.getRecord();
       },
 
@@ -13062,6 +13076,14 @@
     var ember$data$lib$serializers$json$api$serializer$$map = Ember.EnumerableUtils.map;
 
     var ember$data$lib$serializers$json$api$serializer$$default = ember$data$lib$serializers$json$serializer$$default.extend({
+
+      /*
+        This is only to be used temporarily during the transition from the old
+        serializer API to the new one.
+         `JSONAPISerializer` only supports the new Serializer API.
+         @property isNewSerializerAPI
+      */
+      isNewSerializerAPI: true,
 
       /*
         @method _normalizeRelationshipDataHelper
