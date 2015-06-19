@@ -7220,7 +7220,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.2b361f9837'
+      VERSION: '2.0.0+canary.c04913b282'
     });
 
     if (Ember.libraries) {
