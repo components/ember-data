@@ -4321,7 +4321,7 @@
         }
 
         if (payload && payload.meta) {
-          store.setMetadataFor(typeClass, payload.meta);
+          store._setMetadataFor(typeClass, payload.meta);
           delete payload.meta;
         }
       },
@@ -5661,7 +5661,12 @@
     */
     function ember$data$lib$system$store$serializer$response$$normalizeResponseHelper(serializer, store, modelClass, payload, id, requestType) {
       if (serializer.get('isNewSerializerAPI')) {
-        return serializer.normalizeResponse(store, modelClass, payload, id, requestType);
+        var normalizedResponse = serializer.normalizeResponse(store, modelClass, payload, id, requestType);
+        // TODO: Remove after metadata refactor
+        if (normalizedResponse.meta) {
+          store._setMetadataFor(modelClass.modelName, normalizedResponse.meta);
+        }
+        return normalizedResponse;
       } else {
         Ember.deprecate('Your custom serializer uses the old version of the Serializer API, with `extract` hooks. Please upgrade your serializers to the new Serializer API using `normalizeResponse` hooks instead.');
         var serializerPayload = serializer.extract(store, modelClass, payload, id, requestType);
@@ -7216,7 +7221,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.599cf92736'
+      VERSION: '2.0.0+canary.7a54a2d87f'
     });
 
     if (Ember.libraries) {
@@ -7765,7 +7770,7 @@
         var store = ember$data$lib$system$record$arrays$adapter$populated$record$array$$get(this, "store");
         var type = ember$data$lib$system$record$arrays$adapter$populated$record$array$$get(this, "type");
         var modelName = type.modelName;
-        var meta = store.metadataFor(modelName);
+        var meta = store._metadataFor(modelName);
 
         //TODO Optimize
         var internalModels = Ember.A(records).mapBy("_internalModel");
@@ -12293,8 +12298,20 @@
          @method metadataFor
         @param {String} modelName
         @return {object}
+        @deprecated
       */
       metadataFor: function (modelName) {
+        Ember.deprecate("`store.metadataFor()` has been deprecated. You can use `.get('meta')` on relationships and arrays returned from `store.query()`.");
+        return this._metadataFor(modelName);
+      },
+
+      /**
+        @method _metadataFor
+        @param {String} modelName
+        @return {object}
+        @private
+      */
+      _metadataFor: function (modelName) {
         Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string");
         var typeClass = this.modelFor(modelName);
         return this.typeMapFor(typeClass).metadata;
@@ -12306,8 +12323,20 @@
         @param {String} modelName
         @param {Object} metadata metadata to set
         @return {object}
+        @deprecated
       */
       setMetadataFor: function (modelName, metadata) {
+        Ember.deprecate("`store.setMetadataFor()` has been deprecated. Please return meta from your serializer's `extractMeta` hook.");
+        this._setMetadataFor(modelName, metadata);
+      },
+
+      /**
+        @method _setMetadataFor
+        @param {String} modelName
+        @param {Object} metadata metadata to set
+        @private
+      */
+      _setMetadataFor: function (modelName, metadata) {
         Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string");
         var typeClass = this.modelFor(modelName);
         Ember.merge(this.typeMapFor(typeClass).metadata, metadata);

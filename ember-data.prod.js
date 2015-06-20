@@ -4300,7 +4300,7 @@
         }
 
         if (payload && payload.meta) {
-          store.setMetadataFor(typeClass, payload.meta);
+          store._setMetadataFor(typeClass, payload.meta);
           delete payload.meta;
         }
       },
@@ -5632,7 +5632,12 @@
     */
     function ember$data$lib$system$store$serializer$response$$normalizeResponseHelper(serializer, store, modelClass, payload, id, requestType) {
       if (serializer.get('isNewSerializerAPI')) {
-        return serializer.normalizeResponse(store, modelClass, payload, id, requestType);
+        var normalizedResponse = serializer.normalizeResponse(store, modelClass, payload, id, requestType);
+        // TODO: Remove after metadata refactor
+        if (normalizedResponse.meta) {
+          store._setMetadataFor(modelClass.modelName, normalizedResponse.meta);
+        }
+        return normalizedResponse;
       } else {
                 var serializerPayload = serializer.extract(store, modelClass, payload, id, requestType);
         return ember$data$lib$system$store$serializer$response$$_normalizeSerializerPayload(modelClass, serializerPayload);
@@ -7167,7 +7172,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.599cf92736'
+      VERSION: '2.0.0+canary.7a54a2d87f'
     });
 
     if (Ember.libraries) {
@@ -7713,7 +7718,7 @@
         var store = ember$data$lib$system$record$arrays$adapter$populated$record$array$$get(this, "store");
         var type = ember$data$lib$system$record$arrays$adapter$populated$record$array$$get(this, "type");
         var modelName = type.modelName;
-        var meta = store.metadataFor(modelName);
+        var meta = store._metadataFor(modelName);
 
         //TODO Optimize
         var internalModels = Ember.A(records).mapBy("_internalModel");
@@ -12175,8 +12180,19 @@
          @method metadataFor
         @param {String} modelName
         @return {object}
+        @deprecated
       */
       metadataFor: function (modelName) {
+                return this._metadataFor(modelName);
+      },
+
+      /**
+        @method _metadataFor
+        @param {String} modelName
+        @return {object}
+        @private
+      */
+      _metadataFor: function (modelName) {
                 var typeClass = this.modelFor(modelName);
         return this.typeMapFor(typeClass).metadata;
       },
@@ -12187,8 +12203,19 @@
         @param {String} modelName
         @param {Object} metadata metadata to set
         @return {object}
+        @deprecated
       */
       setMetadataFor: function (modelName, metadata) {
+                this._setMetadataFor(modelName, metadata);
+      },
+
+      /**
+        @method _setMetadataFor
+        @param {String} modelName
+        @param {Object} metadata metadata to set
+        @private
+      */
+      _setMetadataFor: function (modelName, metadata) {
                 var typeClass = this.modelFor(modelName);
         Ember.merge(this.typeMapFor(typeClass).metadata, metadata);
       },
