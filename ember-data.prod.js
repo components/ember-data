@@ -252,7 +252,7 @@
       /**
         Implement this method in a subclass to handle the creation of
         new records.
-         Serializes the record and send it to the server.
+         Serializes the record and sends it to the server.
          Example
          ```app/adapters/application.js
         import DS from 'ember-data';
@@ -287,7 +287,7 @@
       /**
         Implement this method in a subclass to handle the updating of
         a record.
-         Serializes the record update and send it to the server.
+         Serializes the record update and sends it to the server.
          Example
          ```app/adapters/application.js
         import DS from 'ember-data';
@@ -360,14 +360,14 @@
         By default the store will try to coalesce all `fetchRecord` calls within the same runloop
         into as few requests as possible by calling groupRecordsForFindMany and passing it into a findMany call.
         You can opt out of this behaviour by either not implementing the findMany hook or by setting
-        coalesceFindRequests to false
+        coalesceFindRequests to false.
          @property coalesceFindRequests
         @type {boolean}
       */
       coalesceFindRequests: true,
 
       /**
-        Find multiple records at once if coalesceFindRequests is true
+        Find multiple records at once if coalesceFindRequests is true.
          @method findMany
         @param {DS.Store} store
         @param {DS.Model} type   the DS.Model class of the records
@@ -396,7 +396,7 @@
         This method is used by the store to determine if the store should
         reload a record from the adapter when a record is requested by
         `store.findRecord`.
-         If this method returns true the store will re fetch a record form
+         If this method returns true the store will re fetch a record from
         the adapter. If is method returns false the store will resolve
         immediately using the cached record.
          @method shouldReloadRecord
@@ -412,7 +412,7 @@
         This method is used by the store to determine if the store should
         reload all records from the adapter when records are requested by
         `store.findAll`.
-         If this method returns true the store will re fetch all records form
+         If this method returns true the store will re fetch all records from
         the adapter. If is method returns false the store will resolve
         immediately using the cached record.
          @method shouldReloadRecord
@@ -428,10 +428,10 @@
       /**
         This method is used by the store to determine if the store should
         reload a record after the `store.findRecord` method resolves a
-        chached record.
+        cached record.
          This method is *only* checked by the store when the store is
         returning a cached record.
-         If this method returns true the store will re-fetch a record form
+         If this method returns true the store will re-fetch a record from
         the adapter.
          @method shouldBackgroundReloadRecord
         @param {DS.Store} store
@@ -445,11 +445,11 @@
       /**
         This method is used by the store to determine if the store should
         reload a record array after the `store.findAll` method resolves
-        with a chached record array.
+        with a cached record array.
          This method is *only* checked by the store when the store is
         returning a cached record array.
          If this method returns true the store will re-fetch all records
-        form the adapter.
+        from the adapter.
          @method shouldBackgroundReloadAll
         @param {DS.Store} store
         @param {DS.SnapshotRecordArray} snapshotRecordArray
@@ -4326,7 +4326,7 @@
         }
 
         if (payload && payload.meta) {
-          store.setMetadataFor(typeClass, payload.meta);
+          store._setMetadataFor(typeClass, payload.meta);
           delete payload.meta;
         }
       },
@@ -5662,7 +5662,12 @@
     */
     function ember$data$lib$system$store$serializer$response$$normalizeResponseHelper(serializer, store, modelClass, payload, id, requestType) {
       if (serializer.get('isNewSerializerAPI')) {
-        return serializer.normalizeResponse(store, modelClass, payload, id, requestType);
+        var normalizedResponse = serializer.normalizeResponse(store, modelClass, payload, id, requestType);
+        // TODO: Remove after metadata refactor
+        if (normalizedResponse.meta) {
+          store._setMetadataFor(modelClass.modelName, normalizedResponse.meta);
+        }
+        return normalizedResponse;
       } else {
                 var serializerPayload = serializer.extract(store, modelClass, payload, id, requestType);
         return ember$data$lib$system$store$serializer$response$$_normalizeSerializerPayload(modelClass, serializerPayload);
@@ -5682,7 +5687,7 @@
       var data = null;
 
       if (payload) {
-        if (Ember.isArray(payload)) {
+        if (Ember.typeOf(payload) === 'array') {
           data = ember$data$lib$system$store$serializer$response$$map.call(payload, function (payload) {
             return ember$data$lib$system$store$serializer$response$$_normalizeSerializerPayloadItem(modelClass, payload);
           });
@@ -6857,7 +6862,7 @@
       @module ember-data
     */
 
-    var activemodel$adapter$lib$system$active$model$serializer$$forEach = Ember.EnumerableUtils.forEach;
+    var activemodel$adapter$lib$system$active$model$serializer$$forEach = Ember.ArrayPolyfills.forEach;
     var activemodel$adapter$lib$system$active$model$serializer$$camelize = Ember.String.camelize;
     var activemodel$adapter$lib$system$active$model$serializer$$classify = Ember.String.classify;
     var activemodel$adapter$lib$system$active$model$serializer$$decamelize = Ember.String.decamelize;
@@ -7118,7 +7123,7 @@
                 payload.type = this.modelNameFromPayloadKey(payload.type);
               } else if (payload && relationship.kind === "hasMany") {
                 var self = this;
-                activemodel$adapter$lib$system$active$model$serializer$$forEach(payload, function (single) {
+                activemodel$adapter$lib$system$active$model$serializer$$forEach.call(payload, function (single) {
                   single.type = self.modelNameFromPayloadKey(single.type);
                 });
               }
@@ -7200,7 +7205,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.13.3'
+      VERSION: '1.13.4'
     });
 
     if (Ember.libraries) {
@@ -7733,7 +7738,7 @@
         var store = ember$data$lib$system$record$arrays$adapter$populated$record$array$$get(this, "store");
         var type = ember$data$lib$system$record$arrays$adapter$populated$record$array$$get(this, "type");
         var modelName = type.modelName;
-        var meta = store.metadataFor(modelName);
+        var meta = store._metadataFor(modelName);
 
         //TODO Optimize
         var internalModels = Ember.A(records).mapBy("_internalModel");
@@ -12194,8 +12199,19 @@
          @method metadataFor
         @param {String} modelName
         @return {object}
+        @deprecated
       */
       metadataFor: function (modelName) {
+                return this._metadataFor(modelName);
+      },
+
+      /**
+        @method _metadataFor
+        @param {String} modelName
+        @return {object}
+        @private
+      */
+      _metadataFor: function (modelName) {
                 var typeClass = this.modelFor(modelName);
         return this.typeMapFor(typeClass).metadata;
       },
@@ -12206,8 +12222,19 @@
         @param {String} modelName
         @param {Object} metadata metadata to set
         @return {object}
+        @deprecated
       */
       setMetadataFor: function (modelName, metadata) {
+                this._setMetadataFor(modelName, metadata);
+      },
+
+      /**
+        @method _setMetadataFor
+        @param {String} modelName
+        @param {Object} metadata metadata to set
+        @private
+      */
+      _setMetadataFor: function (modelName, metadata) {
                 var typeClass = this.modelFor(modelName);
         Ember.merge(this.typeMapFor(typeClass).metadata, metadata);
       },
@@ -12549,9 +12576,9 @@
         if (Ember.typeOf(modelNameArg) === "object" && Ember.typeOf(dataArg) === "undefined") {
           data = modelNameArg;
         } else {
-                              data = ember$data$lib$system$store$serializer$response$$_normalizeSerializerPayload(this.modelFor(modelNameArg), dataArg);
+                                        data = ember$data$lib$system$store$serializer$response$$_normalizeSerializerPayload(this.modelFor(modelNameArg), dataArg);
           modelName = modelNameArg;
-                            }
+                  }
 
         if (data.included) {
           ember$data$lib$system$store$$forEach.call(data.included, function (recordData) {
@@ -12988,6 +13015,9 @@
           var payload, data;
           if (adapterPayload) {
             payload = ember$data$lib$system$store$serializer$response$$normalizeResponseHelper(serializer, store, typeClass, adapterPayload, snapshot.id, operation);
+            if (payload.included) {
+              store.push({ data: payload.included });
+            }
             data = ember$data$lib$system$store$serializer$response$$convertResourceObject(payload.data);
           }
           store.didSaveRecord(internalModel, ember$data$lib$system$store$serializer$response$$_normalizeSerializerPayload(internalModel.type, data));
@@ -13073,7 +13103,7 @@
     var ember$data$lib$system$store$$default = ember$data$lib$system$store$$Store;
 
     var ember$data$lib$serializers$json$api$serializer$$dasherize = Ember.String.dasherize;
-    var ember$data$lib$serializers$json$api$serializer$$map = Ember.EnumerableUtils.map;
+    var ember$data$lib$serializers$json$api$serializer$$map = Ember.ArrayPolyfills.map;
 
     var ember$data$lib$serializers$json$api$serializer$$default = ember$data$lib$serializers$json$serializer$$default.extend({
 
@@ -13084,6 +13114,27 @@
          @property isNewSerializerAPI
       */
       isNewSerializerAPI: true,
+
+      /*
+        @method _normalizeDocumentHelper
+        @param {Object} documentHash
+        @return {Object}
+        @private
+      */
+      _normalizeDocumentHelper: function (documentHash) {
+
+        if (Ember.typeOf(documentHash.data) === 'object') {
+          documentHash.data = this._normalizeResourceHelper(documentHash.data);
+        } else {
+          documentHash.data = ember$data$lib$serializers$json$api$serializer$$map.call(documentHash.data, this._normalizeResourceHelper, this);
+        }
+
+        if (Ember.typeOf(documentHash.included) === 'array') {
+          documentHash.included = ember$data$lib$serializers$json$api$serializer$$map.call(documentHash.included, this._normalizeResourceHelper, this);
+        }
+
+        return documentHash;
+      },
 
       /*
         @method _normalizeRelationshipDataHelper
@@ -13116,6 +13167,16 @@
       },
 
       /**
+        @method pushPayload
+        @param {DS.Store} store
+        @param {Object} payload
+      */
+      pushPayload: function (store, payload) {
+        var normalizedPayload = this._normalizeDocumentHelper(payload);
+        store.push(normalizedPayload);
+      },
+
+      /**
         @method _normalizeResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -13128,17 +13189,8 @@
       */
       _normalizeResponse: function (store, primaryModelClass, payload, id, requestType, isSingle) {
 
-        if (Ember.typeOf(payload.data) === 'object') {
-          payload.data = this._normalizeResourceHelper(payload.data);
-        } else {
-          payload.data = ember$data$lib$serializers$json$api$serializer$$map(payload.data, this._normalizeResourceHelper, this);
-        }
-
-        if (Ember.typeOf(payload.included) === 'array') {
-          payload.included = ember$data$lib$serializers$json$api$serializer$$map(payload.included, this._normalizeResourceHelper, this);
-        }
-
-        return payload;
+        var normalizedPayload = this._normalizeDocumentHelper(payload);
+        return normalizedPayload;
       },
 
       /*
@@ -13176,7 +13228,7 @@
         }
 
         if (Ember.typeOf(relationshipHash.data) === 'array') {
-          relationshipHash.data = ember$data$lib$serializers$json$api$serializer$$map(relationshipHash.data, this._normalizeRelationshipDataHelper, this);
+          relationshipHash.data = ember$data$lib$serializers$json$api$serializer$$map.call(relationshipHash.data, this._normalizeRelationshipDataHelper, this);
         }
 
         return relationshipHash;
@@ -13358,6 +13410,8 @@
        @param {Object} relationship
       */
       serializeHasMany: function (snapshot, json, relationship) {
+        var _this3 = this;
+
         var key = relationship.key;
 
         if (this._shouldSerializeHasMany(snapshot, key, relationship)) {
@@ -13371,9 +13425,9 @@
               payloadKey = this.keyForRelationship(key, 'hasMany', 'serialize');
             }
 
-            var data = ember$data$lib$serializers$json$api$serializer$$map(hasMany, function (item) {
+            var data = ember$data$lib$serializers$json$api$serializer$$map.call(hasMany, function (item) {
               return {
-                type: item.modelName,
+                type: _this3.payloadKeyFromModelName(item.modelName),
                 id: item.id
               };
             });
