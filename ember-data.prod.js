@@ -7172,7 +7172,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.4c5fcf617c'
+      VERSION: '2.0.0+canary.2d60c021f1'
     });
 
     if (Ember.libraries) {
@@ -13000,6 +13000,9 @@
           var payload, data;
           if (adapterPayload) {
             payload = ember$data$lib$system$store$serializer$response$$normalizeResponseHelper(serializer, store, typeClass, adapterPayload, snapshot.id, operation);
+            if (payload.included) {
+              store.push({ data: payload.included });
+            }
             data = ember$data$lib$system$store$serializer$response$$convertResourceObject(payload.data);
           }
           store.didSaveRecord(internalModel, ember$data$lib$system$store$serializer$response$$_normalizeSerializerPayload(internalModel.type, data));
