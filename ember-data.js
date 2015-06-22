@@ -7221,7 +7221,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.b8e4cd5ede'
+      VERSION: '2.0.0+canary.119ab83444'
     });
 
     if (Ember.libraries) {
@@ -13525,6 +13525,8 @@
        @param {Object} relationship
       */
       serializeHasMany: function (snapshot, json, relationship) {
+        var _this3 = this;
+
         var key = relationship.key;
 
         if (this._shouldSerializeHasMany(snapshot, key, relationship)) {
@@ -13540,7 +13542,7 @@
 
             var data = hasMany.map(function (item) {
               return {
-                type: item.modelName,
+                type: _this3.payloadKeyFromModelName(item.modelName),
                 id: item.id
               };
             });
