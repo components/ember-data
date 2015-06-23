@@ -7172,7 +7172,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.054f95c70a'
+      VERSION: '2.0.0+canary.8d51035ef6'
     });
 
     if (Ember.libraries) {
@@ -13619,60 +13619,6 @@
       registry.injection('route', 'store', 'service:store');
       registry.injection('data-adapter', 'store', 'service:store');
     }
-    var ember$new$computed$lib$utils$can$use$new$syntax$$supportsSetterGetter;
-
-    try {
-      ember$lib$main$$default.computed({
-        set: function () {},
-        get: function () {}
-      });
-      ember$new$computed$lib$utils$can$use$new$syntax$$supportsSetterGetter = true;
-    } catch (e) {
-      ember$new$computed$lib$utils$can$use$new$syntax$$supportsSetterGetter = false;
-    }
-
-    var ember$new$computed$lib$utils$can$use$new$syntax$$default = ember$new$computed$lib$utils$can$use$new$syntax$$supportsSetterGetter;
-    var ember$new$computed$lib$main$$default = ember$new$computed$lib$main$$newComputed;
-
-    var ember$new$computed$lib$main$$computed = ember$lib$main$$default.computed;
-
-    function ember$new$computed$lib$main$$newComputed() {
-      var polyfillArguments = [];
-      var config = arguments[arguments.length - 1];
-
-      if (typeof config === 'function' || ember$new$computed$lib$utils$can$use$new$syntax$$default) {
-        return ember$new$computed$lib$main$$computed.apply(undefined, arguments);
-      }
-
-      for (var i = 0, l = arguments.length - 1; i < l; i++) {
-        polyfillArguments.push(arguments[i]);
-      }
-
-      var func;
-      if (config.set) {
-        func = function (key, value) {
-          if (arguments.length > 1) {
-            return config.set.call(this, key, value);
-          } else {
-            return config.get.call(this, key);
-          }
-        };
-      } else {
-        func = function (key) {
-          return config.get.call(this, key);
-        };
-      }
-
-      polyfillArguments.push(func);
-
-      return ember$new$computed$lib$main$$computed.apply(undefined, polyfillArguments);
-    }
-
-    var ember$new$computed$lib$main$$computedKeys = ember$lib$main$$default.keys(ember$new$computed$lib$main$$computed);
-
-    for (var ember$new$computed$lib$main$$i = 0, ember$new$computed$lib$main$$l = ember$new$computed$lib$main$$computedKeys.length; ember$new$computed$lib$main$$i < ember$new$computed$lib$main$$l; ember$new$computed$lib$main$$i++) {
-      ember$new$computed$lib$main$$newComputed[ember$new$computed$lib$main$$computedKeys[ember$new$computed$lib$main$$i]] = ember$new$computed$lib$main$$computed[ember$new$computed$lib$main$$computedKeys[ember$new$computed$lib$main$$i]];
-    }
     var ember$data$lib$system$model$attributes$$default = ember$data$lib$system$model$attributes$$attr;
 
     /**
@@ -13946,7 +13892,7 @@
         options: options
       };
 
-      return ember$new$computed$lib$main$$default({
+      return Ember.computed({
         get: function (key) {
           var internalModel = this._internalModel;
           if (ember$data$lib$system$model$attributes$$hasValue(internalModel, key)) {
@@ -15032,7 +14978,7 @@
     */
     function ember$data$lib$system$relationships$belongs$to$$belongsTo(modelName, options) {
       var opts, userEnteredModelName;
-      if (typeof modelName === "object") {
+      if (typeof modelName === 'object') {
         opts = modelName;
         userEnteredModelName = undefined;
       } else {
@@ -15040,7 +14986,7 @@
         userEnteredModelName = modelName;
       }
 
-      if (typeof userEnteredModelName === "string") {
+      if (typeof userEnteredModelName === 'string') {
         userEnteredModelName = ember$data$lib$system$normalize$model$name$$default(userEnteredModelName);
       }
 
@@ -15048,7 +14994,7 @@
       opts = opts || {};
 
       var shouldWarnAsync = false;
-      if (typeof opts.async === "undefined") {
+      if (typeof opts.async === 'undefined') {
         shouldWarnAsync = true;
       }
 
@@ -15056,12 +15002,12 @@
         type: userEnteredModelName,
         isRelationship: true,
         options: opts,
-        kind: "belongsTo",
+        kind: 'belongsTo',
         key: null,
         shouldWarnAsync: shouldWarnAsync
       };
 
-      return ember$new$computed$lib$main$$default({
+      return Ember.computed({
         get: function (key) {
                     
           if (meta.shouldWarnAsync) {
@@ -15236,7 +15182,7 @@
         shouldWarnAsync: shouldWarnAsync
       };
 
-      return ember$new$computed$lib$main$$default({
+      return Ember.computed({
         get: function (key) {
           if (meta.shouldWarnAsync) {
                         meta.shouldWarnAsync = false;
