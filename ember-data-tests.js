@@ -2164,7 +2164,7 @@ define(
       }]);
 
       run(function () {
-        store.find('post', { filter: { id: 1 } }).then(function (posts) {
+        store.query('post', { filter: { id: 1 } }).then(function (posts) {
           equal(passedUrl[0], '/posts');
           deepEqual(passedHash[0], { data: { filter: { id: 1 } } });
 
@@ -6102,7 +6102,6 @@ define(
     var run = Ember.run;
     var Application = Ember.Application;
     var Controller = Ember.Controller;
-    var View = Ember.View;
     var Store = DS.Store;
     var Namespace = Ember.Namespace;
 
@@ -6125,9 +6124,8 @@ define(
       setup: function () {
         run(function () {
           app = Application.create({
-            ApplicationStore: Store.extend({ isCustom: true }),
+            StoreService: Store.extend({ isCustom: true }),
             FooController: Controller.extend(),
-            ApplicationView: View.extend(),
             BazController: {},
             ApplicationController: Controller.extend(),
             rootElement: '#qunit-fixture'
@@ -6183,7 +6181,6 @@ define(
         run(function () {
           app = Application.create({
             FooController: Controller.extend(),
-            ApplicationView: View.extend(),
             BazController: {},
             ApplicationController: Controller.extend()
           });
@@ -6220,7 +6217,7 @@ define(
         setup: function () {
           run(function () {
             app = Application.create({
-              DoodleService: Ember.Object.extend({ store: Ember.inject.service() })
+              DoodleService: Ember.Service.extend({ store: Ember.inject.service() })
             });
           });
 
@@ -6650,7 +6647,7 @@ define(
             return 'App';
           };
 
-          App.ApplicationStore = DS.Store.extend({
+          App.StoreService = DS.Store.extend({
             adapter: DS.Adapter.extend()
           });
 
@@ -24741,7 +24738,7 @@ define(
       });
 
       run(function () {
-        store.find("person");
+        store.findAll("person");
       });
     });
 
