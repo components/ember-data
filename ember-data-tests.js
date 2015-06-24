@@ -8961,7 +8961,7 @@ define(
     test('Unloading all records for a given type clears saved meta data.', function () {
 
       function metadataKeys(type) {
-        return Ember.keys(env.store.metadataFor(type));
+        return Object.keys(env.store.metadataFor(type));
       }
 
       run(function () {
@@ -20357,7 +20357,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
       mascot = store.push('mascot', { id: 1, likes: 'JavaScript', isMascot: true });
     });
 
-    equal(Ember.keys(mascot.changedAttributes()).length, 0, 'there are no initial changes');
+    equal(Object.keys(mascot.changedAttributes()).length, 0, 'there are no initial changes');
     run(function () {
       mascot.set('name', 'Tomster'); // new value
       mascot.set('likes', 'Ember.js'); // changed value
@@ -20370,7 +20370,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     run(function () {
       mascot.rollbackAttributes();
     });
-    equal(Ember.keys(mascot.changedAttributes()).length, 0, 'after rollback attributes there are no changes');
+    equal(Object.keys(mascot.changedAttributes()).length, 0, 'after rollback attributes there are no changes');
   });
 
   test('a DS.Model does not require an attribute type', function () {
@@ -22929,7 +22929,7 @@ define(
 
           equal(person.get("firstName"), "Tom");
           equal(person.get("isError"), false);
-          equal(Ember.keys(person.changedAttributes()).length, 0);
+          equal(Object.keys(person.changedAttributes()).length, 0);
         });
       });
     });
@@ -25349,7 +25349,7 @@ define(
       expect(7);
 
       function metadataKeys(type) {
-        return Ember.keys(store.metadataFor(type));
+        return Object.keys(store.metadataFor(type));
       }
 
       // Currently not using QUnit.deepEqual due to the way deepEqual

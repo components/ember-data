@@ -2079,7 +2079,7 @@
     });
 
     function ember$data$lib$adapters$rest$adapter$$parseResponseHeaders(headerStr) {
-      var headers = Ember.create(null);
+      var headers = Object.create(null);
       if (!headerStr) {
         return headers;
       }
@@ -7172,7 +7172,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.8d51035ef6'
+      VERSION: '2.0.0+canary.23a5b13a9b'
     });
 
     if (Ember.libraries) {
@@ -8540,7 +8540,7 @@
         },
 
         exit: function (internalModel) {
-          internalModel._inFlightAttributes = Ember.create(null);
+          internalModel._inFlightAttributes = Object.create(null);
         }
       }
     };
@@ -8730,7 +8730,7 @@
         saved: {
           setup: function (internalModel) {
             var attrs = internalModel._attributes;
-            var isDirty = Ember.keys(attrs).length > 0;
+            var isDirty = Object.keys(attrs).length > 0;
 
             if (isDirty) {
               internalModel.adapterDidDirty();
@@ -10919,7 +10919,7 @@
       },
 
       _saveWasRejected: function () {
-        var keys = Ember.keys(this._inFlightAttributes);
+        var keys = Object.keys(this._inFlightAttributes);
         for (var i = 0; i < keys.length; i++) {
           if (this._attributes[keys[i]] === undefined) {
             this._attributes[keys[i]] = this._inFlightAttributes[keys[i]];
