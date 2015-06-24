@@ -5144,7 +5144,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.b57ba3054a'
+      VERSION: '2.0.0+canary.bceb80c1e9'
     });
 
     if (Ember.libraries) {
@@ -7407,7 +7407,7 @@
     ember$lib$main$$default.merge(ember$data$lib$system$store$container$instance$cache$$ContainerInstanceCache.prototype, {
       get: function (type, preferredKey, fallbacks) {
         var cache = this._cache;
-        var preferredLookupKey = '' + type + ':' + preferredKey;
+        var preferredLookupKey = type + ':' + preferredKey;
 
         if (!(preferredLookupKey in cache)) {
           var instance = this.instanceFor(preferredLookupKey) || this._findInstance(type, fallbacks);
@@ -7421,7 +7421,7 @@
       _findInstance: function (type, fallbacks) {
         for (var i = 0, _length = fallbacks.length; i < _length; i++) {
           var fallback = fallbacks[i];
-          var lookupKey = '' + type + ':' + fallback;
+          var lookupKey = type + ':' + fallback;
           var instance = this.instanceFor(lookupKey);
 
           if (instance) {
