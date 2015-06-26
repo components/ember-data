@@ -5178,7 +5178,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.3c6bc3356f'
+      VERSION: '2.0.0+canary.7eb73027ee'
     });
 
     if (Ember.libraries) {
@@ -12550,7 +12550,7 @@
 
         if (Ember.typeOf(documentHash.data) === 'object') {
           documentHash.data = this._normalizeResourceHelper(documentHash.data);
-        } else {
+        } else if (Ember.typeOf(documentHash.data) === 'array') {
           documentHash.data = documentHash.data.map(this._normalizeResourceHelper, this);
         }
 
