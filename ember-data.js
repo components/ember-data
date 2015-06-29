@@ -2218,7 +2218,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.7cb0d7ece8'
+      VERSION: '2.0.0+canary.051d5a733a'
     });
 
     if (Ember.libraries) {
@@ -12339,7 +12339,7 @@
 
       if (store) {
         registry.register("service:store", store, { instantiate: false });
-      } else {
+      } else if (!registry.has("service:store")) {
         registry.register("service:store", application && application.Store || ember$data$lib$system$store$$default);
       }
     }

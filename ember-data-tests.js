@@ -4974,6 +4974,29 @@ define(
       ok(ran, 'ember-data initializer was found');
     });
 
+    test('ember-data initializer does not register the store service when it was already registered', function () {
+
+      var AppStore = Store.extend({
+        isCustomStore: true
+      });
+
+      App.initializer({
+        name: 'after-ember-data',
+        before: 'ember-data',
+        initialize: function (registry) {
+          registry.register('service:store', AppStore);
+        }
+      });
+
+      run(function () {
+        app = App.create();
+        container = app.__container__;
+      });
+
+      var store = getStore();
+      ok(store && store.get('isCustomStore'), 'ember-data initializer does not overwrite the previous registered service store');
+    });
+
     test('store initializer is run (DEPRECATED)', function () {
       var ran = false;
       App.initializer({
