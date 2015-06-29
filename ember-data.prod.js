@@ -5144,7 +5144,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.7eb73027ee'
+      VERSION: '2.0.0+canary.4db3f1f949'
     });
 
     if (Ember.libraries) {
@@ -10529,10 +10529,18 @@
       /**
         Create a new record in the current store. The properties passed
         to this method are set on the newly created record.
-         To create a new instance of `App.Post`:
+         To create a new instance of a `Post`:
          ```js
         store.createRecord('post', {
           title: "Rails is omakase"
+        });
+        ```
+         To create a new instance of a `Post` that has a relationship with a `User` record:
+         ```js
+        var user = this.store.peekRecord('user', 1);
+        store.createRecord('post', {
+          title: "Rails is omakase",
+          user: user
         });
         ```
          @method createRecord
