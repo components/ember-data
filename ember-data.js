@@ -832,8 +832,8 @@
         This method is used by the store to determine if the store should
         reload a record from the adapter when a record is requested by
         `store.findRecord`.
-         If this method returns true the store will re fetch a record from
-        the adapter. If is method returns false the store will resolve
+         If this method returns true, the store will re-fetch a record from
+        the adapter. If this method returns false, the store will resolve
         immediately using the cached record.
          @method shouldReloadRecord
         @param {DS.Store} store
@@ -848,10 +848,10 @@
         This method is used by the store to determine if the store should
         reload all records from the adapter when records are requested by
         `store.findAll`.
-         If this method returns true the store will re fetch all records from
-        the adapter. If is method returns false the store will resolve
+         If this method returns true, the store will re-fetch all records from
+        the adapter. If this method returns false, the store will resolve
         immediately using the cached record.
-         @method shouldReloadRecord
+         @method shouldReloadAll
         @param {DS.Store} store
         @param {DS.SnapshotRecordArray} snapshotRecordArray
         @return {Boolean}
@@ -2218,7 +2218,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.051d5a733a'
+      VERSION: '2.0.0+canary.0148b13494'
     });
 
     if (Ember.libraries) {
