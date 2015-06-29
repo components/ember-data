@@ -1,877 +1,3 @@
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - activemodel-adapter/lib');
-test('activemodel-adapter/lib/main.js should pass jshint', function() { 
-  ok(true, 'activemodel-adapter/lib/main.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - activemodel-adapter/lib');
-test('activemodel-adapter/lib/setup-container.js should pass jshint', function() { 
-  ok(true, 'activemodel-adapter/lib/setup-container.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - activemodel-adapter/lib');
-test('activemodel-adapter/lib/system.js should pass jshint', function() { 
-  ok(true, 'activemodel-adapter/lib/system.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - activemodel-adapter/lib/system');
-test('activemodel-adapter/lib/system/active-model-adapter.js should pass jshint', function() { 
-  ok(true, 'activemodel-adapter/lib/system/active-model-adapter.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - activemodel-adapter/lib/system');
-test('activemodel-adapter/lib/system/active-model-serializer.js should pass jshint', function() { 
-  ok(true, 'activemodel-adapter/lib/system/active-model-serializer.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - activemodel-adapter/tests/integration');
-test('activemodel-adapter/tests/integration/active-model-adapter-serializer-test.js should pass jshint', function() { 
-  ok(true, 'activemodel-adapter/tests/integration/active-model-adapter-serializer-test.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - activemodel-adapter/tests/integration');
-test('activemodel-adapter/tests/integration/active-model-adapter-test.js should pass jshint', function() { 
-  ok(true, 'activemodel-adapter/tests/integration/active-model-adapter-test.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - activemodel-adapter/tests/integration');
-test('activemodel-adapter/tests/integration/active-model-serializer-namespaced-model-name-test.js should pass jshint', function() { 
-  ok(true, 'activemodel-adapter/tests/integration/active-model-serializer-namespaced-model-name-test.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - activemodel-adapter/tests/integration');
-test('activemodel-adapter/tests/integration/active-model-serializer-test.js should pass jshint', function() { 
-  ok(true, 'activemodel-adapter/tests/integration/active-model-serializer-test.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - activemodel-adapter/tests/unit/adapter');
-test('activemodel-adapter/tests/unit/adapter/path-for-type-test.js should pass jshint', function() { 
-  ok(true, 'activemodel-adapter/tests/unit/adapter/path-for-type-test.js should pass jshint.'); 
-});
-
-}
-define(
-  "activemodel-adapter/tests/integration/active-model-adapter-serializer-test",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-
-    function __es6_export__(name, value) {
-      __exports__[name] = value;
-    }
-
-    var env, store, adapter, User;
-    var originalAjax;
-
-    module('integration/active_model_adapter_serializer - AMS Adapter and Serializer', {
-      setup: function () {
-        originalAjax = Ember.$.ajax;
-
-        User = DS.Model.extend({
-          firstName: DS.attr()
-        });
-
-        env = setupStore({
-          user: User,
-          adapter: DS.ActiveModelAdapter
-        });
-
-        store = env.store;
-        adapter = env.adapter;
-
-        env.registry.register('serializer:application', DS.ActiveModelSerializer);
-      },
-
-      teardown: function () {
-        Ember.$.ajax = originalAjax;
-      }
-    });
-
-    test('errors are camelCased and are expected under the `errors` property of the payload', function () {
-      var jqXHR = {
-        status: 422,
-        getAllResponseHeaders: function () {
-          return '';
-        },
-        responseText: JSON.stringify({
-          errors: {
-            first_name: ['firstName error']
-          }
-        })
-      };
-
-      Ember.$.ajax = function (hash) {
-        hash.error(jqXHR);
-      };
-
-      var user;
-      Ember.run(function () {
-        user = store.push('user', { id: 1 });
-      });
-
-      Ember.run(function () {
-        user.save().then(null, function () {
-          var errors = user.get('errors');
-          ok(errors.has('firstName'), 'there are errors for the firstName attribute');
-          deepEqual(errors.errorsFor('firstName').getEach('message'), ['firstName error']);
-        });
-      });
-    });
-  }
-);
-
-
-define(
-  "activemodel-adapter/tests/integration/active-model-adapter-test",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-
-    function __es6_export__(name, value) {
-      __exports__[name] = value;
-    }
-
-    var env, store, adapter, SuperUser;
-    var passedUrl, passedVerb, passedHash;
-    module('integration/active_model_adapter - AMS Adapter', {
-      setup: function () {
-        SuperUser = DS.Model.extend();
-
-        env = setupStore({
-          superUser: SuperUser,
-          adapter: DS.ActiveModelAdapter
-        });
-
-        store = env.store;
-        adapter = env.adapter;
-
-        passedUrl = passedVerb = passedHash = null;
-      }
-    });
-
-    test('buildURL - decamelizes names', function () {
-      equal(adapter.buildURL('superUser', 1), '/super_users/1');
-    });
-
-    test('handleResponse - returns invalid error if 422 response', function () {
-
-      var jqXHR = {
-        status: 422,
-        responseText: JSON.stringify({ errors: { name: 'can\'t be blank' } })
-      };
-
-      var json = adapter.parseErrorResponse(jqXHR.responseText);
-
-      var error = adapter.handleResponse(jqXHR.status, {}, json).errors[0];
-
-      equal(error.details, 'can\'t be blank');
-      equal(error.source.pointer, 'data/attributes/name');
-    });
-
-    test('handleResponse - returns ajax response if not 422 response', function () {
-      var jqXHR = {
-        status: 500,
-        responseText: 'Something went wrong'
-      };
-
-      var json = adapter.parseErrorResponse(jqXHR.responseText);
-
-      ok(adapter.handleResponse(jqXHR.status, {}, json) instanceof DS.AdapterError, 'must be a DS.AdapterError');
-    });
-  }
-);
-
-
-define(
-  "activemodel-adapter/tests/integration/active-model-serializer-namespaced-model-name-test",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-
-    function __es6_export__(name, value) {
-      __exports__[name] = value;
-    }
-
-    var SuperVillain, EvilMinion, YellowMinion, DoomsdayDevice, MediocreVillain, env;
-    var run = Ember.run;
-
-    module('integration/active_model - AMS-namespaced-model-names', {
-      setup: function () {
-        SuperVillain = DS.Model.extend({
-          firstName: DS.attr('string'),
-          lastName: DS.attr('string'),
-          evilMinions: DS.hasMany('evil-minion')
-        });
-
-        EvilMinion = DS.Model.extend({
-          superVillain: DS.belongsTo('super-villain'),
-          name: DS.attr('string')
-        });
-        YellowMinion = EvilMinion.extend();
-        DoomsdayDevice = DS.Model.extend({
-          name: DS.attr('string'),
-          evilMinion: DS.belongsTo('evil-minion', { polymorphic: true })
-        });
-        MediocreVillain = DS.Model.extend({
-          name: DS.attr('string'),
-          evilMinions: DS.hasMany('evil-minion', { polymorphic: true })
-        });
-        env = setupStore({
-          superVillain: SuperVillain,
-          evilMinion: EvilMinion,
-          'evilMinions/yellowMinion': YellowMinion,
-          doomsdayDevice: DoomsdayDevice,
-          mediocreVillain: MediocreVillain,
-          yellowMinion: YellowMinion
-        });
-        env.store.modelFor('super-villain');
-        env.store.modelFor('evil-minion');
-        env.store.modelFor('evil-minions/yellow-minion');
-        env.store.modelFor('doomsday-device');
-        env.store.modelFor('mediocre-villain');
-        env.registry.register('serializer:application', DS.ActiveModelSerializer);
-        env.registry.register('serializer:-active-model', DS.ActiveModelSerializer);
-        env.registry.register('adapter:-active-model', DS.ActiveModelAdapter);
-        env.amsSerializer = env.container.lookup('serializer:-active-model');
-        env.amsAdapter = env.container.lookup('adapter:-active-model');
-      },
-
-      teardown: function () {
-        run(env.store, 'destroy');
-      }
-    });
-
-    test('serialize polymorphic', function () {
-      var tom, ray;
-      run(function () {
-        tom = env.store.createRecord('evil-minions/yellow-minion', { name: 'Alex', id: '124' });
-        ray = env.store.createRecord('doomsday-device', { evilMinion: tom, name: 'DeathRay' });
-      });
-
-      var json = env.amsSerializer.serialize(ray._createSnapshot());
-
-      deepEqual(json, {
-        name: 'DeathRay',
-        evil_minion_type: 'EvilMinions::YellowMinion',
-        evil_minion_id: '124'
-      });
-    });
-
-    test('serialize polymorphic when type key is not camelized', function () {
-      YellowMinion.modelName = 'evil-minions/yellow-minion';
-      var tom, ray;
-      run(function () {
-        tom = env.store.createRecord('yellow-minion', { name: 'Alex', id: '124' });
-        ray = env.store.createRecord('doomsday-device', { evilMinion: tom, name: 'DeathRay' });
-      });
-
-      var json = env.amsSerializer.serialize(ray._createSnapshot());
-
-      deepEqual(json['evil_minion_type'], 'EvilMinions::YellowMinion');
-    });
-
-    test('extractPolymorphic hasMany', function () {
-      var json_hash = {
-        mediocre_villain: { id: 1, name: 'Dr Horrible', evil_minion_ids: [{ type: 'EvilMinions::YellowMinion', id: 12 }] },
-        'evil-minions/yellow-minion': [{ id: 12, name: 'Alex', doomsday_device_ids: [1] }]
-      };
-      var json;
-
-      run(function () {
-        json = env.amsSerializer.normalizeResponse(env.store, MediocreVillain, json_hash, '1', 'findRecord');
-      });
-
-      deepEqual(json, {
-        'data': {
-          'id': '1',
-          'type': 'mediocre-villain',
-          'attributes': {
-            'name': 'Dr Horrible'
-          },
-          'relationships': {
-            'evilMinions': {
-              'data': [{ 'id': '12', 'type': 'evil-minions/yellow-minion' }]
-            }
-          }
-        },
-        'included': [{
-          'id': '12',
-          'type': 'evil-minions/yellow-minion',
-          'attributes': {
-            'name': 'Alex'
-          },
-          'relationships': {}
-        }]
-      });
-    });
-
-    test('extractPolymorphic belongsTo', function () {
-      var json_hash = {
-        doomsday_device: { id: 1, name: 'DeathRay', evil_minion_id: { type: 'EvilMinions::YellowMinion', id: 12 } },
-        'evil-minions/yellow-minion': [{ id: 12, name: 'Alex', doomsday_device_ids: [1] }]
-      };
-      var json;
-
-      run(function () {
-        json = env.amsSerializer.normalizeResponse(env.store, DoomsdayDevice, json_hash, '1', 'findRecord');
-      });
-
-      deepEqual(json, {
-        'data': {
-          'id': '1',
-          'type': 'doomsday-device',
-          'attributes': {
-            'name': 'DeathRay'
-          },
-          'relationships': {
-            'evilMinion': {
-              'data': { 'id': '12', 'type': 'evil-minions/yellow-minion' }
-            }
-          }
-        },
-        'included': [{
-          'id': '12',
-          'type': 'evil-minions/yellow-minion',
-          'attributes': {
-            'name': 'Alex'
-          },
-          'relationships': {}
-        }]
-      });
-    });
-  }
-);
-
-
-define(
-  "activemodel-adapter/tests/integration/active-model-serializer-test",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-
-    function __es6_export__(name, value) {
-      __exports__[name] = value;
-    }
-
-    var get = Ember.get;
-    var HomePlanet, league, SuperVillain, EvilMinion, YellowMinion, DoomsdayDevice, MediocreVillain, env;
-    var run = Ember.run;
-
-    module('integration/active_model - ActiveModelSerializer', {
-      setup: function () {
-        SuperVillain = DS.Model.extend({
-          firstName: DS.attr('string'),
-          lastName: DS.attr('string'),
-          homePlanet: DS.belongsTo('home-planet'),
-          evilMinions: DS.hasMany('evil-minion')
-        });
-        HomePlanet = DS.Model.extend({
-          name: DS.attr('string'),
-          superVillains: DS.hasMany('super-villain', { async: true })
-        });
-        EvilMinion = DS.Model.extend({
-          superVillain: DS.belongsTo('super-villain'),
-          name: DS.attr('string')
-        });
-        YellowMinion = EvilMinion.extend();
-        DoomsdayDevice = DS.Model.extend({
-          name: DS.attr('string'),
-          evilMinion: DS.belongsTo('evil-minion', { polymorphic: true })
-        });
-        MediocreVillain = DS.Model.extend({
-          name: DS.attr('string'),
-          evilMinions: DS.hasMany('evil-minion', { polymorphic: true })
-        });
-        env = setupStore({
-          superVillain: SuperVillain,
-          homePlanet: HomePlanet,
-          evilMinion: EvilMinion,
-          yellowMinion: YellowMinion,
-          doomsdayDevice: DoomsdayDevice,
-          mediocreVillain: MediocreVillain
-        });
-        env.store.modelFor('super-villain');
-        env.store.modelFor('home-planet');
-        env.store.modelFor('evil-minion');
-        env.store.modelFor('yellow-minion');
-        env.store.modelFor('doomsday-device');
-        env.store.modelFor('mediocre-villain');
-        env.registry.register('serializer:application', DS.ActiveModelSerializer);
-        env.registry.register('serializer:-active-model', DS.ActiveModelSerializer);
-        env.registry.register('adapter:-active-model', DS.ActiveModelAdapter);
-        env.amsSerializer = env.container.lookup('serializer:-active-model');
-        env.amsAdapter = env.container.lookup('adapter:-active-model');
-      },
-
-      teardown: function () {
-        run(env.store, 'destroy');
-      }
-    });
-
-    test('serialize', function () {
-      var tom;
-      run(function () {
-        league = env.store.createRecord('home-planet', { name: 'Villain League', id: '123' });
-        tom = env.store.createRecord('super-villain', { firstName: 'Tom', lastName: 'Dale', homePlanet: league });
-      });
-
-      var json = env.amsSerializer.serialize(tom._createSnapshot());
-
-      deepEqual(json, {
-        first_name: 'Tom',
-        last_name: 'Dale',
-        home_planet_id: get(league, 'id')
-      });
-    });
-
-    test('serializeIntoHash', function () {
-      run(function () {
-        league = env.store.createRecord('home-planet', { name: 'Umber', id: '123' });
-      });
-      var json = {};
-
-      env.amsSerializer.serializeIntoHash(json, HomePlanet, league._createSnapshot());
-
-      deepEqual(json, {
-        home_planet: {
-          name: 'Umber'
-        }
-      });
-    });
-
-    test('serializeIntoHash with decamelized types', function () {
-      HomePlanet.modelName = 'home-planet';
-      run(function () {
-        league = env.store.createRecord('home-planet', { name: 'Umber', id: '123' });
-      });
-      var json = {};
-
-      env.amsSerializer.serializeIntoHash(json, HomePlanet, league._createSnapshot());
-
-      deepEqual(json, {
-        home_planet: {
-          name: 'Umber'
-        }
-      });
-    });
-
-    test('normalize', function () {
-      SuperVillain.reopen({
-        yellowMinion: DS.belongsTo('yellowMinion')
-      });
-
-      var superVillain_hash = {
-        id: '1',
-        first_name: 'Tom',
-        last_name: 'Dale',
-        home_planet_id: '123',
-        evil_minion_ids: [1, 2]
-      };
-
-      var json = env.amsSerializer.normalize(SuperVillain, superVillain_hash, 'superVillain');
-
-      deepEqual(json, {
-        'data': {
-          'id': '1',
-          'type': 'super-villain',
-          'attributes': {
-            'firstName': 'Tom',
-            'lastName': 'Dale'
-          },
-          'relationships': {
-            'evilMinions': {
-              'data': [{ 'id': '1', 'type': 'evil-minion' }, { 'id': '2', 'type': 'evil-minion' }]
-            },
-            'homePlanet': {
-              'data': { 'id': '123', 'type': 'home-planet' }
-            }
-          }
-        }
-      });
-    });
-
-    test('normalize links', function () {
-      var home_planet = {
-        id: '1',
-        name: 'Umber',
-        links: { super_villains: '/api/super_villians/1' }
-      };
-
-      var json = env.amsSerializer.normalize(HomePlanet, home_planet, 'homePlanet');
-
-      equal(json.data.relationships.superVillains.links.related, '/api/super_villians/1', 'normalize links');
-    });
-
-    test('normalizeResponse', function () {
-      env.registry.register('adapter:superVillain', DS.ActiveModelAdapter);
-
-      var json_hash = {
-        home_planet: { id: '1', name: 'Umber', super_villain_ids: [1] },
-        super_villains: [{
-          id: '1',
-          first_name: 'Tom',
-          last_name: 'Dale',
-          home_planet_id: '1'
-        }]
-      };
-
-      var json;
-      run(function () {
-        json = env.amsSerializer.normalizeResponse(env.store, HomePlanet, json_hash, '1', 'findRecord');
-      });
-
-      deepEqual(json, {
-        'data': {
-          'id': '1',
-          'type': 'home-planet',
-          'attributes': {
-            'name': 'Umber'
-          },
-          'relationships': {
-            'superVillains': {
-              'data': [{ 'id': '1', 'type': 'super-villain' }]
-            }
-          }
-        },
-        'included': [{
-          'id': '1',
-          'type': 'super-villain',
-          'attributes': {
-            'firstName': 'Tom',
-            'lastName': 'Dale'
-          },
-          'relationships': {
-            'homePlanet': {
-              'data': { 'id': '1', 'type': 'home-planet' }
-            }
-          }
-        }]
-      });
-    });
-
-    test('normalizeResponse', function () {
-      env.registry.register('adapter:superVillain', DS.ActiveModelAdapter);
-      var array;
-
-      var json_hash = {
-        home_planets: [{ id: '1', name: 'Umber', super_villain_ids: [1] }],
-        super_villains: [{ id: '1', first_name: 'Tom', last_name: 'Dale', home_planet_id: '1' }]
-      };
-
-      run(function () {
-        array = env.amsSerializer.normalizeResponse(env.store, HomePlanet, json_hash, null, 'findAll');
-      });
-
-      deepEqual(array, {
-        'data': [{
-          'id': '1',
-          'type': 'home-planet',
-          'attributes': {
-            'name': 'Umber'
-          },
-          'relationships': {
-            'superVillains': {
-              'data': [{ 'id': '1', 'type': 'super-villain' }]
-            }
-          }
-        }],
-        'included': [{
-          'id': '1',
-          'type': 'super-villain',
-          'attributes': {
-            'firstName': 'Tom',
-            'lastName': 'Dale'
-          },
-          'relationships': {
-            'homePlanet': {
-              'data': { 'id': '1', 'type': 'home-planet' }
-            }
-          }
-        }]
-      });
-    });
-
-    test('serialize polymorphic', function () {
-      var tom, ray;
-      run(function () {
-        tom = env.store.createRecord('yellow-minion', { name: 'Alex', id: '124' });
-        ray = env.store.createRecord('doomsday-device', { evilMinion: tom, name: 'DeathRay' });
-      });
-
-      var json = env.amsSerializer.serialize(ray._createSnapshot());
-
-      deepEqual(json, {
-        name: 'DeathRay',
-        evil_minion_type: 'YellowMinion',
-        evil_minion_id: '124'
-      });
-    });
-
-    test('serialize polymorphic when type key is not camelized', function () {
-      YellowMinion.modelName = 'yellow-minion';
-      var tom, ray;
-      run(function () {
-        tom = env.store.createRecord('yellow-minion', { name: 'Alex', id: '124' });
-        ray = env.store.createRecord('doomsday-device', { evilMinion: tom, name: 'DeathRay' });
-      });
-
-      var json = env.amsSerializer.serialize(ray._createSnapshot());
-
-      deepEqual(json['evil_minion_type'], 'YellowMinion');
-    });
-
-    test('serialize polymorphic when associated object is null', function () {
-      var ray, json;
-      run(function () {
-        ray = env.store.createRecord('doomsday-device', { name: 'DeathRay' });
-        json = env.amsSerializer.serialize(ray._createSnapshot());
-      });
-
-      deepEqual(json['evil_minion_type'], null);
-    });
-
-    test('extractPolymorphic hasMany', function () {
-      env.registry.register('adapter:yellowMinion', DS.ActiveModelAdapter);
-      MediocreVillain.toString = function () {
-        return 'MediocreVillain';
-      };
-      YellowMinion.toString = function () {
-        return 'YellowMinion';
-      };
-
-      var json_hash = {
-        mediocre_villain: { id: 1, name: 'Dr Horrible', evil_minion_ids: [{ type: 'yellow_minion', id: 12 }] },
-        yellow_minions: [{ id: 12, name: 'Alex' }]
-      };
-      var json;
-
-      run(function () {
-        json = env.amsSerializer.normalizeResponse(env.store, MediocreVillain, json_hash, '1', 'findRecord');
-      });
-
-      deepEqual(json, {
-        'data': {
-          'id': '1',
-          'type': 'mediocre-villain',
-          'attributes': {
-            'name': 'Dr Horrible'
-          },
-          'relationships': {
-            'evilMinions': {
-              'data': [{ 'id': '12', 'type': 'yellow-minion' }]
-            }
-          }
-        },
-        'included': [{
-          'id': '12',
-          'type': 'yellow-minion',
-          'attributes': {
-            'name': 'Alex'
-          },
-          'relationships': {}
-        }]
-      });
-    });
-
-    test('extractPolymorphic belongsTo', function () {
-      env.registry.register('adapter:yellowMinion', DS.ActiveModelAdapter);
-      EvilMinion.toString = function () {
-        return 'EvilMinion';
-      };
-      YellowMinion.toString = function () {
-        return 'YellowMinion';
-      };
-
-      var json_hash = {
-        doomsday_device: { id: 1, name: 'DeathRay', evil_minion_id: { type: 'yellow_minion', id: 12 } },
-        yellow_minions: [{ id: 12, name: 'Alex', doomsday_device_ids: [1] }]
-      };
-      var json;
-
-      run(function () {
-        json = env.amsSerializer.normalizeResponse(env.store, DoomsdayDevice, json_hash, '1', 'findRecord');
-      });
-
-      deepEqual(json, {
-        'data': {
-          'id': '1',
-          'type': 'doomsday-device',
-          'attributes': {
-            'name': 'DeathRay'
-          },
-          'relationships': {
-            'evilMinion': {
-              'data': { 'id': '12', 'type': 'yellow-minion' }
-            }
-          }
-        },
-        'included': [{
-          'id': '12',
-          'type': 'yellow-minion',
-          'attributes': {
-            'name': 'Alex'
-          },
-          'relationships': {}
-        }]
-      });
-    });
-
-    test('extractPolymorphic when the related data is not specified', function () {
-      var json = {
-        doomsday_device: { id: 1, name: 'DeathRay' },
-        evil_minions: [{ id: 12, name: 'Alex', doomsday_device_ids: [1] }]
-      };
-
-      run(function () {
-        json = env.amsSerializer.normalizeResponse(env.store, DoomsdayDevice, json, '1', 'findRecord');
-      });
-
-      deepEqual(json, {
-        'data': {
-          'id': '1',
-          'type': 'doomsday-device',
-          'attributes': {
-            'name': 'DeathRay'
-          },
-          'relationships': {}
-        },
-        'included': [{
-          'id': '12',
-          'type': 'evil-minion',
-          'attributes': {
-            'name': 'Alex'
-          },
-          'relationships': {}
-        }]
-      });
-    });
-
-    test('extractPolymorphic hasMany when the related data is not specified', function () {
-      var json = {
-        mediocre_villain: { id: 1, name: 'Dr Horrible' }
-      };
-
-      run(function () {
-        json = env.amsSerializer.normalizeResponse(env.store, MediocreVillain, json, '1', 'findRecord');
-      });
-
-      deepEqual(json, {
-        'data': {
-          'id': '1',
-          'type': 'mediocre-villain',
-          'attributes': {
-            'name': 'Dr Horrible'
-          },
-          'relationships': {}
-        },
-        'included': []
-      });
-    });
-
-    test('extractPolymorphic does not break hasMany relationships', function () {
-      var json = {
-        mediocre_villain: { id: 1, name: 'Dr. Evil', evil_minion_ids: [] }
-      };
-
-      run(function () {
-        json = env.amsSerializer.normalizeResponse(env.store, MediocreVillain, json, '1', 'findRecord');
-      });
-
-      deepEqual(json, {
-        'data': {
-          'id': '1',
-          'type': 'mediocre-villain',
-          'attributes': {
-            'name': 'Dr. Evil'
-          },
-          'relationships': {
-            'evilMinions': {
-              'data': []
-            }
-          }
-        },
-        'included': []
-      });
-    });
-
-    test('extractErrors camelizes keys', function () {
-      var error = {
-        errors: [{
-          source: {
-            pointer: 'data/attributes/first_name'
-          },
-          details: 'firstName not evil enough'
-        }]
-      };
-
-      var payload;
-
-      run(function () {
-        payload = env.amsSerializer.extractErrors(env.store, SuperVillain, error);
-      });
-
-      deepEqual(payload, {
-        firstName: ['firstName not evil enough']
-      });
-    });
-  }
-);
-
-
-define(
-  "activemodel-adapter/tests/unit/adapter/path-for-type-test",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-
-    function __es6_export__(name, value) {
-      __exports__[name] = value;
-    }
-
-    var env, adapter;
-    module('unit/adapter/path_for_type - DS.ActiveModelAdapter#pathForType', {
-      setup: function () {
-        env = setupStore({
-          adapter: DS.ActiveModelAdapter
-        });
-
-        adapter = env.adapter;
-      }
-    });
-
-    test('pathForType - works with camelized types', function () {
-      equal(adapter.pathForType('superUser'), 'super_users');
-    });
-
-    test('pathForType - works with dasherized types', function () {
-      equal(adapter.pathForType('super-user'), 'super_users');
-    });
-
-    test('pathForType - works with underscored types', function () {
-      equal(adapter.pathForType('super_user'), 'super_users');
-    });
-  }
-);
-
-
 define(
   "ember-data/tests/helpers/custom-adapter",
   ["exports"],
@@ -5898,23 +5024,6 @@ define(
 
       ok(ran, 'transforms initializer was found');
     });
-
-    test('activeModelAdapter initializer is run (DEPRECATED)', function () {
-      var ran = false;
-      App.initializer({
-        name: 'after-store',
-        after: 'activeModelAdapter',
-        initialize: function () {
-          ran = true;
-        }
-      });
-
-      run(function () {
-        app = App.create();
-      });
-
-      ok(ran, 'activeModelAdapter initializer was found');
-    });
   }
 );
 
@@ -7437,9 +6546,8 @@ define(
           evilMinion: EvilMinion
         });
 
-        env.registry.register('serializer:application', DS.ActiveModelSerializer);
-        env.registry.register('serializer:-active-model', DS.ActiveModelSerializer);
-        env.registry.register('adapter:-active-model', DS.ActiveModelAdapter);
+        env.registry.register('adapter:application', DS.RESTAdapter);
+        env.registry.register('serializer:application', DS.RESTSerializer);
 
         env.registry.register('store:store-a', DS.Store);
         env.registry.register('store:store-b', DS.Store);
@@ -7454,35 +6562,31 @@ define(
     });
 
     test('should be able to push into multiple stores', function () {
-      env.registry.register('adapter:home-planet', DS.ActiveModelAdapter);
-      env.registry.register('serializer:home-planet', DS.ActiveModelSerializer);
-
       var home_planet_main = { id: '1', name: 'Earth' };
       var home_planet_a = { id: '1', name: 'Mars' };
       var home_planet_b = { id: '1', name: 'Saturn' };
 
-      run(env.store, 'push', 'homePlanet', home_planet_main);
-      run(env.store_a, 'push', 'homePlanet', home_planet_a);
-      run(env.store_b, 'push', 'homePlanet', home_planet_b);
+      run(function () {
+        env.store.push(env.store.normalize('home-planet', home_planet_main));
+        env.store_a.push(env.store_a.normalize('home-planet', home_planet_a));
+        env.store_b.push(env.store_b.normalize('home-planet', home_planet_b));
+      });
 
-      run(env.store, 'find', 'homePlanet', 1).then(async(function (homePlanet) {
+      run(env.store, 'find', 'home-planet', 1).then(async(function (homePlanet) {
         equal(homePlanet.get('name'), 'Earth');
       }));
 
-      run(env.store_a, 'find', 'homePlanet', 1).then(async(function (homePlanet) {
+      run(env.store_a, 'find', 'home-planet', 1).then(async(function (homePlanet) {
         equal(homePlanet.get('name'), 'Mars');
       }));
 
-      run(env.store_b, 'find', 'homePlanet', 1).then(async(function (homePlanet) {
+      run(env.store_b, 'find', 'home-planet', 1).then(async(function (homePlanet) {
         equal(homePlanet.get('name'), 'Saturn');
       }));
     });
 
     test('embedded records should be created in multiple stores', function () {
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('adapter:home-planet', DS.ActiveModelAdapter);
-
-      env.registry.register('serializer:home-planet', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           villains: { embedded: 'always' }
         }
@@ -7493,35 +6597,35 @@ define(
       var serializer_b = env.store_b.serializerFor('home-planet');
 
       var json_hash_main = {
-        home_planet: {
+        homePlanet: {
           id: '1',
           name: 'Earth',
           villains: [{
             id: '1',
-            first_name: 'Tom',
-            last_name: 'Dale'
+            firstName: 'Tom',
+            lastName: 'Dale'
           }]
         }
       };
       var json_hash_a = {
-        home_planet: {
+        homePlanet: {
           id: '1',
           name: 'Mars',
           villains: [{
             id: '1',
-            first_name: 'James',
-            last_name: 'Murphy'
+            firstName: 'James',
+            lastName: 'Murphy'
           }]
         }
       };
       var json_hash_b = {
-        home_planet: {
+        homePlanet: {
           id: '1',
           name: 'Saturn',
           villains: [{
             id: '1',
-            first_name: 'Jade',
-            last_name: 'John'
+            firstName: 'Jade',
+            lastName: 'John'
           }]
         }
       };
@@ -15448,11 +14552,12 @@ define(
         env.store.modelFor('light-saber');
         env.store.modelFor('evil-minion');
         env.store.modelFor('comment');
-        env.registry.register('serializer:application', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin));
-        env.registry.register('serializer:-active-model', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin));
-        env.registry.register('adapter:-active-model', DS.ActiveModelAdapter);
-        env.amsSerializer = env.container.lookup('serializer:-active-model');
-        env.amsAdapter = env.container.lookup('adapter:-active-model');
+
+        env.registry.register('adapter:application', DS.RESTAdapter);
+        env.registry.register('serializer:application', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin));
+
+        //env.amsSerializer = env.container.lookup("serializer:-active-model");
+        //env.amsAdapter    = env.container.lookup("adapter:-active-model");
       },
 
       teardown: function () {
@@ -15461,7 +14566,7 @@ define(
     });
 
     test('normalizeResponse with embedded objects', function () {
-      env.registry.register('serializer:home-planet', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           villains: { embedded: 'always' }
         }
@@ -15474,8 +14579,8 @@ define(
           name: 'Umber',
           villains: [{
             id: '2',
-            first_name: 'Tom',
-            last_name: 'Dale'
+            firstName: 'Tom',
+            lastName: 'Dale'
           }]
         }
       };
@@ -15511,18 +14616,16 @@ define(
     });
 
     test('normalizeResponse with embedded objects inside embedded objects', function () {
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:home-planet', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           villains: { embedded: 'always' }
         }
       }));
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           evilMinions: { embedded: 'always' }
         }
       }));
-      env.registry.register('serializer:evil-minion', DS.ActiveModelSerializer);
 
       var serializer = env.container.lookup('serializer:home-planet');
       var json_hash = {
@@ -15531,9 +14634,9 @@ define(
           name: 'Umber',
           villains: [{
             id: '2',
-            first_name: 'Tom',
-            last_name: 'Dale',
-            evil_minions: [{
+            firstName: 'Tom',
+            lastName: 'Dale',
+            evilMinions: [{
               id: '3',
               name: 'Alex'
             }]
@@ -15583,8 +14686,7 @@ define(
     });
 
     test('normalizeResponse with embedded objects of same type', function () {
-      env.registry.register('adapter:comment', DS.ActiveModelAdapter);
-      env.registry.register('serializer:comment', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:comment', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           children: { embedded: 'always' }
         }
@@ -15647,8 +14749,7 @@ define(
     });
 
     test('normalizeResponse with embedded objects inside embedded objects of same type', function () {
-      env.registry.register('adapter:comment', DS.ActiveModelAdapter);
-      env.registry.register('serializer:comment', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:comment', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           children: { embedded: 'always' }
         }
@@ -15732,14 +14833,12 @@ define(
         reformedVillains: DS.hasMany('superVillain', { inverse: null, async: false })
       });
 
-      env.registry.register('adapter:home-planet', DS.ActiveModelAdapter);
-      env.registry.register('serializer:home-planet', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           villains: { embedded: 'always' },
           reformedVillains: { embedded: 'always' }
         }
       }));
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer);
 
       var serializer = env.container.lookup('serializer:home-planet');
       var json_hash = {
@@ -15748,17 +14847,17 @@ define(
           name: 'Earth',
           villains: [{
             id: '1',
-            first_name: 'Tom'
+            firstName: 'Tom'
           }, {
             id: '3',
-            first_name: 'Yehuda'
+            firstName: 'Yehuda'
           }],
-          reformed_villains: [{
+          reformedVillains: [{
             id: '2',
-            first_name: 'Alex'
+            firstName: 'Alex'
           }, {
             id: '4',
-            first_name: 'Erik'
+            firstName: 'Erik'
           }]
         }
       };
@@ -15816,13 +14915,11 @@ define(
     });
 
     test('normalizeResponse with embedded objects', function () {
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:home-planet', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           villains: { embedded: 'always' }
         }
       }));
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer);
 
       var serializer = env.container.lookup('serializer:home-planet');
 
@@ -15832,8 +14929,8 @@ define(
           name: 'Umber',
           villains: [{
             id: '1',
-            first_name: 'Tom',
-            last_name: 'Dale'
+            firstName: 'Tom',
+            lastName: 'Dale'
           }]
         }]
       };
@@ -15870,11 +14967,10 @@ define(
 
     test('normalizeResponse with embedded objects with custom primary key', function () {
       expect(1);
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend({
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend({
         primaryKey: 'villain_id'
       }));
-      env.registry.register('serializer:home-planet', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           villains: { embedded: 'always' }
         }
@@ -15888,8 +14984,8 @@ define(
           name: 'Umber',
           villains: [{
             villain_id: '2',
-            first_name: 'Alex',
-            last_name: 'Baizeau'
+            firstName: 'Alex',
+            lastName: 'Baizeau'
           }]
         }]
       };
@@ -15926,8 +15022,7 @@ define(
 
     test('normalizeResponse with embedded objects with identical relationship and attribute key ', function () {
       expect(1);
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:home-planet', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           villains: { embedded: 'always' }
         },
@@ -15936,7 +15031,6 @@ define(
           return this.keyForAttribute(key, type);
         }
       }));
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer);
 
       var serializer = env.container.lookup('serializer:home-planet');
 
@@ -15946,8 +15040,8 @@ define(
           name: 'Umber',
           villains: [{
             id: '1',
-            first_name: 'Alex',
-            last_name: 'Baizeau'
+            firstName: 'Alex',
+            lastName: 'Baizeau'
           }]
         }]
       };
@@ -15983,8 +15077,7 @@ define(
     });
 
     test('normalizeResponse with embedded objects of same type as primary type', function () {
-      env.registry.register('adapter:comment', DS.ActiveModelAdapter);
-      env.registry.register('serializer:comment', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:comment', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           children: { embedded: 'always' }
         }
@@ -16053,14 +15146,12 @@ define(
         reformedVillains: DS.hasMany('superVillain', { async: false })
       });
 
-      env.registry.register('adapter:home-planet', DS.ActiveModelAdapter);
-      env.registry.register('serializer:home-planet', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           villains: { embedded: 'always' },
           reformedVillains: { embedded: 'always' }
         }
       }));
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer);
 
       var serializer = env.container.lookup('serializer:home-planet');
       var json_hash = {
@@ -16069,34 +15160,34 @@ define(
           name: 'Earth',
           villains: [{
             id: '1',
-            first_name: 'Tom'
+            firstName: 'Tom'
           }, {
             id: '3',
-            first_name: 'Yehuda'
+            firstName: 'Yehuda'
           }],
-          reformed_villains: [{
+          reformedVillains: [{
             id: '2',
-            first_name: 'Alex'
+            firstName: 'Alex'
           }, {
             id: '4',
-            first_name: 'Erik'
+            firstName: 'Erik'
           }]
         }, {
           id: '2',
           name: 'Mars',
           villains: [{
             id: '1',
-            first_name: 'Tom'
+            firstName: 'Tom'
           }, {
             id: '3',
-            first_name: 'Yehuda'
+            firstName: 'Yehuda'
           }],
-          reformed_villains: [{
+          reformedVillains: [{
             id: '5',
-            first_name: 'Peter'
+            firstName: 'Peter'
           }, {
             id: '6',
-            first_name: 'Trek'
+            firstName: 'Trek'
           }]
         }]
       };
@@ -16202,7 +15293,7 @@ define(
         tom = env.store.createRecord('super-villain', { firstName: 'Tom', lastName: 'Dale', id: '1' });
       });
 
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           firstName: { serialize: false }
         }
@@ -16214,9 +15305,9 @@ define(
       });
 
       deepEqual(json, {
-        last_name: 'Dale',
-        home_planet_id: null,
-        secret_lab_id: null
+        lastName: 'Dale',
+        homePlanet: null,
+        secretLab: null
       });
     });
 
@@ -16227,7 +15318,7 @@ define(
         tom = env.store.createRecord('super-villain', { firstName: 'Tom', lastName: 'Dale', homePlanet: league, id: '1' });
       });
 
-      env.registry.register('serializer:home-planet', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           villains: { embedded: 'always' }
         }
@@ -16244,10 +15335,10 @@ define(
         name: 'Villain League',
         villains: [{
           id: get(tom, 'id'),
-          first_name: 'Tom',
-          last_name: 'Dale',
-          home_planet_id: get(league, 'id'),
-          secret_lab_id: null
+          firstName: 'Tom',
+          lastName: 'Dale',
+          homePlanet: get(league, 'id'),
+          secretLab: null
         }]
       });
     });
@@ -16258,7 +15349,7 @@ define(
         league = env.store.push('home-planet', { name: 'Villain League', id: '123' });
       });
 
-      env.registry.register('serializer:home-planet', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           villains: { embedded: 'always' }
         }
@@ -16281,10 +15372,10 @@ define(
     test('serialize with embedded objects (hasMany relationship) supports serialize:false', function () {
       run(function () {
         league = env.store.createRecord('home-planet', { name: 'Villain League', id: '123' });
-        env.store.createRecord('super-villain', { first_name: 'Tom', last_name: 'Dale', homePlanet: league, id: '1' });
+        env.store.createRecord('super-villain', { firstName: 'Tom', lastName: 'Dale', homePlanet: league, id: '1' });
       });
 
-      env.registry.register('serializer:home-planet', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           villains: { serialize: false }
         }
@@ -16307,7 +15398,7 @@ define(
         env.store.createRecord('super-villain', { firstName: 'Tom', lastName: 'Dale', homePlanet: league });
       });
 
-      env.registry.register('serializer:home-planet', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           villains: { embedded: 'always' }
         }
@@ -16321,10 +15412,10 @@ define(
       deepEqual(json, {
         name: 'Villain League',
         villains: [{
-          first_name: 'Tom',
-          last_name: 'Dale',
-          home_planet_id: get(league, 'id'),
-          secret_lab_id: null
+          firstName: 'Tom',
+          lastName: 'Dale',
+          homePlanet: get(league, 'id'),
+          secretLab: null
         }]
       });
     });
@@ -16338,7 +15429,7 @@ define(
         superVillain.get('secretWeapons').pushObject(secretWeapon);
       });
 
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           evilMinions: { serialize: 'records', deserialize: 'records' },
           secretWeapons: { serialize: 'ids' }
@@ -16351,43 +15442,41 @@ define(
         json = serializer.serialize(superVillain._createSnapshot());
       });
       deepEqual(json, {
-        first_name: get(superVillain, 'firstName'),
-        last_name: get(superVillain, 'lastName'),
-        home_planet_id: null,
-        evil_minions: [{
+        firstName: get(superVillain, 'firstName'),
+        lastName: get(superVillain, 'lastName'),
+        homePlanet: null,
+        evilMinions: [{
           id: get(evilMinion, 'id'),
           name: get(evilMinion, 'name'),
-          super_villain_id: '1'
+          superVillain: '1'
         }],
-        secret_lab_id: null,
-        secret_weapon_ids: ['1']
+        secretLab: null,
+        secretWeapons: ['1']
       });
     });
 
     test('normalizeResponse with embedded object (belongsTo relationship)', function () {
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           secretLab: { embedded: 'always' }
         }
       }));
-      //env.registry.register('serializer:secret-lab', DS.ActiveModelSerializer);
 
       var serializer = env.container.lookup('serializer:super-villain');
 
       var json_hash = {
         super_villain: {
           id: '1',
-          first_name: 'Tom',
-          last_name: 'Dale',
-          home_planet_id: '123',
-          evil_minion_ids: ['1', '2', '3'],
-          secret_lab: {
-            minion_capacity: 5000,
+          firstName: 'Tom',
+          lastName: 'Dale',
+          homePlanet: '123',
+          evilMinions: ['1', '2', '3'],
+          secretLab: {
+            minionCapacity: 5000,
             vicinity: 'California, USA',
             id: '101'
           },
-          secret_weapon_ids: []
+          secretWeapons: []
         }
       };
       var json;
@@ -16432,8 +15521,7 @@ define(
     });
 
     test('serialize with embedded object (belongsTo relationship)', function () {
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           secretLab: { embedded: 'always' }
         }
@@ -16455,26 +15543,25 @@ define(
       });
 
       deepEqual(json, {
-        first_name: get(tom, 'firstName'),
-        last_name: get(tom, 'lastName'),
-        home_planet_id: get(tom, 'homePlanet').get('id'),
-        secret_lab: {
+        firstName: get(tom, 'firstName'),
+        lastName: get(tom, 'lastName'),
+        homePlanet: get(tom, 'homePlanet').get('id'),
+        secretLab: {
           id: get(tom, 'secretLab').get('id'),
-          minion_capacity: get(tom, 'secretLab').get('minionCapacity'),
+          minionCapacity: get(tom, 'secretLab').get('minionCapacity'),
           vicinity: get(tom, 'secretLab').get('vicinity')
         }
       });
     });
 
     test('serialize with embedded object (belongsTo relationship) works with different primaryKeys', function () {
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         primaryKey: '_id',
         attrs: {
           secretLab: { embedded: 'always' }
         }
       }));
-      env.registry.register('serializer:secret-lab', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:secret-lab', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         primaryKey: 'crazy_id'
       }));
 
@@ -16495,20 +15582,19 @@ define(
       });
 
       deepEqual(json, {
-        first_name: get(tom, 'firstName'),
-        last_name: get(tom, 'lastName'),
-        home_planet_id: get(tom, 'homePlanet').get('id'),
-        secret_lab: {
+        firstName: get(tom, 'firstName'),
+        lastName: get(tom, 'lastName'),
+        homePlanet: get(tom, 'homePlanet').get('id'),
+        secretLab: {
           crazy_id: get(tom, 'secretLab').get('id'),
-          minion_capacity: get(tom, 'secretLab').get('minionCapacity'),
+          minionCapacity: get(tom, 'secretLab').get('minionCapacity'),
           vicinity: get(tom, 'secretLab').get('vicinity')
         }
       });
     });
 
     test('serialize with embedded object (belongsTo relationship, new no id)', function () {
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           secretLab: { embedded: 'always' }
         }
@@ -16531,19 +15617,18 @@ define(
       });
 
       deepEqual(json, {
-        first_name: get(tom, 'firstName'),
-        last_name: get(tom, 'lastName'),
-        home_planet_id: get(tom, 'homePlanet').get('id'),
-        secret_lab: {
-          minion_capacity: get(tom, 'secretLab').get('minionCapacity'),
+        firstName: get(tom, 'firstName'),
+        lastName: get(tom, 'lastName'),
+        homePlanet: get(tom, 'homePlanet').get('id'),
+        secretLab: {
+          minionCapacity: get(tom, 'secretLab').get('minionCapacity'),
           vicinity: get(tom, 'secretLab').get('vicinity')
         }
       });
     });
 
     test('serialize with embedded object (belongsTo relationship) supports serialize:ids', function () {
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           secretLab: { serialize: 'ids' }
         }
@@ -16565,16 +15650,15 @@ define(
       });
 
       deepEqual(json, {
-        first_name: get(tom, 'firstName'),
-        last_name: get(tom, 'lastName'),
-        home_planet_id: get(tom, 'homePlanet').get('id'),
-        secret_lab_id: get(tom, 'secretLab').get('id')
+        firstName: get(tom, 'firstName'),
+        lastName: get(tom, 'lastName'),
+        homePlanet: get(tom, 'homePlanet').get('id'),
+        secretLab: get(tom, 'secretLab').get('id')
       });
     });
 
     test('serialize with embedded object (belongsTo relationship) supports serialize:id', function () {
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           secretLab: { serialize: 'id' }
         }
@@ -16597,16 +15681,15 @@ define(
       });
 
       deepEqual(json, {
-        first_name: get(tom, 'firstName'),
-        last_name: get(tom, 'lastName'),
-        home_planet_id: get(tom, 'homePlanet').get('id'),
-        secret_lab_id: get(tom, 'secretLab').get('id')
+        firstName: get(tom, 'firstName'),
+        lastName: get(tom, 'lastName'),
+        homePlanet: get(tom, 'homePlanet').get('id'),
+        secretLab: get(tom, 'secretLab').get('id')
       });
     });
 
     test('serialize with embedded object (belongsTo relationship) supports serialize:id in conjunction with deserialize:records', function () {
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           secretLab: { serialize: 'id', deserialize: 'records' }
         }
@@ -16629,16 +15712,15 @@ define(
       });
 
       deepEqual(json, {
-        first_name: get(tom, 'firstName'),
-        last_name: get(tom, 'lastName'),
-        home_planet_id: get(tom, 'homePlanet').get('id'),
-        secret_lab_id: get(tom, 'secretLab').get('id')
+        firstName: get(tom, 'firstName'),
+        lastName: get(tom, 'lastName'),
+        homePlanet: get(tom, 'homePlanet').get('id'),
+        secretLab: get(tom, 'secretLab').get('id')
       });
     });
 
     test('serialize with embedded object (belongsTo relationship) supports serialize:false', function () {
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           secretLab: { serialize: false }
         }
@@ -16659,15 +15741,14 @@ define(
       });
 
       deepEqual(json, {
-        first_name: get(tom, 'firstName'),
-        last_name: get(tom, 'lastName'),
-        home_planet_id: get(tom, 'homePlanet').get('id')
+        firstName: get(tom, 'firstName'),
+        lastName: get(tom, 'lastName'),
+        homePlanet: get(tom, 'homePlanet').get('id')
       });
     });
 
     test('serialize with embedded object (belongsTo relationship) serializes the id by default if no option specified', function () {
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin));
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin));
       var serializer = env.container.lookup('serializer:super-villain');
 
       // records with an id, persisted
@@ -16686,16 +15767,15 @@ define(
       });
 
       deepEqual(json, {
-        first_name: get(tom, 'firstName'),
-        last_name: get(tom, 'lastName'),
-        home_planet_id: get(tom, 'homePlanet').get('id'),
-        secret_lab_id: get(tom, 'secretLab').get('id')
+        firstName: get(tom, 'firstName'),
+        lastName: get(tom, 'lastName'),
+        homePlanet: get(tom, 'homePlanet').get('id'),
+        secretLab: get(tom, 'secretLab').get('id')
       });
     });
 
     test('when related record is not present, serialize embedded record (with a belongsTo relationship) as null', function () {
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           secretLab: { embedded: 'always' }
         }
@@ -16714,21 +15794,20 @@ define(
       });
 
       deepEqual(json, {
-        first_name: get(tom, 'firstName'),
-        last_name: get(tom, 'lastName'),
-        home_planet_id: get(tom, 'homePlanet').get('id'),
-        secret_lab: null
+        firstName: get(tom, 'firstName'),
+        lastName: get(tom, 'lastName'),
+        homePlanet: get(tom, 'homePlanet').get('id'),
+        secretLab: null
       });
     });
 
     test('normalizeResponse with multiply-nested belongsTo', function () {
-      env.registry.register('adapter:evil-minion', DS.ActiveModelAdapter);
-      env.registry.register('serializer:evil-minion', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:evil-minion', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           superVillain: { embedded: 'always' }
         }
       }));
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           homePlanet: { embedded: 'always' }
         }
@@ -16739,15 +15818,15 @@ define(
         evilMinion: {
           id: '1',
           name: 'Alex',
-          super_villain: {
+          superVillain: {
             id: '1',
-            first_name: 'Tom',
-            last_name: 'Dale',
-            evil_minion_ids: ['1'],
-            home_planet: {
+            firstName: 'Tom',
+            lastName: 'Dale',
+            evilMinions: ['1'],
+            homePlanet: {
               id: '1',
               name: 'Umber',
-              villain_ids: ['1']
+              villains: ['1']
             }
           }
         }
@@ -16806,8 +15885,7 @@ define(
         secretWeapons: DS.hasMany('secretWeapon', { polymorphic: true, async: false })
       });
 
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           secretWeapons: { embedded: 'always' }
         }
@@ -16817,9 +15895,9 @@ define(
       var json_hash = {
         super_villain: {
           id: '1',
-          first_name: 'Tom',
-          last_name: 'Dale',
-          secret_weapons: [{
+          firstName: 'Tom',
+          lastName: 'Dale',
+          secretWeapons: [{
             id: '1',
             type: 'LightSaber',
             name: 'Tom\'s LightSaber',
@@ -16875,11 +15953,10 @@ define(
         secretWeapons: DS.hasMany('secretWeapon', { polymorphic: true, async: false })
       });
 
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:light-saber', DS.ActiveModelSerializer.extend({
+      env.registry.register('serializer:light-saber', DS.RESTSerializer.extend({
         primaryKey: 'custom'
       }));
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           secretWeapons: { embedded: 'always' }
         }
@@ -16889,9 +15966,9 @@ define(
       var json_hash = {
         super_villain: {
           id: '1',
-          first_name: 'Tom',
-          last_name: 'Dale',
-          secret_weapons: [{
+          firstName: 'Tom',
+          lastName: 'Dale',
+          secretWeapons: [{
             custom: '1',
             type: 'LightSaber',
             name: 'Tom\'s LightSaber',
@@ -16947,8 +16024,7 @@ define(
         secretLab: DS.belongsTo('secretLab', { polymorphic: true, async: true })
       });
 
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           secretLab: { embedded: 'always' }
         }
@@ -16958,9 +16034,9 @@ define(
       var json_hash = {
         super_villain: {
           id: '1',
-          first_name: 'Tom',
-          last_name: 'Dale',
-          secret_lab: {
+          firstName: 'Tom',
+          lastName: 'Dale',
+          secretLab: {
             id: '1',
             type: 'bat-cave',
             infiltrated: true
@@ -17006,23 +16082,22 @@ define(
         secretLab: DS.belongsTo('secretLab', { polymorphic: true, async: true })
       });
 
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           secretLab: { embedded: 'always' }
         }
       }));
-      env.registry.register('serializer:bat-cave', DS.ActiveModelSerializer.extend({
+      env.registry.register('serializer:bat-cave', DS.RESTSerializer.extend({
         primaryKey: 'custom'
       }));
       var serializer = env.container.lookup('serializer:super-villain');
 
       var json_hash = {
-        super_villain: {
+        superVillain: {
           id: '1',
-          first_name: 'Tom',
-          last_name: 'Dale',
-          secret_lab: {
+          firstName: 'Tom',
+          lastName: 'Dale',
+          secretLab: {
             custom: '1',
             type: 'bat-cave',
             infiltrated: true
@@ -17077,8 +16152,6 @@ define(
         superVillain.get('evilMinions').pushObject(evilMinion);
       });
 
-      env.registry.register('serializer:evil-minion', DS.RESTSerializer);
-      env.registry.register('serializer:secret-weapon', DS.RESTSerializer);
       env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           evilMinions: { serialize: 'records', deserialize: 'records' }
@@ -17107,25 +16180,24 @@ define(
     });
 
     test('normalize with custom belongsTo primary key', function () {
-      env.registry.register('adapter:evil-minion', DS.ActiveModelAdapter);
-      env.registry.register('serializer:evil-minion', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:evil-minion', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           superVillain: { embedded: 'always' }
         }
       }));
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend({
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend({
         primaryKey: 'custom'
       }));
 
       var serializer = env.container.lookup('serializer:evil-minion');
       var json_hash = {
-        evil_minion: {
+        evilMinion: {
           id: '1',
           name: 'Alex',
-          super_villain: {
+          superVillain: {
             custom: '1',
-            first_name: 'Tom',
-            last_name: 'Dale'
+            firstName: 'Tom',
+            lastName: 'Dale'
           }
         }
       };
@@ -17176,7 +16248,7 @@ define(
       var calledSerializeBelongsTo = false;
       var calledSerializeHasMany = false;
 
-      var Serializer = DS.ActiveModelSerializer.extend({
+      var Serializer = DS.RESTSerializer.extend({
         serializeBelongsTo: function (snapshot, json, relationship) {
           calledSerializeBelongsTo = true;
           return this._super(snapshot, json, relationship);
@@ -17210,17 +16282,17 @@ define(
       });
 
       deepEqual(json, {
-        first_name: get(superVillain, 'firstName'),
-        last_name: get(superVillain, 'lastName'),
-        home_planet_id: '123',
-        evil_minions: [{
+        firstName: get(superVillain, 'firstName'),
+        lastName: get(superVillain, 'lastName'),
+        homePlanet: '123',
+        evilMinions: [{
           id: get(evilMinion, 'id'),
           name: get(evilMinion, 'name'),
-          super_villain_id: '1'
+          superVillain: '1'
         }],
-        secret_lab_id: '101',
+        secretLab: '101',
         // customized serializeHasMany method to generate ids for "manyToOne" relation
-        secret_weapon_ids: ['1']
+        secretWeapons: ['1']
       });
       ok(calledSerializeBelongsTo);
       ok(calledSerializeHasMany);
@@ -17240,7 +16312,7 @@ define(
         evilMinion = env.store.createRecord('evil-minion', { name: 'Evil Minion', secretWeapon: secretWeapon });
       });
 
-      env.registry.register('serializer:evil-minion', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:evil-minion', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           secretWeapon: { embedded: 'always' }
         }
@@ -17255,7 +16327,7 @@ define(
 
       deepEqual(json, {
         name: 'Evil Minion',
-        secret_weapon: {
+        secretWeapon: {
           name: 'Secret Weapon'
         }
       });
@@ -25793,8 +24865,6 @@ define(
       env.registry.unregister('adapter:application');
       env.registry.unregister('serializer:application');
 
-      env.registry.register('serializer:-active-model', DS.ActiveModelSerializer);
-
       env.registry.optionsForType('serializer', { singleton: true });
       env.registry.optionsForType('adapter', { singleton: true });
 
@@ -25870,15 +24940,15 @@ define(
       strictEqual(personAdapter, lookupAdapter('-rest'), 'looks up the RESTAdapter first');
       resetStore();
 
-      registerAdapter('application', DS.ActiveModelSerializer.extend());
+      registerAdapter('application', DS.RESTSerializer.extend());
       personAdapter = lookupAdapter('person');
 
       strictEqual(personAdapter, lookupAdapter('application'), 'looks up application adapter before RESTAdapter if it exists');
 
       resetStore();
 
-      registerAdapter('application', DS.ActiveModelSerializer.extend());
-      registerAdapter('person', DS.ActiveModelSerializer.extend({ customThingy: true }));
+      registerAdapter('application', DS.RESTSerializer.extend());
+      registerAdapter('person', DS.RESTSerializer.extend({ customThingy: true }));
 
       ok(lookupAdapter('person').get('customThingy'), 'looks up type serializer before application');
     });
@@ -25892,23 +24962,23 @@ define(
 
       resetStore();
 
-      registerSerializer('application', DS.ActiveModelSerializer.extend());
+      registerSerializer('application', DS.RESTSerializer.extend());
       personSerializer = lookupSerializer('person');
       strictEqual(personSerializer, lookupSerializer('application'), 'looks up application before default');
 
       resetStore();
       registerAdapter('person', DS.Adapter.extend({
-        defaultSerializer: '-active-model'
+        defaultSerializer: '-rest'
       }));
       personSerializer = lookupSerializer('person');
 
-      strictEqual(personSerializer, lookupSerializer('-active-model'), 'uses defaultSerializer on adapterFor("model") if application not defined');
+      strictEqual(personSerializer, lookupSerializer('-rest'), 'uses defaultSerializer on adapterFor("model") if application not defined');
 
       resetStore();
       registerAdapter('person', DS.Adapter.extend({
-        defaultSerializer: '-active-model'
+        defaultSerializer: '-rest'
       }));
-      registerSerializer('application', DS.ActiveModelSerializer.extend());
+      registerSerializer('application', DS.RESTSerializer.extend());
       registerSerializer('person', DS.JSONSerializer.extend({ customThingy: true }));
       personSerializer = lookupSerializer('person');
 
@@ -26155,7 +25225,7 @@ define(
 
         store = env.store;
 
-        env.registry.register('serializer:post', DS.ActiveModelSerializer);
+        env.registry.register('serializer:post', DS.RESTSerializer);
       },
 
       teardown: function () {
@@ -26169,10 +25239,13 @@ define(
       expect(2);
 
       run(function () {
-        var person = store.push('person', {
+        var person = store.push({
+          type: 'person',
           id: 'wat',
-          firstName: 'Yehuda',
-          lastName: 'Katz'
+          attributes: {
+            firstName: 'Yehuda',
+            lastName: 'Katz'
+          }
         });
         store.findRecord('person', 'wat').then(function (foundPerson) {
           equal(foundPerson, person, 'record returned via load() is the same as the record returned from findRecord()');
@@ -26192,10 +25265,13 @@ define(
       env.registry.register('model:programmer', Programmer);
 
       run(function () {
-        store.push('programmer', {
+        store.push({
+          type: 'programmer',
           id: 'wat',
-          firstName: 'Yehuda',
-          lastName: 'Katz'
+          attributes: {
+            firstName: 'Yehuda',
+            lastName: 'Katz'
+          }
         });
 
         store.findRecord('programmer', 'wat').then(function (foundProgrammer) {
@@ -26218,10 +25294,13 @@ define(
       });
 
       run(function () {
-        store.push('person', {
+        store.push({
+          type: 'person',
           id: 'wat',
-          firstName: 'Yehuda',
-          lastName: 'Katz'
+          attributes: {
+            firstName: 'Yehuda',
+            lastName: 'Katz'
+          }
         });
       });
     });
@@ -26238,15 +25317,21 @@ define(
       expect(2);
 
       run(function () {
-        var person = store.push('person', {
+        var person = store.push({
+          type: 'person',
           id: 'wat',
-          firstName: 'Yehuda',
-          lastName: 'Katz'
+          attributes: {
+            firstName: 'Yehuda',
+            lastName: 'Katz'
+          }
         });
 
-        store.push('person', {
+        store.push({
+          type: 'person',
           id: 'wat',
-          lastName: 'Katz!'
+          attributes: {
+            lastName: 'Katz!'
+          }
         });
 
         store.findRecord('person', 'wat').then(function (foundPerson) {
@@ -26265,10 +25350,15 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', {
-          id: '1',
-          firstName: 'Robert',
-          lastName: 'Jackson'
+        person = store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              firstName: 'Robert',
+              lastName: 'Jackson'
+            }
+          }
         });
 
         store.push(store.normalize('person', {
@@ -26334,12 +25424,12 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', {
+        person = store.push(store.normalize('person', {
           id: 'wat',
           firstName: 'John',
           lastName: 'Smith',
           phoneNumbers: ['1', '2']
-        });
+        }));
         person.get('phoneNumbers').then(function (phoneNumbers) {
           deepEqual(phoneNumbers.map(function (item) {
             return item.getProperties('id', 'number', 'person');
@@ -26361,7 +25451,7 @@ define(
         store.pushPayload('post', {
           posts: [{
             id: '1',
-            post_title: 'Ember rocks'
+            postTitle: 'Ember rocks'
           }]
         });
       });
@@ -26374,7 +25464,7 @@ define(
         store.pushPayload('post', {
           posts: [{
             id: '1',
-            post_title: 'Ember rocks (updated)'
+            postTitle: 'Ember rocks (updated)'
           }]
         });
       });
@@ -26387,7 +25477,7 @@ define(
         store.pushPayload('post', {
           post: {
             id: '1',
-            post_title: 'Ember rocks'
+            postTitle: 'Ember rocks'
           }
         });
       });
@@ -26400,7 +25490,7 @@ define(
         store.pushPayload('post', {
           post: {
             id: '1',
-            post_title: 'Ember rocks (updated)'
+            postTitle: 'Ember rocks (updated)'
           }
         });
       });
@@ -26555,12 +25645,12 @@ define(
 
       warns(function () {
         run(function () {
-          store.push('person', {
+          store.push(store.normalize('person', {
             id: '1',
             links: {
               phoneNumbers: '/api/people/1/phone-numbers'
             }
-          });
+          }));
         });
       }, /You have pushed a record of type 'person' with 'phoneNumbers' as a link, but the association is not an async relationship./);
     });
@@ -26572,27 +25662,27 @@ define(
 
       expectAssertion(function () {
         run(function () {
-          store.push('person', {
+          store.push(store.normalize('person', {
             id: '1',
             links: {
               phoneNumbers: {
                 href: '/api/people/1/phone-numbers'
               }
             }
-          });
+          }));
         });
       }, 'You have pushed a record of type \'person\' with \'phoneNumbers\' as a link, but the value of that link is not a string.');
     });
 
     test('Calling push with a link containing the value null', function () {
       run(function () {
-        store.push('person', {
+        store.push(store.normalize('person', {
           id: '1',
           firstName: 'Tan',
           links: {
             phoneNumbers: null
           }
-        });
+        }));
       });
 
       var person = store.peekRecord('person', 1);
