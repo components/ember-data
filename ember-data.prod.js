@@ -2198,7 +2198,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.6d7ffb0bdc'
+      VERSION: '2.0.0+canary.b6294c232b'
     });
 
     if (Ember.libraries) {
@@ -11381,50 +11381,6 @@
     var ember$data$lib$serializers$rest$serializer$$RESTSerializer = ember$data$lib$serializers$json$serializer$$default.extend({
 
       /**
-        If you want to do normalizations specific to some part of the payload, you
-        can specify those under `normalizeHash`.
-         For example, given the following json where the the `IDs` under
-        `"comments"` are provided as `_id` instead of `id`.
-         ```javascript
-        {
-          "post": {
-            "id": 1,
-            "title": "Rails is omakase",
-            "comments": [ 1, 2 ]
-          },
-          "comments": [{
-            "_id": 1,
-            "body": "FIRST"
-          }, {
-            "_id": 2,
-            "body": "Rails is unagi"
-          }]
-        }
-        ```
-         You use `normalizeHash` to normalize just the comments:
-         ```app/serializers/post.js
-        import DS from 'ember-data';
-         export default DS.RESTSerializer.extend({
-          normalizeHash: {
-            comments: function(hash) {
-              hash.id = hash._id;
-              delete hash._id;
-              return hash;
-            }
-          }
-        });
-        ```
-         The key under `normalizeHash` is usually just the original key
-        that was in the original payload. However, key names will be
-        impacted by any modifications done in the `normalizePayload`
-        method. The `DS.RESTSerializer`'s default implementation makes no
-        changes to the payload keys.
-         @property normalizeHash
-        @type {Object}
-        @default undefined
-      */
-
-      /**
         Normalizes a part of the JSON payload returned by
         the server. You should override this method, munge the hash
         and call super if you have generic normalization to do.
@@ -11687,14 +11643,13 @@
         that fetches and saves are structured.
          @method pushPayload
         @param {DS.Store} store
-        @param {Object} rawPayload
+        @param {Object} payload
       */
-      pushPayload: function (store, rawPayload) {
+      pushPayload: function (store, payload) {
         var documentHash = {
           data: [],
           included: []
         };
-        var payload = this.normalizePayload(rawPayload);
 
         for (var prop in payload) {
           var modelName = this.modelNameFromPayloadKey(prop);
@@ -11957,17 +11912,6 @@
       */
       payloadKeyFromModelName: function (modelName) {
         return ember$data$lib$serializers$rest$serializer$$camelize(modelName);
-      },
-
-      /**
-       Deprecated. Use modelNameFromPayloadKey instead
-         @method typeForRoot
-        @param {String} modelName
-        @return {String}
-        @deprecated
-      */
-      typeForRoot: function (modelName) {
-                return this.modelNameFromPayloadKey(modelName);
       },
 
       /**
