@@ -23,16 +23,10 @@
       */
       buildURL: function (modelName, id, snapshot, requestType, query) {
         switch (requestType) {
-          case 'find':
-            // The `find` case is deprecated
-            return this.urlForFind(id, modelName, snapshot);
           case 'findRecord':
             return this.urlForFindRecord(id, modelName, snapshot);
           case 'findAll':
             return this.urlForFindAll(modelName);
-          case 'findQuery':
-            // The `findQuery` case is deprecated
-            return this.urlForFindQuery(query, modelName);
           case 'query':
             return this.urlForQuery(query, modelName);
           case 'findMany':
@@ -93,21 +87,8 @@
        * @param {String} modelName
        * @param {DS.Snapshot} snapshot
        * @return {String} url
-       * @deprecated Use [urlForFindRecord](#method_urlForFindRecord) instead
-       */
-      urlForFind: ember$data$lib$adapters$build$url$mixin$$urlForFind,
-
-      /**
-       * @method urlForFind
-       * @param {String} id
-       * @param {String} modelName
-       * @param {DS.Snapshot} snapshot
-       * @return {String} url
        */
       urlForFindRecord: function (id, modelName, snapshot) {
-        if (this.urlForFind !== ember$data$lib$adapters$build$url$mixin$$urlForFind) {
-                    return this.urlForFind(id, modelName, snapshot);
-        }
         return this._buildURL(modelName, id);
       },
 
@@ -121,24 +102,12 @@
       },
 
       /**
-       * @method urlForFindQuery
-       * @param {Object} query
-       * @param {String} modelName
-       * @return {String} url
-       * @deprecated Use [urlForQuery](#method_urlForQuery) instead
-       */
-      urlForFindQuery: ember$data$lib$adapters$build$url$mixin$$urlForFindQuery,
-
-      /**
        * @method urlForQuery
        * @param {Object} query
        * @param {String} modelName
        * @return {String} url
        */
       urlForQuery: function (query, modelName) {
-        if (this.urlForFindQuery !== ember$data$lib$adapters$build$url$mixin$$urlForFindQuery) {
-                    return this.urlForFindQuery(query, modelName);
-        }
         return this._buildURL(modelName);
       },
 
@@ -271,14 +240,6 @@
         return Ember.String.pluralize(camelized);
       }
     });
-
-    function ember$data$lib$adapters$build$url$mixin$$urlForFind(id, modelName, snapshot) {
-            return this._buildURL(modelName, id);
-    }
-
-    function ember$data$lib$adapters$build$url$mixin$$urlForFindQuery(query, modelName) {
-            return this._buildURL(modelName);
-    }
 
     var ember$data$lib$adapters$errors$$EmberError = Ember.Error;
 
@@ -2112,7 +2073,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.0d603e964d'
+      VERSION: '2.0.0+canary.713eac0201'
     });
 
     if (Ember.libraries) {
