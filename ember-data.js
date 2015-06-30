@@ -1221,8 +1221,7 @@
 
     var ember$data$lib$system$map$$default = ember$data$lib$system$map$$Map;
 
-    var ember$data$lib$adapters$rest$adapter$$get = Ember.get;
-    var ember$data$lib$adapters$rest$adapter$$set = Ember.set;/**
+    var ember$data$lib$adapters$rest$adapter$$get = Ember.get;/**
       The REST adapter allows your store to communicate with an HTTP server by
       transmitting JSON via XHR. Most Ember.js apps that consume a JSON API
       should use the REST adapter.
@@ -1524,20 +1523,6 @@
        */
 
       /**
-        @method find
-        @param {DS.Store} store
-        @param {DS.Model} type
-        @param {String} id
-        @param {DS.Snapshot} snapshot
-        @return {Promise} promise
-        @deprecated Use [findRecord](#method_findRecord) instead
-      */
-      find: function (store, type, id, snapshot) {
-        Ember.deprecate("RestAdapter#find has been deprecated and renamed to `findRecord`.");
-        return this.ajax(this.buildURL(type.modelName, id, snapshot, "find"), "GET");
-      },
-
-      /**
         Called by the store in order to fetch the JSON for a given
         type and ID.
          The `findRecord` method makes an Ajax request to a URL computed by
@@ -1551,11 +1536,6 @@
         @return {Promise} promise
       */
       findRecord: function (store, type, id, snapshot) {
-        var find = ember$data$lib$adapters$rest$adapter$$RESTAdapter.prototype.find;
-        if (find !== this.find) {
-          Ember.deprecate("RestAdapter#find has been deprecated and renamed to `findRecord`.");
-          return this.find(store, type, id, snapshot);
-        }
         return this.ajax(this.buildURL(type.modelName, id, snapshot, "findRecord"), "GET");
       },
 
@@ -1591,32 +1571,6 @@
          The `query` argument is a simple JavaScript object that will be passed directly
         to the server as parameters.
          @private
-        @method findQuery
-        @param {DS.Store} store
-        @param {DS.Model} type
-        @param {Object} query
-        @return {Promise} promise
-        @deprecated Use [query](#method_query) instead
-      */
-      findQuery: function (store, type, query) {
-        Ember.deprecate("RestAdapter#findQuery has been deprecated and renamed to `query`.");
-        var url = this.buildURL(type.modelName, null, null, "findQuery", query);
-
-        if (this.sortQueryParams) {
-          query = this.sortQueryParams(query);
-        }
-
-        return this.ajax(url, "GET", { data: query });
-      },
-
-      /**
-        Called by the store in order to fetch a JSON array for
-        the records that match a particular query.
-         The `findQuery` method makes an Ajax (HTTP GET) request to a URL computed by `buildURL`, and returns a
-        promise for the resulting payload.
-         The `query` argument is a simple JavaScript object that will be passed directly
-        to the server as parameters.
-         @private
         @method query
         @param {DS.Store} store
         @param {DS.Model} type
@@ -1624,12 +1578,6 @@
         @return {Promise} promise
       */
       query: function (store, type, query) {
-        var findQuery = ember$data$lib$adapters$rest$adapter$$RESTAdapter.prototype.findQuery;
-        if (findQuery !== this.findQuery) {
-          Ember.deprecate("RestAdapter#findQuery has been deprecated and renamed to `query`.");
-          return this.findQuery(store, type, query);
-        }
-
         var url = this.buildURL(type.modelName, null, null, "query", query);
 
         if (this.sortQueryParams) {
@@ -1879,25 +1827,6 @@
       },
 
       /**
-        Takes an ajax response, and returns an error payload.
-         @method ajaxError
-        @deprecated Use [handleResponse](#method_handleResponse) instead
-        @param  {Object} jqXHR
-        @param  {Object} responseText
-        @param  {Object} errorThrown
-        @return {Object} jqXHR
-      */
-
-      /**
-        Takes an ajax response, and returns the json payload.
-         @method ajaxSuccess
-        @deprecated Use [handleResponse](#method_handleResponse) instead
-        @param  {Object} jqXHR
-        @param  {Object} jsonPayload
-        @return {Object} jsonPayload
-      */
-
-      /**
         Takes an ajax response, and returns the json payload or an error.
          By default this hook just returns the json payload passed to it.
         You might want to override it in two cases:
@@ -1986,11 +1915,6 @@
           hash.success = function (payload, textStatus, jqXHR) {
             var response = undefined;
 
-            if (adapter.ajaxSuccess) {
-              Ember.deprecate("`ajaxSuccess` has been deprecated. Use `isSuccess`, `isInvalid` or `handleResponse` instead.");
-              response = adapter.ajaxSuccess(jqXHR, payload);
-            }
-
             if (!(response instanceof ember$data$lib$adapters$errors$$AdapterError)) {
               response = adapter.handleResponse(jqXHR.status, ember$data$lib$adapters$rest$adapter$$parseResponseHeaders(jqXHR.getAllResponseHeaders()), response || payload);
             }
@@ -2004,11 +1928,6 @@
 
           hash.error = function (jqXHR, textStatus, errorThrown) {
             var error = undefined;
-
-            if (adapter.ajaxError) {
-              Ember.deprecate("`ajaxError` has been deprecated. Use `isSuccess`, `isInvalid` or `handleResponse` instead.");
-              error = adapter.ajaxError(jqXHR, textStatus, errorThrown);
-            }
 
             if (!(error instanceof Error)) {
               if (errorThrown instanceof Error) {
@@ -2129,19 +2048,6 @@
       }
     }
 
-    Object.defineProperty(ember$data$lib$adapters$rest$adapter$$RESTAdapter.prototype, "maxUrlLength", {
-      enumerable: false,
-      get: function () {
-        Ember.deprecate("maxUrlLength has been deprecated (wrong casing). You should use maxURLLength instead.");
-        return this.maxURLLength;
-      },
-
-      set: function (value) {
-        Ember.deprecate("maxUrlLength has been deprecated (wrong casing). You should use maxURLLength instead.");
-        ember$data$lib$adapters$rest$adapter$$set(this, "maxURLLength", value);
-      }
-    });
-
     var ember$data$lib$adapters$rest$adapter$$default = ember$data$lib$adapters$rest$adapter$$RESTAdapter;
 
     var ember$data$lib$adapters$json$api$adapter$$default = ember$data$lib$adapters$rest$adapter$$default.extend({
@@ -2218,7 +2124,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.b6294c232b'
+      VERSION: '2.0.0+canary.0d603e964d'
     });
 
     if (Ember.libraries) {
