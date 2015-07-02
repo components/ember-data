@@ -2081,7 +2081,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.bfeeb901e1'
+      VERSION: '2.0.0+canary.cf428d4f5d'
     });
 
     if (Ember.libraries) {
@@ -9930,7 +9930,8 @@
       /*
         Returns the resource's attributes formatted as a JSON-API "attributes object".
          http://jsonapi.org/format/#document-resource-object-attributes
-         @method extractId
+         @method extractAttributes
+        @param {Object} modelClass
         @param {Object} resourceHash
         @return {Object}
       */
