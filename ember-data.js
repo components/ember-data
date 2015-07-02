@@ -2081,7 +2081,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.cf428d4f5d'
+      VERSION: '2.0.0+canary.acee775c0f'
     });
 
     if (Ember.libraries) {
