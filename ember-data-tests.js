@@ -4854,6 +4854,16 @@ define(
       });
     });
 
+    test('The JSONAPIAdapter is the default adapter when no custom adapter is provided', function () {
+      run(function () {
+        var store = getStore();
+
+        var adapter = store.adapterFor('application');
+
+        ok(adapter instanceof DS.JSONAPIAdapter, 'default adapter should be the JSONAPIAdapter');
+      });
+    });
+
     module('integration/application - Injecting the Default Store', {
       setup: function () {
         run(function () {
@@ -23249,14 +23259,6 @@ define(
       store = createStore({ adapter: "-rest" });
 
       ok(store.get("defaultAdapter") instanceof DS.RESTAdapter);
-    });
-
-    test("Default RESTAdapter has been deprecated", function () {
-      expectDeprecation(function () {
-        run(function () {
-          store = createStore({ adapter: "-rest" });
-        });
-      }, /You are currently using the default DS.RESTAdapter adapter. For Ember 2.0 the default adapter will be DS.JSONAPIAdapter. If you would like to continue using DS.RESTAdapter please create an application adapter that extends DS.RESTAdapter./);
     });
 
     test("Adapter can not be set as an instance", function () {

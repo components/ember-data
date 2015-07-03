@@ -2073,7 +2073,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.acee775c0f'
+      VERSION: '2.0.0+canary.f548244d31'
     });
 
     if (Ember.libraries) {
@@ -4383,10 +4383,6 @@
       },
 
       instanceFor: function (key) {
-        if (key === 'adapter:-rest') {
-          ember$lib$main$$default.deprecate('You are currently using the default DS.RESTAdapter adapter. For Ember 2.0 the default adapter will be DS.JSONAPIAdapter. If you would like to continue using DS.RESTAdapter please create an application adapter that extends DS.RESTAdapter.');
-        }
-
         var cache = this._cache;
         if (!cache[key]) {
           var instance = this._container.lookup(key);
@@ -7339,7 +7335,7 @@
         @default DS.RESTAdapter
         @type {(DS.Adapter|String)}
       */
-      adapter: "-rest",
+      adapter: "-json-api",
 
       /**
         Returns a JSON representation of the record using a custom
@@ -9077,7 +9073,7 @@
 
       _adapterFallbacks: Ember.computed("adapter", function () {
         var adapter = this.get("adapter");
-        return ["application", adapter, "-rest"];
+        return ["application", adapter, "-json-api"];
       }),
 
       lookupSerializer: function (name, fallbacks) {
