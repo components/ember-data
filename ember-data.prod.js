@@ -396,8 +396,8 @@
         This method is used by the store to determine if the store should
         reload a record from the adapter when a record is requested by
         `store.findRecord`.
-         If this method returns true the store will re fetch a record from
-        the adapter. If is method returns false the store will resolve
+         If this method returns true, the store will re-fetch a record from
+        the adapter. If this method returns false, the store will resolve
         immediately using the cached record.
          @method shouldReloadRecord
         @param {DS.Store} store
@@ -412,10 +412,10 @@
         This method is used by the store to determine if the store should
         reload all records from the adapter when records are requested by
         `store.findAll`.
-         If this method returns true the store will re fetch all records from
-        the adapter. If is method returns false the store will resolve
+         If this method returns true, the store will re-fetch all records from
+        the adapter. If this method returns false, the store will resolve
         immediately using the cached record.
-         @method shouldReloadRecord
+         @method shouldReloadAll
         @param {DS.Store} store
         @param {DS.SnapshotRecordArray} snapshotRecordArray
         @return {Boolean}
@@ -776,13 +776,13 @@
       }
     });
 
+    var ember$data$lib$system$object$polyfills$$keysFunc = Object.keys || Ember.keys;
+    var ember$data$lib$system$object$polyfills$$create = Object.create || Ember.create;
+
     var ember$data$lib$adapters$errors$$EmberError = Ember.Error;
-    var ember$data$lib$adapters$errors$$create = Ember.create;
 
     var ember$data$lib$adapters$errors$$forEach = Ember.ArrayPolyfills.forEach;
-    var ember$data$lib$adapters$errors$$SOURCE_POINTER_REGEXP = /data\/(attributes|relationships)\/(.*)/;
-
-    /**
+    var ember$data$lib$adapters$errors$$SOURCE_POINTER_REGEXP = /data\/(attributes|relationships)\/(.*)/;/**
       @class AdapterError
       @namespace DS
     */
@@ -797,7 +797,7 @@
       }];
     }
 
-    ember$data$lib$adapters$errors$$AdapterError.prototype = ember$data$lib$adapters$errors$$create(ember$data$lib$adapters$errors$$EmberError.prototype);
+    ember$data$lib$adapters$errors$$AdapterError.prototype = ember$data$lib$system$object$polyfills$$create(ember$data$lib$adapters$errors$$EmberError.prototype);
 
     /**
       A `DS.InvalidError` is used by an adapter to signal the external API
@@ -864,7 +864,7 @@
       ember$data$lib$adapters$errors$$AdapterError.call(this, errors, "The adapter rejected the commit because it was invalid");
     }
 
-    ember$data$lib$adapters$errors$$InvalidError.prototype = ember$data$lib$adapters$errors$$create(ember$data$lib$adapters$errors$$AdapterError.prototype);
+    ember$data$lib$adapters$errors$$InvalidError.prototype = ember$data$lib$system$object$polyfills$$create(ember$data$lib$adapters$errors$$AdapterError.prototype);
 
     /**
       @class TimeoutError
@@ -874,7 +874,7 @@
       ember$data$lib$adapters$errors$$AdapterError.call(this, null, "The adapter operation timed out");
     }
 
-    ember$data$lib$adapters$errors$$TimeoutError.prototype = ember$data$lib$adapters$errors$$create(ember$data$lib$adapters$errors$$AdapterError.prototype);
+    ember$data$lib$adapters$errors$$TimeoutError.prototype = ember$data$lib$system$object$polyfills$$create(ember$data$lib$adapters$errors$$AdapterError.prototype);
 
     /**
       @class AbortError
@@ -884,7 +884,7 @@
       ember$data$lib$adapters$errors$$AdapterError.call(this, null, "The adapter operation was aborted");
     }
 
-    ember$data$lib$adapters$errors$$AbortError.prototype = ember$data$lib$adapters$errors$$create(ember$data$lib$adapters$errors$$AdapterError.prototype);
+    ember$data$lib$adapters$errors$$AbortError.prototype = ember$data$lib$system$object$polyfills$$create(ember$data$lib$adapters$errors$$AdapterError.prototype);
 
     /**
       @private
@@ -893,7 +893,7 @@
       var out = [];
 
       if (Ember.isPresent(errors)) {
-        ember$data$lib$adapters$errors$$forEach.call(Ember.keys(errors), function (key) {
+        ember$data$lib$adapters$errors$$forEach.call(ember$data$lib$system$object$polyfills$$keysFunc(errors), function (key) {
           var messages = Ember.makeArray(errors[key]);
           for (var i = 0; i < messages.length; i++) {
             out.push({
@@ -1446,7 +1446,7 @@
         @return {Object}
       */
       sortQueryParams: function (obj) {
-        var keys = Ember.keys(obj);
+        var keys = ember$data$lib$system$object$polyfills$$keysFunc(obj);
         var len = keys.length;
         if (len < 2) {
           return obj;
@@ -2067,7 +2067,7 @@
         var headers = ember$data$lib$adapters$rest$adapter$$get(this, "headers");
         if (headers !== undefined) {
           hash.beforeSend = function (xhr) {
-            ember$data$lib$adapters$rest$adapter$$forEach.call(Ember.keys(headers), function (key) {
+            ember$data$lib$adapters$rest$adapter$$forEach.call(ember$data$lib$system$object$polyfills$$keysFunc(headers), function (key) {
               xhr.setRequestHeader(key, headers[key]);
             });
           };
@@ -2114,7 +2114,7 @@
     });
 
     function ember$data$lib$adapters$rest$adapter$$parseResponseHeaders(headerStr) {
-      var headers = Ember.create(null);
+      var headers = ember$data$lib$system$object$polyfills$$create(null);
       if (!headerStr) {
         return headers;
       }
@@ -3424,7 +3424,8 @@
       /*
         Returns the resource's attributes formatted as a JSON-API "attributes object".
          http://jsonapi.org/format/#document-resource-object-attributes
-         @method extractId
+         @method extractAttributes
+        @param {Object} modelClass
         @param {Object} resourceHash
         @return {Object}
       */
@@ -3539,6 +3540,7 @@
          @method normalizePayload
         @param {Object} payload
         @return {Object} the normalized payload
+        @deprecated
       */
       normalizePayload: function (payload) {
         return payload;
@@ -4264,7 +4266,7 @@
         @return {Object} json The deserialized payload
       */
       extractSingle: function (store, typeClass, payload, id, requestType) {
-        var normalizedPayload = this.normalizePayload(payload);
+                var normalizedPayload = this.normalizePayload(payload);
         return this.normalize(typeClass, normalizedPayload);
       },
 
@@ -4291,7 +4293,7 @@
         @return {Array} array An array of deserialized objects
       */
       extractArray: function (store, typeClass, arrayPayload, id, requestType) {
-        var normalizedPayload = this.normalizePayload(arrayPayload);
+                var normalizedPayload = this.normalizePayload(arrayPayload);
         var serializer = this;
 
         return ember$data$lib$serializers$json$serializer$$map.call(normalizedPayload, function (singlePayload) {
@@ -5409,9 +5411,9 @@
       changedAttributes: function () {
         var oldData = ember$data$lib$system$model$model$$get(this._internalModel, "_data");
         var newData = ember$data$lib$system$model$model$$get(this._internalModel, "_attributes");
-        var diffData = Ember.create(null);
+        var diffData = ember$data$lib$system$object$polyfills$$create(null);
 
-        var newDataKeys = Ember.keys(newData);
+        var newDataKeys = ember$data$lib$system$object$polyfills$$keysFunc(newData);
 
         for (var i = 0, _length = newDataKeys.length; i < _length; i++) {
           var key = newDataKeys[i];
@@ -5629,7 +5631,7 @@
          }
        });
        ```
-       @property
+       @property modelName
        @type String
        @readonly
       */
@@ -5881,14 +5883,14 @@
       };
 
       if (payload.attributes) {
-        var attributeKeys = Ember.keys(payload.attributes);
+        var attributeKeys = ember$data$lib$system$object$polyfills$$keysFunc(payload.attributes);
         ember$data$lib$system$store$serializer$response$$forEach.call(attributeKeys, function (key) {
           var attribute = payload.attributes[key];
           data[key] = attribute;
         });
       }
       if (payload.relationships) {
-        var relationshipKeys = Ember.keys(payload.relationships);
+        var relationshipKeys = ember$data$lib$system$object$polyfills$$keysFunc(payload.relationships);
         ember$data$lib$system$store$serializer$response$$forEach.call(relationshipKeys, function (key) {
           var relationship = payload.relationships[key];
           if (relationship.hasOwnProperty('data')) {
@@ -5993,6 +5995,7 @@
          @property normalizeHash
         @type {Object}
         @default undefined
+        @deprecated
       */
 
       /**
@@ -6062,7 +6065,7 @@
         this.normalizeUsingDeclaredMapping(typeClass, hash);
 
         if (this.normalizeHash && this.normalizeHash[prop]) {
-          this.normalizeHash[prop](hash);
+                    this.normalizeHash[prop](hash);
         }
 
         this.applyTransforms(typeClass, hash);
@@ -6129,7 +6132,7 @@
                     documentHash.meta = meta;
         }
 
-        var keys = Ember.keys(payload);
+        var keys = ember$data$lib$system$object$polyfills$$keysFunc(payload);
 
         for (var i = 0, _length = keys.length; i < _length; i++) {
           var prop = keys[i];
@@ -6306,7 +6309,7 @@
         @return {Object} the primary response to the original request
       */
       extractSingle: function (store, primaryTypeClass, rawPayload, recordId) {
-        var payload = this.normalizePayload(rawPayload);
+                var payload = this.normalizePayload(rawPayload);
         var primaryRecord;
 
         for (var prop in payload) {
@@ -6442,7 +6445,7 @@
           to the original query.
       */
       extractArray: function (store, primaryTypeClass, rawPayload) {
-        var payload = this.normalizePayload(rawPayload);
+                var payload = this.normalizePayload(rawPayload);
         var primaryArray;
 
         for (var prop in payload) {
@@ -6516,7 +6519,7 @@
           return;
         }
 
-        var payload = this.normalizePayload(rawPayload);
+                var payload = this.normalizePayload(rawPayload);
 
         for (var prop in payload) {
           var modelName = this.modelNameFromPayloadKey(prop);
@@ -6816,7 +6819,7 @@
     */
     function ember$data$lib$serializers$rest$serializer$$_newNormalize(modelClass, resourceHash, prop) {
       if (this.normalizeHash && this.normalizeHash[prop]) {
-        this.normalizeHash[prop](resourceHash);
+                this.normalizeHash[prop](resourceHash);
       }
     }
 
@@ -6830,7 +6833,8 @@
         data: [],
         included: []
       };
-      var payload = this.normalizePayload(rawPayload);
+
+            var payload = this.normalizePayload(rawPayload);
 
       for (var prop in payload) {
         var modelName = this.modelNameFromPayloadKey(prop);
@@ -7692,9 +7696,8 @@
     });
 
     var ember$data$lib$system$clone$null$$default = ember$data$lib$system$clone$null$$cloneNull;
-
     function ember$data$lib$system$clone$null$$cloneNull(source) {
-      var clone = Ember.create(null);
+      var clone = ember$data$lib$system$object$polyfills$$create(null);
       for (var key in source) {
         clone[key] = source[key];
       }
@@ -7769,7 +7772,7 @@
       return new Constructor();
     };
 
-    ember$data$lib$system$ordered$set$$OrderedSet.prototype = Ember.create(ember$data$lib$system$ordered$set$$EmberOrderedSet.prototype);
+    ember$data$lib$system$ordered$set$$OrderedSet.prototype = ember$data$lib$system$object$polyfills$$create(ember$data$lib$system$ordered$set$$EmberOrderedSet.prototype);
     ember$data$lib$system$ordered$set$$OrderedSet.prototype.constructor = ember$data$lib$system$ordered$set$$OrderedSet;
     ember$data$lib$system$ordered$set$$OrderedSet.prototype._super$constructor = ember$data$lib$system$ordered$set$$EmberOrderedSet;
 
@@ -8117,15 +8120,15 @@
     */
     function ember$data$lib$system$store$container$instance$cache$$ContainerInstanceCache(container) {
       this._container = container;
-      this._cache = ember$lib$main$$default.create(null);
+      this._cache = ember$data$lib$system$object$polyfills$$create(null);
     }
 
-    ember$data$lib$system$store$container$instance$cache$$ContainerInstanceCache.prototype = ember$lib$main$$default.create(null);
+    ember$data$lib$system$store$container$instance$cache$$ContainerInstanceCache.prototype = ember$data$lib$system$object$polyfills$$create(null);
 
     ember$lib$main$$default.merge(ember$data$lib$system$store$container$instance$cache$$ContainerInstanceCache.prototype, {
       get: function (type, preferredKey, fallbacks) {
         var cache = this._cache;
-        var preferredLookupKey = '' + type + ':' + preferredKey;
+        var preferredLookupKey = type + ':' + preferredKey;
 
         if (!(preferredLookupKey in cache)) {
           var instance = this.instanceFor(preferredLookupKey) || this._findInstance(type, fallbacks);
@@ -8139,7 +8142,7 @@
       _findInstance: function (type, fallbacks) {
         for (var i = 0, _length = fallbacks.length; i < _length; i++) {
           var fallback = fallbacks[i];
-          var lookupKey = '' + type + ':' + fallback;
+          var lookupKey = type + ':' + fallback;
           var instance = this.instanceFor(lookupKey);
 
           if (instance) {
@@ -8165,7 +8168,7 @@
 
       destroy: function () {
         var cache = this._cache;
-        var cacheEntries = ember$lib$main$$default.keys(cache);
+        var cacheEntries = ember$data$lib$system$object$polyfills$$keysFunc(cache);
 
         for (var i = 0, _length2 = cacheEntries.length; i < _length2; i++) {
           var cacheKey = cacheEntries[i];
@@ -8185,12 +8188,12 @@
     });
 
     var ember$data$lib$system$store$container$instance$cache$$default = ember$data$lib$system$store$container$instance$cache$$ContainerInstanceCache;
+
     function ember$data$lib$system$merge$$merge(original, updates) {
       if (!updates || typeof updates !== 'object') {
         return original;
       }
-
-      var props = Ember.keys(updates);
+      var props = ember$data$lib$system$object$polyfills$$keysFunc(updates);
       var prop;
       var length = props.length;
 
@@ -8203,6 +8206,10 @@
     }
 
     var ember$data$lib$system$merge$$default = ember$data$lib$system$merge$$merge;
+
+    /**
+      @module ember-data
+    */
 
     var ember$data$lib$system$model$states$$get = Ember.get;
     /*
@@ -8448,7 +8455,7 @@
         loadingData: Ember.K,
 
         propertyWasReset: function (internalModel, name) {
-          var length = Ember.keys(internalModel._attributes).length;
+          var length = ember$data$lib$system$object$polyfills$$keysFunc(internalModel._attributes).length;
           var stillDirty = length > 0;
 
           if (!stillDirty) {
@@ -8558,7 +8565,7 @@
         },
 
         exit: function (internalModel) {
-          internalModel._inFlightAttributes = Ember.create(null);
+          internalModel._inFlightAttributes = ember$data$lib$system$object$polyfills$$create(null);
         }
       }
     };
@@ -8748,7 +8755,7 @@
         saved: {
           setup: function (internalModel) {
             var attrs = internalModel._attributes;
-            var isDirty = Ember.keys(attrs).length > 0;
+            var isDirty = ember$data$lib$system$object$polyfills$$keysFunc(attrs).length > 0;
 
             if (isDirty) {
               internalModel.adapterDidDirty();
@@ -8941,7 +8948,7 @@
     function ember$data$lib$system$model$states$$wireState(object, parent, name) {
       /*jshint proto:true*/
       // TODO: Use Object.create and copy instead
-      object = ember$data$lib$system$model$states$$mixin(parent ? Ember.create(parent) : {}, object);
+      object = ember$data$lib$system$model$states$$mixin(parent ? ember$data$lib$system$object$polyfills$$create(parent) : {}, object);
       object.parentState = parent;
       object.stateName = name;
 
@@ -9509,7 +9516,7 @@
       this.manyArray.isPolymorphic = this.isPolymorphic;
     };
 
-    ember$data$lib$system$relationships$state$has$many$$ManyRelationship.prototype = Ember.create(ember$data$lib$system$relationships$state$relationship$$default.prototype);
+    ember$data$lib$system$relationships$state$has$many$$ManyRelationship.prototype = ember$data$lib$system$object$polyfills$$create(ember$data$lib$system$relationships$state$relationship$$default.prototype);
     ember$data$lib$system$relationships$state$has$many$$ManyRelationship.prototype.constructor = ember$data$lib$system$relationships$state$has$many$$ManyRelationship;
     ember$data$lib$system$relationships$state$has$many$$ManyRelationship.prototype._super$constructor = ember$data$lib$system$relationships$state$relationship$$default;
 
@@ -9708,7 +9715,7 @@
       this.canonicalState = null;
     };
 
-    ember$data$lib$system$relationships$state$belongs$to$$BelongsToRelationship.prototype = Ember.create(ember$data$lib$system$relationships$state$relationship$$default.prototype);
+    ember$data$lib$system$relationships$state$belongs$to$$BelongsToRelationship.prototype = ember$data$lib$system$object$polyfills$$create(ember$data$lib$system$relationships$state$relationship$$default.prototype);
     ember$data$lib$system$relationships$state$belongs$to$$BelongsToRelationship.prototype.constructor = ember$data$lib$system$relationships$state$belongs$to$$BelongsToRelationship;
     ember$data$lib$system$relationships$state$belongs$to$$BelongsToRelationship.prototype._super$constructor = ember$data$lib$system$relationships$state$relationship$$default;
 
@@ -9862,7 +9869,7 @@
 
     var ember$data$lib$system$relationships$state$create$$Relationships = function (record) {
       this.record = record;
-      this.initializedRelationships = Ember.create(null);
+      this.initializedRelationships = ember$data$lib$system$object$polyfills$$create(null);
     };
 
     ember$data$lib$system$relationships$state$create$$Relationships.prototype.has = function (key) {
@@ -9880,9 +9887,11 @@
 
     var ember$data$lib$system$relationships$state$create$$default = ember$data$lib$system$relationships$state$create$$Relationships;
 
-    var ember$data$lib$system$snapshot$$get = Ember.get;
-
     /**
+      @module ember-data
+    */
+
+    var ember$data$lib$system$snapshot$$get = Ember.get;/**
       @class Snapshot
       @namespace DS
       @private
@@ -9890,11 +9899,11 @@
       @param {DS.Model} internalModel The model to create a snapshot from
     */
     function ember$data$lib$system$snapshot$$Snapshot(internalModel) {
-      this._attributes = Ember.create(null);
-      this._belongsToRelationships = Ember.create(null);
-      this._belongsToIds = Ember.create(null);
-      this._hasManyRelationships = Ember.create(null);
-      this._hasManyIds = Ember.create(null);
+      this._attributes = ember$data$lib$system$object$polyfills$$create(null);
+      this._belongsToRelationships = ember$data$lib$system$object$polyfills$$create(null);
+      this._belongsToIds = ember$data$lib$system$object$polyfills$$create(null);
+      this._hasManyRelationships = ember$data$lib$system$object$polyfills$$create(null);
+      this._hasManyIds = ember$data$lib$system$object$polyfills$$create(null);
 
       var record = internalModel.getRecord();
       this.record = record;
@@ -10024,8 +10033,8 @@
         @return {Object} All changed attributes of the current snapshot
       */
       changedAttributes: function () {
-        var changedAttributes = Ember.create(null);
-        var changedAttributeKeys = Ember.keys(this._changedAttributes);
+        var changedAttributes = ember$data$lib$system$object$polyfills$$create(null);
+        var changedAttributeKeys = ember$data$lib$system$object$polyfills$$keysFunc(this._changedAttributes);
 
         for (var i = 0, _length = changedAttributeKeys.length; i < _length; i++) {
           var key = changedAttributeKeys[i];
@@ -10276,8 +10285,8 @@
     var ember$data$lib$system$model$internal$model$$forEach = Ember.ArrayPolyfills.forEach;
     var ember$data$lib$system$model$internal$model$$map = Ember.ArrayPolyfills.map;
 
-    var ember$data$lib$system$model$internal$model$$_extractPivotNameCache = Ember.create(null);
-    var ember$data$lib$system$model$internal$model$$_splitOnDotCache = Ember.create(null);
+    var ember$data$lib$system$model$internal$model$$_extractPivotNameCache = ember$data$lib$system$object$polyfills$$create(null);
+    var ember$data$lib$system$model$internal$model$$_splitOnDotCache = ember$data$lib$system$object$polyfills$$create(null);
 
     function ember$data$lib$system$model$internal$model$$splitOnDot(name) {
       return ember$data$lib$system$model$internal$model$$_splitOnDotCache[name] || (ember$data$lib$system$model$internal$model$$_splitOnDotCache[name] = name.split("."));
@@ -10314,13 +10323,13 @@
       this.id = id;
       this.store = store;
       this.container = container;
-      this._data = data || Ember.create(null);
+      this._data = data || ember$data$lib$system$object$polyfills$$create(null);
       this.modelName = type.modelName;
       this.dataHasInitialized = false;
       //Look into making this lazy
       this._deferredTriggers = [];
-      this._attributes = Ember.create(null);
-      this._inFlightAttributes = Ember.create(null);
+      this._attributes = ember$data$lib$system$object$polyfills$$create(null);
+      this._inFlightAttributes = ember$data$lib$system$object$polyfills$$create(null);
       this._relationships = new ember$data$lib$system$relationships$state$create$$default(this);
       this.currentState = ember$data$lib$system$model$states$$default.empty;
       this.isReloading = false;
@@ -10347,7 +10356,7 @@
          would have a implicit post relationship in order to be do things like remove ourselves from the post
         when we are deleted
       */
-      this._implicitRelationships = Ember.create(null);
+      this._implicitRelationships = ember$data$lib$system$object$polyfills$$create(null);
     };
 
     ember$data$lib$system$model$internal$model$$InternalModel.prototype = {
@@ -10522,7 +10531,7 @@
 
       flushChangedAttributes: function () {
         this._inFlightAttributes = this._attributes;
-        this._attributes = Ember.create(null);
+        this._attributes = ember$data$lib$system$object$polyfills$$create(null);
       },
 
       /**
@@ -10583,12 +10592,12 @@
       },
 
       rollbackAttributes: function () {
-        var dirtyKeys = Ember.keys(this._attributes);
+        var dirtyKeys = ember$data$lib$system$object$polyfills$$keysFunc(this._attributes);
 
-        this._attributes = Ember.create(null);
+        this._attributes = ember$data$lib$system$object$polyfills$$create(null);
 
         if (ember$data$lib$system$model$internal$model$$get(this, "isError")) {
-          this._inFlightAttributes = Ember.create(null);
+          this._inFlightAttributes = ember$data$lib$system$object$polyfills$$create(null);
           this.didCleanError();
         }
 
@@ -10606,7 +10615,7 @@
         }
 
         if (this.isValid()) {
-          this._inFlightAttributes = Ember.create(null);
+          this._inFlightAttributes = ember$data$lib$system$object$polyfills$$create(null);
         }
 
         this.send("rolledBack");
@@ -10719,7 +10728,7 @@
           }
         }, this);
         var model = this;
-        ember$data$lib$system$model$internal$model$$forEach.call(Ember.keys(this._implicitRelationships), function (key) {
+        ember$data$lib$system$model$internal$model$$forEach.call(ember$data$lib$system$object$polyfills$$keysFunc(this._implicitRelationships), function (key) {
           model._implicitRelationships[key].clear();
           model._implicitRelationships[key].destroy();
         });
@@ -10730,7 +10739,7 @@
           this._relationships.get(name).disconnect();
         }, this);
         var model = this;
-        ember$data$lib$system$model$internal$model$$forEach.call(Ember.keys(this._implicitRelationships), function (key) {
+        ember$data$lib$system$model$internal$model$$forEach.call(ember$data$lib$system$object$polyfills$$keysFunc(this._implicitRelationships), function (key) {
           model._implicitRelationships[key].disconnect();
         });
       },
@@ -10740,7 +10749,7 @@
           this._relationships.get(name).reconnect();
         }, this);
         var model = this;
-        ember$data$lib$system$model$internal$model$$forEach.call(Ember.keys(this._implicitRelationships), function (key) {
+        ember$data$lib$system$model$internal$model$$forEach.call(ember$data$lib$system$object$polyfills$$keysFunc(this._implicitRelationships), function (key) {
           model._implicitRelationships[key].reconnect();
         });
       },
@@ -10761,7 +10770,7 @@
       _preloadData: function (preload) {
         var record = this;
         //TODO(Igor) consider the polymorphic case
-        ember$data$lib$system$model$internal$model$$forEach.call(Ember.keys(preload), function (key) {
+        ember$data$lib$system$model$internal$model$$forEach.call(ember$data$lib$system$object$polyfills$$keysFunc(preload), function (key) {
           var preloadValue = ember$data$lib$system$model$internal$model$$get(preload, key);
           var relationshipMeta = record.type.metaForProperty(key);
           if (relationshipMeta.isRelationship) {
@@ -10866,7 +10875,7 @@
           ember$data$lib$system$merge$$default(this._data, data);
         }
 
-        this._inFlightAttributes = Ember.create(null);
+        this._inFlightAttributes = ember$data$lib$system$object$polyfills$$create(null);
 
         this.send("didCommit");
         this.updateRecordArraysLater();
@@ -10935,13 +10944,13 @@
       },
 
       _saveWasRejected: function () {
-        var keys = Ember.keys(this._inFlightAttributes);
+        var keys = ember$data$lib$system$object$polyfills$$keysFunc(this._inFlightAttributes);
         for (var i = 0; i < keys.length; i++) {
           if (this._attributes[keys[i]] === undefined) {
             this._attributes[keys[i]] = this._inFlightAttributes[keys[i]];
           }
         }
-        this._inFlightAttributes = Ember.create(null);
+        this._inFlightAttributes = ember$data$lib$system$object$polyfills$$create(null);
       },
 
       /**
@@ -10981,10 +10990,10 @@
 
         if (updates) {
           var original, i, value, key;
-          var keys = Ember.keys(updates);
+          var keys = ember$data$lib$system$object$polyfills$$keysFunc(updates);
           var length = keys.length;
 
-          original = ember$data$lib$system$merge$$default(Ember.create(null), this._data);
+          original = ember$data$lib$system$merge$$default(ember$data$lib$system$object$polyfills$$create(null), this._data);
           original = ember$data$lib$system$merge$$default(original, this._inFlightAttributes);
 
           for (i = 0; i < length; i++) {
@@ -11251,10 +11260,18 @@
       /**
         Create a new record in the current store. The properties passed
         to this method are set on the newly created record.
-         To create a new instance of `App.Post`:
+         To create a new instance of a `Post`:
          ```js
         store.createRecord('post', {
           title: "Rails is omakase"
+        });
+        ```
+         To create a new instance of a `Post` that has a relationship with a `User` record:
+         ```js
+        var user = this.store.peekRecord('user', 1);
+        store.createRecord('post', {
+          title: "Rails is omakase",
+          user: user
         });
         ```
          @method createRecord
@@ -11265,7 +11282,7 @@
       */
       createRecord: function (modelName, inputProperties) {
                 var typeClass = this.modelFor(modelName);
-        var properties = ember$data$lib$system$store$$copy(inputProperties) || Ember.create(null);
+        var properties = ember$data$lib$system$store$$copy(inputProperties) || ember$data$lib$system$object$polyfills$$create(null);
 
         // If the passed properties do not include a primary key,
         // give the adapter an opportunity to generate one. Typically,
@@ -12075,7 +12092,7 @@
       unloadAll: function (modelName) {
                 if (arguments.length === 0) {
           var typeMaps = this.typeMaps;
-          var keys = Ember.keys(typeMaps);
+          var keys = ember$data$lib$system$object$polyfills$$keysFunc(typeMaps);
 
           var types = ember$data$lib$system$store$$map.call(keys, byType);
 
@@ -12092,7 +12109,7 @@
             record.destroy(); // maybe within unloadRecord
           }
 
-          typeMap.metadata = Ember.create(null);
+          typeMap.metadata = ember$data$lib$system$object$polyfills$$create(null);
         }
 
         function byType(entry) {
@@ -12402,9 +12419,9 @@
         }
 
         typeMap = {
-          idToRecord: Ember.create(null),
+          idToRecord: ember$data$lib$system$object$polyfills$$create(null),
           records: [],
-          metadata: Ember.create(null),
+          metadata: ember$data$lib$system$object$polyfills$$create(null),
           type: typeClass
         };
 
@@ -13125,7 +13142,7 @@
 
         if (Ember.typeOf(documentHash.data) === 'object') {
           documentHash.data = this._normalizeResourceHelper(documentHash.data);
-        } else {
+        } else if (Ember.typeOf(documentHash.data) === 'array') {
           documentHash.data = ember$data$lib$serializers$json$api$serializer$$map.call(documentHash.data, this._normalizeResourceHelper, this);
         }
 
@@ -13482,7 +13499,7 @@
 
       if (store) {
         registry.register("service:store", store, { instantiate: false });
-      } else {
+      } else if (!registry.has("service:store")) {
         registry.register("service:store", application && application.Store || ember$data$lib$system$store$$default);
       }
     }
@@ -13704,7 +13721,8 @@
       return ember$new$computed$lib$main$$computed.apply(undefined, polyfillArguments);
     }
 
-    var ember$new$computed$lib$main$$computedKeys = ember$lib$main$$default.keys(ember$new$computed$lib$main$$computed);
+    var ember$new$computed$lib$main$$getKeys = Object.keys || ember$lib$main$$default.keys;
+    var ember$new$computed$lib$main$$computedKeys = ember$new$computed$lib$main$$getKeys(ember$new$computed$lib$main$$computed);
 
     for (var ember$new$computed$lib$main$$i = 0, ember$new$computed$lib$main$$l = ember$new$computed$lib$main$$computedKeys.length; ember$new$computed$lib$main$$i < ember$new$computed$lib$main$$l; ember$new$computed$lib$main$$i++) {
       ember$new$computed$lib$main$$newComputed[ember$new$computed$lib$main$$computedKeys[ember$new$computed$lib$main$$i]] = ember$new$computed$lib$main$$computed[ember$new$computed$lib$main$$computedKeys[ember$new$computed$lib$main$$i]];
@@ -15486,7 +15504,7 @@
       },
 
       inverseMap: Ember.computed(function () {
-        return Ember.create(null);
+        return ember$data$lib$system$object$polyfills$$create(null);
       }),
 
       /**
