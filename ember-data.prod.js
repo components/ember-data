@@ -1515,8 +1515,9 @@
       /**
         Called by the store in order to fetch a JSON array for
         the records that match a particular query.
-         The `findQuery` method makes an Ajax (HTTP GET) request to a URL computed by `buildURL`, and returns a
-        promise for the resulting payload.
+         The `query` method makes an Ajax (HTTP GET) request to a URL
+        computed by `buildURL`, and returns a promise for the resulting
+        payload.
          The `query` argument is a simple JavaScript object that will be passed directly
         to the server as parameters.
          @private
@@ -2073,7 +2074,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.b2e1ad96c0'
+      VERSION: '2.0.0+canary.7d93e9a787'
     });
 
     if (Ember.libraries) {
@@ -3473,12 +3474,7 @@
     var ember$data$lib$system$store$finders$$Promise = Ember.RSVP.Promise;
     function ember$data$lib$system$store$finders$$_find(adapter, store, typeClass, id, internalModel, options) {
       var snapshot = internalModel.createSnapshot(options);
-      var promise;
-      if (!adapter.findRecord) {
-                promise = adapter.find(store, typeClass, id, snapshot);
-      } else {
-        promise = adapter.findRecord(store, typeClass, id, snapshot);
-      }
+      var promise = adapter.findRecord(store, typeClass, id, snapshot);
       var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, internalModel.type.modelName);
       var label = "DS: Handle Adapter#find of " + typeClass + " with id: " + id;
 
@@ -3603,13 +3599,7 @@
 
     function ember$data$lib$system$store$finders$$_query(adapter, store, typeClass, query, recordArray) {
       var modelName = typeClass.modelName;
-      var promise;
-
-      if (!adapter.query) {
-                promise = adapter.findQuery(store, typeClass, query, recordArray);
-      } else {
-        promise = adapter.query(store, typeClass, query, recordArray);
-      }
+      var promise = adapter.query(store, typeClass, query, recordArray);
 
       var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, modelName);
       var label = "DS: Handle Adapter#findQuery of " + typeClass;
@@ -7540,74 +7530,19 @@
         @param {Object} options
         @return {Promise} promise
       */
-      find: function (modelName, id, preload) {
+      find: function (modelName, id, options) {
                         
         if (arguments.length === 1) {
-                    return this.findAll(modelName);
-        }
+                  }
 
         // We are passed a query instead of an id.
         if (Ember.typeOf(id) === "object") {
-                    return this.query(modelName, id);
-        }
-        var options = ember$data$lib$system$store$$deprecatePreload(preload, this.modelFor(modelName), "find");
+                  }
+
+        if (options) {
+                  }
+
         return this.findRecord(modelName, ember$data$lib$system$coerce$id$$default(id), options);
-      },
-
-      /**
-        This method returns a fresh record for a given type and id combination.
-         @method fetchById
-        @deprecated Use [findRecord](#method_findRecord) instead
-        @param {String} modelName
-        @param {(String|Integer)} id
-        @param {Object} options
-        @return {Promise} promise
-      */
-      fetchById: function (modelName, id, preload) {
-                var options = ember$data$lib$system$store$$deprecatePreload(preload, this.modelFor(modelName), "fetchById");
-                if (this.hasRecordForId(modelName, id)) {
-          return this.peekRecord(modelName, id).reload();
-        } else {
-          return this.findRecord(modelName, id, options);
-        }
-      },
-
-      /**
-        This method returns a fresh collection from the server, regardless of if there is already records
-        in the store or not.
-         @method fetchAll
-        @deprecated Use [findAll](#method_findAll) instead
-        @param {String} modelName
-        @return {Promise} promise
-      */
-      fetchAll: function (modelName) {
-                return this.findAll(modelName, { reload: true });
-      },
-
-      /**
-        @method fetch
-        @param {String} modelName
-        @param {(String|Integer)} id
-        @param {Object} preload - optional set of attributes and relationships passed in either as IDs or as actual models
-        @return {Promise} promise
-        @deprecated Use [findRecord](#method_findRecord) instead
-      */
-      fetch: function (modelName, id, preload) {
-                        return this.findRecord(modelName, id, { reload: true, preload: preload });
-      },
-
-      /**
-        This method returns a record for a given type and id combination.
-         @method findById
-        @private
-        @param {String} modelName
-        @param {(String|Integer)} id
-        @param {Object} options
-        @return {Promise} promise
-      */
-      findById: function (modelName, id, preload) {
-                var options = ember$data$lib$system$store$$deprecatePreload(preload, this.modelFor(modelName), "findById");
-        return this.findRecord(modelName, id, options);
       },
 
       /**
@@ -7866,25 +7801,6 @@
         pushed manually into the store.
          _Note: This is an synchronous method and does not return a promise._
          ```js
-        var post = store.getById('post', 1);
-         post.get('id'); // 1
-        ```
-         @method getById
-        @param {String} modelName
-        @param {String|Integer} id
-        @return {DS.Model|null} record
-      */
-      getById: function (modelName, id) {
-                return this.peekRecord(modelName, id);
-      },
-
-      /**
-        Get a record by a given type and ID without triggering a fetch.
-         This method will synchronously return the record if it is available in the store,
-        otherwise it will return `null`. A record is available if it has been fetched earlier, or
-        pushed manually into the store.
-         _Note: This is an synchronous method and does not return a promise._
-         ```js
         var post = store.peekRecord('post', 1);
          post.get('id'); // 1
         ```
@@ -8073,24 +7989,6 @@
       },
 
       /**
-        This method delegates a query to the adapter. This is the one place where
-        adapter-level semantics are exposed to the application.
-         Exposing queries this way seems preferable to creating an abstract query
-        language for all server-side queries, and then require all adapters to
-        implement them.
-         This method returns a promise, which is resolved with a `RecordArray`
-        once the server returns.
-         @method query
-        @param {String} modelName
-        @param {any} query an opaque query to be used by the adapter
-        @return {Promise} promise
-        @deprecated Use `store.query instead`
-      */
-      findQuery: function (modelName, query) {
-                return this.query(modelName, query);
-      },
-
-      /**
         `findAll` ask the adapter's `findAll` method to find the records
         for the given type, and return a promise that will be resolved
         once the server returns the values. The promise will resolve into
@@ -8150,28 +8048,6 @@
       didUpdateAll: function (typeClass) {
         var liveRecordArray = this.recordArrayManager.liveRecordArrayFor(typeClass);
         ember$data$lib$system$store$$set(liveRecordArray, "isUpdating", false);
-      },
-
-      /**
-        This method returns a filtered array that contains all of the
-        known records for a given type in the store.
-         Note that because it's just a filter, the result will contain any
-        locally created records of the type, however, it will not make a
-        request to the backend to retrieve additional records. If you
-        would like to request all the records from the backend please use
-        [store.find](#method_find).
-         Also note that multiple calls to `all` for a given type will always
-        return the same `RecordArray`.
-         Example
-         ```javascript
-        var localPosts = store.all('post');
-        ```
-         @method all
-        @param {String} modelName
-        @return {DS.RecordArray}
-      */
-      all: function (modelName) {
-                return this.peekAll(modelName);
       },
 
       /**
@@ -9214,33 +9090,6 @@
           }
         }
       });
-    }
-
-    function ember$data$lib$system$store$$deprecatePreload(preloadOrOptions, type, methodName) {
-      if (preloadOrOptions) {
-        var modelProperties = [];
-        var fields = Ember.get(type, "fields");
-        fields.forEach(function (fieldType, key) {
-          return modelProperties.push(key);
-        });
-        var preloadDetected = false;
-
-        for (var i = 0, _length = modelProperties.length; i < _length; i++) {
-          var key = modelProperties[i];
-          if (typeof preloadOrOptions[key] !== "undefined") {
-            preloadDetected = true;
-            break;
-          }
-        }
-
-        if (preloadDetected) {
-                    var preload = preloadOrOptions;
-          return {
-            preload: preload
-          };
-        }
-      }
-      return preloadOrOptions;
     }
 
     var ember$data$lib$system$store$$default = ember$data$lib$system$store$$Store;
@@ -11809,58 +11658,6 @@
 
     
     var ember$data$lib$serializers$rest$serializer$$default = ember$data$lib$serializers$rest$serializer$$RESTSerializer;
-    var ember$data$lib$system$container$proxy$$default = ember$data$lib$system$container$proxy$$ContainerProxy;
-
-    /**
-      This is used internally to enable deprecation of container paths and provide
-      a decent message to the user indicating how to fix the issue.
-
-      @class ContainerProxy
-      @namespace DS
-      @private
-    */
-    function ember$data$lib$system$container$proxy$$ContainerProxy(container) {
-      this.container = container;
-    }
-
-    ember$data$lib$system$container$proxy$$ContainerProxy.prototype.aliasedFactory = function (path, preLookup) {
-      var _this = this;
-
-      return {
-        create: function () {
-          if (preLookup) {
-            preLookup();
-          }
-
-          return _this.container.lookup(path);
-        }
-      };
-    };
-
-    ember$data$lib$system$container$proxy$$ContainerProxy.prototype.registerAlias = function (source, dest, preLookup) {
-      var factory = this.aliasedFactory(dest, preLookup);
-
-      return this.container.register(source, factory);
-    };
-
-    ember$data$lib$system$container$proxy$$ContainerProxy.prototype.registerDeprecation = function (deprecated, valid) {
-      var preLookupCallback = function () {
-              };
-
-      return this.registerAlias(deprecated, valid, preLookupCallback);
-    };
-
-    ember$data$lib$system$container$proxy$$ContainerProxy.prototype.registerDeprecations = function (proxyPairs) {
-      var i, proxyPair, deprecated, valid;
-
-      for (i = proxyPairs.length; i > 0; i--) {
-        proxyPair = proxyPairs[i - 1];
-        deprecated = proxyPair["deprecated"];
-        valid = proxyPair["valid"];
-
-        this.registerDeprecation(deprecated, valid);
-      }
-    };
     var ember$data$lib$initializers$store$$default = ember$data$lib$initializers$store$$initializeStore;
 
     /**
@@ -11872,15 +11669,9 @@
       @param {Object} [application] an application namespace
     */
     function ember$data$lib$initializers$store$$initializeStore(registry, application) {
-      
       registry.optionsForType("serializer", { singleton: false });
       registry.optionsForType("adapter", { singleton: false });
 
-      // allow older names to be looked up
-      var proxy = new ember$data$lib$system$container$proxy$$default(registry);
-      proxy.registerDeprecations([{ deprecated: "serializer:_default", valid: "serializer:-default" }, { deprecated: "serializer:_rest", valid: "serializer:-rest" }, { deprecated: "adapter:_rest", valid: "adapter:-rest" }]);
-
-      // new go forward paths
       registry.register("serializer:-default", ember$data$lib$serializers$json$serializer$$default);
       registry.register("serializer:-rest", ember$data$lib$serializers$rest$serializer$$default);
       registry.register("adapter:-rest", ember$data$lib$adapters$rest$adapter$$default);
@@ -11888,25 +11679,8 @@
       registry.register("adapter:-json-api", ember$data$lib$adapters$json$api$adapter$$default);
       registry.register("serializer:-json-api", ember$data$lib$serializers$json$api$serializer$$default);
 
-      var store;
-      if (registry.has("store:main")) {
-                store = registry.lookup("store:main");
-      } else {
-        var storeMainProxy = new ember$data$lib$system$container$proxy$$default(registry);
-        storeMainProxy.registerDeprecations([{ deprecated: "store:main", valid: "service:store" }]);
-      }
-
-      if (registry.has("store:application")) {
-                store = registry.lookup("store:application");
-      } else {
-        var storeApplicationProxy = new ember$data$lib$system$container$proxy$$default(registry);
-        storeApplicationProxy.registerDeprecations([{ deprecated: "store:application", valid: "service:store" }]);
-      }
-
-      if (store) {
-        registry.register("service:store", store, { instantiate: false });
-      } else if (!registry.has("service:store")) {
-        registry.register("service:store", application && application.Store || ember$data$lib$system$store$$default);
+      if (!registry.has("service:store")) {
+        registry.register("service:store", ember$data$lib$system$store$$default);
       }
     }
 
@@ -12497,6 +12271,17 @@
     function ember$data$lib$initializers$data$adapter$$initializeDebugAdapter(registry) {
       registry.register("data-adapter:main", ember$data$lib$system$debug$debug$adapter$$default);
     }
+    var ember$data$lib$setup$container$$default = ember$data$lib$setup$container$$setupContainer;
+    function ember$data$lib$setup$container$$setupContainer(registry, application) {
+      // application is not a required argument. This ensures
+      // testing setups can setup a container without booting an
+      // entire ember application.
+
+      ember$data$lib$initializers$data$adapter$$default(registry, application);
+      ember$data$lib$initializers$transforms$$default(registry, application);
+      ember$data$lib$initializers$store$injections$$default(registry, application);
+      ember$data$lib$initializers$store$$default(registry, application);
+    }
     var ember$data$lib$instance$initializers$initialize$store$service$$default = ember$data$lib$instance$initializers$initialize$store$service$$initializeStoreService;
     /**
      Configures a registry for use with an Ember-Data
@@ -12505,46 +12290,10 @@
      @method initializeStore
      @param {Ember.ApplicationInstance} applicationOrRegistry
      */
-    function ember$data$lib$instance$initializers$initialize$store$service$$initializeStoreService(applicationOrRegistry) {
-      var registry, container;
-      if (applicationOrRegistry.registry && applicationOrRegistry.container) {
-        // initializeStoreService was registered with an
-        // instanceInitializer. The first argument is the application
-        // instance.
-        registry = applicationOrRegistry.registry;
-        container = applicationOrRegistry.container;
-      } else {
-        // initializeStoreService was called by an initializer instead of
-        // an instanceInitializer. The first argument is a registy. This
-        // case allows ED to support Ember pre 1.12
-        registry = applicationOrRegistry;
-        if (registry.container) {
-          // Support Ember 1.10 - 1.11
-          container = registry.container();
-        } else {
-          // Support Ember 1.9
-          container = registry;
-        }
-      }
-
+    function ember$data$lib$instance$initializers$initialize$store$service$$initializeStoreService(application) {
+      var container = application.container;
       // Eagerly generate the store so defaultStore is populated.
       container.lookup('service:store');
-    }
-    var ember$data$lib$setup$container$$default = ember$data$lib$setup$container$$setupContainer;
-    function ember$data$lib$setup$container$$setupContainer(registry, application) {
-      // application is not a required argument. This ensures
-      // testing setups can setup a container without booting an
-      // entire ember application.
-
-      ember$data$lib$setup$container$$initializeInjects(registry, application);
-      ember$data$lib$instance$initializers$initialize$store$service$$default(registry);
-    }
-
-    function ember$data$lib$setup$container$$initializeInjects(registry, application) {
-      ember$data$lib$initializers$data$adapter$$default(registry, application);
-      ember$data$lib$initializers$transforms$$default(registry, application);
-      ember$data$lib$initializers$store$injections$$default(registry, application);
-      ember$data$lib$initializers$store$$default(registry, application);
     }
 
     var ember$data$lib$ember$initializer$$K = Ember.K;
@@ -12589,21 +12338,13 @@
 
       Application.initializer({
         name: 'ember-data',
-        initialize: ember$data$lib$setup$container$$initializeInjects
+        initialize: ember$data$lib$setup$container$$default
       });
 
-      if (Application.instanceInitializer) {
-        Application.instanceInitializer({
-          name: 'ember-data',
-          initialize: ember$data$lib$instance$initializers$initialize$store$service$$default
-        });
-      } else {
-        Application.initializer({
-          name: 'ember-data-store-service',
-          after: 'ember-data',
-          initialize: ember$data$lib$instance$initializers$initialize$store$service$$default
-        });
-      }
+      Application.instanceInitializer({
+        name: 'ember-data',
+        initialize: ember$data$lib$instance$initializers$initialize$store$service$$default
+      });
 
       // Deprecated initializers to satisfy old code that depended on them
       Application.initializer({
@@ -14246,6 +13987,58 @@
       }
 
     });
+    var ember$data$lib$system$container$proxy$$default = ember$data$lib$system$container$proxy$$ContainerProxy;
+
+    /**
+      This is used internally to enable deprecation of container paths and provide
+      a decent message to the user indicating how to fix the issue.
+
+      @class ContainerProxy
+      @namespace DS
+      @private
+    */
+    function ember$data$lib$system$container$proxy$$ContainerProxy(container) {
+      this.container = container;
+    }
+
+    ember$data$lib$system$container$proxy$$ContainerProxy.prototype.aliasedFactory = function (path, preLookup) {
+      var _this = this;
+
+      return {
+        create: function () {
+          if (preLookup) {
+            preLookup();
+          }
+
+          return _this.container.lookup(path);
+        }
+      };
+    };
+
+    ember$data$lib$system$container$proxy$$ContainerProxy.prototype.registerAlias = function (source, dest, preLookup) {
+      var factory = this.aliasedFactory(dest, preLookup);
+
+      return this.container.register(source, factory);
+    };
+
+    ember$data$lib$system$container$proxy$$ContainerProxy.prototype.registerDeprecation = function (deprecated, valid) {
+      var preLookupCallback = function () {
+              };
+
+      return this.registerAlias(deprecated, valid, preLookupCallback);
+    };
+
+    ember$data$lib$system$container$proxy$$ContainerProxy.prototype.registerDeprecations = function (proxyPairs) {
+      var i, proxyPair, deprecated, valid;
+
+      for (i = proxyPairs.length; i > 0; i--) {
+        proxyPair = proxyPairs[i - 1];
+        deprecated = proxyPair["deprecated"];
+        valid = proxyPair["valid"];
+
+        this.registerDeprecation(deprecated, valid);
+      }
+    };
 
     /**
       Ember Data

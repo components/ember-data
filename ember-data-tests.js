@@ -538,20 +538,6 @@ define(
       }, 'You may not pass `null` as id to the store\'s find method');
     });
 
-    test('store.find(type) is deprecated', function () {
-      env.registry.register('adapter:person', DS.Adapter.extend({
-        findAll: function (store, typeClass) {
-          return [];
-        }
-      }));
-
-      expectDeprecation(function () {
-        run(function () {
-          store.find('person');
-        });
-      }, 'Using store.find(type) has been deprecated. Use store.findAll(type) to retrieve all records for a given type.');
-    });
-
     test('store.findAll should trigger a deprecation warning about store.shouldReloadAll', function () {
       env.adapter.findAll = function () {
         return Ember.RSVP.resolve([]);
@@ -4831,29 +4817,6 @@ define(
       ok(isCustom, 'the custom store was injected');
     });
 
-    test('registering App.Store is deprecated but functional', function () {
-      run(app, 'destroy');
-
-      expectDeprecation(function () {
-        run(function () {
-          app = Application.create({
-            Store: DS.Store.extend({ isCustomButDeprecated: true }),
-            FooController: Controller.extend()
-          });
-        });
-        container = app.__container__;
-      }, 'Specifying a custom Store for Ember Data on your global namespace as `App.Store` ' + 'has been deprecated. Please use `App.ApplicationStore` instead.');
-
-      run(function () {
-        ok(lookup('service:store').get('isCustomButDeprecated'), 'the custom store was instantiated');
-      });
-
-      var fooController = lookup('controller:foo');
-      run(function () {
-        ok(fooController.get('store.isCustomButDeprecated'), 'the custom store was injected');
-      });
-    });
-
     test('The JSONAPIAdapter is the default adapter when no custom adapter is provided', function () {
       run(function () {
         var store = getStore();
@@ -6673,7 +6636,7 @@ define(
 
     var Person, store, array, moreArray;
 
-    module("integration/peek_all - DS.Store#peekAll()", {
+    module("integration/peek-all - DS.Store#peekAll()", {
       setup: function () {
         array = [{ id: 1, name: "Scumbag Dale" }, { id: 2, name: "Scumbag Katz" }];
         moreArray = [{ id: 3, name: "Scumbag Bryn" }];
@@ -6722,14 +6685,6 @@ define(
         store.createRecord("person", { name: "Tomster" });
         equal(get(store.peekAll("person"), "length"), 1, "should contain one person");
       });
-    });
-
-    test("store.all() is deprecated", function () {
-      expectDeprecation(function () {
-        run(function () {
-          store.all("person");
-        });
-      }, "Using store.all() has been deprecated. Use store.peekAll() to get all records by a given type without triggering a fetch.");
     });
   }
 );
@@ -17672,67 +17627,11 @@ define(
       ok(fooController.get("store") instanceof Store, "the store was injected");
     });
 
-    test("the deprecated serializer:_default is resolved as serializer:default", function () {
-      var deprecated;
-      var valid = container.lookup("serializer:-default");
-      expectDeprecation(function () {
-        deprecated = container.lookup("serializer:_default");
-      });
-
-      ok(deprecated.constructor === valid.constructor, "they should resolve to the same thing");
-    });
-
-    test("the deprecated serializer:_rest is resolved as serializer:rest", function () {
-      var deprecated;
-      var valid = container.lookup("serializer:-rest");
-      expectDeprecation(function () {
-        deprecated = container.lookup("serializer:_rest");
-      });
-
-      ok(deprecated.constructor === valid.constructor, "they should resolve to the same thing");
-    });
-
-    test("the deprecated adapter:_rest is resolved as adapter:rest", function () {
-      var deprecated;
-      var valid = container.lookup("adapter:-rest");
-      expectDeprecation(function () {
-        deprecated = container.lookup("adapter:_rest");
-      });
-
-      ok(deprecated.constructor === valid.constructor, "they should resolve to the same thing");
-    });
-
-    test("a deprecation is made when looking up adapter:_rest", function () {
-      expectDeprecation(function () {
-        container.lookup("serializer:_default");
-      }, "You tried to look up 'serializer:_default', but this has been deprecated in favor of 'serializer:-default'.");
-    });
-
     test("serializers are not returned as singletons - each lookup should return a different instance", function () {
       var serializer1, serializer2;
       serializer1 = container.lookup("serializer:-rest");
       serializer2 = container.lookup("serializer:-rest");
       notEqual(serializer1, serializer2);
-    });
-
-    test("the deprecated store:main is resolved as service:store", function () {
-      var deprecated;
-      var valid = container.lookup("service:store");
-      expectDeprecation(function () {
-        deprecated = container.lookup("store:main");
-      });
-
-      ok(deprecated.constructor === valid.constructor, "they should resolve to the same thing");
-    });
-
-    test("the deprecated store:application is resolved as service:store", function () {
-      var deprecated;
-      var valid = container.lookup("service:store");
-      expectDeprecation(function () {
-        deprecated = container.lookup("store:application");
-      });
-
-      ok(deprecated.constructor === valid.constructor, "they should resolve to the same thing");
     });
 
     test("adapters are not returned as singletons - each lookup should return a different instance", function () {
@@ -18482,27 +18381,6 @@ define(
       equal(filterdPeopleWillDestroy.called.length, 1, 'expected filterdPeople.willDestroy to have been called once');
     });
 
-    module('integration/store - findById() [deprecated]', {
-      setup: function () {
-        initializeStore(DS.RESTAdapter.extend());
-      }
-    });
-
-    test('store.findById() is deprecated', function () {
-      expectDeprecation(function () {
-        run(function () {
-          store.push('person', { id: 1, name: 'Tomster' });
-          store.findById('person', 1);
-        });
-      }, 'Using store.findById() has been deprecated. Use store.findRecord() to return a record for a given type and id combination.');
-    });
-
-    module('integration/store - fetch', {
-      setup: function () {
-        initializeStore(DS.RESTAdapter.extend());
-      }
-    });
-
     function ajaxResponse(value) {
       var passedUrl, passedVerb, passedHash;
       env.adapter.ajax = function (url, verb, hash) {
@@ -18513,18 +18391,6 @@ define(
         return run(Ember.RSVP, 'resolve', Ember.copy(value, true));
       };
     }
-
-    test('Using store#fetch is deprecated', function () {
-      ajaxResponse({
-        cars: [{ id: 1, make: 'BMW', model: 'Mini' }]
-      });
-
-      expectDeprecation(function () {
-        run(function () {
-          store.fetch('car', 1);
-        });
-      }, 'Using store.fetch() has been deprecated. Use store.findRecord for fetching individual records or store.findAll for collections');
-    });
 
     module('integration/store - findRecord { reload: true }', {
       setup: function () {
@@ -18586,18 +18452,6 @@ define(
       setup: function () {
         initializeStore(DS.RESTAdapter.extend());
       }
-    });
-
-    test('store#fetchAll() is deprecated', function () {
-      ajaxResponse({
-        cars: []
-      });
-
-      expectDeprecation(function () {
-        run(function () {
-          store.fetchAll('car');
-        });
-      }, 'Using store.fetchAll(type) has been deprecated. Use store.findAll(type, { reload: true }) to retrieve all records for a given type.');
     });
 
     test('Using store#findAll with no records triggers a query', function () {
@@ -24402,54 +24256,6 @@ define(
         });
       }
     });
-
-    test("store#find with deprecated preload passes correct options to store#findRecord", function () {
-      expect(2);
-
-      var expectedOptions = { preload: { name: "Tom" } };
-
-      store.reopen({
-        findRecord: function (modelName, id, options) {
-          deepEqual(options, expectedOptions, "deprecated preload transformed to new options store#findRecord");
-        }
-      });
-
-      expectDeprecation(function () {
-        run(function () {
-          store.find("person", 1, { name: "Tom" });
-        });
-      }, /Passing a preload argument to `store.find` is deprecated./);
-    });
-
-    test("Using store#find with preload is deprecated", function () {
-      expect(2);
-
-      expectDeprecation(function () {
-        run(function () {
-          store.find("person", 1, { name: "Tom" });
-        });
-      }, /Passing a preload argument to `store.find` is deprecated./);
-    });
-
-    test("Using store#fetchById with preload is deprecated", function () {
-      expect(2);
-
-      expectDeprecation(function () {
-        run(function () {
-          store.fetchById("person", 1, { name: "Tom" });
-        });
-      }, /Passing a preload argument to `store.fetchById` is deprecated./);
-    });
-
-    test("Using store#findById with preload is deprecated", function () {
-      expect(2);
-
-      expectDeprecation(function () {
-        run(function () {
-          store.findById("person", 1, { name: "Tom" });
-        });
-      }, /Passing a preload argument to `store.findById` is deprecated/);
-    });
   }
 );
 
@@ -24936,7 +24742,7 @@ define(
 
 
 define(
-  "ember-data/tests/unit/store/peek-by-id-test",
+  "ember-data/tests/unit/store/peek-record-test",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -24978,15 +24784,6 @@ define(
       run(function () {
         equal(null, store.peekRecord('person', 1), 'peekRecord returns null if the corresponding record is not in the store');
       });
-    });
-
-    test('getById is deprecated', function () {
-      expectDeprecation(function () {
-        run(function () {
-          store.push('person', { id: 1 });
-          store.getById('person', 1);
-        });
-      }, 'Using store.getById() has been deprecated. Use store.peekRecord to get a record by a given type and ID without triggering a fetch.');
     });
   }
 );
@@ -27230,8 +27027,8 @@ test('ember-data/tests/unit/store/model-for-test.js should pass jshint', functio
 }
 if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/tests/unit/store');
-test('ember-data/tests/unit/store/peek-by-id-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/store/peek-by-id-test.js should pass jshint.'); 
+test('ember-data/tests/unit/store/peek-record-test.js should pass jshint', function() { 
+  ok(true, 'ember-data/tests/unit/store/peek-record-test.js should pass jshint.'); 
 });
 
 }
