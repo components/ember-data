@@ -6135,6 +6135,49 @@ define(
         equal(person.get('id'), 1);
       }));
     });
+
+    test('An async hasMany relationship with links should not trigger shouldBackgroundReloadRecord', function () {
+      var Post = DS.Model.extend({
+        name: DS.attr('string'),
+        comments: DS.hasMany('comment', { async: true })
+      });
+
+      var Comment = DS.Model.extend({
+        name: DS.attr('string')
+      });
+
+      env = setupStore({
+        post: Post,
+        comment: Comment,
+        adapter: DS.RESTAdapter.extend({
+          findRecord: function () {
+            return {
+              posts: {
+                id: 1,
+                name: 'Rails is omakase',
+                links: { comments: '/posts/1/comments' }
+              }
+            };
+          },
+          findHasMany: function () {
+            return Ember.RSVP.resolve({
+              comments: [{ id: 1, name: 'FIRST' }, { id: 2, name: 'Rails is unagi' }, { id: 3, name: 'What is omakase?' }]
+            });
+          },
+          shouldBackgroundReloadRecord: function () {
+            ok(false, 'shouldBackgroundReloadRecord should not be called');
+          }
+        })
+      });
+
+      store = env.store;
+
+      run(store, 'find', 'post', '1').then(async(function (post) {
+        return post.get('comments');
+      })).then(async(function (comments) {
+        equal(comments.get('length'), 3);
+      }));
+    });
   }
 );
 
@@ -13632,7 +13675,7 @@ define(
         }
       }));
 
-      var serializer = env.container.lookup('serializer:home-planet');
+      var serializer = env.store.serializerFor('home-planet');
       var json_hash = {
         homePlanet: {
           id: '1',
@@ -13689,7 +13732,7 @@ define(
       }));
       env.registry.register('serializer:evil-minion', TestSerializer);
 
-      var serializer = env.container.lookup('serializer:home-planet');
+      var serializer = env.store.serializerFor('home-planet');
       var json_hash = {
         homePlanet: {
           id: '1',
@@ -13755,7 +13798,7 @@ define(
         }
       }));
 
-      var serializer = env.container.lookup('serializer:comment');
+      var serializer = env.store.serializerFor('comment');
       var json_hash = {
         comment: {
           id: '1',
@@ -13819,7 +13862,7 @@ define(
         }
       }));
 
-      var serializer = env.container.lookup('serializer:comment');
+      var serializer = env.store.serializerFor('comment');
       var json_hash = {
         comment: {
           id: '1',
@@ -13906,7 +13949,7 @@ define(
       }));
       env.registry.register('serializer:super-villain', TestSerializer);
 
-      var serializer = env.container.lookup('serializer:home-planet');
+      var serializer = env.store.serializerFor('home-planet');
       var json_hash = {
         homePlanet: {
           id: '1',
@@ -13989,7 +14032,7 @@ define(
       }));
       env.registry.register('serializer:super-villain', TestSerializer);
 
-      var serializer = env.container.lookup('serializer:home-planet');
+      var serializer = env.store.serializerFor('home-planet');
 
       var json_hash = {
         homePlanets: [{
@@ -14045,7 +14088,7 @@ define(
         }
       }));
 
-      var serializer = env.container.lookup('serializer:home-planet');
+      var serializer = env.store.serializerFor('home-planet');
 
       var json_hash = {
         homePlanets: [{
@@ -14103,7 +14146,7 @@ define(
       }));
       env.registry.register('serializer:super-villain', TestSerializer);
 
-      var serializer = env.container.lookup('serializer:home-planet');
+      var serializer = env.store.serializerFor('home-planet');
 
       var json_hash = {
         homePlanets: [{
@@ -14154,7 +14197,7 @@ define(
         }
       }));
 
-      var serializer = env.container.lookup('serializer:comment');
+      var serializer = env.store.serializerFor('comment');
 
       var json_hash = {
         comments: [{
@@ -14226,7 +14269,7 @@ define(
       }));
       env.registry.register('serializer:super-villain', TestSerializer);
 
-      var serializer = env.container.lookup('serializer:home-planet');
+      var serializer = env.store.serializerFor('home-planet');
       var json_hash = {
         homePlanets: [{
           id: '1',
@@ -14369,7 +14412,7 @@ define(
       }));
       //env.registry.register('serializer:secret-lab', TestSerializer);
 
-      var serializer = env.container.lookup('serializer:super-villain');
+      var serializer = env.store.serializerFor('super-villain');
 
       var json_hash = {
         superVillain: {
@@ -14440,7 +14483,7 @@ define(
         }
       }));
 
-      var serializer = env.container.lookup('serializer:evil-minion');
+      var serializer = env.store.serializerFor('evil-minion');
       var json_hash = {
         evilMinion: {
           id: '1',
@@ -14518,7 +14561,7 @@ define(
           secretWeapons: { embedded: 'always' }
         }
       }));
-      var serializer = env.container.lookup('serializer:super-villain');
+      var serializer = env.store.serializerFor('super-villain');
 
       var json_hash = {
         superVillain: {
@@ -14587,7 +14630,7 @@ define(
           secretLab: { embedded: 'always' }
         }
       }));
-      var serializer = env.container.lookup('serializer:super-villain');
+      var serializer = env.store.serializerFor('super-villain');
 
       var json_hash = {
         superVillain: {
@@ -14644,7 +14687,7 @@ define(
         primaryKey: 'custom'
       }));
 
-      var serializer = env.container.lookup('serializer:evil-minion');
+      var serializer = env.store.serializerFor('evil-minion');
       var json_hash = {
         evil_minion: {
           id: '1',
@@ -14782,7 +14825,7 @@ define(
         }
       }));
 
-      var serializer = env.container.lookup('serializer:home-planet');
+      var serializer = env.store.serializerFor('home-planet');
       var json_hash = {
         home_planet: {
           id: '1',
@@ -14825,7 +14868,7 @@ define(
         }
       }));
 
-      var serializer = env.container.lookup('serializer:home-planet');
+      var serializer = env.store.serializerFor('home-planet');
       var json_hash = {
         home_planet: {
           id: '1',
@@ -14872,7 +14915,8 @@ define(
         }
       }));
 
-      var serializer = env.container.lookup('serializer:comment');
+      var serializer = env.store.serializerFor('comment');
+
       var json_hash = {
         comment: {
           id: '1',
@@ -14912,7 +14956,7 @@ define(
         }
       }));
 
-      var serializer = env.container.lookup('serializer:comment');
+      var serializer = env.store.serializerFor('comment');
       var json_hash = {
         comment: {
           id: '1',
@@ -14965,7 +15009,7 @@ define(
         }
       }));
 
-      var serializer = env.container.lookup('serializer:home-planet');
+      var serializer = env.store.serializerFor('home-planet');
       var json_hash = {
         home_planet: {
           id: '1',
@@ -15012,7 +15056,7 @@ define(
         }
       }));
 
-      var serializer = env.container.lookup('serializer:home-planet');
+      var serializer = env.store.serializerFor('home-planet');
 
       var json_hash = {
         home_planets: [{
@@ -15056,7 +15100,7 @@ define(
         }
       }));
 
-      var serializer = env.container.lookup('serializer:home-planet');
+      var serializer = env.store.serializerFor('home-planet');
 
       var json_hash = {
         home_planets: [{
@@ -15101,7 +15145,7 @@ define(
         }
       }));
 
-      var serializer = env.container.lookup('serializer:home-planet');
+      var serializer = env.store.serializerFor('home-planet');
 
       var json_hash = {
         home_planets: [{
@@ -15140,7 +15184,7 @@ define(
         }
       }));
 
-      var serializer = env.container.lookup('serializer:comment');
+      var serializer = env.store.serializerFor('comment');
 
       var json_hash = {
         comments: [{
@@ -15188,7 +15232,7 @@ define(
         }
       }));
 
-      var serializer = env.container.lookup('serializer:home-planet');
+      var serializer = env.store.serializerFor('home-planet');
       var json_hash = {
         home_planets: [{
           id: '1',
@@ -15264,7 +15308,7 @@ define(
       }));
       var serializer, json;
       run(function () {
-        serializer = env.container.lookup('serializer:super-villain');
+        serializer = env.store.serializerFor('super-villain');
         json = serializer.serialize(tom._createSnapshot());
       });
 
@@ -15290,7 +15334,7 @@ define(
 
       var serializer, json;
       run(function () {
-        serializer = env.container.lookup('serializer:home-planet');
+        serializer = env.store.serializerFor('home-planet');
 
         json = serializer.serialize(league._createSnapshot());
       });
@@ -15322,7 +15366,7 @@ define(
       var serializer, json;
       warns(function () {
         run(function () {
-          serializer = env.container.lookup('serializer:home-planet');
+          serializer = env.store.serializerFor('home-planet');
           json = serializer.serialize(league._createSnapshot());
         });
       }, /The embedded relationship 'villains' is undefined for 'home-planet' with id '123'. Please include it in your original payload./);
@@ -15346,7 +15390,7 @@ define(
       }));
       var serializer, json;
       run(function () {
-        serializer = env.container.lookup('serializer:home-planet');
+        serializer = env.store.serializerFor('home-planet');
 
         json = serializer.serialize(league._createSnapshot());
       });
@@ -15369,7 +15413,7 @@ define(
       }));
       var serializer, json;
       run(function () {
-        serializer = env.container.lookup('serializer:home-planet');
+        serializer = env.store.serializerFor('home-planet');
 
         json = serializer.serialize(league._createSnapshot());
       });
@@ -15428,7 +15472,7 @@ define(
         }
       }));
 
-      var serializer = env.container.lookup('serializer:super-villain');
+      var serializer = env.store.serializerFor('super-villain');
 
       var json_hash = {
         super_villain: {
@@ -15479,7 +15523,7 @@ define(
       }));
       var serializer, json, tom;
       run(function () {
-        serializer = env.container.lookup('serializer:super-villain');
+        serializer = env.store.serializerFor('super-villain');
 
         // records with an id, persisted
 
@@ -15517,7 +15561,7 @@ define(
         primaryKey: 'crazy_id'
       }));
 
-      var serializer = env.container.lookup('serializer:super-villain');
+      var serializer = env.store.serializerFor('super-villain');
 
       // records with an id, persisted
       var tom, json;
@@ -15553,7 +15597,7 @@ define(
         }
       }));
 
-      var serializer = env.container.lookup('serializer:super-villain');
+      var serializer = env.store.serializerFor('super-villain');
 
       // records without ids, new
       var tom, json;
@@ -15587,7 +15631,7 @@ define(
           secretLab: { serialize: 'ids' }
         }
       }));
-      var serializer = env.container.lookup('serializer:super-villain');
+      var serializer = env.store.serializerFor('super-villain');
 
       // records with an id, persisted
       var tom, json;
@@ -15619,7 +15663,7 @@ define(
         }
       }));
 
-      var serializer = env.container.lookup('serializer:super-villain');
+      var serializer = env.store.serializerFor('super-villain');
 
       // records with an id, persisted
       var tom, json;
@@ -15651,7 +15695,7 @@ define(
         }
       }));
 
-      var serializer = env.container.lookup('serializer:super-villain');
+      var serializer = env.store.serializerFor('super-villain');
 
       // records with an id, persisted
       var tom, json;
@@ -15682,7 +15726,7 @@ define(
           secretLab: { serialize: false }
         }
       }));
-      var serializer = env.container.lookup('serializer:super-villain');
+      var serializer = env.store.serializerFor('super-villain');
 
       // records with an id, persisted
       var tom, json;
@@ -15707,7 +15751,7 @@ define(
     test('serialize with embedded object (belongsTo relationship) serializes the id by default if no option specified', function () {
       env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
       env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin));
-      var serializer = env.container.lookup('serializer:super-villain');
+      var serializer = env.store.serializerFor('super-villain');
 
       // records with an id, persisted
 
@@ -15739,7 +15783,7 @@ define(
           secretLab: { embedded: 'always' }
         }
       }));
-      var serializer = env.container.lookup('serializer:super-villain');
+      var serializer = env.store.serializerFor('super-villain');
       var tom, json;
 
       run(function () {
@@ -15773,7 +15817,7 @@ define(
         }
       }));
 
-      var serializer = env.container.lookup('serializer:evil-minion');
+      var serializer = env.store.serializerFor('evil-minion');
       var json_hash = {
         evil_minion: {
           id: '1',
@@ -15818,7 +15862,7 @@ define(
           secretWeapons: { embedded: 'always' }
         }
       }));
-      var serializer = env.container.lookup('serializer:super-villain');
+      var serializer = env.store.serializerFor('super-villain');
 
       var json_hash = {
         super_villain: {
@@ -15868,7 +15912,7 @@ define(
           secretWeapons: { embedded: 'always' }
         }
       }));
-      var serializer = env.container.lookup('serializer:super-villain');
+      var serializer = env.store.serializerFor('super-villain');
 
       var json_hash = {
         super_villain: {
@@ -15917,7 +15961,7 @@ define(
           secretLab: { embedded: 'always' }
         }
       }));
-      var serializer = env.container.lookup('serializer:super-villain');
+      var serializer = env.store.serializerFor('super-villain');
 
       var json_hash = {
         super_villain: {
@@ -15965,7 +16009,7 @@ define(
       env.registry.register('serializer:bat-cave', DS.ActiveModelSerializer.extend({
         primaryKey: 'custom'
       }));
-      var serializer = env.container.lookup('serializer:super-villain');
+      var serializer = env.store.serializerFor('super-villain');
 
       var json_hash = {
         super_villain: {
@@ -16013,7 +16057,7 @@ define(
       env.registry.register('serializer:bat-cave', DS.ActiveModelSerializer.extend({
         primaryKey: 'custom'
       }));
-      var serializer = env.container.lookup('serializer:super-villain');
+      var serializer = env.store.serializerFor('super-villain');
 
       var json_hash = {
         super_villain: {
@@ -16065,7 +16109,7 @@ define(
           evilMinions: { serialize: 'records', deserialize: 'records' }
         }
       }));
-      var serializer = env.container.lookup('serializer:super-villain');
+      var serializer = env.store.serializerFor('super-villain');
       var json;
 
       run(function () {
@@ -16098,7 +16142,7 @@ define(
         primaryKey: 'custom'
       }));
 
-      var serializer = env.container.lookup('serializer:evil-minion');
+      var serializer = env.store.serializerFor('evil-minion');
       var json_hash = {
         evil_minion: {
           id: '1',
@@ -16167,7 +16211,7 @@ define(
           // e.g. secretWeapons: { serialize: 'ids' }
         }
       }));
-      var serializer = env.container.lookup('serializer:super-villain');
+      var serializer = env.store.serializerFor('super-villain');
 
       var json;
       run(function () {
@@ -16211,7 +16255,7 @@ define(
         }
       }));
 
-      var serializer = env.container.lookup('serializer:evil-minion');
+      var serializer = env.store.serializerFor('evil-minion');
       var json;
 
       run(function () {
@@ -16283,7 +16327,7 @@ define(
         });
 
         store = env.store;
-        serializer = env.container.lookup('serializer:-json-api');
+        serializer = store.serializerFor('-json-api');
       },
 
       teardown: function () {
@@ -16608,7 +16652,7 @@ define(
       });
       var json = {};
 
-      env.container.lookup('serializer:post').serializeAttribute(post._createSnapshot(), json, 'title', { type: 'string' });
+      env.store.serializerFor('post').serializeAttribute(post._createSnapshot(), json, 'title', { type: 'string' });
 
       deepEqual(json, { TITLE: 'Rails is omakase' });
     });
@@ -16667,7 +16711,7 @@ define(
       });
       var json = {};
 
-      env.container.lookup('serializer:post').serializeBelongsTo(comment._createSnapshot(), json, { key: 'post', options: {} });
+      env.store.serializerFor('post').serializeBelongsTo(comment._createSnapshot(), json, { key: 'post', options: {} });
 
       deepEqual(json, {
         POST: '1'
@@ -16688,7 +16732,7 @@ define(
 
       var json = {};
 
-      env.container.lookup('serializer:post').serializeHasMany(post._createSnapshot(), json, { key: 'comments', options: {} });
+      env.store.serializerFor('post').serializeHasMany(post._createSnapshot(), json, { key: 'comments', options: {} });
 
       deepEqual(json, {
         COMMENTS: ['1']
@@ -16728,7 +16772,7 @@ define(
         comment = env.store.createRecord('comment', { body: 'Omakase is delicious', post: post });
       });
 
-      env.container.lookup('serializer:comment').serializeBelongsTo(comment._createSnapshot(), {}, { key: 'post', options: { polymorphic: true } });
+      env.store.serializerFor('comment').serializeBelongsTo(comment._createSnapshot(), {}, { key: 'post', options: { polymorphic: true } });
     });
 
     test('serializePolymorphicType async', function () {
@@ -16749,7 +16793,7 @@ define(
         comment = env.store.createRecord('comment', { body: 'Omakase is delicious', post: post });
       });
 
-      env.container.lookup('serializer:comment').serializeBelongsTo(comment._createSnapshot(), {}, { key: 'post', options: { async: true, polymorphic: true } });
+      env.store.serializerFor('comment').serializeBelongsTo(comment._createSnapshot(), {}, { key: 'post', options: { async: true, polymorphic: true } });
     });
 
     test('extractArray normalizes each record in the array', function () {
@@ -16764,7 +16808,7 @@ define(
       }));
 
       run(function () {
-        env.container.lookup('serializer:post').extractArray(env.store, Post, posts);
+        env.store.serializerFor('post').extractArray(env.store, Post, posts);
       });
       equal(postNormalizeCount, 2, 'two posts are normalized');
     });
@@ -16782,7 +16826,7 @@ define(
         my_comments: [1, 2]
       };
 
-      var post = env.container.lookup('serializer:post').extractSingle(env.store, Post, jsonHash);
+      var post = env.store.serializerFor('post').extractSingle(env.store, Post, jsonHash);
 
       equal(post.title, 'Rails is omakase');
       deepEqual(post.comments, [1, 2]);
@@ -16805,7 +16849,7 @@ define(
         post = env.store.createRecord('post', { title: 'Rails is omakase', parentPost: parentPost });
       });
 
-      var payload = env.container.lookup('serializer:post').serialize(post._createSnapshot());
+      var payload = env.store.serializerFor('post').serialize(post._createSnapshot());
 
       equal(payload.title_payload_key, 'Rails is omakase');
       equal(payload.my_parent, '2');
@@ -16823,7 +16867,7 @@ define(
         post = env.store.createRecord('post', { title: 'Rails is omakase' });
       });
 
-      var payload = env.container.lookup('serializer:post').serialize(post._createSnapshot());
+      var payload = env.store.serializerFor('post').serialize(post._createSnapshot());
 
       ok(!payload.hasOwnProperty('title'), 'Does not add the key to instance');
       ok(!payload.hasOwnProperty('[object Object]'), 'Does not add some random key like [object Object]');
@@ -16842,7 +16886,7 @@ define(
         comment = env.store.createRecord('comment', { body: 'Omakase is delicious', post: post });
       });
 
-      var serializer = env.container.lookup('serializer:post');
+      var serializer = env.store.serializerFor('post');
       var serializedProperty = serializer.keyForRelationship('comments', 'hasMany');
 
       var payload = serializer.serialize(post._createSnapshot());
@@ -16862,7 +16906,7 @@ define(
         comment = env.store.createRecord('comment', { body: 'Omakase is delicious', post: post });
       });
 
-      var serializer = env.container.lookup('serializer:comment');
+      var serializer = env.store.serializerFor('comment');
       var serializedProperty = serializer.keyForRelationship('post', 'belongsTo');
 
       var payload = serializer.serialize(comment._createSnapshot());
@@ -16882,7 +16926,7 @@ define(
         comment = env.store.createRecord('comment', { body: 'Omakase is delicious', post: post });
       });
 
-      var serializer = env.container.lookup('serializer:post');
+      var serializer = env.store.serializerFor('post');
       var serializedProperty = serializer.keyForRelationship('comments', 'hasMany');
 
       var payload = serializer.serialize(post._createSnapshot());
@@ -16902,7 +16946,7 @@ define(
         comment = env.store.createRecord('comment', { body: 'Omakase is delicious', post: post });
       });
 
-      var serializer = env.container.lookup('serializer:comment');
+      var serializer = env.store.serializerFor('comment');
       var serializedProperty = serializer.keyForRelationship('post', 'belongsTo');
 
       var payload = serializer.serialize(comment._createSnapshot());
@@ -16922,7 +16966,7 @@ define(
         comment = env.store.createRecord('comment', { body: 'Omakase is delicious', post: post });
       });
 
-      var serializer = env.container.lookup('serializer:post');
+      var serializer = env.store.serializerFor('post');
       var serializedProperty = serializer.keyForRelationship('comments', 'hasMany');
 
       var payload = serializer.serialize(post._createSnapshot());
@@ -16942,7 +16986,7 @@ define(
         comment = env.store.createRecord('comment', { body: 'Omakase is delicious', post: post });
       });
 
-      var serializer = env.container.lookup('serializer:comment');
+      var serializer = env.store.serializerFor('comment');
       var serializedProperty = serializer.keyForRelationship('post', 'belongsTo');
 
       var payload = serializer.serialize(comment._createSnapshot());
@@ -16972,7 +17016,7 @@ define(
         post = env.store.createRecord('post', { title: 'Rails is omakase', description: 'Omakase is delicious', anotherString: 'yet another string' });
       });
 
-      var payload = env.container.lookup('serializer:post').serialize(post._createSnapshot());
+      var payload = env.store.serializerFor('post').serialize(post._createSnapshot());
 
       equal(payload.title_payload_key, 'Rails is omakase');
       equal(payload.description_payload_key, 'Omakase is delicious');
@@ -16988,7 +17032,7 @@ define(
       var jsonHash = { '_ID_': 1, title: 'Rails is omakase' };
 
       run(function () {
-        post = env.container.lookup('serializer:post').extractSingle(env.store, Post, jsonHash);
+        post = env.store.serializerFor('post').extractSingle(env.store, Post, jsonHash);
       });
 
       equal(post.id, '1');
@@ -17004,7 +17048,7 @@ define(
         post = env.store.createRecord('post', { id: '1', title: 'Rails is omakase' });
       });
 
-      var payload = env.container.lookup('serializer:post').serialize(post._createSnapshot(), { includeId: true });
+      var payload = env.store.serializerFor('post').serialize(post._createSnapshot(), { includeId: true });
 
       equal(payload._ID_, '1');
     });
@@ -17018,7 +17062,7 @@ define(
 
       var jsonHash = { id: 1, TITLE: 'Rails is omakase' };
 
-      post = env.container.lookup('serializer:post').normalize(Post, jsonHash);
+      post = env.store.serializerFor('post').normalize(Post, jsonHash);
 
       equal(post.id, '1');
       equal(post.title, 'Rails is omakase');
@@ -17033,7 +17077,7 @@ define(
 
       var jsonHash = { id: 1, title: 'Rails is omakase', COMMENTS: ['1'] };
 
-      post = env.container.lookup('serializer:post').normalize(Post, jsonHash);
+      post = env.store.serializerFor('post').normalize(Post, jsonHash);
 
       deepEqual(post.comments, ['1']);
     });
@@ -17081,7 +17125,7 @@ define(
         inHash: DS.attr('string')
       });
 
-      var normalizedPayload = env.container.lookup('serializer:post').normalize(Post, {
+      var normalizedPayload = env.store.serializerFor('post').normalize(Post, {
         id: '1',
         title: 'Ember rocks',
         author: 1,
@@ -17112,7 +17156,7 @@ define(
         favorite = env.store.createRecord('favorite', { post: post, id: '3' });
       });
 
-      env.container.lookup('serializer:favorite').serializeBelongsTo(favorite._createSnapshot(), json, { key: 'post', options: { polymorphic: true, async: true } });
+      env.store.serializerFor('favorite').serializeBelongsTo(favorite._createSnapshot(), json, { key: 'post', options: { polymorphic: true, async: true } });
 
       deepEqual(json, expected, 'returned JSON is correct');
     });
@@ -17135,7 +17179,7 @@ define(
         }]
       };
 
-      var errors = env.container.lookup('serializer:post').extractErrors(env.store, Post, payload);
+      var errors = env.store.serializerFor('post').extractErrors(env.store, Post, payload);
 
       deepEqual(errors, {
         title: ['title errors'],
@@ -17154,7 +17198,7 @@ define(
         }]
       };
 
-      var errors = env.container.lookup('serializer:post').extractErrors(env.store, Post, payload);
+      var errors = env.store.serializerFor('post').extractErrors(env.store, Post, payload);
 
       deepEqual(errors, { title: ['title errors'] });
     });
@@ -17166,7 +17210,7 @@ define(
         untouchedSinceNoErrorsSiblingPresent: ['true']
       };
 
-      var errors = env.container.lookup('serializer:post').extractErrors(env.store, Post, payload);
+      var errors = env.store.serializerFor('post').extractErrors(env.store, Post, payload);
 
       deepEqual(errors, { untouchedSinceNoErrorsSiblingPresent: ['true'] });
     });

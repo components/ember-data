@@ -11532,34 +11532,16 @@
                 var internalModel = this._internalModelForId(modelName, id);
         options = options || {};
 
-        return this._findByInternalModel(internalModel, options);
-      },
-
-      _findByInternalModel: function (internalModel, options) {
-        options = options || {};
-
-        if (options.preload) {
-          internalModel._preloadData(options.preload);
+        if (!this.hasRecordForId(modelName, id)) {
+          return this._findByInternalModel(internalModel, options);
         }
 
-        var fetchedInternalModel = this._fetchOrResolveInternalModel(internalModel, options);
+        var fetchedInternalModel = this._findRecord(internalModel, options);
 
         return ember$data$lib$system$store$$promiseRecord(fetchedInternalModel, "DS: Store#findRecord " + internalModel.typeKey + " with id: " + ember$data$lib$system$store$$get(internalModel, "id"));
       },
 
-      _fetchOrResolveInternalModel: function (internalModel, options) {
-        var typeClass = internalModel.type;
-        var adapter = this.adapterFor(typeClass.modelName);
-        // Always fetch the model if it is not loaded
-        if (internalModel.isEmpty()) {
-          return this.scheduleFetch(internalModel, options);
-        }
-
-        //TODO double check about reloading
-        if (internalModel.isLoading()) {
-          return internalModel._loadingPromise;
-        }
-
+      _findRecord: function (internalModel, options) {
         // Refetch if the reload option is passed
         if (options.reload) {
           return this.scheduleFetch(internalModel, options);
@@ -11568,6 +11550,8 @@
         // Refetch the record if the adapter thinks the record is stale
         var snapshot = internalModel.createSnapshot();
         snapshot.adapterOptions = options && options.adapterOptions;
+        var typeClass = internalModel.type;
+        var adapter = this.adapterFor(typeClass.modelName);
         if (adapter.shouldReloadRecord(this, snapshot)) {
           return this.scheduleFetch(internalModel, options);
         }
@@ -11580,6 +11564,32 @@
         // Return the cached record
         return ember$data$lib$system$store$$Promise.resolve(internalModel);
       },
+
+      _findByInternalModel: function (internalModel, options) {
+        options = options || {};
+
+        if (options.preload) {
+          internalModel._preloadData(options.preload);
+        }
+
+        var fetchedInternalModel = this._findEmptyInternalModel(internalModel, options);
+
+        return ember$data$lib$system$store$$promiseRecord(fetchedInternalModel, "DS: Store#findRecord " + internalModel.typeKey + " with id: " + ember$data$lib$system$store$$get(internalModel, "id"));
+      },
+
+      _findEmptyInternalModel: function (internalModel, options) {
+        if (internalModel.isEmpty()) {
+          return this.scheduleFetch(internalModel, options);
+        }
+
+        //TODO double check about reloading
+        if (internalModel.isLoading()) {
+          return internalModel._loadingPromise;
+        }
+
+        return ember$data$lib$system$store$$Promise.resolve(internalModel);
+      },
+
       /**
         This method makes a series of requests to the adapter's `find` method
         and returns a promise that resolves once they are all loaded.
@@ -12710,7 +12720,7 @@
         var payload;
         if (!inputPayload) {
           payload = modelName;
-          serializer = ember$data$lib$system$store$$defaultSerializer(this.container);
+          serializer = ember$data$lib$system$store$$defaultSerializer(this);
                   } else {
           payload = inputPayload;
                     serializer = this.serializerFor(modelName);
@@ -13015,8 +13025,8 @@
 
     // Delegation to the adapter and promise management
 
-    function ember$data$lib$system$store$$defaultSerializer(container) {
-      return container.lookup("serializer:application") || container.lookup("serializer:-default");
+    function ember$data$lib$system$store$$defaultSerializer(store) {
+      return store.serializerFor("application");
     }
 
     function ember$data$lib$system$store$$_commit(adapter, store, operation, snapshot) {
