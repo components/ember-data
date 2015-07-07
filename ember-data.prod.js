@@ -6337,6 +6337,7 @@
             var type = store.modelFor(typeName);
             var typeSerializer = store.serializerFor(type.modelName);
 
+            
             hash = typeSerializer.normalize(type, hash, prop);
 
             var isFirstCreatedRecord = isPrimary && !recordId && !primaryRecord;
@@ -6463,6 +6464,8 @@
           }
           var type = store.modelFor(typeName);
           var typeSerializer = store.serializerFor(type.modelName);
+
+          
           var isPrimary = !forcedSecondary && this.isPrimaryType(store, typeName, primaryTypeClass);
 
           /*jshint loopfunc:true*/
@@ -6529,6 +6532,7 @@
           var typeClass = store.modelFor(modelName);
           var typeSerializer = store.serializerFor(modelName);
 
+          
           /*jshint loopfunc:true*/
           var normalizedArray = ember$data$lib$serializers$rest$serializer$$map.call(Ember.makeArray(payload[prop]), function (hash) {
             return typeSerializer.normalize(typeClass, hash, prop);
@@ -6844,6 +6848,7 @@
         var type = store.modelFor(modelName);
         var typeSerializer = store.serializerFor(type.modelName);
 
+        
         /*jshint loopfunc:true*/
         ember$data$lib$serializers$rest$serializer$$forEach.call(Ember.makeArray(payload[prop]), function (hash) {
           var _typeSerializer$normalize = typeSerializer.normalize(type, hash, prop);
@@ -13120,6 +13125,7 @@
     var ember$data$lib$system$store$$default = ember$data$lib$system$store$$Store;
 
     var ember$data$lib$serializers$json$api$serializer$$dasherize = Ember.String.dasherize;
+    var ember$data$lib$serializers$json$api$serializer$$get = Ember.get;
     var ember$data$lib$serializers$json$api$serializer$$map = Ember.ArrayPolyfills.map;
 
     var ember$data$lib$serializers$json$api$serializer$$default = ember$data$lib$serializers$json$serializer$$default.extend({
@@ -13176,6 +13182,7 @@
         var modelClass = this.store.modelFor(modelName);
         var serializer = this.store.serializerFor(modelName);
 
+        
         var _serializer$normalize = serializer.normalize(modelClass, resourceHash);
 
         var data = _serializer$normalize.data;
@@ -14732,6 +14739,8 @@
           if (parentRecord) {
             var name = parentRecord.name;
             var embeddedSerializer = this.store.serializerFor(embeddedSnapshot.modelName);
+
+            
             var parentKey = embeddedSerializer.keyForRelationship(name, parentRecord.kind, 'deserialize');
             if (parentKey) {
               delete json[parentKey];
@@ -14827,6 +14836,8 @@
         var ids = [];
 
         var embeddedSerializer = store.serializerFor(embeddedTypeClass.modelName);
+
+        
         ember$data$lib$serializers$embedded$records$mixin$$forEach.call(hash[key], function (data) {
           var embeddedRecord = embeddedSerializer.normalize(embeddedTypeClass, data, null);
           store.push(embeddedTypeClass.modelName, embeddedRecord);
@@ -14842,6 +14853,8 @@
        @private
       */
       _extractEmbeddedHasManyPolymorphic: function (store, key, hash) {
+        var _this = this;
+
         if (!hash[key]) {
           return hash;
         }
@@ -14851,6 +14864,8 @@
         ember$data$lib$serializers$embedded$records$mixin$$forEach.call(hash[key], function (data) {
           var modelName = data.type;
           var embeddedSerializer = store.serializerFor(modelName);
+
+          
           var embeddedTypeClass = store.modelFor(modelName);
           // var primaryKey = embeddedSerializer.get('primaryKey');
 
@@ -14877,6 +14892,8 @@
         }
 
         var embeddedSerializer = store.serializerFor(embeddedTypeClass.modelName);
+
+        
         var embeddedRecord = embeddedSerializer.normalize(embeddedTypeClass, hash[key], null);
         store.push(embeddedTypeClass.modelName, embeddedRecord);
 
@@ -14896,6 +14913,8 @@
         var data = hash[key];
         var modelName = data.type;
         var embeddedSerializer = store.serializerFor(modelName);
+
+        
         var embeddedTypeClass = store.modelFor(modelName);
         // var primaryKey = embeddedSerializer.get('primaryKey');
 
@@ -14919,6 +14938,7 @@
         var modelClass = store.modelFor(modelName);
         var serializer = store.serializerFor(modelName);
 
+        
         return serializer.normalize(modelClass, relationshipHash, null);
       }
 
@@ -14931,15 +14951,15 @@
      @private
     */
     function ember$data$lib$serializers$embedded$records$mixin$$_newExtractEmbeddedRecords(serializer, store, typeClass, partial) {
-      var _this = this;
+      var _this2 = this;
 
       typeClass.eachRelationship(function (key, relationship) {
         if (serializer.hasDeserializeRecordsOption(key)) {
           if (relationship.kind === 'hasMany') {
-            _this._extractEmbeddedHasMany(store, key, partial, relationship);
+            _this2._extractEmbeddedHasMany(store, key, partial, relationship);
           }
           if (relationship.kind === 'belongsTo') {
-            _this._extractEmbeddedBelongsTo(store, key, partial, relationship);
+            _this2._extractEmbeddedBelongsTo(store, key, partial, relationship);
           }
         }
       }, this);
@@ -14951,7 +14971,7 @@
      @private
     */
     function ember$data$lib$serializers$embedded$records$mixin$$_newExtractEmbeddedHasMany(store, key, hash, relationshipMeta) {
-      var _this2 = this;
+      var _this3 = this;
 
       var relationshipHash = ember$data$lib$serializers$embedded$records$mixin$$get(hash, 'data.relationships.' + key + '.data');
       if (!relationshipHash) {
@@ -14959,7 +14979,7 @@
       }
 
       var hasMany = relationshipHash.map(function (item) {
-        var _normalizeEmbeddedRelationship = _this2._normalizeEmbeddedRelationship(store, relationshipMeta, item);
+        var _normalizeEmbeddedRelationship = _this3._normalizeEmbeddedRelationship(store, relationshipMeta, item);
 
         var data = _normalizeEmbeddedRelationship.data;
         var included = _normalizeEmbeddedRelationship.included;
