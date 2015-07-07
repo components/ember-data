@@ -196,7 +196,7 @@ define(
 
       var error = adapter.handleResponse(jqXHR.status, {}, json).errors[0];
 
-      equal(error.details, 'can\'t be blank');
+      equal(error.detail, 'can\'t be blank');
       equal(error.source.pointer, 'data/attributes/name');
     });
 
@@ -1201,7 +1201,7 @@ define(
           source: {
             pointer: 'data/attributes/first_name'
           },
-          details: 'firstName not evil enough'
+          detail: 'firstName not evil enough'
         }]
       };
 
@@ -5016,7 +5016,7 @@ define(
       try {
         run(function () {
           store.find("post", "1")["catch"](function (err) {
-            equal(err.errors[0].details, errorThrown);
+            equal(err.errors[0].detail, errorThrown);
             ok(err, "promise rejected");
           });
         });
@@ -17113,10 +17113,10 @@ define(
       var payload = {
         errors: [{
           source: { pointer: 'data/attributes/le_title' },
-          details: 'title errors'
+          detail: 'title errors'
         }, {
           source: { pointer: 'data/attributes/my_comments' },
-          details: 'comments errors'
+          detail: 'comments errors'
         }]
       };
 
@@ -17135,7 +17135,7 @@ define(
         attributeWhichWillBeRemovedinExtractErrors: ['true'],
         errors: [{
           source: { pointer: 'data/attributes/title' },
-          details: 'title errors'
+          detail: 'title errors'
         }]
       };
 
@@ -19436,15 +19436,15 @@ define(
 
     var errorsArray = [{
       title: "Invalid Attribute",
-      details: "is invalid",
+      detail: "is invalid",
       source: { pointer: "data/attributes/name" }
     }, {
       title: "Invalid Attribute",
-      details: "must be a string",
+      detail: "must be a string",
       source: { pointer: "data/attributes/name" }
     }, {
       title: "Invalid Attribute",
-      details: "must be a number",
+      detail: "must be a number",
       source: { pointer: "data/attributes/age" }
     }];
 
@@ -19467,7 +19467,7 @@ define(
 
       deepEqual(error.errors, [{
         title: "Invalid Attribute",
-        details: "is invalid",
+        detail: "is invalid",
         source: { pointer: "data/attributes/name" }
       }]);
     });

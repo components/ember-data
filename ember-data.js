@@ -800,7 +800,7 @@
 
       this.errors = errors || [{
         title: "Adapter Error",
-        details: message
+        detail: message
       }];
     }
 
@@ -843,11 +843,11 @@
           // Fictional adapter that always rejects
           return Ember.RSVP.reject(new DS.InvalidError([
             {
-              details: 'Must be unique',
+              detail: 'Must be unique',
               source: { pointer: 'data/attributes/title' }
             },
             {
-              details: 'Must not be blank',
+              detail: 'Must not be blank',
               source: { pointer: 'data/attributes/content'}
             }
           ]));
@@ -906,7 +906,7 @@
           for (var i = 0; i < messages.length; i++) {
             out.push({
               title: "Invalid Attribute",
-              details: messages[i],
+              detail: messages[i],
               source: {
                 pointer: "data/attributes/" + key
               }
@@ -929,7 +929,7 @@
             if (key) {
               key = key[2];
               out[key] = out[key] || [];
-              out[key].push(error.details || error.title);
+              out[key].push(error.detail || error.title);
             }
           }
         });
@@ -2125,7 +2125,7 @@
           return [{
             status: "" + status,
             title: "The backend responded with an error",
-            details: "" + payload
+            detail: "" + payload
           }];
         }
       }
@@ -11030,8 +11030,7 @@
       },
 
       /**
-        @method _changedKeys
-         Ember Data has 3 buckets for storing the value of an attribute on an internalModel.
+        Ember Data has 3 buckets for storing the value of an attribute on an internalModel.
          `_data` holds all of the attributes that have been acknowledged by
         a backend via the adapter. When rollbackAttributes is called on a model all
         attributes will revert to the record's state in `_data`.
@@ -11059,7 +11058,8 @@
         `_inFlightAttributes` has priority) then that means the backend
         has updated the value and the key is added to the list of changed
         keys.
-         @private
+         @method _changedKeys
+        @private
       */
       _changedKeys: function (updates) {
         var changedKeys = [];
