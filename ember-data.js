@@ -5694,7 +5694,7 @@
       @return {Object} JSON-API Document
     */
     function ember$data$lib$system$store$serializer$response$$normalizeResponseHelper(serializer, store, modelClass, payload, id, requestType) {
-      if (serializer.get('isNewSerializerAPI')) {
+      if (ember$data$lib$system$store$serializer$response$$get(serializer, 'isNewSerializerAPI')) {
         var normalizedResponse = serializer.normalizeResponse(store, modelClass, payload, id, requestType);
         // TODO: Remove after metadata refactor
         if (normalizedResponse.meta) {
@@ -7310,6 +7310,7 @@
       }
 
       if (serializer === null || serializer === undefined) {
+        Ember.deprecate('Ember Data 2.0 will no longer support adapters with a null serializer property. Please define `defaultSerializer: "-default"` your adapter and make sure the `serializer` property is not null.');
         serializer = {
           extract: function (store, type, payload) {
             return payload;
@@ -7401,7 +7402,7 @@
           var recordArray = ember$data$lib$system$store$finders$$map.call(records, function (record) {
             return record._internalModel;
           });
-          if (serializer.get("isNewSerializerAPI")) {
+          if (ember$data$lib$system$store$finders$$get(serializer, "isNewSerializerAPI")) {
             recordArray.meta = payload.meta;
           }
           return recordArray;
