@@ -2074,7 +2074,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.18a3c3a356'
+      VERSION: '2.0.0+canary.37fb6f025c'
     });
 
     if (Ember.libraries) {
@@ -9944,8 +9944,7 @@
         @return {boolean} true if the hasMany relationship should be serialized
       */
       _shouldSerializeHasMany: function (snapshot, key, relationship) {
-        var store = snapshot.record.store;
-        var relationshipType = snapshot.type.determineRelationshipType(relationship, store);
+        var relationshipType = snapshot.type.determineRelationshipType(relationship, this.store);
         if (this._mustSerialize(key)) {
           return true;
         }
@@ -10749,21 +10748,16 @@
         @return {Object}
         @private
       */
-      _normalizeDocumentHelper: function (store, documentHash) {
-        var _this = this;
+      _normalizeDocumentHelper: function (documentHash) {
 
         if (Ember.typeOf(documentHash.data) === 'object') {
-          documentHash.data = this._normalizeResourceHelper(store, documentHash.data);
+          documentHash.data = this._normalizeResourceHelper(documentHash.data);
         } else if (Ember.typeOf(documentHash.data) === 'array') {
-          documentHash.data = documentHash.data.map(function (resourceHash) {
-            return _this._normalizeResourceHelper(store, resourceHash);
-          });
+          documentHash.data = documentHash.data.map(this._normalizeResourceHelper, this);
         }
 
         if (Ember.typeOf(documentHash.included) === 'array') {
-          documentHash.included = documentHash.included.map(function (resourceHash) {
-            return _this._normalizeResourceHelper(store, resourceHash);
-          });
+          documentHash.included = documentHash.included.map(this._normalizeResourceHelper, this);
         }
 
         return documentHash;
@@ -10787,10 +10781,10 @@
         @return {Object}
         @private
       */
-      _normalizeResourceHelper: function (store, resourceHash) {
+      _normalizeResourceHelper: function (resourceHash) {
         var modelName = this.modelNameFromPayloadKey(resourceHash.type);
-        var modelClass = store.modelFor(modelName);
-        var serializer = store.serializerFor(modelName);
+        var modelClass = this.store.modelFor(modelName);
+        var serializer = this.store.serializerFor(modelName);
 
         var _serializer$normalize = serializer.normalize(modelClass, resourceHash);
 
@@ -10805,7 +10799,7 @@
         @param {Object} payload
       */
       pushPayload: function (store, payload) {
-        var normalizedPayload = this._normalizeDocumentHelper(store, payload);
+        var normalizedPayload = this._normalizeDocumentHelper(payload);
         store.push(normalizedPayload);
       },
 
@@ -10821,7 +10815,7 @@
         @private
       */
       _normalizeResponse: function (store, primaryModelClass, payload, id, requestType, isSingle) {
-        var normalizedPayload = this._normalizeDocumentHelper(store, payload);
+        var normalizedPayload = this._normalizeDocumentHelper(payload);
         return normalizedPayload;
       },
 
@@ -10832,13 +10826,13 @@
         @return {Object}
       */
       extractAttributes: function (modelClass, resourceHash) {
-        var _this2 = this;
+        var _this = this;
 
         var attributes = {};
 
         if (resourceHash.attributes) {
           modelClass.eachAttribute(function (key) {
-            var attributeKey = _this2.keyForAttribute(key, 'deserialize');
+            var attributeKey = _this.keyForAttribute(key, 'deserialize');
             if (resourceHash.attributes.hasOwnProperty(attributeKey)) {
               attributes[key] = resourceHash.attributes[attributeKey];
             }
@@ -10873,17 +10867,17 @@
         @return {Object}
       */
       extractRelationships: function (modelClass, resourceHash) {
-        var _this3 = this;
+        var _this2 = this;
 
         var relationships = {};
 
         if (resourceHash.relationships) {
           modelClass.eachRelationship(function (key, relationshipMeta) {
-            var relationshipKey = _this3.keyForRelationship(key, relationshipMeta.kind, 'deserialize');
+            var relationshipKey = _this2.keyForRelationship(key, relationshipMeta.kind, 'deserialize');
             if (resourceHash.relationships.hasOwnProperty(relationshipKey)) {
 
               var relationshipHash = resourceHash.relationships[relationshipKey];
-              relationships[key] = _this3.extractRelationship(relationshipHash);
+              relationships[key] = _this2.extractRelationship(relationshipHash);
             }
           });
         }
@@ -11042,7 +11036,7 @@
        @param {Object} relationship
       */
       serializeHasMany: function (snapshot, json, relationship) {
-        var _this4 = this;
+        var _this3 = this;
 
         var key = relationship.key;
 
@@ -11059,7 +11053,7 @@
 
             var data = hasMany.map(function (item) {
               return {
-                type: _this4.payloadKeyFromModelName(item.modelName),
+                type: _this3.payloadKeyFromModelName(item.modelName),
                 id: item.id
               };
             });
@@ -12725,7 +12719,6 @@
     */
     var ember$data$lib$serializers$embedded$records$mixin$$EmbeddedRecordsMixin = Ember.Mixin.create({
 
-      _store: Ember.inject.service('store'),
       /**
         Normalize the record and recursively normalize/extract all the embedded records
         while pushing them into the store as they are encountered
@@ -12752,9 +12745,8 @@
        @return {Object} the normalized hash
       **/
       normalize: function (typeClass, hash, prop) {
-        var normalizedHash = this._super(typeClass, hash);
-        var store = this.get('_store');
-        return this._extractEmbeddedRecords(this, store, typeClass, normalizedHash);
+        var normalizedHash = this._super(typeClass, hash, prop);
+        return this._extractEmbeddedRecords(this, this.store, typeClass, normalizedHash);
       },
 
       keyForRelationship: function (key, typeClass, method) {
@@ -12946,14 +12938,13 @@
         @param {Object} json
       */
       removeEmbeddedForeignKey: function (snapshot, embeddedSnapshot, relationship, json) {
-        var store = this.get('_store');
         if (relationship.kind === 'hasMany') {
           return;
         } else if (relationship.kind === 'belongsTo') {
-          var parentRecord = snapshot.type.inverseFor(relationship.key, store);
+          var parentRecord = snapshot.type.inverseFor(relationship.key, this.store);
           if (parentRecord) {
             var name = parentRecord.name;
-            var embeddedSerializer = store.serializerFor(embeddedSnapshot.modelName);
+            var embeddedSerializer = this.store.serializerFor(embeddedSnapshot.modelName);
             var parentKey = embeddedSerializer.keyForRelationship(name, parentRecord.kind, 'deserialize');
             if (parentKey) {
               delete json[parentKey];
@@ -13095,7 +13086,7 @@
         var modelClass = store.modelFor(modelName);
         var serializer = store.serializerFor(modelName);
 
-        return serializer.normalize(modelClass, relationshipHash);
+        return serializer.normalize(modelClass, relationshipHash, null);
       }
     });
 
