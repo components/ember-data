@@ -2074,7 +2074,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.37fb6f025c'
+      VERSION: '2.0.0+canary.37ee519e47'
     });
 
     if (Ember.libraries) {
@@ -8716,7 +8716,7 @@
         var payload;
         if (!inputPayload) {
           payload = modelName;
-          serializer = ember$data$lib$system$store$$defaultSerializer(this.container);
+          serializer = ember$data$lib$system$store$$defaultSerializer(this);
                   } else {
           payload = inputPayload;
                     serializer = this.serializerFor(modelName);
@@ -9022,8 +9022,8 @@
 
     // Delegation to the adapter and promise management
 
-    function ember$data$lib$system$store$$defaultSerializer(container) {
-      return container.lookup("serializer:application") || container.lookup("serializer:-default");
+    function ember$data$lib$system$store$$defaultSerializer(store) {
+      return store.serializerFor("application");
     }
 
     function ember$data$lib$system$store$$_commit(adapter, store, operation, snapshot) {
