@@ -3612,7 +3612,7 @@ define(
       try {
         run(function () {
           store.find("post", "1")["catch"](function (err) {
-            equal(err.errors[0].details, errorThrown);
+            equal(err.errors[0].detail, errorThrown);
             ok(err, "promise rejected");
           });
         });
@@ -4815,29 +4815,6 @@ define(
       var fooController = lookup('controller:foo');
       var isCustom = run(fooController, 'get', 'store.isCustom');
       ok(isCustom, 'the custom store was injected');
-    });
-
-    test('registering App.Store is deprecated but functional', function () {
-      run(app, 'destroy');
-
-      expectDeprecation(function () {
-        run(function () {
-          app = Application.create({
-            Store: DS.Store.extend({ isCustomButDeprecated: true }),
-            FooController: Controller.extend()
-          });
-        });
-        container = app.__container__;
-      }, 'Specifying a custom Store for Ember Data on your global namespace as `App.Store` ' + 'has been deprecated. Please use `App.ApplicationStore` instead.');
-
-      run(function () {
-        ok(lookup('service:store').get('isCustomButDeprecated'), 'the custom store was instantiated');
-      });
-
-      var fooController = lookup('controller:foo');
-      run(function () {
-        ok(fooController.get('store.isCustomButDeprecated'), 'the custom store was injected');
-      });
     });
 
     test('The JSONAPIAdapter is the default adapter when no custom adapter is provided', function () {
@@ -17008,10 +16985,10 @@ define(
       var payload = {
         errors: [{
           source: { pointer: 'data/attributes/le_title' },
-          details: 'title errors'
+          detail: 'title errors'
         }, {
           source: { pointer: 'data/attributes/my_comments' },
-          details: 'comments errors'
+          detail: 'comments errors'
         }]
       };
 
@@ -17030,7 +17007,7 @@ define(
         attributeWhichWillBeRemovedinExtractErrors: ['true'],
         errors: [{
           source: { pointer: 'data/attributes/title' },
-          details: 'title errors'
+          detail: 'title errors'
         }]
       };
 
@@ -17650,67 +17627,11 @@ define(
       ok(fooController.get("store") instanceof Store, "the store was injected");
     });
 
-    test("the deprecated serializer:_default is resolved as serializer:default", function () {
-      var deprecated;
-      var valid = container.lookup("serializer:-default");
-      expectDeprecation(function () {
-        deprecated = container.lookup("serializer:_default");
-      });
-
-      ok(deprecated.constructor === valid.constructor, "they should resolve to the same thing");
-    });
-
-    test("the deprecated serializer:_rest is resolved as serializer:rest", function () {
-      var deprecated;
-      var valid = container.lookup("serializer:-rest");
-      expectDeprecation(function () {
-        deprecated = container.lookup("serializer:_rest");
-      });
-
-      ok(deprecated.constructor === valid.constructor, "they should resolve to the same thing");
-    });
-
-    test("the deprecated adapter:_rest is resolved as adapter:rest", function () {
-      var deprecated;
-      var valid = container.lookup("adapter:-rest");
-      expectDeprecation(function () {
-        deprecated = container.lookup("adapter:_rest");
-      });
-
-      ok(deprecated.constructor === valid.constructor, "they should resolve to the same thing");
-    });
-
-    test("a deprecation is made when looking up adapter:_rest", function () {
-      expectDeprecation(function () {
-        container.lookup("serializer:_default");
-      }, "You tried to look up 'serializer:_default', but this has been deprecated in favor of 'serializer:-default'.");
-    });
-
     test("serializers are not returned as singletons - each lookup should return a different instance", function () {
       var serializer1, serializer2;
       serializer1 = container.lookup("serializer:-rest");
       serializer2 = container.lookup("serializer:-rest");
       notEqual(serializer1, serializer2);
-    });
-
-    test("the deprecated store:main is resolved as service:store", function () {
-      var deprecated;
-      var valid = container.lookup("service:store");
-      expectDeprecation(function () {
-        deprecated = container.lookup("store:main");
-      });
-
-      ok(deprecated.constructor === valid.constructor, "they should resolve to the same thing");
-    });
-
-    test("the deprecated store:application is resolved as service:store", function () {
-      var deprecated;
-      var valid = container.lookup("service:store");
-      expectDeprecation(function () {
-        deprecated = container.lookup("store:application");
-      });
-
-      ok(deprecated.constructor === valid.constructor, "they should resolve to the same thing");
     });
 
     test("adapters are not returned as singletons - each lookup should return a different instance", function () {
@@ -18852,15 +18773,15 @@ define(
 
     var errorsArray = [{
       title: "Invalid Attribute",
-      details: "is invalid",
+      detail: "is invalid",
       source: { pointer: "data/attributes/name" }
     }, {
       title: "Invalid Attribute",
-      details: "must be a string",
+      detail: "must be a string",
       source: { pointer: "data/attributes/name" }
     }, {
       title: "Invalid Attribute",
-      details: "must be a number",
+      detail: "must be a number",
       source: { pointer: "data/attributes/age" }
     }];
 
@@ -18883,7 +18804,7 @@ define(
 
       deepEqual(error.errors, [{
         title: "Invalid Attribute",
-        details: "is invalid",
+        detail: "is invalid",
         source: { pointer: "data/attributes/name" }
       }]);
     });

@@ -256,7 +256,7 @@
 
       this.errors = errors || [{
         title: 'Adapter Error',
-        details: message
+        detail: message
       }];
     }
 
@@ -299,11 +299,11 @@
           // Fictional adapter that always rejects
           return Ember.RSVP.reject(new DS.InvalidError([
             {
-              details: 'Must be unique',
+              detail: 'Must be unique',
               source: { pointer: 'data/attributes/title' }
             },
             {
-              details: 'Must not be blank',
+              detail: 'Must not be blank',
               source: { pointer: 'data/attributes/content'}
             }
           ]));
@@ -362,7 +362,7 @@
           for (var i = 0; i < messages.length; i++) {
             out.push({
               title: 'Invalid Attribute',
-              details: messages[i],
+              detail: messages[i],
               source: {
                 pointer: 'data/attributes/' + key
               }
@@ -385,7 +385,7 @@
             if (key) {
               key = key[2];
               out[key] = out[key] || [];
-              out[key].push(error.details || error.title);
+              out[key].push(error.detail || error.title);
             }
           }
         });
@@ -1969,7 +1969,7 @@
           return [{
             status: "" + status,
             title: "The backend responded with an error",
-            details: "" + payload
+            detail: "" + payload
           }];
         }
       }
@@ -2082,7 +2082,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.5ac74d1117'
+      VERSION: '2.0.0+canary.2587c9a987'
     });
 
     if (Ember.libraries) {
@@ -7097,8 +7097,7 @@
       },
 
       /**
-        @method _changedKeys
-         Ember Data has 3 buckets for storing the value of an attribute on an internalModel.
+        Ember Data has 3 buckets for storing the value of an attribute on an internalModel.
          `_data` holds all of the attributes that have been acknowledged by
         a backend via the adapter. When rollbackAttributes is called on a model all
         attributes will revert to the record's state in `_data`.
@@ -7126,7 +7125,8 @@
         `_inFlightAttributes` has priority) then that means the backend
         has updated the value and the key is added to the list of changed
         keys.
-         @private
+         @method _changedKeys
+        @private
       */
       _changedKeys: function (updates) {
         var changedKeys = [];
@@ -11777,59 +11777,6 @@
     });
 
     var ember$data$lib$serializers$rest$serializer$$default = ember$data$lib$serializers$rest$serializer$$RESTSerializer;
-    var ember$data$lib$system$container$proxy$$default = ember$data$lib$system$container$proxy$$ContainerProxy;
-
-    /**
-      This is used internally to enable deprecation of container paths and provide
-      a decent message to the user indicating how to fix the issue.
-
-      @class ContainerProxy
-      @namespace DS
-      @private
-    */
-    function ember$data$lib$system$container$proxy$$ContainerProxy(container) {
-      this.container = container;
-    }
-
-    ember$data$lib$system$container$proxy$$ContainerProxy.prototype.aliasedFactory = function (path, preLookup) {
-      var _this = this;
-
-      return {
-        create: function () {
-          if (preLookup) {
-            preLookup();
-          }
-
-          return _this.container.lookup(path);
-        }
-      };
-    };
-
-    ember$data$lib$system$container$proxy$$ContainerProxy.prototype.registerAlias = function (source, dest, preLookup) {
-      var factory = this.aliasedFactory(dest, preLookup);
-
-      return this.container.register(source, factory);
-    };
-
-    ember$data$lib$system$container$proxy$$ContainerProxy.prototype.registerDeprecation = function (deprecated, valid) {
-      var preLookupCallback = function () {
-        Ember.deprecate("You tried to look up '" + deprecated + "', " + "but this has been deprecated in favor of '" + valid + "'.", false);
-      };
-
-      return this.registerAlias(deprecated, valid, preLookupCallback);
-    };
-
-    ember$data$lib$system$container$proxy$$ContainerProxy.prototype.registerDeprecations = function (proxyPairs) {
-      var i, proxyPair, deprecated, valid;
-
-      for (i = proxyPairs.length; i > 0; i--) {
-        proxyPair = proxyPairs[i - 1];
-        deprecated = proxyPair["deprecated"];
-        valid = proxyPair["valid"];
-
-        this.registerDeprecation(deprecated, valid);
-      }
-    };
     var ember$data$lib$initializers$store$$default = ember$data$lib$initializers$store$$initializeStore;
 
     /**
@@ -11841,16 +11788,9 @@
       @param {Object} [application] an application namespace
     */
     function ember$data$lib$initializers$store$$initializeStore(registry, application) {
-      Ember.deprecate("Specifying a custom Store for Ember Data on your global namespace as `App.Store` " + "has been deprecated. Please use `App.ApplicationStore` instead.", !(application && application.Store));
-
       registry.optionsForType("serializer", { singleton: false });
       registry.optionsForType("adapter", { singleton: false });
 
-      // allow older names to be looked up
-      var proxy = new ember$data$lib$system$container$proxy$$default(registry);
-      proxy.registerDeprecations([{ deprecated: "serializer:_default", valid: "serializer:-default" }, { deprecated: "serializer:_rest", valid: "serializer:-rest" }, { deprecated: "adapter:_rest", valid: "adapter:-rest" }]);
-
-      // new go forward paths
       registry.register("serializer:-default", ember$data$lib$serializers$json$serializer$$default);
       registry.register("serializer:-rest", ember$data$lib$serializers$rest$serializer$$default);
       registry.register("adapter:-rest", ember$data$lib$adapters$rest$adapter$$default);
@@ -11858,27 +11798,8 @@
       registry.register("adapter:-json-api", ember$data$lib$adapters$json$api$adapter$$default);
       registry.register("serializer:-json-api", ember$data$lib$serializers$json$api$serializer$$default);
 
-      var store;
-      if (registry.has("store:main")) {
-        Ember.deprecate("Registering a custom store as `store:main` or defining a store in app/store.js has been deprecated. Please move you store to `service:store` or define your custom store in `app/services/store.js`");
-        store = registry.lookup("store:main");
-      } else {
-        var storeMainProxy = new ember$data$lib$system$container$proxy$$default(registry);
-        storeMainProxy.registerDeprecations([{ deprecated: "store:main", valid: "service:store" }]);
-      }
-
-      if (registry.has("store:application")) {
-        Ember.deprecate("Registering a custom store as `store:application` or defining a store in app/stores/application.js has been deprecated. Please move you store to `service:store` or define your custom store in `app/services/store.js`");
-        store = registry.lookup("store:application");
-      } else {
-        var storeApplicationProxy = new ember$data$lib$system$container$proxy$$default(registry);
-        storeApplicationProxy.registerDeprecations([{ deprecated: "store:application", valid: "service:store" }]);
-      }
-
-      if (store) {
-        registry.register("service:store", store, { instantiate: false });
-      } else if (!registry.has("service:store")) {
-        registry.register("service:store", application && application.Store || ember$data$lib$system$store$$default);
+      if (!registry.has("service:store")) {
+        registry.register("service:store", ember$data$lib$system$store$$default);
       }
     }
 
@@ -12471,6 +12392,17 @@
     function ember$data$lib$initializers$data$adapter$$initializeDebugAdapter(registry) {
       registry.register("data-adapter:main", ember$data$lib$system$debug$debug$adapter$$default);
     }
+    var ember$data$lib$setup$container$$default = ember$data$lib$setup$container$$setupContainer;
+    function ember$data$lib$setup$container$$setupContainer(registry, application) {
+      // application is not a required argument. This ensures
+      // testing setups can setup a container without booting an
+      // entire ember application.
+
+      ember$data$lib$initializers$data$adapter$$default(registry, application);
+      ember$data$lib$initializers$transforms$$default(registry, application);
+      ember$data$lib$initializers$store$injections$$default(registry, application);
+      ember$data$lib$initializers$store$$default(registry, application);
+    }
     var ember$data$lib$instance$initializers$initialize$store$service$$default = ember$data$lib$instance$initializers$initialize$store$service$$initializeStoreService;
     /**
      Configures a registry for use with an Ember-Data
@@ -12479,46 +12411,10 @@
      @method initializeStore
      @param {Ember.ApplicationInstance} applicationOrRegistry
      */
-    function ember$data$lib$instance$initializers$initialize$store$service$$initializeStoreService(applicationOrRegistry) {
-      var registry, container;
-      if (applicationOrRegistry.registry && applicationOrRegistry.container) {
-        // initializeStoreService was registered with an
-        // instanceInitializer. The first argument is the application
-        // instance.
-        registry = applicationOrRegistry.registry;
-        container = applicationOrRegistry.container;
-      } else {
-        // initializeStoreService was called by an initializer instead of
-        // an instanceInitializer. The first argument is a registy. This
-        // case allows ED to support Ember pre 1.12
-        registry = applicationOrRegistry;
-        if (registry.container) {
-          // Support Ember 1.10 - 1.11
-          container = registry.container();
-        } else {
-          // Support Ember 1.9
-          container = registry;
-        }
-      }
-
+    function ember$data$lib$instance$initializers$initialize$store$service$$initializeStoreService(application) {
+      var container = application.container;
       // Eagerly generate the store so defaultStore is populated.
       container.lookup('service:store');
-    }
-    var ember$data$lib$setup$container$$default = ember$data$lib$setup$container$$setupContainer;
-    function ember$data$lib$setup$container$$setupContainer(registry, application) {
-      // application is not a required argument. This ensures
-      // testing setups can setup a container without booting an
-      // entire ember application.
-
-      ember$data$lib$setup$container$$initializeInjects(registry, application);
-      ember$data$lib$instance$initializers$initialize$store$service$$default(registry);
-    }
-
-    function ember$data$lib$setup$container$$initializeInjects(registry, application) {
-      ember$data$lib$initializers$data$adapter$$default(registry, application);
-      ember$data$lib$initializers$transforms$$default(registry, application);
-      ember$data$lib$initializers$store$injections$$default(registry, application);
-      ember$data$lib$initializers$store$$default(registry, application);
     }
 
     var ember$data$lib$ember$initializer$$K = Ember.K;
@@ -12563,21 +12459,13 @@
 
       Application.initializer({
         name: 'ember-data',
-        initialize: ember$data$lib$setup$container$$initializeInjects
+        initialize: ember$data$lib$setup$container$$default
       });
 
-      if (Application.instanceInitializer) {
-        Application.instanceInitializer({
-          name: 'ember-data',
-          initialize: ember$data$lib$instance$initializers$initialize$store$service$$default
-        });
-      } else {
-        Application.initializer({
-          name: 'ember-data-store-service',
-          after: 'ember-data',
-          initialize: ember$data$lib$instance$initializers$initialize$store$service$$default
-        });
-      }
+      Application.instanceInitializer({
+        name: 'ember-data',
+        initialize: ember$data$lib$instance$initializers$initialize$store$service$$default
+      });
 
       // Deprecated initializers to satisfy old code that depended on them
       Application.initializer({
@@ -14234,6 +14122,59 @@
       }
 
     });
+    var ember$data$lib$system$container$proxy$$default = ember$data$lib$system$container$proxy$$ContainerProxy;
+
+    /**
+      This is used internally to enable deprecation of container paths and provide
+      a decent message to the user indicating how to fix the issue.
+
+      @class ContainerProxy
+      @namespace DS
+      @private
+    */
+    function ember$data$lib$system$container$proxy$$ContainerProxy(container) {
+      this.container = container;
+    }
+
+    ember$data$lib$system$container$proxy$$ContainerProxy.prototype.aliasedFactory = function (path, preLookup) {
+      var _this = this;
+
+      return {
+        create: function () {
+          if (preLookup) {
+            preLookup();
+          }
+
+          return _this.container.lookup(path);
+        }
+      };
+    };
+
+    ember$data$lib$system$container$proxy$$ContainerProxy.prototype.registerAlias = function (source, dest, preLookup) {
+      var factory = this.aliasedFactory(dest, preLookup);
+
+      return this.container.register(source, factory);
+    };
+
+    ember$data$lib$system$container$proxy$$ContainerProxy.prototype.registerDeprecation = function (deprecated, valid) {
+      var preLookupCallback = function () {
+        Ember.deprecate("You tried to look up '" + deprecated + "', " + "but this has been deprecated in favor of '" + valid + "'.", false);
+      };
+
+      return this.registerAlias(deprecated, valid, preLookupCallback);
+    };
+
+    ember$data$lib$system$container$proxy$$ContainerProxy.prototype.registerDeprecations = function (proxyPairs) {
+      var i, proxyPair, deprecated, valid;
+
+      for (i = proxyPairs.length; i > 0; i--) {
+        proxyPair = proxyPairs[i - 1];
+        deprecated = proxyPair["deprecated"];
+        valid = proxyPair["valid"];
+
+        this.registerDeprecation(deprecated, valid);
+      }
+    };
 
     /**
       Ember Data
