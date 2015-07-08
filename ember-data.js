@@ -2985,8 +2985,8 @@
           normalizeResponse hook
         -To customize how JSONSerializer normalizes a specific response from the server,
           use one of the many specific normalizeResponse hooks
-        -To customize how JSONSerializer normalizes your attributes or relationships,
-          use the extractAttributes and extractRelationships hooks.
+        -To customize how JSONSerializer normalizes your id, attributes or relationships,
+          use the extractId, extractAttributes and extractRelationships hooks.
 
       JSONSerializer normalization process follows these steps:
         - `normalizeResponse` - entry method to the Serializer
@@ -3433,10 +3433,11 @@
       /*
         Returns the resource's ID.
          @method extractId
+        @param {Object} modelClass
         @param {Object} resourceHash
         @return {String}
       */
-      extractId: function (resourceHash) {
+      extractId: function (modelClass, resourceHash) {
         var primaryKey = ember$data$lib$serializers$json$serializer$$get(this, "primaryKey");
         var id = resourceHash[primaryKey];
         return ember$data$lib$system$coerce$id$$default(id);
@@ -4476,7 +4477,7 @@
         this.normalizeUsingDeclaredMapping(modelClass, resourceHash);
 
         data = {
-          id: this.extractId(resourceHash),
+          id: this.extractId(modelClass, resourceHash),
           type: modelClass.modelName,
           attributes: this.extractAttributes(modelClass, resourceHash),
           relationships: this.extractRelationships(modelClass, resourceHash)
@@ -13502,7 +13503,7 @@
         this.normalizeUsingDeclaredMapping(modelClass, resourceHash);
 
         var data = {
-          id: this.extractId(resourceHash),
+          id: this.extractId(modelClass, resourceHash),
           type: this._extractType(modelClass, resourceHash),
           attributes: this.extractAttributes(modelClass, resourceHash),
           relationships: this.extractRelationships(modelClass, resourceHash)
