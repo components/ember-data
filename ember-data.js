@@ -7276,7 +7276,7 @@
       registry.register("adapter:-active-model", activemodel$adapter$lib$system$active$model$adapter$$default);
     }
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.13.4'
+      VERSION: '1.13.5'
     });
 
     if (Ember.libraries) {
