@@ -2074,7 +2074,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.2b4bf97df3'
+      VERSION: '2.0.0+canary.19a1146fbe'
     });
 
     if (Ember.libraries) {
@@ -5180,13 +5180,14 @@
     var ember$data$lib$system$model$states$$default = ember$data$lib$system$model$states$$RootState;
     var ember$data$lib$system$relationships$state$relationship$$default = ember$data$lib$system$relationships$state$relationship$$Relationship;
     function ember$data$lib$system$relationships$state$relationship$$Relationship(store, record, inverseKey, relationshipMeta) {
+      var async = relationshipMeta.options.async;
       this.members = new ember$data$lib$system$ordered$set$$default();
       this.canonicalMembers = new ember$data$lib$system$ordered$set$$default();
       this.store = store;
       this.key = relationshipMeta.key;
       this.inverseKey = inverseKey;
       this.record = record;
-      this.isAsync = relationshipMeta.options.async;
+      this.isAsync = typeof async === 'undefined' ? true : async;
       this.relationshipMeta = relationshipMeta;
       //This probably breaks for polymorphic relationship in complex scenarios, due to
       //multiple possible modelNames
@@ -5388,7 +5389,7 @@
         }
         this.willSync = true;
         this.store._backburner.join(function () {
-          return _this5.store._backburner.schedule("syncRelationships", _this5, _this5.flushCanonical);
+          return _this5.store._backburner.schedule('syncRelationships', _this5, _this5.flushCanonical);
         });
       },
 
@@ -13182,27 +13183,17 @@
       
       opts = opts || {};
 
-      var shouldWarnAsync = false;
-      if (typeof opts.async === 'undefined') {
-        shouldWarnAsync = true;
-      }
-
       var meta = {
         type: userEnteredModelName,
         isRelationship: true,
         options: opts,
         kind: 'belongsTo',
-        key: null,
-        shouldWarnAsync: shouldWarnAsync
+        key: null
       };
 
       return Ember.computed({
         get: function (key) {
                     
-          if (meta.shouldWarnAsync) {
-                        meta.shouldWarnAsycn = false;
-          }
-
           return this._internalModel._relationships.get(key).getRecord();
         },
         set: function (key, value) {
@@ -13349,11 +13340,6 @@
       
       options = options || {};
 
-      var shouldWarnAsync = false;
-      if (typeof options.async === "undefined") {
-        shouldWarnAsync = true;
-      }
-
       if (typeof type === "string") {
         type = ember$data$lib$system$normalize$model$name$$default(type);
       }
@@ -13367,15 +13353,11 @@
         isRelationship: true,
         options: options,
         kind: "hasMany",
-        key: null,
-        shouldWarnAsync: shouldWarnAsync
+        key: null
       };
 
       return Ember.computed({
         get: function (key) {
-          if (meta.shouldWarnAsync) {
-                        meta.shouldWarnAsync = false;
-          }
           var relationship = this._internalModel._relationships.get(key);
           return relationship.getRecords();
         },

@@ -2082,7 +2082,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.2b4bf97df3'
+      VERSION: '2.0.0+canary.19a1146fbe'
     });
 
     if (Ember.libraries) {
@@ -5200,13 +5200,14 @@
     var ember$data$lib$system$model$states$$default = ember$data$lib$system$model$states$$RootState;
     var ember$data$lib$system$relationships$state$relationship$$default = ember$data$lib$system$relationships$state$relationship$$Relationship;
     function ember$data$lib$system$relationships$state$relationship$$Relationship(store, record, inverseKey, relationshipMeta) {
+      var async = relationshipMeta.options.async;
       this.members = new ember$data$lib$system$ordered$set$$default();
       this.canonicalMembers = new ember$data$lib$system$ordered$set$$default();
       this.store = store;
       this.key = relationshipMeta.key;
       this.inverseKey = inverseKey;
       this.record = record;
-      this.isAsync = relationshipMeta.options.async;
+      this.isAsync = typeof async === 'undefined' ? true : async;
       this.relationshipMeta = relationshipMeta;
       //This probably breaks for polymorphic relationship in complex scenarios, due to
       //multiple possible modelNames
@@ -5408,13 +5409,13 @@
         }
         this.willSync = true;
         this.store._backburner.join(function () {
-          return _this5.store._backburner.schedule("syncRelationships", _this5, _this5.flushCanonical);
+          return _this5.store._backburner.schedule('syncRelationships', _this5, _this5.flushCanonical);
         });
       },
 
       updateLink: function (link) {
-        Ember.warn("You have pushed a record of type '" + this.record.type.modelName + "' with '" + this.key + "' as a link, but the association is not an async relationship.", this.isAsync);
-        Ember.assert("You have pushed a record of type '" + this.record.type.modelName + "' with '" + this.key + "' as a link, but the value of that link is not a string.", typeof link === "string" || link === null);
+        Ember.warn('You have pushed a record of type \'' + this.record.type.modelName + '\' with \'' + this.key + '\' as a link, but the association is not an async relationship.', this.isAsync);
+        Ember.assert('You have pushed a record of type \'' + this.record.type.modelName + '\' with \'' + this.key + '\' as a link, but the value of that link is not a string.', typeof link === 'string' || link === null);
         if (link !== this.link) {
           this.link = link;
           this.linkPromise = null;
@@ -13305,29 +13306,18 @@
 
       opts = opts || {};
 
-      var shouldWarnAsync = false;
-      if (typeof opts.async === 'undefined') {
-        shouldWarnAsync = true;
-      }
-
       var meta = {
         type: userEnteredModelName,
         isRelationship: true,
         options: opts,
         kind: 'belongsTo',
-        key: null,
-        shouldWarnAsync: shouldWarnAsync
+        key: null
       };
 
       return Ember.computed({
         get: function (key) {
           Ember.warn('You provided a serialize option on the "' + key + '" property in the "' + this._internalModel.modelName + '" class, this belongs in the serializer. See DS.Serializer and it\'s implementations http://emberjs.com/api/data/classes/DS.Serializer.html', !opts.hasOwnProperty('serialize'));
           Ember.warn('You provided an embedded option on the "' + key + '" property in the "' + this._internalModel.modelName + '" class, this belongs in the serializer. See DS.EmbeddedRecordsMixin http://emberjs.com/api/data/classes/DS.EmbeddedRecordsMixin.html', !opts.hasOwnProperty('embedded'));
-
-          if (meta.shouldWarnAsync) {
-            Ember.deprecate('In Ember Data 2.0, relationships will be asynchronous by default. You must set `' + key + ': DS.belongsTo(\'' + modelName + '\', { async: false })` if you wish for a relationship remain synchronous.');
-            meta.shouldWarnAsycn = false;
-          }
 
           return this._internalModel._relationships.get(key).getRecord();
         },
@@ -13476,11 +13466,6 @@
 
       options = options || {};
 
-      var shouldWarnAsync = false;
-      if (typeof options.async === "undefined") {
-        shouldWarnAsync = true;
-      }
-
       if (typeof type === "string") {
         type = ember$data$lib$system$normalize$model$name$$default(type);
       }
@@ -13494,16 +13479,11 @@
         isRelationship: true,
         options: options,
         kind: "hasMany",
-        key: null,
-        shouldWarnAsync: shouldWarnAsync
+        key: null
       };
 
       return Ember.computed({
         get: function (key) {
-          if (meta.shouldWarnAsync) {
-            Ember.deprecate("In Ember Data 2.0, relationships will be asynchronous by default. You must set `" + key + ": DS.hasMany('" + type + "', { async: false })` if you wish for a relationship remain synchronous.");
-            meta.shouldWarnAsync = false;
-          }
           var relationship = this._internalModel._relationships.get(key);
           return relationship.getRecords();
         },
