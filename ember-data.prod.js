@@ -2074,7 +2074,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.19a1146fbe'
+      VERSION: '2.0.0+canary.24a8398625'
     });
 
     if (Ember.libraries) {
@@ -2592,29 +2592,6 @@
          Example
          ```javascript
         var record = store.createRecord('model');
-        record.get('isDirty'); // true
-         store.find('model', 1).then(function(model) {
-          model.get('isDirty'); // false
-          model.set('foo', 'some value');
-          model.get('isDirty'); // true
-        });
-        ```
-         @property isDirty
-        @type {Boolean}
-        @readOnly
-        @deprecated
-      */
-      isDirty: Ember.computed("currentState.isDirty", function () {
-                return this.get("currentState.isDirty");
-      }),
-      /**
-        If this property is `true` the record is in the `dirty` state. The
-        record has local changes that have not yet been saved by the
-        adapter. This includes records that have been created (but not yet
-        saved) or deleted.
-         Example
-         ```javascript
-        var record = store.createRecord('model');
         record.get('hasDirtyAttributes'); // true
          store.find('model', 1).then(function(model) {
           model.get('hasDirtyAttributes'); // false
@@ -3077,24 +3054,6 @@
         this.updateRecordArraysLater();
       },
       */
-
-      /**
-        If the model `isDirty` this function will discard any unsaved
-        changes. If the model `isNew` it will be removed from the store.
-         Example
-         ```javascript
-        record.get('name'); // 'Untitled Document'
-        record.set('name', 'Doc 1');
-        record.get('name'); // 'Doc 1'
-        record.rollback();
-        record.get('name'); // 'Untitled Document'
-        ```
-         @method rollback
-        @deprecated Use `rollbackAttributes()` instead
-      */
-      rollback: function () {
-                this.rollbackAttributes();
-      },
 
       /**
         If the model `isDirty` this function will discard any unsaved

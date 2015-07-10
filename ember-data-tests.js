@@ -20448,25 +20448,6 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
       return store.createRecord('person');
     });
   });
-
-  test('isDirty should log a deprecation warning', function () {
-    expect(1);
-    var Person = DS.Model.extend({
-      name: DS.attr('string')
-    });
-
-    var env = setupStore({
-      person: Person
-    });
-    var store = env.store;
-
-    run(function () {
-      var person = store.createRecord('person');
-      expectDeprecation(function () {
-        person.get('isDirty');
-      }, /DS.Model#isDirty has been deprecated/);
-    });
-  });
 });
 
 
@@ -22589,53 +22570,6 @@ define(
           ok(dog.get("errors.length") === 0, "must not have errors");
         }));
       });
-    });
-  }
-);
-
-
-define(
-  "ember-data/tests/unit/model/rollback-test",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-
-    function __es6_export__(name, value) {
-      __exports__[name] = value;
-    }
-
-    var env, store, Person;
-    var run = Ember.run;
-
-    module("unit/model/rollback - model.rollback() - deprecated", {
-      setup: function () {
-        Person = DS.Model.extend({
-          firstName: DS.attr(),
-          lastName: DS.attr()
-        });
-
-        env = setupStore({ person: Person });
-        store = env.store;
-      }
-    });
-
-    test("changes to attributes can be rolled back - deprecated", function () {
-      var person;
-      run(function () {
-        person = store.push("person", { id: 1, firstName: "Tom", lastName: "Dale" });
-        person.set("firstName", "Thomas");
-      });
-
-      equal(person.get("firstName"), "Thomas");
-
-      expectDeprecation(function () {
-        run(function () {
-          person.rollback();
-        });
-      }, "Using model.rollback() has been deprecated. Use model.rollbackAttributes() to discard any unsaved changes to a model.");
-
-      equal(person.get("firstName"), "Tom");
-      equal(person.get("hasDirtyAttributes"), false);
     });
   }
 );
@@ -26976,13 +26910,6 @@ if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/tests/unit/model');
 test('ember-data/tests/unit/model/rollback-attributes-test.js should pass jshint', function() { 
   ok(true, 'ember-data/tests/unit/model/rollback-attributes-test.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/model');
-test('ember-data/tests/unit/model/rollback-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/model/rollback-test.js should pass jshint.'); 
 });
 
 }
