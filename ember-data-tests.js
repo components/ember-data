@@ -13217,7 +13217,6 @@ define(
           }
         });
       });
-      console.log(user);
       equal(job.get('user'), user, 'User relationship was set up correctly');
     });
 
