@@ -2074,7 +2074,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.d3674581b6'
+      VERSION: '2.0.0+canary.ab1f5382a8'
     });
 
     if (Ember.libraries) {
@@ -8587,11 +8587,15 @@
         return internalModel.getRecord();
       },
 
+      _hasModelFor: function (type) {
+        return this.container.lookupFactory("model:" + type);
+      },
+
       _pushInternalModel: function (data) {
         var _this4 = this;
 
         var modelName = data.type;
-                
+                        
         var type = this.modelFor(modelName);
 
         // If Ember.ENV.DS_WARN_ON_UNKNOWN_KEYS is set to true and the payload

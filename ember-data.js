@@ -2082,7 +2082,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.d3674581b6'
+      VERSION: '2.0.0+canary.ab1f5382a8'
     });
 
     if (Ember.libraries) {
@@ -8668,12 +8668,17 @@
         return internalModel.getRecord();
       },
 
+      _hasModelFor: function (type) {
+        return this.container.lookupFactory("model:" + type);
+      },
+
       _pushInternalModel: function (data) {
         var _this4 = this;
 
         var modelName = data.type;
         Ember.assert("Expected an object as 'data' in a call to 'push' for " + modelName + ", but was " + Ember.typeOf(data), Ember.typeOf(data) === "object");
         Ember.assert("You must include an 'id' for " + modelName + " in an object passed to 'push'", data.id != null && data.id !== "");
+        Ember.assert("You tried to push data with a type '" + modelName + "' but no model could be found with that name.", this._hasModelFor(modelName));
 
         var type = this.modelFor(modelName);
 
