@@ -2074,7 +2074,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.ab1f5382a8'
+      VERSION: '2.0.0+canary.09556fcbc6'
     });
 
     if (Ember.libraries) {
@@ -9551,14 +9551,24 @@
           var _normalize = this.normalize(primaryModelClass, payload);
 
           var data = _normalize.data;
+          var included = _normalize.included;
 
           documentHash.data = data;
+          if (included) {
+            documentHash.included = included;
+          }
         } else {
           documentHash.data = payload.map(function (item) {
             var _normalize2 = _this2.normalize(primaryModelClass, item);
 
             var data = _normalize2.data;
+            var included = _normalize2.included;
 
+            if (included) {
+              var _documentHash$included;
+
+              (_documentHash$included = documentHash.included).push.apply(_documentHash$included, included);
+            }
             return data;
           });
         }
