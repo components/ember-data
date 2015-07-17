@@ -2082,7 +2082,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.09556fcbc6'
+      VERSION: '2.0.0+canary.3fef5694c3'
     });
 
     if (Ember.libraries) {
@@ -3880,9 +3880,9 @@
         manager.updateFilter(this, ember$data$lib$system$record$arrays$filtered$record$array$$get(this, "type"), ember$data$lib$system$record$arrays$filtered$record$array$$get(this, "filterFunction"));
       },
 
-      updateFilter: Ember.observer(function () {
+      updateFilter: Ember.observer("filterFunction", function () {
         Ember.run.once(this, this._updateFilter);
-      }, "filterFunction")
+      })
     });
 
     var ember$data$lib$system$clone$null$$default = ember$data$lib$system$clone$null$$cloneNull;
