@@ -351,6 +351,7 @@
     ember$data$lib$adapters$errors$$AbortError.prototype = Object.create(ember$data$lib$adapters$errors$$AdapterError.prototype);
 
     /**
+      @method errorsHashToArray
       @private
     */
     function ember$data$lib$adapters$errors$$errorsHashToArray(errors) {
@@ -374,6 +375,10 @@
       return out;
     }
 
+    /**
+      @method errorsArrayToHash
+      @private
+    */
     function ember$data$lib$adapters$errors$$errorsArrayToHash(errors) {
       var out = {};
 
@@ -2082,7 +2087,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.3fef5694c3'
+      VERSION: '2.0.0+canary.1bea9b72c1'
     });
 
     if (Ember.libraries) {
@@ -2822,6 +2827,14 @@
 
         return errors;
       }).readOnly(),
+
+      /**
+        This property holds the `DS.AdapterError` object with which
+        last adapter operation was rejected.
+         @property adapterError
+        @type {DS.AdapterError}
+      */
+      adapterError: null,
 
       /**
         Create a JSON representation of the record, using the serialization
@@ -6477,7 +6490,7 @@
           _internalModel: this,
           currentState: ember$data$lib$system$model$internal$model$$get(this, "currentState"),
           isError: this.isError,
-          error: this.error
+          adapterError: this.error
         });
         this._triggerDeferredTriggers();
       },
@@ -6943,17 +6956,19 @@
         if (this.record) {
           this.record.setProperties({
             isError: true,
-            error: error
+            adapterError: error
           });
         }
       },
 
       didCleanError: function () {
+        this.error = null;
         this.isError = false;
+
         if (this.record) {
           this.record.setProperties({
             isError: false,
-            error: null
+            adapterError: null
           });
         }
       },
