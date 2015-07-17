@@ -2079,7 +2079,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.1bea9b72c1'
+      VERSION: '2.0.0+canary.0be4bd37e7'
     });
 
     if (Ember.libraries) {
@@ -7918,21 +7918,27 @@
          Exposing queries this way seems preferable to creating an abstract query
         language for all server-side queries, and then require all adapters to
         implement them.
+         ---
+         If you do something like this:
+         ```javascript
+        store.query('person', { page: 1 });
+        ```
          The call made to the server, using a Rails backend, will look something like this:
          ```
         Started GET "/api/v1/person?page=1"
         Processing by Api::V1::PersonsController#index as HTML
-        Parameters: {"page"=>"1"}
+        Parameters: { "page"=>"1" }
         ```
+         ---
          If you do something like this:
          ```javascript
-        store.query('person', {ids: [1, 2, 3]});
+        store.query('person', { ids: [1, 2, 3] });
         ```
          The call to the server, using a Rails backend, will look something like this:
          ```
         Started GET "/api/v1/person?ids%5B%5D=1&ids%5B%5D=2&ids%5B%5D=3"
         Processing by Api::V1::PersonsController#index as HTML
-        Parameters: {"ids"=>["1", "2", "3"]}
+        Parameters: { "ids" => ["1", "2", "3"] }
         ```
          This method returns a promise, which is resolved with a `RecordArray`
         once the server returns.
