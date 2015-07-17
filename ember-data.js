@@ -3367,14 +3367,24 @@
           var _normalize = this.normalize(primaryModelClass, payload);
 
           var data = _normalize.data;
+          var included = _normalize.included;
 
           documentHash.data = data;
+          if (included) {
+            documentHash.included = included;
+          }
         } else {
           documentHash.data = payload.map(function (item) {
             var _normalize2 = _this.normalize(primaryModelClass, item);
 
             var data = _normalize2.data;
+            var included = _normalize2.included;
 
+            if (included) {
+              var _documentHash$included;
+
+              (_documentHash$included = documentHash.included).push.apply(_documentHash$included, included);
+            }
             return data;
           });
         }
@@ -5225,6 +5235,14 @@
 
         return errors;
       }).readOnly(),
+
+      /**
+        This property holds the `DS.AdapterError` object with which
+        last adapter operation was rejected.
+         @property adapterError
+        @type {DS.AdapterError}
+      */
+      adapterError: null,
 
       /**
         Create a JSON representation of the record, using the serialization
@@ -10467,7 +10485,7 @@
           _internalModel: this,
           currentState: ember$data$lib$system$model$internal$model$$get(this, "currentState"),
           isError: this.isError,
-          error: this.error
+          adapterError: this.error
         });
         this._triggerDeferredTriggers();
       },
@@ -10929,17 +10947,19 @@
         if (this.record) {
           this.record.setProperties({
             isError: true,
-            error: error
+            adapterError: error
           });
         }
       },
 
       didCleanError: function () {
+        this.error = null;
         this.isError = false;
+
         if (this.record) {
           this.record.setProperties({
             isError: false,
-            error: null
+            adapterError: null
           });
         }
       },
@@ -12022,21 +12042,27 @@
          Exposing queries this way seems preferable to creating an abstract query
         language for all server-side queries, and then require all adapters to
         implement them.
+         ---
+         If you do something like this:
+         ```javascript
+        store.query('person', { page: 1 });
+        ```
          The call made to the server, using a Rails backend, will look something like this:
          ```
         Started GET "/api/v1/person?page=1"
         Processing by Api::V1::PersonsController#index as HTML
-        Parameters: {"page"=>"1"}
+        Parameters: { "page"=>"1" }
         ```
+         ---
          If you do something like this:
          ```javascript
-        store.query('person', {ids: [1, 2, 3]});
+        store.query('person', { ids: [1, 2, 3] });
         ```
          The call to the server, using a Rails backend, will look something like this:
          ```
         Started GET "/api/v1/person?ids%5B%5D=1&ids%5B%5D=2&ids%5B%5D=3"
         Processing by Api::V1::PersonsController#index as HTML
-        Parameters: {"ids"=>["1", "2", "3"]}
+        Parameters: { "ids" => ["1", "2", "3"] }
         ```
          This method returns a promise, which is resolved with a `RecordArray`
         once the server returns.
@@ -12777,10 +12803,15 @@
         return internalModel.getRecord();
       },
 
+      _hasModelFor: function (type) {
+        return this.container.lookupFactory("model:" + type);
+      },
+
       _pushInternalModel: function (data) {
         var modelName = data.type;
-        Ember.assert("Expected an object as `data` in a call to `push` for " + modelName + " , but was " + Ember.typeOf(data), Ember.typeOf(data) === "object");
-        Ember.assert("You must include an `id` for " + modelName + " in an object passed to `push`", data.id != null && data.id !== "");
+        Ember.assert("Expected an object as 'data' in a call to 'push' for " + modelName + ", but was " + Ember.typeOf(data), Ember.typeOf(data) === "object");
+        Ember.assert("You must include an 'id' for " + modelName + " in an object passed to 'push'", data.id != null && data.id !== "");
+        Ember.assert("You tried to push data with a type '" + modelName + "' but no model could be found with that name.", this._hasModelFor(modelName));
 
         var type = this.modelFor(modelName);
         var filter = Ember.ArrayPolyfills.filter;
