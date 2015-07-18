@@ -243,7 +243,7 @@
 
     var ember$data$lib$adapters$errors$$EmberError = Ember.Error;
 
-    var ember$data$lib$adapters$errors$$SOURCE_POINTER_REGEXP = /data\/(attributes|relationships)\/(.*)/;
+    var ember$data$lib$adapters$errors$$SOURCE_POINTER_REGEXP = /^\/?data\/(attributes|relationships)\/(.*)/;
 
     /**
       @class AdapterError
@@ -364,7 +364,7 @@
               title: 'Invalid Attribute',
               detail: messages[i],
               source: {
-                pointer: 'data/attributes/' + key
+                pointer: '/data/attributes/' + key
               }
             });
           }
@@ -2079,7 +2079,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.0be4bd37e7'
+      VERSION: '2.0.0+canary.21ebe9b61b'
     });
 
     if (Ember.libraries) {
