@@ -5463,7 +5463,7 @@ define(
       deepEqual(record.searchKeywords, ['2', 'New Post']);
       deepEqual(record.color, 'green');
 
-      Ember.run(post, 'deleteRecord');
+      Ember.run(post, 'unloadRecord');
 
       equal(removedIndex, 1);
       equal(removedCount, 1);
@@ -7058,8 +7058,39 @@ define(
       }
     });
 
+    test("records should not be removed from record arrays just after deleting, but only after commiting them", function () {
+      var adam, dave;
+
+      env.adapter.deleteRecord = function () {
+        return Ember.RSVP.Promise.resolve();
+      };
+
+      var all;
+      run(function () {
+        adam = env.store.push("person", { id: 1, name: "Adam Sunderland" });
+        dave = env.store.push("person", { id: 2, name: "Dave Sunderland" });
+        all = env.store.peekAll("person");
+      });
+
+      // pre-condition
+      equal(all.get("length"), 2, "pre-condition: 2 records in array");
+
+      Ember.run(adam, "deleteRecord");
+
+      equal(all.get("length"), 2, "2 records in array after deleteRecord");
+
+      Ember.run(adam, "save");
+
+      equal(all.get("length"), 1, "1 record in array after deleteRecord and save");
+    });
+
     test("records can be deleted during record array enumeration", function () {
       var adam, dave;
+
+      env.adapter.deleteRecord = function () {
+        return Ember.RSVP.Promise.resolve();
+      };
+
       run(function () {
         adam = env.store.push("person", { id: 1, name: "Adam Sunderland" });
         dave = env.store.push("person", { id: 2, name: "Dave Sunderland" });
@@ -7071,7 +7102,7 @@ define(
 
       Ember.run(function () {
         all.forEach(function (record) {
-          record.deleteRecord();
+          record.destroyRecord();
         });
       });
 
@@ -10116,7 +10147,7 @@ define(
             return comments.get('lastObject').destroyRecord();
           }).then(function () {
             var comments = post.get('comments');
-            equal(comments.get('length'), 3, 'Comments count after delete');
+            equal(comments.get('length'), 3, 'Comments count after destroy');
 
             // Add another comment #4
             var comment = env.store.createRecord('comment');
@@ -10852,7 +10883,12 @@ define(
         env = setupStore({
           user: User,
           topic: Topic,
-          account: Account
+          account: Account,
+          adapter: DS.Adapter.extend({
+            deleteRecord: function () {
+              return Ember.RSVP.resolve();
+            }
+          })
         });
 
         store = env.store;
@@ -11198,89 +11234,6 @@ define(
     });
 
     /*
-    Deleting tests
-    */
-
-    test('Deleting a record that has a hasMany relationship removes it from the otherMany array but does not remove the other record from itself - async', function () {
-      var user, topic;
-      run(function () {
-        user = store.push({
-          data: {
-            id: '1',
-            type: 'user',
-            attributes: {
-              name: 'Stanley'
-            },
-            relationships: {
-              topics: {
-                data: [{
-                  id: '2',
-                  type: 'topic'
-                }]
-              }
-            }
-          }
-        });
-        topic = store.push({
-          data: {
-            id: '2',
-            type: 'topic',
-            attributes: {
-              title: 'EmberFest was great'
-            }
-          }
-        });
-      });
-
-      run(topic, 'deleteRecord');
-      run(function () {
-        topic.get('users').then(async(function (fetchedUsers) {
-          equal(fetchedUsers.get('length'), 1, 'Users are still there');
-        }));
-        user.get('topics').then(async(function (fetchedTopics) {
-          equal(fetchedTopics.get('length'), 0, 'Topic got removed from the user');
-          equal(fetchedTopics.objectAt(0), null, 'Topic can\'t be fetched');
-        }));
-      });
-    });
-
-    test('Deleting a record that has a hasMany relationship removes it from the otherMany array but does not remove the other record from itself - sync', function () {
-      var account, user;
-      run(function () {
-        account = store.push({
-          data: {
-            id: '2',
-            type: 'account',
-            attributes: {
-              state: 'lonely'
-            }
-          }
-        });
-        user = store.push({
-          data: {
-            id: '1',
-            type: 'user',
-            attributes: {
-              name: 'Stanley'
-            },
-            relationships: {
-              accounts: {
-                data: [{
-                  id: '2',
-                  type: 'account'
-                }]
-              }
-            }
-          }
-        });
-      });
-
-      run(account, 'deleteRecord');
-      equal(account.get('users.length'), 1, 'Users are still there');
-      equal(user.get('accounts.length'), 0, 'Acocount got removed from the user');
-    });
-
-    /*
       Rollback Attributes tests
     */
 
@@ -11545,7 +11498,12 @@ define(
         env = setupStore({
           user: User,
           message: Message,
-          account: Account
+          account: Account,
+          adapter: DS.Adapter.extend({
+            deleteRecord: function () {
+              return Ember.RSVP.resolve();
+            }
+          })
         });
 
         store = env.store;
@@ -12673,165 +12631,6 @@ define(
     });
 
     /*
-    Deleting
-    */
-
-    test('When deleting a record that has a belongsTo it is removed from the hasMany side but not the belongsTo side- async', function () {
-      var user, message;
-      run(function () {
-        user = store.push({
-          data: {
-            id: '1',
-            type: 'user',
-            attributes: {
-              name: 'Stanley'
-            },
-            relationships: {
-              messages: {
-                data: [{
-                  id: '2',
-                  type: 'message'
-                }]
-              }
-            }
-          }
-        });
-        message = store.push({
-          data: {
-            id: '2',
-            type: 'message',
-            attributes: {
-              title: 'EmberFest was great'
-            }
-          }
-        });
-      });
-      run(message, 'deleteRecord');
-      run(function () {
-        message.get('user').then(function (fetchedUser) {
-          equal(fetchedUser, user, 'Message still has the user');
-        });
-        user.get('messages').then(function (fetchedMessages) {
-          equal(fetchedMessages.get('length'), 0, 'User was removed from the messages');
-          equal(fetchedMessages.get('firstObject'), null, 'Message can\'t be accessed');
-        });
-      });
-    });
-
-    test('When deleting a record that has a belongsTo it is removed from the hasMany side but not the belongsTo side- sync', function () {
-      var account, user;
-      run(function () {
-        account = store.push({
-          data: {
-            id: '2',
-            type: 'account',
-            attributes: {
-              state: 'lonely'
-            }
-          }
-        });
-        user = store.push({
-          data: {
-            id: '1',
-            type: 'user',
-            attributes: {
-              name: 'Stanley'
-            },
-            relationships: {
-              accounts: {
-                data: [{
-                  id: '2',
-                  type: 'account'
-                }]
-              }
-            }
-          }
-        });
-        account.deleteRecord();
-      });
-      equal(user.get('accounts.length'), 0, 'User was removed from the accounts');
-      equal(account.get('user'), user, 'Account still has the user');
-    });
-
-    test('When deleting a record that has a hasMany it is removed from the belongsTo side but not the hasMany side- async', function () {
-      var user, message;
-      run(function () {
-        user = store.push({
-          data: {
-            id: '1',
-            type: 'user',
-            attributes: {
-              name: 'Stanley'
-            },
-            relationships: {
-              messages: {
-                data: [{
-                  id: '2',
-                  type: 'message'
-                }]
-              }
-            }
-          }
-        });
-        message = store.push({
-          data: {
-            id: '2',
-            type: 'message',
-            attributes: {
-              title: 'EmberFest was great'
-            }
-          }
-        });
-      });
-      run(user, 'deleteRecord');
-      run(function () {
-        message.get('user').then(function (fetchedUser) {
-          equal(fetchedUser, null, 'Message does not have the user anymore');
-        });
-        user.get('messages').then(function (fetchedMessages) {
-          equal(fetchedMessages.get('length'), 1, 'User still has the messages');
-        });
-      });
-    });
-
-    test('When deleting a record that has a hasMany it is removed from the belongsTo side but not the hasMany side - sync', function () {
-      var account, user;
-      run(function () {
-        account = store.push({
-          data: {
-            id: '2',
-            type: 'account',
-            attributes: {
-              state: 'lonely'
-            }
-          }
-        });
-        user = store.push({
-          data: {
-            id: '1',
-            type: 'user',
-            attributes: {
-              name: 'Stanley'
-            },
-            relationships: {
-              accounts: {
-                data: [{
-                  id: '2',
-                  type: 'account'
-                }]
-              }
-            }
-          }
-        });
-      });
-      run(function () {
-        user.deleteRecord();
-      });
-      equal(user.get('accounts.length'), 1, 'User still has the accounts');
-      equal(account.get('user'), null, 'Account no longer has the user');
-    });
-
-    /*
     Rollback attributes from deleted state
     */
 
@@ -13145,7 +12944,12 @@ define(
 
         env = setupStore({
           user: User,
-          job: Job
+          job: Job,
+          adapter: DS.Adapter.extend({
+            deleteRecord: function () {
+              return Ember.RSVP.resolve();
+            }
+          })
         });
 
         store = env.store;
@@ -13925,98 +13729,6 @@ define(
       equal(user.get('job'), newBetterJob, 'Job updated correctly');
       equal(job.get('user'), null, 'Old relationship nulled out correctly');
       equal(newBetterJob.get('user'), user, 'New job setup correctly');
-    });
-
-    /*
-    Deleting tests
-    */
-
-    test('When deleting a record that has a belongsTo relationship, the record is removed from the inverse but still has access to its own relationship - async', function () {
-      // This observer is here to make sure that inverseRecord gets cleared, when
-      // the record is deleted, before notifyRecordRelationshipRemoved() and in turn
-      // notifyPropertyChange() gets called. If not properly cleared observers will
-      // trigger with the old value of the relationship.
-      User.reopen({
-        bestFriendObserver: Ember.observer('bestFriend', function () {
-          this.get('bestFriend');
-        })
-      });
-      var stanleysFriend, stanley;
-
-      run(function () {
-        stanleysFriend = store.push({
-          data: {
-            id: 2,
-            type: 'user',
-            attributes: {
-              name: 'Stanley\'s friend'
-            }
-          }
-        });
-        stanley = store.push({
-          data: {
-            id: 1,
-            type: 'user',
-            attributes: {
-              name: 'Stanley'
-            },
-            relationships: {
-              bestFriend: {
-                data: {
-                  id: 2,
-                  type: 'user'
-                }
-              }
-            }
-          }
-        });
-      });
-      run(function () {
-        stanley.deleteRecord();
-        stanleysFriend.get('bestFriend').then(function (fetchedUser) {
-          equal(fetchedUser, null, 'Stanley got removed');
-        });
-        stanley.get('bestFriend').then(function (fetchedUser) {
-          equal(fetchedUser, stanleysFriend, 'Stanleys friend did not get removed');
-        });
-      });
-    });
-
-    test('When deleting a record that has a belongsTo relationship, the record is removed from the inverse but still has access to its own relationship - sync', function () {
-      var job, user;
-      run(function () {
-        job = store.push({
-          data: {
-            id: 2,
-            type: 'job',
-            attributes: {
-              isGood: true
-            }
-          }
-        });
-        user = store.push({
-          data: {
-            id: 1,
-            type: 'user',
-            attributes: {
-              name: 'Stanley'
-            },
-            relationships: {
-              job: {
-                data: {
-                  id: 2,
-                  type: 'job'
-                }
-              }
-            }
-          }
-        });
-      });
-      run(function () {
-        job.deleteRecord();
-      });
-      equal(user.get('job'), null, 'Job got removed from the user');
-      equal(job.get('user'), user, 'Job still has the user');
     });
 
     /*
@@ -22391,8 +22103,8 @@ define(
       run(function () {
         person.deleteRecord();
       });
-      equal(people.get("length"), 0, "a deleted record does not appear in record array anymore");
-      equal(people.objectAt(0), null, "a deleted record does not appear in record array anymore");
+      equal(people.get("length"), 1, "a deleted record appears in record array until it is saved");
+      equal(people.objectAt(0), person, "a deleted record appears in record array until it is saved");
 
       run(function () {
         person.save().then(null, function () {
@@ -22480,8 +22192,8 @@ define(
         person.deleteRecord();
       });
 
-      equal(people.get("length"), 0, "a deleted record does not appear in record array anymore");
-      equal(people.objectAt(0), null, "a deleted record does not appear in record array anymore");
+      equal(people.get("length"), 1, "a deleted record appears in the record array until it is saved");
+      equal(people.objectAt(0), person, "a deleted record appears in the record array until it is saved");
 
       equal(person.get("isDeleted"), true, "must be deleted");
 
@@ -22774,7 +22486,7 @@ define(
     });
 
     test("a loaded record is removed from a record array when it is deleted", function () {
-      expect(4);
+      expect(5);
 
       var Tag = DS.Model.extend({
         people: DS.hasMany("person", { async: false })
@@ -22786,7 +22498,12 @@ define(
 
       var env = setupStore({
         tag: Tag,
-        person: Person
+        person: Person,
+        adapter: DS.Adapter.extend({
+          deleteRecord: function () {
+            return Ember.RSVP.resolve();
+          }
+        })
       });
       var store = env.store;
 
@@ -22817,19 +22534,28 @@ define(
 
           scumbag.deleteRecord();
 
-          equal(get(recordArray, "length"), 0, "record is removed from the record array");
+          equal(get(recordArray, "length"), 1, "record is still in the record array until it is saved");
+
+          Ember.run(scumbag, "save");
+
+          equal(get(recordArray, "length"), 0, "record is removed from the array when it is saved");
         });
       });
     });
 
-    test("a loaded record is removed from a record array when it is deleted even if the belongsTo side isn't defined", function () {
+    test("a loaded record is not removed from a record array when it is deleted even if the belongsTo side isn't defined", function () {
       var Tag = DS.Model.extend({
         people: DS.hasMany("person", { async: false })
       });
 
       var env = setupStore({
         tag: Tag,
-        person: Person
+        person: Person,
+        adapter: DS.Adapter.extend({
+          deleteRecord: function () {
+            return Ember.RSVP.resolve();
+          }
+        })
       });
       var store = env.store;
       var scumbag, tag;
@@ -22840,10 +22566,11 @@ define(
         scumbag.deleteRecord();
       });
 
-      equal(tag.get("people.length"), 0, "record is removed from the record array");
+      equal(tag.get("people.length"), 1, "record is not removed from the record array");
+      equal(tag.get("people").objectAt(0), scumbag, "tag still has the scumbag");
     });
 
-    test("a loaded record is removed both from the record array and from the belongs to, even if the belongsTo side isn't defined", function () {
+    test("a loaded record is not removed from both the record array and from the belongs to, even if the belongsTo side isn't defined", function () {
       var Tag = DS.Model.extend({
         people: DS.hasMany("person", { async: false })
       });
@@ -22855,7 +22582,12 @@ define(
       var env = setupStore({
         tag: Tag,
         person: Person,
-        tool: Tool
+        tool: Tool,
+        adapter: DS.Adapter.extend({
+          deleteRecord: function () {
+            return Ember.RSVP.resolve();
+          }
+        })
       });
       var store = env.store;
       var scumbag, tag, tool;
@@ -22873,8 +22605,8 @@ define(
         scumbag.deleteRecord();
       });
 
-      equal(tag.get("people.length"), 0, "record is removed from the record array");
-      equal(tool.get("person"), null, "the tool is now orphan");
+      equal(tag.get("people.length"), 1, "record is stil in the record array");
+      equal(tool.get("person"), scumbag, "the tool still belongs to the record");
     });
 
     // GitHub Issue #168
@@ -22901,19 +22633,13 @@ define(
       });
 
       equal(get(recordArray, "length"), 4, "precond - record array has the created item");
-      equal(get(recordArray.objectAt(0), "name"), "Scumbag Dale", "item at index 0 is record with id 1");
+      equal(recordArray.objectAt(0), scumbag, "item at index 0 is record with id 1");
 
       run(function () {
         scumbag.deleteRecord();
       });
 
-      equal(get(recordArray, "length"), 3, "record is removed from the record array");
-
-      run(function () {
-        recordArray.objectAt(0).set("name", "toto");
-      });
-
-      equal(get(recordArray, "length"), 3, "record is still removed from the record array");
+      equal(get(recordArray, "length"), 3, "record array still has the created item");
     });
 
     test("a record array returns undefined when asking for a member outside of its content Array's range", function () {

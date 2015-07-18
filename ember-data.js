@@ -2087,7 +2087,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.fd1dbc2198'
+      VERSION: '2.0.0+canary.55b1e65f4c'
     });
 
     if (Ember.libraries) {
@@ -4049,11 +4049,11 @@
       updateRecordArrays: function () {
         var _this2 = this;
 
-        this.changedRecords.forEach(function (record) {
-          if (record.isDeleted()) {
-            _this2._recordWasDeleted(record);
+        this.changedRecords.forEach(function (internalModel) {
+          if (ember$data$lib$system$record$array$manager$$get(internalModel, "record.isDestroyed") || ember$data$lib$system$record$array$manager$$get(internalModel, "record.isDestroying") || ember$data$lib$system$record$array$manager$$get(internalModel, "currentState.stateName") === "root.deleted.saved") {
+            _this2._recordWasDeleted(internalModel);
           } else {
-            _this2._recordWasChanged(record);
+            _this2._recordWasChanged(internalModel);
           }
         });
 
@@ -4733,7 +4733,6 @@
         // EVENTS
         deleteRecord: function (internalModel) {
           internalModel.transitionTo('deleted.uncommitted');
-          internalModel.disconnectRelationships();
         },
 
         didSetProperty: function (internalModel, context) {
@@ -4821,7 +4820,6 @@
     });
 
     ember$data$lib$system$model$states$$createdState.uncommitted.deleteRecord = function (internalModel) {
-      internalModel.disconnectRelationships();
       internalModel.transitionTo('deleted.saved');
       internalModel.send('invokeLifecycleCallbacks');
     };
@@ -4846,7 +4844,6 @@
 
     ember$data$lib$system$model$states$$updatedState.uncommitted.deleteRecord = function (internalModel) {
       internalModel.transitionTo('deleted.uncommitted');
-      internalModel.disconnectRelationships();
     };
 
     var ember$data$lib$system$model$states$$RootState = {
@@ -4982,7 +4979,6 @@
 
           deleteRecord: function (internalModel) {
             internalModel.transitionTo('deleted.uncommitted');
-            internalModel.disconnectRelationships();
           },
 
           unloadRecord: function (internalModel) {
@@ -5095,6 +5091,7 @@
           isDirty: false,
 
           setup: function (internalModel) {
+            internalModel.clearRelationships();
             var store = internalModel.store;
             store._dematerializeRecord(internalModel);
           },
@@ -5206,35 +5203,19 @@
         }
       },
 
-      disconnect: function () {
+      removeRecords: function (records) {
         var _this = this;
 
-        this.members.forEach(function (member) {
-          return _this.removeRecordFromInverse(member);
-        });
-      },
-
-      reconnect: function () {
-        var _this2 = this;
-
-        this.members.forEach(function (member) {
-          return _this2.addRecordToInverse(member);
-        });
-      },
-
-      removeRecords: function (records) {
-        var _this3 = this;
-
         records.forEach(function (record) {
-          return _this3.removeRecord(record);
+          return _this.removeRecord(record);
         });
       },
 
       addRecords: function (records, idx) {
-        var _this4 = this;
+        var _this2 = this;
 
         records.forEach(function (record) {
-          _this4.addRecord(record, idx);
+          _this2.addRecord(record, idx);
           if (idx !== undefined) {
             idx++;
           }
@@ -5321,12 +5302,6 @@
         }
       },
 
-      addRecordToInverse: function (record) {
-        if (this.inverseKey) {
-          record._relationships.get(this.inverseKey).addRecord(this.record);
-        }
-      },
-
       removeRecordFromInverse: function (record) {
         var inverseRelationship = record._relationships.get(this.inverseKey);
         //Need to check for existence, as the record might unloading at the moment
@@ -5372,14 +5347,14 @@
       },
 
       flushCanonicalLater: function () {
-        var _this5 = this;
+        var _this3 = this;
 
         if (this.willSync) {
           return;
         }
         this.willSync = true;
         this.store._backburner.join(function () {
-          return _this5.store._backburner.schedule('syncRelationships', _this5, _this5.flushCanonical);
+          return _this3.store._backburner.schedule('syncRelationships', _this3, _this3.flushCanonical);
         });
       },
 
@@ -5845,8 +5820,10 @@
       return this.store.findMany(this.manyArray.toArray().map(function (rec) {
         return rec._internalModel;
       })).then(function () {
-        //Goes away after the manyArray refactor
-        _this2.manyArray.set("isLoaded", true);
+        if (!_this2.manyArray.get("isDestroyed")) {
+          //Goes away after the manyArray refactor
+          _this2.manyArray.set("isLoaded", true);
+        }
         return _this2.manyArray;
       });
     };
@@ -6716,7 +6693,6 @@
         if (this.isDeleted()) {
           //TODO: Should probably move this to the state machine somehow
           this.becameReady();
-          this.reconnectRelationships();
         }
 
         if (this.isNew()) {
@@ -6833,7 +6809,6 @@
         this.eachRelationship(function (name, relationship) {
           if (_this._relationships.has(name)) {
             var rel = _this._relationships.get(name);
-            //TODO(Igor) figure out whether we want to clear or disconnect
             rel.clear();
             rel.destroy();
           }
@@ -6841,28 +6816,6 @@
         Object.keys(this._implicitRelationships).forEach(function (key) {
           _this._implicitRelationships[key].clear();
           _this._implicitRelationships[key].destroy();
-        });
-      },
-
-      disconnectRelationships: function () {
-        var _this2 = this;
-
-        this.eachRelationship(function (name, relationship) {
-          _this2._relationships.get(name).disconnect();
-        });
-        Object.keys(this._implicitRelationships).forEach(function (key) {
-          _this2._implicitRelationships[key].disconnect();
-        });
-      },
-
-      reconnectRelationships: function () {
-        var _this3 = this;
-
-        this.eachRelationship(function (name, relationship) {
-          _this3._relationships.get(name).reconnect();
-        });
-        Object.keys(this._implicitRelationships).forEach(function (key) {
-          return _this3._implicitRelationships[key].reconnect();
         });
       },
 
@@ -6880,16 +6833,16 @@
         @param {Object} preload
       */
       _preloadData: function (preload) {
-        var _this4 = this;
+        var _this2 = this;
 
         //TODO(Igor) consider the polymorphic case
         Object.keys(preload).forEach(function (key) {
           var preloadValue = ember$data$lib$system$model$internal$model$$get(preload, key);
-          var relationshipMeta = _this4.type.metaForProperty(key);
+          var relationshipMeta = _this2.type.metaForProperty(key);
           if (relationshipMeta.isRelationship) {
-            _this4._preloadRelationship(key, preloadValue);
+            _this2._preloadRelationship(key, preloadValue);
           } else {
-            _this4._data[key] = preloadValue;
+            _this2._data[key] = preloadValue;
           }
         });
       },
