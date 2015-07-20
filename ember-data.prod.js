@@ -2079,7 +2079,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.265a14167f'
+      VERSION: '2.0.0+canary.2d4078340f'
     });
 
     if (Ember.libraries) {
@@ -2257,9 +2257,11 @@
     }
 
     var ember$data$lib$system$model$errors$$get = Ember.get;
+    var ember$data$lib$system$model$errors$$set = Ember.set;
     var ember$data$lib$system$model$errors$$isEmpty = Ember.isEmpty;
+    var ember$data$lib$system$model$errors$$makeArray = Ember.makeArray;
 
-    var ember$data$lib$system$model$errors$$default = Ember.Object.extend(Ember.Enumerable, Ember.Evented, {
+    var ember$data$lib$system$model$errors$$default = Ember.ArrayProxy.extend(Ember.Evented, {
       /**
         Register with target handler
          @method registerHandlers
@@ -2342,20 +2344,11 @@
       },
 
       /**
-        @method nextObject
-        @private
-      */
-      nextObject: function (index, previousObject, context) {
-        return ember$data$lib$system$model$errors$$get(this, 'content').objectAt(index);
-      },
-
-      /**
         Total number of errors.
          @property length
         @type {Number}
         @readOnly
       */
-      length: Ember.computed.oneWay('content.length').readOnly(),
 
       /**
         @property isEmpty
@@ -2381,11 +2374,10 @@
         var wasEmpty = ember$data$lib$system$model$errors$$get(this, 'isEmpty');
 
         messages = this._findOrCreateMessages(attribute, messages);
-        ember$data$lib$system$model$errors$$get(this, 'content').addObjects(messages);
+        this.addObjects(messages);
         ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName').get(attribute).addObjects(messages);
 
         this.notifyPropertyChange(attribute);
-        this.enumerableContentDidChange();
 
         if (wasEmpty && !ember$data$lib$system$model$errors$$get(this, 'isEmpty')) {
           this.trigger('becameInvalid');
@@ -2399,7 +2391,7 @@
       _findOrCreateMessages: function (attribute, messages) {
         var errors = this.errorsFor(attribute);
 
-        return Ember.makeArray(messages).map(function (message) {
+        return ember$data$lib$system$model$errors$$makeArray(messages).map(function (message) {
           return errors.findBy('message', message) || {
             attribute: attribute,
             message: message
@@ -2440,12 +2432,11 @@
           return;
         }
 
-        var content = ember$data$lib$system$model$errors$$get(this, 'content').rejectBy('attribute', attribute);
-        ember$data$lib$system$model$errors$$get(this, 'content').setObjects(content);
+        var content = this.rejectBy('attribute', attribute);
+        ember$data$lib$system$model$errors$$set(this, 'content', content);
         ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName')["delete"](attribute);
 
         this.notifyPropertyChange(attribute);
-        this.enumerableContentDidChange();
 
         if (ember$data$lib$system$model$errors$$get(this, 'isEmpty')) {
           this.trigger('becameValid');
@@ -2474,9 +2465,19 @@
           return;
         }
 
-        ember$data$lib$system$model$errors$$get(this, 'content').clear();
-        ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName').clear();
-        this.enumerableContentDidChange();
+        var errorsByAttributeName = ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName');
+        var attributes = Ember.A();
+
+        errorsByAttributeName.forEach(function (_, attribute) {
+          attributes.push(attribute);
+        });
+
+        errorsByAttributeName.clear();
+        attributes.forEach(function (attribute) {
+          this.notifyPropertyChange(attribute);
+        }, this);
+
+        this._super();
 
         this.trigger('becameValid');
       },
@@ -4772,6 +4773,7 @@
 
         rolledBack: function (internalModel) {
           internalModel.clearErrorMessages();
+          internalModel.transitionTo('loaded.saved');
           internalModel.triggerLater('ready');
         },
 
