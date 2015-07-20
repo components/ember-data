@@ -2087,7 +2087,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.2d4078340f'
+      VERSION: '2.0.0+canary.90a0011c8e'
     });
 
     if (Ember.libraries) {
@@ -7479,71 +7479,35 @@
       // ................
 
       /**
-        This is the main entry point into finding records. The first parameter to
-        this method is the model's name as a string.
-         ---
-         To find a record by ID, pass the `id` as the second parameter:
-         ```javascript
-        store.find('person', 1);
-        ```
-         The `find` method will always return a **promise** that will be resolved
-        with the record. If the record was already in the store, the promise will
-        be resolved immediately. Otherwise, the store will ask the adapter's `find`
-        method to find the necessary data.
-         The `find` method will always resolve its promise with the same object for
-        a given type and `id`.
-         ---
-         You can optionally `preload` specific attributes and relationships that you know of
-        by passing them as the third argument to find.
-         For example, if your Ember route looks like `/posts/1/comments/2` and your API route
-        for the comment also looks like `/posts/1/comments/2` if you want to fetch the comment
-        without fetching the post you can pass in the post to the `find` call:
-         ```javascript
-        store.find('comment', 2, { preload: { post: 1 } });
-        ```
-         If you have access to the post model you can also pass the model itself:
-         ```javascript
-        store.find('post', 1).then(function (myPostModel) {
-          store.find('comment', 2, {post: myPostModel});
-        });
-        ```
-         This way, your adapter's `find` or `buildURL` method will be able to look up the
-        relationship on the record and construct the nested URL without having to first
-        fetch the post.
-         ---
-         To find all records for a type, call `findAll`:
-         ```javascript
-        store.findAll('person');
-        ```
-         This will ask the adapter's `findAll` method to find the records for the
-        given type, and return a promise that will be resolved once the server
-        returns the values. The promise will resolve into all records of this type
-        present in the store, even if the server only returns a subset of them.
-         @method find
+        @method find
         @param {String} modelName
-        @param {(Object|String|Integer|null)} id
+        @param {String|Integer} id
         @param {Object} options
         @return {Promise} promise
+        @private
       */
       find: function (modelName, id, options) {
-        Ember.assert("You need to pass a type to the store's find method", arguments.length >= 1);
-        Ember.assert("You may not pass `" + id + "` as id to the store's find method", arguments.length === 1 || !Ember.isNone(id));
-        Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string");
+        // The default `model` hook in Ember.Route calls `find(modelName, id)`,
+        // that's why we have to keep this method around even though `findRecord` is
+        // the public way to get a record by modelName and id.
 
         if (arguments.length === 1) {
           Ember.assert("Using store.find(type) has been removed. Use store.findAll(type) to retrieve all records for a given type.");
         }
 
-        // We are passed a query instead of an id.
         if (Ember.typeOf(id) === "object") {
           Ember.assert("Calling store.find() with a query object is no longer supported. Use store.query() instead.");
         }
 
         if (options) {
-          Ember.assert("Calling store.find(type, id, preload) with a preload object is no longer supported. Use store.findRecord(type, id, { preload: preload }) instead.");
+          Ember.assert("Calling store.find(type, id, { preload: preload }) is no longer supported. Use store.findRecord(type, id, { preload: preload }) instead.");
         }
 
-        return this.findRecord(modelName, ember$data$lib$system$coerce$id$$default(id), options);
+        Ember.assert("You need to pass the model name and id to the store's find method", arguments.length === 2);
+        Ember.assert("You cannot pass `" + Ember.inspect(id) + "` as id to the store's find method", Ember.typeOf(id) === "string" || Ember.typeOf(id) === "number");
+        Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string");
+
+        return this.findRecord(modelName, id);
       },
 
       /**
@@ -8261,18 +8225,6 @@
       },
 
       /**
-        This method returns the metadata for a specific type.
-         @method metadataFor
-        @param {String} modelName
-        @return {object}
-        @deprecated
-      */
-      metadataFor: function (modelName) {
-        Ember.deprecate("`store.metadataFor()` has been deprecated. You can use `.get('meta')` on relationships and arrays returned from `store.query()`.");
-        return this._metadataFor(modelName);
-      },
-
-      /**
         @method _metadataFor
         @param {String} modelName
         @return {object}
@@ -8282,19 +8234,6 @@
         Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string");
         var typeClass = this.modelFor(modelName);
         return this.typeMapFor(typeClass).metadata;
-      },
-
-      /**
-        This method sets the metadata for a specific type.
-         @method setMetadataFor
-        @param {String} modelName
-        @param {Object} metadata metadata to set
-        @return {object}
-        @deprecated
-      */
-      setMetadataFor: function (modelName, metadata) {
-        Ember.deprecate("`store.setMetadataFor()` has been deprecated. Please return meta from your serializer's `extractMeta` hook.");
-        this._setMetadataFor(modelName, metadata);
       },
 
       /**
@@ -8562,25 +8501,6 @@
         }
         factory.modelName = factory.modelName || ember$data$lib$system$normalize$model$name$$default(modelName);
 
-        // deprecate typeKey
-        if (!("typeKey" in factory)) {
-          Object.defineProperty(factory, "typeKey", {
-            enumerable: true,
-            configurable: false,
-            get: function () {
-              Ember.deprecate("Usage of `typeKey` has been deprecated and will be removed in Ember Data 1.0. It has been replaced by `modelName` on the model class.");
-              var typeKey = this.modelName;
-              if (typeKey) {
-                typeKey = Ember.String.camelize(this.modelName);
-              }
-              return typeKey;
-            },
-            set: function () {
-              Ember.assert("Setting typeKey is not supported. In addition, typeKey has also been deprecated in favor of modelName. Setting modelName is also not supported.");
-            }
-          });
-        }
-
         return factory;
       },
 
@@ -8640,26 +8560,14 @@
          This method can be used both to push in brand new
         records, as well as to update existing records.
          @method push
-        @param {String} modelName
         @param {Object} data
         @return {DS.Model|Array} the record(s) that was created or
           updated.
       */
-      push: function (modelNameArg, dataArg) {
+      push: function (data) {
         var _this3 = this;
 
-        var data, modelName;
-
-        if (Ember.typeOf(modelNameArg) === "object" && Ember.typeOf(dataArg) === "undefined") {
-          data = modelNameArg;
-        } else {
-          Ember.deprecate("store.push(type, data) has been deprecated. Please provide a JSON-API document object as the first and only argument to store.push.");
-          Ember.assert("Expected an object as `data` in a call to `push` for " + modelNameArg + " , but was " + Ember.typeOf(dataArg), Ember.typeOf(dataArg) === "object");
-          Ember.assert("You must include an `id` for " + modelNameArg + " in an object passed to `push`", dataArg.id != null && dataArg.id !== "");
-          data = ember$data$lib$system$store$serializer$response$$_normalizeSerializerPayload(this.modelFor(modelNameArg), dataArg);
-          modelName = modelNameArg;
-          Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string" || typeof data === "undefined");
-        }
+        Ember.assert("Expected an object as `data` in a call to `push` but was " + Ember.typeOf(data), Ember.typeOf(data) === "object");
 
         if (data.included) {
           data.included.forEach(function (recordData) {
@@ -8818,54 +8726,6 @@
       },
 
       /**
-        @method update
-        @param {String} modelName
-        @param {Object} data
-        @return {DS.Model} the record that was updated.
-        @deprecated Use [push](#method_push) instead
-      */
-      update: function (modelName, data) {
-        Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string");
-        Ember.deprecate("Using store.update() has been deprecated since store.push() now handles partial updates. You should use store.push() instead.");
-        return this.push(modelName, data);
-      },
-
-      /**
-        If you have an Array of normalized data to push,
-        you can call `pushMany` with the Array, and it will
-        call `push` repeatedly for you.
-         @method pushMany
-        @param {String} modelName
-        @param {Array} datas
-        @return {Array}
-        @deprecated Use [push](#method_push) instead
-      */
-      pushMany: function (modelName, datas) {
-        Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string");
-        Ember.deprecate("Using store.pushMany() has been deprecated since store.push() now handles multiple items. You should use store.push() instead.");
-        var length = datas.length;
-        var result = new Array(length);
-
-        for (var i = 0; i < length; i++) {
-          result[i] = this.push(modelName, datas[i]);
-        }
-
-        return result;
-      },
-
-      /**
-        @method metaForType
-        @param {String} modelName
-        @param {Object} metadata
-        @deprecated Use [setMetadataFor](#method_setMetadataFor) instead
-      */
-      metaForType: function (modelName, metadata) {
-        Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string");
-        Ember.deprecate("Using store.metaForType() has been deprecated. Use store.setMetadataFor() to set metadata for a specific type.");
-        this.setMetadataFor(modelName, metadata);
-      },
-
-      /**
         Build a brand new record for a given type, ID, and
         initial data.
          @method buildRecord
@@ -8905,17 +8765,6 @@
       // ...............
       // . DESTRUCTION .
       // ...............
-
-      /**
-        @method dematerializeRecord
-        @private
-        @param {DS.Model} record
-        @deprecated Use [unloadRecord](#method_unloadRecord) instead
-      */
-      dematerializeRecord: function (record) {
-        Ember.deprecate("Using store.dematerializeRecord() has been deprecated since it was intended for private use only. You should use store.unloadRecord() instead.");
-        this._dematerializeRecord(record);
-      },
 
       /**
         When a record is destroyed, this un-indexes it and
@@ -13334,6 +13183,37 @@
     });
 
     var ember$data$lib$system$relationships$belongs$to$$default = ember$data$lib$system$relationships$belongs$to$$belongsTo;
+    var ember$data$lib$system$is$array$like$$default = ember$data$lib$system$is$array$like$$isArrayLike;
+    /*
+      We're using this to detect arrays and "array-like" objects.
+
+      This is a copy of the `isArray` method found in `ember-runtime/utils` as we're
+      currently unable to import non-exposed modules.
+
+      This method was previously exposed as `Ember.isArray` but since
+      https://github.com/emberjs/ember.js/pull/11463 `Ember.isArray` is an alias of
+      `Array.isArray` hence removing the "array-like" part.
+     */
+    function ember$data$lib$system$is$array$like$$isArrayLike(obj) {
+      if (!obj || obj.setInterval) {
+        return false;
+      }
+      if (Array.isArray(obj)) {
+        return true;
+      }
+      if (Ember.Array.detect(obj)) {
+        return true;
+      }
+
+      var type = Ember.typeOf(obj);
+      if ('array' === type) {
+        return true;
+      }
+      if (obj.length !== undefined && 'object' === type) {
+        return true;
+      }
+      return false;
+    }
 
     /**
       `DS.hasMany` is used to define One-To-Many and Many-To-Many
@@ -13475,7 +13355,7 @@
         set: function (key, records) {
           var relationship = this._internalModel._relationships.get(key);
           relationship.clear();
-          Ember.assert("You must pass an array of records to set a hasMany relationship", Ember.isArray(records));
+          Ember.assert("You must pass an array of records to set a hasMany relationship", ember$data$lib$system$is$array$like$$default(records));
           relationship.addRecords(Ember.A(records).mapBy("_internalModel"));
           return relationship.getRecords();
         }

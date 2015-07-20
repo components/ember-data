@@ -2079,7 +2079,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.2d4078340f'
+      VERSION: '2.0.0+canary.90a0011c8e'
     });
 
     if (Ember.libraries) {
@@ -7451,65 +7451,29 @@
       // ................
 
       /**
-        This is the main entry point into finding records. The first parameter to
-        this method is the model's name as a string.
-         ---
-         To find a record by ID, pass the `id` as the second parameter:
-         ```javascript
-        store.find('person', 1);
-        ```
-         The `find` method will always return a **promise** that will be resolved
-        with the record. If the record was already in the store, the promise will
-        be resolved immediately. Otherwise, the store will ask the adapter's `find`
-        method to find the necessary data.
-         The `find` method will always resolve its promise with the same object for
-        a given type and `id`.
-         ---
-         You can optionally `preload` specific attributes and relationships that you know of
-        by passing them as the third argument to find.
-         For example, if your Ember route looks like `/posts/1/comments/2` and your API route
-        for the comment also looks like `/posts/1/comments/2` if you want to fetch the comment
-        without fetching the post you can pass in the post to the `find` call:
-         ```javascript
-        store.find('comment', 2, { preload: { post: 1 } });
-        ```
-         If you have access to the post model you can also pass the model itself:
-         ```javascript
-        store.find('post', 1).then(function (myPostModel) {
-          store.find('comment', 2, {post: myPostModel});
-        });
-        ```
-         This way, your adapter's `find` or `buildURL` method will be able to look up the
-        relationship on the record and construct the nested URL without having to first
-        fetch the post.
-         ---
-         To find all records for a type, call `findAll`:
-         ```javascript
-        store.findAll('person');
-        ```
-         This will ask the adapter's `findAll` method to find the records for the
-        given type, and return a promise that will be resolved once the server
-        returns the values. The promise will resolve into all records of this type
-        present in the store, even if the server only returns a subset of them.
-         @method find
+        @method find
         @param {String} modelName
-        @param {(Object|String|Integer|null)} id
+        @param {String|Integer} id
         @param {Object} options
         @return {Promise} promise
+        @private
       */
       find: function (modelName, id, options) {
-                        
+        // The default `model` hook in Ember.Route calls `find(modelName, id)`,
+        // that's why we have to keep this method around even though `findRecord` is
+        // the public way to get a record by modelName and id.
+
         if (arguments.length === 1) {
                   }
 
-        // We are passed a query instead of an id.
         if (Ember.typeOf(id) === "object") {
                   }
 
         if (options) {
                   }
 
-        return this.findRecord(modelName, ember$data$lib$system$coerce$id$$default(id), options);
+                        
+        return this.findRecord(modelName, id);
       },
 
       /**
@@ -8193,17 +8157,6 @@
       },
 
       /**
-        This method returns the metadata for a specific type.
-         @method metadataFor
-        @param {String} modelName
-        @return {object}
-        @deprecated
-      */
-      metadataFor: function (modelName) {
-                return this._metadataFor(modelName);
-      },
-
-      /**
         @method _metadataFor
         @param {String} modelName
         @return {object}
@@ -8212,18 +8165,6 @@
       _metadataFor: function (modelName) {
                 var typeClass = this.modelFor(modelName);
         return this.typeMapFor(typeClass).metadata;
-      },
-
-      /**
-        This method sets the metadata for a specific type.
-         @method setMetadataFor
-        @param {String} modelName
-        @param {Object} metadata metadata to set
-        @return {object}
-        @deprecated
-      */
-      setMetadataFor: function (modelName, metadata) {
-                this._setMetadataFor(modelName, metadata);
       },
 
       /**
@@ -8488,23 +8429,6 @@
         }
         factory.modelName = factory.modelName || ember$data$lib$system$normalize$model$name$$default(modelName);
 
-        // deprecate typeKey
-        if (!("typeKey" in factory)) {
-          Object.defineProperty(factory, "typeKey", {
-            enumerable: true,
-            configurable: false,
-            get: function () {
-                            var typeKey = this.modelName;
-              if (typeKey) {
-                typeKey = Ember.String.camelize(this.modelName);
-              }
-              return typeKey;
-            },
-            set: function () {
-                          }
-          });
-        }
-
         return factory;
       },
 
@@ -8563,23 +8487,14 @@
          This method can be used both to push in brand new
         records, as well as to update existing records.
          @method push
-        @param {String} modelName
         @param {Object} data
         @return {DS.Model|Array} the record(s) that was created or
           updated.
       */
-      push: function (modelNameArg, dataArg) {
+      push: function (data) {
         var _this3 = this;
 
-        var data, modelName;
-
-        if (Ember.typeOf(modelNameArg) === "object" && Ember.typeOf(dataArg) === "undefined") {
-          data = modelNameArg;
-        } else {
-                                        data = ember$data$lib$system$store$serializer$response$$_normalizeSerializerPayload(this.modelFor(modelNameArg), dataArg);
-          modelName = modelNameArg;
-                  }
-
+        
         if (data.included) {
           data.included.forEach(function (recordData) {
             return _this3._pushInternalModel(recordData);
@@ -8726,48 +8641,6 @@
       },
 
       /**
-        @method update
-        @param {String} modelName
-        @param {Object} data
-        @return {DS.Model} the record that was updated.
-        @deprecated Use [push](#method_push) instead
-      */
-      update: function (modelName, data) {
-                        return this.push(modelName, data);
-      },
-
-      /**
-        If you have an Array of normalized data to push,
-        you can call `pushMany` with the Array, and it will
-        call `push` repeatedly for you.
-         @method pushMany
-        @param {String} modelName
-        @param {Array} datas
-        @return {Array}
-        @deprecated Use [push](#method_push) instead
-      */
-      pushMany: function (modelName, datas) {
-                        var length = datas.length;
-        var result = new Array(length);
-
-        for (var i = 0; i < length; i++) {
-          result[i] = this.push(modelName, datas[i]);
-        }
-
-        return result;
-      },
-
-      /**
-        @method metaForType
-        @param {String} modelName
-        @param {Object} metadata
-        @deprecated Use [setMetadataFor](#method_setMetadataFor) instead
-      */
-      metaForType: function (modelName, metadata) {
-                        this.setMetadataFor(modelName, metadata);
-      },
-
-      /**
         Build a brand new record for a given type, ID, and
         initial data.
          @method buildRecord
@@ -8805,16 +8678,6 @@
       // ...............
       // . DESTRUCTION .
       // ...............
-
-      /**
-        @method dematerializeRecord
-        @private
-        @param {DS.Model} record
-        @deprecated Use [unloadRecord](#method_unloadRecord) instead
-      */
-      dematerializeRecord: function (record) {
-                this._dematerializeRecord(record);
-      },
 
       /**
         When a record is destroyed, this un-indexes it and
@@ -13210,6 +13073,37 @@
     });
 
     var ember$data$lib$system$relationships$belongs$to$$default = ember$data$lib$system$relationships$belongs$to$$belongsTo;
+    var ember$data$lib$system$is$array$like$$default = ember$data$lib$system$is$array$like$$isArrayLike;
+    /*
+      We're using this to detect arrays and "array-like" objects.
+
+      This is a copy of the `isArray` method found in `ember-runtime/utils` as we're
+      currently unable to import non-exposed modules.
+
+      This method was previously exposed as `Ember.isArray` but since
+      https://github.com/emberjs/ember.js/pull/11463 `Ember.isArray` is an alias of
+      `Array.isArray` hence removing the "array-like" part.
+     */
+    function ember$data$lib$system$is$array$like$$isArrayLike(obj) {
+      if (!obj || obj.setInterval) {
+        return false;
+      }
+      if (Array.isArray(obj)) {
+        return true;
+      }
+      if (Ember.Array.detect(obj)) {
+        return true;
+      }
+
+      var type = Ember.typeOf(obj);
+      if ('array' === type) {
+        return true;
+      }
+      if (obj.length !== undefined && 'object' === type) {
+        return true;
+      }
+      return false;
+    }
 
     /**
       `DS.hasMany` is used to define One-To-Many and Many-To-Many

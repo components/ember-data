@@ -205,7 +205,12 @@ define(
 
       var post;
       run(function () {
-        post = store.push("post", { id: 2 });
+        post = store.push({
+          data: {
+            type: "post",
+            id: "2"
+          }
+        });
       });
 
       run(function () {
@@ -231,7 +236,17 @@ define(
       var post;
 
       run(function () {
-        post = store.push("post", { id: 2, comments: [1, 2, 3] });
+        post = store.push({
+          data: {
+            type: "post",
+            id: "2",
+            relationships: {
+              comments: {
+                data: [{ id: "1", type: "comment" }, { id: "2", type: "comment" }, { id: "3", type: "comment" }]
+              }
+            }
+          }
+        });
         post.get("comments").then(async(function (post) {
           equal(passedUrl, "/posts/2/comments/");
         }));
@@ -247,7 +262,12 @@ define(
       ajaxResponse({ comments: [{ id: 1 }] });
 
       run(function () {
-        var post = store.push("post", { id: 2 });
+        var post = store.push({
+          data: {
+            type: "post",
+            id: "2"
+          }
+        });
         var comment = store.createRecord("comment");
         comment.set("post", post);
         comment.save().then(async(function (post) {
@@ -290,8 +310,18 @@ define(
 
       var post, comment;
       run(function () {
-        post = store.push("post", { id: 2 });
-        comment = store.push("comment", { id: 1 });
+        post = store.push({
+          data: {
+            type: "post",
+            id: "2"
+          }
+        });
+        comment = store.push({
+          data: {
+            type: "comment",
+            id: "1"
+          }
+        });
         comment.set("post", post);
       });
       run(function () {
@@ -312,8 +342,18 @@ define(
 
       var post, comment;
       run(function () {
-        post = store.push("post", { id: 2 });
-        comment = store.push("comment", { id: 1 });
+        post = store.push({
+          data: {
+            type: "post",
+            id: "2"
+          }
+        });
+        comment = store.push({
+          data: {
+            type: "comment",
+            id: "1"
+          }
+        });
 
         comment.set("post", post);
         comment.deleteRecord();
@@ -454,7 +494,15 @@ define(
 
       run(function () {
         // Load a record from the server
-        store.push('person', { id: 1, name: 'Jeremy Ashkenas' });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Jeremy Ashkenas'
+            }
+          }
+        });
         // Create a new, unsaved record in the store
         store.createRecord('person', { name: 'Alex MacCaw' });
       });
@@ -522,20 +570,14 @@ define(
       }
     });
 
-    test('It raises an assertion when no type is passed', function () {
-      expectAssertion(function () {
-        store.find();
-      }, 'You need to pass a type to the store\'s find method');
-    });
-
     test('It raises an assertion when `undefined` is passed as id (#1705)', function () {
       expectAssertion(function () {
         store.find('person', undefined);
-      }, 'You may not pass `undefined` as id to the store\'s find method');
+      }, 'You cannot pass `undefined` as id to the store\'s find method');
 
       expectAssertion(function () {
         store.find('person', null);
-      }, 'You may not pass `null` as id to the store\'s find method');
+      }, 'You cannot pass `null` as id to the store\'s find method');
     });
 
     test('store.findAll should trigger a deprecation warning about store.shouldReloadAll', function () {
@@ -1666,7 +1708,15 @@ define(
       };
 
       run(function () {
-        env.store.push("person", { id: 1, name: "Braaaahm Dale" });
+        env.store.push({
+          data: {
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Braaaahm Dale"
+            }
+          }
+        });
       });
 
       var tom;
@@ -1722,7 +1772,15 @@ define(
       var tom;
 
       run(function () {
-        env.store.push("person", { id: 1, name: "Tom Dale" });
+        env.store.push({
+          data: {
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Tom Dale"
+            }
+          }
+        });
       });
       env.store.find("person", 1).then(async(function (person) {
         tom = person;
@@ -1743,8 +1801,15 @@ define(
       };
 
       run(function () {
-        env.store.push("person", { id: 1 });
-        env.store.push("person", { id: 2 });
+        env.store.push({
+          data: [{
+            type: "person",
+            id: "1"
+          }, {
+            type: "person",
+            id: "2"
+          }]
+        });
       });
 
       all([env.store.find("person", 1), env.store.find("person", 2)]).then(async(function (array) {
@@ -1777,8 +1842,21 @@ define(
       };
 
       run(function () {
-        env.store.push("person", { id: 1, name: "Braaaahm Dale" });
-        env.store.push("person", { id: 2, name: "Gentile Katz" });
+        env.store.push({
+          data: [{
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Braaaahm Dale"
+            }
+          }, {
+            type: "person",
+            id: "2",
+            attributes: {
+              name: "Gentile Katz"
+            }
+          }]
+        });
       });
 
       hash({ tom: env.store.find("person", 1), yehuda: env.store.find("person", 2) }).then(async(function (people) {
@@ -1800,8 +1878,15 @@ define(
       };
 
       run(function () {
-        store.push("person", { id: 1 });
-        store.push("person", { id: 2 });
+        store.push({
+          data: [{
+            type: "person",
+            id: "1"
+          }, {
+            type: "person",
+            id: "2"
+          }]
+        });
       });
 
       hash({ tom: store.find("person", 1), yehuda: store.find("person", 2) }).then(async(function (people) {
@@ -1827,8 +1912,21 @@ define(
       };
 
       run(function () {
-        env.store.push("person", { id: 1, name: "Braaaahm Dale" });
-        env.store.push("person", { id: 2, name: "Gentile Katz" });
+        env.store.push({
+          data: [{
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Braaaahm Dale"
+            }
+          }, {
+            type: "person",
+            id: "2",
+            attributes: {
+              name: "Gentile Katz"
+            }
+          }]
+        });
       });
 
       hash({ tom: store.find("person", 1), yehuda: store.find("person", 2) }).then(async(function (people) {
@@ -1850,8 +1948,21 @@ define(
       };
 
       run(function () {
-        env.store.push("person", { id: 1, name: "Braaaahm Dale" });
-        env.store.push("person", { id: 2, name: "Gentile Katz" });
+        env.store.push({
+          data: [{
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Braaaahm Dale"
+            }
+          }, {
+            type: "person",
+            id: "2",
+            attributes: {
+              name: "Gentile Katz"
+            }
+          }]
+        });
       });
 
       hash({ tom: store.find("person", 1), yehuda: store.find("person", 2) }).then(async(function (people) {
@@ -2122,7 +2233,20 @@ define(
       Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
 
       run(function () {
-        store.push("post", { id: 1, name: "Rails is omakase", comments: [] });
+        store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              name: "Rails is omakase"
+            },
+            relationships: {
+              comments: {
+                data: []
+              }
+            }
+          }
+        });
       });
       var post = store.peekRecord("post", 1);
 
@@ -2286,8 +2410,34 @@ define(
       Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
 
       run(function () {
-        store.push("post", { id: 1, name: "Rails is omakase", comments: [1] });
-        store.push("comment", { id: 1, name: "Dat Parlay Letter", post: 1 });
+        store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              name: "Rails is omakase"
+            },
+            relationships: {
+              comments: {
+                data: [{ type: "comment", id: "1" }]
+              }
+            }
+          }
+        });
+        store.push({
+          data: {
+            type: "comment",
+            id: "1",
+            attributes: {
+              name: "Dat Parlay Letter"
+            },
+            relationships: {
+              post: {
+                data: { type: "post", id: "1" }
+              }
+            }
+          }
+        });
       });
 
       var post = store.peekRecord("post", 1);
@@ -2401,7 +2551,15 @@ define(
 
     test("update - an empty payload is a basic success", function () {
       run(function () {
-        store.push("post", { id: 1, name: "Rails is omakase" });
+        store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              name: "Rails is omakase"
+            }
+          }
+        });
       });
 
       store.find("post", 1).then(async(function (post) {
@@ -2425,7 +2583,15 @@ define(
       };
 
       run(function () {
-        store.push("post", { id: 1, name: "Rails is omakase" });
+        store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              name: "Rails is omakase"
+            }
+          }
+        });
       });
 
       store.find("post", 1).then(async(function (post) {
@@ -2440,7 +2606,15 @@ define(
 
     test("update - a payload with updates applies the updates", function () {
       run(function () {
-        store.push("post", { id: 1, name: "Rails is omakase" });
+        store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              name: "Rails is omakase"
+            }
+          }
+        });
       });
 
       store.find("post", 1).then(async(function (post) {
@@ -2460,7 +2634,15 @@ define(
 
     test("update - a payload with updates applies the updates (with legacy singular name)", function () {
       run(function () {
-        store.push("post", { id: 1, name: "Rails is omakase" });
+        store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              name: "Rails is omakase"
+            }
+          }
+        });
       });
 
       store.find("post", 1).then(async(function (post) {
@@ -2503,7 +2685,15 @@ define(
 
     test("update - a payload with sideloaded updates pushes the updates", function () {
       run(function () {
-        store.push("post", { id: 1, name: "Rails is omakase" });
+        store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              name: "Rails is omakase"
+            }
+          }
+        });
       });
 
       store.find("post", 1).then(async(function (post) {
@@ -2537,7 +2727,13 @@ define(
       }));
 
       run(function () {
-        store.push("post", { id: 1, name: "Rails is omakase" });
+        store.push({
+          data: {
+            type: "post",
+            id: "1",
+            name: "Rails is omakase"
+          }
+        });
       });
       ajaxResponse();
 
@@ -2554,9 +2750,33 @@ define(
       Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
 
       run(function () {
-        store.push("post", { id: 1, name: "Not everyone uses Rails", comments: [1] });
-        store.push("comment", { id: 1, name: "Rails is omakase" });
-        store.push("comment", { id: 2, name: "Yes. Yes it is." });
+        store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              name: "Not everyone uses Rails"
+            },
+            relationships: {
+              comments: {
+                data: [{ type: "comment", id: "1" }]
+              }
+            }
+          },
+          included: [{
+            type: "comment",
+            id: "1",
+            attributes: {
+              name: "Rails is omakase"
+            }
+          }, {
+            type: "comment",
+            id: "2",
+            attributes: {
+              name: "Yes. Yes it is."
+            }
+          }]
+        });
       });
 
       ajaxResponse({
@@ -2582,7 +2802,15 @@ define(
 
     test("delete - an empty payload is a basic success", function () {
       run(function () {
-        store.push("post", { id: 1, name: "Rails is omakase" });
+        store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              name: "Rails is omakase"
+            }
+          }
+        });
       });
 
       store.find("post", 1).then(async(function (post) {
@@ -2606,7 +2834,15 @@ define(
       };
 
       run(function () {
-        store.push("post", { id: 1, name: "Rails is omakase" });
+        store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              name: "Rails is omakase"
+            }
+          }
+        });
       });
 
       store.find("post", 1).then(async(function (post) {
@@ -2621,7 +2857,15 @@ define(
 
     test("delete - a payload with sideloaded updates pushes the updates", function () {
       run(function () {
-        store.push("post", { id: 1, name: "Rails is omakase" });
+        store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              name: "Rails is omakase"
+            }
+          }
+        });
       });
 
       store.find("post", 1).then(async(function (post) {
@@ -2644,7 +2888,15 @@ define(
 
     test("delete - a payload with sidloaded updates pushes the updates when the original record is omitted", function () {
       run(function () {
-        store.push("post", { id: 1, name: "Rails is omakase" });
+        store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              name: "Rails is omakase"
+            }
+          }
+        });
       });
 
       store.find("post", 1).then(async(function (post) {
@@ -2753,33 +3005,6 @@ define(
         equal(posts.get("length"), 2, "The posts are in the array");
         equal(posts.get("isLoaded"), true, "The RecordArray is loaded");
         deepEqual(posts.toArray(), [post1, post2], "The correct records are in the array");
-      }));
-    });
-
-    test("findAll - since token is passed to the adapter", function () {
-      ajaxResponse({
-        meta: { since: "later" },
-        posts: [{ id: 1, name: "Rails is omakase" }, { id: 2, name: "The Parley Letter" }]
-      });
-
-      store.setMetadataFor("post", { since: "now" });
-
-      store.findAll("post").then(async(function (posts) {
-        equal(passedUrl, "/posts");
-        equal(passedVerb, "GET");
-        equal(store.typeMapFor(Post).metadata.since, "later");
-        deepEqual(passedHash.data, { since: "now" });
-      }));
-    });
-
-    test("metadata is accessible", function () {
-      ajaxResponse({
-        meta: { offset: 5 },
-        posts: [{ id: 1, name: "Rails is very expensive sushi" }]
-      });
-
-      store.findAll("post").then(async(function (posts) {
-        equal(store.metadataFor("post").offset, 5, "Metadata can be accessed with metadataFor.");
       }));
     });
 
@@ -2946,7 +3171,20 @@ define(
       adapter.coalesceFindRequests = true;
 
       run(function () {
-        store.push("post", { id: 1, name: "Rails is omakase", comments: [1, 2, 3] });
+        store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              name: "Rails is omakase"
+            },
+            relationships: {
+              comments: {
+                data: [{ type: "comment", id: "1" }, { type: "comment", id: "2" }, { type: "comment", id: "3" }]
+              }
+            }
+          }
+        });
       });
 
       var post = store.peekRecord("post", 1);
@@ -2968,7 +3206,20 @@ define(
       adapter.coalesceFindRequests = true;
 
       run(function () {
-        store.push("post", { id: 1, name: "Rails is omakase", comments: [1, 2, 3] });
+        store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              name: "Rails is omakase"
+            },
+            relationships: {
+              comments: {
+                data: [{ type: "comment", id: "1" }, { type: "comment", id: "2" }, { type: "comment", id: "3" }]
+              }
+            }
+          }
+        });
       });
 
       var post = store.peekRecord("post", 1);
@@ -2984,7 +3235,20 @@ define(
       Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
 
       run(function () {
-        store.push("post", { id: 1, name: "Rails is omakase", comments: [1, 2, 3] });
+        store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              name: "Rails is omakase"
+            },
+            relationships: {
+              comments: {
+                data: [{ type: "comment", id: "1" }, { type: "comment", id: "2" }, { type: "comment", id: "3" }]
+              }
+            }
+          }
+        });
       });
 
       var post = store.peekRecord("post", 1);
@@ -3003,7 +3267,20 @@ define(
       adapter.coalesceFindRequests = true;
 
       run(function () {
-        store.push("post", { id: 1, name: "Rails is omakase", comments: [1, 2, 3] });
+        store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              name: "Rails is omakase"
+            },
+            relationships: {
+              comments: {
+                data: [{ type: "comment", id: "1" }, { type: "comment", id: "2" }, { type: "comment", id: "3" }]
+              }
+            }
+          }
+        });
       });
 
       store.find("post", 1).then(async(function (post) {
@@ -3030,7 +3307,20 @@ define(
       adapter.coalesceFindRequests = true;
 
       run(function () {
-        store.push("post", { id: 1, name: "Rails is omakase", comments: [1, 2, 3] });
+        store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              name: "Rails is omakase"
+            },
+            relationships: {
+              comments: {
+                data: [{ type: "comment", id: "1" }, { type: "comment", id: "2" }, { type: "comment", id: "3" }]
+              }
+            }
+          }
+        });
       });
 
       store.find("post", 1).then(async(function (post) {
@@ -3069,7 +3359,20 @@ define(
       Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
 
       run(function () {
-        store.push("post", { id: 1, name: "Rails is omakase", comments: [1, 2, 3] });
+        store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              name: "Rails is omakase"
+            },
+            relationships: {
+              comments: {
+                data: [{ type: "comment", id: "1" }, { type: "comment", id: "2" }, { type: "comment", id: "3" }]
+              }
+            }
+          }
+        });
       });
 
       store.find("post", 1).then(async(function (post) {
@@ -3095,10 +3398,21 @@ define(
       Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
 
       run(function () {
-        store.push("post", {
-          id: 1,
-          name: "Rails is omakase",
-          links: { comments: "/posts/1/comments" }
+        store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              name: "Rails is omakase"
+            },
+            relationships: {
+              comments: {
+                links: {
+                  related: "/posts/1/comments"
+                }
+              }
+            }
+          }
         });
       });
 
@@ -3133,10 +3447,21 @@ define(
       Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
 
       run(function () {
-        store.push("post", {
-          id: 1,
-          name: "Rails is omakase",
-          links: { comments: "/posts/1/comments" }
+        store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              name: "Rails is omakase"
+            },
+            relationships: {
+              comments: {
+                links: {
+                  related: "/posts/1/comments"
+                }
+              }
+            }
+          }
         });
       });
 
@@ -3154,10 +3479,21 @@ define(
       adapter.coalesceFindRequests = true;
 
       run(function () {
-        store.push("post", {
-          id: 1,
-          name: "Rails is omakase",
-          links: { comments: "/posts/1/comments" }
+        store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              name: "Rails is omakase"
+            },
+            relationships: {
+              comments: {
+                links: {
+                  related: "/posts/1/comments"
+                }
+              }
+            }
+          }
         });
       });
 
@@ -3194,10 +3530,21 @@ define(
       Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
 
       run(function () {
-        store.push("post", {
-          id: 1,
-          name: "Rails is omakase",
-          links: { comments: "/posts/1/comments" }
+        store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              name: "Rails is omakase"
+            },
+            relationships: {
+              comments: {
+                links: {
+                  related: "/posts/1/comments"
+                }
+              }
+            }
+          }
         });
       });
 
@@ -3227,9 +3574,21 @@ define(
       Comment.reopen({ post: DS.belongsTo("post", { async: true }) });
 
       run(function () {
-        store.push("comment", {
-          id: 1, name: "FIRST",
-          links: { post: "/posts/1" }
+        store.push({
+          data: {
+            type: "comment",
+            id: "1",
+            attributes: {
+              name: "FIRST"
+            },
+            relationships: {
+              post: {
+                links: {
+                  related: "/posts/1"
+                }
+              }
+            }
+          }
         });
       });
 
@@ -3250,7 +3609,19 @@ define(
 
       warns(function () {
         run(function () {
-          post = store.push("post", { id: 2, comments: [1, 2, 3] });
+          store.push({
+            data: {
+              type: "post",
+              id: "2",
+              relationships: {
+                comments: {
+                  data: [{ type: "comment", id: "1" }, { type: "comment", id: "2" }, { type: "comment", id: "3" }]
+                }
+              }
+            }
+          });
+
+          post = store.peekRecord("post", 2);
           post.get("comments");
         });
       }, /expected to find records with the following ids in the adapter response but they were missing: \[2,3\]/);
@@ -3281,7 +3652,18 @@ define(
 
       var post;
       run(function () {
-        post = store.push("post", { id: 2, comments: [1, 2, 3] });
+        store.push({
+          data: {
+            type: "post",
+            id: "2",
+            relationships: {
+              comments: {
+                data: [{ type: "comment", id: "1" }, { type: "comment", id: "2" }, { type: "comment", id: "3" }]
+              }
+            }
+          }
+        });
+        post = store.peekRecord("post", 2);
       });
 
       run(function () {
@@ -3314,7 +3696,18 @@ define(
       var post;
 
       run(function () {
-        post = store.push("post", { id: 2, comments: [1, 2, 3] });
+        store.push({
+          data: {
+            type: "post",
+            id: "2",
+            relationships: {
+              comments: {
+                data: [{ type: "comment", id: "1" }, { type: "comment", id: "2" }, { type: "comment", id: "3" }]
+              }
+            }
+          }
+        });
+        post = store.peekRecord("post", 2);
       });
 
       run(function () {
@@ -3403,7 +3796,18 @@ define(
       var b2000 = repeatChar("b", 2000);
       var post;
       run(function () {
-        post = store.push("post", { id: 1, comments: [a2000, b2000] });
+        store.push({
+          data: {
+            type: "post",
+            id: "1",
+            relationships: {
+              comments: {
+                data: [{ type: "comment", id: a2000 }, { type: "comment", id: b2000 }]
+              }
+            }
+          }
+        });
+        post = store.peekRecord("post", 1);
       });
 
       adapter.coalesceFindRequests = true;
@@ -3441,7 +3845,18 @@ define(
       var post;
 
       run(function () {
-        post = store.push("post", { id: 1, comments: [a100, b100] });
+        store.push({
+          data: {
+            type: "post",
+            id: "1",
+            relationships: {
+              comments: {
+                data: [{ type: "comment", id: a100 }, { type: "comment", id: b100 }]
+              }
+            }
+          }
+        });
+        post = store.peekRecord("post", 1);
       });
 
       adapter.coalesceFindRequests = true;
@@ -3874,8 +4289,21 @@ define(
       };
 
       run(function () {
-        store.push('person', { id: 1, name: 'Braaaahm Dale' });
-        store.push('person', { id: 2, name: 'Brohuda Katz' });
+        env.store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Braaaahm Dale'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Brohuda Katz'
+            }
+          }]
+        });
       });
 
       var promise = run(function () {
@@ -3924,8 +4352,21 @@ define(
       };
 
       run(function () {
-        store.push('person', { id: 1, name: 'Braaaahm Dale' });
-        store.push('person', { id: 2, name: 'Brohuda Katz' });
+        env.store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Braaaahm Dale'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Brohuda Katz'
+            }
+          }]
+        });
       });
 
       var promise = run(function () {
@@ -3976,8 +4417,21 @@ define(
       };
 
       run(function () {
-        store.push('person', { id: 1, name: 'Tom Dale' });
-        store.push('person', { id: 2, name: 'Yehuda Katz' });
+        env.store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Yehuda Katz'
+            }
+          }]
+        });
       });
 
       var promise = run(function () {
@@ -4021,8 +4475,21 @@ define(
       };
 
       run(function () {
-        store.push('person', { id: 1, name: 'Tom Dale' });
-        store.push('person', { id: 2, name: 'Yehuda Katz' });
+        env.store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Yehuda Katz'
+            }
+          }]
+        });
       });
 
       var promise = run(function () {
@@ -4060,7 +4527,15 @@ define(
 
       // Load data for a record into the store.
       run(function () {
-        store.push('person', { id: 'deleted-record', name: 'Tom Dale' });
+        env.store.push({
+          data: {
+            type: 'person',
+            id: 'deleted-record',
+            attributes: {
+              name: 'Tom Dale'
+            }
+          }
+        });
       });
 
       // Retrieve that loaded record and edit it so it becomes dirty
@@ -4090,7 +4565,15 @@ define(
       };
 
       run(function () {
-        store.push('person', { id: 'deleted-record', name: 'Tom Dale' });
+        env.store.push({
+          data: {
+            type: 'person',
+            id: 'deleted-record',
+            attributes: {
+              name: 'Tom Dale'
+            }
+          }
+        });
       });
 
       var tom;
@@ -4271,7 +4754,16 @@ define(
       };
 
       var yehuda = run(function () {
-        return store.push('person', { id: 1, name: 'Brohuda Brokatz' });
+        env.store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Brohuda Brokatz'
+            }
+          }
+        });
+        return store.peekRecord('person', 1);
       });
 
       Ember.run(function () {
@@ -4314,7 +4806,16 @@ define(
       };
 
       var yehuda = run(function () {
-        return store.push('person', { id: 1, name: 'Brohuda Brokatz' });
+        env.store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Brohuda Brokatz'
+            }
+          }
+        });
+        return store.peekRecord('person', 1);
       });
 
       run(function () {
@@ -4364,7 +4865,16 @@ define(
       };
 
       var yehuda = run(function () {
-        return store.push('person', { id: 1, name: 'Brohuda Brokatz' });
+        env.store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Brohuda Brokatz'
+            }
+          }
+        });
+        return store.peekRecord('person', 1);
       });
 
       Ember.run(function () {
@@ -4408,7 +4918,16 @@ define(
       };
 
       var person = run(function () {
-        return store.push('person', { id: 1, name: 'John Doe' });
+        env.store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'John Doe'
+            }
+          }
+        });
+        return store.peekRecord('person', 1);
       });
 
       run(store, 'findRecord', 'person', 1).then(async(function (record) {
@@ -4460,7 +4979,15 @@ define(
       });
 
       run(function () {
-        store.push('dog', { id: 1, name: 'Scruffy' });
+        env.store.push({
+          data: {
+            type: 'dog',
+            id: '1',
+            attributes: {
+              name: 'Scruffy'
+            }
+          }
+        });
       });
 
       adapter.findRecord = function (store, type, id, snapshot) {
@@ -4469,8 +4996,28 @@ define(
 
       adapter.updateRecord = function (store, type, snapshot) {
         return new Ember.RSVP.Promise(function (resolve, reject) {
-          store.push('person', { id: 1, name: 'Tom Dale', dogs: [1, 2] });
-          store.push('dog', { id: 2, name: 'Scruffles' });
+          env.store.push({
+            data: {
+              type: 'person',
+              id: '1',
+              attributes: {
+                name: 'Tom Dale'
+              },
+              relationships: {
+                dogs: {
+                  data: [{ type: 'dog', id: '1' }, { type: 'dog', id: '2' }]
+                }
+              }
+            },
+            included: [{
+              type: 'dog',
+              id: '2',
+              attributes: {
+                name: 'Scruffles'
+              }
+            }]
+          });
+
           resolve({ id: 1, name: 'Scruffy' });
         });
       };
@@ -4505,7 +5052,22 @@ define(
       };
 
       run(function () {
-        store.push('person', { id: 1, name: 'Tom Dale', links: { dogs: '/dogs' } });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            },
+            relationships: {
+              dogs: {
+                links: {
+                  related: '/dogs'
+                }
+              }
+            }
+          }
+        });
       });
 
       var tom, dogs;
@@ -4516,7 +5078,22 @@ define(
         return dogs;
       })).then(async(function (dogs) {
         equal(dogs.get('length'), 1, 'The dogs are loaded');
-        store.push('person', { id: 1, name: 'Tom Dale', links: { dogs: '/dogs' } });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            },
+            relationships: {
+              dogs: {
+                links: {
+                  related: '/dogs'
+                }
+              }
+            }
+          }
+        });
         ok(tom.get('dogs') instanceof DS.PromiseArray, 'dogs is a promise');
         return tom.get('dogs');
       })).then(async(function (dogs) {
@@ -4577,7 +5154,16 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', { id: 1, name: 'Tom Dale' });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            }
+          }
+        });
+        person = store.peekRecord('person', 1);
       });
 
       run(function () {
@@ -4597,7 +5183,16 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', { id: 1, name: 'Tom Dale' });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            }
+          }
+        });
+        person = store.peekRecord('person', 1);
       });
 
       run(function () {
@@ -4636,7 +5231,18 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', { id: 1, dogs: [2, 3] });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            relationships: {
+              dogs: {
+                data: [{ type: 'dog', id: '2' }, { type: 'dog', id: '3' }]
+              }
+            }
+          }
+        });
+        person = store.peekRecord('person', 1);
       });
 
       run(function () {
@@ -4659,7 +5265,20 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', { id: 1, links: { dogs: 'dogs' } });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            relationships: {
+              dogs: {
+                links: {
+                  related: 'dogs'
+                }
+              }
+            }
+          }
+        });
+        person = store.peekRecord('person', 1);
       });
 
       run(function () {
@@ -4682,7 +5301,20 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', { id: 1, links: { dog: 'dog' } });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            relationships: {
+              dog: {
+                links: {
+                  related: 'dog'
+                }
+              }
+            }
+          }
+        });
+        person = store.peekRecord('person', 1);
       });
 
       run(function () {
@@ -4699,7 +5331,16 @@ define(
       });
 
       run(function () {
-        var person = store.push('person', { id: 1, name: 'Tom' });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom'
+            }
+          }
+        });
+        var person = store.peekRecord('person', 1);
         person.save({ adapterOptions: { subscribe: true } });
       });
     });
@@ -4727,7 +5368,16 @@ define(
       });
 
       run(function () {
-        var person = store.push('person', { id: 1, name: 'Tom' });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom'
+            }
+          }
+        });
+        var person = store.peekRecord('person', 1);
         person.destroyRecord({ adapterOptions: { subscribe: true } });
       });
     });
@@ -5049,45 +5699,6 @@ define(
 
 
 define(
-  "ember-data/tests/integration/backwards-compat/deprecate-type-key-test",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-
-    function __es6_export__(name, value) {
-      __exports__[name] = value;
-    }
-
-    var Post, env;
-    module('integration/backwards-compat/deprecate-type-key', {
-      setup: function () {
-        env = setupStore({
-          post: DS.Model.extend()
-        });
-        Post = env.store.modelFor('post');
-      },
-
-      teardown: function () {}
-    });
-
-    if (Ember.platform.hasPropertyAccessors) {
-      test('typeKey is deprecated', function () {
-        expectDeprecation(function () {
-          return Post.typeKey;
-        });
-      });
-
-      test('setting typeKey is not allowed', function () {
-        throws(function () {
-          Post.typeKey = 'hello';
-        });
-      });
-    }
-  }
-);
-
-
-define(
   "ember-data/tests/integration/backwards-compat/non-dasherized-lookups",
   ["exports"],
   function(__exports__) {
@@ -5401,7 +6012,15 @@ define(
       debugAdapter.watchModelTypes(added, updated);
 
       run(function () {
-        store.push('post', { id: 1, title: 'Post Title' });
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              title: 'Post Title'
+            }
+          }
+        });
       });
     });
 
@@ -5409,7 +6028,15 @@ define(
       var post, record, addedRecords, updatedRecords, removedIndex, removedCount;
 
       Ember.run(function () {
-        store.push('post', { id: '1', title: 'Clean Post' });
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              title: 'Clean Post'
+            }
+          }
+        });
       });
 
       var recordsAdded = function (wrappedRecords) {
@@ -6347,9 +6974,6 @@ define(
     });
 
     test('Finds the inverse when there is only one possible available', function () {
-      //Maybe store is evaluated lazily, so we need this :(
-      run(store, 'push', 'user', { id: 1 });
-
       deepEqual(Job.inverseFor('user', store), {
         type: User,
         name: 'job',
@@ -6364,13 +6988,6 @@ define(
 
       User.reopen({
         previousJob: belongsTo('job', { async: false })
-      });
-
-      //Maybe store is evaluated lazily, so we need this :(
-      var user, job;
-      run(function () {
-        user = store.push('user', { id: 1 });
-        job = store.push('user', { id: 1 });
       });
 
       deepEqual(Job.inverseFor('owner', store), {
@@ -6394,11 +7011,6 @@ define(
       User.reopen({
         job: belongsTo('job', { async: false })
       });
-      //Maybe store is evaluated lazily, so we need this :(
-      var user;
-      run(function () {
-        user = store.push('user', { id: 1 });
-      });
 
       equal(User.inverseFor('job', store), null, 'There is no inverse');
     });
@@ -6413,21 +7025,13 @@ define(
         job: belongsTo('job', { async: false })
       });
 
-      //Maybe store is evaluated lazily, so we need this :(
       expectAssertion(function () {
-        run(function () {
-          store.push('user', { id: 1 });
-        });
         User.inverseFor('job', store);
       }, 'You defined the \'job\' relationship on user, but you defined the inverse relationships of type job multiple times. Look at http://emberjs.com/guides/models/defining-models/#toc_explicit-inverses for how to explicitly specify inverses');
     });
 
     test('Caches findInverseFor return value', function () {
       expect(1);
-      //Maybe store is evaluated lazily, so we need this :(
-      run(function () {
-        store.push('user', { id: 1 });
-      });
 
       var inverseForUser = Job.inverseFor('user', store);
       Job.findInverseFor = function () {
@@ -6443,7 +7047,13 @@ define(
       warns(function () {
         var reflexiveModel;
         run(function () {
-          reflexiveModel = store.push('reflexive-model', { id: 1 });
+          store.push({
+            data: {
+              type: 'reflexive-model',
+              id: '1'
+            }
+          });
+          reflexiveModel = store.peekRecord('reflexive-model', 1);
           reflexiveModel.get('reflexiveProp');
         });
       }, /Detected a reflexive relationship by the name of 'reflexiveProp'/);
@@ -6688,54 +7298,85 @@ define(
 
     var Person, store, array, moreArray;
 
-    module("integration/peek-all - DS.Store#peekAll()", {
+    module('integration/peek-all - DS.Store#peekAll()', {
       setup: function () {
-        array = [{ id: 1, name: "Scumbag Dale" }, { id: 2, name: "Scumbag Katz" }];
-        moreArray = [{ id: 3, name: "Scumbag Bryn" }];
-        Person = DS.Model.extend({ name: DS.attr("string") });
+        array = {
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Scumbag Dale'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Scumbag Katz'
+            }
+          }]
+        };
+        moreArray = {
+          data: [{
+            type: 'person',
+            id: '3',
+            attributes: {
+              name: 'Scumbag Bryn'
+            }
+          }]
+        };
+
+        Person = DS.Model.extend({ name: DS.attr('string') });
 
         store = createStore({ person: Person });
       },
       teardown: function () {
-        run(store, "destroy");
+        run(store, 'destroy');
         Person = null;
         array = null;
       }
     });
 
-    test("store.peekAll('person') should return all records and should update with new ones", function () {
+    test('store.peekAll(\'person\') should return all records and should update with new ones', function () {
       run(function () {
-        store.pushMany("person", array);
+        store.push(array);
       });
 
-      var all = store.peekAll("person");
-      equal(get(all, "length"), 2);
+      var all = store.peekAll('person');
+      equal(get(all, 'length'), 2);
 
       run(function () {
-        store.pushMany("person", moreArray);
+        store.push(moreArray);
       });
 
-      equal(get(all, "length"), 3);
+      equal(get(all, 'length'), 3);
     });
 
-    test("Calling store.peekAll() multiple times should update immediately inside the runloop", function () {
+    test('Calling store.peekAll() multiple times should update immediately inside the runloop', function () {
       expect(3);
 
       Ember.run(function () {
-        equal(get(store.peekAll("person"), "length"), 0, "should initially be empty");
-        store.createRecord("person", { name: "Tomster" });
-        equal(get(store.peekAll("person"), "length"), 1, "should contain one person");
-        store.push("person", { id: 1, name: "Tomster's friend" });
-        equal(get(store.peekAll("person"), "length"), 2, "should contain two people");
+        equal(get(store.peekAll('person'), 'length'), 0, 'should initially be empty');
+        store.createRecord('person', { name: 'Tomster' });
+        equal(get(store.peekAll('person'), 'length'), 1, 'should contain one person');
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tomster\'s friend'
+            }
+          }
+        });
+        equal(get(store.peekAll('person'), 'length'), 2, 'should contain two people');
       });
     });
 
-    test("Calling store.peekAll() after creating a record should return correct data", function () {
+    test('Calling store.peekAll() after creating a record should return correct data', function () {
       expect(1);
 
       Ember.run(function () {
-        store.createRecord("person", { name: "Tomster" });
-        equal(get(store.peekAll("person"), "length"), 1, "should contain one person");
+        store.createRecord('person', { name: 'Tomster' });
+        equal(get(store.peekAll('person'), 'length'), 1, 'should contain one person');
       });
     });
   }
@@ -6812,20 +7453,39 @@ define(
       var person;
 
       run(function () {
-        store.push('car', {
-          id: 1,
-          make: 'BMC',
-          model: 'Mini Cooper',
-          person: 1
+        store.push({
+          data: {
+            type: 'car',
+            id: '1',
+            attributes: {
+              make: 'BMC',
+              model: 'Mini Cooper'
+            },
+            relationships: {
+              person: {
+                data: { type: 'person', id: '1' }
+              }
+            }
+          }
         });
       });
 
       run(function () {
-        person = store.push('person', {
-          id: 1,
-          name: 'Tom Dale',
-          cars: [1]
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            },
+            relationships: {
+              cars: {
+                data: [{ type: 'car', id: '1' }]
+              }
+            }
+          }
         });
+        person = store.peekRecord('person', 1);
       });
 
       var filterd = manager.createFilteredRecordArray(Person, function () {
@@ -6876,12 +7536,22 @@ define(
       store.peekAll('car');
 
       run(function () {
-        car = store.push('car', {
-          id: 1,
-          make: 'BMC',
-          model: 'Mini Cooper',
-          person: 1
+        store.push({
+          data: {
+            type: 'car',
+            id: '1',
+            attributes: {
+              make: 'BMC',
+              model: 'Mini Cooper'
+            },
+            relationships: {
+              person: {
+                data: { type: 'person', id: '1' }
+              }
+            }
+          }
         });
+        car = store.peekRecord('car', 1);
       });
 
       equal(populateLiveRecordArray.called.length, 1);
@@ -7067,8 +7737,23 @@ define(
 
       var all;
       run(function () {
-        adam = env.store.push("person", { id: 1, name: "Adam Sunderland" });
-        dave = env.store.push("person", { id: 2, name: "Dave Sunderland" });
+        env.store.push({
+          data: [{
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Adam Sunderland"
+            }
+          }, {
+            type: "person",
+            id: "2",
+            attributes: {
+              name: "Dave Sunderland"
+            }
+          }]
+        });
+        adam = env.store.peekRecord("person", 1);
+        dave = env.store.peekRecord("person", 2);
         all = env.store.peekAll("person");
       });
 
@@ -7092,8 +7777,23 @@ define(
       };
 
       run(function () {
-        adam = env.store.push("person", { id: 1, name: "Adam Sunderland" });
-        dave = env.store.push("person", { id: 2, name: "Dave Sunderland" });
+        env.store.push({
+          data: [{
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Adam Sunderland"
+            }
+          }, {
+            type: "person",
+            id: "2",
+            attributes: {
+              name: "Dave Sunderland"
+            }
+          }]
+        });
+        adam = env.store.peekRecord("person", 1);
+        dave = env.store.peekRecord("person", 2);
       });
       var all = env.store.peekAll("person");
 
@@ -7113,8 +7813,23 @@ define(
     test("when deleted records are rolled back, they are still in their previous record arrays", function () {
       var jaime, cersei;
       run(function () {
-        jaime = env.store.push("person", { id: 1, name: "Jaime Lannister" });
-        cersei = env.store.push("person", { id: 2, name: "Cersei Lannister" });
+        env.store.push({
+          data: [{
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Jaime Lannister"
+            }
+          }, {
+            type: "person",
+            id: "2",
+            attributes: {
+              name: "Cersei Lannister"
+            }
+          }]
+        });
+        jaime = env.store.peekRecord("person", 1);
+        cersei = env.store.peekRecord("person", 2);
       });
       var all = env.store.peekAll("person");
       var filtered;
@@ -7237,11 +7952,17 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', {
-          id: 'wat',
-          firstName: 'Yehuda',
-          lastName: 'Katz'
+        store.push({
+          data: {
+            type: 'person',
+            id: 'wat',
+            attributes: {
+              firstName: 'Yehuda',
+              lastName: 'Katz'
+            }
+          }
         });
+        person = store.peekRecord('person', 'wat');
       });
 
       person.addObserver('firstName', function () {
@@ -7253,10 +7974,15 @@ define(
       });
 
       run(function () {
-        store.push('person', {
-          id: 'wat',
-          firstName: 'Yehuda',
-          lastName: 'Katz!'
+        store.push({
+          data: {
+            type: 'person',
+            id: 'wat',
+            attributes: {
+              firstName: 'Yehuda',
+              lastName: 'Katz!'
+            }
+          }
         });
       });
     });
@@ -7266,12 +7992,17 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', {
-          id: 'wat',
-          firstName: 'Yehuda',
-          lastName: 'Katz'
+        store.push({
+          data: {
+            type: 'person',
+            id: 'wat',
+            attributes: {
+              firstName: 'Yehuda',
+              lastName: 'Katz'
+            }
+          }
         });
-
+        person = store.peekRecord('person', 'wat');
         person.set('lastName', 'Katz!');
       });
 
@@ -7284,10 +8015,15 @@ define(
       });
 
       run(function () {
-        store.push('person', {
-          id: 'wat',
-          firstName: 'Yehuda',
-          lastName: 'Katz!'
+        store.push({
+          data: {
+            type: 'person',
+            id: 'wat',
+            attributes: {
+              firstName: 'Yehuda',
+              lastName: 'Katz!'
+            }
+          }
         });
       });
     });
@@ -7301,12 +8037,17 @@ define(
       };
 
       run(function () {
-        person = store.push('person', {
-          id: 'wat',
-          firstName: 'Yehuda',
-          lastName: 'Katz'
+        store.push({
+          data: {
+            type: 'person',
+            id: 'wat',
+            attributes: {
+              firstName: 'Yehuda',
+              lastName: 'Katz'
+            }
+          }
         });
-
+        person = store.peekRecord('person', 'wat');
         person.set('lastName', 'Katz!');
       });
 
@@ -7328,12 +8069,17 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', {
-          id: 'wat',
-          firstName: 'Yehuda',
-          lastName: 'Katz'
+        store.push({
+          data: {
+            type: 'person',
+            id: 'wat',
+            attributes: {
+              firstName: 'Yehuda',
+              lastName: 'Katz'
+            }
+          }
         });
-
+        person = store.peekRecord('person', 'wat');
         person.set('lastName', 'Katz!');
       });
 
@@ -7346,10 +8092,15 @@ define(
       });
 
       run(function () {
-        person = store.push('person', {
-          id: 'wat',
-          firstName: 'Tom',
-          lastName: 'Dale'
+        store.push({
+          data: {
+            type: 'person',
+            id: 'wat',
+            attributes: {
+              firstName: 'Tom',
+              lastName: 'Dale'
+            }
+          }
         });
       });
     });
@@ -7425,7 +8176,16 @@ define(
     test('When a record is reloaded and fails, it can try again', function () {
       var tom;
       run(function () {
-        tom = env.store.push('person', { id: 1, name: 'Tom Dale' });
+        env.store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            }
+          }
+        });
+        tom = env.store.peekRecord('person', 1);
       });
 
       var count = 0;
@@ -7454,7 +8214,15 @@ define(
 
     test('When a record is loaded a second time, isLoaded stays true', function () {
       run(function () {
-        env.store.push('person', { id: 1, name: 'Tom Dale' });
+        env.store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            }
+          }
+        });
       });
 
       run(function () {
@@ -7463,7 +8231,16 @@ define(
           person.addObserver('isLoaded', isLoadedDidChange);
 
           // Reload the record
-          env.store.push('person', { id: 1, name: 'Tom Dale' });
+          env.store.push({
+            data: {
+              type: 'person',
+              id: '1',
+              attributes: {
+                name: 'Tom Dale'
+              }
+            }
+          });
+
           equal(get(person, 'isLoaded'), true, 'The person is still loaded after load');
 
           person.removeObserver('isLoaded', isLoadedDidChange);
@@ -7728,7 +8505,16 @@ define(
     test('can unload a single record', function () {
       var adam;
       run(function () {
-        adam = env.store.push('person', { id: 1, name: 'Adam Sunderland' });
+        env.store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Adam Sunderland'
+            }
+          }
+        });
+        adam = env.store.peekRecord('person', 1);
       });
 
       Ember.run(function () {
@@ -7743,15 +8529,40 @@ define(
 
       var adam, bob, dudu;
       run(function () {
-        adam = env.store.push('person', { id: 1, name: 'Adam Sunderland' });
-        bob = env.store.push('person', { id: 2, name: 'Bob Bobson' });
-
-        dudu = env.store.push('car', {
-          id: 1,
-          make: 'VW',
-          model: 'Beetle',
-          person: 1
+        env.store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Adam Sunderland'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Bob Bobson'
+            }
+          }]
         });
+        adam = env.store.peekRecord('person', 1);
+        bob = env.store.peekRecord('person', 2);
+
+        env.store.push({
+          data: {
+            type: 'car',
+            id: '1',
+            attributes: {
+              make: 'VW',
+              model: 'Beetle'
+            },
+            relationships: {
+              person: {
+                data: { type: 'person', id: '1' }
+              }
+            }
+          }
+        });
+        dudu = bob = env.store.peekRecord('car', 1);
       });
 
       Ember.run(function () {
@@ -7767,15 +8578,40 @@ define(
 
       var adam, bob, dudu;
       run(function () {
-        adam = env.store.push('person', { id: 1, name: 'Adam Sunderland' });
-        bob = env.store.push('person', { id: 2, name: 'Bob Bobson' });
-
-        dudu = env.store.push('car', {
-          id: 1,
-          make: 'VW',
-          model: 'Beetle',
-          person: 1
+        env.store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Adam Sunderland'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Bob Bobson'
+            }
+          }]
         });
+        adam = env.store.peekRecord('person', 1);
+        bob = env.store.peekRecord('person', 2);
+
+        env.store.push({
+          data: {
+            type: 'car',
+            id: '1',
+            attributes: {
+              make: 'VW',
+              model: 'Beetle'
+            },
+            relationships: {
+              person: {
+                data: { type: 'person', id: '1' }
+              }
+            }
+          }
+        });
+        dudu = bob = env.store.peekRecord('car', 1);
       });
 
       Ember.run(function () {
@@ -7786,28 +8622,26 @@ define(
       equal(env.store.peekAll('car').get('length'), 0);
     });
 
-    test('Unloading all records for a given type clears saved meta data.', function () {
-
-      function metadataKeys(type) {
-        return Object.keys(env.store.metadataFor(type));
-      }
-
-      run(function () {
-        env.store.setMetadataFor('person', { count: 10 });
-      });
-
-      Ember.run(function () {
-        env.store.unloadAll('person');
-      });
-
-      deepEqual(metadataKeys('person'), [], 'Metadata for person is empty');
-    });
-
     test('removes findAllCache after unloading all records', function () {
       var adam, bob;
       run(function () {
-        adam = env.store.push('person', { id: 1, name: 'Adam Sunderland' });
-        bob = env.store.push('person', { id: 2, name: 'Bob Bobson' });
+        env.store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Adam Sunderland'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Bob Bobson'
+            }
+          }]
+        });
+        adam = env.store.peekRecord('person', 1);
+        bob = env.store.peekRecord('person', 2);
       });
 
       Ember.run(function () {
@@ -7821,8 +8655,23 @@ define(
     test('unloading all records also updates record array from peekAll()', function () {
       var adam, bob;
       run(function () {
-        adam = env.store.push('person', { id: 1, name: 'Adam Sunderland' });
-        bob = env.store.push('person', { id: 2, name: 'Bob Bobson' });
+        env.store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Adam Sunderland'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Bob Bobson'
+            }
+          }]
+        });
+        adam = env.store.peekRecord('person', 1);
+        bob = env.store.peekRecord('person', 2);
       });
       var all = env.store.peekAll('person');
 
@@ -7838,20 +8687,40 @@ define(
     test('unloading a record also clears its relationship', function () {
       var adam, bob;
       run(function () {
-        adam = env.store.push('person', {
-          id: 1,
-          name: 'Adam Sunderland',
-          cars: [1]
+        env.store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Adam Sunderland'
+            },
+            relationships: {
+              cars: {
+                data: [{ type: 'car', id: '1' }]
+              }
+            }
+          }
         });
+        adam = env.store.peekRecord('person', 1);
       });
 
       run(function () {
-        bob = env.store.push('car', {
-          id: 1,
-          make: 'Lotus',
-          model: 'Exige',
-          person: 1
+        env.store.push({
+          data: {
+            type: 'car',
+            id: '1',
+            attributes: {
+              make: 'Lotus',
+              model: 'Exige'
+            },
+            relationships: {
+              person: {
+                data: { type: 'person', id: '1' }
+              }
+            }
+          }
         });
+        bob = env.store.peekRecord('car', 1);
       });
 
       run(function () {
@@ -7870,17 +8739,31 @@ define(
     test('unloading a record also clears the implicit inverse relationships', function () {
       var adam, bob;
       run(function () {
-        adam = env.store.push('person', {
-          id: 1,
-          name: 'Adam Sunderland'
+        env.store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Adam Sunderland'
+            }
+          }
         });
+        adam = env.store.peekRecord('person', 1);
       });
 
       run(function () {
-        bob = env.store.push('group', {
-          id: 1,
-          people: [1]
+        env.store.push({
+          data: {
+            type: 'group',
+            id: '1',
+            relationships: {
+              people: {
+                data: [{ type: 'person', id: '1' }]
+              }
+            }
+          }
         });
+        bob = env.store.peekRecord('group', 1);
       });
 
       run(function () {
@@ -8995,8 +9878,21 @@ define(
       };
 
       run(function () {
-        env.store.push('post', { id: 1, comments: [1] });
-        env.store.push('comment', { id: 1 });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }]
+              }
+            }
+          },
+          included: [{
+            type: 'comment',
+            id: '1'
+          }]
+        });
         env.store.findRecord('post', 1).then(function (post) {
           return post.get('comments');
         });
@@ -9014,7 +9910,17 @@ define(
       };
 
       run(function () {
-        env.store.push('book', { id: 1, chapters: [2, 3, 3] });
+        env.store.push({
+          data: {
+            type: 'book',
+            id: '1',
+            relationships: {
+              chapters: {
+                data: [{ type: 'chapter', id: '2' }, { type: 'chapter', id: '3' }, { type: 'chapter', id: '3' }]
+              }
+            }
+          }
+        });
         env.store.findRecord('book', 1).then(function (book) {
           return book.get('chapters');
         });
@@ -9074,7 +9980,20 @@ define(
       var post;
 
       run(function () {
-        post = env.store.push('post', { id: 1, links: { comments: '/posts/1/comments' } });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                links: {
+                  related: '/posts/1/comments'
+                }
+              }
+            }
+          }
+        });
+        post = env.store.peekRecord('post', 1);
       });
 
       env.adapter.findHasMany = function (store, snapshot, link, relationship) {
@@ -9095,7 +10014,17 @@ define(
       run(function () {
         promise1 = post.get('comments');
         //Invalidate the post.comments CP
-        env.store.push('comment', { id: 1, message: 1 });
+        env.store.push({
+          data: {
+            type: 'comment',
+            id: '1',
+            relationships: {
+              message: {
+                data: { type: 'post', id: '1' }
+              }
+            }
+          }
+        });
         promise2 = post.get('comments');
       });
       Ember.RSVP.all([promise1, promise2]).then(function () {
@@ -9119,12 +10048,35 @@ define(
       };
       var post;
       run(function () {
-        post = env.store.push('post', { id: 1, links: { comments: '/posts/1/comments' } });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                links: {
+                  related: '/posts/1/comments'
+                }
+              }
+            }
+          }
+        });
+        post = env.store.peekRecord('post', 1);
       });
 
       run(function () {
         post.get('comments').then(function () {
-          env.store.push('comment', { id: 3, message: 1 });
+          env.store.push({
+            data: {
+              type: 'comment',
+              id: '3',
+              relationships: {
+                message: {
+                  data: { type: 'post', id: '1' }
+                }
+              }
+            }
+          });
           post.get('comments').then(function () {
             ok(true, 'Promise was called');
           });
@@ -9261,7 +10213,21 @@ define(
       };
 
       run(function () {
-        env.store.pushMany('comment', [{ id: 1, body: 'First' }, { id: 2, body: 'Second' }]);
+        env.store.push({
+          data: [{
+            type: 'comment',
+            id: '1',
+            attributes: {
+              body: 'First'
+            }
+          }, {
+            type: 'comment',
+            id: '2',
+            attributes: {
+              body: 'Second'
+            }
+          }]
+        });
 
         env.store.findRecord('post', '1').then(function (post) {
           var comments = post.get('comments');
@@ -9353,7 +10319,20 @@ define(
       var post;
 
       run(function () {
-        post = env.store.push('post', { id: 1, links: { comments: 'someLink' } });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                links: {
+                  related: 'someLink'
+                }
+              }
+            }
+          }
+        });
+        post = env.store.peekRecord('post', 1);
       });
 
       run(function () {
@@ -9381,7 +10360,20 @@ define(
       var post, comments;
 
       run(function () {
-        post = env.store.push('post', { id: 1, links: { comments: 'someLink' } });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                links: {
+                  related: 'someLink'
+                }
+              }
+            }
+          }
+        });
+        post = env.store.peekRecord('post', 1);
         comments = post.get('comments');
       });
 
@@ -9434,7 +10426,20 @@ define(
       var post;
 
       run(function () {
-        post = env.store.push('post', { id: 1, links: { comments: '/first' } });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                links: {
+                  related: '/first'
+                }
+              }
+            }
+          }
+        });
+        post = env.store.peekRecord('post', 1);
       });
 
       run(function () {
@@ -9442,7 +10447,19 @@ define(
           equal(comments.get('isLoaded'), true, 'comments are loaded');
           equal(comments.get('length'), 2, 'comments have 2 length');
           equal(comments.objectAt(0).get('body'), 'First', 'comment 1 successfully loaded');
-          env.store.push('post', { id: 1, links: { comments: '/second' } });
+          env.store.push({
+            data: {
+              type: 'post',
+              id: '1',
+              relationships: {
+                comments: {
+                  links: {
+                    related: '/second'
+                  }
+                }
+              }
+            }
+          });
           post.get('comments').then(function (newComments) {
             equal(comments, newComments, 'hasMany array was kept the same');
             equal(newComments.get('length'), 3, 'comments updated successfully');
@@ -9460,9 +10477,24 @@ define(
       };
 
       run(function () {
-        env.store.push('user', { id: 1, messages: [{ id: 1, type: 'post' }, { id: 3, type: 'comment' }] });
-        env.store.push('post', { id: 1 });
-        env.store.push('comment', { id: 3 });
+        env.store.push({
+          data: {
+            type: 'user',
+            id: '1',
+            relationships: {
+              messages: {
+                data: [{ type: 'post', id: '1' }, { type: 'comment', id: '3' }]
+              }
+            }
+          },
+          included: [{
+            type: 'post',
+            id: '1'
+          }, {
+            type: 'comment',
+            id: '3'
+          }]
+        });
       });
 
       run(function () {
@@ -9487,7 +10519,17 @@ define(
       };
 
       run(function () {
-        env.store.push('user', { id: 1, messages: [{ id: 1, type: 'post' }, { id: 3, type: 'comment' }] });
+        env.store.push({
+          data: {
+            type: 'user',
+            id: '1',
+            relationships: {
+              messages: {
+                data: [{ type: 'post', id: '1' }, { type: 'comment', id: '3' }]
+              }
+            }
+          }
+        });
       });
 
       run(function () {
@@ -9522,8 +10564,21 @@ define(
     test('Type can be inferred from the key of a hasMany relationship', function () {
       expect(1);
       run(function () {
-        env.store.push('user', { id: 1, contacts: [1] });
-        env.store.push('contact', { id: 1 });
+        env.store.push({
+          data: {
+            type: 'user',
+            id: '1',
+            relationships: {
+              contacts: {
+                data: [{ type: 'contact', id: '1' }]
+              }
+            }
+          },
+          included: [{
+            type: 'contact',
+            id: '1'
+          }]
+        });
       });
       run(function () {
         env.store.findRecord('user', 1).then(function (user) {
@@ -9541,8 +10596,21 @@ define(
 
       expect(1);
       run(function () {
-        env.store.push('user', { id: 1, contacts: [1] });
-        env.store.push('contact', { id: 1 });
+        env.store.push({
+          data: {
+            type: 'user',
+            id: '1',
+            relationships: {
+              contacts: {
+                data: [{ type: 'contact', id: '1' }]
+              }
+            }
+          },
+          included: [{
+            type: 'contact',
+            id: '1'
+          }]
+        });
       });
       run(function () {
         env.store.findRecord('user', 1).then(function (user) {
@@ -9560,9 +10628,24 @@ define(
 
       expect(1);
       run(function () {
-        env.store.push('user', { id: 1, contacts: [{ id: 1, type: 'email' }, { id: 2, type: 'phone' }] });
-        env.store.push('email', { id: 1 });
-        env.store.push('phone', { id: 2 });
+        env.store.push({
+          data: {
+            type: 'user',
+            id: '1',
+            relationships: {
+              contacts: {
+                data: [{ type: 'email', id: '1' }, { type: 'phone', id: '2' }]
+              }
+            }
+          },
+          included: [{
+            type: 'email',
+            id: '1'
+          }, {
+            type: 'phone',
+            id: '2'
+          }]
+        });
       });
       run(function () {
         env.store.findRecord('user', 1).then(function (user) {
@@ -9598,7 +10681,17 @@ define(
 
     test('A record can\'t be created from a polymorphic hasMany relationship', function () {
       run(function () {
-        env.store.push('user', { id: 1, messages: [] });
+        env.store.push({
+          data: {
+            type: 'user',
+            id: '1',
+            relationships: {
+              messages: {
+                data: []
+              }
+            }
+          }
+        });
       });
 
       run(function () {
@@ -9615,8 +10708,20 @@ define(
     test('Only records of the same type can be added to a monomorphic hasMany relationship', function () {
       expect(1);
       run(function () {
-        env.store.push('post', { id: 1, comments: [] });
-        env.store.push('post', { id: 2 });
+        env.store.push({
+          data: [{
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: []
+              }
+            }
+          }, {
+            type: 'post',
+            id: '2'
+          }]
+        });
       });
 
       run(function () {
@@ -9631,10 +10736,37 @@ define(
     test('Only records of the same base type can be added to a polymorphic hasMany relationship', function () {
       expect(2);
       run(function () {
-        env.store.push('user', { id: 1, messages: [] });
-        env.store.push('user', { id: 2, messages: [] });
-        env.store.push('post', { id: 1, comments: [] });
-        env.store.push('comment', { id: 3 });
+        env.store.push({
+          data: [{
+            type: 'user',
+            id: '1',
+            relationships: {
+              messages: {
+                data: []
+              }
+            }
+          }, {
+            type: 'user',
+            id: '2',
+            relationships: {
+              messages: {
+                data: []
+              }
+            }
+          }],
+          included: [{
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: []
+              }
+            }
+          }, {
+            type: 'comment',
+            id: '3'
+          }]
+        });
       });
       var asyncRecords;
 
@@ -9665,8 +10797,21 @@ define(
       expect(4);
 
       run(function () {
-        env.store.push('user', { id: 1, messages: [{ id: 3, type: 'comment' }] });
-        env.store.push('comment', { id: 3 });
+        env.store.push({
+          data: {
+            type: 'user',
+            id: '1',
+            relationships: {
+              messages: {
+                data: [{ type: 'comment', id: '3' }]
+              }
+            }
+          },
+          included: [{
+            type: 'comment',
+            id: '3'
+          }]
+        });
       });
       var asyncRecords;
 
@@ -9739,7 +10884,22 @@ define(
         return env.store.createRecord('post');
       });
       run(function () {
-        post.set('comments', env.store.pushMany('comment', [{ id: 1, body: 'First' }, { id: 2, body: 'Second' }]));
+        env.store.push({
+          data: [{
+            type: 'comment',
+            id: '1',
+            attributes: {
+              body: 'First'
+            }
+          }, {
+            type: 'comment',
+            id: '2',
+            attributes: {
+              body: 'Second'
+            }
+          }]
+        });
+        post.set('comments', env.store.peekAll('comment'));
       });
       equal(get(post, 'comments.length'), 2, 'we can set HM relationship');
     });
@@ -9754,7 +10914,22 @@ define(
         return env.store.createRecord('post');
       });
       run(function () {
-        post.set('comments', env.store.pushMany('comment', [{ id: 1, body: 'First' }, { id: 2, body: 'Second' }]));
+        env.store.push({
+          data: [{
+            type: 'comment',
+            id: '1',
+            attributes: {
+              body: 'First'
+            }
+          }, {
+            type: 'comment',
+            id: '2',
+            attributes: {
+              body: 'Second'
+            }
+          }]
+        });
+        post.set('comments', env.store.peekAll('comment'));
       });
 
       post.get('comments').then(async(function (comments) {
@@ -9798,8 +10973,30 @@ define(
       var post, firstComment;
 
       run(function () {
-        post = env.store.push('post', { id: 1, comments: [1] });
-        firstComment = env.store.push('comment', { id: 1, post: 1 });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }]
+              }
+            }
+          }
+        });
+        env.store.push({
+          data: {
+            type: 'comment',
+            id: '1',
+            relationships: {
+              comments: {
+                post: { type: 'post', id: '1' }
+              }
+            }
+          }
+        });
+        post = env.store.peekRecord('post', 1);
+        firstComment = env.store.peekRecord('comment', 1);
 
         env.store.createRecord('comment', {
           post: post
@@ -9832,14 +11029,35 @@ define(
       var post;
 
       run(function () {
-        post = env.store.push('post', { id: 1, comments: [1, 2] });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }]
+              }
+            }
+          }
+        });
+        post = env.store.peekRecord('post', 1);
       });
 
       run(function () {
         post.get('comments').then(async(function (fetchedComments) {
           equal(fetchedComments.get('length'), 2, 'comments fetched successfully');
           equal(fetchedComments.objectAt(0).get('body'), 'first', 'first comment loaded successfully');
-          env.store.push('post', { id: 1, comments: [1, 2, 3] });
+          env.store.push({
+            data: {
+              type: 'post',
+              id: '1',
+              relationships: {
+                comments: {
+                  data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
+                }
+              }
+            }
+          });
           post.get('comments').then(async(function (newlyFetchedComments) {
             equal(newlyFetchedComments.get('length'), 3, 'all three comments fetched successfully');
             equal(newlyFetchedComments.objectAt(2).get('body'), 'third', 'third comment loaded successfully');
@@ -9851,7 +11069,18 @@ define(
     test('A sync hasMany errors out if there are unlaoded records in it', function () {
       var post;
       run(function () {
-        post = env.store.push('post', { id: 1, comments: [1, 2] });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }]
+              }
+            }
+          }
+        });
+        post = env.store.peekRecord('post', 1);
       });
 
       expectAssertion(function () {
@@ -9863,39 +11092,116 @@ define(
       var comment1, comment2, comment3, comment4;
       var post;
       run(function () {
-        comment1 = env.store.push('comment', { id: 1 });
-        comment2 = env.store.push('comment', { id: 2 });
-        comment3 = env.store.push('comment', { id: 3 });
-        comment4 = env.store.push('comment', { id: 4 });
+        env.store.push({
+          data: [{
+            type: 'comment',
+            id: '1'
+          }, {
+            type: 'comment',
+            id: '2'
+          }, {
+            type: 'comment',
+            id: '3'
+          }, {
+            type: 'comment',
+            id: '4'
+          }]
+        });
+
+        comment1 = env.store.peekRecord('comment', 1);
+        comment2 = env.store.peekRecord('comment', 2);
+        comment3 = env.store.peekRecord('comment', 3);
+        comment4 = env.store.peekRecord('comment', 4);
       });
 
       run(function () {
-        post = env.store.push('post', { id: 1, comments: [1, 2] });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }]
+              }
+            }
+          }
+        });
+        post = env.store.peekRecord('post', 1);
       });
       deepEqual(post.get('comments').toArray(), [comment1, comment2], 'Initial ordering is correct');
 
       run(function () {
-        env.store.push('post', { id: 1, comments: [2, 1] });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '2' }, { type: 'comment', id: '1' }]
+              }
+            }
+          }
+        });
       });
       deepEqual(post.get('comments').toArray(), [comment2, comment1], 'Updated ordering is correct');
 
       run(function () {
-        env.store.push('post', { id: 1, comments: [2] });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '2' }]
+              }
+            }
+          }
+        });
       });
       deepEqual(post.get('comments').toArray(), [comment2], 'Updated ordering is correct');
 
       run(function () {
-        env.store.push('post', { id: 1, comments: [1, 2, 3, 4] });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }, { type: 'comment', id: '4' }]
+              }
+            }
+          }
+        });
       });
       deepEqual(post.get('comments').toArray(), [comment1, comment2, comment3, comment4], 'Updated ordering is correct');
 
       run(function () {
-        env.store.push('post', { id: 1, comments: [4, 3] });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '4' }, { type: 'comment', id: '3' }]
+              }
+            }
+          }
+        });
       });
       deepEqual(post.get('comments').toArray(), [comment4, comment3], 'Updated ordering is correct');
 
       run(function () {
-        env.store.push('post', { id: 1, comments: [4, 2, 3, 1] });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '4' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }, { type: 'comment', id: '1' }]
+              }
+            }
+          }
+        });
       });
       deepEqual(post.get('comments').toArray(), [comment4, comment2, comment3, comment1], 'Updated ordering is correct');
     });
@@ -9903,8 +11209,29 @@ define(
     test('Rollbacking attributes for deleted record restores implicit relationship correctly when the hasMany side has been deleted - async', function () {
       var book, chapter;
       run(function () {
-        book = env.store.push('book', { id: 1, title: 'Stanley\'s Amazing Adventures', chapters: [2] });
-        chapter = env.store.push('chapter', { id: 2, title: 'Sailing the Seven Seas' });
+        env.store.push({
+          data: {
+            type: 'book',
+            id: '1',
+            attributes: {
+              title: 'Stanley\'s Amazing Adventures'
+            },
+            relationships: {
+              chapters: {
+                data: [{ type: 'chapter', id: '2' }]
+              }
+            }
+          },
+          included: [{
+            type: 'chapter',
+            id: '2',
+            attributes: {
+              title: 'Sailing the Seven Seas'
+            }
+          }]
+        });
+        book = env.store.peekRecord('book', 1);
+        chapter = env.store.peekRecord('chapter', 2);
       });
       run(function () {
         chapter.deleteRecord();
@@ -9920,8 +11247,29 @@ define(
     test('Rollbacking attributes for deleted record restores implicit relationship correctly when the hasMany side has been deleted - sync', function () {
       var book, chapter;
       run(function () {
-        book = env.store.push('book', { id: 1, title: 'Stanley\'s Amazing Adventures', chapters: [2] });
-        chapter = env.store.push('chapter', { id: 2, title: 'Sailing the Seven Seas' });
+        env.store.push({
+          data: {
+            type: 'book',
+            id: '1',
+            attributes: {
+              title: 'Stanley\'s Amazing Adventures'
+            },
+            relationships: {
+              chapters: {
+                data: [{ type: 'chapter', id: '2' }]
+              }
+            }
+          },
+          included: [{
+            type: 'chapter',
+            id: '2',
+            attributes: {
+              title: 'Sailing the Seven Seas'
+            }
+          }]
+        });
+        book = env.store.peekRecord('book', 1);
+        chapter = env.store.peekRecord('chapter', 2);
       });
       run(function () {
         chapter.deleteRecord();
@@ -9938,8 +11286,29 @@ define(
       });
       var chapter, page;
       run(function () {
-        chapter = env.store.push('chapter', { id: 2, title: 'Sailing the Seven Seas' });
-        page = env.store.push('page', { id: 3, number: 1, chapter: 2 });
+        env.store.push({
+          data: {
+            type: 'chapter',
+            id: '2',
+            attributes: {
+              title: 'Sailing the Seven Seas'
+            }
+          },
+          included: [{
+            type: 'page',
+            id: '3',
+            attributes: {
+              number: 1
+            },
+            relationships: {
+              chapter: {
+                data: { type: 'chapter', id: '2' }
+              }
+            }
+          }]
+        });
+        chapter = env.store.peekRecord('chapter', 2);
+        page = env.store.peekRecord('page', 3);
       });
       run(function () {
         chapter.deleteRecord();
@@ -9955,8 +11324,29 @@ define(
     test('Rollbacking attributes for deleted record restores implicit relationship correctly when the belongsTo side has been deleted - sync', function () {
       var chapter, page;
       run(function () {
-        chapter = env.store.push('chapter', { id: 2, title: 'Sailing the Seven Seas' });
-        page = env.store.push('page', { id: 3, number: 1, chapter: 2 });
+        env.store.push({
+          data: {
+            type: 'chapter',
+            id: '2',
+            attributes: {
+              title: 'Sailing the Seven Seas'
+            }
+          },
+          included: [{
+            type: 'page',
+            id: '3',
+            attributes: {
+              number: 1
+            },
+            relationships: {
+              chapter: {
+                data: { type: 'chapter', id: '2' }
+              }
+            }
+          }]
+        });
+        chapter = env.store.peekRecord('chapter', 2);
+        page = env.store.peekRecord('page', 3);
       });
       run(function () {
         chapter.deleteRecord();
@@ -9973,9 +11363,36 @@ define(
       var observe = false;
 
       run(function () {
-        page = env.store.push('page', { id: 1, number: 1 });
-        page2 = env.store.push('page', { id: 2, number: 2 });
-        chapter = env.store.push('chapter', { id: 1, title: 'Sailing the Seven Seas', pages: [1, 2] });
+        env.store.push({
+          data: [{
+            type: 'page',
+            id: '1',
+            attributes: {
+              number: 1
+            }
+          }, {
+            type: 'page',
+            id: '2',
+            attributes: {
+              number: 2
+            }
+          }, {
+            type: 'chapter',
+            id: '1',
+            attributes: {
+              title: 'Sailing the Seven Seas'
+            },
+            relationships: {
+              pages: {
+                data: [{ type: 'page', id: '1' }, { type: 'page', id: '2' }]
+              }
+            }
+          }]
+        });
+        page = env.store.peekRecord('page', 1);
+        page2 = env.store.peekRecord('page', 2);
+        chapter = env.store.peekRecord('chapter', 1);
+
         chapter.get('pages').addEnumerableObserver(this, {
           willChange: function (pages, removing, addCount) {
             if (observe) {
@@ -10002,9 +11419,36 @@ define(
       var observe = false;
 
       run(function () {
-        page = env.store.push('page', { id: 1, number: 1 });
-        page2 = env.store.push('page', { id: 2, number: 2 });
-        chapter = env.store.push('chapter', { id: 1, title: 'Sailing the Seven Seas', pages: [1] });
+        env.store.push({
+          data: [{
+            type: 'page',
+            id: '1',
+            attributes: {
+              number: 1
+            }
+          }, {
+            type: 'page',
+            id: '2',
+            attributes: {
+              number: 2
+            }
+          }, {
+            type: 'chapter',
+            id: '1',
+            attributes: {
+              title: 'Sailing the Seven Seas'
+            },
+            relationships: {
+              pages: {
+                data: [{ type: 'page', id: '1' }]
+              }
+            }
+          }]
+        });
+        page = env.store.peekRecord('page', 1);
+        page2 = env.store.peekRecord('page', 2);
+        chapter = env.store.peekRecord('chapter', 1);
+
         chapter.get('pages').addEnumerableObserver(this, {
           willChange: function (pages, removing, addCount) {
             if (observe) {
@@ -10049,8 +11493,45 @@ define(
       });
 
       run(function () {
-        post = env.store.push('post', { id: 2, title: 'Sailing the Seven Seas', comments: [1, 2] });
-        env.store.pushMany('comment', [{ id: 1, post: 2 }, { id: 2, post: 2 }, { id: 3, post: 2 }]);
+        env.store.push({
+          data: [{
+            type: 'post',
+            id: '2',
+            attributes: {
+              title: 'Sailing the Seven Seas'
+            },
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }]
+              }
+            }
+          }, {
+            type: 'comment',
+            id: '1',
+            relationships: {
+              post: {
+                data: { type: 'post', id: '2' }
+              }
+            }
+          }, {
+            type: 'comment',
+            id: '2',
+            relationships: {
+              post: {
+                data: { type: 'post', id: '2' }
+              }
+            }
+          }, {
+            type: 'comment',
+            id: '3',
+            relationships: {
+              post: {
+                data: { type: 'post', id: '2' }
+              }
+            }
+          }]
+        });
+        post = env.store.peekRecord('post', 2);
       });
 
       run(function () {
@@ -10072,8 +11553,37 @@ define(
       });
 
       run(function () {
-        post = env.store.push('post', { id: 2, title: 'Sailing the Seven Seas', comments: [1, 2] });
-        env.store.pushMany('comment', [{ id: 1, post: 2 }, { id: 2, post: 2 }]);
+        env.store.push({
+          data: [{
+            type: 'post',
+            id: '2',
+            attributes: {
+              title: 'Sailing the Seven Seas'
+            },
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }]
+              }
+            }
+          }, {
+            type: 'comment',
+            id: '1',
+            relationships: {
+              post: {
+                data: { type: 'post', id: '2' }
+              }
+            }
+          }, {
+            type: 'comment',
+            id: '2',
+            relationships: {
+              post: {
+                data: { type: 'post', id: '2' }
+              }
+            }
+          }]
+        });
+        post = env.store.peekRecord('post', 2);
 
         // This line triggers the original bug that gets manifested
         // in teardown for apps, e.g. store.destroy that is caused by
@@ -10099,13 +11609,10 @@ define(
       var Post = DS.Model.extend({
         comments: DS.hasMany('comment', { async: true })
       });
-      var POST_FIXTURES = [{ id: 1, comments: [1, 2, 3] }];
 
       var Comment = DS.Model.extend({
         post: DS.belongsTo('post', { async: false })
       });
-
-      var COMMENT_FIXTURES = [{ id: 1 }, { id: 2 }, { id: 3 }];
 
       env = setupStore({
         post: Post,
@@ -10126,8 +11633,26 @@ define(
       }));
 
       run(function () {
-        env.store.pushMany('post', POST_FIXTURES);
-        env.store.pushMany('comment', COMMENT_FIXTURES);
+        env.store.push({
+          data: [{
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
+              }
+            }
+          }, {
+            type: 'comment',
+            id: '1'
+          }, {
+            type: 'comment',
+            id: '2'
+          }, {
+            type: 'comment',
+            id: '3'
+          }]
+        });
       });
 
       run(function () {
@@ -10257,7 +11782,13 @@ define(
     test('Model\'s hasMany relationship should not be created during model creation', function () {
       var user;
       run(function () {
-        user = env.store.push('user', { id: 1 });
+        env.store.push({
+          data: {
+            type: 'user',
+            id: '1'
+          }
+        });
+        user = env.store.peekRecord('user', 1);
         ok(!user._internalModel._relationships.has('messages'), 'Newly created record should not have relationships');
       });
     });
@@ -10279,11 +11810,30 @@ define(
       };
 
       run(function () {
-        book = env.store.push('book', { id: 1, title: 'Sailing the Seven Seas', meta: { chapters: 'the lefkada sea' }, links: { chapters: '/chapters' } });
+        env.store.push({
+          data: {
+            type: 'book',
+            id: '1',
+            attributes: {
+              title: 'Sailing the Seven Seas'
+            },
+            relationships: {
+              chapters: {
+                meta: {
+                  where: 'the lefkada sea'
+                },
+                links: {
+                  related: '/chapters'
+                }
+              }
+            }
+          }
+        });
+        book = env.store.peekRecord('book', 1);
       });
 
       run(function () {
-        equal(book._internalModel._relationships.get('chapters').meta, 'the lefkada sea', 'meta is there');
+        equal(book._internalModel._relationships.get('chapters').meta.where, 'the lefkada sea', 'meta is there');
       });
     });
 
@@ -10303,7 +11853,23 @@ define(
       var book;
 
       run(function () {
-        book = env.store.push('book', { id: 1, title: 'Sailing the Seven Seas', links: { chapters: '/chapters' } });
+        env.store.push({
+          data: {
+            type: 'book',
+            id: '1',
+            attributes: {
+              title: 'Sailing the Seven Seas'
+            },
+            relationships: {
+              chapters: {
+                links: {
+                  related: '/chapters'
+                }
+              }
+            }
+          }
+        });
+        book = env.store.peekRecord('book', 1);
       });
 
       run(function () {
@@ -10340,8 +11906,37 @@ define(
       var book1, book2;
 
       run(function () {
-        book1 = env.store.push('book', { id: 1, title: 'Sailing the Seven Seas', links: { chapters: 'chapters' } });
-        book2 = env.store.push('book', { id: 2, title: 'Another book title', links: { chapters: 'chapters' } });
+        env.store.push({
+          data: [{
+            type: 'book',
+            id: '1',
+            attributes: {
+              title: 'Sailing the Seven Seas'
+            },
+            relationships: {
+              chapters: {
+                links: {
+                  related: 'chapters'
+                }
+              }
+            }
+          }, {
+            type: 'book',
+            id: '2',
+            attributes: {
+              title: 'Another book title'
+            },
+            relationships: {
+              chapters: {
+                links: {
+                  related: 'chapters'
+                }
+              }
+            }
+          }]
+        });
+        book1 = env.store.peekRecord('book', 1);
+        book2 = env.store.peekRecord('book', 2);
       });
 
       run(function () {
@@ -13934,8 +15529,28 @@ define(
     test('Relationship is available from the belongsTo side even if only loaded from the inverse side - async', function () {
       var user, video;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', bestMessage: 2, bestMessageType: 'video' });
-        video = store.push('video', { id: 2, video: 'Here comes Youtube' });
+        store.push({
+          data: [{
+            type: 'user',
+            id: '1',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              bestMessage: {
+                data: { type: 'video', id: '2' }
+              }
+            }
+          }, {
+            type: 'video',
+            id: '2',
+            attributes: {
+              video: 'Here comes Youtube'
+            }
+          }]
+        });
+        user = store.peekRecord('user', 1);
+        video = store.peekRecord('video', 2);
       });
       run(function () {
         user.get('bestMessage').then(function (message) {
@@ -13953,8 +15568,23 @@ define(
     test('Setting the polymorphic belongsTo gets propagated to the inverse side - async', function () {
       var user, video;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley' });
-        video = store.push('video', { id: 2, video: 'Here comes Youtube' });
+        store.push({
+          data: [{
+            type: 'user',
+            id: '1',
+            attributes: {
+              name: 'Stanley'
+            }
+          }, {
+            type: 'video',
+            id: '2',
+            attributes: {
+              video: 'Here comes Youtube'
+            }
+          }]
+        });
+        user = store.peekRecord('user', 1);
+        video = store.peekRecord('video', 2);
       });
 
       run(function () {
@@ -13971,8 +15601,23 @@ define(
     test('Setting the polymorphic belongsTo with an object that does not implement the mixin errors out', function () {
       var user, video;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley' });
-        video = store.push('not-message', { id: 2, video: 'Here comes Youtube' });
+        store.push({
+          data: [{
+            type: 'user',
+            id: '1',
+            attributes: {
+              name: 'Stanley'
+            }
+          }, {
+            type: 'not-message',
+            id: '2',
+            attributes: {
+              video: 'Here comes Youtube'
+            }
+          }]
+        });
+        user = store.peekRecord('user', 1);
+        video = store.peekRecord('not-message', 2);
       });
 
       run(function () {
@@ -13990,8 +15635,23 @@ define(
       try {
         var user, video;
         run(function () {
-          user = store.push('user', { id: 1, name: 'Stanley' });
-          video = store.push('video', { id: 2, video: 'Here comes Youtube' });
+          store.push({
+            data: [{
+              type: 'user',
+              id: '1',
+              attributes: {
+                name: 'Stanley'
+              }
+            }, {
+              type: 'video',
+              id: '2',
+              attributes: {
+                video: 'Here comes Youtube'
+              }
+            }]
+          });
+          user = store.peekRecord('user', 1);
+          video = store.peekRecord('video', 2);
         });
 
         run(function () {
@@ -14015,8 +15675,23 @@ define(
       try {
         var user, video;
         run(function () {
-          user = store.push('user', { id: 1, name: 'Stanley' });
-          video = store.push('not-message', { id: 2, video: 'Here comes Youtube' });
+          store.push({
+            data: [{
+              type: 'user',
+              id: '1',
+              attributes: {
+                name: 'Stanley'
+              }
+            }, {
+              type: 'not-message',
+              id: '2',
+              attributes: {
+                video: 'Here comes Youtube'
+              }
+            }]
+          });
+          user = store.peekRecord('user', 1);
+          video = store.peekRecord('not-message', 2);
         });
 
         run(function () {
@@ -14099,8 +15774,28 @@ define(
     test('Relationship is available from the belongsTo side even if only loaded from the hasMany side - async', function () {
       var user, video;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', messages: [{ id: 2, type: 'video' }] });
-        video = store.push('video', { id: 2, video: 'Here comes Youtube' });
+        store.push({
+          data: [{
+            type: 'user',
+            id: '1',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              messages: {
+                data: [{ type: 'video', id: '2' }]
+              }
+            }
+          }, {
+            type: 'video',
+            id: '2',
+            attributes: {
+              video: 'Here comes Youtube'
+            }
+          }]
+        });
+        user = store.peekRecord('user', 1);
+        video = store.peekRecord('video', 2);
       });
       run(function () {
         user.get('messages').then(function (messages) {
@@ -14118,8 +15813,28 @@ define(
     test('Pushing to the hasMany reflects the change on the belongsTo side - async', function () {
       var user, video;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', messages: [] });
-        video = store.push('video', { id: 2, video: 'Here comes Youtube' });
+        store.push({
+          data: [{
+            type: 'user',
+            id: '1',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              messages: {
+                data: []
+              }
+            }
+          }, {
+            type: 'video',
+            id: '2',
+            attributes: {
+              video: 'Here comes Youtube'
+            }
+          }]
+        });
+        user = store.peekRecord('user', 1);
+        video = store.peekRecord('video', 2);
       });
 
       run(function () {
@@ -14138,8 +15853,28 @@ define(
     test('Pushing a an object that does not implement the mixin to the mixin accepting array errors out', function () {
       var user, notMessage;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', messages: [] });
-        notMessage = store.push('not-message', { id: 2, video: 'Here comes Youtube' });
+        store.push({
+          data: [{
+            type: 'user',
+            id: '1',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              messages: {
+                data: []
+              }
+            }
+          }, {
+            type: 'not-message',
+            id: '2',
+            attributes: {
+              video: 'Here comes Youtube'
+            }
+          }]
+        });
+        user = store.peekRecord('user', 1);
+        notMessage = store.peekRecord('not-message', 2);
       });
 
       run(function () {
@@ -14158,8 +15893,28 @@ define(
       try {
         var user, video;
         run(function () {
-          user = store.push('user', { id: 1, name: 'Stanley', messages: [] });
-          video = store.push('video', { id: 2, video: 'Here comes Youtube' });
+          store.push({
+            data: [{
+              type: 'user',
+              id: '1',
+              attributes: {
+                name: 'Stanley'
+              },
+              relationships: {
+                messages: {
+                  data: []
+                }
+              }
+            }, {
+              type: 'video',
+              id: '2',
+              attributes: {
+                video: 'Here comes Youtube'
+              }
+            }]
+          });
+          user = store.peekRecord('user', 1);
+          video = store.peekRecord('video', 2);
         });
 
         run(function () {
@@ -14185,8 +15940,28 @@ define(
       try {
         var user, notMessage;
         run(function () {
-          user = store.push('user', { id: 1, name: 'Stanley', messages: [] });
-          notMessage = store.push('not-message', { id: 2, video: 'Here comes Youtube' });
+          store.push({
+            data: [{
+              type: 'user',
+              id: '1',
+              attributes: {
+                name: 'Stanley'
+              },
+              relationships: {
+                messages: {
+                  data: []
+                }
+              }
+            }, {
+              type: 'not-message',
+              id: '2',
+              attributes: {
+                video: 'Here comes Youtube'
+              }
+            }]
+          });
+          user = store.peekRecord('user', 1);
+          notMessage = store.peekRecord('not-message', 2);
         });
 
         run(function () {
@@ -15070,7 +16845,16 @@ define(
     test('serialize with embedded objects (unknown hasMany relationship)', function () {
       var league;
       run(function () {
-        league = env.store.push('home-planet', { name: 'Villain League', id: '123' });
+        env.store.push({
+          data: {
+            type: 'home-planet',
+            id: '123',
+            attributes: {
+              name: 'Villain League'
+            }
+          }
+        });
+        league = env.store.peekRecord('home-planet', 123);
       });
 
       env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
@@ -16435,7 +18219,16 @@ define(
       var parentPost;
 
       run(function () {
-        parentPost = env.store.push('post', { id: 2, title: 'Rails is omakase' });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '2',
+            attributes: {
+              title: 'Rails is omakase'
+            }
+          }
+        });
+        parentPost = env.store.peekRecord('post', 2);
         post = env.store.createRecord('post', { title: 'Rails is omakase', parentPost: parentPost });
       });
 
@@ -17503,7 +19296,16 @@ define(
       expect(1);
 
       run(function () {
-        var post = env.store.push("post", { id: 1, title: "Hello World" });
+        env.store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              title: "Hello World"
+            }
+          }
+        });
+        var post = env.store.peekRecord("post", 1);
         var snapshot = post._createSnapshot();
 
         ok(snapshot instanceof DS.Snapshot, "snapshot is an instance of DS.Snapshot");
@@ -17514,7 +19316,16 @@ define(
       expect(3);
 
       run(function () {
-        var post = env.store.push("post", { id: 1, title: "Hello World" });
+        env.store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              title: "Hello World"
+            }
+          }
+        });
+        var post = env.store.peekRecord("post", 1);
         var snapshot = post._createSnapshot();
 
         equal(snapshot.id, "1", "id is correct");
@@ -17527,7 +19338,16 @@ define(
       expect(2);
 
       run(function () {
-        var post = env.store.push("post", { id: 1, title: "Hello World" });
+        env.store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              title: "Hello World"
+            }
+          }
+        });
+        var post = env.store.peekRecord("post", 1);
         var snapshot = post._createSnapshot();
 
         equal(snapshot.attr("title"), "Hello World", "snapshot title is correct");
@@ -17540,7 +19360,16 @@ define(
       expect(1);
 
       run(function () {
-        var post = env.store.push("post", { id: 1, title: "Hello World" });
+        env.store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              title: "Hello World"
+            }
+          }
+        });
+        var post = env.store.peekRecord("post", 1);
         var snapshot = post._createSnapshot();
 
         throws(function () {
@@ -17553,7 +19382,16 @@ define(
       expect(1);
 
       run(function () {
-        var post = env.store.push("post", { id: 1, title: "Hello World" });
+        env.store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              title: "Hello World"
+            }
+          }
+        });
+        var post = env.store.peekRecord("post", 1);
         var snapshot = post._createSnapshot();
 
         var attributes = snapshot.attributes();
@@ -17566,7 +19404,16 @@ define(
       expect(1);
 
       run(function () {
-        var post = env.store.push("post", { id: 1, title: "Hello World" });
+        env.store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              title: "Hello World"
+            }
+          }
+        });
+        var post = env.store.peekRecord("post", 1);
         post.set("title", "Hello World!");
         var snapshot = post._createSnapshot();
 
@@ -17580,7 +19427,16 @@ define(
       expect(1);
 
       run(function () {
-        var comment = env.store.push("comment", { id: 1, body: "This is comment" });
+        env.store.push({
+          data: {
+            type: "comment",
+            id: "1",
+            attributes: {
+              body: "This is comment"
+            }
+          }
+        });
+        var comment = env.store.peekRecord("comment", 1);
         var snapshot = comment._createSnapshot();
         var relationship = snapshot.belongsTo("post");
 
@@ -17592,8 +19448,27 @@ define(
       expect(1);
 
       run(function () {
-        env.store.push("post", { id: 1, title: "Hello World" });
-        var comment = env.store.push("comment", { id: 2, body: "This is comment", post: null });
+        env.store.push({
+          data: [{
+            type: "post",
+            id: "1",
+            attributes: {
+              title: "Hello World"
+            }
+          }, {
+            type: "comment",
+            id: "2",
+            attributes: {
+              body: "This is comment"
+            },
+            relationships: {
+              post: {
+                data: null
+              }
+            }
+          }]
+        });
+        var comment = env.store.peekRecord("comment", 2);
         var snapshot = comment._createSnapshot();
         var relationship = snapshot.belongsTo("post");
 
@@ -17605,8 +19480,27 @@ define(
       expect(3);
 
       run(function () {
-        env.store.push("post", { id: 1, title: "Hello World" });
-        var comment = env.store.push("comment", { id: 2, body: "This is comment", post: 1 });
+        env.store.push({
+          data: [{
+            type: "post",
+            id: "1",
+            attributes: {
+              title: "Hello World"
+            }
+          }, {
+            type: "comment",
+            id: "2",
+            attributes: {
+              body: "This is comment"
+            },
+            relationships: {
+              post: {
+                data: { type: "post", id: "1" }
+              }
+            }
+          }]
+        });
+        var comment = env.store.peekRecord("comment", 2);
         var snapshot = comment._createSnapshot();
         var relationship = snapshot.belongsTo("post");
 
@@ -17620,8 +19514,28 @@ define(
       expect(1);
 
       run(function () {
-        var post = env.store.push("post", { id: 1, title: "Hello World" });
-        var comment = env.store.push("comment", { id: 2, body: "This is comment", post: 1 });
+        env.store.push({
+          data: [{
+            type: "post",
+            id: "1",
+            attributes: {
+              title: "Hello World"
+            }
+          }, {
+            type: "comment",
+            id: "2",
+            attributes: {
+              body: "This is comment"
+            },
+            relationships: {
+              post: {
+                data: { type: "post", id: "1" }
+              }
+            }
+          }]
+        });
+        var post = env.store.peekRecord("post", 1);
+        var comment = env.store.peekRecord("comment", 2);
 
         post.deleteRecord();
 
@@ -17636,7 +19550,23 @@ define(
       expect(1);
 
       run(function () {
-        var comment = env.store.push("comment", { id: 2, body: "This is comment", links: { post: "post" } });
+        env.store.push({
+          data: {
+            type: "comment",
+            id: "2",
+            attributes: {
+              body: "This is comment"
+            },
+            relationships: {
+              post: {
+                links: {
+                  related: "post"
+                }
+              }
+            }
+          }
+        });
+        var comment = env.store.peekRecord("comment", 2);
         var snapshot = comment._createSnapshot();
         var relationship = snapshot.belongsTo("post");
 
@@ -17648,7 +19578,16 @@ define(
       expect(1);
 
       run(function () {
-        var post = env.store.push("post", { id: 1, title: "Hello World" });
+        env.store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              title: "Hello World"
+            }
+          }
+        });
+        var post = env.store.peekRecord("post", 1);
         var snapshot = post._createSnapshot();
 
         throws(function () {
@@ -17665,7 +19604,23 @@ define(
       };
 
       run(function () {
-        var comment = env.store.push("comment", { id: 2, body: "This is comment", links: { post: "post" } });
+        env.store.push({
+          data: {
+            type: "comment",
+            id: "2",
+            attributes: {
+              body: "This is comment"
+            },
+            relationships: {
+              post: {
+                links: {
+                  related: "post"
+                }
+              }
+            }
+          }
+        });
+        var comment = env.store.peekRecord("comment", 2);
 
         comment.get("post").then(function (post) {
           var snapshot = comment._createSnapshot();
@@ -17681,8 +19636,23 @@ define(
       expect(4);
 
       run(function () {
-        var post = env.store.push("post", { id: 1, title: "Hello World" });
-        var comment = env.store.push("comment", { id: 2, body: "blabla" });
+        env.store.push({
+          data: [{
+            type: "post",
+            id: "1",
+            attributes: {
+              title: "Hello World"
+            }
+          }, {
+            type: "comment",
+            id: "2",
+            attributes: {
+              body: "This is comment"
+            }
+          }]
+        });
+        var post = env.store.peekRecord("post", 1);
+        var comment = env.store.peekRecord("comment", 2);
 
         post.get("comments").then(function (comments) {
           comments.addObject(comment);
@@ -17706,8 +19676,23 @@ define(
       expect(4);
 
       run(function () {
-        var post = env.store.push("post", { id: 1, title: "Hello World" });
-        var comment = env.store.push("comment", { id: 2, body: "blabla" });
+        env.store.push({
+          data: [{
+            type: "post",
+            id: "1",
+            attributes: {
+              title: "Hello World"
+            }
+          }, {
+            type: "comment",
+            id: "2",
+            attributes: {
+              body: "This is comment"
+            }
+          }]
+        });
+        var post = env.store.peekRecord("post", 1);
+        var comment = env.store.peekRecord("comment", 2);
 
         comment.set("post", post);
 
@@ -17729,8 +19714,27 @@ define(
       expect(1);
 
       run(function () {
-        env.store.push("post", { id: 1, title: "Hello World" });
-        var comment = env.store.push("comment", { id: 2, body: "This is comment", post: 1 });
+        env.store.push({
+          data: [{
+            type: "post",
+            id: "1",
+            attributes: {
+              title: "Hello World"
+            }
+          }, {
+            type: "comment",
+            id: "2",
+            attributes: {
+              body: "This is comment"
+            },
+            relationships: {
+              post: {
+                data: { type: "post", id: "1" }
+              }
+            }
+          }]
+        });
+        var comment = env.store.peekRecord("comment", 2);
         var snapshot = comment._createSnapshot();
         var relationship = snapshot.belongsTo("post", { id: true });
 
@@ -17742,8 +19746,28 @@ define(
       expect(1);
 
       run(function () {
-        var post = env.store.push("post", { id: 1, title: "Hello World" });
-        var comment = env.store.push("comment", { id: 2, body: "This is comment", post: 1 });
+        env.store.push({
+          data: [{
+            type: "post",
+            id: "1",
+            attributes: {
+              title: "Hello World"
+            }
+          }, {
+            type: "comment",
+            id: "2",
+            attributes: {
+              body: "This is comment"
+            },
+            relationships: {
+              post: {
+                data: { type: "post", id: "1" }
+              }
+            }
+          }]
+        });
+        var post = env.store.peekRecord("post", 1);
+        var comment = env.store.peekRecord("comment", 2);
 
         post.deleteRecord();
 
@@ -17758,7 +19782,16 @@ define(
       expect(1);
 
       run(function () {
-        var post = env.store.push("post", { id: 1, title: "Hello World" });
+        env.store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              title: "Hello World"
+            }
+          }
+        });
+        var post = env.store.peekRecord("post", 1);
         var snapshot = post._createSnapshot();
         var relationship = snapshot.hasMany("comments");
 
@@ -17766,11 +19799,25 @@ define(
       });
     });
 
-    test("snapshot.hasMany() returns empty array if relationship is unset", function () {
+    test("snapshot.hasMany() returns empty array if relationship is empty", function () {
       expect(2);
 
       run(function () {
-        var post = env.store.push("post", { id: 1, title: "Hello World", comments: null });
+        env.store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              title: "Hello World"
+            },
+            relationships: {
+              comments: {
+                data: []
+              }
+            }
+          }
+        });
+        var post = env.store.peekRecord("post", 1);
         var snapshot = post._createSnapshot();
         var relationship = snapshot.hasMany("comments");
 
@@ -17783,9 +19830,33 @@ define(
       expect(5);
 
       run(function () {
-        env.store.push("comment", { id: 1, body: "This is the first comment" });
-        env.store.push("comment", { id: 2, body: "This is the second comment" });
-        var post = env.store.push("post", { id: 3, title: "Hello World", comments: [1, 2] });
+        env.store.push({
+          data: [{
+            type: "comment",
+            id: "1",
+            attributes: {
+              body: "This is the first comment"
+            }
+          }, {
+            type: "comment",
+            id: "2",
+            attributes: {
+              body: "This is the second comment"
+            }
+          }, {
+            type: "post",
+            id: "3",
+            attributes: {
+              title: "Hello World"
+            },
+            relationships: {
+              comments: {
+                data: [{ type: "comment", id: "1" }, { type: "comment", id: "2" }]
+              }
+            }
+          }]
+        });
+        var post = env.store.peekRecord("post", 3);
         var snapshot = post._createSnapshot();
         var relationship = snapshot.hasMany("comments");
 
@@ -17805,9 +19876,35 @@ define(
       expect(2);
 
       run(function () {
-        var comment1 = env.store.push("comment", { id: 1, body: "This is the first comment" });
-        var comment2 = env.store.push("comment", { id: 2, body: "This is the second comment" });
-        var post = env.store.push("post", { id: 3, title: "Hello World", comments: [1, 2] });
+        env.store.push({
+          data: [{
+            type: "comment",
+            id: "1",
+            attributes: {
+              body: "This is the first comment"
+            }
+          }, {
+            type: "comment",
+            id: "2",
+            attributes: {
+              body: "This is the second comment"
+            }
+          }, {
+            type: "post",
+            id: "3",
+            attributes: {
+              title: "Hello World"
+            },
+            relationships: {
+              comments: {
+                data: [{ type: "comment", id: "1" }, { type: "comment", id: "2" }]
+              }
+            }
+          }]
+        });
+        var comment1 = env.store.peekRecord("comment", 1);
+        var comment2 = env.store.peekRecord("comment", 2);
+        var post = env.store.peekRecord("post", 3);
 
         comment1.deleteRecord();
         comment2.deleteRecord();
@@ -17824,7 +19921,21 @@ define(
       expect(1);
 
       run(function () {
-        var post = env.store.push("post", { id: 1, title: "Hello World", comments: [2, 3] });
+        env.store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              title: "Hello World"
+            },
+            relationships: {
+              comments: {
+                data: [{ type: "comment", id: "2" }, { type: "comment", id: "3" }]
+              }
+            }
+          }
+        });
+        var post = env.store.peekRecord("post", 1);
         var snapshot = post._createSnapshot();
         var relationship = snapshot.hasMany("comments", { ids: true });
 
@@ -17836,9 +19947,35 @@ define(
       expect(2);
 
       run(function () {
-        var comment1 = env.store.push("comment", { id: 1, body: "This is the first comment" });
-        var comment2 = env.store.push("comment", { id: 2, body: "This is the second comment" });
-        var post = env.store.push("post", { id: 3, title: "Hello World", comments: [1, 1] });
+        env.store.push({
+          data: [{
+            type: "comment",
+            id: "1",
+            attributes: {
+              body: "This is the first comment"
+            }
+          }, {
+            type: "comment",
+            id: "2",
+            attributes: {
+              body: "This is the second comment"
+            }
+          }, {
+            type: "post",
+            id: "3",
+            attributes: {
+              title: "Hello World"
+            },
+            relationships: {
+              comments: {
+                data: [{ type: "comment", id: "1" }, { type: "comment", id: "2" }]
+              }
+            }
+          }]
+        });
+        var comment1 = env.store.peekRecord("comment", 1);
+        var comment2 = env.store.peekRecord("comment", 2);
+        var post = env.store.peekRecord("post", 3);
 
         comment1.deleteRecord();
         comment2.deleteRecord();
@@ -17855,7 +19992,23 @@ define(
       expect(1);
 
       run(function () {
-        var post = env.store.push("post", { id: 1, title: "Hello World", links: { comments: "comments" } });
+        env.store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              title: "Hello World"
+            },
+            relationships: {
+              comments: {
+                links: {
+                  related: "comments"
+                }
+              }
+            }
+          }
+        });
+        var post = env.store.peekRecord("post", 1);
         var snapshot = post._createSnapshot();
         var relationship = snapshot.hasMany("comments");
 
@@ -17871,7 +20024,23 @@ define(
       };
 
       run(function () {
-        var post = env.store.push("post", { id: 1, title: "Hello World", links: { comments: "comments" } });
+        env.store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              title: "Hello World"
+            },
+            relationships: {
+              comments: {
+                links: {
+                  related: "comments"
+                }
+              }
+            }
+          }
+        });
+        var post = env.store.peekRecord("post", 1);
 
         post.get("comments").then(function (comments) {
           var snapshot = post._createSnapshot();
@@ -17887,7 +20056,16 @@ define(
       expect(1);
 
       run(function () {
-        var post = env.store.push("post", { id: 1, title: "Hello World" });
+        env.store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              title: "Hello World"
+            }
+          }
+        });
+        var post = env.store.peekRecord("post", 1);
         var snapshot = post._createSnapshot();
 
         throws(function () {
@@ -17900,10 +20078,40 @@ define(
       expect(3);
 
       run(function () {
-        env.store.push("comment", { id: 1, body: "This is the first comment" });
-        env.store.push("comment", { id: 2, body: "This is the second comment" });
-        var comment3 = env.store.push("comment", { id: 3, body: "This is the third comment" });
-        var post = env.store.push("post", { id: 4, title: "Hello World", comments: [1, 2, 3] });
+        env.store.push({
+          data: [{
+            type: "comment",
+            id: "1",
+            attributes: {
+              body: "This is the first comment"
+            }
+          }, {
+            type: "comment",
+            id: "2",
+            attributes: {
+              body: "This is the second comment"
+            }
+          }, {
+            type: "comment",
+            id: "3",
+            attributes: {
+              body: "This is the third comment"
+            }
+          }, {
+            type: "post",
+            id: "4",
+            attributes: {
+              title: "Hello World"
+            },
+            relationships: {
+              comments: {
+                data: [{ type: "comment", id: "1" }, { type: "comment", id: "2" }, { type: "comment", id: "3" }]
+              }
+            }
+          }]
+        });
+        var comment3 = env.store.peekRecord("comment", 3);
+        var post = env.store.peekRecord("post", 4);
 
         post.get("comments").removeObject(comment3);
         post.get("comments").insertAt(0, comment3);
@@ -17921,7 +20129,16 @@ define(
       expect(1);
 
       run(function () {
-        var post = env.store.push("post", { id: 1, title: "Hello World" });
+        env.store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              title: "Hello World"
+            }
+          }
+        });
+        var post = env.store.peekRecord("post", 1);
         var snapshot = post._createSnapshot();
 
         var attributes = [];
@@ -17944,8 +20161,23 @@ define(
       };
 
       run(function () {
-        var comment = env.store.push("comment", { id: 1, body: "This is the first comment" });
-        var post = env.store.push("post", { id: 2, title: "Hello World" });
+        env.store.push({
+          data: [{
+            type: "comment",
+            id: "1",
+            attributes: {
+              body: "This is the first comment"
+            }
+          }, {
+            type: "post",
+            id: "2",
+            attributes: {
+              title: "Hello World"
+            }
+          }]
+        });
+        var comment = env.store.peekRecord("comment", 1);
+        var post = env.store.peekRecord("post", 2);
         var snapshot;
 
         snapshot = comment._createSnapshot();
@@ -17964,7 +20196,21 @@ define(
       };
 
       run(function () {
-        var comment = env.store.push("comment", { id: 2, body: "This is comment", post: 1 });
+        env.store.push({
+          data: {
+            type: "comment",
+            id: "1",
+            attributes: {
+              body: "This is the first comment"
+            },
+            relationships: {
+              post: {
+                data: { type: "post", id: "2" }
+              }
+            }
+          }
+        });
+        var comment = env.store.peekRecord("comment", 1);
         var snapshot = comment._createSnapshot();
 
         snapshot.belongsTo("post");
@@ -17979,7 +20225,21 @@ define(
       };
 
       run(function () {
-        var post = env.store.push("post", { id: 1, title: "Hello World", comments: [2, 3] });
+        env.store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              title: "Hello World"
+            },
+            relationships: {
+              comments: {
+                data: [{ type: "comment", id: "2" }, { type: "comment", id: "3" }]
+              }
+            }
+          }
+        });
+        var post = env.store.peekRecord("post", 1);
         var snapshot = post._createSnapshot();
 
         snapshot.hasMany("comments");
@@ -17990,7 +20250,16 @@ define(
       expect(2);
 
       run(function () {
-        var post = env.store.push("post", { id: 1, title: "Hello World" });
+        env.store.push({
+          data: {
+            type: "post",
+            id: "1",
+            attributes: {
+              title: "Hello World"
+            }
+          }
+        });
+        var post = env.store.peekRecord("post", 1);
         var snapshot = post._createSnapshot();
 
         post.set("title", "New Title");
@@ -18130,18 +20399,34 @@ define(
     test('destroying the store correctly cleans everything up', function () {
       var car, person;
       run(function () {
-        car = store.push('car', {
-          id: 1,
-          make: 'BMC',
-          model: 'Mini',
-          person: 1
+        store.push({
+          data: [{
+            type: 'car',
+            id: '1',
+            attributes: {
+              make: 'BMC',
+              model: 'Mini'
+            },
+            relationships: {
+              person: {
+                data: { type: 'person', id: '1' }
+              }
+            }
+          }, {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            },
+            relationships: {
+              cars: {
+                data: [{ type: 'car', id: '1' }]
+              }
+            }
+          }]
         });
-
-        person = store.push('person', {
-          id: 1,
-          name: 'Tom Dale',
-          cars: [1]
-        });
+        car = store.peekRecord('car', 1);
+        person = store.peekRecord('person', 1);
       });
 
       var personWillDestroy = tap(person, 'willDestroy');
@@ -18242,12 +20527,19 @@ define(
       var car;
 
       run(function () {
-        car = store.push('car', {
-          id: 1,
-          make: 'BMC',
-          model: 'Mini'
+        store.push({
+          data: {
+            type: 'car',
+            id: '1',
+            attributes: {
+              make: 'BMC',
+              model: 'Mini'
+            }
+          }
         });
+        car = store.peekRecord('car', 1);
       });
+
       ajaxResponse({
         cars: [{
           id: 1,
@@ -18300,10 +20592,15 @@ define(
       expect(3);
 
       run(function () {
-        store.push('car', {
-          id: 1,
-          make: 'BMC',
-          model: 'Mini'
+        store.push({
+          data: {
+            type: 'car',
+            id: '1',
+            attributes: {
+              make: 'BMC',
+              model: 'Mini'
+            }
+          }
         });
       });
 
@@ -18335,8 +20632,23 @@ define(
       expect(4);
 
       run(function () {
-        store.push('car', { id: 1, make: 'BMC', model: 'Mini' });
-        store.push('car', { id: 2, make: 'BMCW', model: 'Isetta' });
+        store.push({
+          data: [{
+            type: 'car',
+            id: '1',
+            attributes: {
+              make: 'BMC',
+              model: 'Mini'
+            }
+          }, {
+            type: 'car',
+            id: '2',
+            attributes: {
+              make: 'BMCW',
+              model: 'Isetta'
+            }
+          }]
+        });
       });
 
       ajaxResponse({
@@ -18374,10 +20686,19 @@ define(
       });
 
       run(function () {
-        store.push('person', {
-          id: 1,
-          name: 'Tom Dale',
-          cars: [20]
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            },
+            relationships: {
+              cars: {
+                data: [{ type: 'car', id: '20' }]
+              }
+            }
+          }
         });
       });
 
@@ -18420,10 +20741,16 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', {
-          id: 1,
-          name: 'Tom Dale'
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            }
+          }
         });
+        person = store.peekRecord('person', 1);
       });
 
       ok(store.hasRecordForId('person', 1), 'expected the record to be in the store');
@@ -18647,7 +20974,7 @@ define(
       __exports__[name] = value;
     }
 
-    var Person, array, store;
+    var Person, store;
     var run = Ember.run;
 
     var adapter = DS.Adapter.extend({
@@ -18656,42 +20983,62 @@ define(
       }
     });
 
-    module('unit/adapter_populated_record_array - DS.AdapterPopulatedRecordArray', {
+    module("unit/adapter_populated_record_array - DS.AdapterPopulatedRecordArray", {
       setup: function () {
         Person = DS.Model.extend({
-          name: DS.attr('string')
+          name: DS.attr("string")
         });
 
         store = createStore({
           adapter: adapter,
           person: Person
         });
-        array = [{ id: '1', name: 'Scumbag Dale' }, { id: '2', name: 'Scumbag Katz' }, { id: '3', name: 'Scumbag Bryn' }];
       }
     });
 
-    test('when a record is deleted in an adapter populated record array, it should be removed', function () {
-      var recordArray = store.recordArrayManager.createAdapterPopulatedRecordArray(store.modelFor('person'), null);
+    test("when a record is deleted in an adapter populated record array, it should be removed", function () {
+      var recordArray = store.recordArrayManager.createAdapterPopulatedRecordArray(store.modelFor("person"), null);
 
       run(function () {
-        recordArray.load(array);
+        var records = store.push({
+          data: [{
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Scumbag Dale"
+            }
+          }, {
+            type: "person",
+            id: "2",
+            attributes: {
+              name: "Scumbag Katz"
+            }
+          }, {
+            type: "person",
+            id: "3",
+            attributes: {
+              name: "Scumbag Bryn"
+            }
+          }]
+        });
+        recordArray.loadRecords(records);
       });
 
-      equal(recordArray.get('length'), 3, 'expected recordArray to contain exactly 3 records');
+      equal(recordArray.get("length"), 3, "expected recordArray to contain exactly 3 records");
 
       run(function () {
-        recordArray.get('firstObject').destroyRecord();
+        recordArray.get("firstObject").destroyRecord();
       });
 
-      equal(recordArray.get('length'), 2, 'expected recordArray to contain exactly 2 records');
+      equal(recordArray.get("length"), 2, "expected recordArray to contain exactly 2 records");
     });
 
-    test('recordArray.replace() throws error', function () {
+    test("recordArray.replace() throws error", function () {
       var recordArray = store.recordArrayManager.createAdapterPopulatedRecordArray(Person, null);
 
       throws(function () {
         recordArray.replace();
-      }, Error('The result of a server query (on (subclass of DS.Model)) is immutable.'), 'throws error');
+      }, Error("The result of a server query (on (subclass of DS.Model)) is immutable."), "throws error");
     });
   }
 );
@@ -19288,10 +21635,34 @@ define(
           }
         });
 
-        store.push('tag', { id: 1, name: 'Ember.js' });
-        store.push('tag', { id: 2, name: 'Tomster' });
+        store.push({
+          data: [{
+            type: 'tag',
+            id: '1',
+            attributes: {
+              name: 'Ember.js'
+            }
+          }, {
+            type: 'tag',
+            id: '2',
+            attributes: {
+              name: 'Tomster'
+            }
+          }, {
+            type: 'post',
+            id: '3',
+            attributes: {
+              title: 'A framework for creating ambitious web applications'
+            },
+            relationships: {
+              tags: {
+                data: [{ type: 'tag', id: '1' }, { type: 'tag', id: '2' }]
+              }
+            }
+          }]
+        });
+        var post = store.peekRecord('post', 3);
 
-        var post = store.push('post', { id: 3, title: 'A framework for creating ambitious web applications', tags: [1, 2] });
         post.get('tags').save().then(function () {
           ok(true, 'manyArray.save() promise resolved');
         });
@@ -19320,10 +21691,50 @@ define(
         }
       });
       run(function () {
-        store.push('tag', { id: 1, name: 'Ember.js' });
-        store.push('tag', { id: 2, name: 'Ember Data' });
-        var post = store.push('post', { id: 2, title: 'A framework for creating ambitious web applications', tags: [1] });
-        post = store.push('post', { id: 2, title: 'A framework for creating ambitious web applications', tags: [1, 2] });
+        store.push({
+          data: [{
+            type: 'tag',
+            id: '1',
+            attributes: {
+              name: 'Ember.js'
+            }
+          }, {
+            type: 'tag',
+            id: '2',
+            attributes: {
+              name: 'Tomster'
+            }
+          }, {
+            type: 'post',
+            id: '3',
+            attributes: {
+              title: 'A framework for creating ambitious web applications'
+            },
+            relationships: {
+              tags: {
+                data: [{ type: 'tag', id: '1' }]
+              }
+            }
+          }]
+        });
+        var post = store.peekRecord('post', 3);
+
+        store.push({
+          data: {
+            type: 'post',
+            id: '3',
+            attributes: {
+              title: 'A framework for creating ambitious web applications'
+            },
+            relationships: {
+              tags: {
+                data: [{ type: 'tag', id: '1' }, { type: 'tag', id: '2' }]
+              }
+            }
+          }
+        });
+
+        post = store.peekRecord('post', 3);
       });
       DS.ManyArray.reopen({
         arrayContentWillChange: originalArrayContentWillChange,
@@ -19345,7 +21756,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
   var set = Ember.set;
   var run = Ember.run;
 
-  var Person, store, array, env;
+  var Person, store, env;
 
   module('unit/model - DS.Model', {
     setup: function () {
@@ -19383,7 +21794,17 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     expect(2);
 
     run(function () {
-      store.push('person', { id: 1, name: 'Peter', isDrugAddict: true });
+      store.push({
+        data: {
+          type: 'person',
+          id: '1',
+          attributes: {
+            name: 'Peter',
+            isDrugAddict: true
+          }
+        }
+      });
+
       store.findRecord('person', 1).then(function (person) {
         equal(person.get('hasDirtyAttributes'), false, 'precond - person record should not be dirty');
 
@@ -19399,7 +21820,16 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     expect(3);
 
     run(function () {
-      store.push('person', { id: 1, name: 'Peter', isDrugAddict: true });
+      store.push({
+        data: {
+          type: 'person',
+          id: '1',
+          attributes: {
+            name: 'Peter',
+            isDrugAddict: true
+          }
+        }
+      });
       store.findRecord('person', 1).then(function (person) {
         equal(person.get('hasDirtyAttributes'), false, 'precond - person record should not be dirty');
         person.set('isDrugAddict', false);
@@ -19414,7 +21844,16 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     expect(5);
 
     run(function () {
-      store.push('person', { id: 1, name: 'Peter', isDrugAddict: true });
+      store.push({
+        data: {
+          type: 'person',
+          id: '1',
+          attributes: {
+            name: 'Peter',
+            isDrugAddict: true
+          }
+        }
+      });
       store.findRecord('person', 1).then(function (person) {
         equal(person.get('hasDirtyAttributes'), false, 'precond - person record should not be dirty');
         person.set('isDrugAddict', false);
@@ -19433,7 +21872,12 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     expect(1);
 
     run(function () {
-      store.push('person', { id: 1 });
+      store.push({
+        data: {
+          type: 'person',
+          id: '1'
+        }
+      });
       store.findRecord('person', 1).then(function (record) {
         equal(get(record, 'id'), 1, 'reports id as id by default');
       });
@@ -19444,7 +21888,12 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     expect(1);
 
     run(function () {
-      store.push('person', { id: 1 });
+      store.push({
+        data: {
+          type: 'person',
+          id: '1'
+        }
+      });
       store.findRecord('person', 1).then(function (record) {
         equal(record.toString(), '<(subclass of DS.Model):' + Ember.guidFor(record) + ':1>', 'reports id in toString');
       });
@@ -19463,7 +21912,15 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
     expectAssertion(function () {
       run(function () {
-        store.push('person', { id: 1, name: 'Scumdale' });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Scumdale'
+            }
+          }
+        });
         store.findRecord('person', 1);
       });
     }, /You may not set `id`/);
@@ -19478,7 +21935,13 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
         Object.prototype.watch = function () {};
       }
       run(function () {
-        store.push('person', { id: 'watch' });
+        store.push({
+          data: {
+            type: 'person',
+            id: 'watch'
+          }
+        });
+
         store.findRecord('person', 'watch').then(function (record) {
           equal(get(record, 'id'), 'watch', 'record is successfully created and could be found by its id');
         });
@@ -19519,7 +21982,12 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     var date = new Date(dateString);
 
     run(function () {
-      store.push('post', { id: 1 });
+      store.push({
+        data: {
+          type: 'post',
+          id: '1'
+        }
+      });
       store.findRecord('post', 1).then(function (record) {
         run(function () {
           record.set('updatedAt', date);
@@ -19548,7 +22016,17 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     var mascot;
 
     run(function () {
-      mascot = store.push('mascot', { id: 1, likes: 'JavaScript', isMascot: true });
+      store.push({
+        data: {
+          type: 'mascot',
+          id: '1',
+          attributes: {
+            likes: 'JavaScript',
+            isMascot: true
+          }
+        }
+      });
+      mascot = store.peekRecord('mascot', 1);
     });
 
     equal(Object.keys(mascot.changedAttributes()).length, 0, 'there are no initial changes');
@@ -19632,34 +22110,63 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
   test('supports pushedData in root.deleted.uncommitted', function () {
     var record;
-    var hash = { id: 1 };
+    var hash = {
+      data: {
+        type: 'person',
+        id: '1'
+      }
+    };
     run(function () {
-      record = store.push('person', hash);
+      record = store.push(hash);
       record.deleteRecord();
-      store.push('person', hash);
+      store.push(hash);
       equal(get(record, 'currentState.stateName'), 'root.deleted.uncommitted', 'record accepts pushedData is in root.deleted.uncommitted state');
     });
   });
 
   test('currentState is accessible when the record is created', function () {
     var record;
-    var hash = { id: 1 };
+    var hash = {
+      data: {
+        type: 'person',
+        id: '1'
+      }
+    };
     run(function () {
-      record = store.push('person', hash);
+      record = store.push(hash);
       equal(get(record, 'currentState.stateName'), 'root.loaded.saved', 'records pushed into the store start in the loaded state');
     });
   });
 
   module('unit/model - DS.Model updating', {
     setup: function () {
-      array = [{ id: 1, name: 'Scumbag Dale' }, { id: 2, name: 'Scumbag Katz' }, { id: 3, name: 'Scumbag Bryn' }];
       Person = DS.Model.extend({ name: DS.attr('string') });
       env = setupStore({
         person: Person
       });
       store = env.store;
       run(function () {
-        store.pushMany('person', array);
+        store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Scumbag Dale'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Scumbag Katz'
+            }
+          }, {
+            type: 'person',
+            id: '3',
+            attributes: {
+              name: 'Scumbag Bryn'
+            }
+          }]
+        });
       });
     },
     teardown: function () {
@@ -19667,7 +22174,6 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
         store.destroy();
         Person = null;
         store = null;
-        array = null;
       });
     }
   });
@@ -19823,7 +22329,6 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
   module('unit/model - with a simple Person model', {
     setup: function () {
-      array = [{ id: 1, name: 'Scumbag Dale' }, { id: 2, name: 'Scumbag Katz' }, { id: 3, name: 'Scumbag Bryn' }];
       Person = DS.Model.extend({
         name: DS.attr('string')
       });
@@ -19831,7 +22336,27 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
         person: Person
       });
       run(function () {
-        store.pushMany('person', array);
+        store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Scumbag Dale'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Scumbag Katz'
+            }
+          }, {
+            type: 'person',
+            id: '3',
+            attributes: {
+              name: 'Scumbag Bryn'
+            }
+          }]
+        });
       });
     },
     teardown: function () {
@@ -19839,7 +22364,6 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
         store.destroy();
         Person = null;
         store = null;
-        array = null;
       });
     }
   });
@@ -19977,7 +22501,12 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     var testStore = createStore({ model: Model });
 
     run(function () {
-      testStore.push('model', { id: 2 });
+      testStore.push({
+        data: {
+          type: 'model',
+          id: '2'
+        }
+      });
       testStore.findRecord('model', 2).then(function (record) {
         set(record, 'name', provided);
         deepEqual(record.serialize().name, expected, type + ' saves ' + provided + ' as ' + expected);
@@ -20040,7 +22569,12 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     });
 
     run(function () {
-      store.push('person', { id: 1 });
+      store.push({
+        data: {
+          type: 'person',
+          id: '1'
+        }
+      });
       store.findRecord('person', 1).then(function (record) {
         run(function () {
           record.set('updatedAt', date);
@@ -20162,7 +22696,15 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     run(function () {
       var person = store.createRecord('person', { id: 1, name: 'TomHuda' });
       equal(person.get('isNew'), true, 'createRecord should put records into the new state');
-      store.push('person', { id: 1, name: 'TomHuda' });
+      store.push({
+        data: {
+          type: 'person',
+          id: '1',
+          attributes: {
+            name: 'TomHuda'
+          }
+        }
+      });
       equal(person.get('isNew'), false, 'push should put records into the loaded state');
     });
   });
@@ -20194,8 +22736,11 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     // present on the serializer due to using .create
     // instead of `store.serializerFor`.
     run(function () {
-      person = store.push('person', {
-        id: 1
+      person = store.push({
+        data: {
+          type: 'person',
+          id: '1'
+        }
       });
     });
     var errorThrown = false;
@@ -20692,7 +23237,15 @@ define(
       });
 
       run(function () {
-        store.push("person", { id: 0, name: "Tom Dale" });
+        store.push({
+          data: {
+            type: "person",
+            id: "0",
+            attributes: {
+              name: "Tom Dale"
+            }
+          }
+        });
       });
 
       equal(store.peekAll("person").objectAt(0).get("name"), "Tom Dale", "found record with id 0");
@@ -20771,7 +23324,15 @@ define(
       var person;
 
       run(function () {
-        person = store.push("person", { id: 1, name: "Tom" });
+        person = store.push({
+          data: {
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Tom"
+            }
+          }
+        });
         person.set("name", "Thomas Dale");
       });
 
@@ -20810,7 +23371,15 @@ define(
       var person;
 
       run(function () {
-        person = store.push("person", { id: 1, name: "Tom" });
+        person = store.push({
+          data: {
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Tom"
+            }
+          }
+        });
         person.set("name", "Thomas Dale");
       });
 
@@ -20821,7 +23390,16 @@ define(
 
         person.set("name", "Tomasz Dale");
 
-        store.push("person", { id: 1, name: "Tommy Dale", city: "PDX" });
+        store.push({
+          data: {
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Tommy Dale",
+              city: "PDX"
+            }
+          }
+        });
 
         equal(person.get("name"), "Tomasz Dale", "the local changes applied on top");
         equal(person.get("city"), "PDX", "the pushed change is available");
@@ -20842,7 +23420,16 @@ define(
       var person;
 
       run(function () {
-        person = store.push("person", { id: 1, name: "Tom Dale", city: "San Francisco" });
+        person = store.push({
+          data: {
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Tom Dale",
+              city: "San Francisco"
+            }
+          }
+        });
         person.set("name", "Tomasz Dale");
       });
 
@@ -20851,7 +23438,16 @@ define(
       equal(person.get("city"), "San Francisco", "the original data applies");
 
       run(function () {
-        store.push("person", { id: 1, name: "Thomas Dale", city: "Portland" });
+        store.push({
+          data: {
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Thomas Dale",
+              city: "Portland"
+            }
+          }
+        });
       });
 
       equal(person.get("hasDirtyAttributes"), true, "the local changes are reapplied");
@@ -20867,7 +23463,16 @@ define(
       var person;
 
       run(function () {
-        person = store.push("person", { id: 1, name: "Brendan McLoughlin", city: "Boston" });
+        person = store.push({
+          data: {
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Brendan McLoughlin",
+              city: "Boston"
+            }
+          }
+        });
         person.set("name", "Brondan McLoughlin");
         person.send("becameInvalid");
       });
@@ -20878,7 +23483,16 @@ define(
       equal(person.get("city"), "Boston", "the original data applies");
 
       run(function () {
-        store.push("person", { id: 1, name: "bmac", city: "Prague" });
+        store.push({
+          data: {
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "bmac",
+              city: "Prague"
+            }
+          }
+        });
       });
 
       equal(person.get("hasDirtyAttributes"), true, "the local changes are reapplied");
@@ -20903,7 +23517,15 @@ define(
       var person;
 
       run(function () {
-        person = store.push("person", { id: 1, name: "Tom Dale" });
+        person = store.push({
+          data: {
+            type: "person",
+            id: "1",
+            attributeS: {
+              name: "Tom Dale"
+            }
+          }
+        });
       });
 
       run(function () {
@@ -20929,7 +23551,15 @@ define(
       var person;
 
       run(function () {
-        person = store.push("person", { id: 1, name: "Tom Dale" });
+        person = store.push({
+          data: {
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Tom Dale"
+            }
+          }
+        });
         person.set("name", "Tomasz Dale");
       });
 
@@ -21046,8 +23676,38 @@ define(
       var store = env.store;
 
       run(function () {
-        store.pushMany("tag", [{ id: 5, name: "friendly" }, { id: 2, name: "smarmy" }, { id: 12, name: "oohlala" }]);
-        store.push("person", { id: 1, name: "Tom Dale", tag: 5 });
+        store.push({
+          data: [{
+            type: "tag",
+            id: "5",
+            attributes: {
+              name: "friendly"
+            }
+          }, {
+            type: "tag",
+            id: "2",
+            attributes: {
+              name: "smarmy"
+            }
+          }, {
+            type: "tag",
+            id: "12",
+            attributes: {
+              name: "oohlala"
+            }
+          }, {
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Tom Dale"
+            },
+            relationships: {
+              tag: {
+                data: { type: "tag", id: "5" }
+              }
+            }
+          }]
+        });
       });
 
       run(function () {
@@ -21120,8 +23780,26 @@ define(
       var store = env.store;
 
       run(function () {
-        store.push("tag", { id: 2, name: "friendly" });
-        store.push("person", { id: 1, name: "Tom Dale", tag: 2 });
+        store.push({
+          data: [{
+            type: "tag",
+            id: "2",
+            attributes: {
+              name: "friendly"
+            }
+          }, {
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Tom Dale"
+            },
+            relationships: {
+              tag: {
+                data: { type: "tag", id: "2" }
+              }
+            }
+          }]
+        });
       });
 
       run(function () {
@@ -21194,7 +23872,20 @@ define(
       env.adapter.coalesceFindRequests = true;
 
       run(function () {
-        store.push("person", { id: 1, name: "Tom Dale", occupations: [5, 2] });
+        store.push({
+          data: {
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Tom Dale"
+            },
+            relationships: {
+              occupations: {
+                data: [{ type: "occupation", id: "5" }, { type: "occupation", id: "2" }]
+              }
+            }
+          }
+        });
       });
 
       run(function () {
@@ -21242,7 +23933,20 @@ define(
       };
 
       run(function () {
-        store.push("person", { id: 1, name: "Tom Dale", occupation: 5 });
+        store.push({
+          data: {
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Tom Dale"
+            },
+            relationships: {
+              occupation: {
+                data: { type: "occupation", id: "5" }
+              }
+            }
+          }
+        });
       });
 
       run(function () {
@@ -21273,8 +23977,38 @@ define(
       var store = env.store;
 
       run(function () {
-        store.pushMany("tag", [{ id: 0, name: "friendly" }, { id: 2, name: "smarmy" }, { id: 12, name: "oohlala" }]);
-        store.push("person", { id: 1, name: "Tom Dale", tag: 0 });
+        store.push({
+          data: [{
+            type: "tag",
+            id: "0",
+            attributes: {
+              name: "friendly"
+            }
+          }, {
+            type: "tag",
+            id: "2",
+            attributes: {
+              name: "smarmy"
+            }
+          }, {
+            type: "tag",
+            id: "12",
+            attributes: {
+              name: "oohlala"
+            }
+          }, {
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Tom Dale"
+            },
+            relationships: {
+              tag: {
+                data: { type: "tag", id: "0" }
+              }
+            }
+          }]
+        });
       });
 
       run(function () {
@@ -21310,8 +24044,32 @@ define(
       var store = env.store;
 
       run(function () {
-        store.pushMany("hobby", [{ id: 1, name: "fishing" }, { id: 1, name: "coding" }]);
-        store.push("person", { id: 1, name: "Tom Dale", hobby: 1 });
+        store.push({
+          data: [{
+            type: "hobby",
+            id: "1",
+            attributes: {
+              name: "fishing"
+            }
+          }, {
+            type: "hobby",
+            id: "2",
+            attributes: {
+              name: "coding"
+            }
+          }, {
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Tom Dale"
+            },
+            relationships: {
+              hobby: {
+                data: { type: "hobby", id: "1" }
+              }
+            }
+          }]
+        });
       });
 
       warns(function () {
@@ -21343,8 +24101,32 @@ define(
       var store = env.store;
 
       run(function () {
-        store.pushMany("hobby", [{ id: 1, name: "fishing" }, { id: 1, name: "coding" }]);
-        store.push("person", { id: 1, name: "Tom Dale", hobby: 1 });
+        store.push({
+          data: [{
+            type: "hobby",
+            id: "1",
+            attributes: {
+              name: "fishing"
+            }
+          }, {
+            type: "hobby",
+            id: "2",
+            attributes: {
+              name: "coding"
+            }
+          }, {
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Tom Dale"
+            },
+            relationships: {
+              hobby: {
+                data: { type: "hobby", id: "1" }
+              }
+            }
+          }]
+        });
       });
 
       warns(function () {
@@ -21434,10 +24216,61 @@ define(
       var store = env.store;
 
       run(function () {
-        store.pushMany("tag", [{ id: 5, name: "friendly" }, { id: 2, name: "smarmy" }]);
-        store.pushMany("pet", [{ id: 4, name: "fluffy" }, { id: 7, name: "snowy" }, { id: 12, name: "cerberus" }]);
-        store.push("person", { id: 1, name: "Tom Dale", tags: [5] });
-        store.push("person", { id: 2, name: "Yehuda Katz", tags: [12] });
+        store.push({
+          data: [{
+            type: "tag",
+            id: "5",
+            attributes: {
+              name: "friendly"
+            }
+          }, {
+            type: "tag",
+            id: "2",
+            attributes: {
+              name: "smarmy"
+            }
+          }, {
+            type: "pet",
+            id: "4",
+            attributes: {
+              name: "fluffy"
+            }
+          }, {
+            type: "pet",
+            id: "7",
+            attributes: {
+              name: "snowy"
+            }
+          }, {
+            type: "pet",
+            id: "12",
+            attributes: {
+              name: "cerberus"
+            }
+          }, {
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Tom Dale"
+            },
+            relationships: {
+              tags: {
+                data: [{ type: "tag", id: "5" }]
+              }
+            }
+          }, {
+            type: "person",
+            id: "2",
+            attributes: {
+              name: "Yehuda Katz"
+            },
+            relationships: {
+              tags: {
+                data: [{ type: "tag", id: "12" }]
+              }
+            }
+          }]
+        });
       });
 
       run(function () {
@@ -21449,7 +24282,20 @@ define(
           equal(get(tags.objectAt(0), "name"), "friendly", "the first tag should be a Tag");
 
           run(function () {
-            store.push("person", { id: 1, name: "Tom Dale", tags: [5, 2] });
+            store.push({
+              data: {
+                type: "person",
+                id: "1",
+                attributes: {
+                  name: "Tom Dale"
+                },
+                relationships: {
+                  tags: {
+                    data: [{ type: "tag", id: "5" }, { type: "tag", id: "2" }]
+                  }
+                }
+              }
+            });
           });
 
           equal(tags, get(person, "tags"), "a relationship returns the same object every time");
@@ -21459,7 +24305,15 @@ define(
           asyncEqual(get(person, "tags").objectAt(0), store.findRecord("tag", 5), "relationship objects are the same as objects retrieved directly");
 
           run(function () {
-            store.push("person", { id: 3, name: "KSelden" });
+            store.push({
+              data: {
+                type: "person",
+                id: "3",
+                attributes: {
+                  name: "KSelden"
+                }
+              }
+            });
           });
 
           return store.findRecord("person", 3);
@@ -21467,7 +24321,20 @@ define(
           equal(get(get(kselden, "tags"), "length"), 0, "a relationship that has not been supplied returns an empty array");
 
           run(function () {
-            store.push("person", { id: 4, name: "Cyvid Hamluck", pets: [4] });
+            store.push({
+              data: {
+                type: "person",
+                id: "4",
+                attributes: {
+                  name: "Cyvid Hamluck"
+                },
+                relationships: {
+                  pets: {
+                    data: [{ type: "pet", id: "4" }]
+                  }
+                }
+              }
+            });
           });
           return store.findRecord("person", 4);
         }).then(function (cyvid) {
@@ -21478,7 +24345,20 @@ define(
           equal(get(pets.objectAt(0), "name"), "fluffy", "the first pet should be correct");
 
           run(function () {
-            store.push("person", { id: 4, name: "Cyvid Hamluck", pets: [4, 12] });
+            store.push({
+              data: {
+                type: "person",
+                id: "4",
+                attributes: {
+                  name: "Cyvid Hamluck"
+                },
+                relationships: {
+                  pets: {
+                    data: [{ type: "pet", id: "4" }, { type: "pet", id: "12" }]
+                  }
+                }
+              }
+            });
           });
 
           equal(pets, get(cyvid, "pets"), "a relationship returns the same object every time");
@@ -21521,10 +24401,61 @@ define(
       var store = env.store;
 
       run(function () {
-        store.pushMany("tag", [{ id: 5, name: "friendly" }, { id: 2, name: "smarmy" }]);
-        store.pushMany("pet", [{ id: 4, name: "fluffy" }, { id: 7, name: "snowy" }, { id: 12, name: "cerberus" }]);
-        store.push("person", { id: 1, name: "Tom Dale", tags: [5] });
-        store.push("person", { id: 2, name: "Yehuda Katz", tags: [12] });
+        store.push({
+          data: [{
+            type: "tag",
+            id: "5",
+            attributes: {
+              name: "friendly"
+            }
+          }, {
+            type: "tag",
+            id: "2",
+            attributes: {
+              name: "smarmy"
+            }
+          }, {
+            type: "pet",
+            id: "4",
+            attributes: {
+              name: "fluffy"
+            }
+          }, {
+            type: "pet",
+            id: "7",
+            attributes: {
+              name: "snowy"
+            }
+          }, {
+            type: "pet",
+            id: "12",
+            attributes: {
+              name: "cerberus"
+            }
+          }, {
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Tom Dale"
+            },
+            relationships: {
+              tags: {
+                data: [{ type: "tag", id: "5" }]
+              }
+            }
+          }, {
+            type: "person",
+            id: "2",
+            attributes: {
+              name: "Yehuda Katz"
+            },
+            relationships: {
+              tags: {
+                data: [{ type: "tag", id: "12" }]
+              }
+            }
+          }]
+        });
       });
 
       var wycats;
@@ -21640,8 +24571,38 @@ define(
       });
 
       run(function () {
-        env.store.pushMany("tag", [{ id: 5, name: "friendly" }, { id: 2, name: "smarmy" }, { id: 12, name: "oohlala" }]);
-        env.store.push("person", { id: 1, name: "Tom Dale", tags: [5, 2] });
+        env.store.push({
+          data: [{
+            type: "tag",
+            id: "5",
+            attributes: {
+              name: "friendly"
+            }
+          }, {
+            type: "tag",
+            id: "2",
+            attributes: {
+              name: "smarmy"
+            }
+          }, {
+            type: "tag",
+            id: "12",
+            attributes: {
+              name: "oohlala"
+            }
+          }, {
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Tom Dale"
+            },
+            relationships: {
+              tags: {
+                data: [{ type: "tag", id: "5" }, { type: "tag", id: "2" }]
+              }
+            }
+          }]
+        });
       });
 
       run(function () {
@@ -21727,8 +24688,26 @@ define(
       var store = env.store;
 
       run(function () {
-        store.push("person", { id: 1, name: "Tom Dale", tags: [1] });
-        store.push("tag", { id: 1, name: "ember" });
+        store.push({
+          data: [{
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Tom Dale"
+            },
+            relationships: {
+              tags: {
+                data: [{ type: "tag", id: "1" }]
+              }
+            }
+          }, {
+            type: "tag",
+            id: "1",
+            attributes: {
+              name: "ember"
+            }
+          }]
+        });
       });
 
       run(function () {
@@ -21762,10 +24741,43 @@ define(
       var store = env.store;
 
       run(function () {
-        store.push("person", { id: 1, name: "Tom Dale", tags: [1] });
-        store.push("person", { id: 2, name: "Sylvain Mina", tags: [2] });
-        store.push("tag", { id: 1, name: "ember" });
-        store.push("tag", { id: 2, name: "ember-data" });
+        store.push({
+          data: [{
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Tom Dale"
+            },
+            relationships: {
+              tags: {
+                data: [{ type: "tag", id: "1" }]
+              }
+            }
+          }, {
+            type: "person",
+            id: "2",
+            attributes: {
+              name: "Sylvain Mina"
+            },
+            relationships: {
+              tags: {
+                data: [{ type: "tag", id: "2" }]
+              }
+            }
+          }, {
+            type: "tag",
+            id: "1",
+            attributes: {
+              name: "ember"
+            }
+          }, {
+            type: "tag",
+            id: "2",
+            attributes: {
+              name: "ember-data"
+            }
+          }]
+        });
       });
 
       var tom, sylvain;
@@ -21799,8 +24811,26 @@ define(
       var store = env.store;
 
       run(function () {
-        store.push("person", { id: 1, name: "Tom Dale", tags: [1] });
-        store.push("tag", { id: 1, name: "ember" });
+        store.push({
+          data: [{
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Tom Dale"
+            },
+            relationships: {
+              tags: {
+                data: [{ type: "tag", id: "1" }]
+              }
+            }
+          }, {
+            type: "tag",
+            id: "1",
+            attributes: {
+              name: "ember"
+            }
+          }]
+        });
       });
 
       run(function () {
@@ -21917,7 +24947,28 @@ define(
       var records, tags, internalModel;
 
       run(function () {
-        records = store.pushMany("tag", [{ id: 5, name: "friendly" }, { id: 2, name: "smarmy" }, { id: 12, name: "oohlala" }]);
+        store.push({
+          data: [{
+            type: "tag",
+            id: "5",
+            attributes: {
+              name: "friendly"
+            }
+          }, {
+            type: "tag",
+            id: "2",
+            attributes: {
+              name: "smarmy"
+            }
+          }, {
+            type: "tag",
+            id: "12",
+            attributes: {
+              name: "oohlala"
+            }
+          }]
+        });
+        records = store.peekAll("tag");
         internalModel = Ember.A(records).mapBy("_internalModel");
         tags = DS.RecordArray.create({ content: Ember.A(internalModel.slice(0, 2)), store: store, type: Tag });
       });
@@ -21950,7 +25001,15 @@ define(
       var store = env.store;
 
       run(function () {
-        store.push("person", { id: 1, name: "Tom Dale" });
+        store.push({
+          data: {
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Tom Dale"
+            }
+          }
+        });
       });
 
       run(function () {
@@ -21995,7 +25054,17 @@ define(
     test("changes to attributes can be rolled back", function () {
       var person;
       run(function () {
-        person = store.push("person", { id: 1, firstName: "Tom", lastName: "Dale" });
+        store.push({
+          data: {
+            type: "person",
+            id: "1",
+            attributes: {
+              firstName: "Tom",
+              lastName: "Dale"
+            }
+          }
+        });
+        person = store.peekRecord("person", 1);
         person.set("firstName", "Thomas");
       });
 
@@ -22012,7 +25081,16 @@ define(
     test("changes to unassigned attributes can be rolled back", function () {
       var person;
       run(function () {
-        person = store.push("person", { id: 1, lastName: "Dale" });
+        store.push({
+          data: {
+            type: "person",
+            id: "1",
+            attributes: {
+              lastName: "Dale"
+            }
+          }
+        });
+        person = store.peekRecord("person", 1);
         person.set("firstName", "Thomas");
       });
 
@@ -22036,7 +25114,17 @@ define(
       var person;
 
       run(function () {
-        person = store.push("person", { id: 1, firstName: "Tom", lastName: "Dale" });
+        store.push({
+          data: {
+            type: "person",
+            id: "1",
+            attributes: {
+              firstName: "Tom",
+              lastName: "Dale"
+            }
+          }
+        });
+        person = store.peekRecord("person", 1);
         person.set("firstName", "Thomas");
       });
 
@@ -22068,7 +25156,17 @@ define(
       var person;
 
       run(function () {
-        person = store.push("person", { id: 1, firstName: "Tom", lastName: "Dale" });
+        store.push({
+          data: {
+            type: "person",
+            id: "1",
+            attributes: {
+              firstName: "Tom",
+              lastName: "Dale"
+            }
+          }
+        });
+        person = store.peekRecord("person", 1);
         person.set("firstName", "Thomas");
       });
 
@@ -22096,7 +25194,17 @@ define(
       var person, people;
 
       run(function () {
-        person = store.push("person", { id: 1, firstName: "Tom", lastName: "Dale" });
+        store.push({
+          data: {
+            type: "person",
+            id: "1",
+            attributes: {
+              firstName: "Tom",
+              lastName: "Dale"
+            }
+          }
+        });
+        person = store.peekRecord("person", 1);
         people = store.peekAll("person");
       });
 
@@ -22186,7 +25294,13 @@ define(
       var person, people;
 
       run(function () {
-        person = store.push("person", { id: 1 });
+        store.push({
+          data: {
+            type: "person",
+            id: "1"
+          }
+        });
+        person = store.peekRecord("person", 1);
         people = store.peekAll("person");
         person.deleteRecord();
       });
@@ -22234,7 +25348,16 @@ define(
       env = setupStore({ dog: Dog, adapter: adapter });
       var dog;
       run(function () {
-        dog = env.store.push("dog", { id: 1, name: "Pluto" });
+        env.store.push({
+          data: {
+            type: "dog",
+            id: "1",
+            attributes: {
+              name: "Pluto"
+            }
+          }
+        });
+        dog = env.store.peekRecord("dog", 1);
         dog.set("name", "is a dwarf planet");
       });
 
@@ -22294,7 +25417,17 @@ define(
       env = setupStore({ dog: Dog, adapter: adapter });
       var dog;
       run(function () {
-        dog = env.store.push("dog", { id: 1, name: "Pluto", breed: "Disney" });
+        env.store.push({
+          data: {
+            type: "dog",
+            id: "1",
+            attributes: {
+              name: "Pluto",
+              breed: "Disney"
+            }
+          }
+        });
+        dog = env.store.peekRecord("dog", 1);
         dog.set("name", "is a dwarf planet");
         dog.set("breed", "planet");
       });
@@ -22353,7 +25486,16 @@ define(
       env = setupStore({ dog: Dog, adapter: adapter });
       var dog;
       run(function () {
-        dog = env.store.push("dog", { id: 1, name: "Pluto" });
+        env.store.push({
+          data: {
+            type: "dog",
+            id: "1",
+            attributes: {
+              name: "Pluto"
+            }
+          }
+        });
+        dog = env.store.peekRecord("dog", 1);
       });
 
       run(function () {
@@ -22448,7 +25590,27 @@ define(
         person: Person
       });
       run(function () {
-        store.pushMany("person", array);
+        store.push({
+          data: [{
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Scumbag Dale"
+            }
+          }, {
+            type: "person",
+            id: "2",
+            attributes: {
+              name: "Scumbag Katz"
+            }
+          }, {
+            type: "person",
+            id: "3",
+            attributes: {
+              name: "Scumbag Bryn"
+            }
+          }]
+        });
       });
 
       run(function () {
@@ -22467,12 +25629,28 @@ define(
       });
       var recordArray = store.peekAll("person");
       run(function () {
-        store.push("person", { id: 1, name: "wycats" });
+        store.push({
+          data: {
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "wycats"
+            }
+          }
+        });
       });
       equal(get(recordArray, "lastObject.name"), "wycats");
 
       run(function () {
-        store.push("person", { id: 2, name: "brohuda" });
+        store.push({
+          data: {
+            type: "person",
+            id: "2",
+            attributes: {
+              name: "brohuda"
+            }
+          }
+        });
       });
       equal(get(recordArray, "lastObject.name"), "brohuda");
     });
@@ -22490,7 +25668,15 @@ define(
 
       var recordArray = store.peekAll("person");
       run(function () {
-        store.push("person", { id: 1, name: "wycats" });
+        store.push({
+          data: {
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "wycats"
+            }
+          }
+        });
       });
 
       run(function () {
@@ -22499,7 +25685,15 @@ define(
 
       run(function () {
         equal(recordArray.get("length"), emptyLength, "Has no more records");
-        store.push("person", { id: 2, name: "brohuda" });
+        store.push({
+          data: {
+            type: "person",
+            id: "2",
+            attributes: {
+              name: "brohuda"
+            }
+          }
+        });
       });
 
       equal(recordArray.get("length"), emptyLength, "Has not been updated");
@@ -22529,8 +25723,30 @@ define(
       var store = env.store;
 
       run(function () {
-        store.pushMany("person", array);
-        store.push("tag", { id: 1 });
+        store.push({
+          data: [{
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Scumbag Dale"
+            }
+          }, {
+            type: "person",
+            id: "2",
+            attributes: {
+              name: "Scumbag Katz"
+            }
+          }, {
+            type: "person",
+            id: "3",
+            attributes: {
+              name: "Scumbag Bryn"
+            }
+          }, {
+            type: "tag",
+            id: "1"
+          }]
+        });
       });
 
       run(function () {
@@ -22582,8 +25798,25 @@ define(
       var scumbag, tag;
 
       run(function () {
-        scumbag = store.push("person", { id: 1, name: "Scumbag Tom" });
-        tag = store.push("tag", { id: 1, people: [1] });
+        store.push({
+          data: [{
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Scumbag Tom"
+            }
+          }, {
+            type: "tag",
+            id: "1",
+            relationships: {
+              people: {
+                data: [{ type: "person", id: "1" }]
+              }
+            }
+          }]
+        });
+        scumbag = store.peekRecord("person", 1);
+        tag = store.peekRecord("tag", 1);
         scumbag.deleteRecord();
       });
 
@@ -22614,9 +25847,34 @@ define(
       var scumbag, tag, tool;
 
       run(function () {
-        scumbag = store.push("person", { id: 1, name: "Scumbag Tom" });
-        tag = store.push("tag", { id: 1, people: [1] });
-        tool = store.push("tool", { id: 1, person: 1 });
+        store.push({
+          data: [{
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Scumbag Tom"
+            }
+          }, {
+            type: "tag",
+            id: "1",
+            relationships: {
+              people: {
+                data: [{ type: "person", id: "1" }]
+              }
+            }
+          }, {
+            type: "tool",
+            id: "1",
+            relationships: {
+              person: {
+                data: { type: "person", id: "1" }
+              }
+            }
+          }]
+        });
+        scumbag = store.peekRecord("person", 1);
+        tag = store.peekRecord("tag", 1);
+        tool = store.peekRecord("tool", 1);
       });
 
       equal(tag.get("people.length"), 1, "record is in the record array");
@@ -22669,7 +25927,27 @@ define(
       });
 
       run(function () {
-        store.pushMany("person", array);
+        store.push({
+          data: [{
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Scumbag Dale"
+            }
+          }, {
+            type: "person",
+            id: "2",
+            attributes: {
+              name: "Scumbag Katz"
+            }
+          }, {
+            type: "person",
+            id: "3",
+            attributes: {
+              name: "Scumbag Bryn"
+            }
+          }]
+        });
       });
 
       var recordArray = store.peekAll("person");
@@ -22683,7 +25961,27 @@ define(
         person: Person
       });
       run(function () {
-        store.pushMany("person", array);
+        store.push({
+          data: [{
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Scumbag Dale"
+            }
+          }, {
+            type: "person",
+            id: "2",
+            attributes: {
+              name: "Scumbag Katz"
+            }
+          }, {
+            type: "person",
+            id: "3",
+            attributes: {
+              name: "Scumbag Bryn"
+            }
+          }]
+        });
       });
 
       var recordArray = store.peekAll("person");
@@ -22996,7 +26294,15 @@ define(
         currentStore.findRecord("test", 1).then(async(function (object) {
           equal(typeof object.get("id"), "string", "id was coerced to a string");
           run(function () {
-            currentStore.push("test", { id: 2, name: "Scumbag Sam Saffron" });
+            currentStore.push({
+              data: {
+                type: "test",
+                id: "2",
+                attributes: {
+                  name: "Scumbag Sam Saffron"
+                }
+              }
+            });
           });
           return currentStore.findRecord("test", 2);
         })).then(async(function (object) {
@@ -23005,8 +26311,6 @@ define(
         }));
       });
     });
-
-    var array = [{ id: "1", name: "Scumbag Dale" }, { id: "2", name: "Scumbag Katz" }, { id: "3", name: "Scumbag Bryn" }];
 
     test("can load data for the same record if it is not dirty", function () {
       expect(3);
@@ -23020,13 +26324,29 @@ define(
       });
 
       run(function () {
-        store.push("person", { id: 1, name: "Tom Dale" });
+        store.push({
+          data: {
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Tom Dale"
+            }
+          }
+        });
 
         store.findRecord("person", 1).then(async(function (tom) {
           equal(get(tom, "hasDirtyAttributes"), false, "precond - record is not dirty");
           equal(get(tom, "name"), "Tom Dale", "returns the correct name");
 
-          store.push("person", { id: 1, name: "Captain Underpants" });
+          store.push({
+            data: {
+              type: "person",
+              id: "1",
+              attributes: {
+                name: "Captain Underpants"
+              }
+            }
+          });
           equal(get(tom, "name"), "Captain Underpants", "updated record with new date");
         }));
       });
@@ -23043,23 +26363,6 @@ define(
       equal(get(tom, 'name'), "Tom Dale", "the person was successfully loaded for the given ID");
     });
     */
-
-    test("pushMany extracts ids from an Array of hashes if no ids are specified", function () {
-      expect(1);
-
-      var Person = DS.Model.extend({ name: DS.attr("string") });
-
-      var store = createStore({
-        person: Person
-      });
-
-      run(function () {
-        store.pushMany("person", array);
-        store.findRecord("person", 1).then(async(function (person) {
-          equal(get(person, "name"), "Scumbag Dale", "correctly extracted id for loaded data");
-        }));
-      });
-    });
 
     test("loadMany takes an optional Object and passes it on to the Adapter", function () {
       expect(2);
@@ -23134,7 +26437,15 @@ define(
       });
 
       run(function () {
-        store.push("person", { id: 1, name: "Tom Dale" });
+        store.push({
+          data: {
+            type: "person",
+            id: "1",
+            attributes: {
+              name: "Tom Dale"
+            }
+          }
+        });
       });
 
       var results = store.peekAll("person");
@@ -23142,7 +26453,15 @@ define(
       equal(get(results.objectAt(0), "name"), "Tom Dale", "record has the correct information");
 
       run(function () {
-        store.push("person", { id: 2, name: "Yehuda Katz" });
+        store.push({
+          data: {
+            type: "person",
+            id: "2",
+            attributes: {
+              name: "Yehuda Katz"
+            }
+          }
+        });
       });
       equal(get(results, "length"), 2, "record array should have the new object");
       equal(get(results.objectAt(1), "name"), "Yehuda Katz", "record has the correct information");
@@ -23287,7 +26606,16 @@ define(
       var tom;
 
       run(function () {
-        tom = store.push("person", { id: 2, name: "Tom" });
+        store.push({
+          data: {
+            type: "person",
+            id: "2",
+            attributes: {
+              name: "Tom"
+            }
+          }
+        });
+        tom = store.peekRecord("person", 2);
         store.findRecord("person", 1, { preload: { friend: tom } });
       });
     });
@@ -23345,7 +26673,16 @@ define(
       var tom;
 
       run(function () {
-        tom = store.push("person", { id: 2, name: "Tom" });
+        store.push({
+          data: {
+            type: "person",
+            id: "2",
+            attributes: {
+              name: "Tom"
+            }
+          }
+        });
+        tom = store.peekRecord("person", 2);
         store.findRecord("person", 1, { preload: { friends: [tom] } });
       });
     });
@@ -23716,7 +27053,12 @@ define(
       });
 
       run(function () {
-        store.push("person", { id: 1 });
+        store.push({
+          data: {
+            type: "person",
+            id: "1"
+          }
+        });
         store.findRecord("person", 1);
       });
     });
@@ -23745,7 +27087,12 @@ define(
       });
 
       run(function () {
-        store.push("person", { id: 1 });
+        store.push({
+          data: {
+            type: "person",
+            id: "1"
+          }
+        });
         store.findRecord("person", 1).then(function (record) {
           equal(record.get("name"), "Tom");
         });
@@ -23778,7 +27125,12 @@ define(
       });
 
       run(function () {
-        store.push("person", { id: 1 });
+        store.push({
+          data: {
+            type: "person",
+            id: "1"
+          }
+        });
         store.findRecord("person", 1).then(function (record) {
           equal(record.get("name"), "Tom");
         });
@@ -23809,7 +27161,12 @@ define(
       });
 
       run(function () {
-        store.push("person", { id: 1 });
+        store.push({
+          data: {
+            type: "person",
+            id: "1"
+          }
+        });
         store.findRecord("person", 1).then(function (record) {
           equal(record.get("name"), undefined);
         });
@@ -23840,7 +27197,12 @@ define(
       });
 
       run(function () {
-        store.push("person", { id: 1 });
+        store.push({
+          data: {
+            type: "person",
+            id: "1"
+          }
+        });
         store.findRecord("person", 1).then(function (record) {
           equal(record.get("name"), undefined);
         });
@@ -24086,7 +27448,22 @@ define(
     test('allow passing relationships as well as attributes', function () {
       var records, storage;
       run(function () {
-        records = store.pushMany('record', [{ id: 1, title: 'it\'s a beautiful day' }, { id: 2, title: 'it\'s a beautiful day' }]);
+        store.push({
+          data: [{
+            type: 'record',
+            id: '1',
+            attributes: {
+              title: 'it\'s a beautiful day'
+            }
+          }, {
+            type: 'record',
+            id: '2',
+            attributes: {
+              title: 'it\'s a beautiful day'
+            }
+          }]
+        });
+        records = store.peekAll('record');
         storage = store.createRecord('storage', { name: 'Great store', records: records });
       });
 
@@ -24217,11 +27594,20 @@ define(
     test('hasRecordForId should return false for records in the empty state ', function () {
 
       run(function () {
-        store.push('person', {
-          id: 1,
-          firstName: 'Yehuda',
-          lastName: 'Katz',
-          phoneNumbers: [1]
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              firstName: 'Yehuda',
+              lastName: 'Katz'
+            },
+            relationships: {
+              phoneNumbers: {
+                data: [{ type: 'phone-number', id: '1' }]
+              }
+            }
+          }
         });
 
         equal(false, store.hasRecordForId('phone-number', 1), 'hasRecordForId only returns true for loaded records');
@@ -24230,11 +27616,20 @@ define(
 
     test('hasRecordForId should return true for records in the loaded state ', function () {
       run(function () {
-        store.push('person', {
-          id: 1,
-          firstName: 'Yehuda',
-          lastName: 'Katz',
-          phoneNumbers: [1]
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              firstName: 'Yehuda',
+              lastName: 'Katz'
+            },
+            relationships: {
+              phoneNumbers: {
+                data: [{ type: 'phone-number', id: '1' }]
+              }
+            }
+          }
         });
 
         equal(true, store.hasRecordForId('person', 1), 'hasRecordForId returns true for records loaded into the store');
@@ -24393,73 +27788,6 @@ define(
 
 
 define(
-  "ember-data/tests/unit/store/metadata-for-test",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-
-    function __es6_export__(name, value) {
-      __exports__[name] = value;
-    }
-
-    var store;
-
-    var run = Ember.run;
-
-    module("unit/store/metadata_for - DS.Store#metadataFor", {
-      setup: function () {
-        store = createStore({
-          post: DS.Model.extend(),
-          comment: DS.Model.extend()
-        });
-      },
-
-      teardown: function () {
-        run(function () {
-          store.destroy();
-        });
-      }
-    });
-
-    test("metaForType should be deprecated", function () {
-      expect(1);
-
-      expectDeprecation(function () {
-        store.metaForType("post", { foo: "bar" });
-      });
-    });
-
-    test("metadataFor and setMetadataFor should return and set correct metadata", function () {
-      expect(7);
-
-      function metadataKeys(type) {
-        return Object.keys(store.metadataFor(type));
-      }
-
-      // Currently not using QUnit.deepEqual due to the way deepEqual
-      // comparing __proto__. In its check to see if an object has
-      // no proto, it checks strict equality on null instead of null or undefined.
-
-      deepEqual(metadataKeys("post"), [], "Metadata for post is initially empty");
-
-      store.setMetadataFor("post", { foo: "bar" });
-
-      deepEqual(metadataKeys("post"), ["foo"], "metadata for post contains foo:bar");
-      equal(store.metadataFor("post").foo, "bar");
-
-      store.setMetadataFor("post", { hello: "world" });
-
-      deepEqual(metadataKeys("post"), ["foo", "hello"]);
-      equal(store.metadataFor("post").foo, "bar", "keeps original metadata");
-      equal(store.metadataFor("post").hello, "world", "merges new metadata");
-
-      deepEqual(metadataKeys("comment"), [], "metadata for comment is empty");
-    });
-  }
-);
-
-
-define(
   "ember-data/tests/unit/store/model-for-test",
   ["exports"],
   function(__exports__) {
@@ -24556,7 +27884,12 @@ define(
 
     test('peekRecord should return the record if it is in the store ', function () {
       run(function () {
-        var person = store.push('person', { id: 1 });
+        var person = store.push({
+          data: {
+            type: 'person',
+            id: '1'
+          }
+        });
         equal(person, store.peekRecord('person', 1), 'peekRecord only return the corresponding record in the store');
       });
     });
@@ -24635,11 +27968,13 @@ define(
 
       run(function () {
         var person = store.push({
-          type: 'person',
-          id: 'wat',
-          attributes: {
-            firstName: 'Yehuda',
-            lastName: 'Katz'
+          data: {
+            type: 'person',
+            id: 'wat',
+            attributes: {
+              firstName: 'Yehuda',
+              lastName: 'Katz'
+            }
           }
         });
         store.findRecord('person', 'wat').then(function (foundPerson) {
@@ -24661,11 +27996,13 @@ define(
 
       run(function () {
         store.push({
-          type: 'programmer',
-          id: 'wat',
-          attributes: {
-            firstName: 'Yehuda',
-            lastName: 'Katz'
+          data: {
+            type: 'programmer',
+            id: 'wat',
+            attributes: {
+              firstName: 'Yehuda',
+              lastName: 'Katz'
+            }
           }
         });
 
@@ -24690,20 +28027,14 @@ define(
 
       run(function () {
         store.push({
-          type: 'person',
-          id: 'wat',
-          attributes: {
-            firstName: 'Yehuda',
-            lastName: 'Katz'
+          data: {
+            type: 'person',
+            id: 'wat',
+            attributes: {
+              firstName: 'Yehuda',
+              lastName: 'Katz'
+            }
           }
-        });
-      });
-    });
-
-    test('Calling update should be deprecated', function () {
-      expectDeprecation(function () {
-        run(function () {
-          store.update('person', { id: '1', firstName: 'Yehuda', lastName: 'Katz' });
         });
       });
     });
@@ -24712,20 +28043,25 @@ define(
       expect(2);
 
       run(function () {
-        var person = store.push({
-          type: 'person',
-          id: 'wat',
-          attributes: {
-            firstName: 'Yehuda',
-            lastName: 'Katz'
+        store.push({
+          data: {
+            type: 'person',
+            id: 'wat',
+            attributes: {
+              firstName: 'Yehuda',
+              lastName: 'Katz'
+            }
           }
         });
+        var person = store.peekRecord('person', 'wat');
 
         store.push({
-          type: 'person',
-          id: 'wat',
-          attributes: {
-            lastName: 'Katz!'
+          data: {
+            type: 'person',
+            id: 'wat',
+            attributes: {
+              lastName: 'Katz!'
+            }
           }
         });
 
@@ -24764,32 +28100,6 @@ define(
 
       equal(person.get('firstName'), 'Jacquie', 'you can push raw JSON into the store');
       equal(person.get('lastName'), 'Jackson', 'existing fields are untouched');
-    });
-
-    test('Calling push with a normalized hash containing related records returns a record', function () {
-      var number1, number2, person;
-      run(function () {
-        number1 = store.push('phone-number', {
-          id: 1,
-          number: '5551212',
-          person: 'wat'
-        });
-
-        number2 = store.push('phone-number', {
-          id: 2,
-          number: '5552121',
-          person: 'wat'
-        });
-
-        person = store.push('person', {
-          id: 'wat',
-          firstName: 'John',
-          lastName: 'Smith',
-          phoneNumbers: [number1, number2]
-        });
-      });
-
-      deepEqual(person.get('phoneNumbers').toArray(), [number1, number2], 'phoneNumbers array is correct');
     });
 
     test('Calling push with a normalized hash containing IDs of related records returns a record', function () {
@@ -25107,7 +28417,17 @@ define(
       invalidValues.forEach(function (invalidValue) {
         throws(function () {
           run(function () {
-            store.push('person', { id: 1, phoneNumbers: invalidValue });
+            store.push({
+              data: {
+                type: 'person',
+                id: '1',
+                relationships: {
+                  phoneNumbers: {
+                    data: invalidValue
+                  }
+                }
+              }
+            });
           });
         }, /must be an array/);
       });
@@ -25121,31 +28441,30 @@ define(
       invalidValues.forEach(function (invalidValue) {
         throws(function () {
           run(function () {
-            store.push('person', invalidValue);
+            store.push({
+              data: invalidValue
+            });
           });
-        }, /You must include an `id`/);
+        }, /You must include an 'id'/);
       });
     });
 
     test('calling push with belongsTo relationship the value must not be an array', function () {
       throws(function () {
         run(function () {
-          store.push('phone-number', { id: 1, person: [1] });
-        });
-      }, /must not be an array/);
-    });
-
-    test('calling push with an embedded relationship throws a useful error', function () {
-      throws(function () {
-        run(function () {
-          store.push('person', {
-            id: 1,
-            firstName: 'Ada',
-            lastName: 'Lovelace',
-            phoneNumbers: [{ number: '5551212', person: 1 }]
+          store.push({
+            data: {
+              type: 'phone-number',
+              id: '1',
+              relationships: {
+                person: {
+                  data: [1]
+                }
+              }
+            }
           });
         });
-      }, /If this is an embedded relationship/);
+      }, /must not be an array/);
     });
 
     test('Enabling Ember.ENV.DS_WARN_ON_UNKNOWN_KEYS should warn on unknown keys', function () {
@@ -25154,11 +28473,16 @@ define(
         try {
           Ember.ENV.DS_WARN_ON_UNKNOWN_KEYS = true;
           warns(function () {
-            store.push('person', {
-              id: '1',
-              firstName: 'Tomster',
-              emailAddress: 'tomster@emberjs.com',
-              isMascot: true
+            store.push({
+              data: {
+                type: 'person',
+                id: '1',
+                attributes: {
+                  firstName: 'Tomster',
+                  emailAddress: 'tomster@emberjs.com',
+                  isMascot: true
+                }
+              }
             });
           });
         } finally {
@@ -25170,37 +28494,19 @@ define(
     test('Calling push with unknown keys should not warn by default', function () {
       noWarns(function () {
         run(function () {
-          store.push('person', {
-            id: '1',
-            firstName: 'Tomster',
-            emailAddress: 'tomster@emberjs.com',
-            isMascot: true
+          store.push({
+            data: {
+              type: 'person',
+              id: '1',
+              attributes: {
+                firstName: 'Tomster',
+                emailAddress: 'tomster@emberjs.com',
+                isMascot: true
+              }
+            }
           });
         });
       }, /The payload for 'person' contains these unknown keys: \[emailAddress,isMascot\]. Make sure they've been defined in your model./);
-    });
-
-    test('Calling pushMany is deprecated', function () {
-      var person1, person2;
-      expectDeprecation(function () {
-        run(function () {
-          person1 = { id: 1, firstName: 'John', lastName: 'Smith' };
-          person2 = { id: 2, firstName: 'Suzie', lastName: 'Q' };
-
-          store.pushMany('person', [person1, person2]);
-        });
-      }, 'Using store.pushMany() has been deprecated since store.push() now handles multiple items. You should use store.push() instead.');
-    });
-
-    test('Calling push(type, data) is deprecated', function () {
-      var person1;
-      expectDeprecation(function () {
-        run(function () {
-          person1 = { id: 1, firstName: 'John', lastName: 'Smith' };
-
-          store.push('person', person1);
-        });
-      }, /store.push\(type, data\) has been deprecated/);
     });
 
     module('unit/store/push - DS.Store#push with JSON-API', {
@@ -25407,9 +28713,14 @@ define(
       expect(2);
 
       run(function () {
-        store.push('record', {
-          id: 1,
-          title: 'toto'
+        store.push({
+          data: {
+            type: 'record',
+            id: '1',
+            attributes: {
+              title: 'toto'
+            }
+          }
         });
 
         store.findRecord('record', 1).then(function (record) {
@@ -25434,7 +28745,15 @@ define(
       expect(5);
 
       run(function () {
-        store.push('record', { id: 1, title: 'toto' });
+        store.push({
+          data: {
+            type: 'record',
+            id: '1',
+            attributes: {
+              title: 'toto'
+            }
+          }
+        });
         store.findRecord('record', 1).then(function (record) {
           equal(get(record, 'id'), 1, 'found record with id 1');
           equal(get(record, 'hasDirtyAttributes'), false, 'record is not dirty');
@@ -25490,8 +28809,27 @@ define(
       var asyncRecords;
 
       run(function () {
-        store.push('brand', { id: 1, name: 'EmberJS' });
-        store.push('product', { id: 1, description: 'toto', brand: 1 });
+        store.push({
+          data: [{
+            type: 'brand',
+            id: '1',
+            attributes: {
+              name: 'EmberJS'
+            }
+          }, {
+            type: 'product',
+            id: '1',
+            attributes: {
+              description: 'toto'
+            },
+            relationships: {
+              brand: {
+                data: { type: 'brand', id: '1' }
+              }
+            }
+          }]
+        });
+
         asyncRecords = Ember.RSVP.hash({
           brand: store.findRecord('brand', 1),
           product: store.findRecord('product', 1)
@@ -25735,9 +29073,27 @@ define("ember-data/tests/unit/utils-test", ["exports"], function(__exports__) {
     var user, post, person;
 
     Ember.run(function () {
-      user = env.store.push('user', { id: 1, messages: [] });
-      post = env.store.push('post', { id: 1 });
-      person = env.store.push('person', { id: 1 });
+      env.store.push({
+        data: [{
+          type: 'user',
+          id: '1',
+          relationships: {
+            messages: {
+              data: []
+            }
+          }
+        }, {
+          type: 'post',
+          id: '1'
+        }, {
+          type: 'person',
+          id: '1'
+        }]
+      });
+
+      user = env.store.peekRecord('user', 1);
+      post = env.store.peekRecord('post', 1);
+      person = env.store.peekRecord('person', 1);
     });
 
     // TODO un-comment once we test the assertPolymorphicType directly
@@ -25771,9 +29127,21 @@ define("ember-data/tests/unit/utils-test", ["exports"], function(__exports__) {
     var post, video, person;
 
     Ember.run(function () {
-      post = env.store.push('post', { id: 1 });
-      video = env.store.push('video', { id: 1 });
-      person = env.store.push('person', { id: 1 });
+      env.store.push({
+        data: [{
+          type: 'post',
+          id: '1'
+        }, {
+          type: 'video',
+          id: '1'
+        }, {
+          type: 'person',
+          id: '1'
+        }]
+      });
+      post = env.store.peekRecord('post', 1);
+      video = env.store.peekRecord('video', 1);
+      person = env.store.peekRecord('person', 1);
     });
 
     // TODO un-comment once we test the assertPolymorphicType directly
@@ -25998,6 +29366,13 @@ if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/lib/system/debug');
 test('ember-data/lib/system/debug/debug-info.js should pass jshint', function() { 
   ok(true, 'ember-data/lib/system/debug/debug-info.js should pass jshint.'); 
+});
+
+}
+if (!QUnit.urlParams.nojshint) {
+module('JSHint - ember-data/lib/system');
+test('ember-data/lib/system/is-array-like.js should pass jshint', function() { 
+  ok(true, 'ember-data/lib/system/is-array-like.js should pass jshint.'); 
 });
 
 }
@@ -26376,13 +29751,6 @@ if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/tests/integration');
 test('ember-data/tests/integration/application-test.js should pass jshint', function() { 
   ok(true, 'ember-data/tests/integration/application-test.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/backwards-compat');
-test('ember-data/tests/integration/backwards-compat/deprecate-type-key-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/backwards-compat/deprecate-type-key-test.js should pass jshint.'); 
 });
 
 }
@@ -26796,13 +30164,6 @@ if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/tests/unit/store');
 test('ember-data/tests/unit/store/lookup-test.js should pass jshint', function() { 
   ok(true, 'ember-data/tests/unit/store/lookup-test.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/store');
-test('ember-data/tests/unit/store/metadata-for-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/store/metadata-for-test.js should pass jshint.'); 
 });
 
 }
