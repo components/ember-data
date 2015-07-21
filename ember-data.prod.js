@@ -6855,8 +6855,6 @@
 
         if (this.keyForRelationship) {
           typeClass.eachRelationship(function (key, relationship) {
-            var _this = this;
-
             var payloadKey, payload;
             if (relationship.options.polymorphic) {
               payloadKey = this.keyForAttribute(key, "deserialize");
@@ -6864,9 +6862,10 @@
               if (payload && payload.type) {
                 payload.type = this.modelNameFromPayloadKey(payload.type);
               } else if (payload && relationship.kind === "hasMany") {
-                payload.forEach(function (single) {
-                  return single.type = _this.modelNameFromPayloadKey(single.type);
-                });
+                for (var i = 0, len = payload.length; i < len; i++) {
+                  var single = payload[i];
+                  single.type = this.modelNameFromPayloadKey(single.type);
+                }
               }
             } else {
               payloadKey = this.keyForRelationship(key, relationship.kind, "deserialize");
@@ -7405,7 +7404,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.13.5'
+      VERSION: '1.13.6'
     });
 
     if (Ember.libraries) {
