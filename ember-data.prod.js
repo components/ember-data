@@ -7885,9 +7885,9 @@
         manager.updateFilter(this, ember$data$lib$system$record$arrays$filtered$record$array$$get(this, 'type'), ember$data$lib$system$record$arrays$filtered$record$array$$get(this, 'filterFunction'));
       },
 
-      updateFilter: Ember.observer(function () {
+      updateFilter: Ember.observer('filterFunction', function () {
         Ember.run.once(this, this._updateFilter);
-      }, 'filterFunction')
+      })
     });
 
     var ember$data$lib$system$clone$null$$default = ember$data$lib$system$clone$null$$cloneNull;
