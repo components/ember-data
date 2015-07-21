@@ -63,9 +63,9 @@ define(
         store = env.store;
         adapter = env.adapter;
 
-        Post = store.modelFor("post");
-        Comment = store.modelFor("comment");
-        SuperUser = store.modelFor("super-user");
+        Post = store.modelFor('post');
+        Comment = store.modelFor('comment');
+        SuperUser = store.modelFor('super-user');
 
         passedUrl = null;
       }
@@ -75,110 +75,110 @@ define(
       adapter.ajax = function (url, verb, hash) {
         passedUrl = url;
 
-        return run(Ember.RSVP, "resolve", Ember.copy(value, true));
+        return run(Ember.RSVP, 'resolve', Ember.copy(value, true));
       };
     }
 
-    test("buildURL - with host and namespace", function () {
+    test('buildURL - with host and namespace', function () {
       run(function () {
         adapter.setProperties({
-          host: "http://example.com",
-          namespace: "api/v1"
+          host: 'http://example.com',
+          namespace: 'api/v1'
         });
       });
 
       ajaxResponse({ posts: [{ id: 1 }] });
 
-      run(store, "findRecord", "post", 1).then(async(function (post) {
+      run(store, 'findRecord', 'post', 1).then(async(function (post) {
         equal(passedUrl, "http://example.com/api/v1/posts/1");
       }));
     });
 
-    test("buildURL - with relative paths in links", function () {
+    test('buildURL - with relative paths in links', function () {
       run(function () {
         adapter.setProperties({
-          host: "http://example.com",
-          namespace: "api/v1"
+          host: 'http://example.com',
+          namespace: 'api/v1'
         });
       });
-      Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
-      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
+      Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
+      Comment.reopen({ post: DS.belongsTo('post', { async: false }) });
 
-      ajaxResponse({ posts: [{ id: 1, links: { comments: "comments" } }] });
+      ajaxResponse({ posts: [{ id: 1, links: { comments: 'comments' } }] });
 
-      run(store, "findRecord", "post", "1").then(async(function (post) {
+      run(store, 'findRecord', 'post', '1').then(async(function (post) {
         ajaxResponse({ comments: [{ id: 1 }] });
-        return post.get("comments");
+        return post.get('comments');
       })).then(async(function (comments) {
         equal(passedUrl, "http://example.com/api/v1/posts/1/comments");
       }));
     });
 
-    test("buildURL - with absolute paths in links", function () {
+    test('buildURL - with absolute paths in links', function () {
       run(function () {
         adapter.setProperties({
-          host: "http://example.com",
-          namespace: "api/v1"
+          host: 'http://example.com',
+          namespace: 'api/v1'
         });
       });
-      Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
-      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
+      Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
+      Comment.reopen({ post: DS.belongsTo('post', { async: false }) });
 
-      ajaxResponse({ posts: [{ id: 1, links: { comments: "/api/v1/posts/1/comments" } }] });
+      ajaxResponse({ posts: [{ id: 1, links: { comments: '/api/v1/posts/1/comments' } }] });
 
-      run(store, "findRecord", "post", 1).then(async(function (post) {
+      run(store, 'findRecord', 'post', 1).then(async(function (post) {
         ajaxResponse({ comments: [{ id: 1 }] });
-        return post.get("comments");
+        return post.get('comments');
       })).then(async(function (comments) {
         equal(passedUrl, "http://example.com/api/v1/posts/1/comments");
       }));
     });
 
-    test("buildURL - with absolute paths in links and protocol relative host", function () {
+    test('buildURL - with absolute paths in links and protocol relative host', function () {
       run(function () {
         adapter.setProperties({
-          host: "//example.com",
-          namespace: "api/v1"
+          host: '//example.com',
+          namespace: 'api/v1'
         });
       });
-      Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
-      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
+      Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
+      Comment.reopen({ post: DS.belongsTo('post', { async: false }) });
 
-      ajaxResponse({ posts: [{ id: 1, links: { comments: "/api/v1/posts/1/comments" } }] });
+      ajaxResponse({ posts: [{ id: 1, links: { comments: '/api/v1/posts/1/comments' } }] });
 
-      run(store, "findRecord", "post", 1).then(async(function (post) {
+      run(store, 'findRecord', 'post', 1).then(async(function (post) {
         ajaxResponse({ comments: [{ id: 1 }] });
-        return post.get("comments");
+        return post.get('comments');
       })).then(async(function (comments) {
         equal(passedUrl, "//example.com/api/v1/posts/1/comments");
       }));
     });
 
-    test("buildURL - with full URLs in links", function () {
+    test('buildURL - with full URLs in links', function () {
       adapter.setProperties({
-        host: "http://example.com",
-        namespace: "api/v1"
+        host: 'http://example.com',
+        namespace: 'api/v1'
       });
-      Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
-      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
+      Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
+      Comment.reopen({ post: DS.belongsTo('post', { async: false }) });
 
       ajaxResponse({
         posts: [{ id: 1,
-          links: { comments: "http://example.com/api/v1/posts/1/comments" }
+          links: { comments: 'http://example.com/api/v1/posts/1/comments' }
         }]
       });
 
       run(function () {
-        store.findRecord("post", 1).then(async(function (post) {
+        store.findRecord('post', 1).then(async(function (post) {
           ajaxResponse({ comments: [{ id: 1 }] });
-          return post.get("comments");
+          return post.get('comments');
         })).then(async(function (comments) {
           equal(passedUrl, "http://example.com/api/v1/posts/1/comments");
         }));
       });
     });
 
-    test("buildURL - with camelized names", function () {
+    test('buildURL - with camelized names', function () {
       adapter.setProperties({
         pathForType: function (type) {
           var decamelized = Ember.String.decamelize(type);
@@ -189,16 +189,16 @@ define(
       ajaxResponse({ superUsers: [{ id: 1 }] });
 
       run(function () {
-        store.findRecord("super-user", 1).then(async(function (post) {
+        store.findRecord('super-user', 1).then(async(function (post) {
           equal(passedUrl, "/super_users/1");
         }));
       });
     });
 
-    test("buildURL - buildURL takes a record from find", function () {
-      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
+    test('buildURL - buildURL takes a record from find', function () {
+      Comment.reopen({ post: DS.belongsTo('post', { async: false }) });
       adapter.buildURL = function (type, id, snapshot) {
-        return "/posts/" + snapshot.belongsTo("post", { id: true }) + "/comments/" + snapshot.id;
+        return "/posts/" + snapshot.belongsTo('post', { id: true }) + '/comments/' + snapshot.id;
       };
 
       ajaxResponse({ comments: [{ id: 1 }] });
@@ -207,26 +207,26 @@ define(
       run(function () {
         post = store.push({
           data: {
-            type: "post",
-            id: "2"
+            type: 'post',
+            id: '2'
           }
         });
       });
 
       run(function () {
-        store.findRecord("comment", 1, { preload: { post: post } }).then(async(function (post) {
+        store.findRecord('comment', 1, { preload: { post: post } }).then(async(function (post) {
           equal(passedUrl, "/posts/2/comments/1");
         }));
       });
     });
 
-    test("buildURL - buildURL takes the records from findMany", function () {
-      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
-      Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
+    test('buildURL - buildURL takes the records from findMany', function () {
+      Comment.reopen({ post: DS.belongsTo('post', { async: false }) });
+      Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
 
       adapter.buildURL = function (type, ids, snapshots) {
         if (Ember.isArray(snapshots)) {
-          return "/posts/" + snapshots.get("firstObject").belongsTo("post", { id: true }) + "/comments/";
+          return "/posts/" + snapshots.get('firstObject').belongsTo('post', { id: true }) + '/comments/';
         }
         return "";
       };
@@ -238,25 +238,25 @@ define(
       run(function () {
         post = store.push({
           data: {
-            type: "post",
-            id: "2",
+            type: 'post',
+            id: '2',
             relationships: {
               comments: {
-                data: [{ id: "1", type: "comment" }, { id: "2", type: "comment" }, { id: "3", type: "comment" }]
+                data: [{ id: '1', type: 'comment' }, { id: '2', type: 'comment' }, { id: '3', type: 'comment' }]
               }
             }
           }
         });
-        post.get("comments").then(async(function (post) {
+        post.get('comments').then(async(function (post) {
           equal(passedUrl, "/posts/2/comments/");
         }));
       });
     });
 
-    test("buildURL - buildURL takes a record from create", function () {
-      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
+    test('buildURL - buildURL takes a record from create', function () {
+      Comment.reopen({ post: DS.belongsTo('post', { async: false }) });
       adapter.buildURL = function (type, id, snapshot) {
-        return "/posts/" + snapshot.belongsTo("post", { id: true }) + "/comments/";
+        return "/posts/" + snapshot.belongsTo('post', { id: true }) + '/comments/';
       };
 
       ajaxResponse({ comments: [{ id: 1 }] });
@@ -264,35 +264,35 @@ define(
       run(function () {
         var post = store.push({
           data: {
-            type: "post",
-            id: "2"
+            type: 'post',
+            id: '2'
           }
         });
-        var comment = store.createRecord("comment");
-        comment.set("post", post);
+        var comment = store.createRecord('comment');
+        comment.set('post', post);
         comment.save().then(async(function (post) {
           equal(passedUrl, "/posts/2/comments/");
         }));
       });
     });
 
-    test("buildURL - buildURL takes a record from create to query a resolved async belongsTo relationship", function () {
-      Comment.reopen({ post: DS.belongsTo("post", { async: true }) });
+    test('buildURL - buildURL takes a record from create to query a resolved async belongsTo relationship', function () {
+      Comment.reopen({ post: DS.belongsTo('post', { async: true }) });
 
       ajaxResponse({ posts: [{ id: 2 }] });
 
       run(function () {
-        store.findRecord("post", 2).then(async(function (post) {
-          equal(post.get("id"), 2);
+        store.findRecord('post', 2).then(async(function (post) {
+          equal(post.get('id'), 2);
 
           adapter.buildURL = function (type, id, snapshot) {
-            return "/posts/" + snapshot.belongsTo("post", { id: true }) + "/comments/";
+            return "/posts/" + snapshot.belongsTo('post', { id: true }) + '/comments/';
           };
 
           ajaxResponse({ comments: [{ id: 1 }] });
 
-          var comment = store.createRecord("comment");
-          comment.set("post", post);
+          var comment = store.createRecord('comment');
+          comment.set('post', post);
           comment.save().then(async(function (post) {
             equal(passedUrl, "/posts/2/comments/");
           }));
@@ -300,10 +300,10 @@ define(
       });
     });
 
-    test("buildURL - buildURL takes a record from update", function () {
-      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
+    test('buildURL - buildURL takes a record from update', function () {
+      Comment.reopen({ post: DS.belongsTo('post', { async: false }) });
       adapter.buildURL = function (type, id, snapshot) {
-        return "/posts/" + snapshot.belongsTo("post", { id: true }) + "/comments/" + snapshot.id;
+        return "/posts/" + snapshot.belongsTo('post', { id: true }) + '/comments/' + snapshot.id;
       };
 
       ajaxResponse({ comments: [{ id: 1 }] });
@@ -312,17 +312,17 @@ define(
       run(function () {
         post = store.push({
           data: {
-            type: "post",
-            id: "2"
+            type: 'post',
+            id: '2'
           }
         });
         comment = store.push({
           data: {
-            type: "comment",
-            id: "1"
+            type: 'comment',
+            id: '1'
           }
         });
-        comment.set("post", post);
+        comment.set('post', post);
       });
       run(function () {
         comment.save().then(async(function (post) {
@@ -331,11 +331,11 @@ define(
       });
     });
 
-    test("buildURL - buildURL takes a record from delete", function () {
-      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
-      Post.reopen({ comments: DS.hasMany("comment", { async: false }) });
+    test('buildURL - buildURL takes a record from delete', function () {
+      Comment.reopen({ post: DS.belongsTo('post', { async: false }) });
+      Post.reopen({ comments: DS.hasMany('comment', { async: false }) });
       adapter.buildURL = function (type, id, snapshot) {
-        return "posts/" + snapshot.belongsTo("post", { id: true }) + "/comments/" + snapshot.id;
+        return 'posts/' + snapshot.belongsTo('post', { id: true }) + '/comments/' + snapshot.id;
       };
 
       ajaxResponse({ comments: [{ id: 1 }] });
@@ -344,18 +344,18 @@ define(
       run(function () {
         post = store.push({
           data: {
-            type: "post",
-            id: "2"
+            type: 'post',
+            id: '2'
           }
         });
         comment = store.push({
           data: {
-            type: "comment",
-            id: "1"
+            type: 'comment',
+            id: '1'
           }
         });
 
-        comment.set("post", post);
+        comment.set('post', post);
         comment.deleteRecord();
       });
       run(function () {
@@ -365,16 +365,16 @@ define(
       });
     });
 
-    test("buildURL - with absolute namespace", function () {
+    test('buildURL - with absolute namespace', function () {
       run(function () {
         adapter.setProperties({
-          namespace: "/api/v1"
+          namespace: '/api/v1'
         });
       });
 
       ajaxResponse({ posts: [{ id: 1 }] });
 
-      run(store, "findRecord", "post", 1).then(async(function (post) {
+      run(store, 'findRecord', 'post', 1).then(async(function (post) {
         equal(passedUrl, "/api/v1/posts/1");
       }));
     });
@@ -397,7 +397,7 @@ define(
     var run = Ember.run;
     var env;
 
-    module('integration/adapter/find_all - Finding All Records of a Type', {
+    module("integration/adapter/find_all - Finding All Records of a Type", {
       setup: function () {
         Person = DS.Model.extend({
           updatedAt: DS.attr('string'),
@@ -424,15 +424,15 @@ define(
       }
     });
 
-    test('When all records for a type are requested, the store should call the adapter\'s `findAll` method.', function () {
+    test("When all records for a type are requested, the store should call the adapter's `findAll` method.", function () {
       expect(5);
 
       env.registry.register('adapter:person', DS.Adapter.extend({
         findAll: function (store, type, since) {
           // this will get called twice
-          ok(true, 'the adapter\'s findAll method should be invoked');
+          ok(true, "the adapter's findAll method should be invoked");
 
-          return Ember.RSVP.resolve([{ id: 1, name: 'Braaaahm Dale' }]);
+          return Ember.RSVP.resolve([{ id: 1, name: "Braaaahm Dale" }]);
         }
       }));
 
@@ -441,32 +441,32 @@ define(
       run(function () {
         store.findAll('person').then(function (all) {
           allRecords = all;
-          equal(get(all, 'length'), 1, 'the record array\'s length is 1 after a record is loaded into it');
-          equal(all.objectAt(0).get('name'), 'Braaaahm Dale', 'the first item in the record array is Braaaahm Dale');
+          equal(get(all, 'length'), 1, "the record array's length is 1 after a record is loaded into it");
+          equal(all.objectAt(0).get('name'), "Braaaahm Dale", "the first item in the record array is Braaaahm Dale");
         });
       });
 
       run(function () {
         store.findAll('person').then(function (all) {
           // Only one record array per type should ever be created (identity map)
-          strictEqual(allRecords, all, 'the same record array is returned every time all records of a type are requested');
+          strictEqual(allRecords, all, "the same record array is returned every time all records of a type are requested");
         });
       });
     });
 
-    test('When all records for a type are requested, a rejection should reject the promise', function () {
+    test("When all records for a type are requested, a rejection should reject the promise", function () {
       expect(5);
 
       var count = 0;
       env.registry.register('adapter:person', DS.Adapter.extend({
         findAll: function (store, type, since) {
           // this will get called twice
-          ok(true, 'the adapter\'s findAll method should be invoked');
+          ok(true, "the adapter's findAll method should be invoked");
 
           if (count++ === 0) {
             return Ember.RSVP.reject();
           } else {
-            return Ember.RSVP.resolve([{ id: 1, name: 'Braaaahm Dale' }]);
+            return Ember.RSVP.resolve([{ id: 1, name: "Braaaahm Dale" }]);
           }
         }
       }));
@@ -475,17 +475,17 @@ define(
 
       run(function () {
         store.findAll('person').then(null, function () {
-          ok(true, 'The rejection should get here');
+          ok(true, "The rejection should get here");
           return store.findAll('person');
         }).then(function (all) {
           allRecords = all;
-          equal(get(all, 'length'), 1, 'the record array\'s length is 1 after a record is loaded into it');
-          equal(all.objectAt(0).get('name'), 'Braaaahm Dale', 'the first item in the record array is Braaaahm Dale');
+          equal(get(all, 'length'), 1, "the record array's length is 1 after a record is loaded into it");
+          equal(all.objectAt(0).get('name'), "Braaaahm Dale", "the first item in the record array is Braaaahm Dale");
         });
       });
     });
 
-    test('When all records for a type are requested, records that are already loaded should be returned immediately.', function () {
+    test("When all records for a type are requested, records that are already loaded should be returned immediately.", function () {
       expect(3);
       store = createStore({
         adapter: DS.Adapter.extend(),
@@ -504,17 +504,17 @@ define(
           }
         });
         // Create a new, unsaved record in the store
-        store.createRecord('person', { name: 'Alex MacCaw' });
+        store.createRecord('person', { name: "Alex MacCaw" });
       });
 
       allRecords = store.peekAll('person');
 
-      equal(get(allRecords, 'length'), 2, 'the record array\'s length is 2');
-      equal(allRecords.objectAt(0).get('name'), 'Jeremy Ashkenas', 'the first item in the record array is Jeremy Ashkenas');
-      equal(allRecords.objectAt(1).get('name'), 'Alex MacCaw', 'the second item in the record array is Alex MacCaw');
+      equal(get(allRecords, 'length'), 2, "the record array's length is 2");
+      equal(allRecords.objectAt(0).get('name'), "Jeremy Ashkenas", "the first item in the record array is Jeremy Ashkenas");
+      equal(allRecords.objectAt(1).get('name'), "Alex MacCaw", "the second item in the record array is Alex MacCaw");
     });
 
-    test('When all records for a type are requested, records that are created on the client should be added to the record array.', function () {
+    test("When all records for a type are requested, records that are created on the client should be added to the record array.", function () {
       expect(3);
 
       store = createStore({
@@ -524,14 +524,14 @@ define(
 
       allRecords = store.peekAll('person');
 
-      equal(get(allRecords, 'length'), 0, 'precond - the record array\'s length is zero before any records are loaded');
+      equal(get(allRecords, 'length'), 0, "precond - the record array's length is zero before any records are loaded");
 
       run(function () {
-        store.createRecord('person', { name: 'Carsten Nielsen' });
+        store.createRecord('person', { name: "Carsten Nielsen" });
       });
 
-      equal(get(allRecords, 'length'), 1, 'the record array\'s length is 1');
-      equal(allRecords.objectAt(0).get('name'), 'Carsten Nielsen', 'the first item in the record array is Carsten Nielsen');
+      equal(get(allRecords, 'length'), 1, "the record array's length is 1");
+      equal(allRecords.objectAt(0).get('name'), "Carsten Nielsen", "the first item in the record array is Carsten Nielsen");
     });
   }
 );
@@ -550,7 +550,7 @@ define(
     var Person, store, env;
     var run = Ember.run;
 
-    module('integration/adapter/find - Finding Records', {
+    module("integration/adapter/find - Finding Records", {
       setup: function () {
         Person = DS.Model.extend({
           updatedAt: DS.attr('string'),
@@ -570,17 +570,17 @@ define(
       }
     });
 
-    test('It raises an assertion when `undefined` is passed as id (#1705)', function () {
+    test("It raises an assertion when `undefined` is passed as id (#1705)", function () {
       expectAssertion(function () {
         store.find('person', undefined);
-      }, 'You cannot pass `undefined` as id to the store\'s find method');
+      }, "You cannot pass `undefined` as id to the store's find method");
 
       expectAssertion(function () {
         store.find('person', null);
-      }, 'You cannot pass `null` as id to the store\'s find method');
+      }, "You cannot pass `null` as id to the store's find method");
     });
 
-    test('store.findAll should trigger a deprecation warning about store.shouldReloadAll', function () {
+    test("store.findAll should trigger a deprecation warning about store.shouldReloadAll", function () {
       env.adapter.findAll = function () {
         return Ember.RSVP.resolve([]);
       };
@@ -592,18 +592,18 @@ define(
       });
     });
 
-    test('When a single record is requested, the adapter\'s find method should be called unless it\'s loaded.', function () {
+    test("When a single record is requested, the adapter's find method should be called unless it's loaded.", function () {
       expect(2);
 
       var count = 0;
 
       env.registry.register('adapter:person', DS.Adapter.extend({
         findRecord: function (store, type, id, snapshot) {
-          equal(type, Person, 'the find method is called with the correct type');
-          equal(count, 0, 'the find method is only called once');
+          equal(type, Person, "the find method is called with the correct type");
+          equal(count, 0, "the find method is only called once");
 
           count++;
-          return { id: 1, name: 'Braaaahm Dale' };
+          return { id: 1, name: "Braaaahm Dale" };
         }
       }));
 
@@ -613,7 +613,7 @@ define(
       });
     });
 
-    test('When a single record is requested multiple times, all .find() calls are resolved after the promise is resolved', function () {
+    test("When a single record is requested multiple times, all .find() calls are resolved after the promise is resolved", function () {
       var deferred = Ember.RSVP.defer();
 
       env.registry.register('adapter:person', DS.Adapter.extend({
@@ -624,8 +624,8 @@ define(
 
       run(function () {
         store.findRecord('person', 1).then(async(function (person) {
-          equal(person.get('id'), '1');
-          equal(person.get('name'), 'Braaaahm Dale');
+          equal(person.get('id'), "1");
+          equal(person.get('name'), "Braaaahm Dale");
 
           stop();
           deferred.promise.then(function (value) {
@@ -640,8 +640,8 @@ define(
 
       run(function () {
         store.findRecord('person', 1).then(async(function (post) {
-          equal(post.get('id'), '1');
-          equal(post.get('name'), 'Braaaahm Dale');
+          equal(post.get('id'), "1");
+          equal(post.get('name'), "Braaaahm Dale");
 
           stop();
           deferred.promise.then(function (value) {
@@ -655,11 +655,11 @@ define(
       });
 
       Ember.run(function () {
-        deferred.resolve({ id: 1, name: 'Braaaahm Dale' });
+        deferred.resolve({ id: 1, name: "Braaaahm Dale" });
       });
     });
 
-    test('When a single record is requested, and the promise is rejected, .find() is rejected.', function () {
+    test("When a single record is requested, and the promise is rejected, .find() is rejected.", function () {
       env.registry.register('adapter:person', DS.Adapter.extend({
         findRecord: function (store, type, id, snapshot) {
           return Ember.RSVP.reject();
@@ -668,12 +668,12 @@ define(
 
       run(function () {
         store.findRecord('person', 1).then(null, async(function (reason) {
-          ok(true, 'The rejection handler was called');
+          ok(true, "The rejection handler was called");
         }));
       });
     });
 
-    test('When a single record is requested, and the promise is rejected, the record should be unloaded.', function () {
+    test("When a single record is requested, and the promise is rejected, the record should be unloaded.", function () {
       expect(2);
 
       env.registry.register('adapter:person', DS.Adapter.extend({
@@ -684,11 +684,11 @@ define(
 
       run(function () {
         store.findRecord('person', 1).then(null, async(function (reason) {
-          ok(true, 'The rejection handler was called');
+          ok(true, "The rejection handler was called");
         }));
       });
 
-      ok(!store.hasRecordForId('person', 1), 'The record has been unloaded');
+      ok(!store.hasRecordForId('person', 1), "The record has been unloaded");
     });
   }
 );
@@ -1612,7 +1612,7 @@ define(
     var Person, env, store, adapter;
     var run = Ember.run;
 
-    module('integration/adapter/queries - Queries', {
+    module("integration/adapter/queries - Queries", {
       setup: function () {
         Person = DS.Model.extend({
           updatedAt: DS.attr('string'),
@@ -1631,19 +1631,19 @@ define(
       }
     });
 
-    test('When a query is made, the adapter should receive a record array it can populate with the results of the query.', function () {
+    test("When a query is made, the adapter should receive a record array it can populate with the results of the query.", function () {
       adapter.query = function (store, type, query, recordArray) {
-        equal(type, Person, 'the find method is called with the correct type');
+        equal(type, Person, "the find method is called with the correct type");
 
-        return Ember.RSVP.resolve([{ id: 1, name: 'Peter Wagenet' }, { id: 2, name: 'Brohuda Katz' }]);
+        return Ember.RSVP.resolve([{ id: 1, name: "Peter Wagenet" }, { id: 2, name: "Brohuda Katz" }]);
       };
 
       store.query('person', { page: 1 }).then(async(function (queryResults) {
-        equal(get(queryResults, 'length'), 2, 'the record array has a length of 2 after the results are loaded');
-        equal(get(queryResults, 'isLoaded'), true, 'the record array\'s `isLoaded` property should be true');
+        equal(get(queryResults, 'length'), 2, "the record array has a length of 2 after the results are loaded");
+        equal(get(queryResults, 'isLoaded'), true, "the record array's `isLoaded` property should be true");
 
-        equal(queryResults.objectAt(0).get('name'), 'Peter Wagenet', 'the first record is \'Peter Wagenet\'');
-        equal(queryResults.objectAt(1).get('name'), 'Brohuda Katz', 'the second record is \'Brohuda Katz\'');
+        equal(queryResults.objectAt(0).get('name'), "Peter Wagenet", "the first record is 'Peter Wagenet'");
+        equal(queryResults.objectAt(1).get('name'), "Brohuda Katz", "the second record is 'Brohuda Katz'");
       }));
     });
   }
@@ -1671,7 +1671,7 @@ define(
 
     function assertClean(promise) {
       return promise.then(async(function (record) {
-        equal(record.get("hasDirtyAttributes"), false, "The record is now clean");
+        equal(record.get('hasDirtyAttributes'), false, "The record is now clean");
         return record;
       }));
     }
@@ -1679,10 +1679,10 @@ define(
     module("integration/adapter/record_persistence - Persisting Records", {
       setup: function () {
         Person = DS.Model.extend({
-          updatedAt: attr("string"),
-          name: attr("string"),
-          firstName: attr("string"),
-          lastName: attr("string")
+          updatedAt: attr('string'),
+          name: attr('string'),
+          firstName: attr('string'),
+          lastName: attr('string')
         });
         Person.toString = function () {
           return "Person";
@@ -1693,7 +1693,7 @@ define(
       },
 
       teardown: function () {
-        run(env.container, "destroy");
+        run(env.container, 'destroy');
       }
     });
 
@@ -1704,16 +1704,16 @@ define(
         equal(type, Person, "the type is correct");
         equal(snapshot.record, tom, "the record is correct");
 
-        return run(Ember.RSVP, "resolve");
+        return run(Ember.RSVP, 'resolve');
       };
 
       run(function () {
         env.store.push({
           data: {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "Braaaahm Dale"
+              name: 'Braaaahm Dale'
             }
           }
         });
@@ -1721,7 +1721,7 @@ define(
 
       var tom;
 
-      env.store.find("person", 1).then(async(function (person) {
+      env.store.find('person', 1).then(async(function (person) {
         tom = person;
         set(tom, "name", "Tom Dale");
         tom.save();
@@ -1740,7 +1740,7 @@ define(
       };
 
       run(function () {
-        tom = env.store.createRecord("person", { name: "Tom Dale" });
+        tom = env.store.createRecord('person', { name: "Tom Dale" });
         tom.save();
       });
     });
@@ -1754,11 +1754,11 @@ define(
       };
 
       run(function () {
-        tom = env.store.createRecord("person", { name: "Tom Dale" });
+        tom = env.store.createRecord('person', { name: "Tom Dale" });
         tom.save();
       });
 
-      asyncEqual(tom, env.store.find("person", 1), "the retrieved record is the same as the created record");
+      asyncEqual(tom, env.store.find('person', 1), "the retrieved record is the same as the created record");
     });
 
     test("when a store is committed, the adapter's `commit` method should be called with records that have been deleted.", function () {
@@ -1766,7 +1766,7 @@ define(
         equal(type, Person, "the type is correct");
         equal(snapshot.record, tom, "the record is correct");
 
-        return run(Ember.RSVP, "resolve");
+        return run(Ember.RSVP, 'resolve');
       };
 
       var tom;
@@ -1774,20 +1774,20 @@ define(
       run(function () {
         env.store.push({
           data: {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
               name: "Tom Dale"
             }
           }
         });
       });
-      env.store.find("person", 1).then(async(function (person) {
+      env.store.find('person', 1).then(async(function (person) {
         tom = person;
         tom.deleteRecord();
         return tom.save();
       })).then(async(function (tom) {
-        equal(get(tom, "isDeleted"), true, "record is marked as deleted");
+        equal(get(tom, 'isDeleted'), true, "record is marked as deleted");
       }));
     });
 
@@ -1803,24 +1803,24 @@ define(
       run(function () {
         env.store.push({
           data: [{
-            type: "person",
-            id: "1"
+            type: 'person',
+            id: '1'
           }, {
-            type: "person",
-            id: "2"
+            type: 'person',
+            id: '2'
           }]
         });
       });
 
-      all([env.store.find("person", 1), env.store.find("person", 2)]).then(async(function (array) {
+      all([env.store.find('person', 1), env.store.find('person', 2)]).then(async(function (array) {
         tom = array[0];
         yehuda = array[1];
 
-        tom.set("name", "Michael Phelps");
-        yehuda.set("name", "Usain Bolt");
+        tom.set('name', "Michael Phelps");
+        yehuda.set('name', "Usain Bolt");
 
-        ok(tom.get("hasDirtyAttributes"), "tom is dirty");
-        ok(yehuda.get("hasDirtyAttributes"), "yehuda is dirty");
+        ok(tom.get('hasDirtyAttributes'), "tom is dirty");
+        ok(yehuda.get('hasDirtyAttributes'), "yehuda is dirty");
 
         assertClean(tom.save()).then(async(function (record) {
           equal(record, tom, "The record is correct");
@@ -1844,31 +1844,31 @@ define(
       run(function () {
         env.store.push({
           data: [{
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "Braaaahm Dale"
+              name: 'Braaaahm Dale'
             }
           }, {
-            type: "person",
-            id: "2",
+            type: 'person',
+            id: '2',
             attributes: {
-              name: "Gentile Katz"
+              name: 'Gentile Katz'
             }
           }]
         });
       });
 
-      hash({ tom: env.store.find("person", 1), yehuda: env.store.find("person", 2) }).then(async(function (people) {
-        people.tom.set("name", "Draaaaaahm Dale");
-        people.yehuda.set("name", "Goy Katz");
+      hash({ tom: env.store.find('person', 1), yehuda: env.store.find('person', 2) }).then(async(function (people) {
+        people.tom.set('name', "Draaaaaahm Dale");
+        people.yehuda.set('name', "Goy Katz");
 
         return hash({ tom: people.tom.save(), yehuda: people.yehuda.save() });
       })).then(async(function (people) {
-        equal(people.tom.get("name"), "Tom Dale", "name attribute should reflect value of hash passed to didSaveRecords");
-        equal(people.tom.get("updatedAt"), "now", "updatedAt attribute should reflect value of hash passed to didSaveRecords");
-        equal(people.yehuda.get("name"), "Yehuda Katz", "name attribute should reflect value of hash passed to didSaveRecords");
-        equal(people.yehuda.get("updatedAt"), "now!", "updatedAt attribute should reflect value of hash passed to didSaveRecords");
+        equal(people.tom.get('name'), "Tom Dale", "name attribute should reflect value of hash passed to didSaveRecords");
+        equal(people.tom.get('updatedAt'), "now", "updatedAt attribute should reflect value of hash passed to didSaveRecords");
+        equal(people.yehuda.get('name'), "Yehuda Katz", "name attribute should reflect value of hash passed to didSaveRecords");
+        equal(people.yehuda.get('updatedAt'), "now!", "updatedAt attribute should reflect value of hash passed to didSaveRecords");
       }));
     });
 
@@ -1880,21 +1880,21 @@ define(
       run(function () {
         store.push({
           data: [{
-            type: "person",
-            id: "1"
+            type: 'person',
+            id: '1'
           }, {
-            type: "person",
-            id: "2"
+            type: 'person',
+            id: '2'
           }]
         });
       });
 
-      hash({ tom: store.find("person", 1), yehuda: store.find("person", 2) }).then(async(function (people) {
-        people.tom.set("name", "Tom Dale");
-        people.yehuda.set("name", "Yehuda Katz");
+      hash({ tom: store.find('person', 1), yehuda: store.find('person', 2) }).then(async(function (people) {
+        people.tom.set('name', "Tom Dale");
+        people.yehuda.set('name', "Yehuda Katz");
 
-        ok(people.tom.get("hasDirtyAttributes"), "tom is dirty");
-        ok(people.yehuda.get("hasDirtyAttributes"), "yehuda is dirty");
+        ok(people.tom.get('hasDirtyAttributes'), "tom is dirty");
+        ok(people.yehuda.get('hasDirtyAttributes'), "yehuda is dirty");
 
         assertClean(people.tom.save());
         assertClean(people.yehuda.save());
@@ -1914,31 +1914,31 @@ define(
       run(function () {
         env.store.push({
           data: [{
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "Braaaahm Dale"
+              name: 'Braaaahm Dale'
             }
           }, {
-            type: "person",
-            id: "2",
+            type: 'person',
+            id: '2',
             attributes: {
-              name: "Gentile Katz"
+              name: 'Gentile Katz'
             }
           }]
         });
       });
 
-      hash({ tom: store.find("person", 1), yehuda: store.find("person", 2) }).then(async(function (people) {
-        people.tom.set("name", "Draaaaaahm Dale");
-        people.yehuda.set("name", "Goy Katz");
+      hash({ tom: store.find('person', 1), yehuda: store.find('person', 2) }).then(async(function (people) {
+        people.tom.set('name', "Draaaaaahm Dale");
+        people.yehuda.set('name', "Goy Katz");
 
         return hash({ tom: people.tom.save(), yehuda: people.yehuda.save() });
       })).then(async(function (people) {
-        equal(people.tom.get("name"), "Tom Dale", "name attribute should reflect value of hash passed to didSaveRecords");
-        equal(people.tom.get("updatedAt"), "now", "updatedAt attribute should reflect value of hash passed to didSaveRecords");
-        equal(people.yehuda.get("name"), "Yehuda Katz", "name attribute should reflect value of hash passed to didSaveRecords");
-        equal(people.yehuda.get("updatedAt"), "now!", "updatedAt attribute should reflect value of hash passed to didSaveRecords");
+        equal(people.tom.get('name'), "Tom Dale", "name attribute should reflect value of hash passed to didSaveRecords");
+        equal(people.tom.get('updatedAt'), "now", "updatedAt attribute should reflect value of hash passed to didSaveRecords");
+        equal(people.yehuda.get('name'), "Yehuda Katz", "name attribute should reflect value of hash passed to didSaveRecords");
+        equal(people.yehuda.get('updatedAt'), "now!", "updatedAt attribute should reflect value of hash passed to didSaveRecords");
       }));
     });
 
@@ -1950,22 +1950,22 @@ define(
       run(function () {
         env.store.push({
           data: [{
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "Braaaahm Dale"
+              name: 'Braaaahm Dale'
             }
           }, {
-            type: "person",
-            id: "2",
+            type: 'person',
+            id: '2',
             attributes: {
-              name: "Gentile Katz"
+              name: 'Gentile Katz'
             }
           }]
         });
       });
 
-      hash({ tom: store.find("person", 1), yehuda: store.find("person", 2) }).then(async(function (people) {
+      hash({ tom: store.find('person', 1), yehuda: store.find('person', 2) }).then(async(function (people) {
         people.tom.deleteRecord();
         people.yehuda.deleteRecord();
 
@@ -1977,12 +1977,6 @@ define(
 );
 
 
-// Noop
-// NOOP
-// Noop
-// Noop
-// NOOP
-// NOOP
 define(
   "ember-data/tests/integration/adapter/rest-adapter-test",
   ["exports"],
@@ -2034,20 +2028,20 @@ define(
         passedVerb = verb;
         passedHash = hash;
 
-        return run(Ember.RSVP, "resolve", Ember.copy(value, true));
+        return run(Ember.RSVP, 'resolve', Ember.copy(value, true));
       };
     }
 
     test("find - basic payload", function () {
       ajaxResponse({ posts: [{ id: 1, name: "Rails is omakase" }] });
 
-      run(store, "find", "post", 1).then(async(function (post) {
+      run(store, 'find', 'post', 1).then(async(function (post) {
         equal(passedUrl, "/posts/1");
         equal(passedVerb, "GET");
         equal(passedHash, undefined);
 
-        equal(post.get("id"), "1");
-        equal(post.get("name"), "Rails is omakase");
+        equal(post.get('id'), "1");
+        equal(post.get('name'), "Rails is omakase");
       }));
     });
 
@@ -2058,7 +2052,7 @@ define(
 
       ajaxResponse({ posts: [{ id: 1, name: "Rails is omakase" }] });
 
-      run(store, "findRecord", "post", 1).then(async(function (post) {
+      run(store, 'findRecord', 'post', 1).then(async(function (post) {
         equal(passedUrl, "/findRecord/post/1");
       }));
     });
@@ -2066,13 +2060,13 @@ define(
     test("find - basic payload (with legacy singular name)", function () {
       ajaxResponse({ post: { id: 1, name: "Rails is omakase" } });
 
-      run(store, "find", "post", 1).then(async(function (post) {
+      run(store, 'find', 'post', 1).then(async(function (post) {
         equal(passedUrl, "/posts/1");
         equal(passedVerb, "GET");
         equal(passedHash, undefined);
 
-        equal(post.get("id"), "1");
-        equal(post.get("name"), "Rails is omakase");
+        equal(post.get('id'), "1");
+        equal(post.get('name'), "Rails is omakase");
       }));
     });
 
@@ -2081,17 +2075,17 @@ define(
         posts: [{ id: 1, name: "Rails is omakase" }, { id: 2, name: "The Parley Letter" }]
       });
 
-      run(store, "find", "post", 1).then(async(function (post) {
+      run(store, 'find', 'post', 1).then(async(function (post) {
         equal(passedUrl, "/posts/1");
         equal(passedVerb, "GET");
         equal(passedHash, undefined);
 
-        equal(post.get("id"), "1");
-        equal(post.get("name"), "Rails is omakase");
+        equal(post.get('id'), "1");
+        equal(post.get('name'), "Rails is omakase");
 
-        var post2 = store.peekRecord("post", 2);
-        equal(post2.get("id"), "2");
-        equal(post2.get("name"), "The Parley Letter");
+        var post2 = store.peekRecord('post', 2);
+        equal(post2.get('id'), "2");
+        equal(post2.get('name'), "The Parley Letter");
       }));
     });
 
@@ -2101,42 +2095,42 @@ define(
         comments: [{ id: 1, name: "FIRST" }]
       });
 
-      run(store, "find", "post", 1).then(async(function (post) {
+      run(store, 'find', 'post', 1).then(async(function (post) {
         equal(passedUrl, "/posts/1");
         equal(passedVerb, "GET");
         equal(passedHash, undefined);
 
-        equal(post.get("id"), "1");
-        equal(post.get("name"), "Rails is omakase");
+        equal(post.get('id'), "1");
+        equal(post.get('name'), "Rails is omakase");
 
-        var comment = store.peekRecord("comment", 1);
-        equal(comment.get("id"), "1");
-        equal(comment.get("name"), "FIRST");
+        var comment = store.peekRecord('comment', 1);
+        equal(comment.get('id'), "1");
+        equal(comment.get('name'), "FIRST");
       }));
     });
 
     test("find - payload with an serializer-specified primary key", function () {
-      env.registry.register("serializer:post", DS.RESTSerializer.extend({
-        primaryKey: "_ID_"
+      env.registry.register('serializer:post', DS.RESTSerializer.extend({
+        primaryKey: '_ID_'
       }));
 
       ajaxResponse({ posts: [{ "_ID_": 1, name: "Rails is omakase" }] });
 
-      run(store, "find", "post", 1).then(async(function (post) {
+      run(store, 'find', 'post', 1).then(async(function (post) {
         equal(passedUrl, "/posts/1");
         equal(passedVerb, "GET");
         equal(passedHash, undefined);
 
-        equal(post.get("id"), "1");
-        equal(post.get("name"), "Rails is omakase");
+        equal(post.get('id'), "1");
+        equal(post.get('name'), "Rails is omakase");
       }));
     });
 
     test("find - payload with a serializer-specified attribute mapping", function () {
-      env.registry.register("serializer:post", DS.RESTSerializer.extend({
+      env.registry.register('serializer:post', DS.RESTSerializer.extend({
         attrs: {
-          "name": "_NAME_",
-          "createdAt": { key: "_CREATED_AT_", someOtherOption: "option" }
+          'name': '_NAME_',
+          'createdAt': { key: '_CREATED_AT_', someOtherOption: 'option' }
         }
       }));
 
@@ -2146,14 +2140,14 @@ define(
 
       ajaxResponse({ posts: [{ id: 1, _NAME_: "Rails is omakase", _CREATED_AT_: 2013 }] });
 
-      run(store, "find", "post", 1).then(async(function (post) {
+      run(store, 'find', 'post', 1).then(async(function (post) {
         equal(passedUrl, "/posts/1");
         equal(passedVerb, "GET");
         equal(passedHash, undefined);
 
-        equal(post.get("id"), "1");
-        equal(post.get("name"), "Rails is omakase");
-        equal(post.get("createdAt"), 2013);
+        equal(post.get('id'), "1");
+        equal(post.get('name'), "Rails is omakase");
+        equal(post.get('createdAt'), 2013);
       }));
     });
 
@@ -2162,14 +2156,14 @@ define(
       var post;
 
       run(function () {
-        post = store.createRecord("post", { id: "some-uuid", name: "The Parley Letter" });
+        post = store.createRecord('post', { id: "some-uuid", name: "The Parley Letter" });
         post.save().then(async(function (post) {
           equal(passedUrl, "/posts");
           equal(passedVerb, "POST");
           deepEqual(passedHash.data, { post: { id: "some-uuid", name: "The Parley Letter" } });
 
-          equal(post.get("hasDirtyAttributes"), false, "the post isn't dirty anymore");
-          equal(post.get("name"), "The Parley Letter", "the post was updated");
+          equal(post.get('hasDirtyAttributes'), false, "the post isn't dirty anymore");
+          equal(post.get('name'), "The Parley Letter", "the post was updated");
         }));
       });
     });
@@ -2183,7 +2177,7 @@ define(
       var post;
 
       run(function () {
-        post = store.createRecord("post", { id: "some-uuid", name: "The Parley Letter" });
+        post = store.createRecord('post', { id: "some-uuid", name: "The Parley Letter" });
         post.save().then(async(function (post) {
           equal(passedUrl, "/post/createRecord");
         }));
@@ -2193,16 +2187,16 @@ define(
     test("create - a payload with a new ID and data applies the updates", function () {
       ajaxResponse({ posts: [{ id: "1", name: "Dat Parley Letter" }] });
       run(function () {
-        var post = store.createRecord("post", { name: "The Parley Letter" });
+        var post = store.createRecord('post', { name: "The Parley Letter" });
 
         post.save().then(async(function (post) {
           equal(passedUrl, "/posts");
           equal(passedVerb, "POST");
           deepEqual(passedHash.data, { post: { name: "The Parley Letter" } });
 
-          equal(post.get("id"), "1", "the post has the updated ID");
-          equal(post.get("hasDirtyAttributes"), false, "the post isn't dirty anymore");
-          equal(post.get("name"), "Dat Parley Letter", "the post was updated");
+          equal(post.get('id'), "1", "the post has the updated ID");
+          equal(post.get('hasDirtyAttributes'), false, "the post isn't dirty anymore");
+          equal(post.get('name'), "Dat Parley Letter", "the post was updated");
         }));
       });
     });
@@ -2211,17 +2205,17 @@ define(
       var post;
       ajaxResponse({ post: { id: "1", name: "Dat Parley Letter" } });
       run(function () {
-        post = store.createRecord("post", { name: "The Parley Letter" });
+        post = store.createRecord('post', { name: "The Parley Letter" });
       });
 
-      run(post, "save").then(async(function (post) {
+      run(post, 'save').then(async(function (post) {
         equal(passedUrl, "/posts");
         equal(passedVerb, "POST");
         deepEqual(passedHash.data, { post: { name: "The Parley Letter" } });
 
-        equal(post.get("id"), "1", "the post has the updated ID");
-        equal(post.get("hasDirtyAttributes"), false, "the post isn't dirty anymore");
-        equal(post.get("name"), "Dat Parley Letter", "the post was updated");
+        equal(post.get('id'), "1", "the post has the updated ID");
+        equal(post.get('hasDirtyAttributes'), false, "the post isn't dirty anymore");
+        equal(post.get('name'), "Dat Parley Letter", "the post was updated");
       }));
     });
 
@@ -2229,14 +2223,14 @@ define(
       ajaxResponse({ comment: { id: "1", name: "Dat Parley Letter", post: 1 } });
       var comment;
 
-      Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
-      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
+      Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
+      Comment.reopen({ post: DS.belongsTo('post', { async: false }) });
 
       run(function () {
         store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
               name: "Rails is omakase"
             },
@@ -2248,70 +2242,70 @@ define(
           }
         });
       });
-      var post = store.peekRecord("post", 1);
+      var post = store.peekRecord('post', 1);
 
       run(function () {
-        comment = store.createRecord("comment", { name: "The Parley Letter" });
+        comment = store.createRecord('comment', { name: "The Parley Letter" });
       });
-      post.get("comments").pushObject(comment);
+      post.get('comments').pushObject(comment);
 
-      equal(comment.get("post"), post, "the post has been set correctly");
+      equal(comment.get('post'), post, "the post has been set correctly");
 
       run(function () {
         comment.save().then(async(function (comment) {
-          equal(comment.get("hasDirtyAttributes"), false, "the post isn't dirty anymore");
-          equal(comment.get("name"), "Dat Parley Letter", "the post was updated");
-          equal(comment.get("post"), post, "the post is still set");
+          equal(comment.get('hasDirtyAttributes'), false, "the post isn't dirty anymore");
+          equal(comment.get('name'), "Dat Parley Letter", "the post was updated");
+          equal(comment.get('post'), post, "the post is still set");
         }));
       });
     });
 
     test("create - a serializer's primary key and attributes are consulted when building the payload", function () {
       var post;
-      env.registry.register("serializer:post", DS.RESTSerializer.extend({
-        primaryKey: "_id_",
+      env.registry.register('serializer:post', DS.RESTSerializer.extend({
+        primaryKey: '_id_',
 
         attrs: {
-          name: "_name_"
+          name: '_name_'
         }
       }));
 
       ajaxResponse();
 
       run(function () {
-        post = store.createRecord("post", { id: "some-uuid", name: "The Parley Letter" });
+        post = store.createRecord('post', { id: "some-uuid", name: "The Parley Letter" });
       });
 
-      run(post, "save").then(async(function (post) {
-        deepEqual(passedHash.data, { post: { _id_: "some-uuid", "_name_": "The Parley Letter" } });
+      run(post, 'save').then(async(function (post) {
+        deepEqual(passedHash.data, { post: { _id_: 'some-uuid', '_name_': "The Parley Letter" } });
       }));
     });
 
     test("create - a serializer's attributes are consulted when building the payload if no id is pre-defined", function () {
       var post;
-      env.registry.register("serializer:post", DS.RESTSerializer.extend({
-        primarykey: "_id_",
+      env.registry.register('serializer:post', DS.RESTSerializer.extend({
+        primarykey: '_id_',
 
         attrs: {
-          name: "_name_"
+          name: '_name_'
         }
       }));
 
       ajaxResponse();
 
       run(function () {
-        post = store.createRecord("post", { name: "The Parley Letter" });
+        post = store.createRecord('post', { name: "The Parley Letter" });
 
         post.save().then(async(function (post) {
-          deepEqual(passedHash.data, { post: { "_name_": "The Parley Letter" } });
+          deepEqual(passedHash.data, { post: { '_name_': "The Parley Letter" } });
         }));
       });
     });
 
     test("create - a serializer's attribute mapping takes precdence over keyForAttribute when building the payload", function () {
-      env.registry.register("serializer:post", DS.RESTSerializer.extend({
+      env.registry.register('serializer:post', DS.RESTSerializer.extend({
         attrs: {
-          name: "given_name"
+          name: 'given_name'
         },
 
         keyForAttribute: function (attr) {
@@ -2322,18 +2316,18 @@ define(
       ajaxResponse();
 
       run(function () {
-        var post = store.createRecord("post", { id: "some-uuid", name: "The Parley Letter" });
+        var post = store.createRecord('post', { id: "some-uuid", name: "The Parley Letter" });
 
         post.save().then(async(function (post) {
-          deepEqual(passedHash.data, { post: { "given_name": "The Parley Letter", id: "some-uuid" } });
+          deepEqual(passedHash.data, { post: { 'given_name': "The Parley Letter", id: "some-uuid" } });
         }));
       });
     });
 
     test("create - a serializer's attribute mapping takes precedence over keyForRelationship (belongsTo) when building the payload", function () {
-      env.registry.register("serializer:comment", DS.RESTSerializer.extend({
+      env.registry.register('serializer:comment', DS.RESTSerializer.extend({
         attrs: {
-          post: "article"
+          post: 'article'
         },
 
         keyForRelationship: function (attr, kind) {
@@ -2343,11 +2337,11 @@ define(
 
       ajaxResponse();
 
-      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
+      Comment.reopen({ post: DS.belongsTo('post', { async: false }) });
 
       run(function () {
-        var post = store.createRecord("post", { id: "a-post-id", name: "The Parley Letter" });
-        var comment = store.createRecord("comment", { id: "some-uuid", name: "Letters are fun", post: post });
+        var post = store.createRecord('post', { id: "a-post-id", name: "The Parley Letter" });
+        var comment = store.createRecord('comment', { id: "some-uuid", name: "Letters are fun", post: post });
 
         comment.save().then(async(function (post) {
           deepEqual(passedHash.data, { comment: { article: "a-post-id", id: "some-uuid", name: "Letters are fun" } });
@@ -2356,9 +2350,9 @@ define(
     });
 
     test("create - a serializer's attribute mapping takes precedence over keyForRelationship (hasMany) when building the payload", function () {
-      env.registry.register("serializer:post", DS.RESTSerializer.extend({
+      env.registry.register('serializer:post', DS.RESTSerializer.extend({
         attrs: {
-          comments: "opinions"
+          comments: 'opinions'
         },
 
         keyForRelationship: function (attr, kind) {
@@ -2368,11 +2362,11 @@ define(
 
       ajaxResponse();
 
-      Post.reopen({ comments: DS.hasMany("comment", { async: false }) });
+      Post.reopen({ comments: DS.hasMany('comment', { async: false }) });
 
       run(function () {
-        var comment = store.createRecord("comment", { id: "a-comment-id", name: "First!" });
-        var post = store.createRecord("post", { id: "some-uuid", name: "The Parley Letter", comments: [comment] });
+        var comment = store.createRecord('comment', { id: "a-comment-id", name: "First!" });
+        var post = store.createRecord('post', { id: "some-uuid", name: "The Parley Letter", comments: [comment] });
 
         post.save().then(async(function (post) {
           deepEqual(passedHash.data, { post: { opinions: ["a-comment-id"], id: "some-uuid", name: "The Parley Letter" } });
@@ -2406,53 +2400,53 @@ define(
         // }
       });
 
-      Post.reopen({ comments: DS.hasMany("comment", { async: false }) });
-      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
+      Post.reopen({ comments: DS.hasMany('comment', { async: false }) });
+      Comment.reopen({ post: DS.belongsTo('post', { async: false }) });
 
       run(function () {
         store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
               name: "Rails is omakase"
             },
             relationships: {
               comments: {
-                data: [{ type: "comment", id: "1" }]
+                data: [{ type: 'comment', id: '1' }]
               }
             }
           }
         });
         store.push({
           data: {
-            type: "comment",
-            id: "1",
+            type: 'comment',
+            id: '1',
             attributes: {
               name: "Dat Parlay Letter"
             },
             relationships: {
               post: {
-                data: { type: "post", id: "1" }
+                data: { type: 'post', id: '1' }
               }
             }
           }
         });
       });
 
-      var post = store.peekRecord("post", 1);
-      var commentCount = post.get("comments.length");
+      var post = store.peekRecord('post', 1);
+      var commentCount = post.get('comments.length');
       equal(commentCount, 1, "the post starts life with a comment");
 
       run(function () {
-        var comment = store.createRecord("comment", { name: "Another Comment", post: post });
+        var comment = store.createRecord('comment', { name: "Another Comment", post: post });
 
         comment.save().then(async(function (comment) {
-          equal(comment.get("post"), post, "the comment is related to the post");
+          equal(comment.get('post'), post, "the comment is related to the post");
         }));
 
         post.reload().then(async(function (post) {
-          equal(post.get("comments.length"), 2, "Post comment count has been updated");
+          equal(post.get('comments.length'), 2, "Post comment count has been updated");
         }));
       });
     });
@@ -2461,11 +2455,11 @@ define(
       expect(4);
       var post;
 
-      Post.reopen({ comment: DS.belongsTo("comment", { async: false }) });
-      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
+      Post.reopen({ comment: DS.belongsTo('comment', { async: false }) });
+      Comment.reopen({ post: DS.belongsTo('post', { async: false }) });
 
       run(function () {
-        post = store.createRecord("post", { name: "man" });
+        post = store.createRecord('post', { name: "man" });
       });
 
       ajaxResponse({
@@ -2475,10 +2469,10 @@ define(
 
       run(function () {
         post.save().then(async(function (record) {
-          equal(store.peekRecord("post", 1).get("comment.isLoaded"), true, "post's comment isLoaded (via store)");
-          equal(store.peekRecord("comment", 1).get("post.isLoaded"), true, "comment's post isLoaded (via store)");
-          equal(record.get("comment.isLoaded"), true, "post's comment isLoaded (via record)");
-          equal(record.get("comment.post.isLoaded"), true, "post's comment's post isLoaded (via record)");
+          equal(store.peekRecord('post', 1).get('comment.isLoaded'), true, "post's comment isLoaded (via store)");
+          equal(store.peekRecord('comment', 1).get('post.isLoaded'), true, "comment's post isLoaded (via store)");
+          equal(record.get('comment.isLoaded'), true, "post's comment isLoaded (via record)");
+          equal(record.get('comment.post.isLoaded'), true, "post's comment's post isLoaded (via record)");
         }));
       });
     });
@@ -2499,17 +2493,17 @@ define(
         }]
       });
 
-      Post.reopen({ comments: DS.hasMany("comment", { async: false }) });
-      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
+      Post.reopen({ comments: DS.hasMany('comment', { async: false }) });
+      Comment.reopen({ post: DS.belongsTo('post', { async: false }) });
 
       var post;
       run(function () {
-        post = store.createRecord("post", { name: "Rails is omakase" });
+        post = store.createRecord('post', { name: "Rails is omakase" });
       });
 
       run(function () {
         post.save().then(async(function (post) {
-          equal(post.get("comments.firstObject.post"), post, "the comments are related to the correct post model");
+          equal(post.get('comments.firstObject.post'), post, "the comments are related to the correct post model");
           equal(store.typeMapFor(Post).records.length, 1, "There should only be one post record in the store");
 
           var postRecords = store.typeMapFor(Post).records;
@@ -2523,20 +2517,20 @@ define(
     test("create - relationships are not duplicated", function () {
       var post, comment;
 
-      Post.reopen({ comments: DS.hasMany("comment", { async: false }) });
-      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
+      Post.reopen({ comments: DS.hasMany('comment', { async: false }) });
+      Comment.reopen({ post: DS.belongsTo('post', { async: false }) });
 
       run(function () {
-        post = store.createRecord("post", { name: "Tomtomhuda" });
-        comment = store.createRecord("comment", { id: 2, name: "Comment title" });
+        post = store.createRecord('post', { name: "Tomtomhuda" });
+        comment = store.createRecord('comment', { id: 2, name: "Comment title" });
       });
 
       ajaxResponse({ post: [{ id: 1, name: "Rails is omakase", comments: [] }] });
 
-      run(post, "save").then(async(function (post) {
-        equal(post.get("comments.length"), 0, "post has 0 comments");
-        post.get("comments").pushObject(comment);
-        equal(post.get("comments.length"), 1, "post has 1 comment");
+      run(post, 'save').then(async(function (post) {
+        equal(post.get('comments.length'), 0, "post has 0 comments");
+        post.get('comments').pushObject(comment);
+        equal(post.get('comments.length'), 1, "post has 1 comment");
 
         ajaxResponse({
           post: [{ id: 1, name: "Rails is omakase", comments: [2] }],
@@ -2545,7 +2539,7 @@ define(
 
         return post.save();
       })).then(async(function (post) {
-        equal(post.get("comments.length"), 1, "post has 1 comment");
+        equal(post.get('comments.length'), 1, "post has 1 comment");
       }));
     });
 
@@ -2553,8 +2547,8 @@ define(
       run(function () {
         store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
               name: "Rails is omakase"
             }
@@ -2562,18 +2556,18 @@ define(
         });
       });
 
-      store.find("post", 1).then(async(function (post) {
+      store.find('post', 1).then(async(function (post) {
         ajaxResponse();
 
-        post.set("name", "The Parley Letter");
+        post.set('name', "The Parley Letter");
         return post.save();
       })).then(async(function (post) {
         equal(passedUrl, "/posts/1");
         equal(passedVerb, "PUT");
         deepEqual(passedHash.data, { post: { name: "The Parley Letter" } });
 
-        equal(post.get("hasDirtyAttributes"), false, "the post isn't dirty anymore");
-        equal(post.get("name"), "The Parley Letter", "the post was updated");
+        equal(post.get('hasDirtyAttributes'), false, "the post isn't dirty anymore");
+        equal(post.get('name'), "The Parley Letter", "the post was updated");
       }));
     });
 
@@ -2585,8 +2579,8 @@ define(
       run(function () {
         store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
               name: "Rails is omakase"
             }
@@ -2594,10 +2588,10 @@ define(
         });
       });
 
-      store.find("post", 1).then(async(function (post) {
+      store.find('post', 1).then(async(function (post) {
         ajaxResponse();
 
-        post.set("name", "The Parley Letter");
+        post.set('name', "The Parley Letter");
         return post.save();
       })).then(async(function (post) {
         equal(passedUrl, "/posts/1/updateRecord");
@@ -2608,8 +2602,8 @@ define(
       run(function () {
         store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
               name: "Rails is omakase"
             }
@@ -2617,18 +2611,18 @@ define(
         });
       });
 
-      store.find("post", 1).then(async(function (post) {
+      store.find('post', 1).then(async(function (post) {
         ajaxResponse({ posts: [{ id: 1, name: "Dat Parley Letter" }] });
 
-        post.set("name", "The Parley Letter");
+        post.set('name', "The Parley Letter");
         return post.save();
       })).then(async(function (post) {
         equal(passedUrl, "/posts/1");
         equal(passedVerb, "PUT");
         deepEqual(passedHash.data, { post: { name: "The Parley Letter" } });
 
-        equal(post.get("hasDirtyAttributes"), false, "the post isn't dirty anymore");
-        equal(post.get("name"), "Dat Parley Letter", "the post was updated");
+        equal(post.get('hasDirtyAttributes'), false, "the post isn't dirty anymore");
+        equal(post.get('name'), "Dat Parley Letter", "the post was updated");
       }));
     });
 
@@ -2636,8 +2630,8 @@ define(
       run(function () {
         store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
               name: "Rails is omakase"
             }
@@ -2645,18 +2639,18 @@ define(
         });
       });
 
-      store.find("post", 1).then(async(function (post) {
+      store.find('post', 1).then(async(function (post) {
         ajaxResponse({ post: { id: 1, name: "Dat Parley Letter" } });
 
-        post.set("name", "The Parley Letter");
+        post.set('name', "The Parley Letter");
         return post.save();
       })).then(async(function (post) {
         equal(passedUrl, "/posts/1");
         equal(passedVerb, "PUT");
         deepEqual(passedHash.data, { post: { name: "The Parley Letter" } });
 
-        equal(post.get("hasDirtyAttributes"), false, "the post isn't dirty anymore");
-        equal(post.get("name"), "Dat Parley Letter", "the post was updated");
+        equal(post.get('hasDirtyAttributes'), false, "the post isn't dirty anymore");
+        equal(post.get('name'), "Dat Parley Letter", "the post was updated");
       }));
     });
 
@@ -2667,18 +2661,18 @@ define(
         comments: [{ id: 1, name: "FIRST" }]
       });
       run(function () {
-        post = store.createRecord("post", { name: "The Parley Letter" });
+        post = store.createRecord('post', { name: "The Parley Letter" });
         post.save().then(async(function (post) {
           equal(passedUrl, "/posts");
           equal(passedVerb, "POST");
           deepEqual(passedHash.data, { post: { name: "The Parley Letter" } });
 
-          equal(post.get("id"), "1", "the post has the updated ID");
-          equal(post.get("hasDirtyAttributes"), false, "the post isn't dirty anymore");
-          equal(post.get("name"), "Dat Parley Letter", "the post was updated");
+          equal(post.get('id'), "1", "the post has the updated ID");
+          equal(post.get('hasDirtyAttributes'), false, "the post isn't dirty anymore");
+          equal(post.get('name'), "Dat Parley Letter", "the post was updated");
 
-          var comment = store.peekRecord("comment", 1);
-          equal(comment.get("name"), "FIRST", "The comment was sideloaded");
+          var comment = store.peekRecord('comment', 1);
+          equal(comment.get('name'), "FIRST", "The comment was sideloaded");
         }));
       });
     });
@@ -2687,8 +2681,8 @@ define(
       run(function () {
         store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
               name: "Rails is omakase"
             }
@@ -2696,82 +2690,82 @@ define(
         });
       });
 
-      store.find("post", 1).then(async(function (post) {
+      store.find('post', 1).then(async(function (post) {
         ajaxResponse({
           posts: [{ id: 1, name: "Dat Parley Letter" }],
           comments: [{ id: 1, name: "FIRST" }]
         });
 
-        post.set("name", "The Parley Letter");
+        post.set('name', "The Parley Letter");
         return post.save();
       })).then(async(function (post) {
         equal(passedUrl, "/posts/1");
         equal(passedVerb, "PUT");
         deepEqual(passedHash.data, { post: { name: "The Parley Letter" } });
 
-        equal(post.get("hasDirtyAttributes"), false, "the post isn't dirty anymore");
-        equal(post.get("name"), "Dat Parley Letter", "the post was updated");
+        equal(post.get('hasDirtyAttributes'), false, "the post isn't dirty anymore");
+        equal(post.get('name'), "Dat Parley Letter", "the post was updated");
 
-        var comment = store.peekRecord("comment", 1);
-        equal(comment.get("name"), "FIRST", "The comment was sideloaded");
+        var comment = store.peekRecord('comment', 1);
+        equal(comment.get('name'), "FIRST", "The comment was sideloaded");
       }));
     });
 
     test("update - a serializer's primary key and attributes are consulted when building the payload", function () {
-      env.registry.register("serializer:post", DS.RESTSerializer.extend({
-        primaryKey: "_id_",
+      env.registry.register('serializer:post', DS.RESTSerializer.extend({
+        primaryKey: '_id_',
 
         attrs: {
-          name: "_name_"
+          name: '_name_'
         }
       }));
 
       run(function () {
         store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             name: "Rails is omakase"
           }
         });
       });
       ajaxResponse();
 
-      store.find("post", 1).then(async(function (post) {
-        post.set("name", "The Parley Letter");
+      store.find('post', 1).then(async(function (post) {
+        post.set('name', "The Parley Letter");
         return post.save();
       })).then(async(function (post) {
-        deepEqual(passedHash.data, { post: { "_name_": "The Parley Letter" } });
+        deepEqual(passedHash.data, { post: { '_name_': "The Parley Letter" } });
       }));
     });
 
     test("update - hasMany relationships faithfully reflect simultaneous adds and removes", function () {
-      Post.reopen({ comments: DS.hasMany("comment", { async: false }) });
-      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
+      Post.reopen({ comments: DS.hasMany('comment', { async: false }) });
+      Comment.reopen({ post: DS.belongsTo('post', { async: false }) });
 
       run(function () {
         store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
               name: "Not everyone uses Rails"
             },
             relationships: {
               comments: {
-                data: [{ type: "comment", id: "1" }]
+                data: [{ type: 'comment', id: '1' }]
               }
             }
           },
           included: [{
-            type: "comment",
-            id: "1",
+            type: 'comment',
+            id: '1',
             attributes: {
               name: "Rails is omakase"
             }
           }, {
-            type: "comment",
-            id: "2",
+            type: 'comment',
+            id: '2',
             attributes: {
               name: "Yes. Yes it is."
             }
@@ -2783,11 +2777,11 @@ define(
         posts: { id: 1, name: "Not everyone uses Rails", comments: [2] }
       });
 
-      store.find("comment", 2).then(async(function () {
-        return store.find("post", 1);
+      store.find('comment', 2).then(async(function () {
+        return store.find('post', 1);
       })).then(async(function (post) {
-        var newComment = store.peekRecord("comment", 2);
-        var comments = post.get("comments");
+        var newComment = store.peekRecord('comment', 2);
+        var comments = post.get('comments');
 
         // Replace the comment with a new one
         comments.popObject();
@@ -2795,8 +2789,8 @@ define(
 
         return post.save();
       })).then(async(function (post) {
-        equal(post.get("comments.length"), 1, "the post has the correct number of comments");
-        equal(post.get("comments.firstObject.name"), "Yes. Yes it is.", "the post has the correct comment");
+        equal(post.get('comments.length'), 1, "the post has the correct number of comments");
+        equal(post.get('comments.firstObject.name'), "Yes. Yes it is.", "the post has the correct comment");
       }));
     });
 
@@ -2804,8 +2798,8 @@ define(
       run(function () {
         store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
               name: "Rails is omakase"
             }
@@ -2813,7 +2807,7 @@ define(
         });
       });
 
-      store.find("post", 1).then(async(function (post) {
+      store.find('post', 1).then(async(function (post) {
         ajaxResponse();
 
         post.deleteRecord();
@@ -2823,8 +2817,8 @@ define(
         equal(passedVerb, "DELETE");
         equal(passedHash, undefined);
 
-        equal(post.get("hasDirtyAttributes"), false, "the post isn't dirty anymore");
-        equal(post.get("isDeleted"), true, "the post is now deleted");
+        equal(post.get('hasDirtyAttributes'), false, "the post isn't dirty anymore");
+        equal(post.get('isDeleted'), true, "the post is now deleted");
       }));
     });
 
@@ -2836,8 +2830,8 @@ define(
       run(function () {
         store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
               name: "Rails is omakase"
             }
@@ -2845,7 +2839,7 @@ define(
         });
       });
 
-      store.find("post", 1).then(async(function (post) {
+      store.find('post', 1).then(async(function (post) {
         ajaxResponse();
 
         post.deleteRecord();
@@ -2859,8 +2853,8 @@ define(
       run(function () {
         store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
               name: "Rails is omakase"
             }
@@ -2868,7 +2862,7 @@ define(
         });
       });
 
-      store.find("post", 1).then(async(function (post) {
+      store.find('post', 1).then(async(function (post) {
         ajaxResponse({ comments: [{ id: 1, name: "FIRST" }] });
 
         post.deleteRecord();
@@ -2878,11 +2872,11 @@ define(
         equal(passedVerb, "DELETE");
         equal(passedHash, undefined);
 
-        equal(post.get("hasDirtyAttributes"), false, "the post isn't dirty anymore");
-        equal(post.get("isDeleted"), true, "the post is now deleted");
+        equal(post.get('hasDirtyAttributes'), false, "the post isn't dirty anymore");
+        equal(post.get('isDeleted'), true, "the post is now deleted");
 
-        var comment = store.peekRecord("comment", 1);
-        equal(comment.get("name"), "FIRST", "The comment was sideloaded");
+        var comment = store.peekRecord('comment', 1);
+        equal(comment.get('name'), "FIRST", "The comment was sideloaded");
       }));
     });
 
@@ -2890,8 +2884,8 @@ define(
       run(function () {
         store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
               name: "Rails is omakase"
             }
@@ -2899,7 +2893,7 @@ define(
         });
       });
 
-      store.find("post", 1).then(async(function (post) {
+      store.find('post', 1).then(async(function (post) {
         ajaxResponse({ posts: [{ id: 2, name: "The Parley Letter" }] });
 
         post.deleteRecord();
@@ -2909,18 +2903,18 @@ define(
         equal(passedVerb, "DELETE");
         equal(passedHash, undefined);
 
-        equal(post.get("hasDirtyAttributes"), false, "the original post isn't dirty anymore");
-        equal(post.get("isDeleted"), true, "the original post is now deleted");
+        equal(post.get('hasDirtyAttributes'), false, "the original post isn't dirty anymore");
+        equal(post.get('isDeleted'), true, "the original post is now deleted");
 
-        var newPost = store.peekRecord("post", 2);
-        equal(newPost.get("name"), "The Parley Letter", "The new post was added to the store");
+        var newPost = store.peekRecord('post', 2);
+        equal(newPost.get('name'), "The Parley Letter", "The new post was added to the store");
       }));
     });
 
     test("delete - deleting a newly created record should not throw an error", function () {
       var post;
       run(function () {
-        post = store.createRecord("post");
+        post = store.createRecord('post');
       });
 
       run(function () {
@@ -2930,8 +2924,8 @@ define(
           equal(passedVerb, null, "There is no ajax call to delete a record that has never been saved.");
           equal(passedHash, null, "There is no ajax call to delete a record that has never been saved.");
 
-          equal(post.get("isDeleted"), true, "the post is now deleted");
-          equal(post.get("isError"), false, "the post is not an error");
+          equal(post.get('isDeleted'), true, "the post is now deleted");
+          equal(post.get('isError'), false, "the post is not an error");
         }));
       });
     });
@@ -2941,20 +2935,20 @@ define(
         posts: [{ id: 1, name: "Rails is omakase" }, { id: 2, name: "The Parley Letter" }]
       });
 
-      store.findAll("post").then(async(function (posts) {
+      store.findAll('post').then(async(function (posts) {
         equal(passedUrl, "/posts");
         equal(passedVerb, "GET");
         equal(passedHash.data, undefined);
 
-        var post1 = store.peekRecord("post", 1);
-        var post2 = store.peekRecord("post", 2);
+        var post1 = store.peekRecord('post', 1);
+        var post2 = store.peekRecord('post', 2);
 
-        deepEqual(post1.getProperties("id", "name"), { id: "1", name: "Rails is omakase" }, "Post 1 is loaded");
+        deepEqual(post1.getProperties('id', 'name'), { id: "1", name: "Rails is omakase" }, "Post 1 is loaded");
 
-        deepEqual(post2.getProperties("id", "name"), { id: "2", name: "The Parley Letter" }, "Post 2 is loaded");
+        deepEqual(post2.getProperties('id', 'name'), { id: "2", name: "The Parley Letter" }, "Post 2 is loaded");
 
-        equal(posts.get("length"), 2, "The posts are in the array");
-        equal(posts.get("isLoaded"), true, "The RecordArray is loaded");
+        equal(posts.get('length'), 2, "The posts are in the array");
+        equal(posts.get('isLoaded'), true, "The RecordArray is loaded");
         deepEqual(posts.toArray(), [post1, post2], "The correct records are in the array");
       }));
     });
@@ -2968,7 +2962,7 @@ define(
         posts: [{ id: 1, name: "Rails is omakase" }, { id: 2, name: "The Parley Letter" }]
       });
 
-      store.findAll("post").then(async(function (posts) {
+      store.findAll('post').then(async(function (posts) {
         equal(passedUrl, "/findAll/posts");
       }));
     });
@@ -2978,32 +2972,32 @@ define(
         posts: [{ id: 1, name: "Rails is omakase" }, { id: 2, name: "The Parley Letter" }],
         comments: [{ id: 1, name: "FIRST" }] });
 
-      store.findAll("post").then(async(function (posts) {
-        var comment = store.peekRecord("comment", 1);
+      store.findAll('post').then(async(function (posts) {
+        var comment = store.peekRecord('comment', 1);
 
-        deepEqual(comment.getProperties("id", "name"), { id: "1", name: "FIRST" });
+        deepEqual(comment.getProperties('id', 'name'), { id: "1", name: "FIRST" });
       }));
     });
 
     test("findAll - data is normalized through custom serializers", function () {
-      env.registry.register("serializer:post", DS.RESTSerializer.extend({
-        primaryKey: "_ID_",
-        attrs: { name: "_NAME_" }
+      env.registry.register('serializer:post', DS.RESTSerializer.extend({
+        primaryKey: '_ID_',
+        attrs: { name: '_NAME_' }
       }));
 
       ajaxResponse({
         posts: [{ _ID_: 1, _NAME_: "Rails is omakase" }, { _ID_: 2, _NAME_: "The Parley Letter" }]
       });
 
-      store.findAll("post").then(async(function (posts) {
-        var post1 = store.peekRecord("post", 1);
-        var post2 = store.peekRecord("post", 2);
+      store.findAll('post').then(async(function (posts) {
+        var post1 = store.peekRecord('post', 1);
+        var post2 = store.peekRecord('post', 2);
 
-        deepEqual(post1.getProperties("id", "name"), { id: "1", name: "Rails is omakase" }, "Post 1 is loaded");
-        deepEqual(post2.getProperties("id", "name"), { id: "2", name: "The Parley Letter" }, "Post 2 is loaded");
+        deepEqual(post1.getProperties('id', 'name'), { id: "1", name: "Rails is omakase" }, "Post 1 is loaded");
+        deepEqual(post2.getProperties('id', 'name'), { id: "2", name: "The Parley Letter" }, "Post 2 is loaded");
 
-        equal(posts.get("length"), 2, "The posts are in the array");
-        equal(posts.get("isLoaded"), true, "The RecordArray is loaded");
+        equal(posts.get('length'), 2, "The posts are in the array");
+        equal(posts.get('isLoaded'), true, "The RecordArray is loaded");
         deepEqual(posts.toArray(), [post1, post2], "The correct records are in the array");
       }));
     });
@@ -3014,12 +3008,14 @@ define(
         passedVerb = verb;
         passedHash = hash;
 
-        deepEqual(Object.keys(hash.data), ["in", "order", "params", "wrong"], "query params are received in alphabetical order");
+        deepEqual(Object.keys(hash.data), ["in", "order", "params", "wrong"], 'query params are received in alphabetical order');
 
-        return run(Ember.RSVP, "resolve", { posts: [{ id: 1, name: "Rails is very expensive sushi" }] });
+        return run(Ember.RSVP, 'resolve', { posts: [{ id: 1, name: "Rails is very expensive sushi" }] });
       };
 
-      store.query("post", { "params": 1, "in": 2, "wrong": 3, "order": 4 }).then(async(function () {}));
+      store.query('post', { "params": 1, "in": 2, "wrong": 3, "order": 4 }).then(async(function () {
+        // Noop
+      }));
     });
 
     test("findQuery - passes buildURL the requestType", function () {
@@ -3028,12 +3024,14 @@ define(
       };
 
       adapter.ajax = function (url, verb, hash) {
-        equal(url, "/query/posts");
+        equal(url, '/query/posts');
 
-        return run(Ember.RSVP, "resolve", { posts: [{ id: 1, name: "Rails is very expensive sushi" }] });
+        return run(Ember.RSVP, 'resolve', { posts: [{ id: 1, name: "Rails is very expensive sushi" }] });
       };
 
-      store.query("post", { "params": 1, "in": 2, "wrong": 3, "order": 4 }).then(async(function () {}));
+      store.query('post', { "params": 1, "in": 2, "wrong": 3, "order": 4 }).then(async(function () {
+        // NOOP
+      }));
     });
 
     test("findQuery - if `sortQueryParams` is falsey, query params are not sorted at all", function () {
@@ -3042,14 +3040,16 @@ define(
         passedVerb = verb;
         passedHash = hash;
 
-        deepEqual(Object.keys(hash.data), ["params", "in", "wrong", "order"], "query params are received in their original order");
+        deepEqual(Object.keys(hash.data), ["params", "in", "wrong", "order"], 'query params are received in their original order');
 
-        return run(Ember.RSVP, "resolve", { posts: [{ id: 1, name: "Rails is very expensive sushi" }] });
+        return run(Ember.RSVP, 'resolve', { posts: [{ id: 1, name: "Rails is very expensive sushi" }] });
       };
 
       adapter.sortQueryParams = null;
 
-      store.query("post", { "params": 1, "in": 2, "wrong": 3, "order": 4 }).then(async(function () {}));
+      store.query('post', { "params": 1, "in": 2, "wrong": 3, "order": 4 }).then(async(function () {
+        // Noop
+      }));
     });
 
     test("findQuery - if `sortQueryParams` is a custom function, query params passed through that function", function () {
@@ -3058,9 +3058,9 @@ define(
         passedVerb = verb;
         passedHash = hash;
 
-        deepEqual(Object.keys(hash.data), ["wrong", "params", "order", "in"], "query params are received in reverse alphabetical order");
+        deepEqual(Object.keys(hash.data), ["wrong", "params", "order", "in"], 'query params are received in reverse alphabetical order');
 
-        return run(Ember.RSVP, "resolve", { posts: [{ id: 1, name: "Rails is very expensive sushi" }] });
+        return run(Ember.RSVP, 'resolve', { posts: [{ id: 1, name: "Rails is very expensive sushi" }] });
       };
 
       adapter.sortQueryParams = function (obj) {
@@ -3074,7 +3074,9 @@ define(
         return newQueryParams;
       };
 
-      store.query("post", { "params": 1, "in": 2, "wrong": 3, "order": 4 }).then(async(function () {}));
+      store.query('post', { "params": 1, "in": 2, "wrong": 3, "order": 4 }).then(async(function () {
+        // Noop
+      }));
     });
 
     test("findQuery - payload 'meta' is accessible on the record array", function () {
@@ -3083,8 +3085,8 @@ define(
         posts: [{ id: 1, name: "Rails is very expensive sushi" }]
       });
 
-      store.query("post", { page: 2 }).then(async(function (posts) {
-        equal(posts.get("meta.offset"), 5, "Reponse metadata can be accessed with recordArray.meta");
+      store.query('post', { page: 2 }).then(async(function (posts) {
+        equal(posts.get('meta.offset'), 5, "Reponse metadata can be accessed with recordArray.meta");
       }));
     });
 
@@ -3094,15 +3096,15 @@ define(
         posts: [{ id: 1, name: "Rails is very expensive sushi" }]
       });
 
-      store.query("post", { page: 2 }).then(async(function (posts) {
-        equal(posts.get("meta.offset"), 5, "Reponse metadata can be accessed with recordArray.meta");
+      store.query('post', { page: 2 }).then(async(function (posts) {
+        equal(posts.get('meta.offset'), 5, "Reponse metadata can be accessed with recordArray.meta");
         ajaxResponse({
           meta: { offset: 1 },
           posts: [{ id: 1, name: "Rails is very expensive sushi" }]
         });
-        store.query("post", { page: 1 }).then(async(function (newPosts) {
-          equal(newPosts.get("meta.offset"), 1, "new array has correct metadata");
-          equal(posts.get("meta.offset"), 5, "metadata on the old array hasnt been clobbered");
+        store.query('post', { page: 1 }).then(async(function (newPosts) {
+          equal(newPosts.get('meta.offset'), 1, 'new array has correct metadata');
+          equal(posts.get('meta.offset'), 5, 'metadata on the old array hasnt been clobbered');
         }));
       }));
     });
@@ -3112,19 +3114,19 @@ define(
         posts: [{ id: 1, name: "Rails is omakase" }, { id: 2, name: "The Parley Letter" }]
       });
 
-      store.query("post", { page: 1 }).then(async(function (posts) {
-        equal(passedUrl, "/posts");
-        equal(passedVerb, "GET");
+      store.query('post', { page: 1 }).then(async(function (posts) {
+        equal(passedUrl, '/posts');
+        equal(passedVerb, 'GET');
         deepEqual(passedHash.data, { page: 1 });
 
-        var post1 = store.peekRecord("post", 1);
-        var post2 = store.peekRecord("post", 2);
+        var post1 = store.peekRecord('post', 1);
+        var post2 = store.peekRecord('post', 2);
 
-        deepEqual(post1.getProperties("id", "name"), { id: "1", name: "Rails is omakase" }, "Post 1 is loaded");
-        deepEqual(post2.getProperties("id", "name"), { id: "2", name: "The Parley Letter" }, "Post 2 is loaded");
+        deepEqual(post1.getProperties('id', 'name'), { id: "1", name: "Rails is omakase" }, "Post 1 is loaded");
+        deepEqual(post2.getProperties('id', 'name'), { id: "2", name: "The Parley Letter" }, "Post 2 is loaded");
 
-        equal(posts.get("length"), 2, "The posts are in the array");
-        equal(posts.get("isLoaded"), true, "The RecordArray is loaded");
+        equal(posts.get('length'), 2, "The posts are in the array");
+        equal(posts.get('isLoaded'), true, "The RecordArray is loaded");
         deepEqual(posts.toArray(), [post1, post2], "The correct records are in the array");
       }));
     });
@@ -3135,63 +3137,63 @@ define(
         comments: [{ id: 1, name: "FIRST" }]
       });
 
-      store.query("post", { page: 1 }).then(async(function (posts) {
-        var comment = store.peekRecord("comment", 1);
+      store.query('post', { page: 1 }).then(async(function (posts) {
+        var comment = store.peekRecord('comment', 1);
 
-        deepEqual(comment.getProperties("id", "name"), { id: "1", name: "FIRST" });
+        deepEqual(comment.getProperties('id', 'name'), { id: "1", name: "FIRST" });
       }));
     });
 
     test("findQuery - data is normalized through custom serializers", function () {
-      env.registry.register("serializer:post", DS.RESTSerializer.extend({
-        primaryKey: "_ID_",
-        attrs: { name: "_NAME_" }
+      env.registry.register('serializer:post', DS.RESTSerializer.extend({
+        primaryKey: '_ID_',
+        attrs: { name: '_NAME_' }
       }));
 
       ajaxResponse({
         posts: [{ _ID_: 1, _NAME_: "Rails is omakase" }, { _ID_: 2, _NAME_: "The Parley Letter" }]
       });
 
-      store.query("post", { page: 1 }).then(async(function (posts) {
-        var post1 = store.peekRecord("post", 1);
-        var post2 = store.peekRecord("post", 2);
+      store.query('post', { page: 1 }).then(async(function (posts) {
+        var post1 = store.peekRecord('post', 1);
+        var post2 = store.peekRecord('post', 2);
 
-        deepEqual(post1.getProperties("id", "name"), { id: "1", name: "Rails is omakase" }, "Post 1 is loaded");
+        deepEqual(post1.getProperties('id', 'name'), { id: "1", name: "Rails is omakase" }, "Post 1 is loaded");
 
-        deepEqual(post2.getProperties("id", "name"), { id: "2", name: "The Parley Letter" }, "Post 2 is loaded");
+        deepEqual(post2.getProperties('id', 'name'), { id: "2", name: "The Parley Letter" }, "Post 2 is loaded");
 
-        equal(posts.get("length"), 2, "The posts are in the array");
-        equal(posts.get("isLoaded"), true, "The RecordArray is loaded");
+        equal(posts.get('length'), 2, "The posts are in the array");
+        equal(posts.get('isLoaded'), true, "The RecordArray is loaded");
         deepEqual(posts.toArray(), [post1, post2], "The correct records are in the array");
       }));
     });
 
     test("findMany - findMany uses a correct URL to access the records", function () {
-      Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
+      Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
       adapter.coalesceFindRequests = true;
 
       run(function () {
         store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
               name: "Rails is omakase"
             },
             relationships: {
               comments: {
-                data: [{ type: "comment", id: "1" }, { type: "comment", id: "2" }, { type: "comment", id: "3" }]
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
               }
             }
           }
         });
       });
 
-      var post = store.peekRecord("post", 1);
+      var post = store.peekRecord('post', 1);
       ajaxResponse({
         comments: [{ id: 1, name: "FIRST" }, { id: 2, name: "Rails is unagi" }, { id: 3, name: "What is omakase?" }]
       });
-      run(post, "get", "comments").then(async(function (comments) {
+      run(post, 'get', 'comments').then(async(function (comments) {
         equal(passedUrl, "/comments");
         deepEqual(passedHash, { data: { ids: ["1", "2", "3"] } });
       }));
@@ -3202,213 +3204,213 @@ define(
         return "/" + requestType + "/" + type;
       };
 
-      Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
+      Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
       adapter.coalesceFindRequests = true;
 
       run(function () {
         store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
               name: "Rails is omakase"
             },
             relationships: {
               comments: {
-                data: [{ type: "comment", id: "1" }, { type: "comment", id: "2" }, { type: "comment", id: "3" }]
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
               }
             }
           }
         });
       });
 
-      var post = store.peekRecord("post", 1);
+      var post = store.peekRecord('post', 1);
       ajaxResponse({
         comments: [{ id: 1, name: "FIRST" }, { id: 2, name: "Rails is unagi" }, { id: 3, name: "What is omakase?" }]
       });
-      run(post, "get", "comments").then(async(function (comments) {
+      run(post, 'get', 'comments').then(async(function (comments) {
         equal(passedUrl, "/findMany/comment");
       }));
     });
 
     test("findMany - findMany does not coalesce by default", function () {
-      Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
+      Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
 
       run(function () {
         store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
               name: "Rails is omakase"
             },
             relationships: {
               comments: {
-                data: [{ type: "comment", id: "1" }, { type: "comment", id: "2" }, { type: "comment", id: "3" }]
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
               }
             }
           }
         });
       });
 
-      var post = store.peekRecord("post", 1);
+      var post = store.peekRecord('post', 1);
       //It's still ok to return this even without coalescing  because RESTSerializer supports sideloading
       ajaxResponse({
         comments: [{ id: 1, name: "FIRST" }, { id: 2, name: "Rails is unagi" }, { id: 3, name: "What is omakase?" }]
       });
-      run(post, "get", "comments").then(async(function (comments) {
+      run(post, 'get', 'comments').then(async(function (comments) {
         equal(passedUrl, "/comments/3");
         equal(passedHash, null);
       }));
     });
 
     test("findMany - returning an array populates the array", function () {
-      Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
+      Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
       adapter.coalesceFindRequests = true;
 
       run(function () {
         store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
               name: "Rails is omakase"
             },
             relationships: {
               comments: {
-                data: [{ type: "comment", id: "1" }, { type: "comment", id: "2" }, { type: "comment", id: "3" }]
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
               }
             }
           }
         });
       });
 
-      store.find("post", 1).then(async(function (post) {
+      store.find('post', 1).then(async(function (post) {
         ajaxResponse({
           comments: [{ id: 1, name: "FIRST" }, { id: 2, name: "Rails is unagi" }, { id: 3, name: "What is omakase?" }]
         });
 
-        return post.get("comments");
+        return post.get('comments');
       })).then(async(function (comments) {
-        var comment1 = store.peekRecord("comment", 1);
-        var comment2 = store.peekRecord("comment", 2);
-        var comment3 = store.peekRecord("comment", 3);
+        var comment1 = store.peekRecord('comment', 1);
+        var comment2 = store.peekRecord('comment', 2);
+        var comment3 = store.peekRecord('comment', 3);
 
-        deepEqual(comment1.getProperties("id", "name"), { id: "1", name: "FIRST" });
-        deepEqual(comment2.getProperties("id", "name"), { id: "2", name: "Rails is unagi" });
-        deepEqual(comment3.getProperties("id", "name"), { id: "3", name: "What is omakase?" });
+        deepEqual(comment1.getProperties('id', 'name'), { id: "1", name: "FIRST" });
+        deepEqual(comment2.getProperties('id', 'name'), { id: "2", name: "Rails is unagi" });
+        deepEqual(comment3.getProperties('id', 'name'), { id: "3", name: "What is omakase?" });
 
         deepEqual(comments.toArray(), [comment1, comment2, comment3], "The correct records are in the array");
       }));
     });
 
     test("findMany - returning sideloaded data loads the data", function () {
-      Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
+      Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
       adapter.coalesceFindRequests = true;
 
       run(function () {
         store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
               name: "Rails is omakase"
             },
             relationships: {
               comments: {
-                data: [{ type: "comment", id: "1" }, { type: "comment", id: "2" }, { type: "comment", id: "3" }]
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
               }
             }
           }
         });
       });
 
-      store.find("post", 1).then(async(function (post) {
+      store.find('post', 1).then(async(function (post) {
         ajaxResponse({
           comments: [{ id: 1, name: "FIRST" }, { id: 2, name: "Rails is unagi" }, { id: 3, name: "What is omakase?" }, { id: 4, name: "Unrelated comment" }],
           posts: [{ id: 2, name: "The Parley Letter" }]
         });
 
-        return post.get("comments");
+        return post.get('comments');
       })).then(async(function (comments) {
-        var comment1 = store.peekRecord("comment", 1);
-        var comment2 = store.peekRecord("comment", 2);
-        var comment3 = store.peekRecord("comment", 3);
-        var comment4 = store.peekRecord("comment", 4);
-        var post2 = store.peekRecord("post", 2);
+        var comment1 = store.peekRecord('comment', 1);
+        var comment2 = store.peekRecord('comment', 2);
+        var comment3 = store.peekRecord('comment', 3);
+        var comment4 = store.peekRecord('comment', 4);
+        var post2 = store.peekRecord('post', 2);
 
         deepEqual(comments.toArray(), [comment1, comment2, comment3], "The correct records are in the array");
 
-        deepEqual(comment4.getProperties("id", "name"), { id: "4", name: "Unrelated comment" });
-        deepEqual(post2.getProperties("id", "name"), { id: "2", name: "The Parley Letter" });
+        deepEqual(comment4.getProperties('id', 'name'), { id: "4", name: "Unrelated comment" });
+        deepEqual(post2.getProperties('id', 'name'), { id: "2", name: "The Parley Letter" });
       }));
     });
 
     test("findMany - a custom serializer is used if present", function () {
-      env.registry.register("serializer:post", DS.RESTSerializer.extend({
-        primaryKey: "_ID_",
-        attrs: { name: "_NAME_" }
+      env.registry.register('serializer:post', DS.RESTSerializer.extend({
+        primaryKey: '_ID_',
+        attrs: { name: '_NAME_' }
       }));
 
-      env.registry.register("serializer:comment", DS.RESTSerializer.extend({
-        primaryKey: "_ID_",
-        attrs: { name: "_NAME_" }
+      env.registry.register('serializer:comment', DS.RESTSerializer.extend({
+        primaryKey: '_ID_',
+        attrs: { name: '_NAME_' }
       }));
 
       adapter.coalesceFindRequests = true;
-      Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
+      Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
 
       run(function () {
         store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
               name: "Rails is omakase"
             },
             relationships: {
               comments: {
-                data: [{ type: "comment", id: "1" }, { type: "comment", id: "2" }, { type: "comment", id: "3" }]
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
               }
             }
           }
         });
       });
 
-      store.find("post", 1).then(async(function (post) {
+      store.find('post', 1).then(async(function (post) {
         ajaxResponse({
           comments: [{ _ID_: 1, _NAME_: "FIRST" }, { _ID_: 2, _NAME_: "Rails is unagi" }, { _ID_: 3, _NAME_: "What is omakase?" }]
         });
 
-        return post.get("comments");
+        return post.get('comments');
       })).then(async(function (comments) {
-        var comment1 = store.peekRecord("comment", 1);
-        var comment2 = store.peekRecord("comment", 2);
-        var comment3 = store.peekRecord("comment", 3);
+        var comment1 = store.peekRecord('comment', 1);
+        var comment2 = store.peekRecord('comment', 2);
+        var comment3 = store.peekRecord('comment', 3);
 
-        deepEqual(comment1.getProperties("id", "name"), { id: "1", name: "FIRST" });
-        deepEqual(comment2.getProperties("id", "name"), { id: "2", name: "Rails is unagi" });
-        deepEqual(comment3.getProperties("id", "name"), { id: "3", name: "What is omakase?" });
+        deepEqual(comment1.getProperties('id', 'name'), { id: "1", name: "FIRST" });
+        deepEqual(comment2.getProperties('id', 'name'), { id: "2", name: "Rails is unagi" });
+        deepEqual(comment3.getProperties('id', 'name'), { id: "3", name: "What is omakase?" });
 
         deepEqual(comments.toArray(), [comment1, comment2, comment3], "The correct records are in the array");
       }));
     });
 
     test("findHasMany - returning an array populates the array", function () {
-      Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
+      Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
 
       run(function () {
         store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
               name: "Rails is omakase"
             },
             relationships: {
               comments: {
                 links: {
-                  related: "/posts/1/comments"
+                  related: '/posts/1/comments'
                 }
               }
             }
@@ -3416,24 +3418,24 @@ define(
         });
       });
 
-      run(store, "find", "post", "1").then(async(function (post) {
+      run(store, 'find', 'post', '1').then(async(function (post) {
         ajaxResponse({
           comments: [{ id: 1, name: "FIRST" }, { id: 2, name: "Rails is unagi" }, { id: 3, name: "What is omakase?" }]
         });
 
-        return post.get("comments");
+        return post.get('comments');
       })).then(async(function (comments) {
-        equal(passedUrl, "/posts/1/comments");
-        equal(passedVerb, "GET");
+        equal(passedUrl, '/posts/1/comments');
+        equal(passedVerb, 'GET');
         equal(passedHash, undefined);
 
-        var comment1 = store.peekRecord("comment", 1);
-        var comment2 = store.peekRecord("comment", 2);
-        var comment3 = store.peekRecord("comment", 3);
+        var comment1 = store.peekRecord('comment', 1);
+        var comment2 = store.peekRecord('comment', 2);
+        var comment3 = store.peekRecord('comment', 3);
 
-        deepEqual(comment1.getProperties("id", "name"), { id: "1", name: "FIRST" });
-        deepEqual(comment2.getProperties("id", "name"), { id: "2", name: "Rails is unagi" });
-        deepEqual(comment3.getProperties("id", "name"), { id: "3", name: "What is omakase?" });
+        deepEqual(comment1.getProperties('id', 'name'), { id: "1", name: "FIRST" });
+        deepEqual(comment2.getProperties('id', 'name'), { id: "2", name: "Rails is unagi" });
+        deepEqual(comment3.getProperties('id', 'name'), { id: "3", name: "What is omakase?" });
 
         deepEqual(comments.toArray(), [comment1, comment2, comment3], "The correct records are in the array");
       }));
@@ -3441,23 +3443,23 @@ define(
 
     test("findHasMany - passes buildURL the requestType", function () {
       adapter.buildURL = function (type, id, snapshot, requestType) {
-        equal(requestType, "findHasMany");
+        equal(requestType, 'findHasMany');
       };
 
-      Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
+      Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
 
       run(function () {
         store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
               name: "Rails is omakase"
             },
             relationships: {
               comments: {
                 links: {
-                  related: "/posts/1/comments"
+                  related: '/posts/1/comments'
                 }
               }
             }
@@ -3465,31 +3467,33 @@ define(
         });
       });
 
-      run(store, "find", "post", "1").then(async(function (post) {
+      run(store, 'find', 'post', '1').then(async(function (post) {
         ajaxResponse({
           comments: [{ id: 1, name: "FIRST" }, { id: 2, name: "Rails is unagi" }, { id: 3, name: "What is omakase?" }]
         });
 
-        return post.get("comments");
-      })).then(async(function (comments) {}));
+        return post.get('comments');
+      })).then(async(function (comments) {
+        // NOOP
+      }));
     });
 
     test("findMany - returning sideloaded data loads the data", function () {
-      Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
+      Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
       adapter.coalesceFindRequests = true;
 
       run(function () {
         store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
               name: "Rails is omakase"
             },
             relationships: {
               comments: {
                 links: {
-                  related: "/posts/1/comments"
+                  related: '/posts/1/comments'
                 }
               }
             }
@@ -3497,50 +3501,50 @@ define(
         });
       });
 
-      store.find("post", 1).then(async(function (post) {
+      store.find('post', 1).then(async(function (post) {
         ajaxResponse({
           comments: [{ id: 1, name: "FIRST" }, { id: 2, name: "Rails is unagi" }, { id: 3, name: "What is omakase?" }],
           posts: [{ id: 2, name: "The Parley Letter" }]
         });
 
-        return post.get("comments");
+        return post.get('comments');
       })).then(async(function (comments) {
-        var comment1 = store.peekRecord("comment", 1);
-        var comment2 = store.peekRecord("comment", 2);
-        var comment3 = store.peekRecord("comment", 3);
-        var post2 = store.peekRecord("post", 2);
+        var comment1 = store.peekRecord('comment', 1);
+        var comment2 = store.peekRecord('comment', 2);
+        var comment3 = store.peekRecord('comment', 3);
+        var post2 = store.peekRecord('post', 2);
 
         deepEqual(comments.toArray(), [comment1, comment2, comment3], "The correct records are in the array");
 
-        deepEqual(post2.getProperties("id", "name"), { id: "2", name: "The Parley Letter" });
+        deepEqual(post2.getProperties('id', 'name'), { id: "2", name: "The Parley Letter" });
       }));
     });
 
     test("findMany - a custom serializer is used if present", function () {
-      env.registry.register("serializer:post", DS.RESTSerializer.extend({
-        primaryKey: "_ID_",
-        attrs: { name: "_NAME_" }
+      env.registry.register('serializer:post', DS.RESTSerializer.extend({
+        primaryKey: '_ID_',
+        attrs: { name: '_NAME_' }
       }));
 
-      env.registry.register("serializer:comment", DS.RESTSerializer.extend({
-        primaryKey: "_ID_",
-        attrs: { name: "_NAME_" }
+      env.registry.register('serializer:comment', DS.RESTSerializer.extend({
+        primaryKey: '_ID_',
+        attrs: { name: '_NAME_' }
       }));
 
-      Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
+      Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
 
       run(function () {
         store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
               name: "Rails is omakase"
             },
             relationships: {
               comments: {
                 links: {
-                  related: "/posts/1/comments"
+                  related: '/posts/1/comments'
                 }
               }
             }
@@ -3548,43 +3552,43 @@ define(
         });
       });
 
-      store.find("post", 1).then(async(function (post) {
+      store.find('post', 1).then(async(function (post) {
         ajaxResponse({
           comments: [{ _ID_: 1, _NAME_: "FIRST" }, { _ID_: 2, _NAME_: "Rails is unagi" }, { _ID_: 3, _NAME_: "What is omakase?" }]
         });
-        return post.get("comments");
+        return post.get('comments');
       })).then(async(function (comments) {
-        var comment1 = store.peekRecord("comment", 1);
-        var comment2 = store.peekRecord("comment", 2);
-        var comment3 = store.peekRecord("comment", 3);
+        var comment1 = store.peekRecord('comment', 1);
+        var comment2 = store.peekRecord('comment', 2);
+        var comment3 = store.peekRecord('comment', 3);
 
-        deepEqual(comment1.getProperties("id", "name"), { id: "1", name: "FIRST" });
-        deepEqual(comment2.getProperties("id", "name"), { id: "2", name: "Rails is unagi" });
-        deepEqual(comment3.getProperties("id", "name"), { id: "3", name: "What is omakase?" });
+        deepEqual(comment1.getProperties('id', 'name'), { id: "1", name: "FIRST" });
+        deepEqual(comment2.getProperties('id', 'name'), { id: "2", name: "Rails is unagi" });
+        deepEqual(comment3.getProperties('id', 'name'), { id: "3", name: "What is omakase?" });
 
         deepEqual(comments.toArray(), [comment1, comment2, comment3], "The correct records are in the array");
       }));
     });
 
-    test("findBelongsTo - passes buildURL the requestType", function () {
+    test('findBelongsTo - passes buildURL the requestType', function () {
       adapter.buildURL = function (type, id, snapshot, requestType) {
-        equal(requestType, "findBelongsTo");
+        equal(requestType, 'findBelongsTo');
       };
 
-      Comment.reopen({ post: DS.belongsTo("post", { async: true }) });
+      Comment.reopen({ post: DS.belongsTo('post', { async: true }) });
 
       run(function () {
         store.push({
           data: {
-            type: "comment",
-            id: "1",
+            type: 'comment',
+            id: '1',
             attributes: {
               name: "FIRST"
             },
             relationships: {
               post: {
                 links: {
-                  related: "/posts/1"
+                  related: '/posts/1'
                 }
               }
             }
@@ -3592,15 +3596,17 @@ define(
         });
       });
 
-      run(store, "find", "comment", 1).then(async(function (comment) {
-        ajaxResponse({ post: { id: 1, name: "Rails is omakase" } });
-        return comment.get("post");
-      })).then(async(function (post) {}));
+      run(store, 'find', 'comment', 1).then(async(function (comment) {
+        ajaxResponse({ post: { id: 1, name: 'Rails is omakase' } });
+        return comment.get('post');
+      })).then(async(function (post) {
+        // NOOP
+      }));
     });
 
-    test("coalesceFindRequests warns if the expected records are not returned in the coalesced request", function () {
-      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
-      Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
+    test('coalesceFindRequests warns if the expected records are not returned in the coalesced request', function () {
+      Comment.reopen({ post: DS.belongsTo('post', { async: false }) });
+      Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
 
       adapter.coalesceFindRequests = true;
 
@@ -3611,42 +3617,42 @@ define(
         run(function () {
           store.push({
             data: {
-              type: "post",
-              id: "2",
+              type: 'post',
+              id: '2',
               relationships: {
                 comments: {
-                  data: [{ type: "comment", id: "1" }, { type: "comment", id: "2" }, { type: "comment", id: "3" }]
+                  data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
                 }
               }
             }
           });
 
-          post = store.peekRecord("post", 2);
-          post.get("comments");
+          post = store.peekRecord('post', 2);
+          post.get('comments');
         });
       }, /expected to find records with the following ids in the adapter response but they were missing: \[2,3\]/);
     });
 
-    test("groupRecordsForFindMany groups records based on their url", function () {
-      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
-      Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
+    test('groupRecordsForFindMany groups records based on their url', function () {
+      Comment.reopen({ post: DS.belongsTo('post', { async: false }) });
+      Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
       adapter.coalesceFindRequests = true;
 
       adapter.buildURL = function (type, id, snapshot) {
-        if (id === "1") {
-          return "/comments/1";
+        if (id === '1') {
+          return '/comments/1';
         } else {
-          return "/other_comments/" + id;
+          return '/other_comments/' + id;
         }
       };
 
       adapter.findRecord = function (store, type, id, snapshot) {
-        equal(id, "1");
+        equal(id, '1');
         return Ember.RSVP.resolve({ comments: { id: 1 } });
       };
 
       adapter.findMany = function (store, type, ids, snapshots) {
-        deepEqual(ids, ["2", "3"]);
+        deepEqual(ids, ['2', '3']);
         return Ember.RSVP.resolve({ comments: [{ id: 2 }, { id: 3 }] });
       };
 
@@ -3654,43 +3660,43 @@ define(
       run(function () {
         store.push({
           data: {
-            type: "post",
-            id: "2",
+            type: 'post',
+            id: '2',
             relationships: {
               comments: {
-                data: [{ type: "comment", id: "1" }, { type: "comment", id: "2" }, { type: "comment", id: "3" }]
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
               }
             }
           }
         });
-        post = store.peekRecord("post", 2);
+        post = store.peekRecord('post', 2);
       });
 
       run(function () {
-        post.get("comments");
+        post.get('comments');
       });
     });
 
-    test("groupRecordsForFindMany groups records correctly when singular URLs are encoded as query params", function () {
-      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
-      Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
+    test('groupRecordsForFindMany groups records correctly when singular URLs are encoded as query params', function () {
+      Comment.reopen({ post: DS.belongsTo('post', { async: false }) });
+      Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
       adapter.coalesceFindRequests = true;
 
       adapter.buildURL = function (type, id, snapshot) {
-        if (id === "1") {
-          return "/comments?id=1";
+        if (id === '1') {
+          return '/comments?id=1';
         } else {
-          return "/other_comments?id=" + id;
+          return '/other_comments?id=' + id;
         }
       };
 
       adapter.findRecord = function (store, type, id, snapshot) {
-        equal(id, "1");
+        equal(id, '1');
         return Ember.RSVP.resolve({ comments: { id: 1 } });
       };
 
       adapter.findMany = function (store, type, ids, snapshots) {
-        deepEqual(ids, ["2", "3"]);
+        deepEqual(ids, ['2', '3']);
         return Ember.RSVP.resolve({ comments: [{ id: 2 }, { id: 3 }] });
       };
       var post;
@@ -3698,25 +3704,25 @@ define(
       run(function () {
         store.push({
           data: {
-            type: "post",
-            id: "2",
+            type: 'post',
+            id: '2',
             relationships: {
               comments: {
-                data: [{ type: "comment", id: "1" }, { type: "comment", id: "2" }, { type: "comment", id: "3" }]
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
               }
             }
           }
         });
-        post = store.peekRecord("post", 2);
+        post = store.peekRecord('post', 2);
       });
 
       run(function () {
-        post.get("comments");
+        post.get('comments');
       });
     });
 
-    test("normalizeKey - to set up _ids and _id", function () {
-      env.registry.register("serializer:application", DS.RESTSerializer.extend({
+    test('normalizeKey - to set up _ids and _id', function () {
+      env.registry.register('serializer:application', DS.RESTSerializer.extend({
         keyForAttribute: function (attr) {
           return Ember.String.underscore(attr);
         },
@@ -3724,29 +3730,29 @@ define(
         keyForBelongsTo: function (belongsTo) {},
 
         keyForRelationship: function (rel, kind) {
-          if (kind === "belongsTo") {
+          if (kind === 'belongsTo') {
             var underscored = Ember.String.underscore(rel);
-            return underscored + "_id";
+            return underscored + '_id';
           } else {
             var singular = Ember.String.singularize(rel);
-            return Ember.String.underscore(singular) + "_ids";
+            return Ember.String.underscore(singular) + '_ids';
           }
         }
       }));
 
-      env.registry.register("model:post", DS.Model.extend({
+      env.registry.register('model:post', DS.Model.extend({
         name: DS.attr(),
         authorName: DS.attr(),
-        author: DS.belongsTo("user", { async: false }),
-        comments: DS.hasMany("comment", { async: false })
+        author: DS.belongsTo('user', { async: false }),
+        comments: DS.hasMany('comment', { async: false })
       }));
 
-      env.registry.register("model:user", DS.Model.extend({
+      env.registry.register('model:user', DS.Model.extend({
         createdAt: DS.attr(),
         name: DS.attr()
       }));
 
-      env.registry.register("model:comment", DS.Model.extend({
+      env.registry.register('model:comment', DS.Model.extend({
         body: DS.attr()
       }));
 
@@ -3774,17 +3780,17 @@ define(
       });
 
       run(function () {
-        store.find("post", 1).then(async(function (post) {
-          equal(post.get("authorName"), "@d2h");
-          equal(post.get("author.name"), "D2H");
-          deepEqual(post.get("comments").mapBy("body"), ["Rails is unagi", "What is omakase?"]);
+        store.find('post', 1).then(async(function (post) {
+          equal(post.get('authorName'), "@d2h");
+          equal(post.get('author.name'), "D2H");
+          deepEqual(post.get('comments').mapBy('body'), ["Rails is unagi", "What is omakase?"]);
         }));
       });
     });
 
-    test("groupRecordsForFindMany splits up calls for large ids", function () {
-      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
-      Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
+    test('groupRecordsForFindMany splits up calls for large ids', function () {
+      Comment.reopen({ post: DS.belongsTo('post', { async: false }) });
+      Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
 
       expect(2);
 
@@ -3792,22 +3798,22 @@ define(
         return new Array(n + 1).join(character);
       }
 
-      var a2000 = repeatChar("a", 2000);
-      var b2000 = repeatChar("b", 2000);
+      var a2000 = repeatChar('a', 2000);
+      var b2000 = repeatChar('b', 2000);
       var post;
       run(function () {
         store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             relationships: {
               comments: {
-                data: [{ type: "comment", id: a2000 }, { type: "comment", id: b2000 }]
+                data: [{ type: 'comment', id: a2000 }, { type: 'comment', id: b2000 }]
               }
             }
           }
         });
-        post = store.peekRecord("post", 1);
+        post = store.peekRecord('post', 1);
       });
 
       adapter.coalesceFindRequests = true;
@@ -3826,13 +3832,13 @@ define(
       };
 
       run(function () {
-        post.get("comments");
+        post.get('comments');
       });
     });
 
-    test("groupRecordsForFindMany groups calls for small ids", function () {
-      Comment.reopen({ post: DS.belongsTo("post", { async: false }) });
-      Post.reopen({ comments: DS.hasMany("comment", { async: true }) });
+    test('groupRecordsForFindMany groups calls for small ids', function () {
+      Comment.reopen({ post: DS.belongsTo('post', { async: false }) });
+      Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
 
       expect(1);
 
@@ -3840,23 +3846,23 @@ define(
         return new Array(n + 1).join(character);
       }
 
-      var a100 = repeatChar("a", 100);
-      var b100 = repeatChar("b", 100);
+      var a100 = repeatChar('a', 100);
+      var b100 = repeatChar('b', 100);
       var post;
 
       run(function () {
         store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             relationships: {
               comments: {
-                data: [{ type: "comment", id: a100 }, { type: "comment", id: b100 }]
+                data: [{ type: 'comment', id: a100 }, { type: 'comment', id: b100 }]
               }
             }
           }
         });
-        post = store.peekRecord("post", 1);
+        post = store.peekRecord('post', 1);
       });
 
       adapter.coalesceFindRequests = true;
@@ -3872,7 +3878,7 @@ define(
       };
 
       run(function () {
-        post.get("comments");
+        post.get('comments');
       });
     });
 
@@ -3882,7 +3888,7 @@ define(
       var jqXHR = {
         status: 200,
         getAllResponseHeaders: function () {
-          return "";
+          return '';
         }
       };
       var data = {
@@ -3893,7 +3899,7 @@ define(
       };
 
       Ember.$.ajax = function (hash) {
-        hash.success(data, "ok", jqXHR);
+        hash.success(data, 'ok', jqXHR);
       };
 
       adapter.handleResponse = function (status, headers, json) {
@@ -3904,38 +3910,38 @@ define(
 
       try {
         run(function () {
-          store.find("post", "1");
+          store.find('post', '1');
         });
       } finally {
         Ember.$.ajax = originalAjax;
       }
     });
 
-    test("calls handleResponse with jqXHR, jqXHR.responseText", function () {
+    test('calls handleResponse with jqXHR, jqXHR.responseText', function () {
       expect(3);
       var originalAjax = Ember.$.ajax;
       var jqXHR = {
         status: 400,
-        responseText: "Nope lol",
+        responseText: 'Nope lol',
         getAllResponseHeaders: function () {
-          return "";
+          return '';
         }
       };
 
       Ember.$.ajax = function (hash) {
-        hash.error(jqXHR, jqXHR.responseText, "Bad Request");
+        hash.error(jqXHR, jqXHR.responseText, 'Bad Request');
       };
 
       adapter.handleResponse = function (status, headers, json) {
         deepEqual(status, 400);
         deepEqual(json, jqXHR.responseText);
-        return new DS.AdapterError("nope!");
+        return new DS.AdapterError('nope!');
       };
 
       try {
         run(function () {
-          store.find("post", "1")["catch"](function (err) {
-            ok(err, "promise rejected");
+          store.find('post', '1')["catch"](function (err) {
+            ok(err, 'promise rejected');
           });
         });
       } finally {
@@ -3948,44 +3954,44 @@ define(
       var originalAjax = Ember.$.ajax;
       var jqXHR = {
         getAllResponseHeaders: function () {
-          return "";
+          return '';
         }
       };
       var data = {
-        something: "is invalid"
+        something: 'is invalid'
       };
 
       Ember.$.ajax = function (hash) {
-        hash.success(data, "ok", jqXHR);
+        hash.success(data, 'ok', jqXHR);
       };
 
       adapter.handleResponse = function (status, headers, json) {
-        ok(true, "handleResponse should be called");
+        ok(true, 'handleResponse should be called');
         return new DS.AdapterError(json);
       };
 
       Ember.run(function () {
-        store.find("post", "1").then(null, function (reason) {
-          ok(true, "promise should be rejected");
-          ok(reason instanceof DS.AdapterError, "reason should be an instance of DS.AdapterError");
+        store.find('post', '1').then(null, function (reason) {
+          ok(true, 'promise should be rejected');
+          ok(reason instanceof DS.AdapterError, 'reason should be an instance of DS.AdapterError');
         });
       });
 
       Ember.$.ajax = originalAjax;
     });
 
-    test("on error appends errorThrown for sanity", function () {
+    test('on error appends errorThrown for sanity', function () {
       expect(2);
 
       var originalAjax = Ember.$.ajax;
       var jqXHR = {
-        responseText: "Nope lol",
+        responseText: 'Nope lol',
         getAllResponseHeaders: function () {
-          return "";
+          return '';
         }
       };
 
-      var errorThrown = new Error("nope!");
+      var errorThrown = new Error('nope!');
 
       Ember.$.ajax = function (hash) {
         hash.error(jqXHR, jqXHR.responseText, errorThrown);
@@ -3997,9 +4003,9 @@ define(
 
       try {
         run(function () {
-          store.find("post", "1")["catch"](function (err) {
+          store.find('post', '1')["catch"](function (err) {
             equal(err, errorThrown);
-            ok(err, "promise rejected");
+            ok(err, 'promise rejected');
           });
         });
       } finally {
@@ -4007,28 +4013,28 @@ define(
       }
     });
 
-    test("on error wraps the error string in an DS.AdapterError object", function () {
+    test('on error wraps the error string in an DS.AdapterError object', function () {
       expect(2);
 
       var originalAjax = Ember.$.ajax;
       var jqXHR = {
-        responseText: "",
+        responseText: '',
         getAllResponseHeaders: function () {
-          return "";
+          return '';
         }
       };
 
-      var errorThrown = "nope!";
+      var errorThrown = 'nope!';
 
       Ember.$.ajax = function (hash) {
-        hash.error(jqXHR, "error", errorThrown);
+        hash.error(jqXHR, 'error', errorThrown);
       };
 
       try {
         run(function () {
-          store.find("post", "1")["catch"](function (err) {
+          store.find('post', '1')["catch"](function (err) {
             equal(err.errors[0].detail, errorThrown);
-            ok(err, "promise rejected");
+            ok(err, 'promise rejected');
           });
         });
       } finally {
@@ -4036,25 +4042,25 @@ define(
       }
     });
 
-    test("findAll resolves with a collection of DS.Models, not DS.InternalModels", function () {
+    test('findAll resolves with a collection of DS.Models, not DS.InternalModels', function () {
       expect(4);
 
       ajaxResponse({
         posts: [{
           id: 1,
-          name: "dhh lol"
+          name: 'dhh lol'
         }, {
           id: 2,
-          name: "james mickens is rad"
+          name: 'james mickens is rad'
         }, {
           id: 3,
-          name: "in the name of love"
+          name: 'in the name of love'
         }]
       });
 
       run(function () {
-        store.findAll("post").then(async(function (posts) {
-          equal(get(posts, "length"), 3);
+        store.findAll('post').then(async(function (posts) {
+          equal(get(posts, 'length'), 3);
           posts.forEach(function (post) {
             return ok(post instanceof DS.Model);
           });
@@ -4064,33 +4070,33 @@ define(
 
     test("create - sideloaded records are pushed to the store", function () {
       Post.reopen({
-        comments: DS.hasMany("comment")
+        comments: DS.hasMany('comment')
       });
 
       ajaxResponse({
         post: {
           id: 1,
-          name: "The Parley Letter",
+          name: 'The Parley Letter',
           comments: [2, 3]
         },
         comments: [{
           id: 2,
-          name: "First comment"
+          name: 'First comment'
         }, {
           id: 3,
-          name: "Second comment"
+          name: 'Second comment'
         }]
       });
       var post;
 
       run(function () {
-        post = store.createRecord("post", { name: "The Parley Letter" });
+        post = store.createRecord('post', { name: 'The Parley Letter' });
         post.save().then(function (post) {
-          var comments = store.peekAll("comment");
+          var comments = store.peekAll('comment');
 
-          equal(get(comments, "length"), 2, "comments.length is correct");
-          equal(get(comments, "firstObject.name"), "First comment", "comments.firstObject.name is correct");
-          equal(get(comments, "lastObject.name"), "Second comment", "comments.lastObject.name is correct");
+          equal(get(comments, 'length'), 2, 'comments.length is correct');
+          equal(get(comments, 'firstObject.name'), 'First comment', 'comments.firstObject.name is correct');
+          equal(get(comments, 'lastObject.name'), 'Second comment', 'comments.lastObject.name is correct');
         });
       });
     });
@@ -4111,7 +4117,7 @@ define(
     var run = Ember.run;
     var env, store, adapter, serializer;
 
-    module('integration/adapter/serialize - DS.Adapter integration test', {
+    module("integration/adapter/serialize - DS.Adapter integration test", {
       setup: function () {
         var Person = DS.Model.extend({
           name: DS.attr('string')
@@ -4128,7 +4134,7 @@ define(
       }
     });
 
-    test('serialize() is delegated to the serializer', function () {
+    test("serialize() is delegated to the serializer", function () {
       expect(1);
 
       serializer.serialize = function (snapshot, options) {
@@ -4172,7 +4178,7 @@ define(
     var run = Ember.run;
     var Person, Dog, env, store, adapter;
 
-    module('integration/adapter/store_adapter - DS.Store and DS.Adapter integration test', {
+    module("integration/adapter/store_adapter - DS.Store and DS.Adapter integration test", {
       setup: function () {
         Person = DS.Model.extend({
           updatedAt: DS.attr('string'),
@@ -4195,14 +4201,14 @@ define(
       }
     });
 
-    test('Records loaded multiple times and retrieved in recordArray are ready to send state events', function () {
+    test("Records loaded multiple times and retrieved in recordArray are ready to send state events", function () {
       adapter.query = function (store, type, query, recordArray) {
         return Ember.RSVP.resolve([{
           id: 1,
-          name: 'Mickael Ramírez'
+          name: "Mickael Ramírez"
         }, {
           id: 2,
-          name: 'Johny Fontana'
+          name: "Johny Fontana"
         }]);
       };
 
@@ -4222,23 +4228,23 @@ define(
       }));
     });
 
-    test('by default, createRecords calls createRecord once per record', function () {
+    test("by default, createRecords calls createRecord once per record", function () {
       var count = 1;
 
       adapter.createRecord = function (store, type, snapshot) {
-        equal(type, Person, 'the type is correct');
+        equal(type, Person, "the type is correct");
 
         if (count === 1) {
-          equal(snapshot.attr('name'), 'Tom Dale');
+          equal(snapshot.attr('name'), "Tom Dale");
         } else if (count === 2) {
-          equal(snapshot.attr('name'), 'Yehuda Katz');
+          equal(snapshot.attr('name'), "Yehuda Katz");
         } else {
-          ok(false, 'should not have invoked more than 2 times');
+          ok(false, "should not have invoked more than 2 times");
         }
 
         var hash = snapshot.attributes();
         hash.id = count;
-        hash.updatedAt = 'now';
+        hash.updatedAt = "now";
 
         count++;
         return Ember.RSVP.resolve(hash);
@@ -4246,8 +4252,8 @@ define(
       var tom, yehuda;
 
       run(function () {
-        tom = store.createRecord('person', { name: 'Tom Dale' });
-        yehuda = store.createRecord('person', { name: 'Yehuda Katz' });
+        tom = store.createRecord('person', { name: "Tom Dale" });
+        yehuda = store.createRecord('person', { name: "Yehuda Katz" });
       });
 
       var promise = run(function () {
@@ -4260,30 +4266,30 @@ define(
         tom = records.tom;
         yehuda = records.yehuda;
 
-        asyncEqual(tom, store.findRecord('person', 1), 'Once an ID is in, find returns the same object');
-        asyncEqual(yehuda, store.findRecord('person', 2), 'Once an ID is in, find returns the same object');
-        equal(get(tom, 'updatedAt'), 'now', 'The new information is received');
-        equal(get(yehuda, 'updatedAt'), 'now', 'The new information is received');
+        asyncEqual(tom, store.findRecord('person', 1), "Once an ID is in, find returns the same object");
+        asyncEqual(yehuda, store.findRecord('person', 2), "Once an ID is in, find returns the same object");
+        equal(get(tom, 'updatedAt'), "now", "The new information is received");
+        equal(get(yehuda, 'updatedAt'), "now", "The new information is received");
       }));
     });
 
-    test('by default, updateRecords calls updateRecord once per record', function () {
+    test("by default, updateRecords calls updateRecord once per record", function () {
       var count = 0;
 
       adapter.updateRecord = function (store, type, snapshot) {
-        equal(type, Person, 'the type is correct');
+        equal(type, Person, "the type is correct");
 
         if (count === 0) {
-          equal(snapshot.attr('name'), 'Tom Dale');
+          equal(snapshot.attr('name'), "Tom Dale");
         } else if (count === 1) {
-          equal(snapshot.attr('name'), 'Yehuda Katz');
+          equal(snapshot.attr('name'), "Yehuda Katz");
         } else {
-          ok(false, 'should not get here');
+          ok(false, "should not get here");
         }
 
         count++;
 
-        equal(snapshot.record.get('isSaving'), true, 'record is saving');
+        equal(snapshot.record.get('isSaving'), true, "record is saving");
 
         return Ember.RSVP.resolve();
       };
@@ -4317,37 +4323,37 @@ define(
         var tom = records.tom;
         var yehuda = records.yehuda;
 
-        set(tom, 'name', 'Tom Dale');
-        set(yehuda, 'name', 'Yehuda Katz');
+        set(tom, "name", "Tom Dale");
+        set(yehuda, "name", "Yehuda Katz");
 
         return Ember.RSVP.hash({ tom: tom.save(), yehuda: yehuda.save() });
       })).then(async(function (records) {
         var tom = records.tom;
         var yehuda = records.yehuda;
 
-        equal(tom.get('isSaving'), false, 'record is no longer saving');
-        equal(tom.get('isLoaded'), true, 'record is loaded');
+        equal(tom.get('isSaving'), false, "record is no longer saving");
+        equal(tom.get('isLoaded'), true, "record is loaded");
 
-        equal(yehuda.get('isSaving'), false, 'record is no longer saving');
-        equal(yehuda.get('isLoaded'), true, 'record is loaded');
+        equal(yehuda.get('isSaving'), false, "record is no longer saving");
+        equal(yehuda.get('isLoaded'), true, "record is loaded");
       }));
     });
 
-    test('calling store.didSaveRecord can provide an optional hash', function () {
+    test("calling store.didSaveRecord can provide an optional hash", function () {
       var count = 0;
 
       adapter.updateRecord = function (store, type, snapshot) {
-        equal(type, Person, 'the type is correct');
+        equal(type, Person, "the type is correct");
 
         count++;
         if (count === 1) {
-          equal(snapshot.attr('name'), 'Tom Dale');
-          return Ember.RSVP.resolve({ id: 1, name: 'Tom Dale', updatedAt: 'now' });
+          equal(snapshot.attr('name'), "Tom Dale");
+          return Ember.RSVP.resolve({ id: 1, name: "Tom Dale", updatedAt: "now" });
         } else if (count === 2) {
-          equal(snapshot.attr('name'), 'Yehuda Katz');
-          return Ember.RSVP.resolve({ id: 2, name: 'Yehuda Katz', updatedAt: 'now!' });
+          equal(snapshot.attr('name'), "Yehuda Katz");
+          return Ember.RSVP.resolve({ id: 2, name: "Yehuda Katz", updatedAt: "now!" });
         } else {
-          ok(false, 'should not get here');
+          ok(false, "should not get here");
         }
       };
 
@@ -4379,36 +4385,36 @@ define(
         var tom = records.tom;
         var yehuda = records.yehuda;
 
-        set(tom, 'name', 'Tom Dale');
-        set(yehuda, 'name', 'Yehuda Katz');
+        set(tom, "name", "Tom Dale");
+        set(yehuda, "name", "Yehuda Katz");
 
         return Ember.RSVP.hash({ tom: tom.save(), yehuda: yehuda.save() });
       })).then(async(function (records) {
         var tom = records.tom;
         var yehuda = records.yehuda;
 
-        equal(get(tom, 'hasDirtyAttributes'), false, 'the record should not be dirty');
-        equal(get(tom, 'updatedAt'), 'now', 'the hash was updated');
+        equal(get(tom, 'hasDirtyAttributes'), false, "the record should not be dirty");
+        equal(get(tom, 'updatedAt'), "now", "the hash was updated");
 
-        equal(get(yehuda, 'hasDirtyAttributes'), false, 'the record should not be dirty');
-        equal(get(yehuda, 'updatedAt'), 'now!', 'the hash was updated');
+        equal(get(yehuda, 'hasDirtyAttributes'), false, "the record should not be dirty");
+        equal(get(yehuda, 'updatedAt'), "now!", "the hash was updated");
       }));
     });
 
-    test('by default, deleteRecord calls deleteRecord once per record', function () {
+    test("by default, deleteRecord calls deleteRecord once per record", function () {
       expect(4);
 
       var count = 0;
 
       adapter.deleteRecord = function (store, type, snapshot) {
-        equal(type, Person, 'the type is correct');
+        equal(type, Person, "the type is correct");
 
         if (count === 0) {
-          equal(snapshot.attr('name'), 'Tom Dale');
+          equal(snapshot.attr('name'), "Tom Dale");
         } else if (count === 1) {
-          equal(snapshot.attr('name'), 'Yehuda Katz');
+          equal(snapshot.attr('name'), "Yehuda Katz");
         } else {
-          ok(false, 'should not get here');
+          ok(false, "should not get here");
         }
 
         count++;
@@ -4453,20 +4459,20 @@ define(
       }));
     });
 
-    test('by default, destroyRecord calls deleteRecord once per record without requiring .save', function () {
+    test("by default, destroyRecord calls deleteRecord once per record without requiring .save", function () {
       expect(4);
 
       var count = 0;
 
       adapter.deleteRecord = function (store, type, snapshot) {
-        equal(type, Person, 'the type is correct');
+        equal(type, Person, "the type is correct");
 
         if (count === 0) {
-          equal(snapshot.attr('name'), 'Tom Dale');
+          equal(snapshot.attr('name'), "Tom Dale");
         } else if (count === 1) {
-          equal(snapshot.attr('name'), 'Yehuda Katz');
+          equal(snapshot.attr('name'), "Yehuda Katz");
         } else {
-          ok(false, 'should not get here');
+          ok(false, "should not get here");
         }
 
         count++;
@@ -4508,21 +4514,21 @@ define(
       }));
     });
 
-    test('if an existing model is edited then deleted, deleteRecord is called on the adapter', function () {
+    test("if an existing model is edited then deleted, deleteRecord is called on the adapter", function () {
       expect(5);
 
       var count = 0;
 
       adapter.deleteRecord = function (store, type, snapshot) {
         count++;
-        equal(snapshot.id, 'deleted-record', 'should pass correct record to deleteRecord');
-        equal(count, 1, 'should only call deleteRecord method of adapter once');
+        equal(snapshot.id, 'deleted-record', "should pass correct record to deleteRecord");
+        equal(count, 1, "should only call deleteRecord method of adapter once");
 
         return Ember.RSVP.resolve();
       };
 
       adapter.updateRecord = function () {
-        ok(false, 'should not have called updateRecord method of adapter');
+        ok(false, "should not have called updateRecord method of adapter");
       };
 
       // Load data for a record into the store.
@@ -4540,19 +4546,19 @@ define(
 
       // Retrieve that loaded record and edit it so it becomes dirty
       run(store, 'findRecord', 'person', 'deleted-record').then(async(function (tom) {
-        tom.set('name', 'Tom Mothereffin\' Dale');
+        tom.set('name', "Tom Mothereffin' Dale");
 
-        equal(get(tom, 'hasDirtyAttributes'), true, 'precond - record should be dirty after editing');
+        equal(get(tom, 'hasDirtyAttributes'), true, "precond - record should be dirty after editing");
 
         tom.deleteRecord();
         return tom.save();
       })).then(async(function (tom) {
-        equal(get(tom, 'hasDirtyAttributes'), false, 'record should not be dirty');
-        equal(get(tom, 'isDeleted'), true, 'record should be considered deleted');
+        equal(get(tom, 'hasDirtyAttributes'), false, "record should not be dirty");
+        equal(get(tom, 'isDeleted'), true, "record should be considered deleted");
       }));
     });
 
-    test('if a deleted record errors, it enters the error state', function () {
+    test("if a deleted record errors, it enters the error state", function () {
       var count = 0;
       var error = new DS.AdapterError();
 
@@ -4584,21 +4590,21 @@ define(
           person.deleteRecord();
           return person.save();
         })).then(null, async(function () {
-          equal(tom.get('isError'), true, 'Tom is now errored');
-          equal(tom.get('adapterError'), error, 'error object is exposed');
+          equal(tom.get('isError'), true, "Tom is now errored");
+          equal(tom.get('adapterError'), error, "error object is exposed");
 
           // this time it succeeds
           return tom.save();
         })).then(async(function () {
-          equal(tom.get('isError'), false, 'Tom is not errored anymore');
-          equal(tom.get('adapterError'), null, 'error object is discarded');
+          equal(tom.get('isError'), false, "Tom is not errored anymore");
+          equal(tom.get('adapterError'), null, "error object is discarded");
         }));
       });
     });
 
-    test('if a created record is marked as invalid by the server, it enters an error state', function () {
+    test("if a created record is marked as invalid by the server, it enters an error state", function () {
       adapter.createRecord = function (store, type, snapshot) {
-        equal(type, Person, 'the type is correct');
+        equal(type, Person, "the type is correct");
 
         if (snapshot.attr('name').indexOf('Bro') === -1) {
           return Ember.RSVP.reject(new DS.InvalidError({ name: ['common... name requires a "bro"'] }));
@@ -4608,36 +4614,36 @@ define(
       };
 
       var yehuda = run(function () {
-        return store.createRecord('person', { id: 1, name: 'Yehuda Katz' });
+        return store.createRecord('person', { id: 1, name: "Yehuda Katz" });
       });
       // Wrap this in an Ember.run so that all chained async behavior is set up
       // before flushing any scheduled behavior.
       Ember.run(function () {
         yehuda.save().then(null, async(function (error) {
-          equal(get(yehuda, 'isValid'), false, 'the record is invalid');
-          ok(get(yehuda, 'errors.name'), 'The errors.name property exists');
+          equal(get(yehuda, 'isValid'), false, "the record is invalid");
+          ok(get(yehuda, 'errors.name'), "The errors.name property exists");
 
           set(yehuda, 'updatedAt', true);
-          equal(get(yehuda, 'isValid'), false, 'the record is still invalid');
+          equal(get(yehuda, 'isValid'), false, "the record is still invalid");
 
-          set(yehuda, 'name', 'Brohuda Brokatz');
+          set(yehuda, 'name', "Brohuda Brokatz");
 
-          equal(get(yehuda, 'isValid'), true, 'the record is no longer invalid after changing');
-          equal(get(yehuda, 'hasDirtyAttributes'), true, 'the record has outstanding changes');
+          equal(get(yehuda, 'isValid'), true, "the record is no longer invalid after changing");
+          equal(get(yehuda, 'hasDirtyAttributes'), true, "the record has outstanding changes");
 
-          equal(get(yehuda, 'isNew'), true, 'precond - record is still new');
+          equal(get(yehuda, 'isNew'), true, "precond - record is still new");
 
           return yehuda.save();
         })).then(async(function (person) {
-          strictEqual(person, yehuda, 'The promise resolves with the saved record');
+          strictEqual(person, yehuda, "The promise resolves with the saved record");
 
-          equal(get(yehuda, 'isValid'), true, 'record remains valid after committing');
-          equal(get(yehuda, 'isNew'), false, 'record is no longer new');
+          equal(get(yehuda, 'isValid'), true, "record remains valid after committing");
+          equal(get(yehuda, 'isNew'), false, "record is no longer new");
         }));
       });
     });
 
-    test('allows errors on arbitrary properties on create', function () {
+    test("allows errors on arbitrary properties on create", function () {
       adapter.createRecord = function (store, type, snapshot) {
         if (snapshot.attr('name').indexOf('Bro') === -1) {
           return Ember.RSVP.reject(new DS.InvalidError({ base: ['is a generally unsavoury character'] }));
@@ -4647,42 +4653,42 @@ define(
       };
 
       var yehuda = run(function () {
-        return store.createRecord('person', { id: 1, name: 'Yehuda Katz' });
+        return store.createRecord('person', { id: 1, name: "Yehuda Katz" });
       });
 
       // Wrap this in an Ember.run so that all chained async behavior is set up
       // before flushing any scheduled behavior.
       run(function () {
         yehuda.save().then(null, async(function (error) {
-          equal(get(yehuda, 'isValid'), false, 'the record is invalid');
-          ok(get(yehuda, 'errors.base'), 'The errors.base property exists');
-          deepEqual(get(yehuda, 'errors').errorsFor('base'), [{ attribute: 'base', message: 'is a generally unsavoury character' }]);
+          equal(get(yehuda, 'isValid'), false, "the record is invalid");
+          ok(get(yehuda, 'errors.base'), "The errors.base property exists");
+          deepEqual(get(yehuda, 'errors').errorsFor('base'), [{ attribute: 'base', message: "is a generally unsavoury character" }]);
 
           set(yehuda, 'updatedAt', true);
-          equal(get(yehuda, 'isValid'), false, 'the record is still invalid');
+          equal(get(yehuda, 'isValid'), false, "the record is still invalid");
 
-          set(yehuda, 'name', 'Brohuda Brokatz');
+          set(yehuda, 'name', "Brohuda Brokatz");
 
-          equal(get(yehuda, 'isValid'), false, 'the record is still invalid as far as we know');
-          equal(get(yehuda, 'hasDirtyAttributes'), true, 'the record has outstanding changes');
+          equal(get(yehuda, 'isValid'), false, "the record is still invalid as far as we know");
+          equal(get(yehuda, 'hasDirtyAttributes'), true, "the record has outstanding changes");
 
-          equal(get(yehuda, 'isNew'), true, 'precond - record is still new');
+          equal(get(yehuda, 'isNew'), true, "precond - record is still new");
 
           return yehuda.save();
         })).then(async(function (person) {
-          strictEqual(person, yehuda, 'The promise resolves with the saved record');
-          ok(!get(yehuda, 'errors.base'), 'The errors.base property does not exist');
+          strictEqual(person, yehuda, "The promise resolves with the saved record");
+          ok(!get(yehuda, 'errors.base'), "The errors.base property does not exist");
           deepEqual(get(yehuda, 'errors').errorsFor('base'), []);
-          equal(get(yehuda, 'isValid'), true, 'record remains valid after committing');
-          equal(get(yehuda, 'isNew'), false, 'record is no longer new');
+          equal(get(yehuda, 'isValid'), true, "record remains valid after committing");
+          equal(get(yehuda, 'isNew'), false, "record is no longer new");
         }));
       });
     });
 
-    test('if a created record is marked as invalid by the server, you can attempt the save again', function () {
+    test("if a created record is marked as invalid by the server, you can attempt the save again", function () {
       var saveCount = 0;
       adapter.createRecord = function (store, type, snapshot) {
-        equal(type, Person, 'the type is correct');
+        equal(type, Person, "the type is correct");
         saveCount++;
 
         if (snapshot.attr('name').indexOf('Bro') === -1) {
@@ -4693,39 +4699,39 @@ define(
       };
 
       var yehuda = run(function () {
-        return store.createRecord('person', { id: 1, name: 'Yehuda Katz' });
+        return store.createRecord('person', { id: 1, name: "Yehuda Katz" });
       });
 
       // Wrap this in an Ember.run so that all chained async behavior is set up
       // before flushing any scheduled behavior.
       Ember.run(function () {
         yehuda.save().then(null, async(function (reason) {
-          equal(saveCount, 1, 'The record has been saved once');
-          ok(reason.message.match('The adapter rejected the commit because it was invalid'), 'It should fail due to being invalid');
-          equal(get(yehuda, 'isValid'), false, 'the record is invalid');
-          equal(get(yehuda, 'hasDirtyAttributes'), true, 'the record has outstanding changes');
-          ok(get(yehuda, 'errors.name'), 'The errors.name property exists');
-          equal(get(yehuda, 'isNew'), true, 'precond - record is still new');
+          equal(saveCount, 1, "The record has been saved once");
+          ok(reason.message.match("The adapter rejected the commit because it was invalid"), "It should fail due to being invalid");
+          equal(get(yehuda, 'isValid'), false, "the record is invalid");
+          equal(get(yehuda, 'hasDirtyAttributes'), true, "the record has outstanding changes");
+          ok(get(yehuda, 'errors.name'), "The errors.name property exists");
+          equal(get(yehuda, 'isNew'), true, "precond - record is still new");
           return yehuda.save();
         })).then(null, async(function (reason) {
-          equal(saveCount, 2, 'The record has been saved twice');
-          ok(reason.message.match('The adapter rejected the commit because it was invalid'), 'It should fail due to being invalid');
-          equal(get(yehuda, 'isValid'), false, 'the record is still invalid');
-          equal(get(yehuda, 'hasDirtyAttributes'), true, 'the record has outstanding changes');
-          ok(get(yehuda, 'errors.name'), 'The errors.name property exists');
-          equal(get(yehuda, 'isNew'), true, 'precond - record is still new');
+          equal(saveCount, 2, "The record has been saved twice");
+          ok(reason.message.match("The adapter rejected the commit because it was invalid"), "It should fail due to being invalid");
+          equal(get(yehuda, 'isValid'), false, "the record is still invalid");
+          equal(get(yehuda, 'hasDirtyAttributes'), true, "the record has outstanding changes");
+          ok(get(yehuda, 'errors.name'), "The errors.name property exists");
+          equal(get(yehuda, 'isNew'), true, "precond - record is still new");
           set(yehuda, 'name', 'Brohuda Brokatz');
           return yehuda.save();
         })).then(async(function (person) {
-          equal(saveCount, 3, 'The record has been saved thrice');
-          equal(get(yehuda, 'isValid'), true, 'record is valid');
-          equal(get(yehuda, 'hasDirtyAttributes'), false, 'record is not dirty');
-          equal(get(yehuda, 'errors.isEmpty'), true, 'record has no errors');
+          equal(saveCount, 3, "The record has been saved thrice");
+          equal(get(yehuda, 'isValid'), true, "record is valid");
+          equal(get(yehuda, 'hasDirtyAttributes'), false, "record is not dirty");
+          equal(get(yehuda, 'errors.isEmpty'), true, "record has no errors");
         }));
       });
     });
 
-    test('if a created record is marked as erred by the server, it enters an error state', function () {
+    test("if a created record is marked as erred by the server, it enters an error state", function () {
       var error = new DS.AdapterError();
 
       adapter.createRecord = function (store, type, snapshot) {
@@ -4733,18 +4739,18 @@ define(
       };
 
       Ember.run(function () {
-        var person = store.createRecord('person', { id: 1, name: 'John Doe' });
+        var person = store.createRecord('person', { id: 1, name: "John Doe" });
 
         person.save().then(null, async(function () {
-          ok(get(person, 'isError'), 'the record is in the error state');
-          equal(get(person, 'adapterError'), error, 'error object is exposed');
+          ok(get(person, 'isError'), "the record is in the error state");
+          equal(get(person, 'adapterError'), error, "error object is exposed");
         }));
       });
     });
 
-    test('if an updated record is marked as invalid by the server, it enters an error state', function () {
+    test("if an updated record is marked as invalid by the server, it enters an error state", function () {
       adapter.updateRecord = function (store, type, snapshot) {
-        equal(type, Person, 'the type is correct');
+        equal(type, Person, "the type is correct");
 
         if (snapshot.attr('name').indexOf('Bro') === -1) {
           return Ember.RSVP.reject(new DS.InvalidError({ name: ['common... name requires a "bro"'] }));
@@ -4768,35 +4774,35 @@ define(
 
       Ember.run(function () {
         store.findRecord('person', 1).then(async(function (person) {
-          equal(person, yehuda, 'The same object is passed through');
+          equal(person, yehuda, "The same object is passed through");
 
-          equal(get(yehuda, 'isValid'), true, 'precond - the record is valid');
-          set(yehuda, 'name', 'Yehuda Katz');
-          equal(get(yehuda, 'isValid'), true, 'precond - the record is still valid as far as we know');
+          equal(get(yehuda, 'isValid'), true, "precond - the record is valid");
+          set(yehuda, 'name', "Yehuda Katz");
+          equal(get(yehuda, 'isValid'), true, "precond - the record is still valid as far as we know");
 
-          equal(get(yehuda, 'hasDirtyAttributes'), true, 'the record is dirty');
+          equal(get(yehuda, 'hasDirtyAttributes'), true, "the record is dirty");
 
           return yehuda.save();
         })).then(null, async(function (reason) {
-          equal(get(yehuda, 'hasDirtyAttributes'), true, 'the record is still dirty');
-          equal(get(yehuda, 'isValid'), false, 'the record is invalid');
+          equal(get(yehuda, 'hasDirtyAttributes'), true, "the record is still dirty");
+          equal(get(yehuda, 'isValid'), false, "the record is invalid");
 
           set(yehuda, 'updatedAt', true);
-          equal(get(yehuda, 'isValid'), false, 'the record is still invalid');
+          equal(get(yehuda, 'isValid'), false, "the record is still invalid");
 
-          set(yehuda, 'name', 'Brohuda Brokatz');
-          equal(get(yehuda, 'isValid'), true, 'the record is no longer invalid after changing');
-          equal(get(yehuda, 'hasDirtyAttributes'), true, 'the record has outstanding changes');
+          set(yehuda, 'name', "Brohuda Brokatz");
+          equal(get(yehuda, 'isValid'), true, "the record is no longer invalid after changing");
+          equal(get(yehuda, 'hasDirtyAttributes'), true, "the record has outstanding changes");
 
           return yehuda.save();
         })).then(async(function (yehuda) {
-          equal(get(yehuda, 'isValid'), true, 'record remains valid after committing');
-          equal(get(yehuda, 'hasDirtyAttributes'), false, 'record is no longer new');
+          equal(get(yehuda, 'isValid'), true, "record remains valid after committing");
+          equal(get(yehuda, 'hasDirtyAttributes'), false, "record is no longer new");
         }));
       });
     });
 
-    test('records can have errors on arbitrary properties after update', function () {
+    test("records can have errors on arbitrary properties after update", function () {
       adapter.updateRecord = function (store, type, snapshot) {
         if (snapshot.attr('name').indexOf('Bro') === -1) {
           return Ember.RSVP.reject(new DS.InvalidError({ base: ['is a generally unsavoury character'] }));
@@ -4820,42 +4826,42 @@ define(
 
       run(function () {
         store.findRecord('person', 1).then(async(function (person) {
-          equal(person, yehuda, 'The same object is passed through');
+          equal(person, yehuda, "The same object is passed through");
 
-          equal(get(yehuda, 'isValid'), true, 'precond - the record is valid');
-          set(yehuda, 'name', 'Yehuda Katz');
-          equal(get(yehuda, 'isValid'), true, 'precond - the record is still valid as far as we know');
+          equal(get(yehuda, 'isValid'), true, "precond - the record is valid");
+          set(yehuda, 'name', "Yehuda Katz");
+          equal(get(yehuda, 'isValid'), true, "precond - the record is still valid as far as we know");
 
-          equal(get(yehuda, 'hasDirtyAttributes'), true, 'the record is dirty');
+          equal(get(yehuda, 'hasDirtyAttributes'), true, "the record is dirty");
 
           return yehuda.save();
         })).then(null, async(function (reason) {
-          equal(get(yehuda, 'hasDirtyAttributes'), true, 'the record is still dirty');
-          equal(get(yehuda, 'isValid'), false, 'the record is invalid');
-          ok(get(yehuda, 'errors.base'), 'The errors.base property exists');
-          deepEqual(get(yehuda, 'errors').errorsFor('base'), [{ attribute: 'base', message: 'is a generally unsavoury character' }]);
+          equal(get(yehuda, 'hasDirtyAttributes'), true, "the record is still dirty");
+          equal(get(yehuda, 'isValid'), false, "the record is invalid");
+          ok(get(yehuda, 'errors.base'), "The errors.base property exists");
+          deepEqual(get(yehuda, 'errors').errorsFor('base'), [{ attribute: 'base', message: "is a generally unsavoury character" }]);
 
           set(yehuda, 'updatedAt', true);
-          equal(get(yehuda, 'isValid'), false, 'the record is still invalid');
+          equal(get(yehuda, 'isValid'), false, "the record is still invalid");
 
-          set(yehuda, 'name', 'Brohuda Brokatz');
-          equal(get(yehuda, 'isValid'), false, 'the record is still invalid after changing (only server can know if it\'s now valid)');
-          equal(get(yehuda, 'hasDirtyAttributes'), true, 'the record has outstanding changes');
+          set(yehuda, 'name', "Brohuda Brokatz");
+          equal(get(yehuda, 'isValid'), false, "the record is still invalid after changing (only server can know if it's now valid)");
+          equal(get(yehuda, 'hasDirtyAttributes'), true, "the record has outstanding changes");
 
           return yehuda.save();
         })).then(async(function (yehuda) {
-          equal(get(yehuda, 'isValid'), true, 'record remains valid after committing');
-          equal(get(yehuda, 'hasDirtyAttributes'), false, 'record is no longer new');
-          ok(!get(yehuda, 'errors.base'), 'The errors.base property does not exist');
+          equal(get(yehuda, 'isValid'), true, "record remains valid after committing");
+          equal(get(yehuda, 'hasDirtyAttributes'), false, "record is no longer new");
+          ok(!get(yehuda, 'errors.base'), "The errors.base property does not exist");
           deepEqual(get(yehuda, 'errors').errorsFor('base'), []);
         }));
       });
     });
 
-    test('if an updated record is marked as invalid by the server, you can attempt the save again', function () {
+    test("if an updated record is marked as invalid by the server, you can attempt the save again", function () {
       var saveCount = 0;
       adapter.updateRecord = function (store, type, snapshot) {
-        equal(type, Person, 'the type is correct');
+        equal(type, Person, "the type is correct");
         saveCount++;
         if (snapshot.attr('name').indexOf('Bro') === -1) {
           return Ember.RSVP.reject(new DS.InvalidError({ name: ['common... name requires a "bro"'] }));
@@ -4879,38 +4885,38 @@ define(
 
       Ember.run(function () {
         store.findRecord('person', 1).then(async(function (person) {
-          equal(person, yehuda, 'The same object is passed through');
+          equal(person, yehuda, "The same object is passed through");
 
-          equal(get(yehuda, 'isValid'), true, 'precond - the record is valid');
-          set(yehuda, 'name', 'Yehuda Katz');
-          equal(get(yehuda, 'isValid'), true, 'precond - the record is still valid as far as we know');
+          equal(get(yehuda, 'isValid'), true, "precond - the record is valid");
+          set(yehuda, 'name', "Yehuda Katz");
+          equal(get(yehuda, 'isValid'), true, "precond - the record is still valid as far as we know");
 
-          equal(get(yehuda, 'hasDirtyAttributes'), true, 'the record is dirty');
+          equal(get(yehuda, 'hasDirtyAttributes'), true, "the record is dirty");
 
           return yehuda.save();
         })).then(null, async(function (reason) {
-          equal(saveCount, 1, 'The record has been saved once');
-          ok(reason.message.match('The adapter rejected the commit because it was invalid'), 'It should fail due to being invalid');
-          equal(get(yehuda, 'hasDirtyAttributes'), true, 'the record is still dirty');
-          equal(get(yehuda, 'isValid'), false, 'the record is invalid');
+          equal(saveCount, 1, "The record has been saved once");
+          ok(reason.message.match("The adapter rejected the commit because it was invalid"), "It should fail due to being invalid");
+          equal(get(yehuda, 'hasDirtyAttributes'), true, "the record is still dirty");
+          equal(get(yehuda, 'isValid'), false, "the record is invalid");
           return yehuda.save();
         })).then(null, async(function (reason) {
-          equal(saveCount, 2, 'The record has been saved twice');
-          ok(reason.message.match('The adapter rejected the commit because it was invalid'), 'It should fail due to being invalid');
-          equal(get(yehuda, 'isValid'), false, 'record is still invalid');
-          equal(get(yehuda, 'hasDirtyAttributes'), true, 'record is still dirty');
+          equal(saveCount, 2, "The record has been saved twice");
+          ok(reason.message.match("The adapter rejected the commit because it was invalid"), "It should fail due to being invalid");
+          equal(get(yehuda, 'isValid'), false, "record is still invalid");
+          equal(get(yehuda, 'hasDirtyAttributes'), true, "record is still dirty");
           set(yehuda, 'name', 'Brohuda Brokatz');
           return yehuda.save();
         })).then(async(function (person) {
-          equal(saveCount, 3, 'The record has been saved thrice');
-          equal(get(yehuda, 'isValid'), true, 'record is valid');
-          equal(get(yehuda, 'hasDirtyAttributes'), false, 'record is not dirty');
-          equal(get(yehuda, 'errors.isEmpty'), true, 'record has no errors');
+          equal(saveCount, 3, "The record has been saved thrice");
+          equal(get(yehuda, 'isValid'), true, "record is valid");
+          equal(get(yehuda, 'hasDirtyAttributes'), false, "record is not dirty");
+          equal(get(yehuda, 'errors.isEmpty'), true, "record has no errors");
         }));
       });
     });
 
-    test('if a updated record is marked as erred by the server, it enters an error state', function () {
+    test("if a updated record is marked as erred by the server, it enters an error state", function () {
       var error = new DS.AdapterError();
 
       adapter.updateRecord = function (store, type, snapshot) {
@@ -4931,20 +4937,20 @@ define(
       });
 
       run(store, 'findRecord', 'person', 1).then(async(function (record) {
-        equal(record, person, 'The person was resolved');
-        person.set('name', 'Jonathan Doe');
+        equal(record, person, "The person was resolved");
+        person.set('name', "Jonathan Doe");
         return person.save();
       })).then(null, async(function (reason) {
-        ok(get(person, 'isError'), 'the record is in the error state');
-        equal(get(person, 'adapterError'), error, 'error object is exposed');
+        ok(get(person, 'isError'), "the record is in the error state");
+        equal(get(person, 'adapterError'), error, "error object is exposed");
       }));
     });
 
-    test('can be created after the DS.Store', function () {
+    test("can be created after the DS.Store", function () {
       expect(1);
 
       adapter.findRecord = function (store, type, id, snapshot) {
-        equal(type, Person, 'the type is correct');
+        equal(type, Person, "the type is correct");
         return Ember.RSVP.resolve({ id: 1 });
       };
 
@@ -4953,13 +4959,13 @@ define(
       });
     });
 
-    test('the filter method can optionally take a server query as well', function () {
+    test("the filter method can optionally take a server query as well", function () {
       adapter.query = function (store, type, query, array) {
-        return Ember.RSVP.resolve([{ id: 1, name: 'Yehuda Katz' }, { id: 2, name: 'Tom Dale' }]);
+        return Ember.RSVP.resolve([{ id: 1, name: "Yehuda Katz" }, { id: 2, name: "Tom Dale" }]);
       };
 
       var asyncFilter = store.filter('person', { page: 1 }, function (data) {
-        return data.get('name') === 'Tom Dale';
+        return data.get('name') === "Tom Dale";
       });
 
       var loadedFilter;
@@ -4968,12 +4974,12 @@ define(
         loadedFilter = filter;
         return store.findRecord('person', 2);
       })).then(async(function (tom) {
-        equal(get(loadedFilter, 'length'), 1, 'The filter has an item in it');
-        deepEqual(loadedFilter.toArray(), [tom], 'The filter has a single entry in it');
+        equal(get(loadedFilter, 'length'), 1, "The filter has an item in it");
+        deepEqual(loadedFilter.toArray(), [tom], "The filter has a single entry in it");
       }));
     });
 
-    test('relationships returned via `commit` do not trigger additional findManys', function () {
+    test("relationships returned via `commit` do not trigger additional findManys", function () {
       Person.reopen({
         dogs: DS.hasMany('dog', { async: false })
       });
@@ -4991,7 +4997,7 @@ define(
       });
 
       adapter.findRecord = function (store, type, id, snapshot) {
-        return Ember.RSVP.resolve({ id: 1, name: 'Tom Dale', dogs: [1] });
+        return Ember.RSVP.resolve({ id: 1, name: "Tom Dale", dogs: [1] });
       };
 
       adapter.updateRecord = function (store, type, snapshot) {
@@ -5018,12 +5024,12 @@ define(
             }]
           });
 
-          resolve({ id: 1, name: 'Scruffy' });
+          resolve({ id: 1, name: "Scruffy" });
         });
       };
 
       adapter.findMany = function (store, type, ids, snapshots) {
-        ok(false, 'Should not get here');
+        ok(false, "Should not get here");
       };
 
       run(function () {
@@ -5033,12 +5039,12 @@ define(
           records.tom.get('dogs');
           return records.dog.save();
         })).then(async(function (tom) {
-          ok(true, 'Tom was saved');
+          ok(true, "Tom was saved");
         }));
       });
     });
 
-    test('relationships don\'t get reset if the links is the same', function () {
+    test("relationships don't get reset if the links is the same", function () {
       Person.reopen({
         dogs: DS.hasMany({ async: true })
       });
@@ -5046,9 +5052,9 @@ define(
       var count = 0;
 
       adapter.findHasMany = function (store, snapshot, link, relationship) {
-        ok(count++ === 0, 'findHasMany is only called once');
+        ok(count++ === 0, "findHasMany is only called once");
 
-        return Ember.RSVP.resolve([{ id: 1, name: 'Scruffy' }]);
+        return Ember.RSVP.resolve([{ id: 1, name: "Scruffy" }]);
       };
 
       run(function () {
@@ -5077,7 +5083,7 @@ define(
         dogs = tom.get('dogs');
         return dogs;
       })).then(async(function (dogs) {
-        equal(dogs.get('length'), 1, 'The dogs are loaded');
+        equal(dogs.get('length'), 1, "The dogs are loaded");
         store.push({
           data: {
             type: 'person',
@@ -5097,17 +5103,17 @@ define(
         ok(tom.get('dogs') instanceof DS.PromiseArray, 'dogs is a promise');
         return tom.get('dogs');
       })).then(async(function (dogs) {
-        equal(dogs.get('length'), 1, 'The same dogs are loaded');
+        equal(dogs.get('length'), 1, "The same dogs are loaded");
       }));
     });
 
-    test('async hasMany always returns a promise', function () {
+    test("async hasMany always returns a promise", function () {
       Person.reopen({
         dogs: DS.hasMany({ async: true })
       });
 
       adapter.createRecord = function (store, type, snapshot) {
-        var hash = { name: 'Tom Dale' };
+        var hash = { name: "Tom Dale" };
         hash.dogs = [];
         hash.id = 1;
         return Ember.RSVP.resolve(hash);
@@ -5115,39 +5121,39 @@ define(
       var tom;
 
       run(function () {
-        tom = store.createRecord('person', { name: 'Tom Dale' });
+        tom = store.createRecord('person', { name: "Tom Dale" });
       });
 
-      ok(tom.get('dogs') instanceof DS.PromiseArray, 'dogs is a promise before save');
+      ok(tom.get('dogs') instanceof DS.PromiseArray, "dogs is a promise before save");
 
       run(function () {
         tom.save().then(async(function () {
-          ok(tom.get('dogs') instanceof DS.PromiseArray, 'dogs is a promise after save');
+          ok(tom.get('dogs') instanceof DS.PromiseArray, "dogs is a promise after save");
         }));
       });
     });
 
-    test('createRecord receives a snapshot', function () {
+    test("createRecord receives a snapshot", function () {
       expect(1);
 
       adapter.createRecord = function (store, type, snapshot) {
-        ok(snapshot instanceof DS.Snapshot, 'snapshot is an instance of DS.Snapshot');
+        ok(snapshot instanceof DS.Snapshot, "snapshot is an instance of DS.Snapshot");
         return Ember.RSVP.resolve();
       };
 
       var person;
 
       run(function () {
-        person = store.createRecord('person', { name: 'Tom Dale' });
+        person = store.createRecord('person', { name: "Tom Dale" });
         person.save();
       });
     });
 
-    test('updateRecord receives a snapshot', function () {
+    test("updateRecord receives a snapshot", function () {
       expect(1);
 
       adapter.updateRecord = function (store, type, snapshot) {
-        ok(snapshot instanceof DS.Snapshot, 'snapshot is an instance of DS.Snapshot');
+        ok(snapshot instanceof DS.Snapshot, "snapshot is an instance of DS.Snapshot");
         return Ember.RSVP.resolve();
       };
 
@@ -5167,16 +5173,16 @@ define(
       });
 
       run(function () {
-        set(person, 'name', 'Tomster');
+        set(person, "name", "Tomster");
         person.save();
       });
     });
 
-    test('deleteRecord receives a snapshot', function () {
+    test("deleteRecord receives a snapshot", function () {
       expect(1);
 
       adapter.deleteRecord = function (store, type, snapshot) {
-        ok(snapshot instanceof DS.Snapshot, 'snapshot is an instance of DS.Snapshot');
+        ok(snapshot instanceof DS.Snapshot, "snapshot is an instance of DS.Snapshot");
         return Ember.RSVP.resolve();
       };
 
@@ -5201,11 +5207,11 @@ define(
       });
     });
 
-    test('find receives a snapshot', function () {
+    test("find receives a snapshot", function () {
       expect(1);
 
       adapter.findRecord = function (store, type, id, snapshot) {
-        ok(snapshot instanceof DS.Snapshot, 'snapshot is an instance of DS.Snapshot');
+        ok(snapshot instanceof DS.Snapshot, "snapshot is an instance of DS.Snapshot");
         return Ember.RSVP.resolve({ id: 1 });
       };
 
@@ -5214,7 +5220,7 @@ define(
       });
     });
 
-    test('findMany receives an array of snapshots', function () {
+    test("findMany receives an array of snapshots", function () {
       expect(2);
 
       Person.reopen({
@@ -5223,8 +5229,8 @@ define(
 
       adapter.coalesceFindRequests = true;
       adapter.findMany = function (store, type, ids, snapshots) {
-        ok(snapshots[0] instanceof DS.Snapshot, 'snapshots[0] is an instance of DS.Snapshot');
-        ok(snapshots[1] instanceof DS.Snapshot, 'snapshots[1] is an instance of DS.Snapshot');
+        ok(snapshots[0] instanceof DS.Snapshot, "snapshots[0] is an instance of DS.Snapshot");
+        ok(snapshots[1] instanceof DS.Snapshot, "snapshots[1] is an instance of DS.Snapshot");
         return Ember.RSVP.resolve([{ id: 2 }, { id: 3 }]);
       };
 
@@ -5250,7 +5256,7 @@ define(
       });
     });
 
-    test('findHasMany receives a snapshot', function () {
+    test("findHasMany receives a snapshot", function () {
       expect(1);
 
       Person.reopen({
@@ -5258,7 +5264,7 @@ define(
       });
 
       env.adapter.findHasMany = function (store, snapshot, link, relationship) {
-        ok(snapshot instanceof DS.Snapshot, 'snapshot is an instance of DS.Snapshot');
+        ok(snapshot instanceof DS.Snapshot, "snapshot is an instance of DS.Snapshot");
         return Ember.RSVP.resolve([{ id: 2 }, { id: 3 }]);
       };
 
@@ -5286,7 +5292,7 @@ define(
       });
     });
 
-    test('findBelongsTo receives a snapshot', function () {
+    test("findBelongsTo receives a snapshot", function () {
       expect(1);
 
       Person.reopen({
@@ -5294,7 +5300,7 @@ define(
       });
 
       env.adapter.findBelongsTo = async(function (store, snapshot, link, relationship) {
-        ok(snapshot instanceof DS.Snapshot, 'snapshot is an instance of DS.Snapshot');
+        ok(snapshot instanceof DS.Snapshot, "snapshot is an instance of DS.Snapshot");
         return Ember.RSVP.resolve({ id: 2 });
       });
 
@@ -5322,7 +5328,7 @@ define(
       });
     });
 
-    test('record.save should pass adapterOptions to the updateRecord method', function () {
+    test("record.save should pass adapterOptions to the updateRecord method", function () {
       expect(1);
 
       env.adapter.updateRecord = async(function (store, type, snapshot) {
@@ -5345,7 +5351,7 @@ define(
       });
     });
 
-    test('record.save should pass adapterOptions to the createRecord method', function () {
+    test("record.save should pass adapterOptions to the createRecord method", function () {
       expect(1);
 
       env.adapter.createRecord = async(function (store, type, snapshot) {
@@ -5359,7 +5365,7 @@ define(
       });
     });
 
-    test('record.save should pass adapterOptions to the deleteRecord method', function () {
+    test("record.save should pass adapterOptions to the deleteRecord method", function () {
       expect(1);
 
       env.adapter.deleteRecord = async(function (store, type, snapshot) {
@@ -5382,7 +5388,7 @@ define(
       });
     });
 
-    test('findRecord should pass adapterOptions to the find method', function () {
+    test("findRecord should pass adapterOptions to the find method", function () {
       expect(1);
 
       env.adapter.findRecord = async(function (store, type, id, snapshot) {
@@ -5395,7 +5401,7 @@ define(
       });
     });
 
-    test('findAll should pass adapterOptions to the findAll method', function () {
+    test("findAll should pass adapterOptions to the findAll method", function () {
       expect(1);
 
       env.adapter.findAll = async(function (store, type, sinceToken, arraySnapshot) {
@@ -5409,14 +5415,14 @@ define(
       });
     });
 
-    test('An async hasMany relationship with links should not trigger shouldBackgroundReloadRecord', function () {
+    test("An async hasMany relationship with links should not trigger shouldBackgroundReloadRecord", function () {
       var Post = DS.Model.extend({
-        name: DS.attr('string'),
+        name: DS.attr("string"),
         comments: DS.hasMany('comment', { async: true })
       });
 
       var Comment = DS.Model.extend({
-        name: DS.attr('string')
+        name: DS.attr("string")
       });
 
       env = setupStore({
@@ -5427,14 +5433,14 @@ define(
             return {
               posts: {
                 id: 1,
-                name: 'Rails is omakase',
+                name: "Rails is omakase",
                 links: { comments: '/posts/1/comments' }
               }
             };
           },
           findHasMany: function () {
             return Ember.RSVP.resolve({
-              comments: [{ id: 1, name: 'FIRST' }, { id: 2, name: 'Rails is unagi' }, { id: 3, name: 'What is omakase?' }]
+              comments: [{ id: 1, name: "FIRST" }, { id: 2, name: "Rails is unagi" }, { id: 3, name: "What is omakase?" }]
             });
           },
           shouldBackgroundReloadRecord: function () {
@@ -5486,7 +5492,7 @@ define(
       return run(container, 'lookup', thing);
     }
 
-    module('integration/application - Injecting a Custom Store', {
+    module("integration/application - Injecting a Custom Store", {
       setup: function () {
         run(function () {
           app = Application.create({
@@ -5507,19 +5513,19 @@ define(
       }
     });
 
-    test('If a Store property exists on an Ember.Application, it should be instantiated.', function () {
+    test("If a Store property exists on an Ember.Application, it should be instantiated.", function () {
       run(function () {
-        ok(getStore().get('isCustom'), 'the custom store was instantiated');
+        ok(getStore().get('isCustom'), "the custom store was instantiated");
       });
     });
 
-    test('If a store is instantiated, it should be made available to each controller.', function () {
+    test("If a store is instantiated, it should be made available to each controller.", function () {
       var fooController = lookup('controller:foo');
       var isCustom = run(fooController, 'get', 'store.isCustom');
-      ok(isCustom, 'the custom store was injected');
+      ok(isCustom, "the custom store was injected");
     });
 
-    test('The JSONAPIAdapter is the default adapter when no custom adapter is provided', function () {
+    test("The JSONAPIAdapter is the default adapter when no custom adapter is provided", function () {
       run(function () {
         var store = getStore();
 
@@ -5529,7 +5535,7 @@ define(
       });
     });
 
-    module('integration/application - Injecting the Default Store', {
+    module("integration/application - Injecting the Default Store", {
       setup: function () {
         run(function () {
           app = Application.create({
@@ -5548,25 +5554,25 @@ define(
       }
     });
 
-    test('If a Store property exists on an Ember.Application, it should be instantiated.', function () {
-      ok(getStore() instanceof DS.Store, 'the store was instantiated');
+    test("If a Store property exists on an Ember.Application, it should be instantiated.", function () {
+      ok(getStore() instanceof DS.Store, "the store was instantiated");
     });
 
-    test('If a store is instantiated, it should be made available to each controller.', function () {
+    test("If a store is instantiated, it should be made available to each controller.", function () {
       run(function () {
         var fooController = lookup('controller:foo');
-        ok(fooController.get('store') instanceof DS.Store, 'the store was injected');
+        ok(fooController.get('store') instanceof DS.Store, "the store was injected");
       });
     });
 
-    test('the DS namespace should be accessible', function () {
+    test("the DS namespace should be accessible", function () {
       run(function () {
-        ok(Namespace.byName('DS') instanceof Namespace, 'the DS namespace is accessible');
+        ok(Namespace.byName('DS') instanceof Namespace, "the DS namespace is accessible");
       });
     });
 
     if (Ember.inject && Ember.inject.service) {
-      module('integration/application - Using the store as a service', {
+      module("integration/application - Using the store as a service", {
         setup: function () {
           run(function () {
             app = Application.create({
@@ -5583,15 +5589,15 @@ define(
         }
       });
 
-      test('The store can be injected as a service', function () {
+      test("The store can be injected as a service", function () {
         run(function () {
           var doodleService = lookup('service:doodle');
-          ok(doodleService.get('store') instanceof Store, 'the store can be used as a service');
+          ok(doodleService.get('store') instanceof Store, "the store can be used as a service");
         });
       });
     }
 
-    module('integration/application - Attaching initializer', {
+    module("integration/application - Attaching initializer", {
       setup: function () {
         App = Application.extend();
       },
@@ -5604,11 +5610,11 @@ define(
       }
     });
 
-    test('ember-data initializer is run', function () {
+    test("ember-data initializer is run", function () {
       var ran = false;
       App.initializer({
-        name: 'after-ember-data',
-        after: 'ember-data',
+        name: "after-ember-data",
+        after: "ember-data",
         initialize: function () {
           ran = true;
         }
@@ -5621,15 +5627,15 @@ define(
       ok(ran, 'ember-data initializer was found');
     });
 
-    test('ember-data initializer does not register the store service when it was already registered', function () {
+    test("ember-data initializer does not register the store service when it was already registered", function () {
 
       var AppStore = Store.extend({
         isCustomStore: true
       });
 
       App.initializer({
-        name: 'after-ember-data',
-        before: 'ember-data',
+        name: "after-ember-data",
+        before: "ember-data",
         initialize: function (registry) {
           registry.register('service:store', AppStore);
         }
@@ -5644,10 +5650,10 @@ define(
       ok(store && store.get('isCustomStore'), 'ember-data initializer does not overwrite the previous registered service store');
     });
 
-    test('store initializer is run (DEPRECATED)', function () {
+    test("store initializer is run (DEPRECATED)", function () {
       var ran = false;
       App.initializer({
-        name: 'after-store',
+        name: "after-store",
         after: 'store',
         initialize: function () {
           ran = true;
@@ -5661,10 +5667,10 @@ define(
       ok(ran, 'store initializer was found');
     });
 
-    test('injectStore initializer is run (DEPRECATED)', function () {
+    test("injectStore initializer is run (DEPRECATED)", function () {
       var ran = false;
       App.initializer({
-        name: 'after-store',
+        name: "after-store",
         after: 'injectStore',
         initialize: function () {
           ran = true;
@@ -5678,10 +5684,10 @@ define(
       ok(ran, 'injectStore initializer was found');
     });
 
-    test('transforms initializer is run (DEPRECATED)', function () {
+    test("transforms initializer is run (DEPRECATED)", function () {
       var ran = false;
       App.initializer({
-        name: 'after-store',
+        name: "after-store",
         after: 'transforms',
         initialize: function () {
           ran = true;
@@ -5846,7 +5852,7 @@ define(
     var Post, Comment, Misc, env;
     var run = Ember.run;
 
-    module('integration/client_id_generation - Client-side ID Generation', {
+    module("integration/client_id_generation - Client-side ID Generation", {
       setup: function () {
         Comment = DS.Model.extend({
           post: DS.belongsTo('post', { async: false })
@@ -5872,23 +5878,23 @@ define(
       }
     });
 
-    test('If an adapter implements the `generateIdForRecord` method, the store should be able to assign IDs without saving to the persistence layer.', function () {
+    test("If an adapter implements the `generateIdForRecord` method, the store should be able to assign IDs without saving to the persistence layer.", function () {
       expect(6);
 
       var idCount = 1;
 
       env.adapter.generateIdForRecord = function (passedStore, record) {
-        equal(env.store, passedStore, 'store is the first parameter');
+        equal(env.store, passedStore, "store is the first parameter");
 
-        return 'id-' + idCount++;
+        return "id-" + idCount++;
       };
 
       env.adapter.createRecord = function (store, type, snapshot) {
         if (type === Comment) {
-          equal(snapshot.id, 'id-1', 'Comment passed to `createRecord` has \'id-1\' assigned');
+          equal(snapshot.id, 'id-1', "Comment passed to `createRecord` has 'id-1' assigned");
           return Ember.RSVP.resolve();
         } else {
-          equal(snapshot.id, 'id-2', 'Post passed to `createRecord` has \'id-2\' assigned');
+          equal(snapshot.id, 'id-2', "Post passed to `createRecord` has 'id-2' assigned");
           return Ember.RSVP.resolve();
         }
       };
@@ -5899,8 +5905,8 @@ define(
         post = env.store.createRecord('post');
       });
 
-      equal(get(comment, 'id'), 'id-1', 'comment is assigned id \'id-1\'');
-      equal(get(post, 'id'), 'id-2', 'post is assigned id \'id-2\'');
+      equal(get(comment, 'id'), 'id-1', "comment is assigned id 'id-1'");
+      equal(get(post, 'id'), 'id-2', "post is assigned id 'id-2'");
 
       // Despite client-generated IDs, calling commit() on the store should still
       // invoke the adapter's `createRecord` method.
@@ -5910,13 +5916,13 @@ define(
       });
     });
 
-    test('empty string and undefined ids should coerce to null', function () {
+    test("empty string and undefined ids should coerce to null", function () {
       expect(6);
       var comment, post;
       var idCount = 0;
       var ids = [undefined, ''];
       env.adapter.generateIdForRecord = function (passedStore, record) {
-        equal(env.store, passedStore, 'store is the first parameter');
+        equal(env.store, passedStore, "store is the first parameter");
 
         return ids[idCount++];
       };
@@ -5931,8 +5937,8 @@ define(
         post = env.store.createRecord('misc');
       });
 
-      equal(get(comment, 'id'), null, 'comment is assigned id \'null\'');
-      equal(get(post, 'id'), null, 'post is assigned id \'null\'');
+      equal(get(comment, 'id'), null, "comment is assigned id 'null'");
+      equal(get(post, 'id'), null, "post is assigned id 'null'");
 
       // Despite client-generated IDs, calling commit() on the store should still
       // invoke the adapter's `createRecord` method.
@@ -5959,7 +5965,7 @@ define(
     var get = Ember.get;
     var run = Ember.run;
 
-    module('DS.DebugAdapter', {
+    module("DS.DebugAdapter", {
       setup: function () {
         Ember.run(function () {
           App = Ember.Application.create();
@@ -5995,7 +6001,7 @@ define(
       }
     });
 
-    test('Watching Model Types', function () {
+    test("Watching Model Types", function () {
       expect(5);
 
       var added = function (types) {
@@ -6024,7 +6030,7 @@ define(
       });
     });
 
-    test('Watching Records', function () {
+    test("Watching Records", function () {
       var post, record, addedRecords, updatedRecords, removedIndex, removedCount;
 
       Ember.run(function () {
@@ -6119,14 +6125,14 @@ define(
     var Person, store, env, array, recordArray;
 
     var shouldContain = function (array, item) {
-      ok(array.indexOf(item) !== -1, 'array should contain ' + item.get('name'));
+      ok(array.indexOf(item) !== -1, "array should contain " + item.get('name'));
     };
 
     var shouldNotContain = function (array, item) {
-      ok(array.indexOf(item) === -1, 'array should not contain ' + item.get('name'));
+      ok(array.indexOf(item) === -1, "array should not contain " + item.get('name'));
     };
 
-    module('integration/filter - DS.Model updating', {
+    module("integration/filter - DS.Model updating", {
       setup: function () {
         array = [{
           id: '1',
@@ -6183,7 +6189,7 @@ define(
       return new_fn;
     }
 
-    test('when a DS.Model updates its attributes, its changes affect its filtered Array membership', function () {
+    test("when a DS.Model updates its attributes, its changes affect its filtered Array membership", function () {
       run(function () {
         store.push({ data: array });
       });
@@ -6198,29 +6204,29 @@ define(
       });
 
       run(function () {
-        equal(get(people, 'length'), 1, 'precond - one item is in the RecordArray');
+        equal(get(people, 'length'), 1, "precond - one item is in the RecordArray");
       });
 
       var person = people.objectAt(0);
 
-      equal(get(person, 'name'), 'Scumbag Katz', 'precond - the item is correct');
+      equal(get(person, 'name'), "Scumbag Katz", "precond - the item is correct");
 
       run(function () {
-        set(person, 'name', 'Yehuda Katz');
+        set(person, 'name', "Yehuda Katz");
       });
 
-      equal(get(people, 'length'), 1, 'there is still one item');
-      equal(get(person, 'name'), 'Yehuda Katz', 'it has the updated item');
+      equal(get(people, 'length'), 1, "there is still one item");
+      equal(get(person, 'name'), "Yehuda Katz", "it has the updated item");
 
       run(function () {
-        set(person, 'name', 'Yehuda Katz-Foo');
+        set(person, 'name', "Yehuda Katz-Foo");
       });
 
       equal(get(people, 'query'), null, 'expected no query object set');
-      equal(get(people, 'length'), 0, 'there are now no items');
+      equal(get(people, 'length'), 0, "there are now no items");
     });
 
-    test('when a DS.Model updates its relationships, its changes affect its filtered Array membership', function () {
+    test("when a DS.Model updates its relationships, its changes affect its filtered Array membership", function () {
       run(function () {
         store.push({ data: array });
       });
@@ -6235,18 +6241,18 @@ define(
       });
 
       run(function () {
-        equal(get(people, 'length'), 1, 'precond - one item is in the RecordArray');
+        equal(get(people, 'length'), 1, "precond - one item is in the RecordArray");
       });
 
       var person = people.objectAt(0);
 
-      equal(get(person, 'name'), 'Scumbag Dale', 'precond - the item is correct');
+      equal(get(person, 'name'), "Scumbag Dale", "precond - the item is correct");
 
       run(function () {
         set(person, 'bestFriend', null);
       });
 
-      equal(get(people, 'length'), 0, 'there are now 0 items');
+      equal(get(people, 'length'), 0, "there are now 0 items");
 
       var erik = store.peekRecord('person', 3);
       var yehuda = store.peekRecord('person', 2);
@@ -6255,11 +6261,11 @@ define(
       });
 
       person = people.objectAt(0);
-      equal(get(people, 'length'), 1, 'there is now 1 item');
-      equal(get(person, 'name'), 'Scumbag Bryn', 'precond - the item is correct');
+      equal(get(people, 'length'), 1, "there is now 1 item");
+      equal(get(person, 'name'), "Scumbag Bryn", "precond - the item is correct");
     });
 
-    test('a record array can have a filter on it', function () {
+    test("a record array can have a filter on it", function () {
       run(function () {
         store.push({ data: array });
       });
@@ -6273,7 +6279,7 @@ define(
         });
       });
 
-      equal(get(recordArray, 'length'), 2, 'The Record Array should have the filtered objects on it');
+      equal(get(recordArray, 'length'), 2, "The Record Array should have the filtered objects on it");
 
       run(function () {
         store.push({
@@ -6287,7 +6293,7 @@ define(
         });
       });
 
-      equal(get(recordArray, 'length'), 3, 'The Record Array should be updated as new items are added to the store');
+      equal(get(recordArray, 'length'), 3, "The Record Array should be updated as new items are added to the store");
 
       run(function () {
         store.push({
@@ -6301,10 +6307,10 @@ define(
         });
       });
 
-      equal(get(recordArray, 'length'), 2, 'The Record Array should be updated as existing members are updated');
+      equal(get(recordArray, 'length'), 2, "The Record Array should be updated as existing members are updated");
     });
 
-    test('a filtered record array includes created elements', function () {
+    test("a filtered record array includes created elements", function () {
       run(function () {
         store.push({ data: array });
       });
@@ -6318,16 +6324,16 @@ define(
         });
       });
 
-      equal(get(recordArray, 'length'), 2, 'precond - The Record Array should have the filtered objects on it');
+      equal(get(recordArray, 'length'), 2, "precond - The Record Array should have the filtered objects on it");
 
       run(function () {
-        store.createRecord('person', { name: 'Scumbag Koz' });
+        store.createRecord('person', { name: "Scumbag Koz" });
       });
 
-      equal(get(recordArray, 'length'), 3, 'The record array has the new object on it');
+      equal(get(recordArray, 'length'), 3, "The record array has the new object on it");
     });
 
-    test('a Record Array can update its filter', function () {
+    test("a Record Array can update its filter", function () {
       customAdapter(env, DS.Adapter.extend({
         deleteRecord: function (store, type, snapshot) {
           return Ember.RSVP.resolve();
@@ -6339,7 +6345,7 @@ define(
       });
 
       var dickens = run(function () {
-        var record = store.createRecord('person', { id: 4, name: 'Scumbag Dickens' });
+        var record = store.createRecord('person', { id: 4, name: "Scumbag Dickens" });
         record.deleteRecord();
         return record;
       });
@@ -6371,7 +6377,7 @@ define(
             });
           });
 
-          equal(get(recordArray, 'length'), 1, 'The Record Array should have one object on it');
+          equal(get(recordArray, 'length'), 1, "The Record Array should have one object on it");
 
           Ember.run(function () {
             store.push({
@@ -6385,7 +6391,7 @@ define(
             });
           });
 
-          equal(get(recordArray, 'length'), 2, 'The Record Array now has the new object matching the filter');
+          equal(get(recordArray, 'length'), 2, "The Record Array now has the new object matching the filter");
 
           Ember.run(function () {
             store.push({
@@ -6399,12 +6405,12 @@ define(
             });
           });
 
-          equal(get(recordArray, 'length'), 2, 'The Record Array doesn\'t have objects matching the old filter');
+          equal(get(recordArray, 'length'), 2, "The Record Array doesn't have objects matching the old filter");
         }));
       }));
     });
 
-    test('a Record Array can update its filter and notify array observers', function () {
+    test("a Record Array can update its filter and notify array observers", function () {
       customAdapter(env, DS.Adapter.extend({
         deleteRecord: function (store, type, snapshot) {
           return Ember.RSVP.resolve();
@@ -6417,7 +6423,7 @@ define(
       var dickens;
 
       run(function () {
-        dickens = store.createRecord('person', { id: 4, name: 'Scumbag Dickens' });
+        dickens = store.createRecord('person', { id: 4, name: "Scumbag Dickens" });
         dickens.deleteRecord();
       });
 
@@ -6460,7 +6466,7 @@ define(
         });
 
         Ember.RSVP.all([asyncDale, asyncKatz, asyncBryn]).then(async(function () {
-          equal(didChangeRemoved, 1, 'removed one item from array');
+          equal(didChangeRemoved, 1, "removed one item from array");
           didChangeRemoved = 0;
 
           Ember.run(function () {
@@ -6475,10 +6481,10 @@ define(
             });
           });
 
-          equal(didChangeAdded, 1, 'one item was added');
+          equal(didChangeAdded, 1, "one item was added");
           didChangeAdded = 0;
 
-          equal(recordArray.objectAt(didChangeIdx).get('name'), 'Other Katz');
+          equal(recordArray.objectAt(didChangeIdx).get('name'), "Other Katz");
 
           Ember.run(function () {
             store.push({
@@ -6492,7 +6498,7 @@ define(
             });
           });
 
-          equal(didChangeAdded, 0, 'did not get called when an object that doesn\'t match is added');
+          equal(didChangeAdded, 0, "did not get called when an object that doesn't match is added");
 
           Ember.run(function () {
             recordArray.set('filterFunction', function (hash) {
@@ -6502,14 +6508,14 @@ define(
             });
           });
 
-          equal(didChangeAdded, 2, 'one item is added when going back');
-          equal(recordArray.objectAt(didChangeIdx).get('name'), 'Scumbag Demon');
-          equal(recordArray.objectAt(didChangeIdx - 1).get('name'), 'Scumbag Dale');
+          equal(didChangeAdded, 2, "one item is added when going back");
+          equal(recordArray.objectAt(didChangeIdx).get('name'), "Scumbag Demon");
+          equal(recordArray.objectAt(didChangeIdx - 1).get('name'), "Scumbag Dale");
         }));
       }));
     });
 
-    test('it is possible to filter by computed properties', function () {
+    test("it is possible to filter by computed properties", function () {
       Person.reopen({
         name: DS.attr('string'),
         upperName: Ember.computed(function () {
@@ -6520,11 +6526,11 @@ define(
 
       run(function () {
         filter = store.filter('person', function (person) {
-          return person.get('upperName') === 'TOM DALE';
+          return person.get('upperName') === "TOM DALE";
         });
       });
 
-      equal(filter.get('length'), 0, 'precond - the filter starts empty');
+      equal(filter.get('length'), 0, "precond - the filter starts empty");
 
       run(function () {
         store.push({
@@ -6538,18 +6544,18 @@ define(
         });
       });
 
-      equal(filter.get('length'), 1, 'the filter now has a record in it');
+      equal(filter.get('length'), 1, "the filter now has a record in it");
 
       store.findRecord('person', 1).then(async(function (person) {
         Ember.run(function () {
-          person.set('name', 'Yehuda Katz');
+          person.set('name', "Yehuda Katz");
         });
 
-        equal(filter.get('length'), 0, 'the filter is empty again');
+        equal(filter.get('length'), 0, "the filter is empty again");
       }));
     });
 
-    test('a filter created after a record is already loaded works', function () {
+    test("a filter created after a record is already loaded works", function () {
       Person.reopen({
         name: DS.attr('string'),
         upperName: Ember.computed(function () {
@@ -6572,20 +6578,20 @@ define(
 
       run(function () {
         filter = store.filter('person', function (person) {
-          return person.get('upperName') === 'TOM DALE';
+          return person.get('upperName') === "TOM DALE";
         });
       });
 
-      equal(filter.get('length'), 1, 'the filter now has a record in it');
+      equal(filter.get('length'), 1, "the filter now has a record in it");
       asyncEqual(filter.objectAt(0), store.findRecord('person', 1));
     });
 
-    test('filter with query persists query on the resulting filteredRecordArray', function () {
+    test("filter with query persists query on the resulting filteredRecordArray", function () {
       customAdapter(env, DS.Adapter.extend({
         query: function (store, type, id) {
           return Ember.RSVP.resolve([{
             id: id,
-            name: 'Tom Dale'
+            name: "Tom Dale"
           }]);
         }
       }));
@@ -6605,12 +6611,12 @@ define(
       });
     });
 
-    test('it is possible to filter by state flags', function () {
+    test("it is possible to filter by state flags", function () {
       var filter;
 
       customAdapter(env, DS.Adapter.extend({
         findRecord: function (store, type, id, snapshot) {
-          return Ember.RSVP.resolve({ id: id, name: 'Tom Dale' });
+          return Ember.RSVP.resolve({ id: id, name: "Tom Dale" });
         }
       }));
 
@@ -6620,7 +6626,7 @@ define(
         });
       });
 
-      equal(filter.get('length'), 0, 'precond - there are no records yet');
+      equal(filter.get('length'), 0, "precond - there are no records yet");
 
       Ember.run(function () {
         var asyncPerson = store.findRecord('person', 1);
@@ -6628,16 +6634,16 @@ define(
         // Ember.run will block `find` from being synchronously
         // resolved in test mode
 
-        equal(filter.get('length'), 0, 'the unloaded record isn\'t in the filter');
+        equal(filter.get('length'), 0, "the unloaded record isn't in the filter");
 
         asyncPerson.then(async(function (person) {
-          equal(filter.get('length'), 1, 'the now-loaded record is in the filter');
+          equal(filter.get('length'), 1, "the now-loaded record is in the filter");
           asyncEqual(filter.objectAt(0), store.findRecord('person', 1));
         }));
       });
     });
 
-    test('it is possible to filter loaded records by dirtiness', function () {
+    test("it is possible to filter loaded records by dirtiness", function () {
       customAdapter(env, DS.Adapter.extend({
         updateRecord: function () {
           return Ember.RSVP.resolve();
@@ -6661,23 +6667,23 @@ define(
       });
 
       store.findRecord('person', 1).then(async(function (person) {
-        equal(filter.get('length'), 1, 'the clean record is in the filter');
+        equal(filter.get('length'), 1, "the clean record is in the filter");
 
         // Force synchronous update of the filter, even though
         // we're already inside a run loop
         Ember.run(function () {
-          person.set('name', 'Yehuda Katz');
+          person.set('name', "Yehuda Katz");
         });
 
-        equal(filter.get('length'), 0, 'the now-dirty record is not in the filter');
+        equal(filter.get('length'), 0, "the now-dirty record is not in the filter");
 
         return person.save();
       })).then(async(function (person) {
-        equal(filter.get('length'), 1, 'the clean record is back in the filter');
+        equal(filter.get('length'), 1, "the clean record is back in the filter");
       }));
     });
 
-    test('it is possible to filter created records by dirtiness', function () {
+    test("it is possible to filter created records by dirtiness", function () {
       run(function () {
         customAdapter(env, DS.Adapter.extend({
           createRecord: function () {
@@ -6699,25 +6705,25 @@ define(
       run(function () {
         person = store.createRecord('person', {
           id: 1,
-          name: 'Tom Dale'
+          name: "Tom Dale"
         });
       });
 
-      equal(filter.get('length'), 0, 'the dirty record is not in the filter');
+      equal(filter.get('length'), 0, "the dirty record is not in the filter");
 
       run(function () {
         person.save().then(function (person) {
-          equal(filter.get('length'), 1, 'the clean record is in the filter');
+          equal(filter.get('length'), 1, "the clean record is in the filter");
         });
       });
     });
 
-    test('it is possible to filter created records by isReloading', function () {
+    test("it is possible to filter created records by isReloading", function () {
       customAdapter(env, DS.Adapter.extend({
         findRecord: function (store, type, id, snapshot) {
           return Ember.RSVP.resolve({
             id: 1,
-            name: 'Tom Dalle'
+            name: "Tom Dalle"
           });
         }
       }));
@@ -6728,11 +6734,11 @@ define(
 
       var person = store.createRecord('person', {
         id: 1,
-        name: 'Tom Dale'
+        name: "Tom Dale"
       });
 
       person.reload().then(async(function (person) {
-        equal(filter.get('length'), 1, 'the filter correctly returned a reloaded object');
+        equal(filter.get('length'), 1, "the filter correctly returned a reloaded object");
       }));
     });
 
@@ -6785,95 +6791,95 @@ define(
         });
       });
 
-      equal(get(recordArray, 'length'), 3, 'The filter function should work');
+      equal(get(recordArray, 'length'), 3, "The filter function should work");
     };
 
-    test('a Record Array can update its filter after server-side updates one record', function () {
+    test("a Record Array can update its filter after server-side updates one record", function () {
       setup({
         updateRecord: function (store, type, snapshot) {
-          return Ember.RSVP.resolve({ id: 1, name: 'Scumbag Server-side Dale' });
+          return Ember.RSVP.resolve({ id: 1, name: "Scumbag Server-side Dale" });
         }
       });
 
       clientEdits([1]);
-      equal(get(recordArray, 'length'), 2, 'The record array updates when the client changes records');
+      equal(get(recordArray, 'length'), 2, "The record array updates when the client changes records");
 
       serverResponds();
-      equal(get(recordArray, 'length'), 3, 'The record array updates when the server changes one record');
+      equal(get(recordArray, 'length'), 3, "The record array updates when the server changes one record");
     });
 
-    test('a Record Array can update its filter after server-side updates multiple records', function () {
+    test("a Record Array can update its filter after server-side updates multiple records", function () {
       setup({
         updateRecord: function (store, type, snapshot) {
           switch (snapshot.id) {
-            case '1':
-              return Ember.RSVP.resolve({ id: 1, name: 'Scumbag Server-side Dale' });
-            case '2':
-              return Ember.RSVP.resolve({ id: 2, name: 'Scumbag Server-side Katz' });
+            case "1":
+              return Ember.RSVP.resolve({ id: 1, name: "Scumbag Server-side Dale" });
+            case "2":
+              return Ember.RSVP.resolve({ id: 2, name: "Scumbag Server-side Katz" });
           }
         }
       });
 
       clientEdits([1, 2]);
-      equal(get(recordArray, 'length'), 1, 'The record array updates when the client changes records');
+      equal(get(recordArray, 'length'), 1, "The record array updates when the client changes records");
 
       serverResponds();
-      equal(get(recordArray, 'length'), 3, 'The record array updates when the server changes multiple records');
+      equal(get(recordArray, 'length'), 3, "The record array updates when the server changes multiple records");
     });
 
-    test('a Record Array can update its filter after server-side creates one record', function () {
+    test("a Record Array can update its filter after server-side creates one record", function () {
       setup({
         createRecord: function (store, type, snapshot) {
-          return Ember.RSVP.resolve({ id: 4, name: 'Scumbag Server-side Tim' });
+          return Ember.RSVP.resolve({ id: 4, name: "Scumbag Server-side Tim" });
         }
       });
 
-      clientCreates(['Tim']);
-      equal(get(recordArray, 'length'), 3, 'The record array does not include non-matching records');
+      clientCreates(["Tim"]);
+      equal(get(recordArray, 'length'), 3, "The record array does not include non-matching records");
 
       serverResponds();
-      equal(get(recordArray, 'length'), 4, 'The record array updates when the server creates a record');
+      equal(get(recordArray, 'length'), 4, "The record array updates when the server creates a record");
     });
 
-    test('a Record Array can update its filter after server-side creates multiple records', function () {
+    test("a Record Array can update its filter after server-side creates multiple records", function () {
       setup({
         createRecord: function (store, type, snapshot) {
           switch (snapshot.attr('name')) {
-            case 'Client-side Mike':
-              return Ember.RSVP.resolve({ id: 4, name: 'Scumbag Server-side Mike' });
-            case 'Client-side David':
-              return Ember.RSVP.resolve({ id: 5, name: 'Scumbag Server-side David' });
+            case "Client-side Mike":
+              return Ember.RSVP.resolve({ id: 4, name: "Scumbag Server-side Mike" });
+            case "Client-side David":
+              return Ember.RSVP.resolve({ id: 5, name: "Scumbag Server-side David" });
           }
         }
       });
 
-      clientCreates(['Mike', 'David']);
-      equal(get(recordArray, 'length'), 3, 'The record array does not include non-matching records');
+      clientCreates(["Mike", "David"]);
+      equal(get(recordArray, 'length'), 3, "The record array does not include non-matching records");
 
       serverResponds();
-      equal(get(recordArray, 'length'), 5, 'The record array updates when the server creates multiple records');
+      equal(get(recordArray, 'length'), 5, "The record array updates when the server creates multiple records");
     });
 
-    test('a Record Array can update its filter after server-side creates multiple records', function () {
+    test("a Record Array can update its filter after server-side creates multiple records", function () {
       setup({
         createRecord: function (store, type, snapshot) {
           switch (snapshot.attr('name')) {
-            case 'Client-side Mike':
-              return Ember.RSVP.resolve({ id: 4, name: 'Scumbag Server-side Mike' });
-            case 'Client-side David':
-              return Ember.RSVP.resolve({ id: 5, name: 'Scumbag Server-side David' });
+            case "Client-side Mike":
+              return Ember.RSVP.resolve({ id: 4, name: "Scumbag Server-side Mike" });
+            case "Client-side David":
+              return Ember.RSVP.resolve({ id: 5, name: "Scumbag Server-side David" });
           }
         }
       });
 
-      clientCreates(['Mike', 'David']);
-      equal(get(recordArray, 'length'), 3, 'The record array does not include non-matching records');
+      clientCreates(["Mike", "David"]);
+      equal(get(recordArray, 'length'), 3, "The record array does not include non-matching records");
 
       serverResponds();
-      equal(get(recordArray, 'length'), 5, 'The record array updates when the server creates multiple records');
+      equal(get(recordArray, 'length'), 5, "The record array updates when the server creates multiple records");
     });
 
-    test('destroying filteredRecordArray unregisters models from being filtered', function () {
+    test("destroying filteredRecordArray unregisters models from being filtered", function () {
       var filterFn = tapFn(function () {
         return true;
       });
@@ -6973,7 +6979,7 @@ define(
       }
     });
 
-    test('Finds the inverse when there is only one possible available', function () {
+    test("Finds the inverse when there is only one possible available", function () {
       deepEqual(Job.inverseFor('user', store), {
         type: User,
         name: 'job',
@@ -6981,7 +6987,7 @@ define(
       }, 'Gets correct type, name and kind');
     });
 
-    test('Finds the inverse when only one side has defined it manually', function () {
+    test("Finds the inverse when only one side has defined it manually", function () {
       Job.reopen({
         owner: belongsTo('user', { inverse: 'previousJob', async: false })
       });
@@ -7003,7 +7009,7 @@ define(
       }, 'Gets correct type, name and kind');
     });
 
-    test('Returns null if inverse relationship it is manually set with a different relationship key', function () {
+    test("Returns null if inverse relationship it is manually set with a different relationship key", function () {
       Job.reopen({
         user: belongsTo('user', { inverse: 'previousJob', async: false })
       });
@@ -7015,7 +7021,7 @@ define(
       equal(User.inverseFor('job', store), null, 'There is no inverse');
     });
 
-    test('Errors out if you define 2 inverses to the same model', function () {
+    test("Errors out if you define 2 inverses to the same model", function () {
       Job.reopen({
         user: belongsTo('user', { inverse: 'job', async: false }),
         owner: belongsTo('user', { inverse: 'job', async: false })
@@ -7027,10 +7033,10 @@ define(
 
       expectAssertion(function () {
         User.inverseFor('job', store);
-      }, 'You defined the \'job\' relationship on user, but you defined the inverse relationships of type job multiple times. Look at http://emberjs.com/guides/models/defining-models/#toc_explicit-inverses for how to explicitly specify inverses');
+      }, "You defined the 'job' relationship on user, but you defined the inverse relationships of type job multiple times. Look at http://emberjs.com/guides/models/defining-models/#toc_explicit-inverses for how to explicitly specify inverses");
     });
 
-    test('Caches findInverseFor return value', function () {
+    test("Caches findInverseFor return value", function () {
       expect(1);
 
       var inverseForUser = Job.inverseFor('user', store);
@@ -7041,7 +7047,7 @@ define(
       equal(inverseForUser, Job.inverseFor('user', store), 'Inverse cached succesfully');
     });
 
-    test('Errors out if you do not define an inverse for a reflexive relationship', function () {
+    test("Errors out if you do not define an inverse for a reflexive relationship", function () {
 
       //Maybe store is evaluated lazily, so we need this :(
       warns(function () {
@@ -7077,7 +7083,7 @@ define(
     var resolve = Ember.RSVP.resolve;
     var run = Ember.run;
 
-    module('integration/lifecycle_hooks - Lifecycle Hooks', {
+    module("integration/lifecycle_hooks - Lifecycle Hooks", {
       setup: function () {
         Person = DS.Model.extend({
           name: attr('string')
@@ -7093,29 +7099,29 @@ define(
       }
     });
 
-    asyncTest('When the adapter acknowledges that a record has been created, a `didCreate` event is triggered.', function () {
+    asyncTest("When the adapter acknowledges that a record has been created, a `didCreate` event is triggered.", function () {
       expect(3);
 
       env.adapter.createRecord = function (store, type, snapshot) {
-        return resolve({ id: 99, name: 'Yehuda Katz' });
+        return resolve({ id: 99, name: "Yehuda Katz" });
       };
       var person;
 
       run(function () {
-        person = env.store.createRecord('person', { name: 'Yehuda Katz' });
+        person = env.store.createRecord('person', { name: "Yehuda Katz" });
       });
 
       person.on('didCreate', function () {
-        equal(this, person, 'this is bound to the record');
-        equal(this.get('id'), '99', 'the ID has been assigned');
-        equal(this.get('name'), 'Yehuda Katz', 'the attribute has been assigned');
+        equal(this, person, "this is bound to the record");
+        equal(this.get('id'), "99", "the ID has been assigned");
+        equal(this.get('name'), "Yehuda Katz", "the attribute has been assigned");
         start();
       });
 
       run(person, 'save');
     });
 
-    test('When the adapter acknowledges that a record has been created without a new data payload, a `didCreate` event is triggered.', function () {
+    test("When the adapter acknowledges that a record has been created without a new data payload, a `didCreate` event is triggered.", function () {
       expect(3);
 
       env.adapter.createRecord = function (store, type, snapshot) {
@@ -7124,13 +7130,13 @@ define(
       var person;
 
       run(function () {
-        person = env.store.createRecord('person', { id: 99, name: 'Yehuda Katz' });
+        person = env.store.createRecord('person', { id: 99, name: "Yehuda Katz" });
       });
 
       person.on('didCreate', function () {
-        equal(this, person, 'this is bound to the record');
-        equal(this.get('id'), '99', 'the ID has been assigned');
-        equal(this.get('name'), 'Yehuda Katz', 'the attribute has been assigned');
+        equal(this, person, "this is bound to the record");
+        equal(this.get('id'), "99", "the ID has been assigned");
+        equal(this.get('name'), "Yehuda Katz", "the attribute has been assigned");
       });
 
       run(person, 'save');
@@ -7153,7 +7159,7 @@ define(
     var SuperVillain, HomePlanet, EvilMinion;
     var run = Ember.run;
 
-    module('integration/multiple_stores - Multiple Stores Tests', {
+    module("integration/multiple_stores - Multiple Stores Tests", {
       setup: function () {
         SuperVillain = DS.Model.extend({
           firstName: DS.attr('string'),
@@ -7191,7 +7197,7 @@ define(
       }
     });
 
-    test('should be able to push into multiple stores', function () {
+    test("should be able to push into multiple stores", function () {
       var home_planet_main = { id: '1', name: 'Earth' };
       var home_planet_a = { id: '1', name: 'Mars' };
       var home_planet_b = { id: '1', name: 'Saturn' };
@@ -7203,19 +7209,19 @@ define(
       });
 
       run(env.store, 'find', 'home-planet', 1).then(async(function (homePlanet) {
-        equal(homePlanet.get('name'), 'Earth');
+        equal(homePlanet.get('name'), "Earth");
       }));
 
       run(env.store_a, 'find', 'home-planet', 1).then(async(function (homePlanet) {
-        equal(homePlanet.get('name'), 'Mars');
+        equal(homePlanet.get('name'), "Mars");
       }));
 
       run(env.store_b, 'find', 'home-planet', 1).then(async(function (homePlanet) {
-        equal(homePlanet.get('name'), 'Saturn');
+        equal(homePlanet.get('name'), "Saturn");
       }));
     });
 
-    test('embedded records should be created in multiple stores', function () {
+    test("embedded records should be created in multiple stores", function () {
       env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           villains: { embedded: 'always' }
@@ -7228,34 +7234,34 @@ define(
 
       var json_hash_main = {
         homePlanet: {
-          id: '1',
-          name: 'Earth',
+          id: "1",
+          name: "Earth",
           villains: [{
-            id: '1',
-            firstName: 'Tom',
-            lastName: 'Dale'
+            id: "1",
+            firstName: "Tom",
+            lastName: "Dale"
           }]
         }
       };
       var json_hash_a = {
         homePlanet: {
-          id: '1',
-          name: 'Mars',
+          id: "1",
+          name: "Mars",
           villains: [{
-            id: '1',
-            firstName: 'James',
-            lastName: 'Murphy'
+            id: "1",
+            firstName: "James",
+            lastName: "Murphy"
           }]
         }
       };
       var json_hash_b = {
         homePlanet: {
-          id: '1',
-          name: 'Saturn',
+          id: "1",
+          name: "Saturn",
           villains: [{
-            id: '1',
-            firstName: 'Jade',
-            lastName: 'John'
+            id: "1",
+            firstName: "Jade",
+            lastName: "John"
           }]
         }
       };
@@ -7264,19 +7270,19 @@ define(
       run(function () {
         json_main = serializer_main.normalizeResponse(env.store, env.store.modelFor('home-planet'), json_hash_main, 1, 'findRecord');
         env.store.push(json_main);
-        equal(env.store.hasRecordForId('super-villain', '1'), true, 'superVillain should exist in service:store');
+        equal(env.store.hasRecordForId('super-villain', "1"), true, "superVillain should exist in service:store");
       });
 
       run(function () {
         json_a = serializer_a.normalizeResponse(env.store_a, env.store_a.modelFor('home-planet'), json_hash_a, 1, 'findRecord');
         env.store_a.push(json_a);
-        equal(env.store_a.hasRecordForId('super-villain', '1'), true, 'superVillain should exist in store:store-a');
+        equal(env.store_a.hasRecordForId("super-villain", "1"), true, "superVillain should exist in store:store-a");
       });
 
       run(function () {
         json_b = serializer_b.normalizeResponse(env.store_b, env.store_a.modelFor('home-planet'), json_hash_b, 1, 'findRecord');
         env.store_b.push(json_b);
-        equal(env.store_b.hasRecordForId('super-villain', '1'), true, 'superVillain should exist in store:store-b');
+        equal(env.store_b.hasRecordForId("super-villain", "1"), true, "superVillain should exist in store:store-b");
       });
     });
   }
@@ -7298,20 +7304,20 @@ define(
 
     var Person, store, array, moreArray;
 
-    module('integration/peek-all - DS.Store#peekAll()', {
+    module("integration/peek-all - DS.Store#peekAll()", {
       setup: function () {
         array = {
           data: [{
             type: 'person',
             id: '1',
             attributes: {
-              name: 'Scumbag Dale'
+              name: "Scumbag Dale"
             }
           }, {
             type: 'person',
             id: '2',
             attributes: {
-              name: 'Scumbag Katz'
+              name: "Scumbag Katz"
             }
           }]
         };
@@ -7320,7 +7326,7 @@ define(
             type: 'person',
             id: '3',
             attributes: {
-              name: 'Scumbag Bryn'
+              name: "Scumbag Bryn"
             }
           }]
         };
@@ -7336,7 +7342,7 @@ define(
       }
     });
 
-    test('store.peekAll(\'person\') should return all records and should update with new ones', function () {
+    test("store.peekAll('person') should return all records and should update with new ones", function () {
       run(function () {
         store.push(array);
       });
@@ -7351,19 +7357,19 @@ define(
       equal(get(all, 'length'), 3);
     });
 
-    test('Calling store.peekAll() multiple times should update immediately inside the runloop', function () {
+    test("Calling store.peekAll() multiple times should update immediately inside the runloop", function () {
       expect(3);
 
       Ember.run(function () {
         equal(get(store.peekAll('person'), 'length'), 0, 'should initially be empty');
-        store.createRecord('person', { name: 'Tomster' });
+        store.createRecord('person', { name: "Tomster" });
         equal(get(store.peekAll('person'), 'length'), 1, 'should contain one person');
         store.push({
           data: {
             type: 'person',
             id: '1',
             attributes: {
-              name: 'Tomster\'s friend'
+              name: "Tomster's friend"
             }
           }
         });
@@ -7371,11 +7377,11 @@ define(
       });
     });
 
-    test('Calling store.peekAll() after creating a record should return correct data', function () {
+    test("Calling store.peekAll() after creating a record should return correct data", function () {
       expect(1);
 
       Ember.run(function () {
-        store.createRecord('person', { name: 'Tomster' });
+        store.createRecord('person', { name: "Tomster" });
         equal(get(store.peekAll('person'), 'length'), 1, 'should contain one person');
       });
     });
@@ -7402,7 +7408,7 @@ define(
     });
 
     Person.toString = function () {
-      return 'Person';
+      return "Person";
     };
 
     var Car = DS.Model.extend({
@@ -7412,12 +7418,12 @@ define(
     });
 
     Car.toString = function () {
-      return 'Car';
+      return "Car";
     };
 
     var manager;
 
-    module('integration/record_array_manager', {
+    module("integration/record_array_manager", {
       setup: function () {
         env = setupStore({
           adapter: DS.RESTAdapter.extend()
@@ -7448,7 +7454,7 @@ define(
       return summary;
     }
 
-    test('destroying the store correctly cleans everything up', function () {
+    test("destroying the store correctly cleans everything up", function () {
       var query = {};
       var person;
 
@@ -7527,7 +7533,7 @@ define(
       equal(adapterPopulatedSummary.called.length, 1);
     });
 
-    test('Should not filter a store.peekAll() array when a record property is changed', function () {
+    test("Should not filter a store.peekAll() array when a record property is changed", function () {
       var car;
 
       var populateLiveRecordArray = tap(store.recordArrayManager, 'populateLiveRecordArray');
@@ -7584,7 +7590,7 @@ define(
     module("integration/records/collection_save - Save Collection of Records", {
       setup: function () {
         Post = DS.Model.extend({
-          title: DS.attr("string")
+          title: DS.attr('string')
         });
 
         Post.toString = function () {
@@ -7595,18 +7601,18 @@ define(
       },
 
       teardown: function () {
-        run(env.container, "destroy");
+        run(env.container, 'destroy');
       }
     });
 
     test("Collection will resolve save on success", function () {
       expect(1);
       run(function () {
-        env.store.createRecord("post", { title: "Hello" });
-        env.store.createRecord("post", { title: "World" });
+        env.store.createRecord('post', { title: 'Hello' });
+        env.store.createRecord('post', { title: 'World' });
       });
 
-      var posts = env.store.peekAll("post");
+      var posts = env.store.peekAll('post');
 
       env.adapter.createRecord = function (store, type, snapshot) {
         return Ember.RSVP.resolve({ id: 123 });
@@ -7614,18 +7620,18 @@ define(
 
       run(function () {
         posts.save().then(async(function () {
-          ok(true, "save operation was resolved");
+          ok(true, 'save operation was resolved');
         }));
       });
     });
 
     test("Collection will reject save on error", function () {
       run(function () {
-        env.store.createRecord("post", { title: "Hello" });
-        env.store.createRecord("post", { title: "World" });
+        env.store.createRecord('post', { title: 'Hello' });
+        env.store.createRecord('post', { title: 'World' });
       });
 
-      var posts = env.store.peekAll("post");
+      var posts = env.store.peekAll('post');
 
       env.adapter.createRecord = function (store, type, snapshot) {
         return Ember.RSVP.reject();
@@ -7633,18 +7639,18 @@ define(
 
       run(function () {
         posts.save().then(function () {}, async(function () {
-          ok(true, "save operation was rejected");
+          ok(true, 'save operation was rejected');
         }));
       });
     });
 
     test("Retry is allowed in a failure handler", function () {
       run(function () {
-        env.store.createRecord("post", { title: "Hello" });
-        env.store.createRecord("post", { title: "World" });
+        env.store.createRecord('post', { title: 'Hello' });
+        env.store.createRecord('post', { title: 'World' });
       });
 
-      var posts = env.store.peekAll("post");
+      var posts = env.store.peekAll('post');
 
       var count = 0;
 
@@ -7664,7 +7670,7 @@ define(
         posts.save().then(function () {}, async(function () {
           return posts.save();
         })).then(async(function (post) {
-          equal(posts.get("firstObject.id"), "123", "The post ID made it through");
+          equal(posts.get('firstObject.id'), '123', "The post ID made it through");
         }));
       });
     });
@@ -7672,19 +7678,19 @@ define(
     test("Collection will reject save on invalid", function () {
       expect(1);
       run(function () {
-        env.store.createRecord("post", { title: "Hello" });
-        env.store.createRecord("post", { title: "World" });
+        env.store.createRecord('post', { title: 'Hello' });
+        env.store.createRecord('post', { title: 'World' });
       });
 
-      var posts = env.store.peekAll("post");
+      var posts = env.store.peekAll('post');
 
       env.adapter.createRecord = function (store, type, snapshot) {
-        return Ember.RSVP.reject({ title: "invalid" });
+        return Ember.RSVP.reject({ title: 'invalid' });
       };
 
       Ember.run(function () {
         posts.save().then(function () {}, function () {
-          ok(true, "save operation was rejected");
+          ok(true, 'save operation was rejected');
         });
       });
     });
@@ -7709,7 +7715,7 @@ define(
     module("integration/deletedRecord - Deleting Records", {
       setup: function () {
         Person = DS.Model.extend({
-          name: attr("string")
+          name: attr('string')
         });
 
         Person.toString = function () {
@@ -7739,34 +7745,34 @@ define(
       run(function () {
         env.store.push({
           data: [{
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "Adam Sunderland"
+              name: 'Adam Sunderland'
             }
           }, {
-            type: "person",
-            id: "2",
+            type: 'person',
+            id: '2',
             attributes: {
-              name: "Dave Sunderland"
+              name: 'Dave Sunderland'
             }
           }]
         });
-        adam = env.store.peekRecord("person", 1);
-        dave = env.store.peekRecord("person", 2);
-        all = env.store.peekAll("person");
+        adam = env.store.peekRecord('person', 1);
+        dave = env.store.peekRecord('person', 2);
+        all = env.store.peekAll('person');
       });
 
       // pre-condition
-      equal(all.get("length"), 2, "pre-condition: 2 records in array");
+      equal(all.get('length'), 2, 'pre-condition: 2 records in array');
 
-      Ember.run(adam, "deleteRecord");
+      Ember.run(adam, 'deleteRecord');
 
-      equal(all.get("length"), 2, "2 records in array after deleteRecord");
+      equal(all.get('length'), 2, '2 records in array after deleteRecord');
 
-      Ember.run(adam, "save");
+      Ember.run(adam, 'save');
 
-      equal(all.get("length"), 1, "1 record in array after deleteRecord and save");
+      equal(all.get('length'), 1, '1 record in array after deleteRecord and save');
     });
 
     test("records can be deleted during record array enumeration", function () {
@@ -7779,26 +7785,26 @@ define(
       run(function () {
         env.store.push({
           data: [{
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "Adam Sunderland"
+              name: 'Adam Sunderland'
             }
           }, {
-            type: "person",
-            id: "2",
+            type: 'person',
+            id: '2',
             attributes: {
-              name: "Dave Sunderland"
+              name: 'Dave Sunderland'
             }
           }]
         });
-        adam = env.store.peekRecord("person", 1);
-        dave = env.store.peekRecord("person", 2);
+        adam = env.store.peekRecord('person', 1);
+        dave = env.store.peekRecord('person', 2);
       });
-      var all = env.store.peekAll("person");
+      var all = env.store.peekAll('person');
 
       // pre-condition
-      equal(all.get("length"), 2, "expected 2 records");
+      equal(all.get('length'), 2, 'expected 2 records');
 
       Ember.run(function () {
         all.forEach(function (record) {
@@ -7806,7 +7812,7 @@ define(
         });
       });
 
-      equal(all.get("length"), 0, "expected 0 records");
+      equal(all.get('length'), 0, 'expected 0 records');
       equal(all.objectAt(0), null, "can't get any records");
     });
 
@@ -7815,39 +7821,39 @@ define(
       run(function () {
         env.store.push({
           data: [{
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "Jaime Lannister"
+              name: 'Jaime Lannister'
             }
           }, {
-            type: "person",
-            id: "2",
+            type: 'person',
+            id: '2',
             attributes: {
-              name: "Cersei Lannister"
+              name: 'Cersei Lannister'
             }
           }]
         });
-        jaime = env.store.peekRecord("person", 1);
-        cersei = env.store.peekRecord("person", 2);
+        jaime = env.store.peekRecord('person', 1);
+        cersei = env.store.peekRecord('person', 2);
       });
-      var all = env.store.peekAll("person");
+      var all = env.store.peekAll('person');
       var filtered;
       run(function () {
-        filtered = env.store.filter("person", function () {
+        filtered = env.store.filter('person', function () {
           return true;
         });
       });
 
-      equal(all.get("length"), 2, "precond - we start with two people");
-      equal(filtered.get("length"), 2, "precond - we start with two people");
+      equal(all.get('length'), 2, 'precond - we start with two people');
+      equal(filtered.get('length'), 2, 'precond - we start with two people');
 
       run(function () {
         jaime.deleteRecord();
         jaime.rollbackAttributes();
       });
-      equal(all.get("length"), 2, "record was not removed");
-      equal(filtered.get("length"), 2, "record was not removed");
+      equal(all.get('length'), 2, 'record was not removed');
+      equal(filtered.get('length'), 2, 'record was not removed');
     });
   }
 );
@@ -7886,7 +7892,7 @@ define(
       },
 
       teardown: function () {
-        run(env.container, "destroy");
+        run(env.container, 'destroy');
       }
     });
 
@@ -7896,11 +7902,11 @@ define(
       };
 
       run(function () {
-        env.store.findRecord("post", 1).then(null, async(function () {
+        env.store.findRecord('post', 1).then(null, async(function () {
           // store.recordForId is private, but there is currently no other way to
           // get the specific record instance, since it is not passed to this
           // rejection handler
-          var post = env.store.recordForId("post", 1);
+          var post = env.store.recordForId('post', 1);
 
           equal(post.get("isLoading"), false, "post is not loading anymore");
         }));
@@ -8123,7 +8129,7 @@ define(
     var Person, env;
     var run = Ember.run;
 
-    module('integration/reload - Reloading Records', {
+    module("integration/reload - Reloading Records", {
       setup: function () {
         Person = DS.Model.extend({
           updatedAt: attr('string'),
@@ -8133,7 +8139,7 @@ define(
         });
 
         Person.toString = function () {
-          return 'Person';
+          return "Person";
         };
 
         env = setupStore({ person: Person });
@@ -8144,36 +8150,36 @@ define(
       }
     });
 
-    test('When a single record is requested, the adapter\'s find method should be called unless it\'s loaded.', function () {
+    test("When a single record is requested, the adapter's find method should be called unless it's loaded.", function () {
       var count = 0;
 
       env.adapter.findRecord = function (store, type, id, snapshot) {
         if (count === 0) {
           count++;
-          return Ember.RSVP.resolve({ id: id, name: 'Tom Dale' });
+          return Ember.RSVP.resolve({ id: id, name: "Tom Dale" });
         } else if (count === 1) {
           count++;
-          return Ember.RSVP.resolve({ id: id, name: 'Braaaahm Dale' });
+          return Ember.RSVP.resolve({ id: id, name: "Braaaahm Dale" });
         } else {
-          ok(false, 'Should not get here');
+          ok(false, "Should not get here");
         }
       };
 
       run(function () {
         env.store.findRecord('person', 1).then(function (person) {
-          equal(get(person, 'name'), 'Tom Dale', 'The person is loaded with the right name');
-          equal(get(person, 'isLoaded'), true, 'The person is now loaded');
+          equal(get(person, 'name'), "Tom Dale", "The person is loaded with the right name");
+          equal(get(person, 'isLoaded'), true, "The person is now loaded");
           var promise = person.reload();
-          equal(get(person, 'isReloading'), true, 'The person is now reloading');
+          equal(get(person, 'isReloading'), true, "The person is now reloading");
           return promise;
         }).then(function (person) {
-          equal(get(person, 'isReloading'), false, 'The person is no longer reloading');
-          equal(get(person, 'name'), 'Braaaahm Dale', 'The person is now updated with the right name');
+          equal(get(person, 'isReloading'), false, "The person is no longer reloading");
+          equal(get(person, 'name'), "Braaaahm Dale", "The person is now updated with the right name");
         });
       });
     });
 
-    test('When a record is reloaded and fails, it can try again', function () {
+    test("When a record is reloaded and fails, it can try again", function () {
       var tom;
       run(function () {
         env.store.push({
@@ -8190,29 +8196,29 @@ define(
 
       var count = 0;
       env.adapter.findRecord = function (store, type, id, snapshot) {
-        equal(tom.get('isReloading'), true, 'Tom is reloading');
+        equal(tom.get('isReloading'), true, "Tom is reloading");
         if (count++ === 0) {
           return Ember.RSVP.reject();
         } else {
-          return Ember.RSVP.resolve({ id: 1, name: 'Thomas Dale' });
+          return Ember.RSVP.resolve({ id: 1, name: "Thomas Dale" });
         }
       };
 
       run(function () {
         tom.reload().then(null, function () {
-          equal(tom.get('isError'), true, 'Tom is now errored');
-          equal(tom.get('isReloading'), false, 'Tom is no longer reloading');
+          equal(tom.get('isError'), true, "Tom is now errored");
+          equal(tom.get('isReloading'), false, "Tom is no longer reloading");
           return tom.reload();
         }).then(function (person) {
-          equal(person, tom, 'The resolved value is the record');
-          equal(tom.get('isError'), false, 'Tom is no longer errored');
-          equal(tom.get('isReloading'), false, 'Tom is no longer reloading');
-          equal(tom.get('name'), 'Thomas Dale', 'the updates apply');
+          equal(person, tom, "The resolved value is the record");
+          equal(tom.get('isError'), false, "Tom is no longer errored");
+          equal(tom.get('isReloading'), false, "Tom is no longer reloading");
+          equal(tom.get('name'), "Thomas Dale", "the updates apply");
         });
       });
     });
 
-    test('When a record is loaded a second time, isLoaded stays true', function () {
+    test("When a record is loaded a second time, isLoaded stays true", function () {
       run(function () {
         env.store.push({
           data: {
@@ -8227,7 +8233,7 @@ define(
 
       run(function () {
         env.store.findRecord('person', 1).then(function (person) {
-          equal(get(person, 'isLoaded'), true, 'The person is loaded');
+          equal(get(person, 'isLoaded'), true, "The person is loaded");
           person.addObserver('isLoaded', isLoadedDidChange);
 
           // Reload the record
@@ -8241,7 +8247,7 @@ define(
             }
           });
 
-          equal(get(person, 'isLoaded'), true, 'The person is still loaded after load');
+          equal(get(person, 'isLoaded'), true, "The person is still loaded after load");
 
           person.removeObserver('isLoaded', isLoadedDidChange);
         });
@@ -8249,11 +8255,11 @@ define(
 
       function isLoadedDidChange() {
         // This shouldn't be hit
-        equal(get(this, 'isLoaded'), true, 'The person is still loaded after change');
+        equal(get(this, 'isLoaded'), true, "The person is still loaded after change");
       }
     });
 
-    test('When a record is reloaded, its async hasMany relationships still work', function () {
+    test("When a record is reloaded, its async hasMany relationships still work", function () {
       env.registry.register('model:person', DS.Model.extend({
         name: DS.attr(),
         tags: DS.hasMany('tag', { async: true })
@@ -8263,12 +8269,12 @@ define(
         name: DS.attr()
       }));
 
-      var tags = { 1: 'hipster', 2: 'hair' };
+      var tags = { 1: "hipster", 2: "hair" };
 
       env.adapter.findRecord = function (store, type, id, snapshot) {
         switch (type.modelName) {
           case 'person':
-            return Ember.RSVP.resolve({ id: 1, name: 'Tom', tags: [1, 2] });
+            return Ember.RSVP.resolve({ id: 1, name: "Tom", tags: [1, 2] });
           case 'tag':
             return Ember.RSVP.resolve({ id: id, name: tags[id] });
         }
@@ -8279,7 +8285,7 @@ define(
       run(function () {
         env.store.findRecord('person', 1).then(function (person) {
           tom = person;
-          equal(person.get('name'), 'Tom', 'precond');
+          equal(person.get('name'), "Tom", "precond");
 
           return person.get('tags');
         }).then(function (tags) {
@@ -8287,11 +8293,11 @@ define(
 
           return tom.reload();
         }).then(function (person) {
-          equal(person.get('name'), 'Tom', 'precond');
+          equal(person.get('name'), "Tom", "precond");
 
           return person.get('tags');
         }).then(function (tags) {
-          deepEqual(tags.mapBy('name'), ['hipster', 'hair'], 'The tags are still there');
+          deepEqual(tags.mapBy('name'), ['hipster', 'hair'], "The tags are still there");
         });
       });
     });
@@ -8315,7 +8321,7 @@ define(
     module("integration/records/save - Save Record", {
       setup: function () {
         Post = DS.Model.extend({
-          title: DS.attr("string")
+          title: DS.attr('string')
         });
 
         Post.toString = function () {
@@ -8326,7 +8332,7 @@ define(
       },
 
       teardown: function () {
-        run(env.container, "destroy");
+        run(env.container, 'destroy');
       }
     });
 
@@ -8334,7 +8340,7 @@ define(
       expect(4);
       var post;
       run(function () {
-        post = env.store.createRecord("post", { title: "toto" });
+        post = env.store.createRecord('post', { title: 'toto' });
       });
 
       var deferred = Ember.RSVP.defer();
@@ -8346,12 +8352,12 @@ define(
         var saved = post.save();
 
         // `save` returns a PromiseObject which allows to call get on it
-        equal(saved.get("id"), undefined);
+        equal(saved.get('id'), undefined);
 
         deferred.resolve({ id: 123 });
         saved.then(function (model) {
-          ok(true, "save operation was resolved");
-          equal(saved.get("id"), 123);
+          ok(true, 'save operation was resolved');
+          equal(saved.get('id'), 123);
           equal(model, post, "resolves with the model");
         });
       });
@@ -8360,7 +8366,7 @@ define(
     test("Will reject save on error", function () {
       var post;
       run(function () {
-        post = env.store.createRecord("post", { title: "toto" });
+        post = env.store.createRecord('post', { title: 'toto' });
       });
 
       env.adapter.createRecord = function (store, type, snapshot) {
@@ -8369,7 +8375,7 @@ define(
 
       run(function () {
         post.save().then(function () {}, function () {
-          ok(true, "save operation was rejected");
+          ok(true, 'save operation was rejected');
         });
       });
     });
@@ -8377,7 +8383,7 @@ define(
     test("Retry is allowed in a failure handler", function () {
       var post;
       run(function () {
-        post = env.store.createRecord("post", { title: "toto" });
+        post = env.store.createRecord('post', { title: 'toto' });
       });
 
       var count = 0;
@@ -8394,7 +8400,7 @@ define(
         post.save().then(function () {}, function () {
           return post.save();
         }).then(function (post) {
-          equal(post.get("id"), "123", "The post ID made it through");
+          equal(post.get('id'), '123', "The post ID made it through");
         });
       });
     });
@@ -8404,7 +8410,7 @@ define(
       var post;
 
       run(function () {
-        post = env.store.createRecord("post", { title: "toto" });
+        post = env.store.createRecord('post', { title: 'toto' });
       });
 
       env.adapter.createRecord = function (store, type, snapshot) {
@@ -8413,10 +8419,10 @@ define(
 
       run(function () {
         post.save().then(null, function () {
-          equal(post.get("currentState.stateName"), "root.loaded.created.uncommitted");
+          equal(post.get('currentState.stateName'), 'root.loaded.created.uncommitted');
 
           post.save().then(null, function () {
-            equal(post.get("currentState.stateName"), "root.loaded.created.uncommitted");
+            equal(post.get('currentState.stateName'), 'root.loaded.created.uncommitted');
           });
         });
       });
@@ -8426,16 +8432,16 @@ define(
       expect(1);
       var post;
       run(function () {
-        post = env.store.createRecord("post", { title: "toto" });
+        post = env.store.createRecord('post', { title: 'toto' });
       });
 
       env.adapter.createRecord = function (store, type, snapshot) {
-        return Ember.RSVP.reject({ title: "invalid" });
+        return Ember.RSVP.reject({ title: 'invalid' });
       };
 
       run(function () {
         post.save().then(function () {}, function () {
-          ok(true, "save operation was rejected");
+          ok(true, 'save operation was rejected');
         });
       });
     });
@@ -8465,7 +8471,7 @@ define(
     });
 
     Person.toString = function () {
-      return 'Person';
+      return "Person";
     };
 
     var Group = DS.Model.extend({
@@ -8473,7 +8479,7 @@ define(
     });
 
     Group.toString = function () {
-      return 'Group';
+      return "Group";
     };
 
     var Car = DS.Model.extend({
@@ -8483,10 +8489,10 @@ define(
     });
 
     Car.toString = function () {
-      return 'Car';
+      return "Car";
     };
 
-    module('integration/unload - Unloading Records', {
+    module("integration/unload - Unloading Records", {
       setup: function () {
         env = setupStore({
           person: Person,
@@ -8502,7 +8508,7 @@ define(
       }
     });
 
-    test('can unload a single record', function () {
+    test("can unload a single record", function () {
       var adam;
       run(function () {
         env.store.push({
@@ -8524,7 +8530,7 @@ define(
       equal(env.store.peekAll('person').get('length'), 0);
     });
 
-    test('can unload all records for a given type', function () {
+    test("can unload all records for a given type", function () {
       expect(2);
 
       var adam, bob, dudu;
@@ -8552,8 +8558,8 @@ define(
             type: 'car',
             id: '1',
             attributes: {
-              make: 'VW',
-              model: 'Beetle'
+              make: "VW",
+              model: "Beetle"
             },
             relationships: {
               person: {
@@ -8573,7 +8579,7 @@ define(
       equal(env.store.peekAll('car').get('length'), 1);
     });
 
-    test('can unload all records', function () {
+    test("can unload all records", function () {
       expect(2);
 
       var adam, bob, dudu;
@@ -8601,8 +8607,8 @@ define(
             type: 'car',
             id: '1',
             attributes: {
-              make: 'VW',
-              model: 'Beetle'
+              make: "VW",
+              model: "Beetle"
             },
             relationships: {
               person: {
@@ -8622,7 +8628,7 @@ define(
       equal(env.store.peekAll('car').get('length'), 0);
     });
 
-    test('removes findAllCache after unloading all records', function () {
+    test("removes findAllCache after unloading all records", function () {
       var adam, bob;
       run(function () {
         env.store.push({
@@ -8652,7 +8658,7 @@ define(
       equal(env.store.peekAll('person').get('length'), 0);
     });
 
-    test('unloading all records also updates record array from peekAll()', function () {
+    test("unloading all records also updates record array from peekAll()", function () {
       var adam, bob;
       run(function () {
         env.store.push({
@@ -8684,7 +8690,7 @@ define(
       equal(all.get('length'), 0);
     });
 
-    test('unloading a record also clears its relationship', function () {
+    test("unloading a record also clears its relationship", function () {
       var adam, bob;
       run(function () {
         env.store.push({
@@ -8710,8 +8716,8 @@ define(
             type: 'car',
             id: '1',
             attributes: {
-              make: 'Lotus',
-              model: 'Exige'
+              make: "Lotus",
+              model: "Exige"
             },
             relationships: {
               person: {
@@ -8736,7 +8742,7 @@ define(
       });
     });
 
-    test('unloading a record also clears the implicit inverse relationships', function () {
+    test("unloading a record also clears the implicit inverse relationships", function () {
       var adam, bob;
       run(function () {
         env.store.push({
@@ -8816,7 +8822,7 @@ define(
       return desc;
     }
 
-    module('integration/relationship/belongs_to Belongs-To Relationships', {
+    module("integration/relationship/belongs_to Belongs-To Relationships", {
       setup: function () {
         User = DS.Model.extend({
           name: attr('string'),
@@ -8890,7 +8896,7 @@ define(
       }
     });
 
-    test('The store can materialize a non loaded monomorphic belongsTo association', function () {
+    test("The store can materialize a non loaded monomorphic belongsTo association", function () {
       expect(1);
 
       env.store.modelFor('post').reopen({
@@ -8901,7 +8907,7 @@ define(
       });
 
       env.adapter.findRecord = function (store, type, id, snapshot) {
-        ok(true, 'The adapter\'s find method should be called');
+        ok(true, "The adapter's find method should be called");
         return Ember.RSVP.resolve({
           id: 1
         });
@@ -8931,7 +8937,7 @@ define(
       });
     });
 
-    test('Only a record of the same type can be used with a monomorphic belongsTo relationship', function () {
+    test("Only a record of the same type can be used with a monomorphic belongsTo relationship", function () {
       expect(1);
 
       run(function () {
@@ -8961,7 +8967,7 @@ define(
       });
     });
 
-    test('Only a record of the same base type can be used with a polymorphic belongsTo relationship', function () {
+    test("Only a record of the same base type can be used with a polymorphic belongsTo relationship", function () {
       expect(1);
       run(function () {
         store.push({
@@ -9009,7 +9015,7 @@ define(
       });
     });
 
-    test('The store can load a polymorphic belongsTo association', function () {
+    test("The store can load a polymorphic belongsTo association", function () {
       run(function () {
         env.store.push({
           data: {
@@ -9044,12 +9050,12 @@ define(
       });
     });
 
-    test('The store can serialize a polymorphic belongsTo association', function () {
+    test("The store can serialize a polymorphic belongsTo association", function () {
       var serializerInstance = store.serializerFor('comment');
 
       serializerInstance.serializePolymorphicType = function (record, json, relationship) {
-        ok(true, 'The serializer\'s serializePolymorphicType method should be called');
-        json['message_type'] = 'post';
+        ok(true, "The serializer's serializePolymorphicType method should be called");
+        json["message_type"] = "post";
       };
       run(function () {
         env.store.push({
@@ -9081,7 +9087,7 @@ define(
       });
     });
 
-    test('A serializer can materialize a belongsTo as a link that gets sent back to findBelongsTo', function () {
+    test("A serializer can materialize a belongsTo as a link that gets sent back to findBelongsTo", function () {
       var Group = DS.Model.extend({
         people: DS.hasMany('person', { async: false })
       });
@@ -9110,13 +9116,13 @@ define(
       });
 
       env.adapter.findRecord = function (store, type, id, snapshot) {
-        throw new Error('Adapter\'s find method should not be called');
+        throw new Error("Adapter's find method should not be called");
       };
 
       env.adapter.findBelongsTo = async(function (store, snapshot, link, relationship) {
         equal(relationship.type, 'group');
         equal(relationship.key, 'group');
-        equal(link, '/people/1/group');
+        equal(link, "/people/1/group");
 
         return Ember.RSVP.resolve({ id: 1, people: [1] });
       });
@@ -9125,7 +9131,7 @@ define(
         env.store.findRecord('person', 1).then(function (person) {
           return person.get('group');
         }).then(function (group) {
-          ok(group instanceof Group, 'A group object is loaded');
+          ok(group instanceof Group, "A group object is loaded");
           ok(group.get('id') === '1', 'It is the group we are expecting');
         });
       });
@@ -9160,7 +9166,7 @@ define(
       });
 
       env.adapter.findRecord = function (store, type, id, snapshot) {
-        throw new Error('Adapter\'s find method should not be called');
+        throw new Error("Adapter's find method should not be called");
       };
 
       env.adapter.findBelongsTo = async(function (store, snapshot, link, relationship) {
@@ -9179,7 +9185,7 @@ define(
       });
     });
 
-    test('A record with an async belongsTo relationship returning null should resolve null', function () {
+    test("A record with an async belongsTo relationship returning null should resolve null", function () {
       expect(1);
 
       var Group = DS.Model.extend({
@@ -9210,7 +9216,7 @@ define(
       });
 
       env.adapter.findRecord = function (store, type, id, snapshot) {
-        throw new Error('Adapter\'s find method should not be called');
+        throw new Error("Adapter's find method should not be called");
       };
 
       env.adapter.findBelongsTo = async(function (store, snapshot, link, relationship) {
@@ -9220,11 +9226,11 @@ define(
       env.store.findRecord('person', '1').then(async(function (person) {
         return person.get('group');
       })).then(async(function (group) {
-        ok(group === null, 'group should be null');
+        ok(group === null, "group should be null");
       }));
     });
 
-    test('A record can be created with a resolved belongsTo promise', function () {
+    test("A record can be created with a resolved belongsTo promise", function () {
       expect(1);
 
       var Group = DS.Model.extend({
@@ -9257,7 +9263,7 @@ define(
       }));
     });
 
-    test('polymorphic belongsTo type-checks check the superclass when MODEL_FACTORY_INJECTIONS is enabled', function () {
+    test("polymorphic belongsTo type-checks check the superclass when MODEL_FACTORY_INJECTIONS is enabled", function () {
       expect(1);
 
       var injectionValue = Ember.MODEL_FACTORY_INJECTIONS;
@@ -9266,18 +9272,18 @@ define(
       try {
         run(function () {
           var igor = env.store.createRecord('user', { name: 'Igor' });
-          var post = env.store.createRecord('post', { title: 'Igor\'s unimaginative blog post' });
+          var post = env.store.createRecord('post', { title: "Igor's unimaginative blog post" });
 
           igor.set('favouriteMessage', post);
 
-          equal(igor.get('favouriteMessage.title'), 'Igor\'s unimaginative blog post');
+          equal(igor.get('favouriteMessage.title'), "Igor's unimaginative blog post");
         });
       } finally {
         Ember.MODEL_FACTORY_INJECTIONS = injectionValue;
       }
     });
 
-    test('the subclass in a polymorphic belongsTo relationship is an instanceof its superclass', function () {
+    test("the subclass in a polymorphic belongsTo relationship is an instanceof its superclass", function () {
       expect(1);
 
       var injectionValue = Ember.MODEL_FACTORY_INJECTIONS;
@@ -9294,7 +9300,7 @@ define(
       }
     });
 
-    test('relationshipsByName does not cache a factory', function () {
+    test("relationshipsByName does not cache a factory", function () {
 
       // The model is loaded up via a container. It has relationshipsByName
       // called on it.
@@ -9325,10 +9331,10 @@ define(
       // And the model is lookup up internally via the relationship type
       var messageModelFromRelationType = store.modelFor(messageType);
 
-      equal(messageModelFromRelationType, messageModelFromStore, 'model factory based on relationship type matches the model based on store.modelFor');
+      equal(messageModelFromRelationType, messageModelFromStore, "model factory based on relationship type matches the model based on store.modelFor");
     });
 
-    test('relationshipsByName is cached in production', function () {
+    test("relationshipsByName is cached in production", function () {
       var model = store.modelFor('user');
       var oldTesting = Ember.testing;
       //We set the cacheable to true because that is the default state for any CP and then assert that it
@@ -9346,7 +9352,7 @@ define(
       }
     });
 
-    test('relatedTypes is cached in production', function () {
+    test("relatedTypes is cached in production", function () {
       var model = store.modelFor('user');
       var oldTesting = Ember.testing;
       //We set the cacheable to true because that is the default state for any CP and then assert that it
@@ -9364,7 +9370,7 @@ define(
       }
     });
 
-    test('relationships is cached in production', function () {
+    test("relationships is cached in production", function () {
       var model = store.modelFor('user');
       var oldTesting = Ember.testing;
       //We set the cacheable to true because that is the default state for any CP and then assert that it
@@ -9382,7 +9388,7 @@ define(
       }
     });
 
-    test('relationship changes shouldn’t cause async fetches', function () {
+    test("relationship changes shouldn’t cause async fetches", function () {
       expect(2);
 
       /*  Scenario:
@@ -9460,7 +9466,7 @@ define(
       run(comment, 'destroyRecord');
     });
 
-    test('Destroying a record with an unloaded aync belongsTo association does not fetch the record', function () {
+    test("Destroying a record with an unloaded aync belongsTo association does not fetch the record", function () {
       expect(2);
       var post;
 
@@ -9495,7 +9501,7 @@ define(
       });
 
       env.adapter.findRecord = function (store, type, id, snapshot) {
-        throw new Error('Adapter\'s find method should not be called');
+        throw new Error("Adapter's find method should not be called");
       };
 
       env.adapter.deleteRecord = function (store, type, snapshot) {
@@ -9505,14 +9511,14 @@ define(
           id: '1',
           title: null,
           created_at: null,
-          user: '2'
+          user: "2"
         };
       };
 
       run(post, 'destroyRecord');
     });
 
-    test('A sync belongsTo errors out if the record is unlaoded', function () {
+    test("A sync belongsTo errors out if the record is unlaoded", function () {
       var message;
       run(function () {
         message = env.store.push({
@@ -9536,7 +9542,7 @@ define(
       }, /You looked up the 'user' relationship on a 'message' with id 1 but some of the associated records were not loaded. Either make sure they are all loaded together with the parent record, or specify that the relationship is async \(`DS.belongsTo\({ async: true }\)`\)/);
     });
 
-    test('Rollbacking attributes for a deleted record restores implicit relationship - async', function () {
+    test("Rollbacking attributes for a deleted record restores implicit relationship - async", function () {
       Book.reopen({
         author: DS.belongsTo('author', { async: true })
       });
@@ -9547,7 +9553,7 @@ define(
             id: '1',
             type: 'book',
             attributes: {
-              name: 'Stanley\'s Amazing Adventures'
+              name: "Stanley's Amazing Adventures"
             },
             relationships: {
               author: {
@@ -9578,7 +9584,7 @@ define(
       });
     });
 
-    test('Rollbacking attributes for a deleted record restores implicit relationship - sync', function () {
+    test("Rollbacking attributes for a deleted record restores implicit relationship - sync", function () {
       var book, author;
       run(function () {
         book = env.store.push({
@@ -9586,7 +9592,7 @@ define(
             id: '1',
             type: 'book',
             attributes: {
-              name: 'Stanley\'s Amazing Adventures'
+              name: "Stanley's Amazing Adventures"
             },
             relationships: {
               author: {
@@ -9603,7 +9609,7 @@ define(
             id: '2',
             type: 'author',
             attributes: {
-              name: 'Stanley'
+              name: "Stanley"
             }
           }
         });
@@ -9615,7 +9621,7 @@ define(
       equal(book.get('author'), author, 'Book has an author after rollback attributes');
     });
 
-    test('Passing a model as type to belongsTo should not work', function () {
+    test("Passing a model as type to belongsTo should not work", function () {
       expect(1);
 
       expectAssertion(function () {
@@ -9627,7 +9633,7 @@ define(
       }, /The first argument to DS.belongsTo must be a string/);
     });
 
-    test('belongsTo hasData async loaded', function () {
+    test("belongsTo hasData async loaded", function () {
       expect(1);
 
       Book.reopen({
@@ -9646,7 +9652,7 @@ define(
       });
     });
 
-    test('belongsTo hasData sync loaded', function () {
+    test("belongsTo hasData sync loaded", function () {
       expect(1);
 
       env.adapter.findRecord = function (store, type, id, snapshot) {
@@ -9661,7 +9667,7 @@ define(
       });
     });
 
-    test('belongsTo hasData async not loaded', function () {
+    test("belongsTo hasData async not loaded", function () {
       expect(1);
 
       Book.reopen({
@@ -9680,7 +9686,7 @@ define(
       });
     });
 
-    test('belongsTo hasData sync not loaded', function () {
+    test("belongsTo hasData sync not loaded", function () {
       expect(1);
 
       env.adapter.findRecord = function (store, type, id, snapshot) {
@@ -9695,7 +9701,7 @@ define(
       });
     });
 
-    test('belongsTo hasData async created', function () {
+    test("belongsTo hasData async created", function () {
       expect(1);
 
       Book.reopen({
@@ -9709,7 +9715,7 @@ define(
       });
     });
 
-    test('belongsTo hasData sync created', function () {
+    test("belongsTo hasData sync created", function () {
       expect(1);
 
       run(function () {
@@ -9719,7 +9725,7 @@ define(
       });
     });
 
-    test('Model\'s belongsTo relationship should not be created during model creation', function () {
+    test("Model's belongsTo relationship should not be created during model creation", function () {
       var user;
       run(function () {
         user = env.store.push({
@@ -9733,7 +9739,7 @@ define(
       });
     });
 
-    test('Model\'s belongsTo relationship should be created during model creation if relationship passed in constructor', function () {
+    test("Model's belongsTo relationship should be created during model creation if relationship passed in constructor", function () {
       var user, message;
       run(function () {
         message = env.store.createRecord('message');
@@ -9741,26 +9747,26 @@ define(
           name: 'John Doe',
           favouriteMessage: message
         });
-        ok(user._internalModel._relationships.has('favouriteMessage'), 'Newly created record with relationships in params passed in its constructor should have relationships');
+        ok(user._internalModel._relationships.has('favouriteMessage'), "Newly created record with relationships in params passed in its constructor should have relationships");
       });
     });
 
-    test('Model\'s belongsTo relationship should be created during \'set\' method', function () {
+    test("Model's belongsTo relationship should be created during 'set' method", function () {
       var user, message;
       run(function () {
         message = env.store.createRecord('message');
         user = env.store.createRecord('user');
         user.set('favouriteMessage', message);
-        ok(user._internalModel._relationships.has('favouriteMessage'), 'Newly created record with relationships in params passed in its constructor should have relationships');
+        ok(user._internalModel._relationships.has('favouriteMessage'), "Newly created record with relationships in params passed in its constructor should have relationships");
       });
     });
 
-    test('Model\'s belongsTo relationship should be created during \'get\' method', function () {
+    test("Model's belongsTo relationship should be created during 'get' method", function () {
       var user;
       run(function () {
         user = env.store.createRecord('user');
         user.get('favouriteMessage');
-        ok(user._internalModel._relationships.has('favouriteMessage'), 'Newly created record with relationships in params passed in its constructor should have relationships');
+        ok(user._internalModel._relationships.has('favouriteMessage'), "Newly created record with relationships in params passed in its constructor should have relationships");
       });
     });
   }
@@ -9793,7 +9799,7 @@ define(
       };
     }
 
-    module('integration/relationships/has_many - Has-Many Relationships', {
+    module("integration/relationships/has_many - Has-Many Relationships", {
       setup: function () {
         User = DS.Model.extend({
           name: attr('string'),
@@ -9870,11 +9876,11 @@ define(
       }
     });
 
-    test('When a hasMany relationship is accessed, the adapter\'s findMany method should not be called if all the records in the relationship are already loaded', function () {
+    test("When a hasMany relationship is accessed, the adapter's findMany method should not be called if all the records in the relationship are already loaded", function () {
       expect(0);
 
       env.adapter.findMany = function (store, type, ids, snapshots) {
-        ok(false, 'The adapter\'s find method should not be called');
+        ok(false, "The adapter's find method should not be called");
       };
 
       run(function () {
@@ -9899,7 +9905,7 @@ define(
       });
     });
 
-    test('adapter.findMany only gets unique IDs even if duplicate IDs are present in the hasMany relationship', function () {
+    test("adapter.findMany only gets unique IDs even if duplicate IDs are present in the hasMany relationship", function () {
       expect(2);
 
       env.adapter.findMany = function (store, type, ids, snapshots) {
@@ -9931,7 +9937,7 @@ define(
     // relationship as a internalModel that it can fetch lazily. The most
     // common use case of this is to provide a URL to a collection that
     // is loaded later.
-    test('A serializer can materialize a hasMany as an opaque token that can be lazily fetched via the adapter\'s findHasMany hook', function () {
+    test("A serializer can materialize a hasMany as an opaque token that can be lazily fetched via the adapter's findHasMany hook", function () {
       Post.reopen({
         comments: DS.hasMany('comment', { async: true })
       });
@@ -9939,35 +9945,35 @@ define(
       // When the store asks the adapter for the record with ID 1,
       // provide some fake data.
       env.adapter.findRecord = function (store, type, id, snapshot) {
-        equal(type, Post, 'find type was Post');
-        equal(id, '1', 'find id was 1');
+        equal(type, Post, "find type was Post");
+        equal(id, "1", "find id was 1");
 
-        return Ember.RSVP.resolve({ id: 1, links: { comments: '/posts/1/comments' } });
+        return Ember.RSVP.resolve({ id: 1, links: { comments: "/posts/1/comments" } });
       };
 
       env.adapter.findMany = function (store, type, ids, snapshots) {
-        throw new Error('Adapter\'s findMany should not be called');
+        throw new Error("Adapter's findMany should not be called");
       };
 
       env.adapter.findHasMany = function (store, snapshot, link, relationship) {
-        equal(link, '/posts/1/comments', 'findHasMany link was /posts/1/comments');
-        equal(relationship.type, 'comment', 'relationship was passed correctly');
+        equal(link, "/posts/1/comments", "findHasMany link was /posts/1/comments");
+        equal(relationship.type, "comment", "relationship was passed correctly");
 
-        return Ember.RSVP.resolve([{ id: 1, body: 'First' }, { id: 2, body: 'Second' }]);
+        return Ember.RSVP.resolve([{ id: 1, body: "First" }, { id: 2, body: "Second" }]);
       };
 
       run(function () {
         env.store.findRecord('post', 1).then(async(function (post) {
           return post.get('comments');
         })).then(async(function (comments) {
-          equal(comments.get('isLoaded'), true, 'comments are loaded');
-          equal(comments.get('length'), 2, 'comments have 2 length');
-          equal(comments.objectAt(0).get('body'), 'First', 'comment loaded successfully');
+          equal(comments.get('isLoaded'), true, "comments are loaded");
+          equal(comments.get('length'), 2, "comments have 2 length");
+          equal(comments.objectAt(0).get('body'), 'First', "comment loaded successfully");
         }));
       });
     });
 
-    test('Accessing a hasMany backed by a link multiple times triggers only one request', function () {
+    test("Accessing a hasMany backed by a link multiple times triggers only one request", function () {
       expect(2);
       var count = 0;
       Post.reopen({
@@ -9999,11 +10005,11 @@ define(
       env.adapter.findHasMany = function (store, snapshot, link, relationship) {
         start();
         count++;
-        equal(count, 1, 'findHasMany has only been called once');
+        equal(count, 1, "findHasMany has only been called once");
         stop();
         return new Ember.RSVP.Promise(function (resolve, reject) {
           setTimeout(function () {
-            var value = [{ id: 1, body: 'First' }, { id: 2, body: 'Second' }];
+            var value = [{ id: 1, body: "First" }, { id: 2, body: "Second" }];
             resolve(value);
           }, 100);
         });
@@ -10030,10 +10036,10 @@ define(
       Ember.RSVP.all([promise1, promise2]).then(function () {
         start();
       });
-      equal(promise1.promise, promise2.promise, 'Same promise is returned both times');
+      equal(promise1.promise, promise2.promise, "Same promise is returned both times");
     });
 
-    test('A hasMany backed by a link remains a promise after a record has been added to it', function () {
+    test("A hasMany backed by a link remains a promise after a record has been added to it", function () {
       expect(1);
       Post.reopen({
         comments: DS.hasMany('comment', { async: true })
@@ -10044,7 +10050,7 @@ define(
       });
 
       env.adapter.findHasMany = function (store, snapshot, link, relationship) {
-        return Ember.RSVP.resolve([{ id: 1, body: 'First' }, { id: 2, body: 'Second' }]);
+        return Ember.RSVP.resolve([{ id: 1, body: "First" }, { id: 2, body: "Second" }]);
       };
       var post;
       run(function () {
@@ -10084,7 +10090,7 @@ define(
       });
     });
 
-    test('A hasMany updated link should not remove new children', function () {
+    test("A hasMany updated link should not remove new children", function () {
       Post.reopen({
         comments: DS.hasMany('comment', { async: true })
       });
@@ -10121,7 +10127,7 @@ define(
       });
     });
 
-    test('A hasMany updated link should not remove new children when the parent record has children already', function () {
+    test("A hasMany updated link should not remove new children when the parent record has children already", function () {
       Post.reopen({
         comments: DS.hasMany('comment', { async: true })
       });
@@ -10158,56 +10164,56 @@ define(
       });
     });
 
-    test('A hasMany relationship can be reloaded if it was fetched via a link', function () {
+    test("A hasMany relationship can be reloaded if it was fetched via a link", function () {
       Post.reopen({
         comments: DS.hasMany('comment', { async: true })
       });
 
       env.adapter.findRecord = function (store, type, id, snapshot) {
-        equal(type, Post, 'find type was Post');
-        equal(id, '1', 'find id was 1');
+        equal(type, Post, "find type was Post");
+        equal(id, "1", "find id was 1");
 
-        return Ember.RSVP.resolve({ id: 1, links: { comments: '/posts/1/comments' } });
+        return Ember.RSVP.resolve({ id: 1, links: { comments: "/posts/1/comments" } });
       };
 
       env.adapter.findHasMany = function (store, snapshot, link, relationship) {
-        equal(relationship.type, 'comment', 'findHasMany relationship type was Comment');
-        equal(relationship.key, 'comments', 'findHasMany relationship key was comments');
-        equal(link, '/posts/1/comments', 'findHasMany link was /posts/1/comments');
+        equal(relationship.type, 'comment', "findHasMany relationship type was Comment");
+        equal(relationship.key, 'comments', "findHasMany relationship key was comments");
+        equal(link, "/posts/1/comments", "findHasMany link was /posts/1/comments");
 
-        return Ember.RSVP.resolve([{ id: 1, body: 'First' }, { id: 2, body: 'Second' }]);
+        return Ember.RSVP.resolve([{ id: 1, body: "First" }, { id: 2, body: "Second" }]);
       };
 
       run(function () {
         run(env.store, 'findRecord', 'post', 1).then(function (post) {
           return post.get('comments');
         }).then(function (comments) {
-          equal(comments.get('isLoaded'), true, 'comments are loaded');
-          equal(comments.get('length'), 2, 'comments have 2 length');
+          equal(comments.get('isLoaded'), true, "comments are loaded");
+          equal(comments.get('length'), 2, "comments have 2 length");
 
           env.adapter.findHasMany = function (store, snapshot, link, relationship) {
-            equal(relationship.type, 'comment', 'findHasMany relationship type was Comment');
-            equal(relationship.key, 'comments', 'findHasMany relationship key was comments');
-            equal(link, '/posts/1/comments', 'findHasMany link was /posts/1/comments');
+            equal(relationship.type, 'comment', "findHasMany relationship type was Comment");
+            equal(relationship.key, 'comments', "findHasMany relationship key was comments");
+            equal(link, "/posts/1/comments", "findHasMany link was /posts/1/comments");
 
-            return Ember.RSVP.resolve([{ id: 1, body: 'First' }, { id: 2, body: 'Second' }, { id: 3, body: 'Thirds' }]);
+            return Ember.RSVP.resolve([{ id: 1, body: "First" }, { id: 2, body: "Second" }, { id: 3, body: "Thirds" }]);
           };
 
           return comments.reload();
         }).then(function (newComments) {
-          equal(newComments.get('length'), 3, 'reloaded comments have 3 length');
+          equal(newComments.get('length'), 3, "reloaded comments have 3 length");
         });
       });
     });
 
-    test('A sync hasMany relationship can be reloaded if it was fetched via ids', function () {
+    test("A sync hasMany relationship can be reloaded if it was fetched via ids", function () {
       Post.reopen({
         comments: DS.hasMany('comment', { async: false })
       });
 
       env.adapter.findRecord = function (store, type, id, snapshot) {
-        equal(type, Post, 'find type was Post');
-        equal(id, '1', 'find id was 1');
+        equal(type, Post, "find type was Post");
+        equal(id, "1", "find id was 1");
 
         return Ember.RSVP.resolve({ id: 1, comments: [1, 2] });
       };
@@ -10231,82 +10237,82 @@ define(
 
         env.store.findRecord('post', '1').then(function (post) {
           var comments = post.get('comments');
-          equal(comments.get('isLoaded'), true, 'comments are loaded');
-          equal(comments.get('length'), 2, 'comments have a length of 2');
+          equal(comments.get('isLoaded'), true, "comments are loaded");
+          equal(comments.get('length'), 2, "comments have a length of 2");
 
           env.adapter.findMany = function (store, type, ids, snapshots) {
-            return Ember.RSVP.resolve([{ id: 1, body: 'FirstUpdated' }, { id: 2, body: 'Second' }]);
+            return Ember.RSVP.resolve([{ id: 1, body: "FirstUpdated" }, { id: 2, body: "Second" }]);
           };
 
           return comments.reload();
         }).then(function (newComments) {
-          equal(newComments.get('firstObject.body'), 'FirstUpdated', 'Record body was correctly updated');
+          equal(newComments.get('firstObject.body'), 'FirstUpdated', "Record body was correctly updated");
         });
       });
     });
 
-    test('A hasMany relationship can be reloaded if it was fetched via ids', function () {
+    test("A hasMany relationship can be reloaded if it was fetched via ids", function () {
       Post.reopen({
         comments: DS.hasMany('comment', { async: true })
       });
 
       env.adapter.findRecord = function (store, type, id, snapshot) {
-        equal(type, Post, 'find type was Post');
-        equal(id, '1', 'find id was 1');
+        equal(type, Post, "find type was Post");
+        equal(id, "1", "find id was 1");
 
         return Ember.RSVP.resolve({ id: 1, comments: [1, 2] });
       };
 
       env.adapter.findMany = function (store, type, ids, snapshots) {
-        return Ember.RSVP.resolve([{ id: 1, body: 'First' }, { id: 2, body: 'Second' }]);
+        return Ember.RSVP.resolve([{ id: 1, body: "First" }, { id: 2, body: "Second" }]);
       };
 
       run(function () {
         env.store.findRecord('post', 1).then(function (post) {
           return post.get('comments');
         }).then(function (comments) {
-          equal(comments.get('isLoaded'), true, 'comments are loaded');
-          equal(comments.get('length'), 2, 'comments have 2 length');
+          equal(comments.get('isLoaded'), true, "comments are loaded");
+          equal(comments.get('length'), 2, "comments have 2 length");
 
           env.adapter.findMany = function (store, type, ids, snapshots) {
-            return Ember.RSVP.resolve([{ id: 1, body: 'FirstUpdated' }, { id: 2, body: 'Second' }]);
+            return Ember.RSVP.resolve([{ id: 1, body: "FirstUpdated" }, { id: 2, body: "Second" }]);
           };
 
           return comments.reload();
         }).then(function (newComments) {
-          equal(newComments.get('firstObject.body'), 'FirstUpdated', 'Record body was correctly updated');
+          equal(newComments.get('firstObject.body'), 'FirstUpdated', "Record body was correctly updated");
         });
       });
     });
 
-    test('A hasMany relationship can be directly reloaded if it was fetched via ids', function () {
+    test("A hasMany relationship can be directly reloaded if it was fetched via ids", function () {
       Post.reopen({
         comments: DS.hasMany('comment', { async: true })
       });
 
       env.adapter.findRecord = function (store, type, id, snapshot) {
-        equal(type, Post, 'find type was Post');
-        equal(id, '1', 'find id was 1');
+        equal(type, Post, "find type was Post");
+        equal(id, "1", "find id was 1");
 
         return Ember.RSVP.resolve({ id: 1, comments: [1, 2] });
       };
 
       env.adapter.findMany = function (store, type, ids, snapshots) {
-        return Ember.RSVP.resolve([{ id: 1, body: 'FirstUpdated' }, { id: 2, body: 'Second' }]);
+        return Ember.RSVP.resolve([{ id: 1, body: "FirstUpdated" }, { id: 2, body: "Second" }]);
       };
 
       run(function () {
         env.store.findRecord('post', 1).then(function (post) {
           return post.get('comments').reload().then(function (comments) {
-            equal(comments.get('isLoaded'), true, 'comments are loaded');
-            equal(comments.get('length'), 2, 'comments have 2 length');
-            equal(comments.get('firstObject.body'), 'FirstUpdated', 'Record body was correctly updated');
+            equal(comments.get('isLoaded'), true, "comments are loaded");
+            equal(comments.get('length'), 2, "comments have 2 length");
+            equal(comments.get('firstObject.body'), "FirstUpdated", "Record body was correctly updated");
           });
         });
       });
     });
 
-    test('PromiseArray proxies createRecord to its ManyArray once the hasMany is loaded', function () {
+    test("PromiseArray proxies createRecord to its ManyArray once the hasMany is loaded", function () {
       expect(4);
 
       Post.reopen({
@@ -10314,7 +10320,7 @@ define(
       });
 
       env.adapter.findHasMany = function (store, snapshot, link, relationship) {
-        return Ember.RSVP.resolve([{ id: 1, body: 'First' }, { id: 2, body: 'Second' }]);
+        return Ember.RSVP.resolve([{ id: 1, body: "First" }, { id: 2, body: "Second" }]);
       };
       var post;
 
@@ -10337,17 +10343,17 @@ define(
 
       run(function () {
         post.get('comments').then(function (comments) {
-          equal(comments.get('isLoaded'), true, 'comments are loaded');
-          equal(comments.get('length'), 2, 'comments have 2 length');
+          equal(comments.get('isLoaded'), true, "comments are loaded");
+          equal(comments.get('length'), 2, "comments have 2 length");
 
           var newComment = post.get('comments').createRecord({ body: 'Third' });
-          equal(newComment.get('body'), 'Third', 'new comment is returned');
-          equal(comments.get('length'), 3, 'comments have 3 length, including new record');
+          equal(newComment.get('body'), 'Third', "new comment is returned");
+          equal(comments.get('length'), 3, "comments have 3 length, including new record");
         });
       });
     });
 
-    test('PromiseArray proxies evented methods to its ManyArray', function () {
+    test("PromiseArray proxies evented methods to its ManyArray", function () {
       expect(6);
 
       Post.reopen({
@@ -10355,7 +10361,7 @@ define(
       });
 
       env.adapter.findHasMany = function (store, snapshot, link, relationship) {
-        return Ember.RSVP.resolve([{ id: 1, body: 'First' }, { id: 2, body: 'Second' }]);
+        return Ember.RSVP.resolve([{ id: 1, body: "First" }, { id: 2, body: "Second" }]);
       };
       var post, comments;
 
@@ -10408,19 +10414,19 @@ define(
       equal(comments.has('one-event'), false);
     });
 
-    test('An updated `links` value should invalidate a relationship cache', function () {
+    test("An updated `links` value should invalidate a relationship cache", function () {
       expect(8);
       Post.reopen({
         comments: DS.hasMany('comment', { async: true })
       });
 
       env.adapter.findHasMany = function (store, snapshot, link, relationship) {
-        equal(relationship.type, 'comment', 'relationship was passed correctly');
+        equal(relationship.type, "comment", "relationship was passed correctly");
 
         if (link === '/first') {
-          return Ember.RSVP.resolve([{ id: 1, body: 'First' }, { id: 2, body: 'Second' }]);
+          return Ember.RSVP.resolve([{ id: 1, body: "First" }, { id: 2, body: "Second" }]);
         } else if (link === '/second') {
-          return Ember.RSVP.resolve([{ id: 3, body: 'Third' }, { id: 4, body: 'Fourth' }, { id: 5, body: 'Fifth' }]);
+          return Ember.RSVP.resolve([{ id: 3, body: "Third" }, { id: 4, body: "Fourth" }, { id: 5, body: "Fifth" }]);
         }
       };
       var post;
@@ -10444,9 +10450,9 @@ define(
 
       run(function () {
         post.get('comments').then(function (comments) {
-          equal(comments.get('isLoaded'), true, 'comments are loaded');
-          equal(comments.get('length'), 2, 'comments have 2 length');
-          equal(comments.objectAt(0).get('body'), 'First', 'comment 1 successfully loaded');
+          equal(comments.get('isLoaded'), true, "comments are loaded");
+          equal(comments.get('length'), 2, "comments have 2 length");
+          equal(comments.objectAt(0).get('body'), 'First', "comment 1 successfully loaded");
           env.store.push({
             data: {
               type: 'post',
@@ -10461,19 +10467,19 @@ define(
             }
           });
           post.get('comments').then(function (newComments) {
-            equal(comments, newComments, 'hasMany array was kept the same');
-            equal(newComments.get('length'), 3, 'comments updated successfully');
-            equal(newComments.objectAt(0).get('body'), 'Third', 'third comment loaded successfully');
+            equal(comments, newComments, "hasMany array was kept the same");
+            equal(newComments.get('length'), 3, "comments updated successfully");
+            equal(newComments.objectAt(0).get('body'), 'Third', "third comment loaded successfully");
           });
         });
       });
     });
 
-    test('When a polymorphic hasMany relationship is accessed, the adapter\'s findMany method should not be called if all the records in the relationship are already loaded', function () {
+    test("When a polymorphic hasMany relationship is accessed, the adapter's findMany method should not be called if all the records in the relationship are already loaded", function () {
       expect(1);
 
       env.adapter.findMany = function (store, type, ids, snapshots) {
-        ok(false, 'The adapter\'s find method should not be called');
+        ok(false, "The adapter's find method should not be called");
       };
 
       run(function () {
@@ -10500,12 +10506,12 @@ define(
       run(function () {
         env.store.findRecord('user', 1).then(function (user) {
           var messages = user.get('messages');
-          equal(messages.get('length'), 2, 'The messages are correctly loaded');
+          equal(messages.get('length'), 2, "The messages are correctly loaded");
         });
       });
     });
 
-    test('When a polymorphic hasMany relationship is accessed, the store can call multiple adapters\' findMany or find methods if the records are not loaded', function () {
+    test("When a polymorphic hasMany relationship is accessed, the store can call multiple adapters' findMany or find methods if the records are not loaded", function () {
       User.reopen({
         messages: hasMany('message', { polymorphic: true, async: true })
       });
@@ -10536,12 +10542,12 @@ define(
         env.store.findRecord('user', 1).then(function (user) {
           return user.get('messages');
         }).then(function (messages) {
-          equal(messages.get('length'), 2, 'The messages are correctly loaded');
+          equal(messages.get('length'), 2, "The messages are correctly loaded");
         });
       });
     });
 
-    test('polymorphic hasMany type-checks check the superclass when MODEL_FACTORY_INJECTIONS is enabled', function () {
+    test("polymorphic hasMany type-checks check the superclass when MODEL_FACTORY_INJECTIONS is enabled", function () {
       expect(1);
 
       var injectionValue = Ember.MODEL_FACTORY_INJECTIONS;
@@ -10550,18 +10556,18 @@ define(
       try {
         run(function () {
           var igor = env.store.createRecord('user', { name: 'Igor' });
-          var comment = env.store.createRecord('comment', { body: 'Well I thought the title was fine' });
+          var comment = env.store.createRecord('comment', { body: "Well I thought the title was fine" });
 
           igor.get('messages').addObject(comment);
 
-          equal(igor.get('messages.firstObject.body'), 'Well I thought the title was fine');
+          equal(igor.get('messages.firstObject.body'), "Well I thought the title was fine");
         });
       } finally {
         Ember.MODEL_FACTORY_INJECTIONS = injectionValue;
       }
     });
 
-    test('Type can be inferred from the key of a hasMany relationship', function () {
+    test("Type can be inferred from the key of a hasMany relationship", function () {
       expect(1);
       run(function () {
         env.store.push({
@@ -10584,12 +10590,12 @@ define(
         env.store.findRecord('user', 1).then(function (user) {
           return user.get('contacts');
         }).then(function (contacts) {
-          equal(contacts.get('length'), 1, 'The contacts relationship is correctly set up');
+          equal(contacts.get('length'), 1, "The contacts relationship is correctly set up");
         });
       });
     });
 
-    test('Type can be inferred from the key of an async hasMany relationship', function () {
+    test("Type can be inferred from the key of an async hasMany relationship", function () {
       User.reopen({
         contacts: DS.hasMany({ async: true })
       });
@@ -10616,12 +10622,12 @@ define(
         env.store.findRecord('user', 1).then(function (user) {
           return user.get('contacts');
         }).then(function (contacts) {
-          equal(contacts.get('length'), 1, 'The contacts relationship is correctly set up');
+          equal(contacts.get('length'), 1, "The contacts relationship is correctly set up");
         });
       });
     });
 
-    test('Polymorphic relationships work with a hasMany whose type is inferred', function () {
+    test("Polymorphic relationships work with a hasMany whose type is inferred", function () {
       User.reopen({
         contacts: DS.hasMany({ polymorphic: true, async: false })
       });
@@ -10651,12 +10657,12 @@ define(
         env.store.findRecord('user', 1).then(function (user) {
           return user.get('contacts');
         }).then(function (contacts) {
-          equal(contacts.get('length'), 2, 'The contacts relationship is correctly set up');
+          equal(contacts.get('length'), 2, "The contacts relationship is correctly set up");
         });
       });
     });
 
-    test('Polymorphic relationships with a hasMany is set up correctly on both sides', function () {
+    test("Polymorphic relationships with a hasMany is set up correctly on both sides", function () {
       expect(2);
 
       Contact.reopen({
@@ -10676,10 +10682,10 @@ define(
       });
 
       equal(post.get('contact'), email, 'The polymorphic belongsTo is set up correctly');
-      equal(get(email, 'posts.length'), 1, 'The inverse has many is set up correctly on the email side.');
+      equal(get(email, 'posts.length'), 1, "The inverse has many is set up correctly on the email side.");
     });
 
-    test('A record can\'t be created from a polymorphic hasMany relationship', function () {
+    test("A record can't be created from a polymorphic hasMany relationship", function () {
       run(function () {
         env.store.push({
           data: {
@@ -10705,7 +10711,7 @@ define(
       });
     });
 
-    test('Only records of the same type can be added to a monomorphic hasMany relationship', function () {
+    test("Only records of the same type can be added to a monomorphic hasMany relationship", function () {
       expect(1);
       run(function () {
         env.store.push({
@@ -10733,7 +10739,7 @@ define(
       });
     });
 
-    test('Only records of the same base type can be added to a polymorphic hasMany relationship', function () {
+    test("Only records of the same base type can be added to a polymorphic hasMany relationship", function () {
       expect(2);
       run(function () {
         env.store.push({
@@ -10784,7 +10790,7 @@ define(
         }).then(function (records) {
           records.messages.pushObject(records.post);
           records.messages.pushObject(records.comment);
-          equal(records.messages.get('length'), 2, 'The messages are correctly added');
+          equal(records.messages.get('length'), 2, "The messages are correctly added");
 
           expectAssertion(function () {
             records.messages.pushObject(records.anotherUser);
@@ -10793,7 +10799,7 @@ define(
       });
     });
 
-    test('A record can be removed from a polymorphic association', function () {
+    test("A record can be removed from a polymorphic association", function () {
       expect(4);
 
       run(function () {
@@ -10825,18 +10831,18 @@ define(
           records.messages = records.user.get('messages');
           return Ember.RSVP.hash(records);
         }).then(function (records) {
-          equal(records.messages.get('length'), 1, 'The user has 1 message');
+          equal(records.messages.get('length'), 1, "The user has 1 message");
 
           var removedObject = records.messages.popObject();
 
-          equal(removedObject, records.comment, 'The message is correctly removed');
-          equal(records.messages.get('length'), 0, 'The user does not have any messages');
-          equal(records.messages.objectAt(0), null, 'No messages can\'t be fetched');
+          equal(removedObject, records.comment, "The message is correctly removed");
+          equal(records.messages.get('length'), 0, "The user does not have any messages");
+          equal(records.messages.objectAt(0), null, "No messages can't be fetched");
         });
       });
     });
 
-    test('When a record is created on the client, its hasMany arrays should be in a loaded state', function () {
+    test("When a record is created on the client, its hasMany arrays should be in a loaded state", function () {
       expect(3);
 
       var post;
@@ -10845,18 +10851,18 @@ define(
         post = env.store.createRecord('post');
       });
 
-      ok(get(post, 'isLoaded'), 'The post should have isLoaded flag');
+      ok(get(post, 'isLoaded'), "The post should have isLoaded flag");
       var comments;
       run(function () {
         comments = get(post, 'comments');
       });
 
-      equal(get(comments, 'length'), 0, 'The comments should be an empty array');
+      equal(get(comments, 'length'), 0, "The comments should be an empty array");
 
-      ok(get(comments, 'isLoaded'), 'The comments should have isLoaded flag');
+      ok(get(comments, 'isLoaded'), "The comments should have isLoaded flag");
     });
 
-    test('When a record is created on the client, its async hasMany arrays should be in a loaded state', function () {
+    test("When a record is created on the client, its async hasMany arrays should be in a loaded state", function () {
       expect(4);
 
       Post.reopen({
@@ -10867,18 +10873,18 @@ define(
         return env.store.createRecord('post');
       });
 
-      ok(get(post, 'isLoaded'), 'The post should have isLoaded flag');
+      ok(get(post, 'isLoaded'), "The post should have isLoaded flag");
 
       run(function () {
         get(post, 'comments').then(function (comments) {
-          ok(true, 'Comments array successfully resolves');
-          equal(get(comments, 'length'), 0, 'The comments should be an empty array');
-          ok(get(comments, 'isLoaded'), 'The comments should have isLoaded flag');
+          ok(true, "Comments array successfully resolves");
+          equal(get(comments, 'length'), 0, "The comments should be an empty array");
+          ok(get(comments, 'isLoaded'), "The comments should have isLoaded flag");
         });
       });
     });
 
-    test('we can set records SYNC HM relationship', function () {
+    test("we can set records SYNC HM relationship", function () {
       expect(1);
       var post = run(function () {
         return env.store.createRecord('post');
@@ -10901,10 +10907,10 @@ define(
         });
         post.set('comments', env.store.peekAll('comment'));
       });
-      equal(get(post, 'comments.length'), 2, 'we can set HM relationship');
+      equal(get(post, 'comments.length'), 2, "we can set HM relationship");
     });
 
-    test('We can set records ASYNC HM relationship', function () {
+    test("We can set records ASYNC HM relationship", function () {
       expect(1);
       Post.reopen({
         comments: DS.hasMany('comment', { async: true })
@@ -10933,11 +10939,11 @@ define(
       });
 
       post.get('comments').then(async(function (comments) {
-        equal(comments.get('length'), 2, 'we can set async HM relationship');
+        equal(comments.get('length'), 2, "we can set async HM relationship");
       }));
     });
 
-    test('When a record is saved, its unsaved hasMany records should be kept', function () {
+    test("When a record is saved, its unsaved hasMany records should be kept", function () {
       expect(1);
 
       var post, comment;
@@ -10953,10 +10959,10 @@ define(
         post.save();
       });
 
-      equal(get(post, 'comments.length'), 1, 'The unsaved comment should be in the post\'s comments array');
+      equal(get(post, 'comments.length'), 1, "The unsaved comment should be in the post's comments array");
     });
 
-    test('dual non-async HM <-> BT', function () {
+    test("dual non-async HM <-> BT", function () {
       Post.reopen({
         comments: DS.hasMany('comment', { inverse: 'post', async: false })
       });
@@ -11006,15 +11012,15 @@ define(
           var postCommentsLength = comment.get('post.comments.length');
 
           deepEqual(post, commentPost, 'expect the new comments post, to be the correct post');
-          ok(postComments, 'comments should exist');
-          equal(postCommentsLength, 2, 'comment\'s post should have a internalModel back to comment');
+          ok(postComments, "comments should exist");
+          equal(postCommentsLength, 2, "comment's post should have a internalModel back to comment");
           ok(postComments && postComments.indexOf(firstComment) !== -1, 'expect to contain first comment');
           ok(postComments && postComments.indexOf(comment) !== -1, 'expected to contain the new comment');
         });
       });
     });
 
-    test('When an unloaded record is added to the hasMany, it gets fetched once the hasMany is accessed even if the hasMany has been already fetched', function () {
+    test("When an unloaded record is added to the hasMany, it gets fetched once the hasMany is accessed even if the hasMany has been already fetched", function () {
       Post.reopen({
         comments: DS.hasMany('comment', { async: true })
       });
@@ -11066,7 +11072,7 @@ define(
       });
     });
 
-    test('A sync hasMany errors out if there are unlaoded records in it', function () {
+    test("A sync hasMany errors out if there are unlaoded records in it", function () {
       var post;
       run(function () {
         env.store.push({
@@ -11088,7 +11094,7 @@ define(
       }, /You looked up the 'comments' relationship on a 'post' with id 1 but some of the associated records were not loaded. Either make sure they are all loaded together with the parent record, or specify that the relationship is async \(`DS.hasMany\({ async: true }\)`\)/);
     });
 
-    test('If reordered hasMany data has been pushed to the store, the many array reflects the ordering change - sync', function () {
+    test("If reordered hasMany data has been pushed to the store, the many array reflects the ordering change - sync", function () {
       var comment1, comment2, comment3, comment4;
       var post;
       run(function () {
@@ -11206,7 +11212,7 @@ define(
       deepEqual(post.get('comments').toArray(), [comment4, comment2, comment3, comment1], 'Updated ordering is correct');
     });
 
-    test('Rollbacking attributes for deleted record restores implicit relationship correctly when the hasMany side has been deleted - async', function () {
+    test("Rollbacking attributes for deleted record restores implicit relationship correctly when the hasMany side has been deleted - async", function () {
       var book, chapter;
       run(function () {
         env.store.push({
@@ -11214,7 +11220,7 @@ define(
             type: 'book',
             id: '1',
             attributes: {
-              title: 'Stanley\'s Amazing Adventures'
+              title: "Stanley's Amazing Adventures"
             },
             relationships: {
               chapters: {
@@ -11244,7 +11250,7 @@ define(
       });
     });
 
-    test('Rollbacking attributes for deleted record restores implicit relationship correctly when the hasMany side has been deleted - sync', function () {
+    test("Rollbacking attributes for deleted record restores implicit relationship correctly when the hasMany side has been deleted - sync", function () {
       var book, chapter;
       run(function () {
         env.store.push({
@@ -11252,7 +11258,7 @@ define(
             type: 'book',
             id: '1',
             attributes: {
-              title: 'Stanley\'s Amazing Adventures'
+              title: "Stanley's Amazing Adventures"
             },
             relationships: {
               chapters: {
@@ -11276,11 +11282,11 @@ define(
         chapter.rollbackAttributes();
       });
       run(function () {
-        equal(book.get('chapters.firstObject'), chapter, 'Book has a chapter after rollback attributes');
+        equal(book.get('chapters.firstObject'), chapter, "Book has a chapter after rollback attributes");
       });
     });
 
-    test('Rollbacking attributes for deleted record restores implicit relationship correctly when the belongsTo side has been deleted - async', function () {
+    test("Rollbacking attributes for deleted record restores implicit relationship correctly when the belongsTo side has been deleted - async", function () {
       Page.reopen({
         chapter: DS.belongsTo('chapter', { async: true })
       });
@@ -11321,7 +11327,7 @@ define(
       });
     });
 
-    test('Rollbacking attributes for deleted record restores implicit relationship correctly when the belongsTo side has been deleted - sync', function () {
+    test("Rollbacking attributes for deleted record restores implicit relationship correctly when the belongsTo side has been deleted - sync", function () {
       var chapter, page;
       run(function () {
         env.store.push({
@@ -11353,11 +11359,11 @@ define(
         chapter.rollbackAttributes();
       });
       run(function () {
-        equal(page.get('chapter'), chapter, 'Page has a chapter after rollback attributes');
+        equal(page.get('chapter'), chapter, "Page has a chapter after rollback attributes");
       });
     });
 
-    test('ManyArray notifies the array observers and flushes bindings when removing', function () {
+    test("ManyArray notifies the array observers and flushes bindings when removing", function () {
       expect(2);
       var chapter, page, page2;
       var observe = false;
@@ -11413,7 +11419,7 @@ define(
       });
     });
 
-    test('ManyArray notifies the array observers and flushes bindings when adding', function () {
+    test("ManyArray notifies the array observers and flushes bindings when adding", function () {
       expect(2);
       var chapter, page, page2;
       var observe = false;
@@ -11469,7 +11475,7 @@ define(
       });
     });
 
-    test('Passing a model as type to hasMany should not work', function () {
+    test("Passing a model as type to hasMany should not work", function () {
       expect(1);
 
       expectAssertion(function () {
@@ -11481,7 +11487,7 @@ define(
       }, /The first argument to DS.hasMany must be a string/);
     });
 
-    test('Relationship.clear removes all records correctly', function () {
+    test("Relationship.clear removes all records correctly", function () {
       var post;
 
       Comment.reopen({
@@ -11597,13 +11603,13 @@ define(
         run(function () {
           env.store.destroy();
         });
-        ok(true, 'store destroyed correctly');
+        ok(true, "store destroyed correctly");
       } catch (error) {
-        ok(false, 'store prevented from being destroyed');
+        ok(false, "store prevented from being destroyed");
       }
     });
 
-    test('adding and removing records from hasMany relationship #2666', function () {
+    test("adding and removing records from hasMany relationship #2666", function () {
       expect(4);
 
       var Post = DS.Model.extend({
@@ -11659,20 +11665,20 @@ define(
         stop();
         env.store.findRecord('post', 1).then(function (post) {
           var comments = post.get('comments');
-          equal(comments.get('length'), 3, 'Initial comments count');
+          equal(comments.get('length'), 3, "Initial comments count");
 
           // Add comment #4
           var comment = env.store.createRecord('comment');
           comments.addObject(comment);
           return comment.save().then(function () {
             var comments = post.get('comments');
-            equal(comments.get('length'), 4, 'Comments count after first add');
+            equal(comments.get('length'), 4, "Comments count after first add");
 
             // Delete comment #4
             return comments.get('lastObject').destroyRecord();
           }).then(function () {
             var comments = post.get('comments');
-            equal(comments.get('length'), 3, 'Comments count after destroy');
+            equal(comments.get('length'), 3, "Comments count after destroy");
 
             // Add another comment #4
             var comment = env.store.createRecord('comment');
@@ -11680,14 +11686,14 @@ define(
             return comment.save();
           }).then(function () {
             var comments = post.get('comments');
-            equal(comments.get('length'), 4, 'Comments count after second add');
+            equal(comments.get('length'), 4, "Comments count after second add");
             start();
           });
         });
       });
     });
 
-    test('hasMany hasData async loaded', function () {
+    test("hasMany hasData async loaded", function () {
       expect(1);
 
       Chapter.reopen({
@@ -11706,7 +11712,7 @@ define(
       });
     });
 
-    test('hasMany hasData sync loaded', function () {
+    test("hasMany hasData sync loaded", function () {
       expect(1);
 
       env.adapter.findRecord = function (store, type, id, snapshot) {
@@ -11721,7 +11727,7 @@ define(
       });
     });
 
-    test('hasMany hasData async not loaded', function () {
+    test("hasMany hasData async not loaded", function () {
       expect(1);
 
       Chapter.reopen({
@@ -11740,7 +11746,7 @@ define(
       });
     });
 
-    test('hasMany hasData sync not loaded', function () {
+    test("hasMany hasData sync not loaded", function () {
       expect(1);
 
       env.adapter.findRecord = function (store, type, id, snapshot) {
@@ -11755,7 +11761,7 @@ define(
       });
     });
 
-    test('hasMany hasData async created', function () {
+    test("hasMany hasData async created", function () {
       expect(1);
 
       Chapter.reopen({
@@ -11769,7 +11775,7 @@ define(
       });
     });
 
-    test('hasMany hasData sync created', function () {
+    test("hasMany hasData sync created", function () {
       expect(1);
 
       run(function () {
@@ -11779,7 +11785,7 @@ define(
       });
     });
 
-    test('Model\'s hasMany relationship should not be created during model creation', function () {
+    test("Model's hasMany relationship should not be created during model creation", function () {
       var user;
       run(function () {
         env.store.push({
@@ -11793,16 +11799,16 @@ define(
       });
     });
 
-    test('Model\'s belongsTo relationship should be created during \'get\' method', function () {
+    test("Model's belongsTo relationship should be created during 'get' method", function () {
       var user;
       run(function () {
         user = env.store.createRecord('user');
         user.get('messages');
-        ok(user._internalModel._relationships.has('messages'), 'Newly created record with relationships in params passed in its constructor should have relationships');
+        ok(user._internalModel._relationships.has('messages'), "Newly created record with relationships in params passed in its constructor should have relationships");
       });
     });
 
-    test('metadata is accessible when pushed as a meta property for a relationship', function () {
+    test("metadata is accessible when pushed as a meta property for a relationship", function () {
       expect(1);
       var book;
       env.adapter.findHasMany = function () {
@@ -11837,7 +11843,7 @@ define(
       });
     });
 
-    test('metadata is accessible when return from a fetchLink', function () {
+    test("metadata is accessible when return from a fetchLink", function () {
       expect(1);
       env.registry.register('serializer:application', DS.RESTSerializer);
 
@@ -11880,7 +11886,7 @@ define(
       });
     });
 
-    test('metadata should be reset between requests', function () {
+    test("metadata should be reset between requests", function () {
       var counter = 0;
       env.registry.register('serializer:application', DS.RESTSerializer);
 
@@ -11970,7 +11976,7 @@ define(
 
     module('integration/relationships/inverse_relationships - Inverse Relationships');
 
-    test('When a record is added to a has-many relationship, the inverse belongsTo is determined automatically', function () {
+    test("When a record is added to a has-many relationship, the inverse belongsTo is determined automatically", function () {
       Post = DS.Model.extend({
         comments: DS.hasMany('comment', { async: false })
       });
@@ -11988,15 +11994,15 @@ define(
         post = store.createRecord('post');
       });
 
-      equal(comment.get('post'), null, 'no post has been set on the comment');
+      equal(comment.get('post'), null, "no post has been set on the comment");
 
       run(function () {
         post.get('comments').pushObject(comment);
       });
-      equal(comment.get('post'), post, 'post was set on the comment');
+      equal(comment.get('post'), post, "post was set on the comment");
     });
 
-    test('Inverse relationships can be explicitly nullable', function () {
+    test("Inverse relationships can be explicitly nullable", function () {
       User = DS.Model.extend();
 
       Post = DS.Model.extend({
@@ -12024,7 +12030,7 @@ define(
       equal(post.inverseFor('participants').name, 'posts', 'Post.participants inverse is User.posts');
     });
 
-    test('When a record is added to a has-many relationship, the inverse belongsTo can be set explicitly', function () {
+    test("When a record is added to a has-many relationship, the inverse belongsTo can be set explicitly", function () {
       Post = DS.Model.extend({
         comments: DS.hasMany('comment', { inverse: 'redPost', async: false })
       });
@@ -12045,22 +12051,22 @@ define(
         post = store.createRecord('post');
       });
 
-      equal(comment.get('onePost'), null, 'onePost has not been set on the comment');
-      equal(comment.get('twoPost'), null, 'twoPost has not been set on the comment');
-      equal(comment.get('redPost'), null, 'redPost has not been set on the comment');
-      equal(comment.get('bluePost'), null, 'bluePost has not been set on the comment');
+      equal(comment.get('onePost'), null, "onePost has not been set on the comment");
+      equal(comment.get('twoPost'), null, "twoPost has not been set on the comment");
+      equal(comment.get('redPost'), null, "redPost has not been set on the comment");
+      equal(comment.get('bluePost'), null, "bluePost has not been set on the comment");
 
       run(function () {
         post.get('comments').pushObject(comment);
       });
 
-      equal(comment.get('onePost'), null, 'onePost has not been set on the comment');
-      equal(comment.get('twoPost'), null, 'twoPost has not been set on the comment');
-      equal(comment.get('redPost'), post, 'redPost has been set on the comment');
-      equal(comment.get('bluePost'), null, 'bluePost has not been set on the comment');
+      equal(comment.get('onePost'), null, "onePost has not been set on the comment");
+      equal(comment.get('twoPost'), null, "twoPost has not been set on the comment");
+      equal(comment.get('redPost'), post, "redPost has been set on the comment");
+      equal(comment.get('bluePost'), null, "bluePost has not been set on the comment");
     });
 
-    test('When a record\'s belongsTo relationship is set, it can specify the inverse hasMany to which the new child should be added', function () {
+    test("When a record's belongsTo relationship is set, it can specify the inverse hasMany to which the new child should be added", function () {
       Post = DS.Model.extend({
         meComments: DS.hasMany('comment', { async: false }),
         youComments: DS.hasMany('comment', { async: false }),
@@ -12080,9 +12086,9 @@ define(
         post = store.createRecord('post');
       });
 
-      equal(post.get('meComments.length'), 0, 'meComments has no posts');
-      equal(post.get('youComments.length'), 0, 'youComments has no posts');
-      equal(post.get('everyoneWeKnowComments.length'), 0, 'everyoneWeKnowComments has no posts');
+      equal(post.get('meComments.length'), 0, "meComments has no posts");
+      equal(post.get('youComments.length'), 0, "youComments has no posts");
+      equal(post.get('everyoneWeKnowComments.length'), 0, "everyoneWeKnowComments has no posts");
 
       run(function () {
         comment.set('post', post);
@@ -12090,12 +12096,12 @@ define(
 
       equal(comment.get('post'), post, 'The post that was set can be retrieved');
 
-      equal(post.get('meComments.length'), 0, 'meComments has no posts');
-      equal(post.get('youComments.length'), 1, 'youComments had the post added');
-      equal(post.get('everyoneWeKnowComments.length'), 0, 'everyoneWeKnowComments has no posts');
+      equal(post.get('meComments.length'), 0, "meComments has no posts");
+      equal(post.get('youComments.length'), 1, "youComments had the post added");
+      equal(post.get('everyoneWeKnowComments.length'), 0, "everyoneWeKnowComments has no posts");
     });
 
-    test('When setting a belongsTo, the OneToOne invariant is respected even when other records have been previously used', function () {
+    test("When setting a belongsTo, the OneToOne invariant is respected even when other records have been previously used", function () {
       Post = DS.Model.extend({
         bestComment: DS.belongsTo('comment', { async: false })
       });
@@ -12131,7 +12137,7 @@ define(
       equal(post2.get('bestComment'), comment);
     });
 
-    test('When setting a belongsTo, the OneToOne invariant is transitive', function () {
+    test("When setting a belongsTo, the OneToOne invariant is transitive", function () {
       Post = DS.Model.extend({
         bestComment: DS.belongsTo('comment', { async: false })
       });
@@ -12169,7 +12175,7 @@ define(
       equal(post2.get('bestComment'), comment);
     });
 
-    test('When setting a belongsTo, the OneToOne invariant is commutative', function () {
+    test("When setting a belongsTo, the OneToOne invariant is commutative", function () {
       Post = DS.Model.extend({
         bestComment: DS.belongsTo('comment', { async: false })
       });
@@ -12205,7 +12211,7 @@ define(
       equal(comment2.get('post'), post);
     });
 
-    test('OneToNone relationship works', function () {
+    test("OneToNone relationship works", function () {
       expect(3);
       Post = DS.Model.extend({
         name: DS.attr('string')
@@ -12241,7 +12247,7 @@ define(
       equal(comment.get('post'), post1, 'the post is re-set to the first one');
     });
 
-    test('When a record is added to or removed from a polymorphic has-many relationship, the inverse belongsTo can be set explicitly', function () {
+    test("When a record is added to or removed from a polymorphic has-many relationship, the inverse belongsTo can be set explicitly", function () {
       User = DS.Model.extend({
         messages: DS.hasMany('message', {
           async: false,
@@ -12268,31 +12274,31 @@ define(
         user = store.createRecord('user');
       });
 
-      equal(post.get('oneUser'), null, 'oneUser has not been set on the user');
-      equal(post.get('twoUser'), null, 'twoUser has not been set on the user');
-      equal(post.get('redUser'), null, 'redUser has not been set on the user');
-      equal(post.get('blueUser'), null, 'blueUser has not been set on the user');
+      equal(post.get('oneUser'), null, "oneUser has not been set on the user");
+      equal(post.get('twoUser'), null, "twoUser has not been set on the user");
+      equal(post.get('redUser'), null, "redUser has not been set on the user");
+      equal(post.get('blueUser'), null, "blueUser has not been set on the user");
 
       run(function () {
         user.get('messages').pushObject(post);
       });
 
-      equal(post.get('oneUser'), null, 'oneUser has not been set on the user');
-      equal(post.get('twoUser'), null, 'twoUser has not been set on the user');
-      equal(post.get('redUser'), user, 'redUser has been set on the user');
-      equal(post.get('blueUser'), null, 'blueUser has not been set on the user');
+      equal(post.get('oneUser'), null, "oneUser has not been set on the user");
+      equal(post.get('twoUser'), null, "twoUser has not been set on the user");
+      equal(post.get('redUser'), user, "redUser has been set on the user");
+      equal(post.get('blueUser'), null, "blueUser has not been set on the user");
 
       run(function () {
         user.get('messages').popObject();
       });
 
-      equal(post.get('oneUser'), null, 'oneUser has not been set on the user');
-      equal(post.get('twoUser'), null, 'twoUser has not been set on the user');
-      equal(post.get('redUser'), null, 'redUser has bot been set on the user');
-      equal(post.get('blueUser'), null, 'blueUser has not been set on the user');
+      equal(post.get('oneUser'), null, "oneUser has not been set on the user");
+      equal(post.get('twoUser'), null, "twoUser has not been set on the user");
+      equal(post.get('redUser'), null, "redUser has bot been set on the user");
+      equal(post.get('blueUser'), null, "blueUser has not been set on the user");
     });
 
-    test('When a record\'s belongsTo relationship is set, it can specify the inverse polymorphic hasMany to which the new child should be added or removed', function () {
+    test("When a record's belongsTo relationship is set, it can specify the inverse polymorphic hasMany to which the new child should be added or removed", function () {
       User = DS.Model.extend({
         meMessages: DS.hasMany('message', { polymorphic: true, async: false }),
         youMessages: DS.hasMany('message', { polymorphic: true, async: false }),
@@ -12314,28 +12320,28 @@ define(
         post = store.createRecord('post');
       });
 
-      equal(user.get('meMessages.length'), 0, 'meMessages has no posts');
-      equal(user.get('youMessages.length'), 0, 'youMessages has no posts');
-      equal(user.get('everyoneWeKnowMessages.length'), 0, 'everyoneWeKnowMessages has no posts');
+      equal(user.get('meMessages.length'), 0, "meMessages has no posts");
+      equal(user.get('youMessages.length'), 0, "youMessages has no posts");
+      equal(user.get('everyoneWeKnowMessages.length'), 0, "everyoneWeKnowMessages has no posts");
 
       run(function () {
         post.set('user', user);
       });
 
-      equal(user.get('meMessages.length'), 0, 'meMessages has no posts');
-      equal(user.get('youMessages.length'), 1, 'youMessages had the post added');
-      equal(user.get('everyoneWeKnowMessages.length'), 0, 'everyoneWeKnowMessages has no posts');
+      equal(user.get('meMessages.length'), 0, "meMessages has no posts");
+      equal(user.get('youMessages.length'), 1, "youMessages had the post added");
+      equal(user.get('everyoneWeKnowMessages.length'), 0, "everyoneWeKnowMessages has no posts");
 
       run(function () {
         post.set('user', null);
       });
 
-      equal(user.get('meMessages.length'), 0, 'meMessages has no posts');
-      equal(user.get('youMessages.length'), 0, 'youMessages has no posts');
-      equal(user.get('everyoneWeKnowMessages.length'), 0, 'everyoneWeKnowMessages has no posts');
+      equal(user.get('meMessages.length'), 0, "meMessages has no posts");
+      equal(user.get('youMessages.length'), 0, "youMessages has no posts");
+      equal(user.get('everyoneWeKnowMessages.length'), 0, "everyoneWeKnowMessages has no posts");
     });
 
-    test('When a record\'s polymorphic belongsTo relationship is set, it can specify the inverse hasMany to which the new child should be added', function () {
+    test("When a record's polymorphic belongsTo relationship is set, it can specify the inverse hasMany to which the new child should be added", function () {
       Message = DS.Model.extend({
         meMessages: DS.hasMany('comment', { inverse: null, async: false }),
         youMessages: DS.hasMany('comment', { inverse: 'message', async: false }),
@@ -12361,28 +12367,28 @@ define(
         post = store.createRecord('post');
       });
 
-      equal(post.get('meMessages.length'), 0, 'meMessages has no posts');
-      equal(post.get('youMessages.length'), 0, 'youMessages has no posts');
-      equal(post.get('everyoneWeKnowMessages.length'), 0, 'everyoneWeKnowMessages has no posts');
+      equal(post.get('meMessages.length'), 0, "meMessages has no posts");
+      equal(post.get('youMessages.length'), 0, "youMessages has no posts");
+      equal(post.get('everyoneWeKnowMessages.length'), 0, "everyoneWeKnowMessages has no posts");
 
       run(function () {
         comment.set('message', post);
       });
 
-      equal(post.get('meMessages.length'), 0, 'meMessages has no posts');
-      equal(post.get('youMessages.length'), 1, 'youMessages had the post added');
-      equal(post.get('everyoneWeKnowMessages.length'), 0, 'everyoneWeKnowMessages has no posts');
+      equal(post.get('meMessages.length'), 0, "meMessages has no posts");
+      equal(post.get('youMessages.length'), 1, "youMessages had the post added");
+      equal(post.get('everyoneWeKnowMessages.length'), 0, "everyoneWeKnowMessages has no posts");
 
       run(function () {
         comment.set('message', null);
       });
 
-      equal(post.get('meMessages.length'), 0, 'meMessages has no posts');
-      equal(post.get('youMessages.length'), 0, 'youMessages has no posts');
-      equal(post.get('everyoneWeKnowMessages.length'), 0, 'everyoneWeKnowMessages has no posts');
+      equal(post.get('meMessages.length'), 0, "meMessages has no posts");
+      equal(post.get('youMessages.length'), 0, "youMessages has no posts");
+      equal(post.get('everyoneWeKnowMessages.length'), 0, "everyoneWeKnowMessages has no posts");
     });
 
-    test('Inverse relationships that don\'t exist throw a nice error for a hasMany', function () {
+    test("Inverse relationships that don't exist throw a nice error for a hasMany", function () {
       User = DS.Model.extend();
       Comment = DS.Model.extend();
 
@@ -12404,7 +12410,7 @@ define(
       }, /We found no inverse relationships by the name of 'testPost' on the 'comment' model/);
     });
 
-    test('Inverse relationships that don\'t exist throw a nice error for a belongsTo', function () {
+    test("Inverse relationships that don't exist throw a nice error for a belongsTo", function () {
       User = DS.Model.extend();
       Comment = DS.Model.extend();
 
@@ -12500,7 +12506,7 @@ define(
       Server loading tests
     */
 
-    test('Loading from one hasMany side reflects on the other hasMany side - async', function () {
+    test("Loading from one hasMany side reflects on the other hasMany side - async", function () {
       run(function () {
         store.push({
           data: {
@@ -12543,7 +12549,7 @@ define(
       });
     });
 
-    test('Relationship is available from the belongsTo side even if only loaded from the hasMany side - sync', function () {
+    test("Relationship is available from the belongsTo side even if only loaded from the hasMany side - sync", function () {
       var account;
       run(function () {
         account = store.push({
@@ -12579,7 +12585,7 @@ define(
       });
     });
 
-    test('Fetching a hasMany where a record was removed reflects on the other hasMany side - async', function () {
+    test("Fetching a hasMany where a record was removed reflects on the other hasMany side - async", function () {
       var user, topic;
       run(function () {
         user = store.push({
@@ -12617,16 +12623,16 @@ define(
       run(function () {
         user.get('topics').then(async(function (fetchedTopics) {
           equal(fetchedTopics.get('length'), 0, 'Topics were removed correctly');
-          equal(fetchedTopics.objectAt(0), null, 'Topics can\'t be fetched');
+          equal(fetchedTopics.objectAt(0), null, "Topics can't be fetched");
           topic.get('users').then(async(function (fetchedUsers) {
             equal(fetchedUsers.get('length'), 0, 'Users were removed correctly');
-            equal(fetchedUsers.objectAt(0), null, 'User can\'t be fetched');
+            equal(fetchedUsers.objectAt(0), null, "User can't be fetched");
           }));
         }));
       });
     });
 
-    test('Fetching a hasMany where a record was removed reflects on the other hasMany side - async', function () {
+    test("Fetching a hasMany where a record was removed reflects on the other hasMany side - async", function () {
       var account, user;
       run(function () {
         account = store.push({
@@ -12679,7 +12685,7 @@ define(
       Local edits
     */
 
-    test('Pushing to a hasMany reflects on the other hasMany side - async', function () {
+    test("Pushing to a hasMany reflects on the other hasMany side - async", function () {
       expect(1);
       var user, topic;
 
@@ -12719,7 +12725,7 @@ define(
       });
     });
 
-    test('Pushing to a hasMany reflects on the other hasMany side - sync', function () {
+    test("Pushing to a hasMany reflects on the other hasMany side - sync", function () {
       var account, stanley;
       run(function () {
         account = store.push({
@@ -12746,7 +12752,7 @@ define(
       equal(account.get('users.length'), 1, 'User relationship was set up correctly');
     });
 
-    test('Removing a record from a hasMany reflects on the other hasMany side - async', function () {
+    test("Removing a record from a hasMany reflects on the other hasMany side - async", function () {
       var user, topic;
       run(function () {
         user = store.push({
@@ -12783,13 +12789,13 @@ define(
           fetchedTopics.removeObject(topic);
           topic.get('users').then(async(function (fetchedUsers) {
             equal(fetchedUsers.get('length'), 0, 'Users were removed correctly');
-            equal(fetchedUsers.objectAt(0), null, 'User can\'t be fetched');
+            equal(fetchedUsers.objectAt(0), null, "User can't be fetched");
           }));
         }));
       });
     });
 
-    test('Removing a record from a hasMany reflects on the other hasMany side - sync', function () {
+    test("Removing a record from a hasMany reflects on the other hasMany side - sync", function () {
       var account, user;
       run(function () {
         account = store.push({
@@ -12832,7 +12838,7 @@ define(
       Rollback Attributes tests
     */
 
-    test('Rollbacking attributes for a deleted record that has a ManyToMany relationship works correctly - async', function () {
+    test("Rollbacking attributes for a deleted record that has a ManyToMany relationship works correctly - async", function () {
       var user, topic;
       run(function () {
         user = store.push({
@@ -12877,7 +12883,7 @@ define(
       });
     });
 
-    test('Deleting a record that has a hasMany relationship removes it from the otherMany array but does not remove the other record from itself - sync', function () {
+    test("Deleting a record that has a hasMany relationship removes it from the otherMany array but does not remove the other record from itself - sync", function () {
       var account, user;
       run(function () {
         account = store.push({
@@ -12916,7 +12922,7 @@ define(
       equal(user.get('accounts.length'), 1, 'Account got rolledback correctly into the user');
     });
 
-    test('Rollbacking attributes for a created record that has a ManyToMany relationship works correctly - async', function () {
+    test("Rollbacking attributes for a created record that has a ManyToMany relationship works correctly - async", function () {
       var user, topic;
       run(function () {
         user = store.push({
@@ -12937,17 +12943,17 @@ define(
           topic.rollbackAttributes();
           topic.get('users').then(async(function (fetchedUsers) {
             equal(fetchedUsers.get('length'), 0, 'Users got removed');
-            equal(fetchedUsers.objectAt(0), null, 'User can\'t be fetched');
+            equal(fetchedUsers.objectAt(0), null, "User can't be fetched");
           }));
           user.get('topics').then(async(function (fetchedTopics) {
             equal(fetchedTopics.get('length'), 0, 'Topics got removed');
-            equal(fetchedTopics.objectAt(0), null, 'Topic can\'t be fetched');
+            equal(fetchedTopics.objectAt(0), null, "Topic can't be fetched");
           }));
         }));
       });
     });
 
-    test('Deleting a record that has a hasMany relationship removes it from the otherMany array but does not remove the other record from itself - sync', function () {
+    test("Deleting a record that has a hasMany relationship removes it from the otherMany array but does not remove the other record from itself - sync", function () {
       var account, user;
       run(function () {
         account = store.push({
@@ -12970,7 +12976,7 @@ define(
       equal(user.get('accounts.length'), undefined, 'Accounts got rolledback correctly');
     });
 
-    test('Re-loading a removed record should re add it to the relationship when the removed record is the last one in the relationship', function () {
+    test("Re-loading a removed record should re add it to the relationship when the removed record is the last one in the relationship", function () {
       var account, ada, byron;
       run(function () {
         account = store.push({
@@ -13113,7 +13119,7 @@ define(
       Server loading tests
     */
 
-    test('Relationship is available from the belongsTo side even if only loaded from the hasMany side - async', function () {
+    test("Relationship is available from the belongsTo side even if only loaded from the hasMany side - async", function () {
       var user, message;
       run(function () {
         user = store.push({
@@ -13150,7 +13156,7 @@ define(
       });
     });
 
-    test('Relationship is available from the belongsTo side even if only loaded from the hasMany side - sync', function () {
+    test("Relationship is available from the belongsTo side even if only loaded from the hasMany side - sync", function () {
       var account, user;
       run(function () {
         account = store.push({
@@ -13183,7 +13189,7 @@ define(
       equal(account.get('user'), user, 'User relationship was set up correctly');
     });
 
-    test('Relationship is available from the hasMany side even if only loaded from the belongsTo side - async', function () {
+    test("Relationship is available from the hasMany side even if only loaded from the belongsTo side - async", function () {
       var user, message;
       run(function () {
         user = store.push({
@@ -13220,7 +13226,7 @@ define(
       });
     });
 
-    test('Relationship is available from the hasMany side even if only loaded from the belongsTo side - sync', function () {
+    test("Relationship is available from the hasMany side even if only loaded from the belongsTo side - sync", function () {
       var user, account;
       run(function () {
         user = store.push({
@@ -13253,7 +13259,7 @@ define(
       equal(user.get('accounts').objectAt(0), account, 'Accounts relationship was set up correctly');
     });
 
-    test('Fetching a belongsTo that is set to null removes the record from a relationship - async', function () {
+    test("Fetching a belongsTo that is set to null removes the record from a relationship - async", function () {
       var user;
       run(function () {
         user = store.push({
@@ -13314,7 +13320,7 @@ define(
       });
     });
 
-    test('Fetching a belongsTo that is set to null removes the record from a relationship - sync', function () {
+    test("Fetching a belongsTo that is set to null removes the record from a relationship - sync", function () {
       var account, user;
       run(function () {
         account = store.push({
@@ -13361,7 +13367,7 @@ define(
       equal(user.get('accounts').objectAt(0), null, 'Account was sucesfully removed');
     });
 
-    test('Fetching a belongsTo that is not defined does not remove the record from a relationship - async', function () {
+    test("Fetching a belongsTo that is not defined does not remove the record from a relationship - async", function () {
       var user;
       run(function () {
         user = store.push({
@@ -13417,7 +13423,7 @@ define(
       });
     });
 
-    test('Fetching a belongsTo that is not defined does not remove the record from a relationship - sync', function () {
+    test("Fetching a belongsTo that is not defined does not remove the record from a relationship - sync", function () {
       var account, user;
       run(function () {
         account = store.push({
@@ -13459,7 +13465,7 @@ define(
       equal(user.get('accounts').objectAt(0), account, 'Account was sucesfully removed');
     });
 
-    test('Fetching the hasMany that doesn\'t contain the belongsTo, sets the belongsTo to null - async', function () {
+    test("Fetching the hasMany that doesn't contain the belongsTo, sets the belongsTo to null - async", function () {
       var user, message, message2;
       run(function () {
         user = store.push({
@@ -13536,7 +13542,7 @@ define(
       });
     });
 
-    test('Fetching the hasMany that doesn\'t contain the belongsTo, sets the belongsTo to null - sync', function () {
+    test("Fetching the hasMany that doesn't contain the belongsTo, sets the belongsTo to null - sync", function () {
       var account;
       run(function () {
         store.push({
@@ -13603,7 +13609,7 @@ define(
       equal(account.get('user'), null, 'User was removed correctly');
     });
 
-    test('Fetching the hasMany side where the hasMany is undefined does not change the belongsTo side - async', function () {
+    test("Fetching the hasMany side where the hasMany is undefined does not change the belongsTo side - async", function () {
       var message, user;
       run(function () {
         store.push({
@@ -13658,7 +13664,7 @@ define(
       });
     });
 
-    test('Fetching the hasMany side where the hasMany is undefined does not change the belongsTo side - sync', function () {
+    test("Fetching the hasMany side where the hasMany is undefined does not change the belongsTo side - sync", function () {
       var account, user;
       run(function () {
         store.push({
@@ -13722,7 +13728,7 @@ define(
       Local edits
     */
 
-    test('Pushing to the hasMany reflects the change on the belongsTo side - async', function () {
+    test("Pushing to the hasMany reflects the change on the belongsTo side - async", function () {
       var user, message2;
       run(function () {
         user = store.push({
@@ -13766,13 +13772,13 @@ define(
         user.get('messages').then(function (fetchedMessages) {
           fetchedMessages.pushObject(message2);
           message2.get('user').then(function (fetchedUser) {
-            equal(fetchedUser, user, 'user got set correctly');
+            equal(fetchedUser, user, "user got set correctly");
           });
         });
       });
     });
 
-    test('Pushing to the hasMany reflects the change on the belongsTo side - sync', function () {
+    test("Pushing to the hasMany reflects the change on the belongsTo side - sync", function () {
       var user, account2;
       run(function () {
         user = store.push({
@@ -13825,7 +13831,7 @@ define(
       equal(account2.get('user'), user, 'user got set correctly');
     });
 
-    test('Removing from the hasMany side reflects the change on the belongsTo side - async', function () {
+    test("Removing from the hasMany side reflects the change on the belongsTo side - async", function () {
       var user, message;
       run(function () {
         user = store.push({
@@ -13860,13 +13866,13 @@ define(
         user.get('messages').then(function (fetchedMessages) {
           fetchedMessages.removeObject(message);
           message.get('user').then(function (fetchedUser) {
-            equal(fetchedUser, null, 'user got removed correctly');
+            equal(fetchedUser, null, "user got removed correctly");
           });
         });
       });
     });
 
-    test('Removing from the hasMany side reflects the change on the belongsTo side - sync', function () {
+    test("Removing from the hasMany side reflects the change on the belongsTo side - sync", function () {
       var user, account;
       run(function () {
         user = store.push({
@@ -13911,7 +13917,7 @@ define(
       equal(account.get('user'), null, 'user got removed correctly');
     });
 
-    test('Pushing to the hasMany side keeps the oneToMany invariant on the belongsTo side - async', function () {
+    test("Pushing to the hasMany side keeps the oneToMany invariant on the belongsTo side - async", function () {
       expect(2);
       var user, user2, message;
       run(function () {
@@ -13957,7 +13963,7 @@ define(
           fetchedMessages.pushObject(message);
 
           message.get('user').then(function (fetchedUser) {
-            equal(fetchedUser, user2, 'user got set correctly');
+            equal(fetchedUser, user2, "user got set correctly");
           });
 
           user.get('messages').then(function (newFetchedMessages) {
@@ -13967,7 +13973,7 @@ define(
       });
     });
 
-    test('Pushing to the hasMany side keeps the oneToMany invariant - sync', function () {
+    test("Pushing to the hasMany side keeps the oneToMany invariant - sync", function () {
       var user, user2, account;
       run(function () {
         user = store.push({
@@ -14012,7 +14018,7 @@ define(
       equal(user2.get('accounts.length'), 1, 'the account got pushed correctly');
     });
 
-    test('Setting the belongsTo side keeps the oneToMany invariant on the hasMany- async', function () {
+    test("Setting the belongsTo side keeps the oneToMany invariant on the hasMany- async", function () {
       expect(2);
       var user, user2, message;
       run(function () {
@@ -14074,7 +14080,7 @@ define(
       });
     });
 
-    test('Setting the belongsTo side keeps the oneToMany invariant on the hasMany- sync', function () {
+    test("Setting the belongsTo side keeps the oneToMany invariant on the hasMany- sync", function () {
       var user, user2, account;
       run(function () {
         user = store.push({
@@ -14127,7 +14133,7 @@ define(
       equal(user2.get('accounts.length'), 1, 'the account got pushed correctly');
     });
 
-    test('Setting the belongsTo side to null removes the record from the hasMany side - async', function () {
+    test("Setting the belongsTo side to null removes the record from the hasMany side - async", function () {
       expect(2);
       var user, message;
       run(function () {
@@ -14180,7 +14186,7 @@ define(
       });
     });
 
-    test('Setting the belongsTo side to null removes the record from the hasMany side - sync', function () {
+    test("Setting the belongsTo side to null removes the record from the hasMany side - sync", function () {
       var user, account;
       run(function () {
         user = store.push({
@@ -14229,7 +14235,7 @@ define(
     Rollback attributes from deleted state
     */
 
-    test('Rollbacking attributes of a deleted record works correctly when the hasMany side has been deleted - async', function () {
+    test("Rollbacking attributes of a deleted record works correctly when the hasMany side has been deleted - async", function () {
       var user, message;
       run(function () {
         user = store.push({
@@ -14273,7 +14279,7 @@ define(
       });
     });
 
-    test('Rollbacking attributes of a deleted record works correctly when the hasMany side has been deleted - sync', function () {
+    test("Rollbacking attributes of a deleted record works correctly when the hasMany side has been deleted - sync", function () {
       var account, user;
       run(function () {
         account = store.push({
@@ -14307,11 +14313,11 @@ define(
         account.deleteRecord();
         account.rollbackAttributes();
       });
-      equal(user.get('accounts.length'), 1, 'Accounts are rolled back');
+      equal(user.get('accounts.length'), 1, "Accounts are rolled back");
       equal(account.get('user'), user, 'Account still has the user');
     });
 
-    test('Rollbacking attributes of deleted record works correctly when the belongsTo side has been deleted - async', function () {
+    test("Rollbacking attributes of deleted record works correctly when the belongsTo side has been deleted - async", function () {
       var user, message;
       run(function () {
         user = store.push({
@@ -14355,7 +14361,7 @@ define(
       });
     });
 
-    test('Rollbacking attributes of a deleted record works correctly when the belongsTo side has been deleted - sync', function () {
+    test("Rollbacking attributes of a deleted record works correctly when the belongsTo side has been deleted - sync", function () {
       var account, user;
       run(function () {
         account = store.push({
@@ -14389,7 +14395,7 @@ define(
         user.deleteRecord();
         user.rollbackAttributes();
       });
-      equal(user.get('accounts.length'), 1, 'User still has the accounts');
+      equal(user.get('accounts.length'), 1, "User still has the accounts");
       equal(account.get('user'), user, 'Account has the user again');
     });
 
@@ -14397,7 +14403,7 @@ define(
     Rollback attributes from created state
     */
 
-    test('Rollbacking attributes of a created record works correctly when the hasMany side has been created - async', function () {
+    test("Rollbacking attributes of a created record works correctly when the hasMany side has been created - async", function () {
       var user, message;
       run(function () {
         user = store.push({
@@ -14420,12 +14426,12 @@ define(
         });
         user.get('messages').then(function (fetchedMessages) {
           equal(fetchedMessages.get('length'), 0, message, 'User does not have the message anymore');
-          equal(fetchedMessages.get('firstObject'), null, 'User message can\'t be accessed');
+          equal(fetchedMessages.get('firstObject'), null, "User message can't be accessed");
         });
       });
     });
 
-    test('Rollbacking attributes of a created record works correctly when the hasMany side has been created - sync', function () {
+    test("Rollbacking attributes of a created record works correctly when the hasMany side has been created - sync", function () {
       var user, account;
       run(function () {
         user = store.push({
@@ -14442,11 +14448,11 @@ define(
         });
       });
       run(account, 'rollbackAttributes');
-      equal(user.get('accounts.length'), 0, 'Accounts are rolled back');
+      equal(user.get('accounts.length'), 0, "Accounts are rolled back");
       equal(account.get('user'), null, 'Account does not have the user anymore');
     });
 
-    test('Rollbacking attributes of a created record works correctly when the belongsTo side has been created - async', function () {
+    test("Rollbacking attributes of a created record works correctly when the belongsTo side has been created - async", function () {
       var message, user;
       run(function () {
         message = store.push({
@@ -14469,13 +14475,13 @@ define(
           });
           user.get('messages').then(function (fetchedMessages) {
             equal(fetchedMessages.get('length'), 0, 'User does not have the message anymore');
-            equal(fetchedMessages.get('firstObject'), null, 'User message can\'t be accessed');
+            equal(fetchedMessages.get('firstObject'), null, "User message can't be accessed");
           });
         });
       });
     });
 
-    test('Rollbacking attributes of a created record works correctly when the belongsTo side has been created - sync', function () {
+    test("Rollbacking attributes of a created record works correctly when the belongsTo side has been created - sync", function () {
       var account, user;
       run(function () {
         account = store.push({
@@ -14493,7 +14499,7 @@ define(
         user.get('accounts').pushObject(account);
       });
       run(user, 'rollbackAttributes');
-      equal(user.get('accounts.length'), undefined, 'User does not have the account anymore');
+      equal(user.get('accounts.length'), undefined, "User does not have the account anymore");
       equal(account.get('user'), null, 'Account does not have the user anymore');
     });
   }
@@ -14559,7 +14565,7 @@ define(
       Server loading tests
     */
 
-    test('Relationship is available from both sides even if only loaded from one side - async', function () {
+    test("Relationship is available from both sides even if only loaded from one side - async", function () {
       var stanley, stanleysFriend;
       run(function () {
         stanley = store.push({
@@ -14584,7 +14590,7 @@ define(
             id: 2,
             type: 'user',
             attributes: {
-              name: 'Stanley\'s friend'
+              name: "Stanley's friend"
             }
           }
         });
@@ -14595,7 +14601,7 @@ define(
       });
     });
 
-    test('Relationship is available from both sides even if only loaded from one side - sync', function () {
+    test("Relationship is available from both sides even if only loaded from one side - sync", function () {
       var job, user;
       run(function () {
         job = store.push({
@@ -14628,7 +14634,7 @@ define(
       equal(job.get('user'), user, 'User relationship was set up correctly');
     });
 
-    test('Fetching a belongsTo that is set to null removes the record from a relationship - async', function () {
+    test("Fetching a belongsTo that is set to null removes the record from a relationship - async", function () {
       var stanleysFriend;
       run(function () {
         stanleysFriend = store.push({
@@ -14636,7 +14642,7 @@ define(
             id: 2,
             type: 'user',
             attributes: {
-              name: 'Stanley\'s friend'
+              name: "Stanley's friend"
             },
             relationships: {
               bestFriend: {
@@ -14668,7 +14674,7 @@ define(
       });
     });
 
-    test('Fetching a belongsTo that is set to null removes the record from a relationship - sync', function () {
+    test("Fetching a belongsTo that is set to null removes the record from a relationship - sync", function () {
       var job;
       run(function () {
         job = store.push({
@@ -14717,7 +14723,7 @@ define(
       equal(job.get('user'), null, 'User relationship was removed correctly');
     });
 
-    test('Fetching a belongsTo that is set to a different record, sets the old relationship to null - async', function () {
+    test("Fetching a belongsTo that is set to a different record, sets the old relationship to null - async", function () {
       expect(3);
       var stanley, stanleysFriend;
       run(function () {
@@ -14743,7 +14749,7 @@ define(
             id: 2,
             type: 'user',
             attributes: {
-              name: 'Stanley\'s friend'
+              name: "Stanley's friend"
             },
             relationships: {
               bestFriend: {
@@ -14765,7 +14771,7 @@ define(
                 id: 3,
                 type: 'user',
                 attributes: {
-                  name: 'Stanley\'s New friend'
+                  name: "Stanley's New friend"
                 },
                 relationships: {
                   bestFriend: {
@@ -14790,7 +14796,7 @@ define(
       });
     });
 
-    test('Fetching a belongsTo that is set to a different record, sets the old relationship to null - sync', function () {
+    test("Fetching a belongsTo that is set to a different record, sets the old relationship to null - sync", function () {
       var job, user, newBetterJob;
       run(function () {
         job = store.push({
@@ -14850,7 +14856,7 @@ define(
       Local edits
     */
 
-    test('Setting a OneToOne relationship reflects correctly on the other side- async', function () {
+    test("Setting a OneToOne relationship reflects correctly on the other side- async", function () {
       var stanley, stanleysFriend;
       run(function () {
         stanley = store.push({
@@ -14867,7 +14873,7 @@ define(
             id: 2,
             type: 'user',
             attributes: {
-              name: 'Stanley\'s friend'
+              name: "Stanley's friend"
             }
           }
         });
@@ -14880,7 +14886,7 @@ define(
       });
     });
 
-    test('Setting a OneToOne relationship reflects correctly on the other side- sync', function () {
+    test("Setting a OneToOne relationship reflects correctly on the other side- sync", function () {
       var job, user;
       run(function () {
         job = store.push({
@@ -14908,7 +14914,7 @@ define(
       equal(job.get('user'), user, 'User relationship was set up correctly');
     });
 
-    test('Setting a BelongsTo to a promise unwraps the promise before setting- async', function () {
+    test("Setting a BelongsTo to a promise unwraps the promise before setting- async", function () {
       var stanley, stanleysFriend, newFriend;
       run(function () {
         stanley = store.push({
@@ -14933,7 +14939,7 @@ define(
             id: 2,
             type: 'user',
             attributes: {
-              name: 'Stanley\'s friend'
+              name: "Stanley's friend"
             }
           }
         });
@@ -14942,7 +14948,7 @@ define(
             id: 3,
             type: 'user',
             attributes: {
-              name: 'New friend'
+              name: "New friend"
             }
           }
         });
@@ -14958,7 +14964,7 @@ define(
       });
     });
 
-    test('Setting a BelongsTo to a promise works when the promise returns null- async', function () {
+    test("Setting a BelongsTo to a promise works when the promise returns null- async", function () {
       var igor, newFriend;
       run(function () {
         store.push({
@@ -14975,7 +14981,7 @@ define(
             id: 2,
             type: 'user',
             attributes: {
-              name: 'Igor'
+              name: "Igor"
             }
           }
         });
@@ -14984,7 +14990,7 @@ define(
             id: 3,
             type: 'user',
             attributes: {
-              name: 'New friend'
+              name: "New friend"
             },
             relationships: {
               bestFriend: {
@@ -15005,7 +15011,7 @@ define(
       });
     });
 
-    test('Setting a BelongsTo to a promise that didn\'t come from a relationship errors out', function () {
+    test("Setting a BelongsTo to a promise that didn't come from a relationship errors out", function () {
       var stanley, igor;
       run(function () {
         stanley = store.push({
@@ -15043,7 +15049,7 @@ define(
       }, /You passed in a promise that did not originate from an EmberData relationship. You can only pass promises that come from a belongsTo or hasMany relationship to the get call./);
     });
 
-    test('Setting a BelongsTo to a promise multiple times is resistant to race conditions- async', function () {
+    test("Setting a BelongsTo to a promise multiple times is resistant to race conditions- async", function () {
       expect(1);
       var stanley, igor, newFriend;
       run(function () {
@@ -15069,7 +15075,7 @@ define(
             id: 3,
             type: 'user',
             attributes: {
-              name: 'Igor'
+              name: "Igor"
             },
             relationships: {
               bestFriend: {
@@ -15086,7 +15092,7 @@ define(
             id: 7,
             type: 'user',
             attributes: {
-              name: 'New friend'
+              name: "New friend"
             }
           }
         });
@@ -15094,13 +15100,13 @@ define(
 
       env.adapter.findRecord = function (store, type, id, snapshot) {
         if (id === '5') {
-          return Ember.RSVP.resolve({ id: 5, name: 'Igor\'s friend' });
+          return Ember.RSVP.resolve({ id: 5, name: "Igor's friend" });
         } else if (id === '2') {
           stop();
           return new Ember.RSVP.Promise(function (resolve, reject) {
             setTimeout(function () {
               start();
-              resolve({ id: 2, name: 'Stanley\'s friend' });
+              resolve({ id: 2, name: "Stanley's friend" });
             }, 1);
           });
         }
@@ -15110,12 +15116,12 @@ define(
         newFriend.set('bestFriend', stanley.get('bestFriend'));
         newFriend.set('bestFriend', igor.get('bestFriend'));
         newFriend.get('bestFriend').then(function (fetchedUser) {
-          equal(fetchedUser.get('name'), 'Igor\'s friend', 'User relationship was updated correctly');
+          equal(fetchedUser.get('name'), "Igor's friend", 'User relationship was updated correctly');
         });
       });
     });
 
-    test('Setting a OneToOne relationship to null reflects correctly on the other side - async', function () {
+    test("Setting a OneToOne relationship to null reflects correctly on the other side - async", function () {
       var stanley, stanleysFriend;
       run(function () {
         stanley = store.push({
@@ -15140,7 +15146,7 @@ define(
             id: 2,
             type: 'user',
             attributes: {
-              name: 'Stanley\'s friend'
+              name: "Stanley's friend"
             },
             relationships: {
               bestFriend: {
@@ -15162,7 +15168,7 @@ define(
       });
     });
 
-    test('Setting a OneToOne relationship to null reflects correctly on the other side - sync', function () {
+    test("Setting a OneToOne relationship to null reflects correctly on the other side - sync", function () {
       var job, user;
       run(function () {
         job = store.push({
@@ -15207,7 +15213,7 @@ define(
       equal(job.get('user'), null, 'User relationship was removed correctly');
     });
 
-    test('Setting a belongsTo to a different record, sets the old relationship to null - async', function () {
+    test("Setting a belongsTo to a different record, sets the old relationship to null - async", function () {
       expect(3);
 
       var stanley, stanleysFriend;
@@ -15234,7 +15240,7 @@ define(
             id: 2,
             type: 'user',
             attributes: {
-              name: 'Stanley\'s friend'
+              name: "Stanley's friend"
             },
             relationships: {
               bestFriend: {
@@ -15254,7 +15260,7 @@ define(
               id: 3,
               type: 'user',
               attributes: {
-                name: 'Stanley\'s New friend'
+                name: "Stanley's New friend"
               }
             }
           });
@@ -15274,7 +15280,7 @@ define(
       });
     });
 
-    test('Setting a belongsTo to a different record, sets the old relationship to null - sync', function () {
+    test("Setting a belongsTo to a different record, sets the old relationship to null - sync", function () {
       var job, user, newBetterJob;
       run(function () {
         job = store.push({
@@ -15330,7 +15336,7 @@ define(
     Rollback attributes tests
     */
 
-    test('Rollbacking attributes of deleted record restores the relationship on both sides - async', function () {
+    test("Rollbacking attributes of deleted record restores the relationship on both sides - async", function () {
       var stanley, stanleysFriend;
       run(function () {
         stanley = store.push({
@@ -15355,7 +15361,7 @@ define(
             id: 2,
             type: 'user',
             attributes: {
-              name: 'Stanley\'s friend'
+              name: "Stanley's friend"
             }
           }
         });
@@ -15374,7 +15380,7 @@ define(
       });
     });
 
-    test('Rollbacking attributes of deleted record restores the relationship on both sides - sync', function () {
+    test("Rollbacking attributes of deleted record restores the relationship on both sides - sync", function () {
       var job, user;
       run(function () {
         job = store.push({
@@ -15412,7 +15418,7 @@ define(
       equal(job.get('user'), user, 'Job still has the user');
     });
 
-    test('Rollbacking attributes of created record removes the relationship on both sides - async', function () {
+    test("Rollbacking attributes of created record removes the relationship on both sides - async", function () {
       var stanleysFriend, stanley;
       run(function () {
         stanleysFriend = store.push({
@@ -15420,7 +15426,7 @@ define(
             id: 2,
             type: 'user',
             attributes: {
-              name: 'Stanley\'s friend'
+              name: "Stanley's friend"
             }
           }
         });
@@ -15438,7 +15444,7 @@ define(
       });
     });
 
-    test('Rollbacking attributes of created record removes the relationship on both sides - sync', function () {
+    test("Rollbacking attributes of created record removes the relationship on both sides - sync", function () {
       var user, job;
       run(function () {
         user = store.push({
@@ -15526,7 +15532,7 @@ define(
       Server loading tests
     */
 
-    test('Relationship is available from the belongsTo side even if only loaded from the inverse side - async', function () {
+    test("Relationship is available from the belongsTo side even if only loaded from the inverse side - async", function () {
       var user, video;
       run(function () {
         store.push({
@@ -15565,7 +15571,7 @@ define(
     /*
       Local edits
     */
-    test('Setting the polymorphic belongsTo gets propagated to the inverse side - async', function () {
+    test("Setting the polymorphic belongsTo gets propagated to the inverse side - async", function () {
       var user, video;
       run(function () {
         store.push({
@@ -15590,7 +15596,7 @@ define(
       run(function () {
         user.set('bestMessage', video);
         video.get('user').then(function (fetchedUser) {
-          equal(fetchedUser, user, 'user got set correctly');
+          equal(fetchedUser, user, "user got set correctly");
         });
         user.get('bestMessage').then(function (message) {
           equal(message, video, 'The message was set correctly');
@@ -15598,7 +15604,7 @@ define(
       });
     });
 
-    test('Setting the polymorphic belongsTo with an object that does not implement the mixin errors out', function () {
+    test("Setting the polymorphic belongsTo with an object that does not implement the mixin errors out", function () {
       var user, video;
       run(function () {
         store.push({
@@ -15627,7 +15633,7 @@ define(
       });
     });
 
-    test('Setting the polymorphic belongsTo gets propagated to the inverse side - model injections true', function () {
+    test("Setting the polymorphic belongsTo gets propagated to the inverse side - model injections true", function () {
       expect(2);
       var injectionValue = Ember.MODEL_FACTORY_INJECTIONS;
       Ember.MODEL_FACTORY_INJECTIONS = true;
@@ -15657,7 +15663,7 @@ define(
         run(function () {
           user.set('bestMessage', video);
           video.get('user').then(function (fetchedUser) {
-            equal(fetchedUser, user, 'user got set correctly');
+            equal(fetchedUser, user, "user got set correctly");
           });
           user.get('bestMessage').then(function (message) {
             equal(message, video, 'The message was set correctly');
@@ -15668,7 +15674,7 @@ define(
       }
     });
 
-    test('Setting the polymorphic belongsTo with an object that does not implement the mixin errors out - model injections true', function () {
+    test("Setting the polymorphic belongsTo with an object that does not implement the mixin errors out - model injections true", function () {
       var injectionValue = Ember.MODEL_FACTORY_INJECTIONS;
       Ember.MODEL_FACTORY_INJECTIONS = true;
 
@@ -15771,7 +15777,7 @@ define(
       Server loading tests
     */
 
-    test('Relationship is available from the belongsTo side even if only loaded from the hasMany side - async', function () {
+    test("Relationship is available from the belongsTo side even if only loaded from the hasMany side - async", function () {
       var user, video;
       run(function () {
         store.push({
@@ -15810,7 +15816,7 @@ define(
     /*
       Local edits
     */
-    test('Pushing to the hasMany reflects the change on the belongsTo side - async', function () {
+    test("Pushing to the hasMany reflects the change on the belongsTo side - async", function () {
       var user, video;
       run(function () {
         store.push({
@@ -15841,7 +15847,7 @@ define(
         user.get('messages').then(function (fetchedMessages) {
           fetchedMessages.pushObject(video);
           video.get('user').then(function (fetchedUser) {
-            equal(fetchedUser, user, 'user got set correctly');
+            equal(fetchedUser, user, "user got set correctly");
           });
         });
       });
@@ -15850,7 +15856,7 @@ define(
     /*
       Local edits
     */
-    test('Pushing a an object that does not implement the mixin to the mixin accepting array errors out', function () {
+    test("Pushing a an object that does not implement the mixin to the mixin accepting array errors out", function () {
       var user, notMessage;
       run(function () {
         store.push({
@@ -15886,7 +15892,7 @@ define(
       });
     });
 
-    test('Pushing to the hasMany reflects the change on the belongsTo side - model injections true', function () {
+    test("Pushing to the hasMany reflects the change on the belongsTo side - model injections true", function () {
       var injectionValue = Ember.MODEL_FACTORY_INJECTIONS;
       Ember.MODEL_FACTORY_INJECTIONS = true;
 
@@ -15921,7 +15927,7 @@ define(
           user.get('messages').then(function (fetchedMessages) {
             fetchedMessages.pushObject(video);
             video.get('user').then(function (fetchedUser) {
-              equal(fetchedUser, user, 'user got set correctly');
+              equal(fetchedUser, user, "user got set correctly");
             });
           });
         });
@@ -15933,7 +15939,7 @@ define(
     /*
       Local edits
     */
-    test('Pushing a an object that does not implement the mixin to the mixin accepting array errors out - model injections true', function () {
+    test("Pushing a an object that does not implement the mixin to the mixin accepting array errors out - model injections true", function () {
       var injectionValue = Ember.MODEL_FACTORY_INJECTIONS;
       Ember.MODEL_FACTORY_INJECTIONS = true;
 
@@ -15994,7 +16000,7 @@ define(
     var run = Ember.run;
     var LightSaber;
 
-    module('integration/embedded_records_mixin - EmbeddedRecordsMixin', {
+    module("integration/embedded_records_mixin - EmbeddedRecordsMixin", {
       setup: function () {
         SuperVillain = DS.Model.extend({
           firstName: DS.attr('string'),
@@ -16063,22 +16069,22 @@ define(
       }
     });
 
-    test('normalizeResponse with embedded objects', function () {
+    test("normalizeResponse with embedded objects", function () {
       env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           villains: { embedded: 'always' }
         }
       }));
 
-      var serializer = env.store.serializerFor('home-planet');
+      var serializer = env.store.serializerFor("home-planet");
       var json_hash = {
         homePlanet: {
-          id: '1',
-          name: 'Umber',
+          id: "1",
+          name: "Umber",
           villains: [{
-            id: '2',
-            firstName: 'Tom',
-            lastName: 'Dale'
+            id: "2",
+            firstName: "Tom",
+            lastName: "Dale"
           }]
         }
       };
@@ -16089,31 +16095,31 @@ define(
       });
 
       deepEqual(json, {
-        'data': {
-          'id': '1',
-          'type': 'home-planet',
-          'attributes': {
-            'name': 'Umber'
+        "data": {
+          "id": "1",
+          "type": "home-planet",
+          "attributes": {
+            "name": "Umber"
           },
-          'relationships': {
-            'villains': {
-              'data': [{ 'id': '2', 'type': 'super-villain' }]
+          "relationships": {
+            "villains": {
+              "data": [{ "id": "2", "type": "super-villain" }]
             }
           }
         },
-        'included': [{
-          'id': '2',
-          'type': 'super-villain',
-          'attributes': {
-            'firstName': 'Tom',
-            'lastName': 'Dale'
+        "included": [{
+          "id": "2",
+          "type": "super-villain",
+          "attributes": {
+            "firstName": "Tom",
+            "lastName": "Dale"
           },
-          'relationships': {}
+          "relationships": {}
         }]
       });
     });
 
-    test('normalizeResponse with embedded objects inside embedded objects', function () {
+    test("normalizeResponse with embedded objects inside embedded objects", function () {
       env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           villains: { embedded: 'always' }
@@ -16125,18 +16131,18 @@ define(
         }
       }));
 
-      var serializer = env.store.serializerFor('home-planet');
+      var serializer = env.store.serializerFor("home-planet");
       var json_hash = {
         homePlanet: {
-          id: '1',
-          name: 'Umber',
+          id: "1",
+          name: "Umber",
           villains: [{
-            id: '2',
-            firstName: 'Tom',
-            lastName: 'Dale',
+            id: "2",
+            firstName: "Tom",
+            lastName: "Dale",
             evilMinions: [{
-              id: '3',
-              name: 'Alex'
+              id: "3",
+              name: "Alex"
             }]
           }]
         }
@@ -16148,62 +16154,62 @@ define(
       });
 
       deepEqual(json, {
-        'data': {
-          'id': '1',
-          'type': 'home-planet',
-          'attributes': {
-            'name': 'Umber'
+        "data": {
+          "id": "1",
+          "type": "home-planet",
+          "attributes": {
+            "name": "Umber"
           },
-          'relationships': {
-            'villains': {
-              'data': [{ 'id': '2', 'type': 'super-villain' }]
+          "relationships": {
+            "villains": {
+              "data": [{ "id": "2", "type": "super-villain" }]
             }
           }
         },
-        'included': [{
-          'id': '2',
-          'type': 'super-villain',
-          'attributes': {
-            'firstName': 'Tom',
-            'lastName': 'Dale'
+        "included": [{
+          "id": "2",
+          "type": "super-villain",
+          "attributes": {
+            "firstName": "Tom",
+            "lastName": "Dale"
           },
-          'relationships': {
-            'evilMinions': {
-              'data': [{ 'id': '3', 'type': 'evil-minion' }]
+          "relationships": {
+            "evilMinions": {
+              "data": [{ "id": "3", "type": "evil-minion" }]
             }
           }
         }, {
-          'id': '3',
-          'type': 'evil-minion',
-          'attributes': {
-            'name': 'Alex'
+          "id": "3",
+          "type": "evil-minion",
+          "attributes": {
+            "name": "Alex"
           },
-          'relationships': {}
+          "relationships": {}
         }]
       });
     });
 
-    test('normalizeResponse with embedded objects of same type', function () {
+    test("normalizeResponse with embedded objects of same type", function () {
       env.registry.register('serializer:comment', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           children: { embedded: 'always' }
         }
       }));
 
-      var serializer = env.store.serializerFor('comment');
+      var serializer = env.store.serializerFor("comment");
 
       var json_hash = {
         comment: {
-          id: '1',
-          body: 'Hello',
+          id: "1",
+          body: "Hello",
           root: true,
           children: [{
-            id: '2',
-            body: 'World',
+            id: "2",
+            body: "World",
             root: false
           }, {
-            id: '3',
-            body: 'Foo',
+            id: "3",
+            body: "Foo",
             root: false
           }]
         }
@@ -16214,64 +16220,64 @@ define(
       });
 
       deepEqual(json, {
-        'data': {
-          'id': '1',
-          'type': 'comment',
-          'attributes': {
-            'body': 'Hello',
-            'root': true
+        "data": {
+          "id": "1",
+          "type": "comment",
+          "attributes": {
+            "body": "Hello",
+            "root": true
           },
-          'relationships': {
-            'children': {
-              'data': [{ 'id': '2', 'type': 'comment' }, { 'id': '3', 'type': 'comment' }]
+          "relationships": {
+            "children": {
+              "data": [{ "id": "2", "type": "comment" }, { "id": "3", "type": "comment" }]
             }
           }
         },
-        'included': [{
-          'id': '2',
-          'type': 'comment',
-          'attributes': {
-            'body': 'World',
-            'root': false
+        "included": [{
+          "id": "2",
+          "type": "comment",
+          "attributes": {
+            "body": "World",
+            "root": false
           },
-          'relationships': {}
+          "relationships": {}
         }, {
-          'id': '3',
-          'type': 'comment',
-          'attributes': {
-            'body': 'Foo',
-            'root': false
+          "id": "3",
+          "type": "comment",
+          "attributes": {
+            "body": "Foo",
+            "root": false
           },
-          'relationships': {}
+          "relationships": {}
         }]
-      }, 'Primary record was correct');
+      }, "Primary record was correct");
     });
 
-    test('normalizeResponse with embedded objects inside embedded objects of same type', function () {
+    test("normalizeResponse with embedded objects inside embedded objects of same type", function () {
       env.registry.register('serializer:comment', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           children: { embedded: 'always' }
         }
       }));
 
-      var serializer = env.store.serializerFor('comment');
+      var serializer = env.store.serializerFor("comment");
       var json_hash = {
         comment: {
-          id: '1',
-          body: 'Hello',
+          id: "1",
+          body: "Hello",
           root: true,
           children: [{
-            id: '2',
-            body: 'World',
+            id: "2",
+            body: "World",
             root: false,
             children: [{
-              id: '4',
-              body: 'Another',
+              id: "4",
+              body: "Another",
               root: false
             }]
           }, {
-            id: '3',
-            body: 'Foo',
+            id: "3",
+            body: "Foo",
             root: false
           }]
         }
@@ -16282,52 +16288,52 @@ define(
       });
 
       deepEqual(json, {
-        'data': {
-          'id': '1',
-          'type': 'comment',
-          'attributes': {
-            'body': 'Hello',
-            'root': true
+        "data": {
+          "id": "1",
+          "type": "comment",
+          "attributes": {
+            "body": "Hello",
+            "root": true
           },
-          'relationships': {
-            'children': {
-              'data': [{ 'id': '2', 'type': 'comment' }, { 'id': '3', 'type': 'comment' }]
+          "relationships": {
+            "children": {
+              "data": [{ "id": "2", "type": "comment" }, { "id": "3", "type": "comment" }]
             }
           }
         },
-        'included': [{
-          'id': '2',
-          'type': 'comment',
-          'attributes': {
-            'body': 'World',
-            'root': false
+        "included": [{
+          "id": "2",
+          "type": "comment",
+          "attributes": {
+            "body": "World",
+            "root": false
           },
-          'relationships': {
-            'children': {
-              'data': [{ 'id': '4', 'type': 'comment' }]
+          "relationships": {
+            "children": {
+              "data": [{ "id": "4", "type": "comment" }]
             }
           }
         }, {
-          'id': '4',
-          'type': 'comment',
-          'attributes': {
-            'body': 'Another',
-            'root': false
+          "id": "4",
+          "type": "comment",
+          "attributes": {
+            "body": "Another",
+            "root": false
           },
-          'relationships': {}
+          "relationships": {}
         }, {
-          'id': '3',
-          'type': 'comment',
-          'attributes': {
-            'body': 'Foo',
-            'root': false
+          "id": "3",
+          "type": "comment",
+          "attributes": {
+            "body": "Foo",
+            "root": false
           },
-          'relationships': {}
+          "relationships": {}
         }]
-      }, 'Primary record was correct');
+      }, "Primary record was correct");
     });
 
-    test('normalizeResponse with embedded objects of same type, but from separate attributes', function () {
+    test("normalizeResponse with embedded objects of same type, but from separate attributes", function () {
       HomePlanet.reopen({
         reformedVillains: DS.hasMany('superVillain', { inverse: null, async: false })
       });
@@ -16339,24 +16345,24 @@ define(
         }
       }));
 
-      var serializer = env.store.serializerFor('home-planet');
+      var serializer = env.store.serializerFor("home-planet");
       var json_hash = {
         homePlanet: {
-          id: '1',
-          name: 'Earth',
+          id: "1",
+          name: "Earth",
           villains: [{
-            id: '1',
-            firstName: 'Tom'
+            id: "1",
+            firstName: "Tom"
           }, {
-            id: '3',
-            firstName: 'Yehuda'
+            id: "3",
+            firstName: "Yehuda"
           }],
           reformedVillains: [{
-            id: '2',
-            firstName: 'Alex'
+            id: "2",
+            firstName: "Alex"
           }, {
-            id: '4',
-            firstName: 'Erik'
+            id: "4",
+            firstName: "Erik"
           }]
         }
       };
@@ -16366,70 +16372,70 @@ define(
       });
 
       deepEqual(json, {
-        'data': {
-          'id': '1',
-          'type': 'home-planet',
-          'attributes': {
-            'name': 'Earth'
+        "data": {
+          "id": "1",
+          "type": "home-planet",
+          "attributes": {
+            "name": "Earth"
           },
-          'relationships': {
-            'villains': {
-              'data': [{ 'id': '1', 'type': 'super-villain' }, { 'id': '3', 'type': 'super-villain' }]
+          "relationships": {
+            "villains": {
+              "data": [{ "id": "1", "type": "super-villain" }, { "id": "3", "type": "super-villain" }]
             },
-            'reformedVillains': {
-              'data': [{ 'id': '2', 'type': 'super-villain' }, { 'id': '4', 'type': 'super-villain' }]
+            "reformedVillains": {
+              "data": [{ "id": "2", "type": "super-villain" }, { "id": "4", "type": "super-villain" }]
             }
           }
         },
-        'included': [{
-          'id': '1',
-          'type': 'super-villain',
-          'attributes': {
-            'firstName': 'Tom'
+        "included": [{
+          "id": "1",
+          "type": "super-villain",
+          "attributes": {
+            "firstName": "Tom"
           },
-          'relationships': {}
+          "relationships": {}
         }, {
-          'id': '3',
-          'type': 'super-villain',
-          'attributes': {
-            'firstName': 'Yehuda'
+          "id": "3",
+          "type": "super-villain",
+          "attributes": {
+            "firstName": "Yehuda"
           },
-          'relationships': {}
+          "relationships": {}
         }, {
-          'id': '2',
-          'type': 'super-villain',
-          'attributes': {
-            'firstName': 'Alex'
+          "id": "2",
+          "type": "super-villain",
+          "attributes": {
+            "firstName": "Alex"
           },
-          'relationships': {}
+          "relationships": {}
         }, {
-          'id': '4',
-          'type': 'super-villain',
-          'attributes': {
-            'firstName': 'Erik'
+          "id": "4",
+          "type": "super-villain",
+          "attributes": {
+            "firstName": "Erik"
           },
-          'relationships': {}
+          "relationships": {}
         }]
-      }, 'Primary hash was correct');
+      }, "Primary hash was correct");
     });
 
-    test('normalizeResponse with embedded objects', function () {
+    test("normalizeResponse with embedded objects", function () {
       env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           villains: { embedded: 'always' }
         }
       }));
 
-      var serializer = env.store.serializerFor('home-planet');
+      var serializer = env.store.serializerFor("home-planet");
 
       var json_hash = {
         homePlanets: [{
-          id: '1',
-          name: 'Umber',
+          id: "1",
+          name: "Umber",
           villains: [{
-            id: '1',
-            firstName: 'Tom',
-            lastName: 'Dale'
+            id: "1",
+            firstName: "Tom",
+            lastName: "Dale"
           }]
         }]
       };
@@ -16440,31 +16446,31 @@ define(
       });
 
       deepEqual(array, {
-        'data': [{
-          'id': '1',
-          'type': 'home-planet',
-          'attributes': {
-            'name': 'Umber'
+        "data": [{
+          "id": "1",
+          "type": "home-planet",
+          "attributes": {
+            "name": "Umber"
           },
-          'relationships': {
-            'villains': {
-              'data': [{ 'id': '1', 'type': 'super-villain' }]
+          "relationships": {
+            "villains": {
+              "data": [{ "id": "1", "type": "super-villain" }]
             }
           }
         }],
-        'included': [{
-          'id': '1',
-          'type': 'super-villain',
-          'attributes': {
-            'firstName': 'Tom',
-            'lastName': 'Dale'
+        "included": [{
+          "id": "1",
+          "type": "super-villain",
+          "attributes": {
+            "firstName": "Tom",
+            "lastName": "Dale"
           },
-          'relationships': {}
+          "relationships": {}
         }]
       });
     });
 
-    test('normalizeResponse with embedded objects with custom primary key', function () {
+    test("normalizeResponse with embedded objects with custom primary key", function () {
       expect(1);
       env.registry.register('serializer:super-villain', DS.RESTSerializer.extend({
         primaryKey: 'villain_id'
@@ -16475,16 +16481,16 @@ define(
         }
       }));
 
-      var serializer = env.store.serializerFor('home-planet');
+      var serializer = env.store.serializerFor("home-planet");
 
       var json_hash = {
         homePlanets: [{
-          id: '1',
-          name: 'Umber',
+          id: "1",
+          name: "Umber",
           villains: [{
-            villain_id: '2',
-            firstName: 'Alex',
-            lastName: 'Baizeau'
+            villain_id: "2",
+            firstName: "Alex",
+            lastName: "Baizeau"
           }]
         }]
       };
@@ -16495,31 +16501,31 @@ define(
       });
 
       deepEqual(array, {
-        'data': [{
-          'id': '1',
-          'type': 'home-planet',
-          'attributes': {
-            'name': 'Umber'
+        "data": [{
+          "id": "1",
+          "type": "home-planet",
+          "attributes": {
+            "name": "Umber"
           },
-          'relationships': {
-            'villains': {
-              'data': [{ 'id': '2', 'type': 'super-villain' }]
+          "relationships": {
+            "villains": {
+              "data": [{ "id": "2", "type": "super-villain" }]
             }
           }
         }],
-        'included': [{
-          'id': '2',
-          'type': 'super-villain',
-          'attributes': {
-            'firstName': 'Alex',
-            'lastName': 'Baizeau'
+        "included": [{
+          "id": "2",
+          "type": "super-villain",
+          "attributes": {
+            "firstName": "Alex",
+            "lastName": "Baizeau"
           },
-          'relationships': {}
+          "relationships": {}
         }]
       });
     });
 
-    test('normalizeResponse with embedded objects with identical relationship and attribute key ', function () {
+    test("normalizeResponse with embedded objects with identical relationship and attribute key ", function () {
       expect(1);
       env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
@@ -16531,16 +16537,16 @@ define(
         }
       }));
 
-      var serializer = env.store.serializerFor('home-planet');
+      var serializer = env.store.serializerFor("home-planet");
 
       var json_hash = {
         homePlanets: [{
-          id: '1',
-          name: 'Umber',
+          id: "1",
+          name: "Umber",
           villains: [{
-            id: '1',
-            firstName: 'Alex',
-            lastName: 'Baizeau'
+            id: "1",
+            firstName: "Alex",
+            lastName: "Baizeau"
           }]
         }]
       };
@@ -16551,51 +16557,51 @@ define(
       });
 
       deepEqual(array, {
-        'data': [{
-          'id': '1',
-          'type': 'home-planet',
-          'attributes': {
-            'name': 'Umber'
+        "data": [{
+          "id": "1",
+          "type": "home-planet",
+          "attributes": {
+            "name": "Umber"
           },
-          'relationships': {
-            'villains': {
-              'data': [{ 'id': '1', 'type': 'super-villain' }]
+          "relationships": {
+            "villains": {
+              "data": [{ "id": "1", "type": "super-villain" }]
             }
           }
         }],
-        'included': [{
-          'id': '1',
-          'type': 'super-villain',
-          'attributes': {
-            'firstName': 'Alex',
-            'lastName': 'Baizeau'
+        "included": [{
+          "id": "1",
+          "type": "super-villain",
+          "attributes": {
+            "firstName": "Alex",
+            "lastName": "Baizeau"
           },
-          'relationships': {}
+          "relationships": {}
         }]
       });
     });
 
-    test('normalizeResponse with embedded objects of same type as primary type', function () {
+    test("normalizeResponse with embedded objects of same type as primary type", function () {
       env.registry.register('serializer:comment', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           children: { embedded: 'always' }
         }
       }));
 
-      var serializer = env.store.serializerFor('comment');
+      var serializer = env.store.serializerFor("comment");
 
       var json_hash = {
         comments: [{
-          id: '1',
-          body: 'Hello',
+          id: "1",
+          body: "Hello",
           root: true,
           children: [{
-            id: '2',
-            body: 'World',
+            id: "2",
+            body: "World",
             root: false
           }, {
-            id: '3',
-            body: 'Foo',
+            id: "3",
+            body: "Foo",
             root: false
           }]
         }]
@@ -16607,40 +16613,40 @@ define(
       });
 
       deepEqual(array, {
-        'data': [{
-          'id': '1',
-          'type': 'comment',
-          'attributes': {
-            'body': 'Hello',
-            'root': true
+        "data": [{
+          "id": "1",
+          "type": "comment",
+          "attributes": {
+            "body": "Hello",
+            "root": true
           },
-          'relationships': {
-            'children': {
-              'data': [{ 'id': '2', 'type': 'comment' }, { 'id': '3', 'type': 'comment' }]
+          "relationships": {
+            "children": {
+              "data": [{ "id": "2", "type": "comment" }, { "id": "3", "type": "comment" }]
             }
           }
         }],
-        'included': [{
-          'id': '2',
-          'type': 'comment',
-          'attributes': {
-            'body': 'World',
-            'root': false
+        "included": [{
+          "id": "2",
+          "type": "comment",
+          "attributes": {
+            "body": "World",
+            "root": false
           },
-          'relationships': {}
+          "relationships": {}
         }, {
-          'id': '3',
-          'type': 'comment',
-          'attributes': {
-            'body': 'Foo',
-            'root': false
+          "id": "3",
+          "type": "comment",
+          "attributes": {
+            "body": "Foo",
+            "root": false
           },
-          'relationships': {}
+          "relationships": {}
         }]
-      }, 'Primary array is correct');
+      }, "Primary array is correct");
     });
 
-    test('normalizeResponse with embedded objects of same type, but from separate attributes', function () {
+    test("normalizeResponse with embedded objects of same type, but from separate attributes", function () {
       HomePlanet.reopen({
         reformedVillains: DS.hasMany('superVillain', { async: false })
       });
@@ -16652,41 +16658,41 @@ define(
         }
       }));
 
-      var serializer = env.store.serializerFor('home-planet');
+      var serializer = env.store.serializerFor("home-planet");
       var json_hash = {
         homePlanets: [{
-          id: '1',
-          name: 'Earth',
+          id: "1",
+          name: "Earth",
           villains: [{
-            id: '1',
-            firstName: 'Tom'
+            id: "1",
+            firstName: "Tom"
           }, {
-            id: '3',
-            firstName: 'Yehuda'
+            id: "3",
+            firstName: "Yehuda"
           }],
           reformedVillains: [{
-            id: '2',
-            firstName: 'Alex'
+            id: "2",
+            firstName: "Alex"
           }, {
-            id: '4',
-            firstName: 'Erik'
+            id: "4",
+            firstName: "Erik"
           }]
         }, {
-          id: '2',
-          name: 'Mars',
+          id: "2",
+          name: "Mars",
           villains: [{
-            id: '1',
-            firstName: 'Tom'
+            id: "1",
+            firstName: "Tom"
           }, {
-            id: '3',
-            firstName: 'Yehuda'
+            id: "3",
+            firstName: "Yehuda"
           }],
           reformedVillains: [{
-            id: '5',
-            firstName: 'Peter'
+            id: "5",
+            firstName: "Peter"
           }, {
-            id: '6',
-            firstName: 'Trek'
+            id: "6",
+            firstName: "Trek"
           }]
         }]
       };
@@ -16697,99 +16703,99 @@ define(
       });
 
       deepEqual(json, {
-        'data': [{
-          'id': '1',
-          'type': 'home-planet',
-          'attributes': {
-            'name': 'Earth'
+        "data": [{
+          "id": "1",
+          "type": "home-planet",
+          "attributes": {
+            "name": "Earth"
           },
-          'relationships': {
-            'reformedVillains': {
-              'data': [{ 'id': '2', 'type': 'super-villain' }, { 'id': '4', 'type': 'super-villain' }]
+          "relationships": {
+            "reformedVillains": {
+              "data": [{ "id": "2", "type": "super-villain" }, { "id": "4", "type": "super-villain" }]
             },
-            'villains': {
-              'data': [{ 'id': '1', 'type': 'super-villain' }, { 'id': '3', 'type': 'super-villain' }]
+            "villains": {
+              "data": [{ "id": "1", "type": "super-villain" }, { "id": "3", "type": "super-villain" }]
             }
           }
         }, {
-          'id': '2',
-          'type': 'home-planet',
-          'attributes': {
-            'name': 'Mars'
+          "id": "2",
+          "type": "home-planet",
+          "attributes": {
+            "name": "Mars"
           },
-          'relationships': {
-            'reformedVillains': {
-              'data': [{ 'id': '5', 'type': 'super-villain' }, { 'id': '6', 'type': 'super-villain' }]
+          "relationships": {
+            "reformedVillains": {
+              "data": [{ "id": "5", "type": "super-villain" }, { "id": "6", "type": "super-villain" }]
             },
-            'villains': {
-              'data': [{ 'id': '1', 'type': 'super-villain' }, { 'id': '3', 'type': 'super-villain' }]
+            "villains": {
+              "data": [{ "id": "1", "type": "super-villain" }, { "id": "3", "type": "super-villain" }]
             }
           }
         }],
-        'included': [{
-          'id': '1',
-          'type': 'super-villain',
-          'attributes': {
-            'firstName': 'Tom'
+        "included": [{
+          "id": "1",
+          "type": "super-villain",
+          "attributes": {
+            "firstName": "Tom"
           },
-          'relationships': {}
+          "relationships": {}
         }, {
-          'id': '3',
-          'type': 'super-villain',
-          'attributes': {
-            'firstName': 'Yehuda'
+          "id": "3",
+          "type": "super-villain",
+          "attributes": {
+            "firstName": "Yehuda"
           },
-          'relationships': {}
+          "relationships": {}
         }, {
-          'id': '2',
-          'type': 'super-villain',
-          'attributes': {
-            'firstName': 'Alex'
+          "id": "2",
+          "type": "super-villain",
+          "attributes": {
+            "firstName": "Alex"
           },
-          'relationships': {}
+          "relationships": {}
         }, {
-          'id': '4',
-          'type': 'super-villain',
-          'attributes': {
-            'firstName': 'Erik'
+          "id": "4",
+          "type": "super-villain",
+          "attributes": {
+            "firstName": "Erik"
           },
-          'relationships': {}
+          "relationships": {}
         }, {
-          'id': '1',
-          'type': 'super-villain',
-          'attributes': {
-            'firstName': 'Tom'
+          "id": "1",
+          "type": "super-villain",
+          "attributes": {
+            "firstName": "Tom"
           },
-          'relationships': {}
+          "relationships": {}
         }, {
-          'id': '3',
-          'type': 'super-villain',
-          'attributes': {
-            'firstName': 'Yehuda'
+          "id": "3",
+          "type": "super-villain",
+          "attributes": {
+            "firstName": "Yehuda"
           },
-          'relationships': {}
+          "relationships": {}
         }, {
-          'id': '5',
-          'type': 'super-villain',
-          'attributes': {
-            'firstName': 'Peter'
+          "id": "5",
+          "type": "super-villain",
+          "attributes": {
+            "firstName": "Peter"
           },
-          'relationships': {}
+          "relationships": {}
         }, {
-          'id': '6',
-          'type': 'super-villain',
-          'attributes': {
-            'firstName': 'Trek'
+          "id": "6",
+          "type": "super-villain",
+          "attributes": {
+            "firstName": "Trek"
           },
-          'relationships': {}
+          "relationships": {}
         }]
-      }, 'Primary array was correct');
+      }, "Primary array was correct");
     });
 
-    test('serialize supports serialize:false on non-relationship properties', function () {
+    test("serialize supports serialize:false on non-relationship properties", function () {
       var tom;
       run(function () {
-        tom = env.store.createRecord('super-villain', { firstName: 'Tom', lastName: 'Dale', id: '1' });
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: '1' });
       });
 
       env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
@@ -16799,22 +16805,22 @@ define(
       }));
       var serializer, json;
       run(function () {
-        serializer = env.store.serializerFor('super-villain');
+        serializer = env.store.serializerFor("super-villain");
         json = serializer.serialize(tom._createSnapshot());
       });
 
       deepEqual(json, {
-        lastName: 'Dale',
+        lastName: "Dale",
         homePlanet: null,
         secretLab: null
       });
     });
 
-    test('serialize with embedded objects (hasMany relationship)', function () {
+    test("serialize with embedded objects (hasMany relationship)", function () {
       var tom, league;
       run(function () {
-        league = env.store.createRecord('home-planet', { name: 'Villain League', id: '123' });
-        tom = env.store.createRecord('super-villain', { firstName: 'Tom', lastName: 'Dale', homePlanet: league, id: '1' });
+        league = env.store.createRecord('home-planet', { name: "Villain League", id: "123" });
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", homePlanet: league, id: '1' });
       });
 
       env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
@@ -16825,24 +16831,24 @@ define(
 
       var serializer, json;
       run(function () {
-        serializer = env.store.serializerFor('home-planet');
+        serializer = env.store.serializerFor("home-planet");
 
         json = serializer.serialize(league._createSnapshot());
       });
 
       deepEqual(json, {
-        name: 'Villain League',
+        name: "Villain League",
         villains: [{
-          id: get(tom, 'id'),
-          firstName: 'Tom',
-          lastName: 'Dale',
-          homePlanet: get(league, 'id'),
+          id: get(tom, "id"),
+          firstName: "Tom",
+          lastName: "Dale",
+          homePlanet: get(league, "id"),
           secretLab: null
         }]
       });
     });
 
-    test('serialize with embedded objects (unknown hasMany relationship)', function () {
+    test("serialize with embedded objects (unknown hasMany relationship)", function () {
       var league;
       run(function () {
         env.store.push({
@@ -16850,7 +16856,7 @@ define(
             type: 'home-planet',
             id: '123',
             attributes: {
-              name: 'Villain League'
+              name: "Villain League"
             }
           }
         });
@@ -16866,21 +16872,21 @@ define(
       var serializer, json;
       warns(function () {
         run(function () {
-          serializer = env.store.serializerFor('home-planet');
+          serializer = env.store.serializerFor("home-planet");
           json = serializer.serialize(league._createSnapshot());
         });
       }, /The embedded relationship 'villains' is undefined for 'home-planet' with id '123'. Please include it in your original payload./);
 
       deepEqual(json, {
-        name: 'Villain League',
+        name: "Villain League",
         villains: []
       });
     });
 
-    test('serialize with embedded objects (hasMany relationship) supports serialize:false', function () {
+    test("serialize with embedded objects (hasMany relationship) supports serialize:false", function () {
       run(function () {
-        league = env.store.createRecord('home-planet', { name: 'Villain League', id: '123' });
-        env.store.createRecord('super-villain', { firstName: 'Tom', lastName: 'Dale', homePlanet: league, id: '1' });
+        league = env.store.createRecord('home-planet', { name: "Villain League", id: "123" });
+        env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", homePlanet: league, id: '1' });
       });
 
       env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
@@ -16890,20 +16896,20 @@ define(
       }));
       var serializer, json;
       run(function () {
-        serializer = env.store.serializerFor('home-planet');
+        serializer = env.store.serializerFor("home-planet");
 
         json = serializer.serialize(league._createSnapshot());
       });
 
       deepEqual(json, {
-        name: 'Villain League'
+        name: "Villain League"
       });
     });
 
-    test('serialize with (new) embedded objects (hasMany relationship)', function () {
+    test("serialize with (new) embedded objects (hasMany relationship)", function () {
       run(function () {
-        league = env.store.createRecord('home-planet', { name: 'Villain League', id: '123' });
-        env.store.createRecord('super-villain', { firstName: 'Tom', lastName: 'Dale', homePlanet: league });
+        league = env.store.createRecord('home-planet', { name: "Villain League", id: "123" });
+        env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", homePlanet: league });
       });
 
       env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
@@ -16913,26 +16919,26 @@ define(
       }));
       var serializer, json;
       run(function () {
-        serializer = env.store.serializerFor('home-planet');
+        serializer = env.store.serializerFor("home-planet");
 
         json = serializer.serialize(league._createSnapshot());
       });
       deepEqual(json, {
-        name: 'Villain League',
+        name: "Villain League",
         villains: [{
-          firstName: 'Tom',
-          lastName: 'Dale',
-          homePlanet: get(league, 'id'),
+          firstName: "Tom",
+          lastName: "Dale",
+          homePlanet: get(league, "id"),
           secretLab: null
         }]
       });
     });
 
-    test('serialize with embedded objects (hasMany relationships, including related objects not embedded)', function () {
+    test("serialize with embedded objects (hasMany relationships, including related objects not embedded)", function () {
       run(function () {
-        superVillain = env.store.createRecord('super-villain', { id: 1, firstName: 'Super', lastName: 'Villian' });
-        evilMinion = env.store.createRecord('evil-minion', { id: 1, name: 'Evil Minion', superVillian: superVillain });
-        secretWeapon = env.store.createRecord('secret-weapon', { id: 1, name: 'Secret Weapon', superVillain: superVillain });
+        superVillain = env.store.createRecord('super-villain', { id: 1, firstName: "Super", lastName: "Villian" });
+        evilMinion = env.store.createRecord('evil-minion', { id: 1, name: "Evil Minion", superVillian: superVillain });
+        secretWeapon = env.store.createRecord('secret-weapon', { id: 1, name: "Secret Weapon", superVillain: superVillain });
         superVillain.get('evilMinions').pushObject(evilMinion);
         superVillain.get('secretWeapons').pushObject(secretWeapon);
       });
@@ -16945,44 +16951,44 @@ define(
       }));
       var serializer, json;
       run(function () {
-        serializer = env.container.lookup('serializer:super-villain');
+        serializer = env.container.lookup("serializer:super-villain");
 
         json = serializer.serialize(superVillain._createSnapshot());
       });
       deepEqual(json, {
-        firstName: get(superVillain, 'firstName'),
-        lastName: get(superVillain, 'lastName'),
+        firstName: get(superVillain, "firstName"),
+        lastName: get(superVillain, "lastName"),
         homePlanet: null,
         evilMinions: [{
-          id: get(evilMinion, 'id'),
-          name: get(evilMinion, 'name'),
-          superVillain: '1'
+          id: get(evilMinion, "id"),
+          name: get(evilMinion, "name"),
+          superVillain: "1"
         }],
         secretLab: null,
-        secretWeapons: ['1']
+        secretWeapons: ["1"]
       });
     });
 
-    test('normalizeResponse with embedded object (belongsTo relationship)', function () {
+    test("normalizeResponse with embedded object (belongsTo relationship)", function () {
       env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           secretLab: { embedded: 'always' }
         }
       }));
 
-      var serializer = env.store.serializerFor('super-villain');
+      var serializer = env.store.serializerFor("super-villain");
 
       var json_hash = {
         super_villain: {
-          id: '1',
-          firstName: 'Tom',
-          lastName: 'Dale',
-          homePlanet: '123',
-          evilMinions: ['1', '2', '3'],
+          id: "1",
+          firstName: "Tom",
+          lastName: "Dale",
+          homePlanet: "123",
+          evilMinions: ["1", "2", "3"],
           secretLab: {
             minionCapacity: 5000,
-            vicinity: 'California, USA',
-            id: '101'
+            vicinity: "California, USA",
+            id: "101"
           },
           secretWeapons: []
         }
@@ -16994,41 +17000,41 @@ define(
       });
 
       deepEqual(json, {
-        'data': {
-          'id': '1',
-          'type': 'super-villain',
-          'attributes': {
-            'firstName': 'Tom',
-            'lastName': 'Dale'
+        "data": {
+          "id": "1",
+          "type": "super-villain",
+          "attributes": {
+            "firstName": "Tom",
+            "lastName": "Dale"
           },
-          'relationships': {
-            'evilMinions': {
-              'data': [{ 'id': '1', 'type': 'evil-minion' }, { 'id': '2', 'type': 'evil-minion' }, { 'id': '3', 'type': 'evil-minion' }]
+          "relationships": {
+            "evilMinions": {
+              "data": [{ "id": "1", "type": "evil-minion" }, { "id": "2", "type": "evil-minion" }, { "id": "3", "type": "evil-minion" }]
             },
-            'homePlanet': {
-              'data': { 'id': '123', 'type': 'home-planet' }
+            "homePlanet": {
+              "data": { "id": "123", "type": "home-planet" }
             },
-            'secretLab': {
-              'data': { 'id': '101', 'type': 'secret-lab' }
+            "secretLab": {
+              "data": { "id": "101", "type": "secret-lab" }
             },
-            'secretWeapons': {
-              'data': []
+            "secretWeapons": {
+              "data": []
             }
           }
         },
-        'included': [{
-          'id': '101',
-          'type': 'secret-lab',
-          'attributes': {
-            'minionCapacity': 5000,
-            'vicinity': 'California, USA'
+        "included": [{
+          "id": "101",
+          "type": "secret-lab",
+          "attributes": {
+            "minionCapacity": 5000,
+            "vicinity": "California, USA"
           },
-          'relationships': {}
+          "relationships": {}
         }]
       });
     });
 
-    test('serialize with embedded object (belongsTo relationship)', function () {
+    test("serialize with embedded object (belongsTo relationship)", function () {
       env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           secretLab: { embedded: 'always' }
@@ -17036,13 +17042,13 @@ define(
       }));
       var serializer, json, tom;
       run(function () {
-        serializer = env.store.serializerFor('super-villain');
+        serializer = env.store.serializerFor("super-villain");
 
         // records with an id, persisted
 
-        tom = env.store.createRecord('super-villain', { firstName: 'Tom', lastName: 'Dale', id: '1',
-          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: 'California, USA', id: '101' }),
-          homePlanet: env.store.createRecord('home-planet', { name: 'Villain League', id: '123' })
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
+          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA", id: "101" }),
+          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
         });
       });
 
@@ -17051,18 +17057,18 @@ define(
       });
 
       deepEqual(json, {
-        firstName: get(tom, 'firstName'),
-        lastName: get(tom, 'lastName'),
-        homePlanet: get(tom, 'homePlanet').get('id'),
+        firstName: get(tom, "firstName"),
+        lastName: get(tom, "lastName"),
+        homePlanet: get(tom, "homePlanet").get("id"),
         secretLab: {
-          id: get(tom, 'secretLab').get('id'),
-          minionCapacity: get(tom, 'secretLab').get('minionCapacity'),
-          vicinity: get(tom, 'secretLab').get('vicinity')
+          id: get(tom, "secretLab").get("id"),
+          minionCapacity: get(tom, "secretLab").get("minionCapacity"),
+          vicinity: get(tom, "secretLab").get("vicinity")
         }
       });
     });
 
-    test('serialize with embedded object (belongsTo relationship) works with different primaryKeys', function () {
+    test("serialize with embedded object (belongsTo relationship) works with different primaryKeys", function () {
       env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         primaryKey: '_id',
         attrs: {
@@ -17073,15 +17079,15 @@ define(
         primaryKey: 'crazy_id'
       }));
 
-      var serializer = env.store.serializerFor('super-villain');
+      var serializer = env.store.serializerFor("super-villain");
 
       // records with an id, persisted
       var tom, json;
 
       run(function () {
-        tom = env.store.createRecord('super-villain', { firstName: 'Tom', lastName: 'Dale', id: '1',
-          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: 'California, USA', id: '101' }),
-          homePlanet: env.store.createRecord('home-planet', { name: 'Villain League', id: '123' })
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
+          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA", id: "101" }),
+          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
         });
       });
 
@@ -17090,33 +17096,33 @@ define(
       });
 
       deepEqual(json, {
-        firstName: get(tom, 'firstName'),
-        lastName: get(tom, 'lastName'),
-        homePlanet: get(tom, 'homePlanet').get('id'),
+        firstName: get(tom, "firstName"),
+        lastName: get(tom, "lastName"),
+        homePlanet: get(tom, "homePlanet").get("id"),
         secretLab: {
-          crazy_id: get(tom, 'secretLab').get('id'),
-          minionCapacity: get(tom, 'secretLab').get('minionCapacity'),
-          vicinity: get(tom, 'secretLab').get('vicinity')
+          crazy_id: get(tom, "secretLab").get("id"),
+          minionCapacity: get(tom, "secretLab").get("minionCapacity"),
+          vicinity: get(tom, "secretLab").get("vicinity")
         }
       });
     });
 
-    test('serialize with embedded object (belongsTo relationship, new no id)', function () {
+    test("serialize with embedded object (belongsTo relationship, new no id)", function () {
       env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           secretLab: { embedded: 'always' }
         }
       }));
 
-      var serializer = env.store.serializerFor('super-villain');
+      var serializer = env.store.serializerFor("super-villain");
 
       // records without ids, new
       var tom, json;
 
       run(function () {
-        tom = env.store.createRecord('super-villain', { firstName: 'Tom', lastName: 'Dale',
-          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: 'California, USA' }),
-          homePlanet: env.store.createRecord('home-planet', { name: 'Villain League', id: '123' })
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale",
+          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA" }),
+          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
         });
       });
 
@@ -17125,31 +17131,31 @@ define(
       });
 
       deepEqual(json, {
-        firstName: get(tom, 'firstName'),
-        lastName: get(tom, 'lastName'),
-        homePlanet: get(tom, 'homePlanet').get('id'),
+        firstName: get(tom, "firstName"),
+        lastName: get(tom, "lastName"),
+        homePlanet: get(tom, "homePlanet").get("id"),
         secretLab: {
-          minionCapacity: get(tom, 'secretLab').get('minionCapacity'),
-          vicinity: get(tom, 'secretLab').get('vicinity')
+          minionCapacity: get(tom, "secretLab").get("minionCapacity"),
+          vicinity: get(tom, "secretLab").get("vicinity")
         }
       });
     });
 
-    test('serialize with embedded object (belongsTo relationship) supports serialize:ids', function () {
+    test("serialize with embedded object (belongsTo relationship) supports serialize:ids", function () {
       env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           secretLab: { serialize: 'ids' }
         }
       }));
-      var serializer = env.store.serializerFor('super-villain');
+      var serializer = env.store.serializerFor("super-villain");
 
       // records with an id, persisted
       var tom, json;
 
       run(function () {
-        tom = env.store.createRecord('super-villain', { firstName: 'Tom', lastName: 'Dale', id: '1',
-          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: 'California, USA', id: '101' }),
-          homePlanet: env.store.createRecord('home-planet', { name: 'Villain League', id: '123' })
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
+          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA", id: "101" }),
+          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
         });
       });
 
@@ -17158,29 +17164,29 @@ define(
       });
 
       deepEqual(json, {
-        firstName: get(tom, 'firstName'),
-        lastName: get(tom, 'lastName'),
-        homePlanet: get(tom, 'homePlanet').get('id'),
-        secretLab: get(tom, 'secretLab').get('id')
+        firstName: get(tom, "firstName"),
+        lastName: get(tom, "lastName"),
+        homePlanet: get(tom, "homePlanet").get("id"),
+        secretLab: get(tom, "secretLab").get("id")
       });
     });
 
-    test('serialize with embedded object (belongsTo relationship) supports serialize:id', function () {
+    test("serialize with embedded object (belongsTo relationship) supports serialize:id", function () {
       env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           secretLab: { serialize: 'id' }
         }
       }));
 
-      var serializer = env.store.serializerFor('super-villain');
+      var serializer = env.store.serializerFor("super-villain");
 
       // records with an id, persisted
       var tom, json;
 
       run(function () {
-        tom = env.store.createRecord('super-villain', { firstName: 'Tom', lastName: 'Dale', id: '1',
-          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: 'California, USA', id: '101' }),
-          homePlanet: env.store.createRecord('home-planet', { name: 'Villain League', id: '123' })
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
+          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA", id: "101" }),
+          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
         });
       });
 
@@ -17189,29 +17195,29 @@ define(
       });
 
       deepEqual(json, {
-        firstName: get(tom, 'firstName'),
-        lastName: get(tom, 'lastName'),
-        homePlanet: get(tom, 'homePlanet').get('id'),
-        secretLab: get(tom, 'secretLab').get('id')
+        firstName: get(tom, "firstName"),
+        lastName: get(tom, "lastName"),
+        homePlanet: get(tom, "homePlanet").get("id"),
+        secretLab: get(tom, "secretLab").get("id")
       });
     });
 
-    test('serialize with embedded object (belongsTo relationship) supports serialize:id in conjunction with deserialize:records', function () {
+    test("serialize with embedded object (belongsTo relationship) supports serialize:id in conjunction with deserialize:records", function () {
       env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           secretLab: { serialize: 'id', deserialize: 'records' }
         }
       }));
 
-      var serializer = env.store.serializerFor('super-villain');
+      var serializer = env.store.serializerFor("super-villain");
 
       // records with an id, persisted
       var tom, json;
 
       run(function () {
-        tom = env.store.createRecord('super-villain', { firstName: 'Tom', lastName: 'Dale', id: '1',
-          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: 'California, USA', id: '101' }),
-          homePlanet: env.store.createRecord('home-planet', { name: 'Villain League', id: '123' })
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
+          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA", id: "101" }),
+          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
         });
       });
 
@@ -17220,27 +17226,27 @@ define(
       });
 
       deepEqual(json, {
-        firstName: get(tom, 'firstName'),
-        lastName: get(tom, 'lastName'),
-        homePlanet: get(tom, 'homePlanet').get('id'),
-        secretLab: get(tom, 'secretLab').get('id')
+        firstName: get(tom, "firstName"),
+        lastName: get(tom, "lastName"),
+        homePlanet: get(tom, "homePlanet").get("id"),
+        secretLab: get(tom, "secretLab").get("id")
       });
     });
 
-    test('serialize with embedded object (belongsTo relationship) supports serialize:false', function () {
+    test("serialize with embedded object (belongsTo relationship) supports serialize:false", function () {
       env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           secretLab: { serialize: false }
         }
       }));
-      var serializer = env.store.serializerFor('super-villain');
+      var serializer = env.store.serializerFor("super-villain");
 
       // records with an id, persisted
       var tom, json;
       run(function () {
-        tom = env.store.createRecord('super-villain', { firstName: 'Tom', lastName: 'Dale', id: '1',
-          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: 'California, USA', id: '101' }),
-          homePlanet: env.store.createRecord('home-planet', { name: 'Villain League', id: '123' })
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
+          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA", id: "101" }),
+          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
         });
       });
 
@@ -17249,24 +17255,24 @@ define(
       });
 
       deepEqual(json, {
-        firstName: get(tom, 'firstName'),
-        lastName: get(tom, 'lastName'),
-        homePlanet: get(tom, 'homePlanet').get('id')
+        firstName: get(tom, "firstName"),
+        lastName: get(tom, "lastName"),
+        homePlanet: get(tom, "homePlanet").get("id")
       });
     });
 
-    test('serialize with embedded object (belongsTo relationship) serializes the id by default if no option specified', function () {
+    test("serialize with embedded object (belongsTo relationship) serializes the id by default if no option specified", function () {
       env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin));
-      var serializer = env.store.serializerFor('super-villain');
+      var serializer = env.store.serializerFor("super-villain");
 
       // records with an id, persisted
 
       var tom, json;
 
       run(function () {
-        tom = env.store.createRecord('super-villain', { firstName: 'Tom', lastName: 'Dale', id: '1',
-          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: 'California, USA', id: '101' }),
-          homePlanet: env.store.createRecord('home-planet', { name: 'Villain League', id: '123' })
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
+          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA", id: "101" }),
+          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
         });
       });
 
@@ -17275,25 +17281,25 @@ define(
       });
 
       deepEqual(json, {
-        firstName: get(tom, 'firstName'),
-        lastName: get(tom, 'lastName'),
-        homePlanet: get(tom, 'homePlanet').get('id'),
-        secretLab: get(tom, 'secretLab').get('id')
+        firstName: get(tom, "firstName"),
+        lastName: get(tom, "lastName"),
+        homePlanet: get(tom, "homePlanet").get("id"),
+        secretLab: get(tom, "secretLab").get("id")
       });
     });
 
-    test('when related record is not present, serialize embedded record (with a belongsTo relationship) as null', function () {
+    test("when related record is not present, serialize embedded record (with a belongsTo relationship) as null", function () {
       env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           secretLab: { embedded: 'always' }
         }
       }));
-      var serializer = env.store.serializerFor('super-villain');
+      var serializer = env.store.serializerFor("super-villain");
       var tom, json;
 
       run(function () {
-        tom = env.store.createRecord('super-villain', { firstName: 'Tom', lastName: 'Dale', id: '1',
-          homePlanet: env.store.createRecord('home-planet', { name: 'Villain League', id: '123' })
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
+          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
         });
       });
 
@@ -17302,14 +17308,14 @@ define(
       });
 
       deepEqual(json, {
-        firstName: get(tom, 'firstName'),
-        lastName: get(tom, 'lastName'),
-        homePlanet: get(tom, 'homePlanet').get('id'),
+        firstName: get(tom, "firstName"),
+        lastName: get(tom, "lastName"),
+        homePlanet: get(tom, "homePlanet").get("id"),
         secretLab: null
       });
     });
 
-    test('normalizeResponse with multiply-nested belongsTo', function () {
+    test("normalizeResponse with multiply-nested belongsTo", function () {
       env.registry.register('serializer:evil-minion', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           superVillain: { embedded: 'always' }
@@ -17321,20 +17327,20 @@ define(
         }
       }));
 
-      var serializer = env.store.serializerFor('evil-minion');
+      var serializer = env.store.serializerFor("evil-minion");
       var json_hash = {
         evilMinion: {
-          id: '1',
-          name: 'Alex',
+          id: "1",
+          name: "Alex",
           superVillain: {
-            id: '1',
-            firstName: 'Tom',
-            lastName: 'Dale',
-            evilMinions: ['1'],
+            id: "1",
+            firstName: "Tom",
+            lastName: "Dale",
+            evilMinions: ["1"],
             homePlanet: {
-              id: '1',
-              name: 'Umber',
-              villains: ['1']
+              id: "1",
+              name: "Umber",
+              villains: ["1"]
             }
           }
         }
@@ -17346,51 +17352,51 @@ define(
       });
 
       deepEqual(json, {
-        'data': {
-          'id': '1',
-          'type': 'evil-minion',
-          'attributes': {
-            'name': 'Alex'
+        "data": {
+          "id": "1",
+          "type": "evil-minion",
+          "attributes": {
+            "name": "Alex"
           },
-          'relationships': {
-            'superVillain': {
-              'data': { 'id': '1', 'type': 'super-villain' }
+          "relationships": {
+            "superVillain": {
+              "data": { "id": "1", "type": "super-villain" }
             }
           }
         },
-        'included': [{
-          'id': '1',
-          'type': 'super-villain',
-          'attributes': {
-            'firstName': 'Tom',
-            'lastName': 'Dale'
+        "included": [{
+          "id": "1",
+          "type": "super-villain",
+          "attributes": {
+            "firstName": "Tom",
+            "lastName": "Dale"
           },
-          'relationships': {
-            'evilMinions': {
-              'data': [{ 'id': '1', 'type': 'evil-minion' }]
+          "relationships": {
+            "evilMinions": {
+              "data": [{ "id": "1", "type": "evil-minion" }]
             },
-            'homePlanet': {
-              'data': { 'id': '1', 'type': 'home-planet' }
+            "homePlanet": {
+              "data": { "id": "1", "type": "home-planet" }
             }
           }
         }, {
-          'id': '1',
-          'type': 'home-planet',
-          'attributes': {
-            'name': 'Umber'
+          "id": "1",
+          "type": "home-planet",
+          "attributes": {
+            "name": "Umber"
           },
-          'relationships': {
-            'villains': {
-              'data': [{ 'id': '1', 'type': 'super-villain' }]
+          "relationships": {
+            "villains": {
+              "data": [{ "id": "1", "type": "super-villain" }]
             }
           }
         }]
-      }, 'Primary hash was correct');
+      }, "Primary hash was correct");
     });
 
-    test('normalizeResponse with polymorphic hasMany', function () {
+    test("normalizeResponse with polymorphic hasMany", function () {
       SuperVillain.reopen({
-        secretWeapons: DS.hasMany('secretWeapon', { polymorphic: true, async: false })
+        secretWeapons: DS.hasMany("secretWeapon", { polymorphic: true, async: false })
       });
 
       env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
@@ -17398,22 +17404,22 @@ define(
           secretWeapons: { embedded: 'always' }
         }
       }));
-      var serializer = env.store.serializerFor('super-villain');
+      var serializer = env.store.serializerFor("super-villain");
 
       var json_hash = {
         super_villain: {
-          id: '1',
-          firstName: 'Tom',
-          lastName: 'Dale',
+          id: "1",
+          firstName: "Tom",
+          lastName: "Dale",
           secretWeapons: [{
-            id: '1',
-            type: 'LightSaber',
-            name: 'Tom\'s LightSaber',
-            color: 'Red'
+            id: "1",
+            type: "LightSaber",
+            name: "Tom's LightSaber",
+            color: "Red"
           }, {
-            id: '1',
-            type: 'SecretWeapon',
-            name: 'The Death Star'
+            id: "1",
+            type: "SecretWeapon",
+            name: "The Death Star"
           }]
         }
       };
@@ -17424,41 +17430,41 @@ define(
       });
 
       deepEqual(json, {
-        'data': {
-          'id': '1',
-          'type': 'super-villain',
-          'attributes': {
-            'firstName': 'Tom',
-            'lastName': 'Dale'
+        "data": {
+          "id": "1",
+          "type": "super-villain",
+          "attributes": {
+            "firstName": "Tom",
+            "lastName": "Dale"
           },
-          'relationships': {
-            'secretWeapons': {
-              'data': [{ 'id': '1', 'type': 'light-saber' }, { 'id': '1', 'type': 'secret-weapon' }]
+          "relationships": {
+            "secretWeapons": {
+              "data": [{ "id": "1", "type": "light-saber" }, { "id": "1", "type": "secret-weapon" }]
             }
           }
         },
-        'included': [{
-          'id': '1',
-          'type': 'light-saber',
-          'attributes': {
-            'color': 'Red',
-            'name': 'Tom\'s LightSaber'
+        "included": [{
+          "id": "1",
+          "type": "light-saber",
+          "attributes": {
+            "color": "Red",
+            "name": "Tom's LightSaber"
           },
-          'relationships': {}
+          "relationships": {}
         }, {
-          'id': '1',
-          'type': 'secret-weapon',
-          'attributes': {
-            'name': 'The Death Star'
+          "id": "1",
+          "type": "secret-weapon",
+          "attributes": {
+            "name": "The Death Star"
           },
-          'relationships': {}
+          "relationships": {}
         }]
-      }, 'Primary hash was correct');
+      }, "Primary hash was correct");
     });
 
-    test('normalizeResponse with polymorphic hasMany and custom primary key', function () {
+    test("normalizeResponse with polymorphic hasMany and custom primary key", function () {
       SuperVillain.reopen({
-        secretWeapons: DS.hasMany('secretWeapon', { polymorphic: true, async: false })
+        secretWeapons: DS.hasMany("secretWeapon", { polymorphic: true, async: false })
       });
 
       env.registry.register('serializer:light-saber', DS.RESTSerializer.extend({
@@ -17469,22 +17475,22 @@ define(
           secretWeapons: { embedded: 'always' }
         }
       }));
-      var serializer = env.store.serializerFor('super-villain');
+      var serializer = env.store.serializerFor("super-villain");
 
       var json_hash = {
         super_villain: {
-          id: '1',
-          firstName: 'Tom',
-          lastName: 'Dale',
+          id: "1",
+          firstName: "Tom",
+          lastName: "Dale",
           secretWeapons: [{
-            custom: '1',
-            type: 'LightSaber',
-            name: 'Tom\'s LightSaber',
-            color: 'Red'
+            custom: "1",
+            type: "LightSaber",
+            name: "Tom's LightSaber",
+            color: "Red"
           }, {
-            id: '1',
-            type: 'SecretWeapon',
-            name: 'The Death Star'
+            id: "1",
+            type: "SecretWeapon",
+            name: "The Death Star"
           }]
         }
       };
@@ -17495,41 +17501,41 @@ define(
       });
 
       deepEqual(json, {
-        'data': {
-          'attributes': {
-            'firstName': 'Tom',
-            'lastName': 'Dale'
+        "data": {
+          "attributes": {
+            "firstName": "Tom",
+            "lastName": "Dale"
           },
-          'id': '1',
-          'relationships': {
-            'secretWeapons': {
-              'data': [{ 'type': 'light-saber', 'id': '1' }, { 'type': 'secret-weapon', 'id': '1' }]
+          "id": "1",
+          "relationships": {
+            "secretWeapons": {
+              "data": [{ "type": "light-saber", "id": "1" }, { "type": "secret-weapon", "id": "1" }]
             }
           },
-          'type': 'super-villain'
+          "type": "super-villain"
         },
-        'included': [{
-          'attributes': {
-            'color': 'Red',
-            'name': 'Tom\'s LightSaber'
+        "included": [{
+          "attributes": {
+            "color": "Red",
+            "name": "Tom's LightSaber"
           },
-          'id': '1',
-          'relationships': {},
-          'type': 'light-saber'
+          "id": "1",
+          "relationships": {},
+          "type": "light-saber"
         }, {
-          'attributes': {
-            'name': 'The Death Star'
+          "attributes": {
+            "name": "The Death Star"
           },
-          'id': '1',
-          'relationships': {},
-          'type': 'secret-weapon'
+          "id": "1",
+          "relationships": {},
+          "type": "secret-weapon"
         }]
-      }, 'Custom primary key of embedded hasMany is correctly normalized');
+      }, "Custom primary key of embedded hasMany is correctly normalized");
     });
 
-    test('normalizeResponse with polymorphic belongsTo', function () {
+    test("normalizeResponse with polymorphic belongsTo", function () {
       SuperVillain.reopen({
-        secretLab: DS.belongsTo('secretLab', { polymorphic: true, async: true })
+        secretLab: DS.belongsTo("secretLab", { polymorphic: true, async: true })
       });
 
       env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
@@ -17537,16 +17543,16 @@ define(
           secretLab: { embedded: 'always' }
         }
       }));
-      var serializer = env.store.serializerFor('super-villain');
+      var serializer = env.store.serializerFor("super-villain");
 
       var json_hash = {
         super_villain: {
-          id: '1',
-          firstName: 'Tom',
-          lastName: 'Dale',
+          id: "1",
+          firstName: "Tom",
+          lastName: "Dale",
           secretLab: {
-            id: '1',
-            type: 'bat-cave',
+            id: "1",
+            type: "bat-cave",
             infiltrated: true
           }
         }
@@ -17559,35 +17565,35 @@ define(
       });
 
       deepEqual(json, {
-        'data': {
-          'id': '1',
-          'type': 'super-villain',
-          'attributes': {
-            'firstName': 'Tom',
-            'lastName': 'Dale'
+        "data": {
+          "id": "1",
+          "type": "super-villain",
+          "attributes": {
+            "firstName": "Tom",
+            "lastName": "Dale"
           },
-          'relationships': {
-            'secretLab': {
-              'data': { 'id': '1', 'type': 'bat-cave' }
+          "relationships": {
+            "secretLab": {
+              "data": { "id": "1", "type": "bat-cave" }
             }
           }
         },
-        'included': [{
-          'id': '1',
-          'type': 'bat-cave',
-          'attributes': {
-            'infiltrated': true
+        "included": [{
+          "id": "1",
+          "type": "bat-cave",
+          "attributes": {
+            "infiltrated": true
           },
-          'relationships': {}
+          "relationships": {}
         }]
-      }, 'Primary has was correct');
+      }, "Primary has was correct");
     });
 
-    test('normalizeResponse with polymorphic belongsTo and custom primary key', function () {
+    test("normalizeResponse with polymorphic belongsTo and custom primary key", function () {
       expect(1);
 
       SuperVillain.reopen({
-        secretLab: DS.belongsTo('secretLab', { polymorphic: true, async: true })
+        secretLab: DS.belongsTo("secretLab", { polymorphic: true, async: true })
       });
 
       env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
@@ -17598,16 +17604,16 @@ define(
       env.registry.register('serializer:bat-cave', DS.RESTSerializer.extend({
         primaryKey: 'custom'
       }));
-      var serializer = env.store.serializerFor('super-villain');
+      var serializer = env.store.serializerFor("super-villain");
 
       var json_hash = {
         superVillain: {
-          id: '1',
-          firstName: 'Tom',
-          lastName: 'Dale',
+          id: "1",
+          firstName: "Tom",
+          lastName: "Dale",
           secretLab: {
-            custom: '1',
-            type: 'bat-cave',
+            custom: "1",
+            type: "bat-cave",
             infiltrated: true
           }
         }
@@ -17620,43 +17626,43 @@ define(
       });
 
       deepEqual(json, {
-        'data': {
-          'attributes': {
-            'firstName': 'Tom',
-            'lastName': 'Dale'
+        "data": {
+          "attributes": {
+            "firstName": "Tom",
+            "lastName": "Dale"
           },
-          'id': '1',
-          'relationships': {
-            'secretLab': {
-              'data': {
-                'id': '1',
-                'type': 'bat-cave'
+          "id": "1",
+          "relationships": {
+            "secretLab": {
+              "data": {
+                "id": "1",
+                "type": "bat-cave"
               }
             }
           },
-          'type': 'super-villain'
+          "type": "super-villain"
         },
-        'included': [{
-          'attributes': {
-            'infiltrated': true
+        "included": [{
+          "attributes": {
+            "infiltrated": true
           },
-          'id': '1',
-          'relationships': {},
-          'type': 'bat-cave'
+          "id": "1",
+          "relationships": {},
+          "type": "bat-cave"
         }]
-      }, 'Custom primary key is correctly normalized');
+      }, "Custom primary key is correctly normalized");
     });
 
-    test('Mixin can be used with RESTSerializer which does not define keyForAttribute', function () {
+    test("Mixin can be used with RESTSerializer which does not define keyForAttribute", function () {
       run(function () {
-        homePlanet = env.store.createRecord('home-planet', { name: 'Villain League', id: '123' });
-        secretLab = env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: 'California, USA', id: '101' });
+        homePlanet = env.store.createRecord('home-planet', { name: "Villain League", id: "123" });
+        secretLab = env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA", id: "101" });
         superVillain = env.store.createRecord('super-villain', {
-          id: '1', firstName: 'Super', lastName: 'Villian', homePlanet: homePlanet, secretLab: secretLab
+          id: "1", firstName: "Super", lastName: "Villian", homePlanet: homePlanet, secretLab: secretLab
         });
-        secretWeapon = env.store.createRecord('secret-weapon', { id: '1', name: 'Secret Weapon', superVillain: superVillain });
+        secretWeapon = env.store.createRecord('secret-weapon', { id: "1", name: "Secret Weapon", superVillain: superVillain });
         superVillain.get('secretWeapons').pushObject(secretWeapon);
-        evilMinion = env.store.createRecord('evil-minion', { id: '1', name: 'Evil Minion', superVillian: superVillain });
+        evilMinion = env.store.createRecord('evil-minion', { id: "1", name: "Evil Minion", superVillian: superVillain });
         superVillain.get('evilMinions').pushObject(evilMinion);
       });
 
@@ -17665,7 +17671,7 @@ define(
           evilMinions: { serialize: 'records', deserialize: 'records' }
         }
       }));
-      var serializer = env.store.serializerFor('super-villain');
+      var serializer = env.store.serializerFor("super-villain");
       var json;
 
       run(function () {
@@ -17673,21 +17679,21 @@ define(
       });
 
       deepEqual(json, {
-        firstName: get(superVillain, 'firstName'),
-        lastName: get(superVillain, 'lastName'),
-        homePlanet: '123',
+        firstName: get(superVillain, "firstName"),
+        lastName: get(superVillain, "lastName"),
+        homePlanet: "123",
         evilMinions: [{
-          id: get(evilMinion, 'id'),
-          name: get(evilMinion, 'name'),
-          superVillain: '1'
+          id: get(evilMinion, "id"),
+          name: get(evilMinion, "name"),
+          superVillain: "1"
         }],
-        secretLab: '101'
+        secretLab: "101"
         // "manyToOne" relation does not serialize ids
         // sersecretWeapons: ["1"]
       });
     });
 
-    test('normalize with custom belongsTo primary key', function () {
+    test("normalize with custom belongsTo primary key", function () {
       env.registry.register('serializer:evil-minion', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           superVillain: { embedded: 'always' }
@@ -17697,15 +17703,15 @@ define(
         primaryKey: 'custom'
       }));
 
-      var serializer = env.store.serializerFor('evil-minion');
+      var serializer = env.store.serializerFor("evil-minion");
       var json_hash = {
         evilMinion: {
-          id: '1',
-          name: 'Alex',
+          id: "1",
+          name: "Alex",
           superVillain: {
-            custom: '1',
-            firstName: 'Tom',
-            lastName: 'Dale'
+            custom: "1",
+            firstName: "Tom",
+            lastName: "Dale"
           }
         }
       };
@@ -17716,40 +17722,40 @@ define(
       });
 
       deepEqual(json, {
-        'data': {
-          'id': '1',
-          'type': 'evil-minion',
-          'attributes': {
-            'name': 'Alex'
+        "data": {
+          "id": "1",
+          "type": "evil-minion",
+          "attributes": {
+            "name": "Alex"
           },
-          'relationships': {
-            'superVillain': {
-              'data': { 'id': '1', 'type': 'super-villain' }
+          "relationships": {
+            "superVillain": {
+              "data": { "id": "1", "type": "super-villain" }
             }
           }
         },
-        'included': [{
-          'id': '1',
-          'type': 'super-villain',
-          'attributes': {
-            'firstName': 'Tom',
-            'lastName': 'Dale'
+        "included": [{
+          "id": "1",
+          "type": "super-villain",
+          "attributes": {
+            "firstName": "Tom",
+            "lastName": "Dale"
           },
-          'relationships': {}
+          "relationships": {}
         }]
-      }, 'Primary hash was correct');
+      }, "Primary hash was correct");
     });
 
-    test('serializing relationships with an embedded and without calls super when not attr not present', function () {
+    test("serializing relationships with an embedded and without calls super when not attr not present", function () {
       run(function () {
-        homePlanet = env.store.createRecord('home-planet', { name: 'Villain League', id: '123' });
-        secretLab = env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: 'California, USA', id: '101' });
+        homePlanet = env.store.createRecord('home-planet', { name: "Villain League", id: "123" });
+        secretLab = env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA", id: "101" });
         superVillain = env.store.createRecord('super-villain', {
-          id: '1', firstName: 'Super', lastName: 'Villian', homePlanet: homePlanet, secretLab: secretLab
+          id: "1", firstName: "Super", lastName: "Villian", homePlanet: homePlanet, secretLab: secretLab
         });
-        secretWeapon = env.store.createRecord('secret-weapon', { id: '1', name: 'Secret Weapon', superVillain: superVillain });
+        secretWeapon = env.store.createRecord('secret-weapon', { id: "1", name: "Secret Weapon", superVillain: superVillain });
         superVillain.get('secretWeapons').pushObject(secretWeapon);
-        evilMinion = env.store.createRecord('evil-minion', { id: '1', name: 'Evil Minion', superVillian: superVillain });
+        evilMinion = env.store.createRecord('evil-minion', { id: "1", name: "Evil Minion", superVillian: superVillain });
         superVillain.get('evilMinions').pushObject(evilMinion);
       });
 
@@ -17764,7 +17770,7 @@ define(
         serializeHasMany: function (snapshot, json, relationship) {
           calledSerializeHasMany = true;
           var key = relationship.key;
-          var payloadKey = this.keyForRelationship ? this.keyForRelationship(key, 'hasMany') : key;
+          var payloadKey = this.keyForRelationship ? this.keyForRelationship(key, "hasMany") : key;
           var relationshipType = snapshot.type.determineRelationshipType(relationship);
           // "manyToOne" not supported in DS.ActiveModelSerializer.prototype.serializeHasMany
           var relationshipTypes = Ember.String.w('manyToNone manyToMany manyToOne');
@@ -17782,7 +17788,7 @@ define(
           // e.g. secretWeapons: { serialize: 'ids' }
         }
       }));
-      var serializer = env.store.serializerFor('super-villain');
+      var serializer = env.store.serializerFor("super-villain");
 
       var json;
       run(function () {
@@ -17790,23 +17796,23 @@ define(
       });
 
       deepEqual(json, {
-        firstName: get(superVillain, 'firstName'),
-        lastName: get(superVillain, 'lastName'),
-        homePlanet: '123',
+        firstName: get(superVillain, "firstName"),
+        lastName: get(superVillain, "lastName"),
+        homePlanet: "123",
         evilMinions: [{
-          id: get(evilMinion, 'id'),
-          name: get(evilMinion, 'name'),
-          superVillain: '1'
+          id: get(evilMinion, "id"),
+          name: get(evilMinion, "name"),
+          superVillain: "1"
         }],
-        secretLab: '101',
+        secretLab: "101",
         // customized serializeHasMany method to generate ids for "manyToOne" relation
-        secretWeapons: ['1']
+        secretWeapons: ["1"]
       });
       ok(calledSerializeBelongsTo);
       ok(calledSerializeHasMany);
     });
 
-    test('serializing belongsTo correctly removes embedded foreign key', function () {
+    test("serializing belongsTo correctly removes embedded foreign key", function () {
       SecretWeapon.reopen({
         superVillain: null
       });
@@ -17816,8 +17822,8 @@ define(
       });
 
       run(function () {
-        secretWeapon = env.store.createRecord('secret-weapon', { name: 'Secret Weapon' });
-        evilMinion = env.store.createRecord('evil-minion', { name: 'Evil Minion', secretWeapon: secretWeapon });
+        secretWeapon = env.store.createRecord('secret-weapon', { name: "Secret Weapon" });
+        evilMinion = env.store.createRecord('evil-minion', { name: "Evil Minion", secretWeapon: secretWeapon });
       });
 
       env.registry.register('serializer:evil-minion', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
@@ -17826,7 +17832,7 @@ define(
         }
       }));
 
-      var serializer = env.store.serializerFor('evil-minion');
+      var serializer = env.store.serializerFor("evil-minion");
       var json;
 
       run(function () {
@@ -17834,9 +17840,9 @@ define(
       });
 
       deepEqual(json, {
-        name: 'Evil Minion',
+        name: "Evil Minion",
         secretWeapon: {
-          name: 'Secret Weapon'
+          name: "Secret Weapon"
         }
       });
     });
@@ -17972,7 +17978,7 @@ define(
     var Post, post, Comment, comment, Favorite, favorite, env;
     var run = Ember.run;
 
-    module('integration/serializer/json - JSONSerializer', {
+    module("integration/serializer/json - JSONSerializer", {
       setup: function () {
         Post = DS.Model.extend({
           title: DS.attr('string'),
@@ -18000,20 +18006,20 @@ define(
       }
     });
 
-    test('serializeAttribute', function () {
+    test("serializeAttribute", function () {
       run(function () {
-        post = env.store.createRecord('post', { title: 'Rails is omakase' });
+        post = env.store.createRecord('post', { title: "Rails is omakase" });
       });
       var json = {};
 
-      env.serializer.serializeAttribute(post._createSnapshot(), json, 'title', { type: 'string' });
+      env.serializer.serializeAttribute(post._createSnapshot(), json, "title", { type: "string" });
 
       deepEqual(json, {
-        title: 'Rails is omakase'
+        title: "Rails is omakase"
       });
     });
 
-    test('serializeAttribute respects keyForAttribute', function () {
+    test("serializeAttribute respects keyForAttribute", function () {
       env.registry.register('serializer:post', DS.JSONSerializer.extend({
         keyForAttribute: function (key) {
           return key.toUpperCase();
@@ -18021,77 +18027,77 @@ define(
       }));
 
       run(function () {
-        post = env.store.createRecord('post', { title: 'Rails is omakase' });
+        post = env.store.createRecord('post', { title: "Rails is omakase" });
       });
       var json = {};
 
-      env.store.serializerFor('post').serializeAttribute(post._createSnapshot(), json, 'title', { type: 'string' });
+      env.store.serializerFor("post").serializeAttribute(post._createSnapshot(), json, "title", { type: "string" });
 
-      deepEqual(json, { TITLE: 'Rails is omakase' });
+      deepEqual(json, { TITLE: "Rails is omakase" });
     });
 
-    test('serializeBelongsTo', function () {
+    test("serializeBelongsTo", function () {
       run(function () {
-        post = env.store.createRecord('post', { title: 'Rails is omakase', id: '1' });
-        comment = env.store.createRecord('comment', { body: 'Omakase is delicious', post: post });
+        post = env.store.createRecord('post', { title: "Rails is omakase", id: "1" });
+        comment = env.store.createRecord('comment', { body: "Omakase is delicious", post: post });
       });
 
       var json = {};
 
-      env.serializer.serializeBelongsTo(comment._createSnapshot(), json, { key: 'post', options: {} });
+      env.serializer.serializeBelongsTo(comment._createSnapshot(), json, { key: "post", options: {} });
 
-      deepEqual(json, { post: '1' });
+      deepEqual(json, { post: "1" });
     });
 
-    test('serializeBelongsTo with null', function () {
+    test("serializeBelongsTo with null", function () {
       run(function () {
-        comment = env.store.createRecord('comment', { body: 'Omakase is delicious', post: null });
+        comment = env.store.createRecord('comment', { body: "Omakase is delicious", post: null });
       });
       var json = {};
 
-      env.serializer.serializeBelongsTo(comment._createSnapshot(), json, { key: 'post', options: {} });
+      env.serializer.serializeBelongsTo(comment._createSnapshot(), json, { key: "post", options: {} });
 
       deepEqual(json, {
         post: null
-      }, 'Can set a belongsTo to a null value');
+      }, "Can set a belongsTo to a null value");
     });
 
-    test('async serializeBelongsTo with null', function () {
+    test("async serializeBelongsTo with null", function () {
       Comment.reopen({
         post: DS.belongsTo('post', { async: true })
       });
       run(function () {
-        comment = env.store.createRecord('comment', { body: 'Omakase is delicious', post: null });
+        comment = env.store.createRecord('comment', { body: "Omakase is delicious", post: null });
       });
       var json = {};
 
-      env.serializer.serializeBelongsTo(comment._createSnapshot(), json, { key: 'post', options: {} });
+      env.serializer.serializeBelongsTo(comment._createSnapshot(), json, { key: "post", options: {} });
 
       deepEqual(json, {
         post: null
-      }, 'Can set a belongsTo to a null value');
+      }, "Can set a belongsTo to a null value");
     });
 
-    test('serializeBelongsTo respects keyForRelationship', function () {
+    test("serializeBelongsTo respects keyForRelationship", function () {
       env.registry.register('serializer:post', DS.JSONSerializer.extend({
         keyForRelationship: function (key, type) {
           return key.toUpperCase();
         }
       }));
       run(function () {
-        post = env.store.createRecord('post', { title: 'Rails is omakase', id: '1' });
-        comment = env.store.createRecord('comment', { body: 'Omakase is delicious', post: post });
+        post = env.store.createRecord('post', { title: "Rails is omakase", id: "1" });
+        comment = env.store.createRecord('comment', { body: "Omakase is delicious", post: post });
       });
       var json = {};
 
-      env.store.serializerFor('post').serializeBelongsTo(comment._createSnapshot(), json, { key: 'post', options: {} });
+      env.store.serializerFor("post").serializeBelongsTo(comment._createSnapshot(), json, { key: "post", options: {} });
 
       deepEqual(json, {
-        POST: '1'
+        POST: "1"
       });
     });
 
-    test('serializeHasMany respects keyForRelationship', function () {
+    test("serializeHasMany respects keyForRelationship", function () {
       env.registry.register('serializer:post', DS.JSONSerializer.extend({
         keyForRelationship: function (key, type) {
           return key.toUpperCase();
@@ -18099,22 +18105,22 @@ define(
       }));
 
       run(function () {
-        post = env.store.createRecord('post', { title: 'Rails is omakase', id: '1' });
-        comment = env.store.createRecord('comment', { body: 'Omakase is delicious', post: post, id: '1' });
+        post = env.store.createRecord('post', { title: "Rails is omakase", id: "1" });
+        comment = env.store.createRecord('comment', { body: "Omakase is delicious", post: post, id: "1" });
       });
 
       var json = {};
 
-      env.store.serializerFor('post').serializeHasMany(post._createSnapshot(), json, { key: 'comments', options: {} });
+      env.store.serializerFor("post").serializeHasMany(post._createSnapshot(), json, { key: "comments", options: {} });
 
       deepEqual(json, {
-        COMMENTS: ['1']
+        COMMENTS: ["1"]
       });
     });
 
-    test('serializeIntoHash', function () {
+    test("serializeIntoHash", function () {
       run(function () {
-        post = env.store.createRecord('post', { title: 'Rails is omakase' });
+        post = env.store.createRecord('post', { title: "Rails is omakase" });
       });
 
       var json = {};
@@ -18122,19 +18128,19 @@ define(
       env.serializer.serializeIntoHash(json, Post, post._createSnapshot());
 
       deepEqual(json, {
-        title: 'Rails is omakase',
+        title: "Rails is omakase",
         comments: []
       });
     });
 
-    test('serializePolymorphicType sync', function () {
+    test("serializePolymorphicType sync", function () {
       expect(1);
 
       env.registry.register('serializer:comment', DS.JSONSerializer.extend({
         serializePolymorphicType: function (record, json, relationship) {
           var key = relationship.key;
           var belongsTo = record.belongsTo(key);
-          json[relationship.key + 'TYPE'] = belongsTo.modelName;
+          json[relationship.key + "TYPE"] = belongsTo.modelName;
 
           ok(true, 'serializePolymorphicType is called when serialize a polymorphic belongsTo');
         }
@@ -18148,7 +18154,7 @@ define(
       env.store.serializerFor('comment').serializeBelongsTo(comment._createSnapshot(), {}, { key: 'post', options: { polymorphic: true } });
     });
 
-    test('serializePolymorphicType async', function () {
+    test("serializePolymorphicType async", function () {
       expect(1);
 
       Comment.reopen({
@@ -18169,9 +18175,9 @@ define(
       env.store.serializerFor('comment').serializeBelongsTo(comment._createSnapshot(), {}, { key: 'post', options: { async: true, polymorphic: true } });
     });
 
-    test('normalizeResponse normalizes each record in the array', function () {
+    test("normalizeResponse normalizes each record in the array", function () {
       var postNormalizeCount = 0;
-      var posts = [{ id: '1', title: 'Rails is omakase' }, { id: '2', title: 'Another Post' }];
+      var posts = [{ id: "1", title: "Rails is omakase" }, { id: "2", title: "Another Post" }];
 
       env.registry.register('serializer:post', DS.JSONSerializer.extend({
         normalize: function () {
@@ -18181,39 +18187,39 @@ define(
       }));
 
       run(function () {
-        env.store.serializerFor('post').normalizeResponse(env.store, Post, posts, null, 'findAll');
+        env.store.serializerFor("post").normalizeResponse(env.store, Post, posts, null, 'findAll');
       });
-      equal(postNormalizeCount, 2, 'two posts are normalized');
+      equal(postNormalizeCount, 2, "two posts are normalized");
     });
 
     test('Serializer should respect the attrs hash when extracting records', function () {
-      env.registry.register('serializer:post', DS.JSONSerializer.extend({
+      env.registry.register("serializer:post", DS.JSONSerializer.extend({
         attrs: {
-          title: 'title_payload_key',
+          title: "title_payload_key",
           comments: { key: 'my_comments' }
         }
       }));
 
       var jsonHash = {
-        id: '1',
-        title_payload_key: 'Rails is omakase',
+        id: "1",
+        title_payload_key: "Rails is omakase",
         my_comments: [1, 2]
       };
 
-      var post = env.store.serializerFor('post').normalizeResponse(env.store, Post, jsonHash, '1', 'findRecord');
+      var post = env.store.serializerFor("post").normalizeResponse(env.store, Post, jsonHash, '1', 'findRecord');
 
-      equal(post.data.attributes.title, 'Rails is omakase');
-      deepEqual(post.data.relationships.comments.data, [{ id: '1', type: 'comment' }, { id: '2', type: 'comment' }]);
+      equal(post.data.attributes.title, "Rails is omakase");
+      deepEqual(post.data.relationships.comments.data, [{ id: "1", type: "comment" }, { id: "2", type: "comment" }]);
     });
 
     test('Serializer should respect the attrs hash when serializing records', function () {
       Post.reopen({
         parentPost: DS.belongsTo('post', { inverse: null, async: true })
       });
-      env.registry.register('serializer:post', DS.JSONSerializer.extend({
+      env.registry.register("serializer:post", DS.JSONSerializer.extend({
         attrs: {
-          title: 'title_payload_key',
-          parentPost: { key: 'my_parent' }
+          title: "title_payload_key",
+          parentPost: { key: "my_parent" }
         }
       }));
       var parentPost;
@@ -18224,159 +18230,159 @@ define(
             type: 'post',
             id: '2',
             attributes: {
-              title: 'Rails is omakase'
+              title: "Rails is omakase"
             }
           }
         });
         parentPost = env.store.peekRecord('post', 2);
-        post = env.store.createRecord('post', { title: 'Rails is omakase', parentPost: parentPost });
+        post = env.store.createRecord('post', { title: "Rails is omakase", parentPost: parentPost });
       });
 
-      var payload = env.store.serializerFor('post').serialize(post._createSnapshot());
+      var payload = env.store.serializerFor("post").serialize(post._createSnapshot());
 
-      equal(payload.title_payload_key, 'Rails is omakase');
+      equal(payload.title_payload_key, "Rails is omakase");
       equal(payload.my_parent, '2');
     });
 
     test('Serializer respects `serialize: false` on the attrs hash', function () {
       expect(2);
-      env.registry.register('serializer:post', DS.JSONSerializer.extend({
+      env.registry.register("serializer:post", DS.JSONSerializer.extend({
         attrs: {
           title: { serialize: false }
         }
       }));
 
       run(function () {
-        post = env.store.createRecord('post', { title: 'Rails is omakase' });
+        post = env.store.createRecord('post', { title: "Rails is omakase" });
       });
 
-      var payload = env.store.serializerFor('post').serialize(post._createSnapshot());
+      var payload = env.store.serializerFor("post").serialize(post._createSnapshot());
 
-      ok(!payload.hasOwnProperty('title'), 'Does not add the key to instance');
-      ok(!payload.hasOwnProperty('[object Object]'), 'Does not add some random key like [object Object]');
+      ok(!payload.hasOwnProperty('title'), "Does not add the key to instance");
+      ok(!payload.hasOwnProperty('[object Object]'), "Does not add some random key like [object Object]");
     });
 
     test('Serializer respects `serialize: false` on the attrs hash for a `hasMany` property', function () {
       expect(1);
-      env.registry.register('serializer:post', DS.JSONSerializer.extend({
+      env.registry.register("serializer:post", DS.JSONSerializer.extend({
         attrs: {
           comments: { serialize: false }
         }
       }));
 
       run(function () {
-        post = env.store.createRecord('post', { title: 'Rails is omakase' });
-        comment = env.store.createRecord('comment', { body: 'Omakase is delicious', post: post });
+        post = env.store.createRecord('post', { title: "Rails is omakase" });
+        comment = env.store.createRecord('comment', { body: "Omakase is delicious", post: post });
       });
 
-      var serializer = env.store.serializerFor('post');
+      var serializer = env.store.serializerFor("post");
       var serializedProperty = serializer.keyForRelationship('comments', 'hasMany');
 
       var payload = serializer.serialize(post._createSnapshot());
-      ok(!payload.hasOwnProperty(serializedProperty), 'Does not add the key to instance');
+      ok(!payload.hasOwnProperty(serializedProperty), "Does not add the key to instance");
     });
 
     test('Serializer respects `serialize: false` on the attrs hash for a `belongsTo` property', function () {
       expect(1);
-      env.registry.register('serializer:comment', DS.JSONSerializer.extend({
+      env.registry.register("serializer:comment", DS.JSONSerializer.extend({
         attrs: {
           post: { serialize: false }
         }
       }));
 
       run(function () {
-        post = env.store.createRecord('post', { title: 'Rails is omakase' });
-        comment = env.store.createRecord('comment', { body: 'Omakase is delicious', post: post });
+        post = env.store.createRecord('post', { title: "Rails is omakase" });
+        comment = env.store.createRecord('comment', { body: "Omakase is delicious", post: post });
       });
 
-      var serializer = env.store.serializerFor('comment');
+      var serializer = env.store.serializerFor("comment");
       var serializedProperty = serializer.keyForRelationship('post', 'belongsTo');
 
       var payload = serializer.serialize(comment._createSnapshot());
-      ok(!payload.hasOwnProperty(serializedProperty), 'Does not add the key to instance');
+      ok(!payload.hasOwnProperty(serializedProperty), "Does not add the key to instance");
     });
 
     test('Serializer respects `serialize: false` on the attrs hash for a `hasMany` property', function () {
       expect(1);
-      env.registry.register('serializer:post', DS.JSONSerializer.extend({
+      env.registry.register("serializer:post", DS.JSONSerializer.extend({
         attrs: {
           comments: { serialize: false }
         }
       }));
 
       run(function () {
-        post = env.store.createRecord('post', { title: 'Rails is omakase' });
-        comment = env.store.createRecord('comment', { body: 'Omakase is delicious', post: post });
+        post = env.store.createRecord('post', { title: "Rails is omakase" });
+        comment = env.store.createRecord('comment', { body: "Omakase is delicious", post: post });
       });
 
-      var serializer = env.store.serializerFor('post');
+      var serializer = env.store.serializerFor("post");
       var serializedProperty = serializer.keyForRelationship('comments', 'hasMany');
 
       var payload = serializer.serialize(post._createSnapshot());
-      ok(!payload.hasOwnProperty(serializedProperty), 'Does not add the key to instance');
+      ok(!payload.hasOwnProperty(serializedProperty), "Does not add the key to instance");
     });
 
     test('Serializer respects `serialize: false` on the attrs hash for a `belongsTo` property', function () {
       expect(1);
-      env.registry.register('serializer:comment', DS.JSONSerializer.extend({
+      env.registry.register("serializer:comment", DS.JSONSerializer.extend({
         attrs: {
           post: { serialize: false }
         }
       }));
 
       run(function () {
-        post = env.store.createRecord('post', { title: 'Rails is omakase' });
-        comment = env.store.createRecord('comment', { body: 'Omakase is delicious', post: post });
+        post = env.store.createRecord('post', { title: "Rails is omakase" });
+        comment = env.store.createRecord('comment', { body: "Omakase is delicious", post: post });
       });
 
-      var serializer = env.store.serializerFor('comment');
+      var serializer = env.store.serializerFor("comment");
       var serializedProperty = serializer.keyForRelationship('post', 'belongsTo');
 
       var payload = serializer.serialize(comment._createSnapshot());
-      ok(!payload.hasOwnProperty(serializedProperty), 'Does not add the key to instance');
+      ok(!payload.hasOwnProperty(serializedProperty), "Does not add the key to instance");
     });
 
     test('Serializer respects `serialize: true` on the attrs hash for a `hasMany` property', function () {
       expect(1);
-      env.registry.register('serializer:post', DS.JSONSerializer.extend({
+      env.registry.register("serializer:post", DS.JSONSerializer.extend({
         attrs: {
           comments: { serialize: true }
         }
       }));
 
       run(function () {
-        post = env.store.createRecord('post', { title: 'Rails is omakase' });
-        comment = env.store.createRecord('comment', { body: 'Omakase is delicious', post: post });
+        post = env.store.createRecord('post', { title: "Rails is omakase" });
+        comment = env.store.createRecord('comment', { body: "Omakase is delicious", post: post });
       });
 
-      var serializer = env.store.serializerFor('post');
+      var serializer = env.store.serializerFor("post");
       var serializedProperty = serializer.keyForRelationship('comments', 'hasMany');
 
       var payload = serializer.serialize(post._createSnapshot());
-      ok(payload.hasOwnProperty(serializedProperty), 'Add the key to instance');
+      ok(payload.hasOwnProperty(serializedProperty), "Add the key to instance");
     });
 
     test('Serializer respects `serialize: true` on the attrs hash for a `belongsTo` property', function () {
       expect(1);
-      env.registry.register('serializer:comment', DS.JSONSerializer.extend({
+      env.registry.register("serializer:comment", DS.JSONSerializer.extend({
         attrs: {
           post: { serialize: true }
         }
       }));
 
       run(function () {
-        post = env.store.createRecord('post', { title: 'Rails is omakase' });
-        comment = env.store.createRecord('comment', { body: 'Omakase is delicious', post: post });
+        post = env.store.createRecord('post', { title: "Rails is omakase" });
+        comment = env.store.createRecord('comment', { body: "Omakase is delicious", post: post });
       });
 
-      var serializer = env.store.serializerFor('comment');
+      var serializer = env.store.serializerFor("comment");
       var serializedProperty = serializer.keyForRelationship('post', 'belongsTo');
 
       var payload = serializer.serialize(comment._createSnapshot());
-      ok(payload.hasOwnProperty(serializedProperty), 'Add the key to instance');
+      ok(payload.hasOwnProperty(serializedProperty), "Add the key to instance");
     });
 
-    test('Serializer should merge attrs from superclasses', function () {
+    test("Serializer should merge attrs from superclasses", function () {
       expect(4);
       Post.reopen({
         description: DS.attr('string'),
@@ -18384,59 +18390,59 @@ define(
       });
       var BaseSerializer = DS.JSONSerializer.extend({
         attrs: {
-          title: 'title_payload_key',
-          anotherString: 'base_another_string_key'
+          title: "title_payload_key",
+          anotherString: "base_another_string_key"
         }
       });
-      env.registry.register('serializer:post', BaseSerializer.extend({
+      env.registry.register("serializer:post", BaseSerializer.extend({
         attrs: {
-          description: 'description_payload_key',
-          anotherString: 'overwritten_another_string_key'
+          description: "description_payload_key",
+          anotherString: "overwritten_another_string_key"
         }
       }));
 
       run(function () {
-        post = env.store.createRecord('post', { title: 'Rails is omakase', description: 'Omakase is delicious', anotherString: 'yet another string' });
+        post = env.store.createRecord("post", { title: "Rails is omakase", description: "Omakase is delicious", anotherString: "yet another string" });
       });
 
-      var payload = env.store.serializerFor('post').serialize(post._createSnapshot());
+      var payload = env.store.serializerFor("post").serialize(post._createSnapshot());
 
-      equal(payload.title_payload_key, 'Rails is omakase');
-      equal(payload.description_payload_key, 'Omakase is delicious');
-      equal(payload.overwritten_another_string_key, 'yet another string');
-      ok(!payload.base_another_string_key, 'overwritten key is not added');
+      equal(payload.title_payload_key, "Rails is omakase");
+      equal(payload.description_payload_key, "Omakase is delicious");
+      equal(payload.overwritten_another_string_key, "yet another string");
+      ok(!payload.base_another_string_key, "overwritten key is not added");
     });
 
-    test('Serializer should respect the primaryKey attribute when extracting records', function () {
+    test("Serializer should respect the primaryKey attribute when extracting records", function () {
       env.registry.register('serializer:post', DS.JSONSerializer.extend({
         primaryKey: '_ID_'
       }));
 
-      var jsonHash = { '_ID_': 1, title: 'Rails is omakase' };
+      var jsonHash = { "_ID_": 1, title: "Rails is omakase" };
 
       run(function () {
-        post = env.store.serializerFor('post').normalizeResponse(env.store, Post, jsonHash, '1', 'findRecord');
+        post = env.store.serializerFor("post").normalizeResponse(env.store, Post, jsonHash, '1', 'findRecord');
       });
 
-      equal(post.data.id, '1');
-      equal(post.data.attributes.title, 'Rails is omakase');
+      equal(post.data.id, "1");
+      equal(post.data.attributes.title, "Rails is omakase");
     });
 
-    test('Serializer should respect the primaryKey attribute when serializing records', function () {
+    test("Serializer should respect the primaryKey attribute when serializing records", function () {
       env.registry.register('serializer:post', DS.JSONSerializer.extend({
         primaryKey: '_ID_'
       }));
 
       run(function () {
-        post = env.store.createRecord('post', { id: '1', title: 'Rails is omakase' });
+        post = env.store.createRecord('post', { id: "1", title: "Rails is omakase" });
       });
 
-      var payload = env.store.serializerFor('post').serialize(post._createSnapshot(), { includeId: true });
+      var payload = env.store.serializerFor("post").serialize(post._createSnapshot(), { includeId: true });
 
-      equal(payload._ID_, '1');
+      equal(payload._ID_, "1");
     });
 
-    test('Serializer should respect keyForAttribute when extracting records', function () {
+    test("Serializer should respect keyForAttribute when extracting records", function () {
       env.registry.register('serializer:post', DS.JSONSerializer.extend({
         keyForAttribute: function (key) {
           return key.toUpperCase();
@@ -18445,13 +18451,13 @@ define(
 
       var jsonHash = { id: 1, TITLE: 'Rails is omakase' };
 
-      post = env.store.serializerFor('post').normalize(Post, jsonHash);
+      post = env.store.serializerFor("post").normalize(Post, jsonHash);
 
-      equal(post.data.id, '1');
-      equal(post.data.attributes.title, 'Rails is omakase');
+      equal(post.data.id, "1");
+      equal(post.data.attributes.title, "Rails is omakase");
     });
 
-    test('Serializer should respect keyForRelationship when extracting records', function () {
+    test("Serializer should respect keyForRelationship when extracting records", function () {
       env.registry.register('serializer:post', DS.JSONSerializer.extend({
         keyForRelationship: function (key, type) {
           return key.toUpperCase();
@@ -18460,12 +18466,12 @@ define(
 
       var jsonHash = { id: 1, title: 'Rails is omakase', COMMENTS: ['1'] };
 
-      post = env.store.serializerFor('post').normalize(Post, jsonHash);
+      post = env.store.serializerFor("post").normalize(Post, jsonHash);
 
-      deepEqual(post.data.relationships.comments.data, [{ id: '1', type: 'comment' }]);
+      deepEqual(post.data.relationships.comments.data, [{ id: "1", type: "comment" }]);
     });
 
-    test('Calling normalize should normalize the payload (only the passed keys)', function () {
+    test("Calling normalize should normalize the payload (only the passed keys)", function () {
       expect(1);
       var Person = DS.Model.extend({
         posts: DS.hasMany('post', { async: false })
@@ -18486,7 +18492,7 @@ define(
         inHash: DS.attr('string')
       });
 
-      var normalizedPayload = env.store.serializerFor('post').normalize(Post, {
+      var normalizedPayload = env.store.serializerFor("post").normalize(Post, {
         id: '1',
         title: 'Ember rocks',
         author: 1,
@@ -18494,16 +18500,16 @@ define(
       });
 
       deepEqual(normalizedPayload, {
-        'data': {
-          'id': '1',
-          'type': 'post',
-          'attributes': {
-            'inHash': 'blah',
-            'title': 'Ember rocks'
+        "data": {
+          "id": "1",
+          "type": "post",
+          "attributes": {
+            "inHash": "blah",
+            "title": "Ember rocks"
           },
-          'relationships': {
-            'author': {
-              'data': { 'id': '1', 'type': 'person' }
+          "relationships": {
+            "author": {
+              "data": { "id": "1", "type": "person" }
             }
           }
         }
@@ -18542,18 +18548,18 @@ define(
       var payload = {
         errors: [{
           source: { pointer: 'data/attributes/le_title' },
-          detail: 'title errors'
+          detail: "title errors"
         }, {
           source: { pointer: 'data/attributes/my_comments' },
-          detail: 'comments errors'
+          detail: "comments errors"
         }]
       };
 
       var errors = env.store.serializerFor('post').extractErrors(env.store, Post, payload);
 
       deepEqual(errors, {
-        title: ['title errors'],
-        comments: ['comments errors']
+        title: ["title errors"],
+        comments: ["comments errors"]
       });
     });
 
@@ -18561,32 +18567,32 @@ define(
       env.registry.register('serializer:post', DS.JSONSerializer.extend());
 
       var payload = {
-        attributeWhichWillBeRemovedinExtractErrors: ['true'],
+        attributeWhichWillBeRemovedinExtractErrors: ["true"],
         errors: [{
           source: { pointer: 'data/attributes/title' },
-          detail: 'title errors'
+          detail: "title errors"
         }]
       };
 
       var errors = env.store.serializerFor('post').extractErrors(env.store, Post, payload);
 
-      deepEqual(errors, { title: ['title errors'] });
+      deepEqual(errors, { title: ["title errors"] });
     });
 
     test('extractErrors leaves payload untouched if it has no errors property', function () {
       env.registry.register('serializer:post', DS.JSONSerializer.extend());
 
       var payload = {
-        untouchedSinceNoErrorsSiblingPresent: ['true']
+        untouchedSinceNoErrorsSiblingPresent: ["true"]
       };
 
       var errors = env.store.serializerFor('post').extractErrors(env.store, Post, payload);
 
-      deepEqual(errors, { untouchedSinceNoErrorsSiblingPresent: ['true'] });
+      deepEqual(errors, { untouchedSinceNoErrorsSiblingPresent: ["true"] });
     });
 
     test('normalizeResponse should extract meta using extractMeta', function () {
-      env.registry.register('serializer:post', DS.JSONSerializer.extend({
+      env.registry.register("serializer:post", DS.JSONSerializer.extend({
         extractMeta: function (store, modelClass, payload) {
           var meta = this._super.apply(this, arguments);
           meta.authors.push('Tomhuda');
@@ -18595,70 +18601,70 @@ define(
       }));
 
       var jsonHash = {
-        id: '1',
-        title_payload_key: 'Rails is omakase',
+        id: "1",
+        title_payload_key: "Rails is omakase",
         my_comments: [1, 2],
         meta: {
           authors: ['Tomster']
         }
       };
 
-      var post = env.store.serializerFor('post').normalizeResponse(env.store, Post, jsonHash, '1', 'findRecord');
+      var post = env.store.serializerFor("post").normalizeResponse(env.store, Post, jsonHash, '1', 'findRecord');
 
       deepEqual(post.meta.authors, ['Tomster', 'Tomhuda']);
     });
 
     test('normalizeResponse returns empty `included` payload by default', function () {
-      env.registry.register('serializer:post', DS.JSONSerializer.extend());
+      env.registry.register("serializer:post", DS.JSONSerializer.extend());
 
       var jsonHash = {
-        id: '1',
-        title: 'Rails is omakase'
+        id: "1",
+        title: "Rails is omakase"
       };
 
-      var post = env.store.serializerFor('post').normalizeResponse(env.store, Post, jsonHash, '1', 'findRecord');
+      var post = env.store.serializerFor("post").normalizeResponse(env.store, Post, jsonHash, '1', 'findRecord');
 
       deepEqual(post.included, []);
     });
 
     test('normalizeResponse respects `included` items (single response)', function () {
-      env.registry.register('serializer:post', DS.JSONSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register("serializer:post", DS.JSONSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           comments: { embedded: 'always' }
         }
       }));
 
       var jsonHash = {
-        id: '1',
-        title: 'Rails is omakase',
-        comments: [{ id: '1', body: 'comment 1' }, { id: '2', body: 'comment 2' }]
+        id: "1",
+        title: "Rails is omakase",
+        comments: [{ id: "1", body: "comment 1" }, { id: "2", body: "comment 2" }]
       };
 
-      var post = env.store.serializerFor('post').normalizeResponse(env.store, Post, jsonHash, '1', 'findRecord');
+      var post = env.store.serializerFor("post").normalizeResponse(env.store, Post, jsonHash, '1', 'findRecord');
 
-      deepEqual(post.included, [{ id: '1', type: 'comment', attributes: { body: 'comment 1' }, relationships: {} }, { id: '2', type: 'comment', attributes: { body: 'comment 2' }, relationships: {} }]);
+      deepEqual(post.included, [{ id: "1", type: "comment", attributes: { body: "comment 1" }, relationships: {} }, { id: "2", type: "comment", attributes: { body: "comment 2" }, relationships: {} }]);
     });
 
     test('normalizeResponse respects `included` items (array response)', function () {
-      env.registry.register('serializer:post', DS.JSONSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register("serializer:post", DS.JSONSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           comments: { embedded: 'always' }
         }
       }));
 
       var payload = [{
-        id: '1',
-        title: 'Rails is omakase',
-        comments: [{ id: '1', body: 'comment 1' }]
+        id: "1",
+        title: "Rails is omakase",
+        comments: [{ id: "1", body: "comment 1" }]
       }, {
-        id: '2',
-        title: 'Post 2',
-        comments: [{ id: '2', body: 'comment 2' }, { id: '3', body: 'comment 3' }]
+        id: "2",
+        title: "Post 2",
+        comments: [{ id: "2", body: "comment 2" }, { id: "3", body: "comment 3" }]
       }];
 
-      var post = env.store.serializerFor('post').normalizeResponse(env.store, Post, payload, '1', 'findAll');
+      var post = env.store.serializerFor("post").normalizeResponse(env.store, Post, payload, '1', 'findAll');
 
-      deepEqual(post.included, [{ id: '1', type: 'comment', attributes: { body: 'comment 1' }, relationships: {} }, { id: '2', type: 'comment', attributes: { body: 'comment 2' }, relationships: {} }, { id: '3', type: 'comment', attributes: { body: 'comment 3' }, relationships: {} }]);
+      deepEqual(post.included, [{ id: "1", type: "comment", attributes: { body: "comment 1" }, relationships: {} }, { id: "2", type: "comment", attributes: { body: "comment 2" }, relationships: {} }, { id: "3", type: "comment", attributes: { body: "comment 3" }, relationships: {} }]);
     });
   }
 );
@@ -18677,7 +18683,7 @@ define(
     var HomePlanet, league, SuperVillain, EvilMinion, YellowMinion, DoomsdayDevice, Comment, env;
     var run = Ember.run;
 
-    module('integration/serializer/rest - RESTSerializer', {
+    module("integration/serializer/rest - RESTSerializer", {
       setup: function () {
         HomePlanet = DS.Model.extend({
           name: DS.attr('string'),
@@ -18724,7 +18730,7 @@ define(
       }
     });
 
-    test('modelNameFromPayloadKey returns always same modelName even for uncountable multi words keys', function () {
+    test("modelNameFromPayloadKey returns always same modelName even for uncountable multi words keys", function () {
       expect(2);
       Ember.Inflector.inflector.uncountable('words');
       var expectedModelName = 'multi-words';
@@ -18733,7 +18739,7 @@ define(
     });
 
     test('normalizeResponse should extract meta using extractMeta', function () {
-      env.registry.register('serializer:home-planet', DS.RESTSerializer.extend({
+      env.registry.register("serializer:home-planet", DS.RESTSerializer.extend({
         extractMeta: function (store, modelClass, payload) {
           var meta = this._super.apply(this, arguments);
           meta.authors.push('Tomhuda');
@@ -18743,15 +18749,15 @@ define(
 
       var jsonHash = {
         meta: { authors: ['Tomster'] },
-        home_planets: [{ id: '1', name: 'Umber', superVillains: [1] }]
+        home_planets: [{ id: "1", name: "Umber", superVillains: [1] }]
       };
 
-      var json = env.container.lookup('serializer:home-planet').normalizeResponse(env.store, HomePlanet, jsonHash, null, 'findAll');
+      var json = env.container.lookup("serializer:home-planet").normalizeResponse(env.store, HomePlanet, jsonHash, null, 'findAll');
 
       deepEqual(json.meta.authors, ['Tomster', 'Tomhuda']);
     });
 
-    test('normalizeResponse with custom modelNameFromPayloadKey', function () {
+    test("normalizeResponse with custom modelNameFromPayloadKey", function () {
       expect(1);
 
       env.restSerializer.modelNameFromPayloadKey = function (root) {
@@ -18760,8 +18766,8 @@ define(
       };
 
       var jsonHash = {
-        home_planets: [{ id: '1', name: 'Umber', superVillains: [1] }],
-        super_villains: [{ id: '1', firstName: 'Tom', lastName: 'Dale', homePlanet: '1' }]
+        home_planets: [{ id: "1", name: "Umber", superVillains: [1] }],
+        super_villains: [{ id: "1", firstName: "Tom", lastName: "Dale", homePlanet: "1" }]
       };
       var array;
 
@@ -18798,16 +18804,16 @@ define(
       });
     });
 
-    test('normalizeResponse warning with custom modelNameFromPayloadKey', function () {
+    test("normalizeResponse warning with custom modelNameFromPayloadKey", function () {
       var homePlanet;
       var oldModelNameFromPayloadKey = env.restSerializer.modelNameFromPayloadKey;
       env.restSerializer.modelNameFromPayloadKey = function (root) {
         //return some garbage that won"t resolve in the container
-        return 'garbage';
+        return "garbage";
       };
 
       var jsonHash = {
-        home_planet: { id: '1', name: 'Umber', superVillains: [1] }
+        home_planet: { id: "1", name: "Umber", superVillains: [1] }
       };
 
       warns(Ember.run.bind(null, function () {
@@ -18819,7 +18825,7 @@ define(
       // should not warn if a model is found.
       env.restSerializer.modelNameFromPayloadKey = oldModelNameFromPayloadKey;
       jsonHash = {
-        home_planet: { id: '1', name: 'Umber', superVillains: [1] }
+        home_planet: { id: "1", name: "Umber", superVillains: [1] }
       };
 
       noWarns(function () {
@@ -18829,19 +18835,19 @@ define(
         });
       });
 
-      equal(homePlanet.data.attributes.name, 'Umber');
+      equal(homePlanet.data.attributes.name, "Umber");
       deepEqual(homePlanet.data.relationships.superVillains.data, [{ id: '1', type: 'super-villain' }]);
     });
 
-    test('normalizeResponse warning with custom modelNameFromPayloadKey', function () {
+    test("normalizeResponse warning with custom modelNameFromPayloadKey", function () {
       var homePlanets;
       env.restSerializer.modelNameFromPayloadKey = function (root) {
         //return some garbage that won"t resolve in the container
-        return 'garbage';
+        return "garbage";
       };
 
       var jsonHash = {
-        home_planets: [{ id: '1', name: 'Umber', superVillains: [1] }]
+        home_planets: [{ id: "1", name: "Umber", superVillains: [1] }]
       };
 
       warns(function () {
@@ -18854,7 +18860,7 @@ define(
       };
 
       jsonHash = {
-        home_planets: [{ id: '1', name: 'Umber', superVillains: [1] }]
+        home_planets: [{ id: "1", name: "Umber", superVillains: [1] }]
       };
 
       noWarns(function () {
@@ -18864,51 +18870,51 @@ define(
       });
 
       equal(homePlanets.data.length, 1);
-      equal(homePlanets.data[0].attributes.name, 'Umber');
+      equal(homePlanets.data[0].attributes.name, "Umber");
       deepEqual(homePlanets.data[0].relationships.superVillains.data, [{ id: '1', type: 'super-villain' }]);
     });
 
-    test('serialize polymorphicType', function () {
+    test("serialize polymorphicType", function () {
       var tom, ray;
       run(function () {
-        tom = env.store.createRecord('yellow-minion', { name: 'Alex', id: '124' });
-        ray = env.store.createRecord('doomsday-device', { evilMinion: tom, name: 'DeathRay' });
+        tom = env.store.createRecord('yellow-minion', { name: "Alex", id: "124" });
+        ray = env.store.createRecord('doomsday-device', { evilMinion: tom, name: "DeathRay" });
       });
 
       var json = env.restSerializer.serialize(ray._createSnapshot());
 
       deepEqual(json, {
-        name: 'DeathRay',
-        evilMinionType: 'yellowMinion',
-        evilMinion: '124'
+        name: "DeathRay",
+        evilMinionType: "yellowMinion",
+        evilMinion: "124"
       });
     });
 
-    test('serialize polymorphicType with decamelized modelName', function () {
+    test("serialize polymorphicType with decamelized modelName", function () {
       YellowMinion.modelName = 'yellow-minion';
       var tom, ray;
       run(function () {
-        tom = env.store.createRecord('yellow-minion', { name: 'Alex', id: '124' });
-        ray = env.store.createRecord('doomsday-device', { evilMinion: tom, name: 'DeathRay' });
+        tom = env.store.createRecord('yellow-minion', { name: "Alex", id: "124" });
+        ray = env.store.createRecord('doomsday-device', { evilMinion: tom, name: "DeathRay" });
       });
 
       var json = env.restSerializer.serialize(ray._createSnapshot());
 
-      deepEqual(json['evilMinionType'], 'yellowMinion');
+      deepEqual(json["evilMinionType"], "yellowMinion");
     });
 
-    test('serialize polymorphic when associated object is null', function () {
+    test("serialize polymorphic when associated object is null", function () {
       var ray;
       run(function () {
-        ray = env.store.createRecord('doomsday-device', { name: 'DeathRay' });
+        ray = env.store.createRecord('doomsday-device', { name: "DeathRay" });
       });
 
       var json = env.restSerializer.serialize(ray._createSnapshot());
 
-      deepEqual(json['evilMinionType'], null);
+      deepEqual(json["evilMinionType"], null);
     });
 
-    test('normalizeResponse loads secondary records with correct serializer', function () {
+    test("normalizeResponse loads secondary records with correct serializer", function () {
       var superVillainNormalizeCount = 0;
 
       env.registry.register('serializer:super-villain', DS.RESTSerializer.extend({
@@ -18919,18 +18925,18 @@ define(
       }));
 
       var jsonHash = {
-        evilMinion: { id: '1', name: 'Tom Dale', superVillain: 1 },
-        superVillains: [{ id: '1', firstName: 'Yehuda', lastName: 'Katz', homePlanet: '1' }]
+        evilMinion: { id: "1", name: "Tom Dale", superVillain: 1 },
+        superVillains: [{ id: "1", firstName: "Yehuda", lastName: "Katz", homePlanet: "1" }]
       };
 
       run(function () {
         env.restSerializer.normalizeResponse(env.store, EvilMinion, jsonHash, '1', 'findRecord');
       });
 
-      equal(superVillainNormalizeCount, 1, 'superVillain is normalized once');
+      equal(superVillainNormalizeCount, 1, "superVillain is normalized once");
     });
 
-    test('normalizeResponse returns null if payload contains null', function () {
+    test("normalizeResponse returns null if payload contains null", function () {
       expect(1);
 
       var jsonHash = {
@@ -18942,10 +18948,10 @@ define(
         value = env.restSerializer.normalizeResponse(env.store, EvilMinion, jsonHash, null, 'findRecord');
       });
 
-      deepEqual(value, { data: null, included: [] }, 'returned value is null');
+      deepEqual(value, { data: null, included: [] }, "returned value is null");
     });
 
-    test('normalizeResponse loads secondary records with correct serializer', function () {
+    test("normalizeResponse loads secondary records with correct serializer", function () {
       var superVillainNormalizeCount = 0;
 
       env.registry.register('serializer:super-villain', DS.RESTSerializer.extend({
@@ -18956,15 +18962,15 @@ define(
       }));
 
       var jsonHash = {
-        evilMinions: [{ id: '1', name: 'Tom Dale', superVillain: 1 }],
-        superVillains: [{ id: '1', firstName: 'Yehuda', lastName: 'Katz', homePlanet: '1' }]
+        evilMinions: [{ id: "1", name: "Tom Dale", superVillain: 1 }],
+        superVillains: [{ id: "1", firstName: "Yehuda", lastName: "Katz", homePlanet: "1" }]
       };
 
       run(function () {
         env.restSerializer.normalizeResponse(env.store, EvilMinion, jsonHash, null, 'findAll');
       });
 
-      equal(superVillainNormalizeCount, 1, 'superVillain is normalized once');
+      equal(superVillainNormalizeCount, 1, "superVillain is normalized once");
     });
 
     test('normalizeHash normalizes specific parts of the payload', function () {
@@ -18979,7 +18985,7 @@ define(
       }));
 
       var jsonHash = {
-        homePlanets: [{ _id: '1', name: 'Umber', superVillains: [1] }]
+        homePlanets: [{ _id: "1", name: "Umber", superVillains: [1] }]
       };
       var array;
 
@@ -18988,19 +18994,19 @@ define(
       });
 
       deepEqual(array, {
-        'data': [{
-          'id': '1',
-          'type': 'home-planet',
-          'attributes': {
-            'name': 'Umber'
+        "data": [{
+          "id": "1",
+          "type": "home-planet",
+          "attributes": {
+            "name": "Umber"
           },
-          'relationships': {
-            'superVillains': {
-              'data': [{ 'id': '1', 'type': 'super-villain' }]
+          "relationships": {
+            "superVillains": {
+              "data": [{ "id": "1", "type": "super-villain" }]
             }
           }
         }],
-        'included': []
+        "included": []
       });
     });
 
@@ -19018,13 +19024,13 @@ define(
       env.registry.register('transform:condition', DS.Transform.extend({
         deserialize: function (serialized) {
           if (serialized === 1) {
-            return 'healing';
+            return "healing";
           } else {
-            return 'unknown';
+            return "unknown";
           }
         },
         serialize: function (deserialized) {
-          if (deserialized === 'healing') {
+          if (deserialized === "healing") {
             return 1;
           } else {
             return 2;
@@ -19035,7 +19041,7 @@ define(
       EvilMinion.reopen({ condition: DS.attr('condition') });
 
       var jsonHash = {
-        evilMinions: [{ id: '1', name: 'Tom Dale', superVillain: 1, _condition: 1 }]
+        evilMinions: [{ id: "1", name: "Tom Dale", superVillain: 1, _condition: 1 }]
       };
       var array;
 
@@ -19043,7 +19049,7 @@ define(
         array = env.restSerializer.normalizeResponse(env.store, EvilMinion, jsonHash, null, 'findAll');
       });
 
-      equal(array.data[0].attributes.condition, 'healing');
+      equal(array.data[0].attributes.condition, "healing");
     });
 
     test('normalize should allow for different levels of normalization', function () {
@@ -19057,7 +19063,7 @@ define(
       }));
 
       var jsonHash = {
-        evilMinions: [{ id: '1', name: 'Tom Dale', is_super_villain: 1 }]
+        evilMinions: [{ id: "1", name: "Tom Dale", is_super_villain: 1 }]
       };
       var array;
 
@@ -19068,9 +19074,9 @@ define(
       equal(array.data[0].relationships.superVillain.data.id, 1);
     });
 
-    test('serializeIntoHash', function () {
+    test("serializeIntoHash", function () {
       run(function () {
-        league = env.store.createRecord('home-planet', { name: 'Umber', id: '123' });
+        league = env.store.createRecord('home-planet', { name: "Umber", id: "123" });
       });
       var json = {};
 
@@ -19078,15 +19084,15 @@ define(
 
       deepEqual(json, {
         homePlanet: {
-          name: 'Umber'
+          name: "Umber"
         }
       });
     });
 
-    test('serializeIntoHash with decamelized modelName', function () {
+    test("serializeIntoHash with decamelized modelName", function () {
       HomePlanet.modelName = 'home-planet';
       run(function () {
-        league = env.store.createRecord('home-planet', { name: 'Umber', id: '123' });
+        league = env.store.createRecord('home-planet', { name: "Umber", id: "123" });
       });
       var json = {};
 
@@ -19094,7 +19100,7 @@ define(
 
       deepEqual(json, {
         homePlanet: {
-          name: 'Umber'
+          name: "Umber"
         }
       });
     });
@@ -19116,7 +19122,7 @@ define(
 
     test('serializeIntoHash uses payloadKeyFromModelName to normalize the payload root key', function () {
       run(function () {
-        league = env.store.createRecord('home-planet', { name: 'Umber', id: '123' });
+        league = env.store.createRecord('home-planet', { name: "Umber", id: "123" });
       });
       var json = {};
       env.registry.register('serializer:home-planet', DS.RESTSerializer.extend({
@@ -19129,15 +19135,15 @@ define(
 
       deepEqual(json, {
         'home-planet': {
-          name: 'Umber'
+          name: "Umber"
         }
       });
     });
 
-    test('normalizeResponse can load secondary records of the same type without affecting the query count', function () {
+    test("normalizeResponse can load secondary records of the same type without affecting the query count", function () {
       var jsonHash = {
-        comments: [{ id: '1', body: 'Parent Comment', root: true, children: [2, 3] }],
-        _comments: [{ id: '2', body: 'Child Comment 1', root: false }, { id: '3', body: 'Child Comment 2', root: false }]
+        comments: [{ id: "1", body: "Parent Comment", root: true, children: [2, 3] }],
+        _comments: [{ id: "2", body: "Child Comment 1", root: false }, { id: "3", body: "Child Comment 2", root: false }]
       };
       var array;
 
@@ -19146,35 +19152,35 @@ define(
       });
 
       deepEqual(array, {
-        'data': {
-          'id': '1',
-          'type': 'comment',
-          'attributes': {
-            'body': 'Parent Comment',
-            'root': true
+        "data": {
+          "id": "1",
+          "type": "comment",
+          "attributes": {
+            "body": "Parent Comment",
+            "root": true
           },
-          'relationships': {
-            'children': {
-              'data': [{ 'id': '2', 'type': 'comment' }, { 'id': '3', 'type': 'comment' }]
+          "relationships": {
+            "children": {
+              "data": [{ "id": "2", "type": "comment" }, { "id": "3", "type": "comment" }]
             }
           }
         },
-        'included': [{
-          'id': '2',
-          'type': 'comment',
-          'attributes': {
-            'body': 'Child Comment 1',
-            'root': false
+        "included": [{
+          "id": "2",
+          "type": "comment",
+          "attributes": {
+            "body": "Child Comment 1",
+            "root": false
           },
-          'relationships': {}
+          "relationships": {}
         }, {
-          'id': '3',
-          'type': 'comment',
-          'attributes': {
-            'body': 'Child Comment 2',
-            'root': false
+          "id": "3",
+          "type": "comment",
+          "attributes": {
+            "body": "Child Comment 2",
+            "root": false
           },
-          'relationships': {}
+          "relationships": {}
         }]
       });
     });
@@ -19224,30 +19230,30 @@ define(
     });
 
     test("The store should be registered into a container.", function () {
-      ok(container.lookup("service:store") instanceof Store, "the custom store is instantiated");
+      ok(container.lookup('service:store') instanceof Store, "the custom store is instantiated");
     });
 
     test("The store should be registered into the container as a service.", function () {
-      ok(container.lookup("service:store") instanceof Store, "the store as a service is registered");
+      ok(container.lookup('service:store') instanceof Store, "the store as a service is registered");
     });
 
     test("If a store is instantiated, it should be made available to each controller.", function () {
-      registry.register("controller:foo", EmberObject.extend({}));
-      var fooController = container.lookup("controller:foo");
-      ok(fooController.get("store") instanceof Store, "the store was injected");
+      registry.register('controller:foo', EmberObject.extend({}));
+      var fooController = container.lookup('controller:foo');
+      ok(fooController.get('store') instanceof Store, "the store was injected");
     });
 
     test("serializers are not returned as singletons - each lookup should return a different instance", function () {
       var serializer1, serializer2;
-      serializer1 = container.lookup("serializer:-rest");
-      serializer2 = container.lookup("serializer:-rest");
+      serializer1 = container.lookup('serializer:-rest');
+      serializer2 = container.lookup('serializer:-rest');
       notEqual(serializer1, serializer2);
     });
 
     test("adapters are not returned as singletons - each lookup should return a different instance", function () {
       var adapter1, adapter2;
-      adapter1 = container.lookup("adapter:-rest");
-      adapter2 = container.lookup("adapter:-rest");
+      adapter1 = container.lookup('adapter:-rest');
+      adapter2 = container.lookup('adapter:-rest');
       notEqual(adapter1, adapter2);
     });
   }
@@ -19298,17 +19304,17 @@ define(
       run(function () {
         env.store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             }
           }
         });
-        var post = env.store.peekRecord("post", 1);
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
 
-        ok(snapshot instanceof DS.Snapshot, "snapshot is an instance of DS.Snapshot");
+        ok(snapshot instanceof DS.Snapshot, 'snapshot is an instance of DS.Snapshot');
       });
     });
 
@@ -19318,19 +19324,19 @@ define(
       run(function () {
         env.store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             }
           }
         });
-        var post = env.store.peekRecord("post", 1);
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
 
-        equal(snapshot.id, "1", "id is correct");
-        ok(DS.Model.detect(snapshot.type), "type is correct");
-        equal(snapshot.modelName, "post", "modelName is correct");
+        equal(snapshot.id, '1', 'id is correct');
+        ok(DS.Model.detect(snapshot.type), 'type is correct');
+        equal(snapshot.modelName, 'post', 'modelName is correct');
       });
     });
 
@@ -19340,19 +19346,19 @@ define(
       run(function () {
         env.store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             }
           }
         });
-        var post = env.store.peekRecord("post", 1);
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
 
-        equal(snapshot.attr("title"), "Hello World", "snapshot title is correct");
-        post.set("title", "Tomster");
-        equal(snapshot.attr("title"), "Hello World", "snapshot title is still correct");
+        equal(snapshot.attr('title'), 'Hello World', 'snapshot title is correct');
+        post.set('title', 'Tomster');
+        equal(snapshot.attr('title'), 'Hello World', 'snapshot title is still correct');
       });
     });
 
@@ -19362,19 +19368,19 @@ define(
       run(function () {
         env.store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             }
           }
         });
-        var post = env.store.peekRecord("post", 1);
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
 
         throws(function () {
-          snapshot.attr("unknown");
-        }, /has no attribute named 'unknown' defined/, "attr throws error");
+          snapshot.attr('unknown');
+        }, /has no attribute named 'unknown' defined/, 'attr throws error');
       });
     });
 
@@ -19384,19 +19390,19 @@ define(
       run(function () {
         env.store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             }
           }
         });
-        var post = env.store.peekRecord("post", 1);
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
 
         var attributes = snapshot.attributes();
 
-        deepEqual(attributes, { author: undefined, title: "Hello World" }, "attributes are returned correctly");
+        deepEqual(attributes, { author: undefined, title: 'Hello World' }, 'attributes are returned correctly');
       });
     });
 
@@ -19406,20 +19412,20 @@ define(
       run(function () {
         env.store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             }
           }
         });
-        var post = env.store.peekRecord("post", 1);
-        post.set("title", "Hello World!");
+        var post = env.store.peekRecord('post', 1);
+        post.set('title', 'Hello World!');
         var snapshot = post._createSnapshot();
 
         var changes = snapshot.changedAttributes();
 
-        deepEqual(changes.title, ["Hello World", "Hello World!"], "changed attributes are returned correctly");
+        deepEqual(changes.title, ['Hello World', 'Hello World!'], 'changed attributes are returned correctly');
       });
     });
 
@@ -19429,18 +19435,18 @@ define(
       run(function () {
         env.store.push({
           data: {
-            type: "comment",
-            id: "1",
+            type: 'comment',
+            id: '1',
             attributes: {
-              body: "This is comment"
+              body: 'This is comment'
             }
           }
         });
-        var comment = env.store.peekRecord("comment", 1);
+        var comment = env.store.peekRecord('comment', 1);
         var snapshot = comment._createSnapshot();
-        var relationship = snapshot.belongsTo("post");
+        var relationship = snapshot.belongsTo('post');
 
-        equal(relationship, undefined, "relationship is undefined");
+        equal(relationship, undefined, 'relationship is undefined');
       });
     });
 
@@ -19450,16 +19456,16 @@ define(
       run(function () {
         env.store.push({
           data: [{
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             }
           }, {
-            type: "comment",
-            id: "2",
+            type: 'comment',
+            id: '2',
             attributes: {
-              body: "This is comment"
+              body: 'This is comment'
             },
             relationships: {
               post: {
@@ -19468,11 +19474,11 @@ define(
             }
           }]
         });
-        var comment = env.store.peekRecord("comment", 2);
+        var comment = env.store.peekRecord('comment', 2);
         var snapshot = comment._createSnapshot();
-        var relationship = snapshot.belongsTo("post");
+        var relationship = snapshot.belongsTo('post');
 
-        equal(relationship, null, "relationship is unset");
+        equal(relationship, null, 'relationship is unset');
       });
     });
 
@@ -19482,31 +19488,31 @@ define(
       run(function () {
         env.store.push({
           data: [{
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             }
           }, {
-            type: "comment",
-            id: "2",
+            type: 'comment',
+            id: '2',
             attributes: {
-              body: "This is comment"
+              body: 'This is comment'
             },
             relationships: {
               post: {
-                data: { type: "post", id: "1" }
+                data: { type: 'post', id: '1' }
               }
             }
           }]
         });
-        var comment = env.store.peekRecord("comment", 2);
+        var comment = env.store.peekRecord('comment', 2);
         var snapshot = comment._createSnapshot();
-        var relationship = snapshot.belongsTo("post");
+        var relationship = snapshot.belongsTo('post');
 
-        ok(relationship instanceof DS.Snapshot, "snapshot is an instance of DS.Snapshot");
-        equal(relationship.id, "1", "post id is correct");
-        equal(relationship.attr("title"), "Hello World", "post title is correct");
+        ok(relationship instanceof DS.Snapshot, 'snapshot is an instance of DS.Snapshot');
+        equal(relationship.id, '1', 'post id is correct');
+        equal(relationship.attr('title'), 'Hello World', 'post title is correct');
       });
     });
 
@@ -19516,33 +19522,33 @@ define(
       run(function () {
         env.store.push({
           data: [{
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             }
           }, {
-            type: "comment",
-            id: "2",
+            type: 'comment',
+            id: '2',
             attributes: {
-              body: "This is comment"
+              body: 'This is comment'
             },
             relationships: {
               post: {
-                data: { type: "post", id: "1" }
+                data: { type: 'post', id: '1' }
               }
             }
           }]
         });
-        var post = env.store.peekRecord("post", 1);
-        var comment = env.store.peekRecord("comment", 2);
+        var post = env.store.peekRecord('post', 1);
+        var comment = env.store.peekRecord('comment', 2);
 
         post.deleteRecord();
 
         var snapshot = comment._createSnapshot();
-        var relationship = snapshot.belongsTo("post");
+        var relationship = snapshot.belongsTo('post');
 
-        equal(relationship, null, "relationship unset after deleted");
+        equal(relationship, null, 'relationship unset after deleted');
       });
     });
 
@@ -19552,25 +19558,25 @@ define(
       run(function () {
         env.store.push({
           data: {
-            type: "comment",
-            id: "2",
+            type: 'comment',
+            id: '2',
             attributes: {
-              body: "This is comment"
+              body: 'This is comment'
             },
             relationships: {
               post: {
                 links: {
-                  related: "post"
+                  related: 'post'
                 }
               }
             }
           }
         });
-        var comment = env.store.peekRecord("comment", 2);
+        var comment = env.store.peekRecord('comment', 2);
         var snapshot = comment._createSnapshot();
-        var relationship = snapshot.belongsTo("post");
+        var relationship = snapshot.belongsTo('post');
 
-        equal(relationship, undefined, "relationship is undefined");
+        equal(relationship, undefined, 'relationship is undefined');
       });
     });
 
@@ -19580,19 +19586,19 @@ define(
       run(function () {
         env.store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             }
           }
         });
-        var post = env.store.peekRecord("post", 1);
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
 
         throws(function () {
-          snapshot.belongsTo("unknown");
-        }, /has no belongsTo relationship named 'unknown'/, "throws error");
+          snapshot.belongsTo('unknown');
+        }, /has no belongsTo relationship named 'unknown'/, 'throws error');
       });
     });
 
@@ -19600,34 +19606,34 @@ define(
       expect(2);
 
       env.adapter.findBelongsTo = function (store, snapshot, link, relationship) {
-        return Ember.RSVP.resolve({ id: 1, title: "Hello World" });
+        return Ember.RSVP.resolve({ id: 1, title: 'Hello World' });
       };
 
       run(function () {
         env.store.push({
           data: {
-            type: "comment",
-            id: "2",
+            type: 'comment',
+            id: '2',
             attributes: {
-              body: "This is comment"
+              body: 'This is comment'
             },
             relationships: {
               post: {
                 links: {
-                  related: "post"
+                  related: 'post'
                 }
               }
             }
           }
         });
-        var comment = env.store.peekRecord("comment", 2);
+        var comment = env.store.peekRecord('comment', 2);
 
-        comment.get("post").then(function (post) {
+        comment.get('post').then(function (post) {
           var snapshot = comment._createSnapshot();
-          var relationship = snapshot.belongsTo("post");
+          var relationship = snapshot.belongsTo('post');
 
-          ok(relationship instanceof DS.Snapshot, "snapshot is an instance of DS.Snapshot");
-          equal(relationship.id, "1", "post id is correct");
+          ok(relationship instanceof DS.Snapshot, 'snapshot is an instance of DS.Snapshot');
+          equal(relationship.id, '1', 'post id is correct');
         });
       });
     });
@@ -19638,36 +19644,36 @@ define(
       run(function () {
         env.store.push({
           data: [{
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             }
           }, {
-            type: "comment",
-            id: "2",
+            type: 'comment',
+            id: '2',
             attributes: {
-              body: "This is comment"
+              body: 'This is comment'
             }
           }]
         });
-        var post = env.store.peekRecord("post", 1);
-        var comment = env.store.peekRecord("comment", 2);
+        var post = env.store.peekRecord('post', 1);
+        var comment = env.store.peekRecord('comment', 2);
 
-        post.get("comments").then(function (comments) {
+        post.get('comments').then(function (comments) {
           comments.addObject(comment);
 
           var postSnapshot = post._createSnapshot();
           var commentSnapshot = comment._createSnapshot();
 
-          var hasManyRelationship = postSnapshot.hasMany("comments");
-          var belongsToRelationship = commentSnapshot.belongsTo("post");
+          var hasManyRelationship = postSnapshot.hasMany('comments');
+          var belongsToRelationship = commentSnapshot.belongsTo('post');
 
-          ok(hasManyRelationship instanceof Array, "hasMany relationship is an instance of Array");
-          equal(hasManyRelationship.length, 1, "hasMany relationship contains related object");
+          ok(hasManyRelationship instanceof Array, 'hasMany relationship is an instance of Array');
+          equal(hasManyRelationship.length, 1, 'hasMany relationship contains related object');
 
-          ok(belongsToRelationship instanceof DS.Snapshot, "belongsTo relationship is an instance of DS.Snapshot");
-          equal(belongsToRelationship.attr("title"), "Hello World", "belongsTo relationship contains related object");
+          ok(belongsToRelationship instanceof DS.Snapshot, 'belongsTo relationship is an instance of DS.Snapshot');
+          equal(belongsToRelationship.attr('title'), 'Hello World', 'belongsTo relationship contains related object');
         });
       });
     });
@@ -19678,35 +19684,35 @@ define(
       run(function () {
         env.store.push({
           data: [{
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             }
           }, {
-            type: "comment",
-            id: "2",
+            type: 'comment',
+            id: '2',
             attributes: {
-              body: "This is comment"
+              body: 'This is comment'
             }
           }]
         });
-        var post = env.store.peekRecord("post", 1);
-        var comment = env.store.peekRecord("comment", 2);
+        var post = env.store.peekRecord('post', 1);
+        var comment = env.store.peekRecord('comment', 2);
 
-        comment.set("post", post);
+        comment.set('post', post);
 
         var postSnapshot = post._createSnapshot();
         var commentSnapshot = comment._createSnapshot();
 
-        var hasManyRelationship = postSnapshot.hasMany("comments");
-        var belongsToRelationship = commentSnapshot.belongsTo("post");
+        var hasManyRelationship = postSnapshot.hasMany('comments');
+        var belongsToRelationship = commentSnapshot.belongsTo('post');
 
-        ok(hasManyRelationship instanceof Array, "hasMany relationship is an instance of Array");
-        equal(hasManyRelationship.length, 1, "hasMany relationship contains related object");
+        ok(hasManyRelationship instanceof Array, 'hasMany relationship is an instance of Array');
+        equal(hasManyRelationship.length, 1, 'hasMany relationship contains related object');
 
-        ok(belongsToRelationship instanceof DS.Snapshot, "belongsTo relationship is an instance of DS.Snapshot");
-        equal(belongsToRelationship.attr("title"), "Hello World", "belongsTo relationship contains related object");
+        ok(belongsToRelationship instanceof DS.Snapshot, 'belongsTo relationship is an instance of DS.Snapshot');
+        equal(belongsToRelationship.attr('title'), 'Hello World', 'belongsTo relationship contains related object');
       });
     });
 
@@ -19716,29 +19722,29 @@ define(
       run(function () {
         env.store.push({
           data: [{
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             }
           }, {
-            type: "comment",
-            id: "2",
+            type: 'comment',
+            id: '2',
             attributes: {
-              body: "This is comment"
+              body: 'This is comment'
             },
             relationships: {
               post: {
-                data: { type: "post", id: "1" }
+                data: { type: 'post', id: '1' }
               }
             }
           }]
         });
-        var comment = env.store.peekRecord("comment", 2);
+        var comment = env.store.peekRecord('comment', 2);
         var snapshot = comment._createSnapshot();
-        var relationship = snapshot.belongsTo("post", { id: true });
+        var relationship = snapshot.belongsTo('post', { id: true });
 
-        equal(relationship, "1", "relationship ID correctly returned");
+        equal(relationship, '1', 'relationship ID correctly returned');
       });
     });
 
@@ -19748,33 +19754,33 @@ define(
       run(function () {
         env.store.push({
           data: [{
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             }
           }, {
-            type: "comment",
-            id: "2",
+            type: 'comment',
+            id: '2',
             attributes: {
-              body: "This is comment"
+              body: 'This is comment'
             },
             relationships: {
               post: {
-                data: { type: "post", id: "1" }
+                data: { type: 'post', id: '1' }
               }
             }
           }]
         });
-        var post = env.store.peekRecord("post", 1);
-        var comment = env.store.peekRecord("comment", 2);
+        var post = env.store.peekRecord('post', 1);
+        var comment = env.store.peekRecord('comment', 2);
 
         post.deleteRecord();
 
         var snapshot = comment._createSnapshot();
-        var relationship = snapshot.belongsTo("post", { id: true });
+        var relationship = snapshot.belongsTo('post', { id: true });
 
-        equal(relationship, null, "relationship unset after deleted");
+        equal(relationship, null, 'relationship unset after deleted');
       });
     });
 
@@ -19784,18 +19790,18 @@ define(
       run(function () {
         env.store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             }
           }
         });
-        var post = env.store.peekRecord("post", 1);
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
-        var relationship = snapshot.hasMany("comments");
+        var relationship = snapshot.hasMany('comments');
 
-        equal(relationship, undefined, "relationship is undefined");
+        equal(relationship, undefined, 'relationship is undefined');
       });
     });
 
@@ -19805,10 +19811,10 @@ define(
       run(function () {
         env.store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             },
             relationships: {
               comments: {
@@ -19817,12 +19823,12 @@ define(
             }
           }
         });
-        var post = env.store.peekRecord("post", 1);
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
-        var relationship = snapshot.hasMany("comments");
+        var relationship = snapshot.hasMany('comments');
 
-        ok(relationship instanceof Array, "relationship is an instance of Array");
-        equal(relationship.length, 0, "relationship is empty");
+        ok(relationship instanceof Array, 'relationship is an instance of Array');
+        equal(relationship.length, 0, 'relationship is empty');
       });
     });
 
@@ -19832,43 +19838,43 @@ define(
       run(function () {
         env.store.push({
           data: [{
-            type: "comment",
-            id: "1",
+            type: 'comment',
+            id: '1',
             attributes: {
-              body: "This is the first comment"
+              body: 'This is the first comment'
             }
           }, {
-            type: "comment",
-            id: "2",
+            type: 'comment',
+            id: '2',
             attributes: {
-              body: "This is the second comment"
+              body: 'This is the second comment'
             }
           }, {
-            type: "post",
-            id: "3",
+            type: 'post',
+            id: '3',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             },
             relationships: {
               comments: {
-                data: [{ type: "comment", id: "1" }, { type: "comment", id: "2" }]
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }]
               }
             }
           }]
         });
-        var post = env.store.peekRecord("post", 3);
+        var post = env.store.peekRecord('post', 3);
         var snapshot = post._createSnapshot();
-        var relationship = snapshot.hasMany("comments");
+        var relationship = snapshot.hasMany('comments');
 
-        ok(relationship instanceof Array, "relationship is an instance of Array");
-        equal(relationship.length, 2, "relationship has two items");
+        ok(relationship instanceof Array, 'relationship is an instance of Array');
+        equal(relationship.length, 2, 'relationship has two items');
 
         var relationship1 = relationship[0];
 
-        ok(relationship1 instanceof DS.Snapshot, "relationship item is an instance of DS.Snapshot");
+        ok(relationship1 instanceof DS.Snapshot, 'relationship item is an instance of DS.Snapshot');
 
-        equal(relationship1.id, "1", "relationship item id is correct");
-        equal(relationship1.attr("body"), "This is the first comment", "relationship item body is correct");
+        equal(relationship1.id, '1', 'relationship item id is correct');
+        equal(relationship1.attr('body'), 'This is the first comment', 'relationship item body is correct');
       });
     });
 
@@ -19878,42 +19884,42 @@ define(
       run(function () {
         env.store.push({
           data: [{
-            type: "comment",
-            id: "1",
+            type: 'comment',
+            id: '1',
             attributes: {
-              body: "This is the first comment"
+              body: 'This is the first comment'
             }
           }, {
-            type: "comment",
-            id: "2",
+            type: 'comment',
+            id: '2',
             attributes: {
-              body: "This is the second comment"
+              body: 'This is the second comment'
             }
           }, {
-            type: "post",
-            id: "3",
+            type: 'post',
+            id: '3',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             },
             relationships: {
               comments: {
-                data: [{ type: "comment", id: "1" }, { type: "comment", id: "2" }]
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }]
               }
             }
           }]
         });
-        var comment1 = env.store.peekRecord("comment", 1);
-        var comment2 = env.store.peekRecord("comment", 2);
-        var post = env.store.peekRecord("post", 3);
+        var comment1 = env.store.peekRecord('comment', 1);
+        var comment2 = env.store.peekRecord('comment', 2);
+        var post = env.store.peekRecord('post', 3);
 
         comment1.deleteRecord();
         comment2.deleteRecord();
 
         var snapshot = post._createSnapshot();
-        var relationship = snapshot.hasMany("comments");
+        var relationship = snapshot.hasMany('comments');
 
-        ok(relationship instanceof Array, "relationship is an instance of Array");
-        equal(relationship.length, 0, "relationship is empty");
+        ok(relationship instanceof Array, 'relationship is an instance of Array');
+        equal(relationship.length, 0, 'relationship is empty');
       });
     });
 
@@ -19923,23 +19929,23 @@ define(
       run(function () {
         env.store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             },
             relationships: {
               comments: {
-                data: [{ type: "comment", id: "2" }, { type: "comment", id: "3" }]
+                data: [{ type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
               }
             }
           }
         });
-        var post = env.store.peekRecord("post", 1);
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
-        var relationship = snapshot.hasMany("comments", { ids: true });
+        var relationship = snapshot.hasMany('comments', { ids: true });
 
-        deepEqual(relationship, ["2", "3"], "relationship IDs correctly returned");
+        deepEqual(relationship, ['2', '3'], 'relationship IDs correctly returned');
       });
     });
 
@@ -19949,42 +19955,42 @@ define(
       run(function () {
         env.store.push({
           data: [{
-            type: "comment",
-            id: "1",
+            type: 'comment',
+            id: '1',
             attributes: {
-              body: "This is the first comment"
+              body: 'This is the first comment'
             }
           }, {
-            type: "comment",
-            id: "2",
+            type: 'comment',
+            id: '2',
             attributes: {
-              body: "This is the second comment"
+              body: 'This is the second comment'
             }
           }, {
-            type: "post",
-            id: "3",
+            type: 'post',
+            id: '3',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             },
             relationships: {
               comments: {
-                data: [{ type: "comment", id: "1" }, { type: "comment", id: "2" }]
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }]
               }
             }
           }]
         });
-        var comment1 = env.store.peekRecord("comment", 1);
-        var comment2 = env.store.peekRecord("comment", 2);
-        var post = env.store.peekRecord("post", 3);
+        var comment1 = env.store.peekRecord('comment', 1);
+        var comment2 = env.store.peekRecord('comment', 2);
+        var post = env.store.peekRecord('post', 3);
 
         comment1.deleteRecord();
         comment2.deleteRecord();
 
         var snapshot = post._createSnapshot();
-        var relationship = snapshot.hasMany("comments", { ids: true });
+        var relationship = snapshot.hasMany('comments', { ids: true });
 
-        ok(relationship instanceof Array, "relationship is an instance of Array");
-        equal(relationship.length, 0, "relationship is empty");
+        ok(relationship instanceof Array, 'relationship is an instance of Array');
+        equal(relationship.length, 0, 'relationship is empty');
       });
     });
 
@@ -19994,25 +20000,25 @@ define(
       run(function () {
         env.store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             },
             relationships: {
               comments: {
                 links: {
-                  related: "comments"
+                  related: 'comments'
                 }
               }
             }
           }
         });
-        var post = env.store.peekRecord("post", 1);
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
-        var relationship = snapshot.hasMany("comments");
+        var relationship = snapshot.hasMany('comments');
 
-        equal(relationship, undefined, "relationship is undefined");
+        equal(relationship, undefined, 'relationship is undefined');
       });
     });
 
@@ -20020,34 +20026,34 @@ define(
       expect(2);
 
       env.adapter.findHasMany = function (store, snapshot, link, relationship) {
-        return Ember.RSVP.resolve([{ id: 2, body: "This is comment" }]);
+        return Ember.RSVP.resolve([{ id: 2, body: 'This is comment' }]);
       };
 
       run(function () {
         env.store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             },
             relationships: {
               comments: {
                 links: {
-                  related: "comments"
+                  related: 'comments'
                 }
               }
             }
           }
         });
-        var post = env.store.peekRecord("post", 1);
+        var post = env.store.peekRecord('post', 1);
 
-        post.get("comments").then(function (comments) {
+        post.get('comments').then(function (comments) {
           var snapshot = post._createSnapshot();
-          var relationship = snapshot.hasMany("comments");
+          var relationship = snapshot.hasMany('comments');
 
-          ok(relationship instanceof Array, "relationship is an instance of Array");
-          equal(relationship.length, 1, "relationship has one item");
+          ok(relationship instanceof Array, 'relationship is an instance of Array');
+          equal(relationship.length, 1, 'relationship has one item');
         });
       });
     });
@@ -20058,19 +20064,19 @@ define(
       run(function () {
         env.store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             }
           }
         });
-        var post = env.store.peekRecord("post", 1);
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
 
         throws(function () {
-          snapshot.hasMany("unknown");
-        }, /has no hasMany relationship named 'unknown'/, "throws error");
+          snapshot.hasMany('unknown');
+        }, /has no hasMany relationship named 'unknown'/, 'throws error');
       });
     });
 
@@ -20080,48 +20086,48 @@ define(
       run(function () {
         env.store.push({
           data: [{
-            type: "comment",
-            id: "1",
+            type: 'comment',
+            id: '1',
             attributes: {
-              body: "This is the first comment"
+              body: 'This is the first comment'
             }
           }, {
-            type: "comment",
-            id: "2",
+            type: 'comment',
+            id: '2',
             attributes: {
-              body: "This is the second comment"
+              body: 'This is the second comment'
             }
           }, {
-            type: "comment",
-            id: "3",
+            type: 'comment',
+            id: '3',
             attributes: {
-              body: "This is the third comment"
+              body: 'This is the third comment'
             }
           }, {
-            type: "post",
-            id: "4",
+            type: 'post',
+            id: '4',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             },
             relationships: {
               comments: {
-                data: [{ type: "comment", id: "1" }, { type: "comment", id: "2" }, { type: "comment", id: "3" }]
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
               }
             }
           }]
         });
-        var comment3 = env.store.peekRecord("comment", 3);
-        var post = env.store.peekRecord("post", 4);
+        var comment3 = env.store.peekRecord('comment', 3);
+        var post = env.store.peekRecord('post', 4);
 
-        post.get("comments").removeObject(comment3);
-        post.get("comments").insertAt(0, comment3);
+        post.get('comments').removeObject(comment3);
+        post.get('comments').insertAt(0, comment3);
 
         var snapshot = post._createSnapshot();
-        var relationship = snapshot.hasMany("comments");
+        var relationship = snapshot.hasMany('comments');
 
-        equal(relationship[0].id, "3", "order of comment 3 is correct");
-        equal(relationship[1].id, "1", "order of comment 1 is correct");
-        equal(relationship[2].id, "2", "order of comment 2 is correct");
+        equal(relationship[0].id, '3', 'order of comment 3 is correct');
+        equal(relationship[1].id, '1', 'order of comment 1 is correct');
+        equal(relationship[2].id, '2', 'order of comment 2 is correct');
       });
     });
 
@@ -20131,21 +20137,21 @@ define(
       run(function () {
         env.store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             }
           }
         });
-        var post = env.store.peekRecord("post", 1);
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
 
         var attributes = [];
         snapshot.eachAttribute(function (name) {
           attributes.push(name);
         });
-        deepEqual(attributes, ["author", "title"], "attributes are iterated correctly");
+        deepEqual(attributes, ['author', 'title'], 'attributes are iterated correctly');
       });
     });
 
@@ -20163,28 +20169,28 @@ define(
       run(function () {
         env.store.push({
           data: [{
-            type: "comment",
-            id: "1",
+            type: 'comment',
+            id: '1',
             attributes: {
-              body: "This is the first comment"
+              body: 'This is the first comment'
             }
           }, {
-            type: "post",
-            id: "2",
+            type: 'post',
+            id: '2',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             }
           }]
         });
-        var comment = env.store.peekRecord("comment", 1);
-        var post = env.store.peekRecord("post", 2);
+        var comment = env.store.peekRecord('comment', 1);
+        var post = env.store.peekRecord('post', 2);
         var snapshot;
 
         snapshot = comment._createSnapshot();
-        deepEqual(getRelationships(snapshot), ["post"], "relationships are iterated correctly");
+        deepEqual(getRelationships(snapshot), ['post'], 'relationships are iterated correctly');
 
         snapshot = post._createSnapshot();
-        deepEqual(getRelationships(snapshot), ["comments"], "relationships are iterated correctly");
+        deepEqual(getRelationships(snapshot), ['comments'], 'relationships are iterated correctly');
       });
     });
 
@@ -20192,28 +20198,28 @@ define(
       expect(0);
 
       env.store.scheduleFetch = function () {
-        ok(false, "store.scheduleFetch should not be called");
+        ok(false, 'store.scheduleFetch should not be called');
       };
 
       run(function () {
         env.store.push({
           data: {
-            type: "comment",
-            id: "1",
+            type: 'comment',
+            id: '1',
             attributes: {
-              body: "This is the first comment"
+              body: 'This is the first comment'
             },
             relationships: {
               post: {
-                data: { type: "post", id: "2" }
+                data: { type: 'post', id: '2' }
               }
             }
           }
         });
-        var comment = env.store.peekRecord("comment", 1);
+        var comment = env.store.peekRecord('comment', 1);
         var snapshot = comment._createSnapshot();
 
-        snapshot.belongsTo("post");
+        snapshot.belongsTo('post');
       });
     });
 
@@ -20221,28 +20227,28 @@ define(
       expect(0);
 
       env.store.scheduleFetch = function () {
-        ok(false, "store.scheduleFetch should not be called");
+        ok(false, 'store.scheduleFetch should not be called');
       };
 
       run(function () {
         env.store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             },
             relationships: {
               comments: {
-                data: [{ type: "comment", id: "2" }, { type: "comment", id: "3" }]
+                data: [{ type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
               }
             }
           }
         });
-        var post = env.store.peekRecord("post", 1);
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
 
-        snapshot.hasMany("comments");
+        snapshot.hasMany('comments');
       });
     });
 
@@ -20252,20 +20258,20 @@ define(
       run(function () {
         env.store.push({
           data: {
-            type: "post",
-            id: "1",
+            type: 'post',
+            id: '1',
             attributes: {
-              title: "Hello World"
+              title: 'Hello World'
             }
           }
         });
-        var post = env.store.peekRecord("post", 1);
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
 
-        post.set("title", "New Title");
+        post.set('title', 'New Title');
 
-        deepEqual(snapshot.serialize(), { author: undefined, title: "Hello World" }, "shapshot serializes correctly");
-        deepEqual(snapshot.serialize({ includeId: true }), { id: "1", author: undefined, title: "Hello World" }, "serialize takes options");
+        deepEqual(snapshot.serialize(), { author: undefined, title: 'Hello World' }, 'shapshot serializes correctly');
+        deepEqual(snapshot.serialize({ includeId: true }), { id: "1", author: undefined, title: 'Hello World' }, 'serialize takes options');
       });
     });
   }
@@ -20292,7 +20298,7 @@ define(
     var run = Ember.run;
 
     Person.toString = function () {
-      return 'Person';
+      return "Person";
     };
 
     var Car = DS.Model.extend({
@@ -20302,7 +20308,7 @@ define(
     });
 
     Car.toString = function () {
-      return 'Car';
+      return "Car";
     };
 
     function initializeStore(adapter) {
@@ -20315,7 +20321,7 @@ define(
       env.registry.register('model:person', Person);
     }
 
-    module('integration/store - destroy', {
+    module("integration/store - destroy", {
       setup: function () {
         initializeStore(DS.Adapter.extend());
       }
@@ -20338,7 +20344,7 @@ define(
       return summary;
     }
 
-    asyncTest('destroying record during find doesn\'t cause error', function () {
+    asyncTest("destroying record during find doesn't cause error", function () {
       expect(0);
 
       var TestAdapter = DS.Adapter.extend({
@@ -20354,7 +20360,7 @@ define(
 
       initializeStore(TestAdapter);
 
-      var type = 'car';
+      var type = "car";
       var id = 1;
 
       function done() {
@@ -20366,7 +20372,7 @@ define(
       });
     });
 
-    asyncTest('find calls do not resolve when the store is destroyed', function () {
+    asyncTest("find calls do not resolve when the store is destroyed", function () {
       expect(0);
 
       var TestAdapter = DS.Adapter.extend({
@@ -20378,13 +20384,13 @@ define(
 
       initializeStore(TestAdapter);
 
-      var type = 'car';
+      var type = "car";
       var id = 1;
 
       store.push = function () {
-        Ember.assert('The test should have destroyed the store by now', store.get('isDestroyed'));
+        Ember.assert("The test should have destroyed the store by now", store.get("isDestroyed"));
 
-        throw new Error('We shouldn\'t be pushing data into the store when it is destroyed');
+        throw new Error("We shouldn't be pushing data into the store when it is destroyed");
       };
 
       run(function () {
@@ -20396,7 +20402,7 @@ define(
       }, 500);
     });
 
-    test('destroying the store correctly cleans everything up', function () {
+    test("destroying the store correctly cleans everything up", function () {
       var car, person;
       run(function () {
         store.push({
@@ -20468,13 +20474,13 @@ define(
 
       equal(filterdPeople.get('length'), 2, 'expected filterdPeople to have 2 entries');
 
-      equal(car.get('person'), person, 'expected car\'s person to be the correct person');
-      equal(person.get('cars.firstObject'), car, ' expected persons cars\'s firstRecord to be the correct car');
+      equal(car.get('person'), person, "expected car's person to be the correct person");
+      equal(person.get('cars.firstObject'), car, " expected persons cars's firstRecord to be the correct car");
 
       Ember.run(person, person.destroy);
       Ember.run(store, 'destroy');
 
-      equal(car.get('person'), null, 'expected car.person to no longer be present');
+      equal(car.get('person'), null, "expected car.person to no longer be present");
 
       equal(personWillDestroy.called.length, 1, 'expected person to have recieved willDestroy once');
       equal(carWillDestroy.called.length, 1, 'expected car to recieve willDestroy once');
@@ -20494,13 +20500,13 @@ define(
       };
     }
 
-    module('integration/store - findRecord { reload: true }', {
+    module("integration/store - findRecord { reload: true }", {
       setup: function () {
         initializeStore(DS.RESTAdapter.extend());
       }
     });
 
-    test('Using store#findRecord on non existing record fetches it from the server', function () {
+    test("Using store#findRecord on non existing record fetches it from the server", function () {
       expect(2);
 
       env.registry.register('serializer:application', DS.RESTSerializer);
@@ -20522,7 +20528,7 @@ define(
       });
     });
 
-    test('Using store#findRecord on existing record reloads it', function () {
+    test("Using store#findRecord on existing record reloads it", function () {
       expect(2);
       var car;
 
@@ -20557,13 +20563,13 @@ define(
       });
     });
 
-    module('integration/store - findAll', {
+    module("integration/store - findAll", {
       setup: function () {
         initializeStore(DS.RESTAdapter.extend());
       }
     });
 
-    test('Using store#findAll with no records triggers a query', function () {
+    test("Using store#findAll with no records triggers a query", function () {
       expect(2);
 
       ajaxResponse({
@@ -20588,7 +20594,7 @@ define(
       });
     });
 
-    test('Using store#findAll with existing records performs a query, updating existing records and returning new ones', function () {
+    test("Using store#findAll with existing records performs a query, updating existing records and returning new ones", function () {
       expect(3);
 
       run(function () {
@@ -20628,7 +20634,7 @@ define(
       });
     });
 
-    test('store#findAll should return all known records even if they are not in the adapter response', function () {
+    test("store#findAll should return all known records even if they are not in the adapter response", function () {
       expect(4);
 
       run(function () {
@@ -20674,7 +20680,7 @@ define(
       });
     });
 
-    test('Using store#fetch on an empty record calls find', function () {
+    test("Using store#fetch on an empty record calls find", function () {
       expect(2);
 
       ajaxResponse({
@@ -20712,7 +20718,7 @@ define(
       });
     });
 
-    test('Using store#adapterFor should not throw an error when looking up the application adapter', function () {
+    test("Using store#adapterFor should not throw an error when looking up the application adapter", function () {
       expect(1);
 
       run(function () {
@@ -20721,7 +20727,7 @@ define(
       });
     });
 
-    test('Using store#serializerFor should not throw an error when looking up the application serializer', function () {
+    test("Using store#serializerFor should not throw an error when looking up the application serializer", function () {
       expect(1);
 
       run(function () {
@@ -20730,13 +20736,13 @@ define(
       });
     });
 
-    module('integration/store - deleteRecord', {
+    module("integration/store - deleteRecord", {
       setup: function () {
         initializeStore(DS.RESTAdapter.extend());
       }
     });
 
-    test('Using store#deleteRecord should mark the model for removal', function () {
+    test("Using store#deleteRecord should mark the model for removal", function () {
       expect(3);
       var person;
 
@@ -20781,7 +20787,7 @@ define(
     var Person, store, env;
     var run = Ember.run;
 
-    module('integration/store/query-record - Query one record with a query hash', {
+    module("integration/store/query-record - Query one record with a query hash", {
       setup: function () {
         Person = DS.Model.extend({
           updatedAt: DS.attr('string'),
@@ -20801,25 +20807,25 @@ define(
       }
     });
 
-    test('It raises an assertion when no type is passed', function () {
+    test("It raises an assertion when no type is passed", function () {
       expectAssertion(function () {
         store.queryRecord();
-      }, 'You need to pass a type to the store\'s queryRecord method');
+      }, "You need to pass a type to the store's queryRecord method");
     });
 
-    test('It raises an assertion when no query hash is passed', function () {
+    test("It raises an assertion when no query hash is passed", function () {
       expectAssertion(function () {
         store.queryRecord('person');
-      }, 'You need to pass a query hash to the store\'s queryRecord method');
+      }, "You need to pass a query hash to the store's queryRecord method");
     });
 
-    test('When a record is requested, the adapter\'s queryRecord method should be called.', function () {
+    test("When a record is requested, the adapter's queryRecord method should be called.", function () {
       expect(1);
 
       env.registry.register('adapter:person', DS.Adapter.extend({
         queryRecord: function (store, type, query) {
-          equal(type, Person, 'the query method is called with the correct type');
-          return Ember.RSVP.resolve({ id: 1, name: 'Peter Wagenet' });
+          equal(type, Person, "the query method is called with the correct type");
+          return Ember.RSVP.resolve({ id: 1, name: "Peter Wagenet" });
         }
       }));
 
@@ -20828,7 +20834,7 @@ define(
       });
     });
 
-    test('When a record is requested, and the promise is rejected, .queryRecord() is rejected.', function () {
+    test("When a record is requested, and the promise is rejected, .queryRecord() is rejected.", function () {
       env.registry.register('adapter:person', DS.Adapter.extend({
         queryRecord: function (store, type, query) {
           return Ember.RSVP.reject();
@@ -20837,17 +20843,17 @@ define(
 
       run(function () {
         store.queryRecord('person', {}).then(null, async(function (reason) {
-          ok(true, 'The rejection handler was called');
+          ok(true, "The rejection handler was called");
         }));
       });
     });
 
-    test('When a record is requested, the serializer\'s normalizeQueryRecordResponse method should be called.', function () {
+    test("When a record is requested, the serializer's normalizeQueryRecordResponse method should be called.", function () {
       expect(1);
 
       env.registry.register('serializer:person', DS.JSONAPISerializer.extend({
         normalizeQueryRecordResponse: function (store, primaryModelClass, payload, id, requestType) {
-          equal(payload.data.id, '1', 'the normalizeQueryRecordResponse method was called with the right payload');
+          equal(payload.data.id, '1', "the normalizeQueryRecordResponse method was called with the right payload");
           return this._super.apply(this, arguments);
         }
       }));
@@ -20859,7 +20865,7 @@ define(
               id: '1',
               type: 'person',
               attributes: {
-                name: 'Peter Wagenet'
+                name: "Peter Wagenet"
               }
             }
           });
@@ -20911,22 +20917,22 @@ define(
     });
 
     var errorsHash = {
-      name: ["is invalid", "must be a string"],
-      age: ["must be a number"]
+      name: ['is invalid', 'must be a string'],
+      age: ['must be a number']
     };
 
     var errorsArray = [{
-      title: "Invalid Attribute",
-      detail: "is invalid",
-      source: { pointer: "/data/attributes/name" }
+      title: 'Invalid Attribute',
+      detail: 'is invalid',
+      source: { pointer: '/data/attributes/name' }
     }, {
-      title: "Invalid Attribute",
-      detail: "must be a string",
-      source: { pointer: "/data/attributes/name" }
+      title: 'Invalid Attribute',
+      detail: 'must be a string',
+      source: { pointer: '/data/attributes/name' }
     }, {
-      title: "Invalid Attribute",
-      detail: "must be a number",
-      source: { pointer: "/data/attributes/age" }
+      title: 'Invalid Attribute',
+      detail: 'must be a number',
+      source: { pointer: '/data/attributes/age' }
     }];
 
     test("errorsHashToArray", function () {
@@ -20941,23 +20947,23 @@ define(
 
     test("errorsArrayToHash without trailing slash", function () {
       var result = DS.errorsArrayToHash([{
-        detail: "error message",
-        source: { pointer: "data/attributes/name" }
+        detail: 'error message',
+        source: { pointer: 'data/attributes/name' }
       }]);
-      deepEqual(result, { name: ["error message"] });
+      deepEqual(result, { name: ['error message'] });
     });
 
     test("DS.InvalidError will normalize errors hash with deprecation", function () {
       var error;
 
       expectDeprecation(function () {
-        error = new DS.InvalidError({ name: ["is invalid"] });
+        error = new DS.InvalidError({ name: ['is invalid'] });
       }, /expects json-api formatted errors/);
 
       deepEqual(error.errors, [{
-        title: "Invalid Attribute",
-        detail: "is invalid",
-        source: { pointer: "/data/attributes/name" }
+        title: 'Invalid Attribute',
+        detail: 'is invalid',
+        source: { pointer: '/data/attributes/name' }
       }]);
     });
   }
@@ -20986,7 +20992,7 @@ define(
     module("unit/adapter_populated_record_array - DS.AdapterPopulatedRecordArray", {
       setup: function () {
         Person = DS.Model.extend({
-          name: DS.attr("string")
+          name: DS.attr('string')
         });
 
         store = createStore({
@@ -20997,48 +21003,48 @@ define(
     });
 
     test("when a record is deleted in an adapter populated record array, it should be removed", function () {
-      var recordArray = store.recordArrayManager.createAdapterPopulatedRecordArray(store.modelFor("person"), null);
+      var recordArray = store.recordArrayManager.createAdapterPopulatedRecordArray(store.modelFor('person'), null);
 
       run(function () {
         var records = store.push({
           data: [{
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "Scumbag Dale"
+              name: 'Scumbag Dale'
             }
           }, {
-            type: "person",
-            id: "2",
+            type: 'person',
+            id: '2',
             attributes: {
-              name: "Scumbag Katz"
+              name: 'Scumbag Katz'
             }
           }, {
-            type: "person",
-            id: "3",
+            type: 'person',
+            id: '3',
             attributes: {
-              name: "Scumbag Bryn"
+              name: 'Scumbag Bryn'
             }
           }]
         });
         recordArray.loadRecords(records);
       });
 
-      equal(recordArray.get("length"), 3, "expected recordArray to contain exactly 3 records");
+      equal(recordArray.get('length'), 3, "expected recordArray to contain exactly 3 records");
 
       run(function () {
-        recordArray.get("firstObject").destroyRecord();
+        recordArray.get('firstObject').destroyRecord();
       });
 
-      equal(recordArray.get("length"), 2, "expected recordArray to contain exactly 2 records");
+      equal(recordArray.get('length'), 2, "expected recordArray to contain exactly 2 records");
     });
 
-    test("recordArray.replace() throws error", function () {
+    test('recordArray.replace() throws error', function () {
       var recordArray = store.recordArrayManager.createAdapterPopulatedRecordArray(Person, null);
 
       throws(function () {
         recordArray.replace();
-      }, Error("The result of a server query (on (subclass of DS.Model)) is immutable."), "throws error");
+      }, Error("The result of a server query (on (subclass of DS.Model)) is immutable."), 'throws error');
     });
   }
 );
@@ -21056,7 +21062,7 @@ define(
 
     var env, adapter;
 
-    module('unit/adapters/build-url-mixin/path-for-type - DS.BuildURLMixin#pathForType', {
+    module("unit/adapters/build-url-mixin/path-for-type - DS.BuildURLMixin#pathForType", {
       setup: function () {
 
         // test for overriden pathForType methods which return null path values
@@ -21080,19 +21086,19 @@ define(
     });
 
     test('pathForType - works with camelized types', function () {
-      equal(adapter.pathForType('superUser'), 'superUsers');
+      equal(adapter.pathForType('superUser'), "superUsers");
     });
 
     test('pathForType - works with dasherized types', function () {
-      equal(adapter.pathForType('super-user'), 'superUsers');
+      equal(adapter.pathForType('super-user'), "superUsers");
     });
 
     test('pathForType - works with underscored types', function () {
-      equal(adapter.pathForType('super_user'), 'superUsers');
+      equal(adapter.pathForType('super_user'), "superUsers");
     });
 
     test('buildURL - works with empty paths', function () {
-      equal(adapter.buildURL('rootModel', 1), '/1');
+      equal(adapter.buildURL('rootModel', 1), "/1");
     });
 
     test('buildURL - find requestType delegates to urlForFindRecord', function () {
@@ -21223,7 +21229,7 @@ define(
     var Person, Place, store, adapter, env;
     var run = Ember.run;
 
-    module('unit/adapters/json-api-adapter/ajax - building requests', {
+    module("unit/adapters/json-api-adapter/ajax - building requests", {
       setup: function () {
         Person = { modelName: 'person' };
         Place = { modelName: 'place' };
@@ -21240,7 +21246,7 @@ define(
       }
     });
 
-    test('ajaxOptions() adds Accept when no other headers exist', function () {
+    test("ajaxOptions() adds Accept when no other headers exist", function () {
       var url = 'example.com';
       var type = 'GET';
       var ajaxOptions = adapter.ajaxOptions(url, type, {});
@@ -21254,7 +21260,7 @@ define(
       deepEqual(receivedHeaders, [['Accept', 'application/vnd.api+json']], 'headers assigned');
     });
 
-    test('ajaxOptions() adds Accept header to existing headers', function () {
+    test("ajaxOptions() adds Accept header to existing headers", function () {
       adapter.headers = { 'Other-key': 'Other Value' };
       var url = 'example.com';
       var type = 'GET';
@@ -21269,7 +21275,7 @@ define(
       deepEqual(receivedHeaders, [['Accept', 'application/vnd.api+json'], ['Other-key', 'Other Value']], 'headers assigned');
     });
 
-    test('ajaxOptions() adds Accept header to existing computed properties headers', function () {
+    test("ajaxOptions() adds Accept header to existing computed properties headers", function () {
       adapter.headers = Ember.computed(function () {
         return { 'Other-key': 'Other Value' };
       });
@@ -21302,7 +21308,7 @@ define(
     var Person, Place, store, adapter, env;
     var run = Ember.run;
 
-    module('unit/adapters/rest-adapter/ajax - building requests', {
+    module("unit/adapters/rest-adapter/ajax - building requests", {
       setup: function () {
         Person = { modelName: 'person' };
         Place = { modelName: 'place' };
@@ -21319,15 +21325,15 @@ define(
       }
     });
 
-    test('When an id is searched, the correct url should be generated', function () {
+    test("When an id is searched, the correct url should be generated", function () {
       expect(2);
       var count = 0;
       adapter.ajax = function (url, method) {
         if (count === 0) {
-          equal(url, '/people/1', 'should create the correct url');
+          equal(url, '/people/1', "should create the correct url");
         }
         if (count === 1) {
-          equal(url, '/places/1', 'should create the correct url');
+          equal(url, '/places/1', "should create the correct url");
         }
         count++;
         return Ember.RSVP.resolve();
@@ -21338,10 +21344,10 @@ define(
       });
     });
 
-    test('id\'s should be sanatized', function () {
+    test("id's should be sanatized", function () {
       expect(1);
       adapter.ajax = function (url, method) {
-        equal(url, '/people/..%2Fplace%2F1', 'should create the correct url');
+        equal(url, '/people/..%2Fplace%2F1', "should create the correct url");
         return Ember.RSVP.resolve();
       };
       run(function () {
@@ -21349,7 +21355,7 @@ define(
       });
     });
 
-    test('ajaxOptions() headers are set', function () {
+    test("ajaxOptions() headers are set", function () {
       adapter.headers = { 'Content-Type': 'application/json', 'Other-key': 'Other Value' };
       var url = 'example.com';
       var type = 'GET';
@@ -21364,7 +21370,7 @@ define(
       deepEqual(receivedHeaders, [['Content-Type', 'application/json'], ['Other-key', 'Other Value']], 'headers assigned');
     });
 
-    test('ajaxOptions() do not serializes data when GET', function () {
+    test("ajaxOptions() do not serializes data when GET", function () {
       var url = 'example.com';
       var type = 'GET';
       var ajaxOptions = adapter.ajaxOptions(url, type, { data: { key: 'value' } });
@@ -21380,13 +21386,13 @@ define(
       });
     });
 
-    test('ajaxOptions() serializes data when not GET', function () {
+    test("ajaxOptions() serializes data when not GET", function () {
       var url = 'example.com';
       var type = 'POST';
       var ajaxOptions = adapter.ajaxOptions(url, type, { data: { key: 'value' } });
 
       deepEqual(ajaxOptions, {
-        contentType: 'application/json; charset=utf-8',
+        contentType: "application/json; charset=utf-8",
         context: adapter,
         data: '{"key":"value"}',
         dataType: 'json',
@@ -21395,7 +21401,7 @@ define(
       });
     });
 
-    test('ajaxOptions() empty data', function () {
+    test("ajaxOptions() empty data", function () {
       var url = 'example.com';
       var type = 'POST';
       var ajaxOptions = adapter.ajaxOptions(url, type, {});
@@ -21422,7 +21428,7 @@ define(
     }
 
     var store = {};
-    var type = "post";
+    var type = 'post';
     var id = 1;
     var snapshot = {};
 
@@ -21433,7 +21439,7 @@ define(
 
       var adapter = DS.RESTAdapter.extend({
         find: function () {
-          ok(true, "overridden `find` method should be called");
+          ok(true, 'overridden `find` method should be called');
         }
       }).create();
 
@@ -21447,7 +21453,7 @@ define(
 
       var adapter = DS.RESTAdapter.extend({
         findQuery: function () {
-          ok(true, "overridden `findQuery` method should be called");
+          ok(true, 'overridden `findQuery` method should be called');
         }
       }).create();
 
@@ -21473,7 +21479,7 @@ define(
     var maxLength = -1;
     var lengths = Ember.A([]);
 
-    module('unit/adapters/rest_adapter/group_records_for_find_many_test - DS.RESTAdapter#groupRecordsForFindMany', {
+    module("unit/adapters/rest_adapter/group_records_for_find_many_test - DS.RESTAdapter#groupRecordsForFindMany", {
       setup: function () {
         GroupsAdapter = DS.RESTAdapter.extend({
 
@@ -21517,7 +21523,7 @@ define(
 
       ok(lengths.every(function (len) {
         return len <= maxLength;
-      }), 'Some URLs are longer than ' + maxLength + ' chars');
+      }), "Some URLs are longer than " + maxLength + " chars");
     });
   }
 );
@@ -21538,18 +21544,18 @@ define("ember-data/tests/unit/debug-test", ["exports"], function(__exports__) {
 
   test("_debugInfo groups the attributes and relationships correctly", function () {
     var MaritalStatus = DS.Model.extend({
-      name: DS.attr("string")
+      name: DS.attr('string')
     });
 
     var Post = DS.Model.extend({
-      title: DS.attr("string")
+      title: DS.attr('string')
     });
 
     var User = DS.Model.extend({
-      name: DS.attr("string"),
-      isDrugAddict: DS.attr("boolean"),
-      maritalStatus: DS.belongsTo("marital-status", { async: false }),
-      posts: DS.hasMany("post", { async: false })
+      name: DS.attr('string'),
+      isDrugAddict: DS.attr('boolean'),
+      maritalStatus: DS.belongsTo('marital-status', { async: false }),
+      posts: DS.hasMany('post', { async: false })
     });
 
     var store = createStore({
@@ -21561,15 +21567,15 @@ define("ember-data/tests/unit/debug-test", ["exports"], function(__exports__) {
     var record;
 
     run(function () {
-      record = store.createRecord("user");
+      record = store.createRecord('user');
     });
 
     var propertyInfo = record._debugInfo().propertyInfo;
 
     equal(propertyInfo.groups.length, 4);
-    deepEqual(propertyInfo.groups[0].properties, ["id", "name", "isDrugAddict"]);
-    deepEqual(propertyInfo.groups[1].properties, ["maritalStatus"]);
-    deepEqual(propertyInfo.groups[2].properties, ["posts"]);
+    deepEqual(propertyInfo.groups[0].properties, ['id', 'name', 'isDrugAddict']);
+    deepEqual(propertyInfo.groups[1].properties, ['maritalStatus']);
+    deepEqual(propertyInfo.groups[2].properties, ['posts']);
   });
 });
 
@@ -21592,7 +21598,7 @@ define(
 
     var Post, Tag;
 
-    module('unit/many_array - DS.ManyArray', {
+    module("unit/many_array - DS.ManyArray", {
       setup: function () {
         Post = DS.Model.extend({
           title: attr('string'),
@@ -21624,7 +21630,7 @@ define(
       }
     });
 
-    test('manyArray.save() calls save() on all records', function () {
+    test("manyArray.save() calls save() on all records", function () {
       expect(3);
 
       run(function () {
@@ -21669,7 +21675,7 @@ define(
       });
     });
 
-    test('manyArray trigger arrayContentChange functions with the correct values', function () {
+    test("manyArray trigger arrayContentChange functions with the correct values", function () {
       expect(12);
       var willChangeStartIdx;
       var willChangeRemoveAmt;
@@ -21758,7 +21764,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
   var Person, store, env;
 
-  module('unit/model - DS.Model', {
+  module("unit/model - DS.Model", {
     setup: function () {
       Person = DS.Model.extend({
         name: DS.attr('string'),
@@ -21780,17 +21786,17 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     }
   });
 
-  test('can have a property set on it', function () {
+  test("can have a property set on it", function () {
     var record;
     run(function () {
       record = store.createRecord('person');
       set(record, 'name', 'bar');
     });
 
-    equal(get(record, 'name'), 'bar', 'property was set on the record');
+    equal(get(record, 'name'), 'bar', "property was set on the record");
   });
 
-  test('setting a property on a record that has not changed does not cause it to become dirty', function () {
+  test("setting a property on a record that has not changed does not cause it to become dirty", function () {
     expect(2);
 
     run(function () {
@@ -21806,17 +21812,17 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
       });
 
       store.findRecord('person', 1).then(function (person) {
-        equal(person.get('hasDirtyAttributes'), false, 'precond - person record should not be dirty');
+        equal(person.get('hasDirtyAttributes'), false, "precond - person record should not be dirty");
 
-        person.set('name', 'Peter');
+        person.set('name', "Peter");
         person.set('isDrugAddict', true);
 
-        equal(person.get('hasDirtyAttributes'), false, 'record does not become dirty after setting property to old value');
+        equal(person.get('hasDirtyAttributes'), false, "record does not become dirty after setting property to old value");
       });
     });
   });
 
-  test('resetting a property on a record cause it to become clean again', function () {
+  test("resetting a property on a record cause it to become clean again", function () {
     expect(3);
 
     run(function () {
@@ -21831,16 +21837,16 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
         }
       });
       store.findRecord('person', 1).then(function (person) {
-        equal(person.get('hasDirtyAttributes'), false, 'precond - person record should not be dirty');
+        equal(person.get('hasDirtyAttributes'), false, "precond - person record should not be dirty");
         person.set('isDrugAddict', false);
-        equal(person.get('hasDirtyAttributes'), true, 'record becomes dirty after setting property to a new value');
+        equal(person.get('hasDirtyAttributes'), true, "record becomes dirty after setting property to a new value");
         person.set('isDrugAddict', true);
-        equal(person.get('hasDirtyAttributes'), false, 'record becomes clean after resetting property to the old value');
+        equal(person.get('hasDirtyAttributes'), false, "record becomes clean after resetting property to the old value");
       });
     });
   });
 
-  test('a record becomes clean again only if all changed properties are reset', function () {
+  test("a record becomes clean again only if all changed properties are reset", function () {
     expect(5);
 
     run(function () {
@@ -21855,20 +21861,20 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
         }
       });
       store.findRecord('person', 1).then(function (person) {
-        equal(person.get('hasDirtyAttributes'), false, 'precond - person record should not be dirty');
+        equal(person.get('hasDirtyAttributes'), false, "precond - person record should not be dirty");
         person.set('isDrugAddict', false);
-        equal(person.get('hasDirtyAttributes'), true, 'record becomes dirty after setting one property to a new value');
+        equal(person.get('hasDirtyAttributes'), true, "record becomes dirty after setting one property to a new value");
         person.set('name', 'Mark');
-        equal(person.get('hasDirtyAttributes'), true, 'record stays dirty after setting another property to a new value');
+        equal(person.get('hasDirtyAttributes'), true, "record stays dirty after setting another property to a new value");
         person.set('isDrugAddict', true);
-        equal(person.get('hasDirtyAttributes'), true, 'record stays dirty after resetting only one property to the old value');
+        equal(person.get('hasDirtyAttributes'), true, "record stays dirty after resetting only one property to the old value");
         person.set('name', 'Peter');
-        equal(person.get('hasDirtyAttributes'), false, 'record becomes clean after resetting both properties to the old value');
+        equal(person.get('hasDirtyAttributes'), false, "record becomes clean after resetting both properties to the old value");
       });
     });
   });
 
-  test('a record reports its unique id via the `id` property', function () {
+  test("a record reports its unique id via the `id` property", function () {
     expect(1);
 
     run(function () {
@@ -21879,12 +21885,12 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
         }
       });
       store.findRecord('person', 1).then(function (record) {
-        equal(get(record, 'id'), 1, 'reports id as id by default');
+        equal(get(record, 'id'), 1, "reports id as id by default");
       });
     });
   });
 
-  test('a record\'s id is included in its toString representation', function () {
+  test("a record's id is included in its toString representation", function () {
     expect(1);
 
     run(function () {
@@ -21895,12 +21901,12 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
         }
       });
       store.findRecord('person', 1).then(function (record) {
-        equal(record.toString(), '<(subclass of DS.Model):' + Ember.guidFor(record) + ':1>', 'reports id in toString');
+        equal(record.toString(), '<(subclass of DS.Model):' + Ember.guidFor(record) + ':1>', "reports id in toString");
       });
     });
   });
 
-  test('trying to set an `id` attribute should raise', function () {
+  test("trying to set an `id` attribute should raise", function () {
     Person = DS.Model.extend({
       id: DS.attr('number'),
       name: DS.attr('string')
@@ -21926,7 +21932,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     }, /You may not set `id`/);
   });
 
-  test('a collision of a record\'s id with object function\'s name', function () {
+  test("a collision of a record's id with object function's name", function () {
     expect(1);
 
     var hasWatchMethod = Object.prototype.watch;
@@ -21943,7 +21949,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
         });
 
         store.findRecord('person', 'watch').then(function (record) {
-          equal(get(record, 'id'), 'watch', 'record is successfully created and could be found by its id');
+          equal(get(record, 'id'), 'watch', "record is successfully created and could be found by its id");
         });
       });
     } finally {
@@ -21967,7 +21973,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
   });
   */
 
-  test('it should cache attributes', function () {
+  test("it should cache attributes", function () {
     expect(2);
 
     var Post = DS.Model.extend({
@@ -21978,7 +21984,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
       post: Post
     });
 
-    var dateString = 'Sat, 31 Dec 2011 00:08:16 GMT';
+    var dateString = "Sat, 31 Dec 2011 00:08:16 GMT";
     var date = new Date(dateString);
 
     run(function () {
@@ -21992,15 +21998,15 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
         run(function () {
           record.set('updatedAt', date);
         });
-        deepEqual(date, get(record, 'updatedAt'), 'setting a date returns the same date');
-        strictEqual(get(record, 'updatedAt'), get(record, 'updatedAt'), 'second get still returns the same object');
+        deepEqual(date, get(record, 'updatedAt'), "setting a date returns the same date");
+        strictEqual(get(record, 'updatedAt'), get(record, 'updatedAt'), "second get still returns the same object");
       })["finally"](function () {
         run(store, 'destroy');
       });
     });
   });
 
-  test('changedAttributes() return correct values', function () {
+  test("changedAttributes() return correct values", function () {
     expect(4);
 
     var Mascot = DS.Model.extend({
@@ -22045,7 +22051,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     equal(Object.keys(mascot.changedAttributes()).length, 0, 'after rollback attributes there are no changes');
   });
 
-  test('a DS.Model does not require an attribute type', function () {
+  test("a DS.Model does not require an attribute type", function () {
     var Tag = DS.Model.extend({
       name: DS.attr()
     });
@@ -22057,15 +22063,15 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     var tag;
 
     run(function () {
-      tag = store.createRecord('tag', { name: 'test' });
+      tag = store.createRecord('tag', { name: "test" });
     });
 
-    equal(get(tag, 'name'), 'test', 'the value is persisted');
+    equal(get(tag, 'name'), "test", "the value is persisted");
   });
 
-  test('a DS.Model can have a defaultValue without an attribute type', function () {
+  test("a DS.Model can have a defaultValue without an attribute type", function () {
     var Tag = DS.Model.extend({
-      name: DS.attr({ defaultValue: 'unknown' })
+      name: DS.attr({ defaultValue: "unknown" })
     });
 
     var store = createStore({
@@ -22077,10 +22083,10 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
       tag = store.createRecord('tag');
     });
 
-    equal(get(tag, 'name'), 'unknown', 'the default value is found');
+    equal(get(tag, 'name'), "unknown", "the default value is found");
   });
 
-  test('Calling attr(), belongsTo() or hasMany() throws a warning', function () {
+  test("Calling attr(), belongsTo() or hasMany() throws a warning", function () {
     expect(3);
 
     var Person = DS.Model.extend({
@@ -22096,19 +22102,19 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
       throws(function () {
         person.attr();
-      }, /The `attr` method is not available on DS.Model, a DS.Snapshot was probably expected/, 'attr() throws a warning');
+      }, /The `attr` method is not available on DS.Model, a DS.Snapshot was probably expected/, "attr() throws a warning");
 
       throws(function () {
         person.belongsTo();
-      }, /The `belongsTo` method is not available on DS.Model, a DS.Snapshot was probably expected/, 'belongTo() throws a warning');
+      }, /The `belongsTo` method is not available on DS.Model, a DS.Snapshot was probably expected/, "belongTo() throws a warning");
 
       throws(function () {
         person.hasMany();
-      }, /The `hasMany` method is not available on DS.Model, a DS.Snapshot was probably expected/, 'hasMany() throws a warning');
+      }, /The `hasMany` method is not available on DS.Model, a DS.Snapshot was probably expected/, "hasMany() throws a warning");
     });
   });
 
-  test('supports pushedData in root.deleted.uncommitted', function () {
+  test("supports pushedData in root.deleted.uncommitted", function () {
     var record;
     var hash = {
       data: {
@@ -22124,7 +22130,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     });
   });
 
-  test('currentState is accessible when the record is created', function () {
+  test("currentState is accessible when the record is created", function () {
     var record;
     var hash = {
       data: {
@@ -22138,7 +22144,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     });
   });
 
-  module('unit/model - DS.Model updating', {
+  module("unit/model - DS.Model updating", {
     setup: function () {
       Person = DS.Model.extend({ name: DS.attr('string') });
       env = setupStore({
@@ -22178,20 +22184,20 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     }
   });
 
-  test('a DS.Model can update its attributes', function () {
+  test("a DS.Model can update its attributes", function () {
     expect(1);
 
     run(function () {
       store.findRecord('person', 2).then(function (person) {
-        set(person, 'name', 'Brohuda Katz');
-        equal(get(person, 'name'), 'Brohuda Katz', 'setting took hold');
+        set(person, 'name', "Brohuda Katz");
+        equal(get(person, 'name'), "Brohuda Katz", "setting took hold");
       });
     });
   });
 
-  test('a DS.Model can have a defaultValue', function () {
+  test("a DS.Model can have a defaultValue", function () {
     var Tag = DS.Model.extend({
-      name: DS.attr('string', { defaultValue: 'unknown' })
+      name: DS.attr('string', { defaultValue: "unknown" })
     });
     var tag;
 
@@ -22203,23 +22209,23 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
       tag = store.createRecord('tag');
     });
 
-    equal(get(tag, 'name'), 'unknown', 'the default value is found');
+    equal(get(tag, 'name'), "unknown", "the default value is found");
 
     run(function () {
       set(tag, 'name', null);
     });
 
-    equal(get(tag, 'name'), null, 'null doesn\'t shadow defaultValue');
+    equal(get(tag, 'name'), null, "null doesn't shadow defaultValue");
   });
 
-  test('a DS.model can define \'setUnknownProperty\'', function () {
+  test("a DS.model can define 'setUnknownProperty'", function () {
     var tag;
     var Tag = DS.Model.extend({
-      name: DS.attr('string'),
+      name: DS.attr("string"),
 
       setUnknownProperty: function (key, value) {
-        if (key === 'title') {
-          this.set('name', value);
+        if (key === "title") {
+          this.set("name", value);
         }
       }
     });
@@ -22229,18 +22235,18 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     });
 
     run(function () {
-      tag = store.createRecord('tag', { name: 'old' });
-      set(tag, 'title', 'new');
+      tag = store.createRecord('tag', { name: "old" });
+      set(tag, "title", "new");
     });
 
-    equal(get(tag, 'name'), 'new', 'setUnknownProperty not triggered');
+    equal(get(tag, "name"), "new", "setUnknownProperty not triggered");
   });
 
-  test('a defaultValue for an attribute can be a function', function () {
+  test("a defaultValue for an attribute can be a function", function () {
     var Tag = DS.Model.extend({
       createdAt: DS.attr('string', {
         defaultValue: function () {
-          return 'le default value';
+          return "le default value";
         }
       })
     });
@@ -22253,18 +22259,18 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     run(function () {
       tag = store.createRecord('tag');
     });
-    equal(get(tag, 'createdAt'), 'le default value', 'the defaultValue function is evaluated');
+    equal(get(tag, 'createdAt'), "le default value", "the defaultValue function is evaluated");
   });
 
-  test('a defaultValue function gets the record, options, and key', function () {
+  test("a defaultValue function gets the record, options, and key", function () {
     expect(2);
 
     var Tag = DS.Model.extend({
       createdAt: DS.attr('string', {
         defaultValue: function (record, options, key) {
-          deepEqual(record, tag, 'the record is passed in properly');
-          equal(key, 'createdAt', 'the attribute being defaulted is passed in properly');
-          return 'le default value';
+          deepEqual(record, tag, "the record is passed in properly");
+          equal(key, 'createdAt', "the attribute being defaulted is passed in properly");
+          return "le default value";
         }
       })
     });
@@ -22281,7 +22287,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     get(tag, 'createdAt');
   });
 
-  test('setting a property to undefined on a newly created record should not impact the current state', function () {
+  test("setting a property to undefined on a newly created record should not impact the current state", function () {
     var Tag = DS.Model.extend({
       name: DS.attr('string')
     });
@@ -22298,36 +22304,36 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
       set(tag, 'name', undefined);
     });
 
-    equal(get(tag, 'currentState.stateName'), 'root.loaded.created.uncommitted');
+    equal(get(tag, 'currentState.stateName'), "root.loaded.created.uncommitted");
 
     run(function () {
       tag = store.createRecord('tag', { name: undefined });
     });
 
-    equal(get(tag, 'currentState.stateName'), 'root.loaded.created.uncommitted');
+    equal(get(tag, 'currentState.stateName'), "root.loaded.created.uncommitted");
   });
 
   // NOTE: this is a 'backdoor' test that ensures internal consistency, and should be
   // thrown out if/when the current `_attributes` hash logic is removed.
-  test('setting a property back to its original value removes the property from the `_attributes` hash', function () {
+  test("setting a property back to its original value removes the property from the `_attributes` hash", function () {
     expect(3);
 
     run(function () {
       store.findRecord('person', 1).then(function (person) {
-        equal(person._internalModel._attributes.name, undefined, 'the `_attributes` hash is clean');
+        equal(person._internalModel._attributes.name, undefined, "the `_attributes` hash is clean");
 
-        set(person, 'name', 'Niceguy Dale');
+        set(person, 'name', "Niceguy Dale");
 
-        equal(person._internalModel._attributes.name, 'Niceguy Dale', 'the `_attributes` hash contains the changed value');
+        equal(person._internalModel._attributes.name, "Niceguy Dale", "the `_attributes` hash contains the changed value");
 
-        set(person, 'name', 'Scumbag Dale');
+        set(person, 'name', "Scumbag Dale");
 
-        equal(person._internalModel._attributes.name, undefined, 'the `_attributes` hash is reset');
+        equal(person._internalModel._attributes.name, undefined, "the `_attributes` hash is reset");
       });
     });
   });
 
-  module('unit/model - with a simple Person model', {
+  module("unit/model - with a simple Person model", {
     setup: function () {
       Person = DS.Model.extend({
         name: DS.attr('string')
@@ -22368,14 +22374,14 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     }
   });
 
-  test('can ask if record with a given id is loaded', function () {
+  test("can ask if record with a given id is loaded", function () {
     equal(store.recordIsLoaded('person', 1), true, 'should have person with id 1');
     equal(store.recordIsLoaded('person', 1), true, 'should have person with id 1');
     equal(store.recordIsLoaded('person', 4), false, 'should not have person with id 4');
     equal(store.recordIsLoaded('person', 4), false, 'should not have person with id 4');
   });
 
-  test('a listener can be added to a record', function () {
+  test("a listener can be added to a record", function () {
     var count = 0;
     var F = function () {
       count++;
@@ -22391,16 +22397,16 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
       record.trigger('event!');
     });
 
-    equal(count, 1, 'the event was triggered');
+    equal(count, 1, "the event was triggered");
 
     run(function () {
       record.trigger('event!');
     });
 
-    equal(count, 2, 'the event was triggered');
+    equal(count, 2, "the event was triggered");
   });
 
-  test('when an event is triggered on a record the method with the same name is invoked with arguments', function () {
+  test("when an event is triggered on a record the method with the same name is invoked with arguments", function () {
     var count = 0;
     var F = function () {
       count++;
@@ -22417,10 +22423,10 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
       record.trigger('eventNamedMethod');
     });
 
-    equal(count, 1, 'the corresponding method was called');
+    equal(count, 1, "the corresponding method was called");
   });
 
-  test('when a method is invoked from an event with the same name the arguments are passed through', function () {
+  test("when a method is invoked from an event with the same name the arguments are passed through", function () {
     var eventMethodArgs = null;
     var F = function () {
       eventMethodArgs = arguments;
@@ -22460,7 +22466,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
       testStore.push(testStore.normalize('model', { id: 1, name: provided }));
       testStore.push(testStore.normalize('model', { id: 2 }));
       testStore.findRecord('model', 1).then(function (record) {
-        deepEqual(get(record, 'name'), expected, type + ' coerces ' + provided + ' to ' + expected);
+        deepEqual(get(record, 'name'), expected, type + " coerces " + provided + " to " + expected);
       });
     });
 
@@ -22486,9 +22492,9 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     var testStore = createStore({ model: Model });
 
     run(function () {
-      testStore.push(testStore.normalize('model', { id: '1', name: provided }));
+      testStore.push(testStore.normalize('model', { id: "1", name: provided }));
       testStore.findRecord('model', 1).then(function (record) {
-        deepEqual(get(record, 'name'), expected, type + ' coerces ' + provided + ' to ' + expected);
+        deepEqual(get(record, 'name'), expected, type + " coerces " + provided + " to " + expected);
       });
     });
   };
@@ -22509,41 +22515,41 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
       });
       testStore.findRecord('model', 2).then(function (record) {
         set(record, 'name', provided);
-        deepEqual(record.serialize().name, expected, type + ' saves ' + provided + ' as ' + expected);
+        deepEqual(record.serialize().name, expected, type + " saves " + provided + " as " + expected);
       });
     });
   };
 
-  test('a DS.Model can describe String attributes', function () {
+  test("a DS.Model can describe String attributes", function () {
     expect(6);
 
-    converts('string', 'Scumbag Tom', 'Scumbag Tom');
-    converts('string', 1, '1');
-    converts('string', '', '');
+    converts('string', "Scumbag Tom", "Scumbag Tom");
+    converts('string', 1, "1");
+    converts('string', "", "");
     converts('string', null, null);
     converts('string', undefined, null);
     convertsFromServer('string', undefined, null);
   });
 
-  test('a DS.Model can describe Number attributes', function () {
+  test("a DS.Model can describe Number attributes", function () {
     expect(9);
 
-    converts('number', '1', 1);
-    converts('number', '0', 0);
+    converts('number', "1", 1);
+    converts('number', "0", 0);
     converts('number', 1, 1);
     converts('number', 0, 0);
-    converts('number', '', null);
+    converts('number', "", null);
     converts('number', null, null);
     converts('number', undefined, null);
     converts('number', true, 1);
     converts('number', false, 0);
   });
 
-  test('a DS.Model can describe Boolean attributes', function () {
+  test("a DS.Model can describe Boolean attributes", function () {
     expect(7);
 
-    converts('boolean', '1', true);
-    converts('boolean', '', false);
+    converts('boolean', "1", true);
+    converts('boolean', "", false);
     converts('boolean', 1, true);
     converts('boolean', 0, false);
     converts('boolean', null, false);
@@ -22551,13 +22557,13 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     converts('boolean', false, false);
   });
 
-  test('a DS.Model can describe Date attributes', function () {
+  test("a DS.Model can describe Date attributes", function () {
     expect(5);
 
     converts('date', null, null);
     converts('date', undefined, undefined);
 
-    var dateString = '2011-12-31T00:08:16.000Z';
+    var dateString = "2011-12-31T00:08:16.000Z";
     var date = new Date(Ember.Date.parse(dateString));
 
     var Person = DS.Model.extend({
@@ -22579,14 +22585,14 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
         run(function () {
           record.set('updatedAt', date);
         });
-        deepEqual(date, get(record, 'updatedAt'), 'setting a date returns the same date');
+        deepEqual(date, get(record, 'updatedAt'), "setting a date returns the same date");
       });
     });
     convertsFromServer('date', dateString, date);
     convertsWhenSet('date', date, dateString);
   });
 
-  test('don\'t allow setting', function () {
+  test("don't allow setting", function () {
     var Person = DS.Model.extend();
     var record;
 
@@ -22602,16 +22608,16 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
       run(function () {
         record.set('isLoaded', true);
       });
-    }, 'raised error when trying to set an unsettable record');
+    }, "raised error when trying to set an unsettable record");
   });
 
-  test('ensure model exits loading state, materializes data and fulfills promise only after data is available', function () {
+  test("ensure model exits loading state, materializes data and fulfills promise only after data is available", function () {
     expect(2);
 
     var store = createStore({
       adapter: DS.Adapter.extend({
         findRecord: function (store, type, id, snapshot) {
-          return Ember.RSVP.resolve({ id: 1, name: 'John' });
+          return Ember.RSVP.resolve({ id: 1, name: "John" });
         }
       }),
       person: Person
@@ -22625,7 +22631,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     });
   });
 
-  test('A DS.Model can be JSONified', function () {
+  test("A DS.Model can be JSONified", function () {
     var Person = DS.Model.extend({
       name: DS.attr('string')
     });
@@ -22634,12 +22640,12 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     var record;
 
     run(function () {
-      record = store.createRecord('person', { name: 'TomHuda' });
+      record = store.createRecord('person', { name: "TomHuda" });
     });
-    deepEqual(record.toJSON(), { name: 'TomHuda' });
+    deepEqual(record.toJSON(), { name: "TomHuda" });
   });
 
-  test('A subclass of DS.Model can not use the `data` property', function () {
+  test("A subclass of DS.Model can not use the `data` property", function () {
     var Person = DS.Model.extend({
       data: DS.attr('string'),
       name: DS.attr('string')
@@ -22649,12 +22655,12 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
     expectAssertion(function () {
       run(function () {
-        store.createRecord('person', { name: 'TomHuda' });
+        store.createRecord('person', { name: "TomHuda" });
       });
     }, /`data` is a reserved property name on DS.Model objects/);
   });
 
-  test('A subclass of DS.Model can not use the `store` property', function () {
+  test("A subclass of DS.Model can not use the `store` property", function () {
     var Retailer = DS.Model.extend({
       store: DS.attr(),
       name: DS.attr()
@@ -22664,12 +22670,12 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
     expectAssertion(function () {
       run(function () {
-        store.createRecord('retailer', { name: 'Buy n Large' });
+        store.createRecord('retailer', { name: "Buy n Large" });
       });
     }, /`store` is a reserved property name on DS.Model objects/);
   });
 
-  test('A subclass of DS.Model can not use reserved properties', function () {
+  test("A subclass of DS.Model can not use reserved properties", function () {
     expect(3);
     ['currentState', 'data', 'store'].forEach(function (reservedProperty) {
       var invalidExtendObject = {};
@@ -22686,7 +22692,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     });
   });
 
-  test('Pushing a record into the store should transition it to the loaded state', function () {
+  test("Pushing a record into the store should transition it to the loaded state", function () {
     var Person = DS.Model.extend({
       name: DS.attr('string')
     });
@@ -22709,10 +22715,10 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     });
   });
 
-  test('A subclass of DS.Model throws an error when calling create() directly', function () {
+  test("A subclass of DS.Model throws an error when calling create() directly", function () {
     throws(function () {
       Person.create();
-    }, /You should not call `create` on a model/, 'Throws an error when calling create() on model');
+    }, /You should not call `create` on a model/, "Throws an error when calling create() on model");
   });
 
   test('toJSON looks up the JSONSerializer using the store instead of using JSONSerializer.create', function () {
@@ -22789,7 +22795,7 @@ define(
 
     var errors;
 
-    module('unit/model/errors', {
+    module("unit/model/errors", {
       setup: function () {
         errors = DS.Errors.create();
       },
@@ -22817,7 +22823,7 @@ define(
       ok(false, 'unexpected send : ' + eventName);
     }
 
-    test('add error', function () {
+    test("add error", function () {
       expect(6);
       errors.trigger = becameInvalid;
       errors.add('firstName', 'error');
@@ -22832,7 +22838,7 @@ define(
       equal(errors.get('length'), 4, 'it has 4 errors');
     });
 
-    test('get error', function () {
+    test("get error", function () {
       expect(8);
       ok(errors.get('firstObject') === undefined, 'returns undefined');
       errors.trigger = becameInvalid;
@@ -22848,7 +22854,7 @@ define(
       deepEqual(errors.get('messages'), ['error', 'error2', 'error3']);
     });
 
-    test('remove error', function () {
+    test("remove error", function () {
       expect(5);
       errors.trigger = becameInvalid;
       errors.add('firstName', 'error');
@@ -22861,7 +22867,7 @@ define(
       errors.remove('firstName');
     });
 
-    test('remove same errors from different attributes', function () {
+    test("remove same errors from different attributes", function () {
       expect(5);
       errors.trigger = becameInvalid;
       errors.add('firstName', 'error');
@@ -22875,7 +22881,7 @@ define(
       ok(errors.get('isEmpty'), 'it is empty');
     });
 
-    test('clear errors', function () {
+    test("clear errors", function () {
       expect(5);
       errors.trigger = becameInvalid;
       errors.add('firstName', ['error', 'error1']);
@@ -22960,9 +22966,9 @@ define(
       });
 
       run(function () {
-        store.findRecord("person", 1).then(function (person) {
-          equal(person.get("id"), "1", "The person's ID is available");
-          equal(person.get("name"), "Foo", "The person's properties are available");
+        store.findRecord('person', 1).then(function (person) {
+          equal(person.get('id'), "1", "The person's ID is available");
+          equal(person.get('name'), "Foo", "The person's properties are available");
         });
       });
     });
@@ -22982,11 +22988,11 @@ define(
       });
 
       run(function () {
-        store._pushInternalModel({ id: 1, type: "person" });
+        store._pushInternalModel({ id: 1, type: 'person' });
         equal(didLoadCalled, 0, "didLoad was not called");
       });
       run(function () {
-        store.peekRecord("person", 1);
+        store.peekRecord('person', 1);
       });
       run(function () {
         equal(didLoadCalled, 1, "didLoad was called");
@@ -22999,13 +23005,13 @@ define(
       var callCount = 0;
 
       var Person = DS.Model.extend({
-        bar: DS.attr("string"),
-        name: DS.attr("string"),
+        bar: DS.attr('string'),
+        name: DS.attr('string'),
 
         didUpdate: function () {
           callCount++;
-          equal(get(this, "isSaving"), false, "record should be saving");
-          equal(get(this, "hasDirtyAttributes"), false, "record should not be dirty");
+          equal(get(this, 'isSaving'), false, "record should be saving");
+          equal(get(this, 'hasDirtyAttributes'), false, "record should not be dirty");
         }
       });
 
@@ -23028,14 +23034,14 @@ define(
       var asyncPerson;
 
       run(function () {
-        asyncPerson = store.findRecord("person", 1);
+        asyncPerson = store.findRecord('person', 1);
       });
       equal(callCount, 0, "precond - didUpdate callback was not called yet");
 
       run(function () {
         asyncPerson.then(function (person) {
           return run(function () {
-            person.set("bar", "Bar");
+            person.set('bar', "Bar");
             return person.save();
           });
         }).then(function () {
@@ -23052,8 +23058,8 @@ define(
       var Person = DS.Model.extend({
         didCreate: function () {
           callCount++;
-          equal(get(this, "isSaving"), false, "record should not be saving");
-          equal(get(this, "hasDirtyAttributes"), false, "record should not be dirty");
+          equal(get(this, 'isSaving'), false, "record should not be saving");
+          equal(get(this, 'hasDirtyAttributes'), false, "record should not be dirty");
         }
       });
 
@@ -23074,7 +23080,7 @@ define(
       var person;
 
       run(function () {
-        person = store.createRecord("person", { id: 69, name: "Newt Gingrich" });
+        person = store.createRecord('person', { id: 69, name: "Newt Gingrich" });
       });
 
       run(function () {
@@ -23090,14 +23096,14 @@ define(
       var callCount = 0;
 
       var Person = DS.Model.extend({
-        bar: DS.attr("string"),
-        name: DS.attr("string"),
+        bar: DS.attr('string'),
+        name: DS.attr('string'),
 
         didDelete: function () {
           callCount++;
 
-          equal(get(this, "isSaving"), false, "record should not be saving");
-          equal(get(this, "hasDirtyAttributes"), false, "record should not be dirty");
+          equal(get(this, 'isSaving'), false, "record should not be saving");
+          equal(get(this, 'hasDirtyAttributes'), false, "record should not be dirty");
         }
       });
 
@@ -23120,7 +23126,7 @@ define(
       var asyncPerson;
 
       run(function () {
-        asyncPerson = store.findRecord("person", 1);
+        asyncPerson = store.findRecord('person', 1);
       });
 
       equal(callCount, 0, "precond - didDelete callback was not called yet");
@@ -23143,13 +23149,13 @@ define(
       var callCount = 0;
 
       var Person = DS.Model.extend({
-        bar: DS.attr("string"),
-        name: DS.attr("string"),
+        bar: DS.attr('string'),
+        name: DS.attr('string'),
 
         didDelete: function () {
           callCount++;
-          equal(get(this, "isSaving"), false, "record should not be saving");
-          equal(get(this, "hasDirtyAttributes"), false, "record should not be dirty");
+          equal(get(this, 'isSaving'), false, "record should not be saving");
+          equal(get(this, 'hasDirtyAttributes'), false, "record should not be dirty");
         }
       });
 
@@ -23160,7 +23166,7 @@ define(
 
       var person;
       run(function () {
-        person = store.createRecord("person", { name: "Tomster" });
+        person = store.createRecord('person', { name: 'Tomster' });
       });
 
       equal(callCount, 0, "precond - didDelete callback was not called yet");
@@ -23178,14 +23184,14 @@ define(
       var callCount = 0;
 
       var Person = DS.Model.extend({
-        bar: DS.attr("string"),
-        name: DS.attr("string"),
+        bar: DS.attr('string'),
+        name: DS.attr('string'),
 
         becameInvalid: function () {
           callCount++;
 
-          equal(get(this, "isSaving"), false, "record should not be saving");
-          equal(get(this, "hasDirtyAttributes"), true, "record should be dirty");
+          equal(get(this, 'isSaving'), false, "record should not be saving");
+          equal(get(this, 'hasDirtyAttributes'), true, "record should be dirty");
         }
       });
 
@@ -23197,7 +23203,7 @@ define(
         updateRecord: function (store, type, snapshot) {
           equal(callCount, 0, "becameInvalid callback was not called until recordWasInvalid is called");
 
-          return Ember.RSVP.reject(new DS.InvalidError({ bar: "error" }));
+          return Ember.RSVP.reject(new DS.InvalidError({ bar: 'error' }));
         }
       });
 
@@ -23208,7 +23214,7 @@ define(
       var asyncPerson;
 
       run(function () {
-        asyncPerson = store.findRecord("person", 1);
+        asyncPerson = store.findRecord('person', 1);
       });
       equal(callCount, 0, "precond - becameInvalid callback was not called yet");
 
@@ -23217,7 +23223,7 @@ define(
       run(function () {
         asyncPerson.then(function (person) {
           return run(function () {
-            person.set("bar", "Bar");
+            person.set('bar', "Bar");
             return person.save();
           });
         }).then(null, function () {
@@ -23229,7 +23235,7 @@ define(
     test("an ID of 0 is allowed", function () {
 
       var Person = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
 
       var store = createStore({
@@ -23239,8 +23245,8 @@ define(
       run(function () {
         store.push({
           data: {
-            type: "person",
-            id: "0",
+            type: 'person',
+            id: '0',
             attributes: {
               name: "Tom Dale"
             }
@@ -23248,7 +23254,7 @@ define(
         });
       });
 
-      equal(store.peekAll("person").objectAt(0).get("name"), "Tom Dale", "found record with id 0");
+      equal(store.peekAll('person').objectAt(0).get('name'), "Tom Dale", "found record with id 0");
     });
   }
 );
@@ -23291,20 +23297,20 @@ define(
       });
 
       run(function () {
-        person = store.createRecord("person", { name: "Tom Dale" });
+        person = store.createRecord('person', { name: "Tom Dale" });
       });
 
       // Make sure saving isn't resolved synchronously
       run(function () {
         var promise = person.save();
 
-        equal(person.get("name"), "Tom Dale");
+        equal(person.get('name'), "Tom Dale");
 
-        person.set("name", "Thomas Dale");
+        person.set('name', "Thomas Dale");
 
         promise.then(function (person) {
-          equal(person.get("hasDirtyAttributes"), true, "The person is still dirty");
-          equal(person.get("name"), "Thomas Dale", "The changes made still apply");
+          equal(person.get('hasDirtyAttributes'), true, "The person is still dirty");
+          equal(person.get('name'), "Thomas Dale", "The changes made still apply");
         });
       });
     });
@@ -23314,7 +23320,7 @@ define(
 
       var adapter = DS.Adapter.extend({
         updateRecord: function (store, type, snapshot) {
-          equal(snapshot.attr("name"), "Thomas Dale");
+          equal(snapshot.attr('name'), 'Thomas Dale');
 
           return Ember.RSVP.resolve();
         }
@@ -23326,28 +23332,28 @@ define(
       run(function () {
         person = store.push({
           data: {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
               name: "Tom"
             }
           }
         });
-        person.set("name", "Thomas Dale");
+        person.set('name', "Thomas Dale");
       });
 
       run(function () {
         var promise = person.save();
 
-        equal(person.get("name"), "Thomas Dale");
+        equal(person.get('name'), "Thomas Dale");
 
-        person.set("name", "Tomasz Dale");
+        person.set('name', "Tomasz Dale");
 
-        equal(person.get("name"), "Tomasz Dale", "the local changes applied on top");
+        equal(person.get('name'), "Tomasz Dale", "the local changes applied on top");
 
         promise.then(async(function (person) {
-          equal(person.get("hasDirtyAttributes"), true, "The person is still dirty");
-          equal(person.get("name"), "Tomasz Dale", "The local changes apply");
+          equal(person.get('hasDirtyAttributes'), true, "The person is still dirty");
+          equal(person.get('name'), "Tomasz Dale", "The local changes apply");
         }));
       });
     });
@@ -23373,27 +23379,27 @@ define(
       run(function () {
         person = store.push({
           data: {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
               name: "Tom"
             }
           }
         });
-        person.set("name", "Thomas Dale");
+        person.set('name', "Thomas Dale");
       });
 
       run(function () {
         var promise = person.save();
 
-        equal(person.get("name"), "Thomas Dale");
+        equal(person.get('name'), "Thomas Dale");
 
-        person.set("name", "Tomasz Dale");
+        person.set('name', "Tomasz Dale");
 
         store.push({
           data: {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
               name: "Tommy Dale",
               city: "PDX"
@@ -23401,13 +23407,13 @@ define(
           }
         });
 
-        equal(person.get("name"), "Tomasz Dale", "the local changes applied on top");
-        equal(person.get("city"), "PDX", "the pushed change is available");
+        equal(person.get('name'), "Tomasz Dale", "the local changes applied on top");
+        equal(person.get('city'), "PDX", "the pushed change is available");
 
         promise.then(async(function (person) {
-          equal(person.get("hasDirtyAttributes"), true, "The person is still dirty");
-          equal(person.get("name"), "Tomasz Dale", "The local changes apply");
-          equal(person.get("city"), "Portland", "The updates from the server apply on top of the previous pushes");
+          equal(person.get('hasDirtyAttributes'), true, "The person is still dirty");
+          equal(person.get('name'), "Tomasz Dale", "The local changes apply");
+          equal(person.get('city'), "Portland", "The updates from the server apply on top of the previous pushes");
         }));
       });
     });
@@ -23422,26 +23428,26 @@ define(
       run(function () {
         person = store.push({
           data: {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
               name: "Tom Dale",
               city: "San Francisco"
             }
           }
         });
-        person.set("name", "Tomasz Dale");
+        person.set('name', "Tomasz Dale");
       });
 
-      equal(person.get("hasDirtyAttributes"), true, "the person is currently dirty");
-      equal(person.get("name"), "Tomasz Dale", "the update was effective");
-      equal(person.get("city"), "San Francisco", "the original data applies");
+      equal(person.get('hasDirtyAttributes'), true, "the person is currently dirty");
+      equal(person.get('name'), "Tomasz Dale", "the update was effective");
+      equal(person.get('city'), "San Francisco", "the original data applies");
 
       run(function () {
         store.push({
           data: {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
               name: "Thomas Dale",
               city: "Portland"
@@ -23450,9 +23456,9 @@ define(
         });
       });
 
-      equal(person.get("hasDirtyAttributes"), true, "the local changes are reapplied");
-      equal(person.get("name"), "Tomasz Dale", "the local changes are reapplied");
-      equal(person.get("city"), "Portland", "if there are no local changes, the new data applied");
+      equal(person.get('hasDirtyAttributes'), true, "the local changes are reapplied");
+      equal(person.get('name'), "Tomasz Dale", "the local changes are reapplied");
+      equal(person.get('city'), "Portland", "if there are no local changes, the new data applied");
     });
 
     test("When a record is invalid, pushes are overridden by local changes", function () {
@@ -23465,28 +23471,28 @@ define(
       run(function () {
         person = store.push({
           data: {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
               name: "Brendan McLoughlin",
               city: "Boston"
             }
           }
         });
-        person.set("name", "Brondan McLoughlin");
-        person.send("becameInvalid");
+        person.set('name', "Brondan McLoughlin");
+        person.send('becameInvalid');
       });
 
-      equal(person.get("hasDirtyAttributes"), true, "the person is currently dirty");
-      equal(person.get("isValid"), false, "the person is currently invalid");
-      equal(person.get("name"), "Brondan McLoughlin", "the update was effective");
-      equal(person.get("city"), "Boston", "the original data applies");
+      equal(person.get('hasDirtyAttributes'), true, "the person is currently dirty");
+      equal(person.get('isValid'), false, "the person is currently invalid");
+      equal(person.get('name'), "Brondan McLoughlin", "the update was effective");
+      equal(person.get('city'), "Boston", "the original data applies");
 
       run(function () {
         store.push({
           data: {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
               name: "bmac",
               city: "Prague"
@@ -23495,10 +23501,10 @@ define(
         });
       });
 
-      equal(person.get("hasDirtyAttributes"), true, "the local changes are reapplied");
-      equal(person.get("isValid"), false, "record is still invalid");
-      equal(person.get("name"), "Brondan McLoughlin", "the local changes are reapplied");
-      equal(person.get("city"), "Prague", "if there are no local changes, the new data applied");
+      equal(person.get('hasDirtyAttributes'), true, "the local changes are reapplied");
+      equal(person.get('isValid'), false, "record is still invalid");
+      equal(person.get('name'), "Brondan McLoughlin", "the local changes are reapplied");
+      equal(person.get('city'), "Prague", "if there are no local changes, the new data applied");
     });
 
     test("A record with no changes can still be saved", function () {
@@ -23519,8 +23525,8 @@ define(
       run(function () {
         person = store.push({
           data: {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributeS: {
               name: "Tom Dale"
             }
@@ -23530,7 +23536,7 @@ define(
 
       run(function () {
         person.save().then(function () {
-          equal(person.get("name"), "Thomas Dale", "the updates occurred");
+          equal(person.get('name'), "Thomas Dale", "the updates occurred");
         });
       });
     });
@@ -23553,21 +23559,21 @@ define(
       run(function () {
         person = store.push({
           data: {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
               name: "Tom Dale"
             }
           }
         });
-        person.set("name", "Tomasz Dale");
+        person.set('name', "Tomasz Dale");
       });
 
       run(function () {
         person.reload().then(function () {
-          equal(person.get("hasDirtyAttributes"), true, "the person is dirty");
-          equal(person.get("name"), "Tomasz Dale", "the local changes remain");
-          equal(person.get("city"), "Portland", "the new changes apply");
+          equal(person.get('hasDirtyAttributes'), true, "the person is dirty");
+          equal(person.get('name'), "Tomasz Dale", "the local changes remain");
+          equal(person.get('city'), "Portland", "the new changes apply");
         });
       });
     });
@@ -23589,7 +23595,7 @@ define(
     var run = Ember.run;
     var Occupation, Person, store;
 
-    module('unit/model/relationships - DS.Model', {
+    module("unit/model/relationships - DS.Model", {
       setup: function () {
         Occupation = DS.Model.extend();
 
@@ -23608,7 +23614,7 @@ define(
       }
     });
 
-    test('exposes a hash of the relationships on a model', function () {
+    test("exposes a hash of the relationships on a model", function () {
       var person, occupation;
 
       run(function () {
@@ -23617,15 +23623,15 @@ define(
       });
 
       var relationships = get(Person, 'relationships');
-      deepEqual(relationships.get('person'), [{ name: 'people', kind: 'hasMany' }, { name: 'parent', kind: 'belongsTo' }]);
-      deepEqual(relationships.get('occupation'), [{ name: 'occupations', kind: 'hasMany' }]);
+      deepEqual(relationships.get('person'), [{ name: "people", kind: "hasMany" }, { name: "parent", kind: "belongsTo" }]);
+      deepEqual(relationships.get('occupation'), [{ name: "occupations", kind: "hasMany" }]);
     });
 
-    test('relationshipNames a hash of the relationships on a model with type as a key', function () {
-      deepEqual(get(Person, 'relationshipNames'), { hasMany: ['occupations', 'people'], belongsTo: ['parent'] });
+    test("relationshipNames a hash of the relationships on a model with type as a key", function () {
+      deepEqual(get(Person, 'relationshipNames'), { hasMany: ['occupations', 'people'], belongsTo: ["parent"] });
     });
 
-    test('eachRelatedType() iterates over relations without duplication', function () {
+    test("eachRelatedType() iterates over relations without duplication", function () {
       var relations = [];
 
       Person.eachRelatedType(function (modelName) {
@@ -23657,16 +23663,16 @@ define(
       expect(5);
 
       var Tag = DS.Model.extend({
-        name: DS.attr("string"),
-        people: DS.hasMany("person", { async: false })
+        name: DS.attr('string'),
+        people: DS.hasMany('person', { async: false })
       });
       Tag.toString = function () {
         return "Tag";
       };
 
       var Person = DS.Model.extend({
-        name: DS.attr("string"),
-        tag: DS.belongsTo("tag", { async: false })
+        name: DS.attr('string'),
+        tag: DS.belongsTo('tag', { async: false })
       });
       Person.toString = function () {
         return "Person";
@@ -23678,32 +23684,32 @@ define(
       run(function () {
         store.push({
           data: [{
-            type: "tag",
-            id: "5",
+            type: 'tag',
+            id: '5',
             attributes: {
-              name: "friendly"
+              name: 'friendly'
             }
           }, {
-            type: "tag",
-            id: "2",
+            type: 'tag',
+            id: '2',
             attributes: {
-              name: "smarmy"
+              name: 'smarmy'
             }
           }, {
-            type: "tag",
-            id: "12",
+            type: 'tag',
+            id: '12',
             attributes: {
-              name: "oohlala"
+              name: 'oohlala'
             }
           }, {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "Tom Dale"
+              name: 'Tom Dale'
             },
             relationships: {
               tag: {
-                data: { type: "tag", id: "5" }
+                data: { type: 'tag', id: '5' }
               }
             }
           }]
@@ -23711,14 +23717,14 @@ define(
       });
 
       run(function () {
-        store.findRecord("person", 1).then(async(function (person) {
-          equal(get(person, "name"), "Tom Dale", "precond - retrieves person record from store");
+        store.findRecord('person', 1).then(async(function (person) {
+          equal(get(person, 'name'), "Tom Dale", "precond - retrieves person record from store");
 
-          equal(get(person, "tag") instanceof Tag, true, "the tag property should return a tag");
-          equal(get(person, "tag.name"), "friendly", "the tag shuld have name");
+          equal(get(person, 'tag') instanceof Tag, true, "the tag property should return a tag");
+          equal(get(person, 'tag.name'), "friendly", "the tag shuld have name");
 
-          strictEqual(get(person, "tag"), get(person, "tag"), "the returned object is always the same");
-          asyncEqual(get(person, "tag"), store.findRecord("tag", 5), "relationship object is the same as object retrieved directly");
+          strictEqual(get(person, 'tag'), get(person, 'tag'), "the returned object is always the same");
+          asyncEqual(get(person, 'tag'), store.findRecord('tag', 5), "relationship object is the same as object retrieved directly");
         }));
       });
     });
@@ -23727,12 +23733,12 @@ define(
       expect(5);
 
       var Tag = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
 
       var Person = DS.Model.extend({
-        name: DS.attr("string"),
-        tag: DS.belongsTo("tag", { async: true })
+        name: DS.attr('string'),
+        tag: DS.belongsTo('tag', { async: true })
       });
 
       var env = setupStore({ tag: Tag, person: Person });
@@ -23751,15 +23757,15 @@ define(
       };
 
       run(function () {
-        store.findRecord("person", 1).then(async(function (person) {
-          equal(get(person, "name"), "Tom Dale", "The person is now populated");
+        store.findRecord('person', 1).then(async(function (person) {
+          equal(get(person, 'name'), "Tom Dale", "The person is now populated");
 
           return run(function () {
-            return get(person, "tag");
+            return get(person, 'tag');
           });
         })).then(async(function (tag) {
-          equal(get(tag, "name"), "friendly", "Tom Dale is now friendly");
-          equal(get(tag, "isLoaded"), true, "Tom Dale is now loaded");
+          equal(get(tag, 'name'), "friendly", "Tom Dale is now friendly");
+          equal(get(tag, 'isLoaded'), true, "Tom Dale is now loaded");
         }));
       });
     });
@@ -23768,12 +23774,12 @@ define(
       expect(3);
 
       var Tag = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
 
       var Person = DS.Model.extend({
-        name: DS.attr("string"),
-        tag: DS.belongsTo("tag", { async: true })
+        name: DS.attr('string'),
+        tag: DS.belongsTo('tag', { async: true })
       });
 
       var env = setupStore({ tag: Tag, person: Person });
@@ -23782,20 +23788,20 @@ define(
       run(function () {
         store.push({
           data: [{
-            type: "tag",
-            id: "2",
+            type: 'tag',
+            id: '2',
             attributes: {
-              name: "friendly"
+              name: 'friendly'
             }
           }, {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "Tom Dale"
+              name: 'Tom Dale'
             },
             relationships: {
               tag: {
-                data: { type: "tag", id: "2" }
+                data: { type: 'tag', id: '2' }
               }
             }
           }]
@@ -23803,14 +23809,14 @@ define(
       });
 
       run(function () {
-        store.findRecord("person", 1).then(async(function (person) {
-          equal(get(person, "name"), "Tom Dale", "The person is now populated");
+        store.findRecord('person', 1).then(async(function (person) {
+          equal(get(person, 'name'), "Tom Dale", "The person is now populated");
           return run(function () {
-            return get(person, "tag");
+            return get(person, 'tag');
           });
         })).then(async(function (tag) {
-          equal(get(tag, "name"), "friendly", "Tom Dale is now friendly");
-          equal(get(tag, "isLoaded"), true, "Tom Dale is now loaded");
+          equal(get(tag, 'name'), "friendly", "Tom Dale is now friendly");
+          equal(get(tag, 'isLoaded'), true, "Tom Dale is now loaded");
         }));
       });
     });
@@ -23819,33 +23825,33 @@ define(
       expect(1);
 
       var Tag = DS.Model.extend({
-        name: DS.attr("string"),
-        person: DS.belongsTo("person", { async: false })
+        name: DS.attr('string'),
+        person: DS.belongsTo('person', { async: false })
       });
 
       var Person = DS.Model.extend({
-        name: DS.attr("string"),
-        tag: DS.belongsTo("tag", { async: false })
+        name: DS.attr('string'),
+        tag: DS.belongsTo('tag', { async: false })
       });
 
       var env = setupStore({ tag: Tag, person: Person });
       var store = env.store;
 
       run(function () {
-        store.createRecord("person", { id: 1, tag: undefined });
+        store.createRecord('person', { id: 1, tag: undefined });
       });
 
       run(function () {
-        store.findRecord("person", 1).then(async(function (person) {
-          strictEqual(person.get("tag"), null, "undefined values should return null relationships");
+        store.findRecord('person', 1).then(async(function (person) {
+          strictEqual(person.get('tag'), null, "undefined values should return null relationships");
         }));
       });
     });
 
     test("When finding a hasMany relationship the inverse belongsTo relationship is available immediately", function () {
       var Occupation = DS.Model.extend({
-        description: DS.attr("string"),
-        person: DS.belongsTo("person", { async: false })
+        description: DS.attr('string'),
+        person: DS.belongsTo('person', { async: false })
       });
 
       Occupation.toString = function () {
@@ -23853,8 +23859,8 @@ define(
       };
 
       var Person = DS.Model.extend({
-        name: DS.attr("string"),
-        occupations: DS.hasMany("occupation", { async: true })
+        name: DS.attr('string'),
+        occupations: DS.hasMany('occupation', { async: true })
       });
 
       Person.toString = function () {
@@ -23865,7 +23871,7 @@ define(
       var store = env.store;
 
       env.adapter.findMany = function (store, type, ids, snapshots) {
-        equal(snapshots[0].belongsTo("person").id, "1");
+        equal(snapshots[0].belongsTo('person').id, '1');
         return Ember.RSVP.resolve([{ id: 5, description: "fifth" }, { id: 2, description: "second" }]);
       };
 
@@ -23874,14 +23880,14 @@ define(
       run(function () {
         store.push({
           data: {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "Tom Dale"
+              name: 'Tom Dale'
             },
             relationships: {
               occupations: {
-                data: [{ type: "occupation", id: "5" }, { type: "occupation", id: "2" }]
+                data: [{ type: 'occupation', id: '5' }, { type: 'occupation', id: '2' }]
               }
             }
           }
@@ -23889,16 +23895,16 @@ define(
       });
 
       run(function () {
-        store.findRecord("person", 1).then(async(function (person) {
-          equal(get(person, "isLoaded"), true, "isLoaded should be true");
-          equal(get(person, "name"), "Tom Dale", "the person is still Tom Dale");
+        store.findRecord('person', 1).then(async(function (person) {
+          equal(get(person, 'isLoaded'), true, "isLoaded should be true");
+          equal(get(person, 'name'), "Tom Dale", "the person is still Tom Dale");
 
-          return get(person, "occupations");
+          return get(person, 'occupations');
         })).then(async(function (occupations) {
-          equal(get(occupations, "length"), 2, "the list of occupations should have the correct length");
+          equal(get(occupations, 'length'), 2, "the list of occupations should have the correct length");
 
-          equal(get(occupations.objectAt(0), "description"), "fifth", "the occupation is the fifth");
-          equal(get(occupations.objectAt(0), "isLoaded"), true, "the occupation is now loaded");
+          equal(get(occupations.objectAt(0), 'description'), "fifth", "the occupation is the fifth");
+          equal(get(occupations.objectAt(0), 'isLoaded'), true, "the occupation is now loaded");
         }));
       });
     });
@@ -23907,8 +23913,8 @@ define(
       expect(1);
 
       var Occupation = DS.Model.extend({
-        description: DS.attr("string"),
-        person: DS.belongsTo("person", { async: false })
+        description: DS.attr('string'),
+        person: DS.belongsTo('person', { async: false })
       });
 
       Occupation.toString = function () {
@@ -23916,8 +23922,8 @@ define(
       };
 
       var Person = DS.Model.extend({
-        name: DS.attr("string"),
-        occupation: DS.belongsTo("occupation", { async: true })
+        name: DS.attr('string'),
+        occupation: DS.belongsTo('occupation', { async: true })
       });
 
       Person.toString = function () {
@@ -23928,21 +23934,21 @@ define(
       var store = env.store;
 
       env.adapter.findRecord = function (store, type, id, snapshot) {
-        equal(snapshot.belongsTo("person").id, "1");
+        equal(snapshot.belongsTo('person').id, '1');
         return Ember.RSVP.resolve({ id: 5, description: "fifth" });
       };
 
       run(function () {
         store.push({
           data: {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "Tom Dale"
+              name: 'Tom Dale'
             },
             relationships: {
               occupation: {
-                data: { type: "occupation", id: "5" }
+                data: { type: 'occupation', id: '5' }
               }
             }
           }
@@ -23950,7 +23956,7 @@ define(
       });
 
       run(function () {
-        store.peekRecord("person", 1).get("occupation");
+        store.peekRecord('person', 1).get('occupation');
       });
     });
 
@@ -23958,16 +23964,16 @@ define(
       expect(5);
 
       var Tag = DS.Model.extend({
-        name: DS.attr("string"),
-        people: DS.hasMany("person", { async: false })
+        name: DS.attr('string'),
+        people: DS.hasMany('person', { async: false })
       });
       Tag.toString = function () {
         return "Tag";
       };
 
       var Person = DS.Model.extend({
-        name: DS.attr("string"),
-        tag: DS.belongsTo("tag", { async: false })
+        name: DS.attr('string'),
+        tag: DS.belongsTo('tag', { async: false })
       });
       Person.toString = function () {
         return "Person";
@@ -23979,32 +23985,32 @@ define(
       run(function () {
         store.push({
           data: [{
-            type: "tag",
-            id: "0",
+            type: 'tag',
+            id: '0',
             attributes: {
-              name: "friendly"
+              name: 'friendly'
             }
           }, {
-            type: "tag",
-            id: "2",
+            type: 'tag',
+            id: '2',
             attributes: {
-              name: "smarmy"
+              name: 'smarmy'
             }
           }, {
-            type: "tag",
-            id: "12",
+            type: 'tag',
+            id: '12',
             attributes: {
-              name: "oohlala"
+              name: 'oohlala'
             }
           }, {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "Tom Dale"
+              name: 'Tom Dale'
             },
             relationships: {
               tag: {
-                data: { type: "tag", id: "0" }
+                data: { type: 'tag', id: '0' }
               }
             }
           }]
@@ -24012,29 +24018,29 @@ define(
       });
 
       run(function () {
-        store.findRecord("person", 1).then(async(function (person) {
-          equal(get(person, "name"), "Tom Dale", "precond - retrieves person record from store");
+        store.findRecord('person', 1).then(async(function (person) {
+          equal(get(person, 'name'), "Tom Dale", "precond - retrieves person record from store");
 
-          equal(get(person, "tag") instanceof Tag, true, "the tag property should return a tag");
-          equal(get(person, "tag.name"), "friendly", "the tag should have name");
+          equal(get(person, 'tag') instanceof Tag, true, "the tag property should return a tag");
+          equal(get(person, 'tag.name'), "friendly", "the tag should have name");
 
-          strictEqual(get(person, "tag"), get(person, "tag"), "the returned object is always the same");
-          asyncEqual(get(person, "tag"), store.findRecord("tag", 0), "relationship object is the same as object retrieved directly");
+          strictEqual(get(person, 'tag'), get(person, 'tag'), "the returned object is always the same");
+          asyncEqual(get(person, 'tag'), store.findRecord('tag', 0), "relationship object is the same as object retrieved directly");
         }));
       });
     });
 
     test("belongsTo gives a warning when provided with a serialize option", function () {
       var Hobby = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
       Hobby.toString = function () {
         return "Hobby";
       };
 
       var Person = DS.Model.extend({
-        name: DS.attr("string"),
-        hobby: DS.belongsTo("hobby", { serialize: true, async: true })
+        name: DS.attr('string'),
+        hobby: DS.belongsTo('hobby', { serialize: true, async: true })
       });
       Person.toString = function () {
         return "Person";
@@ -24046,26 +24052,26 @@ define(
       run(function () {
         store.push({
           data: [{
-            type: "hobby",
-            id: "1",
+            type: 'hobby',
+            id: '1',
             attributes: {
-              name: "fishing"
+              name: 'fishing'
             }
           }, {
-            type: "hobby",
-            id: "2",
+            type: 'hobby',
+            id: '2',
             attributes: {
-              name: "coding"
+              name: 'coding'
             }
           }, {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "Tom Dale"
+              name: 'Tom Dale'
             },
             relationships: {
               hobby: {
-                data: { type: "hobby", id: "1" }
+                data: { type: 'hobby', id: '1' }
               }
             }
           }]
@@ -24074,8 +24080,8 @@ define(
 
       warns(function () {
         run(function () {
-          store.find("person", 1).then(async(function (person) {
-            get(person, "hobby");
+          store.find('person', 1).then(async(function (person) {
+            get(person, 'hobby');
           }));
         });
       }, /You provided a serialize option on the "hobby" property in the "person" class, this belongs in the serializer. See DS.Serializer and it's implementations/);
@@ -24083,15 +24089,15 @@ define(
 
     test("belongsTo gives a warning when provided with an embedded option", function () {
       var Hobby = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
       Hobby.toString = function () {
         return "Hobby";
       };
 
       var Person = DS.Model.extend({
-        name: DS.attr("string"),
-        hobby: DS.belongsTo("hobby", { embedded: true, async: true })
+        name: DS.attr('string'),
+        hobby: DS.belongsTo('hobby', { embedded: true, async: true })
       });
       Person.toString = function () {
         return "Person";
@@ -24103,26 +24109,26 @@ define(
       run(function () {
         store.push({
           data: [{
-            type: "hobby",
-            id: "1",
+            type: 'hobby',
+            id: '1',
             attributes: {
-              name: "fishing"
+              name: 'fishing'
             }
           }, {
-            type: "hobby",
-            id: "2",
+            type: 'hobby',
+            id: '2',
             attributes: {
-              name: "coding"
+              name: 'coding'
             }
           }, {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "Tom Dale"
+              name: 'Tom Dale'
             },
             relationships: {
               hobby: {
-                data: { type: "hobby", id: "1" }
+                data: { type: 'hobby', id: '1' }
               }
             }
           }]
@@ -24131,8 +24137,8 @@ define(
 
       warns(function () {
         run(function () {
-          store.find("person", 1).then(async(function (person) {
-            get(person, "hobby");
+          store.find('person', 1).then(async(function (person) {
+            get(person, 'hobby');
           }));
         });
       }, /You provided an embedded option on the "hobby" property in the "person" class, this belongs in the serializer. See DS.EmbeddedRecordsMixin/);
@@ -24140,22 +24146,22 @@ define(
 
     test("DS.belongsTo should be async by default", function () {
       var Tag = DS.Model.extend({
-        name: DS.attr("string"),
-        people: DS.hasMany("person", { async: false })
+        name: DS.attr('string'),
+        people: DS.hasMany('person', { async: false })
       });
 
       var Person = DS.Model.extend({
-        name: DS.attr("string"),
-        tag: DS.belongsTo("tag")
+        name: DS.attr('string'),
+        tag: DS.belongsTo('tag')
       });
 
       var env = setupStore({ tag: Tag, person: Person });
       var store = env.store;
 
       run(function () {
-        var person = store.createRecord("person");
+        var person = store.createRecord('person');
 
-        ok(person.get("tag") instanceof DS.PromiseObject, "tag should be an async relationship");
+        ok(person.get('tag') instanceof DS.PromiseObject, 'tag should be an async relationship');
       });
     });
   }
@@ -24186,27 +24192,27 @@ define(
       expect(13);
 
       var Tag = DS.Model.extend({
-        name: DS.attr("string"),
-        person: DS.belongsTo("person", { async: false })
+        name: DS.attr('string'),
+        person: DS.belongsTo('person', { async: false })
       });
 
       var Pet = DS.Model.extend({
-        name: DS.attr("string"),
-        person: DS.belongsTo("person", { async: false })
+        name: DS.attr('string'),
+        person: DS.belongsTo('person', { async: false })
       });
 
       var Person = DS.Model.extend({
-        name: DS.attr("string"),
-        tags: DS.hasMany("tag", { async: false }),
-        pets: DS.hasMany("pet", { async: false })
+        name: DS.attr('string'),
+        tags: DS.hasMany('tag', { async: false }),
+        pets: DS.hasMany('pet', { async: false })
       });
 
-      env.registry.register("model:tag", Tag);
-      env.registry.register("model:pet", Pet);
-      env.registry.register("model:person", Person);
+      env.registry.register('model:tag', Tag);
+      env.registry.register('model:pet', Pet);
+      env.registry.register('model:person', Person);
 
       env.adapter.findRecord = function (store, type, id, snapshot) {
-        if (type === Tag && id === "12") {
+        if (type === Tag && id === '12') {
           return Ember.RSVP.resolve({ id: 12, name: "oohlala" });
         } else {
           ok(false, "findRecord() should not be called with these values");
@@ -24218,55 +24224,55 @@ define(
       run(function () {
         store.push({
           data: [{
-            type: "tag",
-            id: "5",
+            type: 'tag',
+            id: '5',
             attributes: {
-              name: "friendly"
+              name: 'friendly'
             }
           }, {
-            type: "tag",
-            id: "2",
+            type: 'tag',
+            id: '2',
             attributes: {
-              name: "smarmy"
+              name: 'smarmy'
             }
           }, {
-            type: "pet",
-            id: "4",
+            type: 'pet',
+            id: '4',
             attributes: {
-              name: "fluffy"
+              name: 'fluffy'
             }
           }, {
-            type: "pet",
-            id: "7",
+            type: 'pet',
+            id: '7',
             attributes: {
-              name: "snowy"
+              name: 'snowy'
             }
           }, {
-            type: "pet",
-            id: "12",
+            type: 'pet',
+            id: '12',
             attributes: {
-              name: "cerberus"
+              name: 'cerberus'
             }
           }, {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "Tom Dale"
+              name: 'Tom Dale'
             },
             relationships: {
               tags: {
-                data: [{ type: "tag", id: "5" }]
+                data: [{ type: 'tag', id: '5' }]
               }
             }
           }, {
-            type: "person",
-            id: "2",
+            type: 'person',
+            id: '2',
             attributes: {
-              name: "Yehuda Katz"
+              name: 'Yehuda Katz'
             },
             relationships: {
               tags: {
-                data: [{ type: "tag", id: "12" }]
+                data: [{ type: 'tag', id: '12' }]
               }
             }
           }]
@@ -24274,95 +24280,95 @@ define(
       });
 
       run(function () {
-        store.findRecord("person", 1).then(function (person) {
-          equal(get(person, "name"), "Tom Dale", "precond - retrieves person record from store");
+        store.findRecord('person', 1).then(function (person) {
+          equal(get(person, 'name'), "Tom Dale", "precond - retrieves person record from store");
 
-          var tags = get(person, "tags");
-          equal(get(tags, "length"), 1, "the list of tags should have the correct length");
-          equal(get(tags.objectAt(0), "name"), "friendly", "the first tag should be a Tag");
+          var tags = get(person, 'tags');
+          equal(get(tags, 'length'), 1, "the list of tags should have the correct length");
+          equal(get(tags.objectAt(0), 'name'), "friendly", "the first tag should be a Tag");
 
           run(function () {
             store.push({
               data: {
-                type: "person",
-                id: "1",
+                type: 'person',
+                id: '1',
                 attributes: {
-                  name: "Tom Dale"
+                  name: 'Tom Dale'
                 },
                 relationships: {
                   tags: {
-                    data: [{ type: "tag", id: "5" }, { type: "tag", id: "2" }]
+                    data: [{ type: 'tag', id: '5' }, { type: 'tag', id: '2' }]
                   }
                 }
               }
             });
           });
 
-          equal(tags, get(person, "tags"), "a relationship returns the same object every time");
-          equal(get(get(person, "tags"), "length"), 2, "the length is updated after new data is loaded");
+          equal(tags, get(person, 'tags'), "a relationship returns the same object every time");
+          equal(get(get(person, 'tags'), 'length'), 2, "the length is updated after new data is loaded");
 
-          strictEqual(get(person, "tags").objectAt(0), get(person, "tags").objectAt(0), "the returned object is always the same");
-          asyncEqual(get(person, "tags").objectAt(0), store.findRecord("tag", 5), "relationship objects are the same as objects retrieved directly");
+          strictEqual(get(person, 'tags').objectAt(0), get(person, 'tags').objectAt(0), "the returned object is always the same");
+          asyncEqual(get(person, 'tags').objectAt(0), store.findRecord('tag', 5), "relationship objects are the same as objects retrieved directly");
 
           run(function () {
             store.push({
               data: {
-                type: "person",
-                id: "3",
+                type: 'person',
+                id: '3',
                 attributes: {
-                  name: "KSelden"
+                  name: 'KSelden'
                 }
               }
             });
           });
 
-          return store.findRecord("person", 3);
+          return store.findRecord('person', 3);
         }).then(function (kselden) {
-          equal(get(get(kselden, "tags"), "length"), 0, "a relationship that has not been supplied returns an empty array");
+          equal(get(get(kselden, 'tags'), 'length'), 0, "a relationship that has not been supplied returns an empty array");
 
           run(function () {
             store.push({
               data: {
-                type: "person",
-                id: "4",
+                type: 'person',
+                id: '4',
                 attributes: {
-                  name: "Cyvid Hamluck"
+                  name: 'Cyvid Hamluck'
                 },
                 relationships: {
                   pets: {
-                    data: [{ type: "pet", id: "4" }]
+                    data: [{ type: 'pet', id: '4' }]
                   }
                 }
               }
             });
           });
-          return store.findRecord("person", 4);
+          return store.findRecord('person', 4);
         }).then(function (cyvid) {
-          equal(get(cyvid, "name"), "Cyvid Hamluck", "precond - retrieves person record from store");
+          equal(get(cyvid, 'name'), "Cyvid Hamluck", "precond - retrieves person record from store");
 
-          var pets = get(cyvid, "pets");
-          equal(get(pets, "length"), 1, "the list of pets should have the correct length");
-          equal(get(pets.objectAt(0), "name"), "fluffy", "the first pet should be correct");
+          var pets = get(cyvid, 'pets');
+          equal(get(pets, 'length'), 1, "the list of pets should have the correct length");
+          equal(get(pets.objectAt(0), 'name'), "fluffy", "the first pet should be correct");
 
           run(function () {
             store.push({
               data: {
-                type: "person",
-                id: "4",
+                type: 'person',
+                id: '4',
                 attributes: {
-                  name: "Cyvid Hamluck"
+                  name: 'Cyvid Hamluck'
                 },
                 relationships: {
                   pets: {
-                    data: [{ type: "pet", id: "4" }, { type: "pet", id: "12" }]
+                    data: [{ type: 'pet', id: '4' }, { type: 'pet', id: '12' }]
                   }
                 }
               }
             });
           });
 
-          equal(pets, get(cyvid, "pets"), "a relationship returns the same object every time");
-          equal(get(get(cyvid, "pets"), "length"), 2, "the length is updated after new data is loaded");
+          equal(pets, get(cyvid, 'pets'), "a relationship returns the same object every time");
+          equal(get(get(cyvid, 'pets'), 'length'), 2, "the length is updated after new data is loaded");
         });
       });
     });
@@ -24371,27 +24377,27 @@ define(
       expect(5);
 
       var Tag = DS.Model.extend({
-        name: DS.attr("string"),
-        person: DS.belongsTo("person", { async: false })
+        name: DS.attr('string'),
+        person: DS.belongsTo('person', { async: false })
       });
 
       var Pet = DS.Model.extend({
-        name: DS.attr("string"),
-        person: DS.belongsTo("person", { async: false })
+        name: DS.attr('string'),
+        person: DS.belongsTo('person', { async: false })
       });
 
       var Person = DS.Model.extend({
-        name: DS.attr("string"),
-        tags: DS.hasMany("tag", { async: true }),
-        pets: DS.hasMany("pet", { async: false })
+        name: DS.attr('string'),
+        tags: DS.hasMany('tag', { async: true }),
+        pets: DS.hasMany('pet', { async: false })
       });
 
-      env.registry.register("model:tag", Tag);
-      env.registry.register("model:pet", Pet);
-      env.registry.register("model:person", Person);
+      env.registry.register('model:tag', Tag);
+      env.registry.register('model:pet', Pet);
+      env.registry.register('model:person', Person);
 
       env.adapter.findRecord = function (store, type, id, snapshot) {
-        if (type === Tag && id === "12") {
+        if (type === Tag && id === '12') {
           return Ember.RSVP.resolve({ id: 12, name: "oohlala" });
         } else {
           ok(false, "findRecord() should not be called with these values");
@@ -24403,55 +24409,55 @@ define(
       run(function () {
         store.push({
           data: [{
-            type: "tag",
-            id: "5",
+            type: 'tag',
+            id: '5',
             attributes: {
-              name: "friendly"
+              name: 'friendly'
             }
           }, {
-            type: "tag",
-            id: "2",
+            type: 'tag',
+            id: '2',
             attributes: {
-              name: "smarmy"
+              name: 'smarmy'
             }
           }, {
-            type: "pet",
-            id: "4",
+            type: 'pet',
+            id: '4',
             attributes: {
-              name: "fluffy"
+              name: 'fluffy'
             }
           }, {
-            type: "pet",
-            id: "7",
+            type: 'pet',
+            id: '7',
             attributes: {
-              name: "snowy"
+              name: 'snowy'
             }
           }, {
-            type: "pet",
-            id: "12",
+            type: 'pet',
+            id: '12',
             attributes: {
-              name: "cerberus"
+              name: 'cerberus'
             }
           }, {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "Tom Dale"
+              name: 'Tom Dale'
             },
             relationships: {
               tags: {
-                data: [{ type: "tag", id: "5" }]
+                data: [{ type: 'tag', id: '5' }]
               }
             }
           }, {
-            type: "person",
-            id: "2",
+            type: 'person',
+            id: '2',
             attributes: {
-              name: "Yehuda Katz"
+              name: 'Yehuda Katz'
             },
             relationships: {
               tags: {
-                data: [{ type: "tag", id: "12" }]
+                data: [{ type: 'tag', id: '12' }]
               }
             }
           }]
@@ -24461,27 +24467,27 @@ define(
       var wycats;
 
       run(function () {
-        store.findRecord("person", 2).then(function (person) {
+        store.findRecord('person', 2).then(function (person) {
           wycats = person;
 
-          equal(get(wycats, "name"), "Yehuda Katz", "precond - retrieves person record from store");
+          equal(get(wycats, 'name'), "Yehuda Katz", "precond - retrieves person record from store");
 
           return Ember.RSVP.hash({
             wycats: wycats,
-            tags: wycats.get("tags")
+            tags: wycats.get('tags')
           });
         }).then(function (records) {
-          equal(get(records.tags, "length"), 1, "the list of tags should have the correct length");
-          equal(get(records.tags.objectAt(0), "name"), "oohlala", "the first tag should be a Tag");
+          equal(get(records.tags, 'length'), 1, "the list of tags should have the correct length");
+          equal(get(records.tags.objectAt(0), 'name'), "oohlala", "the first tag should be a Tag");
 
           strictEqual(records.tags.objectAt(0), records.tags.objectAt(0), "the returned object is always the same");
-          asyncEqual(records.tags.objectAt(0), store.findRecord("tag", 12), "relationship objects are the same as objects retrieved directly");
+          asyncEqual(records.tags.objectAt(0), store.findRecord('tag', 12), "relationship objects are the same as objects retrieved directly");
 
-          return get(wycats, "tags");
+          return get(wycats, 'tags');
         }).then(function (tags) {
           var newTag;
           run(function () {
-            newTag = store.createRecord("tag");
+            newTag = store.createRecord('tag');
             tags.pushObject(newTag);
           });
         });
@@ -24492,7 +24498,7 @@ define(
       var Tag = DS.Model.extend({});
 
       var Person = DS.Model.extend({
-        tags: DS.hasMany("tag", { async: false })
+        tags: DS.hasMany('tag', { async: false })
 
       });
 
@@ -24501,14 +24507,14 @@ define(
         person: Person
       });
 
-      equal(env.store.modelFor("person").typeForRelationship("tags", env.store), Tag, "returns the relationship type");
+      equal(env.store.modelFor('person').typeForRelationship('tags', env.store), Tag, "returns the relationship type");
     });
 
     test("should be able to retrieve the type for a hasMany relationship specified using a string from its metadata", function () {
       var Tag = DS.Model.extend({});
 
       var Person = DS.Model.extend({
-        tags: DS.hasMany("tag", { async: false })
+        tags: DS.hasMany('tag', { async: false })
       });
 
       var env = setupStore({
@@ -24516,14 +24522,14 @@ define(
         person: Person
       });
 
-      equal(env.store.modelFor("person").typeForRelationship("tags", env.store), Tag, "returns the relationship type");
+      equal(env.store.modelFor('person').typeForRelationship('tags', env.store), Tag, "returns the relationship type");
     });
 
     test("should be able to retrieve the type for a belongsTo relationship without specifying a type from its metadata", function () {
       var Tag = DS.Model.extend({});
 
       var Person = DS.Model.extend({
-        tag: DS.belongsTo("tag", { async: false })
+        tag: DS.belongsTo('tag', { async: false })
       });
 
       var env = setupStore({
@@ -24531,16 +24537,16 @@ define(
         person: Person
       });
 
-      equal(env.store.modelFor("person").typeForRelationship("tag", env.store), Tag, "returns the relationship type");
+      equal(env.store.modelFor('person').typeForRelationship('tag', env.store), Tag, "returns the relationship type");
     });
 
     test("should be able to retrieve the type for a belongsTo relationship specified using a string from its metadata", function () {
       var Tag = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
 
       var Person = DS.Model.extend({
-        tags: DS.belongsTo("tag", { async: false })
+        tags: DS.belongsTo('tag', { async: false })
       });
 
       var env = setupStore({
@@ -24548,7 +24554,7 @@ define(
         person: Person
       });
 
-      equal(env.store.modelFor("person").typeForRelationship("tags", env.store), Tag, "returns the relationship type");
+      equal(env.store.modelFor('person').typeForRelationship('tags', env.store), Tag, "returns the relationship type");
     });
 
     test("relationships work when declared with a string path", function () {
@@ -24557,12 +24563,12 @@ define(
       window.App = {};
 
       var Person = DS.Model.extend({
-        name: DS.attr("string"),
-        tags: DS.hasMany("tag", { async: false })
+        name: DS.attr('string'),
+        tags: DS.hasMany('tag', { async: false })
       });
 
       var Tag = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
 
       var env = setupStore({
@@ -24573,32 +24579,32 @@ define(
       run(function () {
         env.store.push({
           data: [{
-            type: "tag",
-            id: "5",
+            type: 'tag',
+            id: '5',
             attributes: {
-              name: "friendly"
+              name: 'friendly'
             }
           }, {
-            type: "tag",
-            id: "2",
+            type: 'tag',
+            id: '2',
             attributes: {
-              name: "smarmy"
+              name: 'smarmy'
             }
           }, {
-            type: "tag",
-            id: "12",
+            type: 'tag',
+            id: '12',
             attributes: {
-              name: "oohlala"
+              name: 'oohlala'
             }
           }, {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "Tom Dale"
+              name: 'Tom Dale'
             },
             relationships: {
               tags: {
-                data: [{ type: "tag", id: "5" }, { type: "tag", id: "2" }]
+                data: [{ type: 'tag', id: '5' }, { type: 'tag', id: '2' }]
               }
             }
           }]
@@ -24606,9 +24612,9 @@ define(
       });
 
       run(function () {
-        env.store.findRecord("person", 1).then(function (person) {
-          equal(get(person, "name"), "Tom Dale", "precond - retrieves person record from store");
-          equal(get(person, "tags.length"), 2, "the list of tags should have the correct length");
+        env.store.findRecord('person', 1).then(function (person) {
+          equal(get(person, 'name'), "Tom Dale", "precond - retrieves person record from store");
+          equal(get(person, 'tags.length'), 2, "the list of tags should have the correct length");
         });
       });
     });
@@ -24617,8 +24623,8 @@ define(
       expect(8);
 
       var Tag = DS.Model.extend({
-        name: DS.attr("string"),
-        person: DS.belongsTo("person", { async: false })
+        name: DS.attr('string'),
+        person: DS.belongsTo('person', { async: false })
       });
 
       Tag.toString = function () {
@@ -24626,8 +24632,8 @@ define(
       };
 
       var Person = DS.Model.extend({
-        name: DS.attr("string"),
-        tags: DS.hasMany("tag", { async: true })
+        name: DS.attr('string'),
+        tags: DS.hasMany('tag', { async: true })
       });
 
       Person.toString = function () {
@@ -24640,7 +24646,7 @@ define(
       env.adapter.coalesceFindRequests = true;
       env.adapter.findMany = function (store, type, ids, snapshots) {
         equal(type, Tag, "type should be Tag");
-        deepEqual(ids, ["5", "2"], "ids should be 5 and 2");
+        deepEqual(ids, ['5', '2'], "ids should be 5 and 2");
 
         return Ember.RSVP.resolve([{ id: 5, name: "friendly" }, { id: 2, name: "smarmy" }]);
       };
@@ -24653,16 +24659,16 @@ define(
       };
 
       run(function () {
-        store.findRecord("person", 1).then(function (person) {
-          equal(get(person, "name"), "Tom Dale", "The person is now populated");
+        store.findRecord('person', 1).then(function (person) {
+          equal(get(person, 'name'), "Tom Dale", "The person is now populated");
 
           return run(function () {
-            return person.get("tags");
+            return person.get('tags');
           });
         }).then(function (tags) {
-          equal(get(tags, "length"), 2, "the tags object still exists");
-          equal(get(tags.objectAt(0), "name"), "friendly", "Tom Dale is now friendly");
-          equal(get(tags.objectAt(0), "isLoaded"), true, "Tom Dale is now loaded");
+          equal(get(tags, 'length'), 2, "the tags object still exists");
+          equal(get(tags.objectAt(0), 'name'), "friendly", "Tom Dale is now friendly");
+          equal(get(tags.objectAt(0), 'isLoaded'), true, "Tom Dale is now loaded");
         });
       });
     });
@@ -24671,13 +24677,13 @@ define(
       expect(2);
 
       var Tag = DS.Model.extend({
-        name: DS.attr("string"),
-        people: DS.belongsTo("person", { async: false })
+        name: DS.attr('string'),
+        people: DS.belongsTo('person', { async: false })
       });
 
       var Person = DS.Model.extend({
-        name: DS.attr("string"),
-        tags: DS.hasMany("tag", { async: false })
+        name: DS.attr('string'),
+        tags: DS.hasMany('tag', { async: false })
       });
 
       var env = setupStore({
@@ -24690,36 +24696,36 @@ define(
       run(function () {
         store.push({
           data: [{
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "Tom Dale"
+              name: 'Tom Dale'
             },
             relationships: {
               tags: {
-                data: [{ type: "tag", id: "1" }]
+                data: [{ type: 'tag', id: '1' }]
               }
             }
           }, {
-            type: "tag",
-            id: "1",
+            type: 'tag',
+            id: '1',
             attributes: {
-              name: "ember"
+              name: 'ember'
             }
           }]
         });
       });
 
       run(function () {
-        store.findRecord("person", 1).then(function (person) {
-          var tag = get(person, "tags").objectAt(0);
+        store.findRecord('person', 1).then(function (person) {
+          var tag = get(person, 'tags').objectAt(0);
 
-          equal(get(tag, "name"), "ember", "precond - relationships work");
+          equal(get(tag, 'name'), "ember", "precond - relationships work");
 
-          tag = store.createRecord("tag", { name: "js" });
-          get(person, "tags").pushObject(tag);
+          tag = store.createRecord('tag', { name: "js" });
+          get(person, 'tags').pushObject(tag);
 
-          equal(get(person, "tags").objectAt(1), tag, "newly added relationship works");
+          equal(get(person, 'tags').objectAt(1), tag, "newly added relationship works");
         });
       });
     });
@@ -24728,13 +24734,13 @@ define(
       expect(2);
 
       var Tag = DS.Model.extend({
-        name: DS.attr("string"),
-        person: DS.belongsTo("person", { async: false })
+        name: DS.attr('string'),
+        person: DS.belongsTo('person', { async: false })
       });
 
       var Person = DS.Model.extend({
-        name: DS.attr("string"),
-        tags: DS.hasMany("tag", { async: false })
+        name: DS.attr('string'),
+        tags: DS.hasMany('tag', { async: false })
       });
 
       var env = setupStore({ tag: Tag, person: Person });
@@ -24743,38 +24749,38 @@ define(
       run(function () {
         store.push({
           data: [{
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "Tom Dale"
+              name: 'Tom Dale'
             },
             relationships: {
               tags: {
-                data: [{ type: "tag", id: "1" }]
+                data: [{ type: 'tag', id: '1' }]
               }
             }
           }, {
-            type: "person",
-            id: "2",
+            type: 'person',
+            id: '2',
             attributes: {
-              name: "Sylvain Mina"
+              name: 'Sylvain Mina'
             },
             relationships: {
               tags: {
-                data: [{ type: "tag", id: "2" }]
+                data: [{ type: 'tag', id: '2' }]
               }
             }
           }, {
-            type: "tag",
-            id: "1",
+            type: 'tag',
+            id: '1',
             attributes: {
-              name: "ember"
+              name: 'ember'
             }
           }, {
-            type: "tag",
-            id: "2",
+            type: 'tag',
+            id: '2',
             attributes: {
-              name: "ember-data"
+              name: 'ember-data'
             }
           }]
         });
@@ -24783,28 +24789,28 @@ define(
       var tom, sylvain;
 
       run(function () {
-        tom = store.peekRecord("person", "1");
-        sylvain = store.peekRecord("person", "2");
+        tom = store.peekRecord('person', '1');
+        sylvain = store.peekRecord('person', '2');
         // Test that since sylvain.get('tags') instanceof DS.ManyArray,
         // addRecords on Relationship iterates correctly.
-        tom.get("tags").setObjects(sylvain.get("tags"));
+        tom.get('tags').setObjects(sylvain.get('tags'));
       });
 
-      equal(tom.get("tags.length"), 1);
-      equal(tom.get("tags.firstObject"), store.peekRecord("tag", 2));
+      equal(tom.get('tags.length'), 1);
+      equal(tom.get('tags.firstObject'), store.peekRecord('tag', 2));
     });
 
     test("it is possible to remove an item from a relationship", function () {
       expect(2);
 
       var Tag = DS.Model.extend({
-        name: DS.attr("string"),
-        person: DS.belongsTo("person", { async: false })
+        name: DS.attr('string'),
+        person: DS.belongsTo('person', { async: false })
       });
 
       var Person = DS.Model.extend({
-        name: DS.attr("string"),
-        tags: DS.hasMany("tag", { async: false })
+        name: DS.attr('string'),
+        tags: DS.hasMany('tag', { async: false })
       });
 
       var env = setupStore({ tag: Tag, person: Person });
@@ -24813,50 +24819,50 @@ define(
       run(function () {
         store.push({
           data: [{
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "Tom Dale"
+              name: 'Tom Dale'
             },
             relationships: {
               tags: {
-                data: [{ type: "tag", id: "1" }]
+                data: [{ type: 'tag', id: '1' }]
               }
             }
           }, {
-            type: "tag",
-            id: "1",
+            type: 'tag',
+            id: '1',
             attributes: {
-              name: "ember"
+              name: 'ember'
             }
           }]
         });
       });
 
       run(function () {
-        store.findRecord("person", 1).then(async(function (person) {
-          var tag = get(person, "tags").objectAt(0);
+        store.findRecord('person', 1).then(async(function (person) {
+          var tag = get(person, 'tags').objectAt(0);
 
-          equal(get(tag, "name"), "ember", "precond - relationships work");
+          equal(get(tag, 'name'), "ember", "precond - relationships work");
 
           run(function () {
-            get(person, "tags").removeObject(tag);
+            get(person, 'tags').removeObject(tag);
           });
 
-          equal(get(person, "tags.length"), 0, "object is removed from the relationship");
+          equal(get(person, 'tags.length'), 0, "object is removed from the relationship");
         }));
       });
     });
 
     test("it is possible to add an item to a relationship, remove it, then add it again", function () {
       var Tag = DS.Model.extend({
-        name: DS.attr("string"),
-        person: DS.belongsTo("person", { async: false })
+        name: DS.attr('string'),
+        person: DS.belongsTo('person', { async: false })
       });
 
       var Person = DS.Model.extend({
-        name: DS.attr("string"),
-        tags: DS.hasMany("tag", { async: false })
+        name: DS.attr('string'),
+        tags: DS.hasMany('tag', { async: false })
       });
 
       Tag.toString = function () {
@@ -24871,13 +24877,13 @@ define(
       var person, tag1, tag2, tag3;
 
       run(function () {
-        person = store.createRecord("person");
-        tag1 = store.createRecord("tag");
-        tag2 = store.createRecord("tag");
-        tag3 = store.createRecord("tag");
+        person = store.createRecord('person');
+        tag1 = store.createRecord('tag');
+        tag2 = store.createRecord('tag');
+        tag3 = store.createRecord('tag');
       });
 
-      var tags = get(person, "tags");
+      var tags = get(person, 'tags');
 
       run(function () {
         tags.pushObjects([tag1, tag2, tag3]);
@@ -24886,13 +24892,13 @@ define(
 
       equal(tags.objectAt(0), tag1);
       equal(tags.objectAt(1), tag3);
-      equal(get(person, "tags.length"), 2, "object is removed from the relationship");
+      equal(get(person, 'tags.length'), 2, "object is removed from the relationship");
 
       run(function () {
         tags.insertAt(0, tag2);
       });
 
-      equal(get(person, "tags.length"), 3, "object is added back to the relationship");
+      equal(get(person, 'tags.length'), 3, "object is added back to the relationship");
       equal(tags.objectAt(0), tag2);
       equal(tags.objectAt(1), tag1);
       equal(tags.objectAt(2), tag3);
@@ -24900,21 +24906,21 @@ define(
 
     test("DS.hasMany is async by default", function () {
       var Tag = DS.Model.extend({
-        name: DS.attr("string"),
-        people: DS.hasMany("person")
+        name: DS.attr('string'),
+        people: DS.hasMany('person')
       });
 
       var Person = DS.Model.extend({
-        name: DS.attr("string"),
-        tag: DS.belongsTo("tag", { async: false })
+        name: DS.attr('string'),
+        tag: DS.belongsTo('tag', { async: false })
       });
 
       var env = setupStore({ tag: Tag, person: Person });
       var store = env.store;
 
       run(function () {
-        var tag = store.createRecord("tag");
-        ok(tag.get("people") instanceof DS.PromiseArray, "people should be an async relationship");
+        var tag = store.createRecord('tag');
+        ok(tag.get('people') instanceof DS.PromiseArray, 'people should be an async relationship');
       });
     });
   }
@@ -24939,7 +24945,7 @@ define(
 
     test("updating the content of a RecordArray updates its content", function () {
       var Tag = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
 
       var env = setupStore({ tag: Tag });
@@ -24949,52 +24955,52 @@ define(
       run(function () {
         store.push({
           data: [{
-            type: "tag",
-            id: "5",
+            type: 'tag',
+            id: '5',
             attributes: {
-              name: "friendly"
+              name: 'friendly'
             }
           }, {
-            type: "tag",
-            id: "2",
+            type: 'tag',
+            id: '2',
             attributes: {
-              name: "smarmy"
+              name: 'smarmy'
             }
           }, {
-            type: "tag",
-            id: "12",
+            type: 'tag',
+            id: '12',
             attributes: {
-              name: "oohlala"
+              name: 'oohlala'
             }
           }]
         });
-        records = store.peekAll("tag");
-        internalModel = Ember.A(records).mapBy("_internalModel");
+        records = store.peekAll('tag');
+        internalModel = Ember.A(records).mapBy('_internalModel');
         tags = DS.RecordArray.create({ content: Ember.A(internalModel.slice(0, 2)), store: store, type: Tag });
       });
 
       var tag = tags.objectAt(0);
-      equal(get(tag, "name"), "friendly", "precond - we're working with the right tags");
+      equal(get(tag, 'name'), "friendly", "precond - we're working with the right tags");
 
       run(function () {
-        set(tags, "content", Ember.A(internalModel.slice(1, 3)));
+        set(tags, 'content', Ember.A(internalModel.slice(1, 3)));
       });
 
       tag = tags.objectAt(0);
-      equal(get(tag, "name"), "smarmy", "the lookup was updated");
+      equal(get(tag, 'name'), "smarmy", "the lookup was updated");
     });
 
     test("can create child record from a hasMany relationship", function () {
       expect(3);
 
       var Tag = DS.Model.extend({
-        name: DS.attr("string"),
-        person: DS.belongsTo("person", { async: false })
+        name: DS.attr('string'),
+        person: DS.belongsTo('person', { async: false })
       });
 
       var Person = DS.Model.extend({
-        name: DS.attr("string"),
-        tags: DS.hasMany("tag", { async: false })
+        name: DS.attr('string'),
+        tags: DS.hasMany('tag', { async: false })
       });
 
       var env = setupStore({ tag: Tag, person: Person });
@@ -25003,8 +25009,8 @@ define(
       run(function () {
         store.push({
           data: {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
               name: "Tom Dale"
             }
@@ -25013,12 +25019,12 @@ define(
       });
 
       run(function () {
-        store.findRecord("person", 1).then(async(function (person) {
+        store.findRecord('person', 1).then(async(function (person) {
           person.get("tags").createRecord({ name: "cool" });
 
-          equal(get(person, "name"), "Tom Dale", "precond - retrieves person record from store");
-          equal(get(person, "tags.length"), 1, "tag is added to the parent record");
-          equal(get(person, "tags").objectAt(0).get("name"), "cool", "tag values are passed along");
+          equal(get(person, 'name'), "Tom Dale", "precond - retrieves person record from store");
+          equal(get(person, 'tags.length'), 1, "tag is added to the parent record");
+          equal(get(person, 'tags').objectAt(0).get("name"), "cool", "tag values are passed along");
         }));
       });
     });
@@ -25056,26 +25062,26 @@ define(
       run(function () {
         store.push({
           data: {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
               firstName: "Tom",
               lastName: "Dale"
             }
           }
         });
-        person = store.peekRecord("person", 1);
-        person.set("firstName", "Thomas");
+        person = store.peekRecord('person', 1);
+        person.set('firstName', "Thomas");
       });
 
-      equal(person.get("firstName"), "Thomas");
+      equal(person.get('firstName'), "Thomas");
 
       run(function () {
         person.rollbackAttributes();
       });
 
-      equal(person.get("firstName"), "Tom");
-      equal(person.get("hasDirtyAttributes"), false);
+      equal(person.get('firstName'), "Tom");
+      equal(person.get('hasDirtyAttributes'), false);
     });
 
     test("changes to unassigned attributes can be rolled back", function () {
@@ -25083,25 +25089,25 @@ define(
       run(function () {
         store.push({
           data: {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
               lastName: "Dale"
             }
           }
         });
-        person = store.peekRecord("person", 1);
-        person.set("firstName", "Thomas");
+        person = store.peekRecord('person', 1);
+        person.set('firstName', "Thomas");
       });
 
-      equal(person.get("firstName"), "Thomas");
+      equal(person.get('firstName'), "Thomas");
 
       run(function () {
         person.rollbackAttributes();
       });
 
-      equal(person.get("firstName"), undefined);
-      equal(person.get("hasDirtyAttributes"), false);
+      equal(person.get('firstName'), undefined);
+      equal(person.get('hasDirtyAttributes'), false);
     });
 
     test("changes to attributes made after a record is in-flight only rolls back the local changes", function () {
@@ -25116,35 +25122,35 @@ define(
       run(function () {
         store.push({
           data: {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
               firstName: "Tom",
               lastName: "Dale"
             }
           }
         });
-        person = store.peekRecord("person", 1);
-        person.set("firstName", "Thomas");
+        person = store.peekRecord('person', 1);
+        person.set('firstName', "Thomas");
       });
 
       Ember.run(function () {
         var saving = person.save();
 
-        equal(person.get("firstName"), "Thomas");
+        equal(person.get('firstName'), "Thomas");
 
-        person.set("lastName", "Dolly");
+        person.set('lastName', "Dolly");
 
-        equal(person.get("lastName"), "Dolly");
+        equal(person.get('lastName'), "Dolly");
 
         person.rollbackAttributes();
 
-        equal(person.get("firstName"), "Thomas");
-        equal(person.get("lastName"), "Dale");
-        equal(person.get("isSaving"), true);
+        equal(person.get('firstName'), "Thomas");
+        equal(person.get('lastName'), "Dale");
+        equal(person.get('isSaving'), true);
 
         saving.then(async(function () {
-          equal(person.get("hasDirtyAttributes"), false, "The person is now clean");
+          equal(person.get('hasDirtyAttributes'), false, "The person is now clean");
         }));
       });
     });
@@ -25158,29 +25164,29 @@ define(
       run(function () {
         store.push({
           data: {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
               firstName: "Tom",
               lastName: "Dale"
             }
           }
         });
-        person = store.peekRecord("person", 1);
-        person.set("firstName", "Thomas");
+        person = store.peekRecord('person', 1);
+        person.set('firstName', "Thomas");
       });
 
       deepEqual(person.changedAttributes().firstName, ["Tom", "Thomas"]);
 
       run(function () {
         person.save().then(null, function () {
-          equal(person.get("isError"), true);
+          equal(person.get('isError'), true);
           deepEqual(person.changedAttributes().firstName, ["Tom", "Thomas"]);
 
           person.rollbackAttributes();
 
-          equal(person.get("firstName"), "Tom");
-          equal(person.get("isError"), false);
+          equal(person.get('firstName'), "Tom");
+          equal(person.get('isError'), false);
           equal(Object.keys(person.changedAttributes()).length, 0);
         });
       });
@@ -25196,36 +25202,36 @@ define(
       run(function () {
         store.push({
           data: {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
               firstName: "Tom",
               lastName: "Dale"
             }
           }
         });
-        person = store.peekRecord("person", 1);
-        people = store.peekAll("person");
+        person = store.peekRecord('person', 1);
+        people = store.peekAll('person');
       });
 
       run(function () {
         person.deleteRecord();
       });
-      equal(people.get("length"), 1, "a deleted record appears in record array until it is saved");
+      equal(people.get('length'), 1, "a deleted record appears in record array until it is saved");
       equal(people.objectAt(0), person, "a deleted record appears in record array until it is saved");
 
       run(function () {
         person.save().then(null, function () {
-          equal(person.get("isError"), true);
-          equal(person.get("isDeleted"), true);
+          equal(person.get('isError'), true);
+          equal(person.get('isDeleted'), true);
           run(function () {
             person.rollbackAttributes();
           });
-          equal(person.get("isDeleted"), false);
-          equal(person.get("isError"), false);
-          equal(person.get("hasDirtyAttributes"), false, "must be not dirty");
+          equal(person.get('isDeleted'), false);
+          equal(person.get('isError'), false);
+          equal(person.get('hasDirtyAttributes'), false, "must be not dirty");
         }).then(function () {
-          equal(people.get("length"), 1, "the underlying record array is updated accordingly in an asynchronous way");
+          equal(people.get('length'), 1, "the underlying record array is updated accordingly in an asynchronous way");
         });
       });
     });
@@ -25234,24 +25240,24 @@ define(
       var person;
 
       run(function () {
-        person = store.createRecord("person", { id: 1 });
+        person = store.createRecord('person', { id: 1 });
       });
 
-      equal(person.get("isNew"), true, "must be new");
-      equal(person.get("hasDirtyAttributes"), true, "must be dirty");
+      equal(person.get('isNew'), true, "must be new");
+      equal(person.get('hasDirtyAttributes'), true, "must be dirty");
 
-      Ember.run(person, "rollbackAttributes");
+      Ember.run(person, 'rollbackAttributes');
 
-      equal(person.get("isNew"), false, "must not be new");
-      equal(person.get("hasDirtyAttributes"), false, "must not be dirty");
-      equal(person.get("isDeleted"), true, "must be deleted");
+      equal(person.get('isNew'), false, "must not be new");
+      equal(person.get('hasDirtyAttributes'), false, "must not be dirty");
+      equal(person.get('isDeleted'), true, "must be deleted");
     });
 
     test("invalid new record's attributes can be rollbacked", function () {
       var person;
       var error = new DS.InvalidError([{
-        detail: "is invalid",
-        source: { pointer: "data/attributes/name" }
+        detail: 'is invalid',
+        source: { pointer: 'data/attributes/name' }
       }]);
       var adapter = DS.RESTAdapter.extend({
         ajax: function (url, type, hash) {
@@ -25272,20 +25278,20 @@ define(
       env = setupStore({ person: Person, adapter: adapter });
 
       run(function () {
-        person = env.store.createRecord("person", { id: 1 });
+        person = env.store.createRecord('person', { id: 1 });
       });
 
-      equal(person.get("isNew"), true, "must be new");
-      equal(person.get("hasDirtyAttributes"), true, "must be dirty");
+      equal(person.get('isNew'), true, "must be new");
+      equal(person.get('hasDirtyAttributes'), true, "must be dirty");
 
       run(function () {
         person.save().then(null, async(function () {
-          equal(person.get("isValid"), false);
+          equal(person.get('isValid'), false);
           person.rollbackAttributes();
 
-          equal(person.get("isNew"), false, "must not be new");
-          equal(person.get("hasDirtyAttributes"), false, "must not be dirty");
-          equal(person.get("isDeleted"), true, "must be deleted");
+          equal(person.get('isNew'), false, "must not be new");
+          equal(person.get('hasDirtyAttributes'), false, "must not be dirty");
+          equal(person.get('isDeleted'), true, "must be deleted");
         }));
       });
     });
@@ -25296,26 +25302,26 @@ define(
       run(function () {
         store.push({
           data: {
-            type: "person",
-            id: "1"
+            type: 'person',
+            id: '1'
           }
         });
-        person = store.peekRecord("person", 1);
-        people = store.peekAll("person");
+        person = store.peekRecord('person', 1);
+        people = store.peekAll('person');
         person.deleteRecord();
       });
 
-      equal(people.get("length"), 1, "a deleted record appears in the record array until it is saved");
+      equal(people.get('length'), 1, "a deleted record appears in the record array until it is saved");
       equal(people.objectAt(0), person, "a deleted record appears in the record array until it is saved");
 
-      equal(person.get("isDeleted"), true, "must be deleted");
+      equal(person.get('isDeleted'), true, "must be deleted");
 
       run(function () {
         person.rollbackAttributes();
       });
-      equal(people.get("length"), 1, "the rollbacked record should appear again in the record array");
-      equal(person.get("isDeleted"), false, "must not be deleted");
-      equal(person.get("hasDirtyAttributes"), false, "must not be dirty");
+      equal(people.get('length'), 1, "the rollbacked record should appear again in the record array");
+      equal(person.get('isDeleted'), false, "must not be deleted");
+      equal(person.get('hasDirtyAttributes'), false, "must not be dirty");
     });
 
     test("invalid record's attributes can be rollbacked", function () {
@@ -25325,8 +25331,8 @@ define(
       });
 
       var error = new DS.InvalidError([{
-        detail: "is invalid",
-        source: { pointer: "data/attributes/name" }
+        detail: 'is invalid',
+        source: { pointer: 'data/attributes/name' }
       }]);
 
       var adapter = DS.RESTAdapter.extend({
@@ -25350,38 +25356,38 @@ define(
       run(function () {
         env.store.push({
           data: {
-            type: "dog",
-            id: "1",
+            type: 'dog',
+            id: '1',
             attributes: {
               name: "Pluto"
             }
           }
         });
-        dog = env.store.peekRecord("dog", 1);
-        dog.set("name", "is a dwarf planet");
+        dog = env.store.peekRecord('dog', 1);
+        dog.set('name', "is a dwarf planet");
       });
 
       run(function () {
-        Ember.addObserver(dog, "errors.name", function () {
-          ok(true, "errors.name did change");
+        Ember.addObserver(dog, 'errors.name', function () {
+          ok(true, 'errors.name did change');
         });
 
-        dog.get("errors").addArrayObserver({}, {
+        dog.get('errors').addArrayObserver({}, {
           willChange: function () {
-            ok(true, "errors will change");
+            ok(true, 'errors will change');
           },
           didChange: function () {
-            ok(true, "errors did change");
+            ok(true, 'errors did change');
           }
         });
 
         dog.save().then(null, async(function () {
           dog.rollbackAttributes();
 
-          equal(dog.get("hasDirtyAttributes"), false, "must not be dirty");
-          equal(dog.get("name"), "Pluto");
-          ok(Ember.isEmpty(dog.get("errors.name")));
-          ok(dog.get("isValid"));
+          equal(dog.get('hasDirtyAttributes'), false, "must not be dirty");
+          equal(dog.get('name'), "Pluto");
+          ok(Ember.isEmpty(dog.get('errors.name')));
+          ok(dog.get('isValid'));
         }));
       });
     });
@@ -25394,8 +25400,8 @@ define(
       });
 
       var error = new DS.InvalidError([{
-        detail: "is invalid",
-        source: { pointer: "data/attributes/name" }
+        detail: 'is invalid',
+        source: { pointer: 'data/attributes/name' }
       }]);
 
       var adapter = DS.RESTAdapter.extend({
@@ -25419,46 +25425,46 @@ define(
       run(function () {
         env.store.push({
           data: {
-            type: "dog",
-            id: "1",
+            type: 'dog',
+            id: '1',
             attributes: {
               name: "Pluto",
               breed: "Disney"
             }
           }
         });
-        dog = env.store.peekRecord("dog", 1);
-        dog.set("name", "is a dwarf planet");
-        dog.set("breed", "planet");
+        dog = env.store.peekRecord('dog', 1);
+        dog.set('name', "is a dwarf planet");
+        dog.set('breed', 'planet');
       });
 
       run(function () {
-        Ember.addObserver(dog, "errors.name", function () {
-          ok(true, "errors.name did change");
+        Ember.addObserver(dog, 'errors.name', function () {
+          ok(true, 'errors.name did change');
         });
 
         dog.save().then(null, async(function () {
-          equal(dog.get("name"), "is a dwarf planet");
-          equal(dog.get("breed"), "planet");
-          ok(Ember.isPresent(dog.get("errors.name")));
-          equal(dog.get("errors.name.length"), 1);
+          equal(dog.get('name'), "is a dwarf planet");
+          equal(dog.get('breed'), "planet");
+          ok(Ember.isPresent(dog.get('errors.name')));
+          equal(dog.get('errors.name.length'), 1);
 
           run(function () {
-            dog.set("name", "Seymour Asses");
+            dog.set('name', 'Seymour Asses');
           });
 
-          equal(dog.get("name"), "Seymour Asses");
-          equal(dog.get("breed"), "planet");
+          equal(dog.get('name'), "Seymour Asses");
+          equal(dog.get('breed'), "planet");
 
           run(function () {
             dog.rollbackAttributes();
           });
 
-          equal(dog.get("name"), "Pluto");
-          equal(dog.get("breed"), "Disney");
-          equal(dog.get("hasDirtyAttributes"), false, "must not be dirty");
-          ok(Ember.isEmpty(dog.get("errors.name")));
-          ok(dog.get("isValid"));
+          equal(dog.get('name'), "Pluto");
+          equal(dog.get('breed'), "Disney");
+          equal(dog.get('hasDirtyAttributes'), false, "must not be dirty");
+          ok(Ember.isEmpty(dog.get('errors.name')));
+          ok(dog.get('isValid'));
         }));
       });
     });
@@ -25469,8 +25475,8 @@ define(
       });
 
       var error = new DS.InvalidError([{
-        detail: "is invalid",
-        source: { pointer: "data/attributes/name" }
+        detail: 'is invalid',
+        source: { pointer: 'data/attributes/name' }
       }]);
 
       var adapter = DS.RESTAdapter.extend({
@@ -25488,30 +25494,30 @@ define(
       run(function () {
         env.store.push({
           data: {
-            type: "dog",
-            id: "1",
+            type: 'dog',
+            id: '1',
             attributes: {
               name: "Pluto"
             }
           }
         });
-        dog = env.store.peekRecord("dog", 1);
+        dog = env.store.peekRecord('dog', 1);
       });
 
       run(function () {
         dog.destroyRecord().then(null, async(function () {
 
-          equal(dog.get("isError"), false, "must not be error");
-          equal(dog.get("isDeleted"), true, "must be deleted");
-          equal(dog.get("isValid"), false, "must not be valid");
-          ok(dog.get("errors.length") > 0, "must have errors");
+          equal(dog.get('isError'), false, "must not be error");
+          equal(dog.get('isDeleted'), true, "must be deleted");
+          equal(dog.get('isValid'), false, "must not be valid");
+          ok(dog.get('errors.length') > 0, "must have errors");
 
           dog.rollbackAttributes();
 
-          equal(dog.get("isError"), false, "must not be error after `rollbackAttributes`");
-          equal(dog.get("isDeleted"), false, "must not be deleted after `rollbackAttributes`");
-          equal(dog.get("isValid"), true, "must be valid after `rollbackAttributes`");
-          ok(dog.get("errors.length") === 0, "must not have errors");
+          equal(dog.get('isError'), false, "must not be error after `rollbackAttributes`");
+          equal(dog.get('isDeleted'), false, "must not be deleted after `rollbackAttributes`");
+          equal(dog.get('isValid'), true, "must be valid after `rollbackAttributes`");
+          ok(dog.get('errors.length') === 0, "must not have errors");
         }));
       });
     });
@@ -25575,10 +25581,10 @@ define(
 
     module("unit/record_array - DS.RecordArray", {
       setup: function () {
-        array = [{ id: "1", name: "Scumbag Dale" }, { id: "2", name: "Scumbag Katz" }, { id: "3", name: "Scumbag Bryn" }];
+        array = [{ id: '1', name: "Scumbag Dale" }, { id: '2', name: "Scumbag Katz" }, { id: '3', name: "Scumbag Bryn" }];
 
         Person = DS.Model.extend({
-          name: DS.attr("string")
+          name: DS.attr('string')
         });
       }
     });
@@ -25592,31 +25598,31 @@ define(
       run(function () {
         store.push({
           data: [{
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "Scumbag Dale"
+              name: 'Scumbag Dale'
             }
           }, {
-            type: "person",
-            id: "2",
+            type: 'person',
+            id: '2',
             attributes: {
-              name: "Scumbag Katz"
+              name: 'Scumbag Katz'
             }
           }, {
-            type: "person",
-            id: "3",
+            type: 'person',
+            id: '3',
             attributes: {
-              name: "Scumbag Bryn"
+              name: 'Scumbag Bryn'
             }
           }]
         });
       });
 
       run(function () {
-        store.findByIds("person", [1, 2, 3]).then(function (records) {
-          for (var i = 0, l = get(array, "length"); i < l; i++) {
-            deepEqual(records[i].getProperties("id", "name"), array[i], "a record array materializes objects on demand");
+        store.findByIds('person', [1, 2, 3]).then(function (records) {
+          for (var i = 0, l = get(array, 'length'); i < l; i++) {
+            deepEqual(records[i].getProperties('id', 'name'), array[i], "a record array materializes objects on demand");
           }
         });
       });
@@ -25627,32 +25633,32 @@ define(
       var store = createStore({
         person: Person
       });
-      var recordArray = store.peekAll("person");
+      var recordArray = store.peekAll('person');
       run(function () {
         store.push({
           data: {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "wycats"
+              name: 'wycats'
             }
           }
         });
       });
-      equal(get(recordArray, "lastObject.name"), "wycats");
+      equal(get(recordArray, 'lastObject.name'), 'wycats');
 
       run(function () {
         store.push({
           data: {
-            type: "person",
-            id: "2",
+            type: 'person',
+            id: '2',
             attributes: {
-              name: "brohuda"
+              name: 'brohuda'
             }
           }
         });
       });
-      equal(get(recordArray, "lastObject.name"), "brohuda");
+      equal(get(recordArray, 'lastObject.name'), 'brohuda');
     });
 
     test("stops updating when destroyed", function () {
@@ -25666,14 +25672,14 @@ define(
       // is on the release branch
       var emptyLength = Ember.meta(store).descs ? undefined : 0;
 
-      var recordArray = store.peekAll("person");
+      var recordArray = store.peekAll('person');
       run(function () {
         store.push({
           data: {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "wycats"
+              name: 'wycats'
             }
           }
         });
@@ -25684,31 +25690,31 @@ define(
       });
 
       run(function () {
-        equal(recordArray.get("length"), emptyLength, "Has no more records");
+        equal(recordArray.get('length'), emptyLength, "Has no more records");
         store.push({
           data: {
-            type: "person",
-            id: "2",
+            type: 'person',
+            id: '2',
             attributes: {
-              name: "brohuda"
+              name: 'brohuda'
             }
           }
         });
       });
 
-      equal(recordArray.get("length"), emptyLength, "Has not been updated");
-      equal(recordArray.get("content"), undefined, "Has not been updated");
+      equal(recordArray.get('length'), emptyLength, "Has not been updated");
+      equal(recordArray.get('content'), undefined, "Has not been updated");
     });
 
     test("a loaded record is removed from a record array when it is deleted", function () {
       expect(5);
 
       var Tag = DS.Model.extend({
-        people: DS.hasMany("person", { async: false })
+        people: DS.hasMany('person', { async: false })
       });
 
       Person.reopen({
-        tag: DS.belongsTo("tag", { async: false })
+        tag: DS.belongsTo('tag', { async: false })
       });
 
       var env = setupStore({
@@ -25725,34 +25731,34 @@ define(
       run(function () {
         store.push({
           data: [{
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "Scumbag Dale"
+              name: 'Scumbag Dale'
             }
           }, {
-            type: "person",
-            id: "2",
+            type: 'person',
+            id: '2',
             attributes: {
-              name: "Scumbag Katz"
+              name: 'Scumbag Katz'
             }
           }, {
-            type: "person",
-            id: "3",
+            type: 'person',
+            id: '3',
             attributes: {
-              name: "Scumbag Bryn"
+              name: 'Scumbag Bryn'
             }
           }, {
-            type: "tag",
-            id: "1"
+            type: 'tag',
+            id: '1'
           }]
         });
       });
 
       run(function () {
         var asyncRecords = Ember.RSVP.hash({
-          scumbag: store.findRecord("person", 1),
-          tag: store.findRecord("tag", 1)
+          scumbag: store.findRecord('person', 1),
+          tag: store.findRecord('tag', 1)
         });
 
         asyncRecords.then(function (records) {
@@ -25760,29 +25766,29 @@ define(
           var tag = records.tag;
 
           run(function () {
-            tag.get("people").addObject(scumbag);
+            tag.get('people').addObject(scumbag);
           });
-          equal(get(scumbag, "tag"), tag, "precond - the scumbag's tag has been set");
+          equal(get(scumbag, 'tag'), tag, "precond - the scumbag's tag has been set");
 
-          var recordArray = tag.get("people");
+          var recordArray = tag.get('people');
 
-          equal(get(recordArray, "length"), 1, "precond - record array has one item");
-          equal(get(recordArray.objectAt(0), "name"), "Scumbag Dale", "item at index 0 is record with id 1");
+          equal(get(recordArray, 'length'), 1, "precond - record array has one item");
+          equal(get(recordArray.objectAt(0), 'name'), "Scumbag Dale", "item at index 0 is record with id 1");
 
           scumbag.deleteRecord();
 
-          equal(get(recordArray, "length"), 1, "record is still in the record array until it is saved");
+          equal(get(recordArray, 'length'), 1, "record is still in the record array until it is saved");
 
-          Ember.run(scumbag, "save");
+          Ember.run(scumbag, 'save');
 
-          equal(get(recordArray, "length"), 0, "record is removed from the array when it is saved");
+          equal(get(recordArray, 'length'), 0, "record is removed from the array when it is saved");
         });
       });
     });
 
     test("a loaded record is not removed from a record array when it is deleted even if the belongsTo side isn't defined", function () {
       var Tag = DS.Model.extend({
-        people: DS.hasMany("person", { async: false })
+        people: DS.hasMany('person', { async: false })
       });
 
       var env = setupStore({
@@ -25800,37 +25806,37 @@ define(
       run(function () {
         store.push({
           data: [{
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "Scumbag Tom"
+              name: 'Scumbag Tom'
             }
           }, {
-            type: "tag",
-            id: "1",
+            type: 'tag',
+            id: '1',
             relationships: {
               people: {
-                data: [{ type: "person", id: "1" }]
+                data: [{ type: 'person', id: '1' }]
               }
             }
           }]
         });
-        scumbag = store.peekRecord("person", 1);
-        tag = store.peekRecord("tag", 1);
+        scumbag = store.peekRecord('person', 1);
+        tag = store.peekRecord('tag', 1);
         scumbag.deleteRecord();
       });
 
-      equal(tag.get("people.length"), 1, "record is not removed from the record array");
-      equal(tag.get("people").objectAt(0), scumbag, "tag still has the scumbag");
+      equal(tag.get('people.length'), 1, 'record is not removed from the record array');
+      equal(tag.get('people').objectAt(0), scumbag, 'tag still has the scumbag');
     });
 
     test("a loaded record is not removed from both the record array and from the belongs to, even if the belongsTo side isn't defined", function () {
       var Tag = DS.Model.extend({
-        people: DS.hasMany("person", { async: false })
+        people: DS.hasMany('person', { async: false })
       });
 
       var Tool = DS.Model.extend({
-        person: DS.belongsTo("person", { async: false })
+        person: DS.belongsTo('person', { async: false })
       });
 
       var env = setupStore({
@@ -25849,43 +25855,43 @@ define(
       run(function () {
         store.push({
           data: [{
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "Scumbag Tom"
+              name: 'Scumbag Tom'
             }
           }, {
-            type: "tag",
-            id: "1",
+            type: 'tag',
+            id: '1',
             relationships: {
               people: {
-                data: [{ type: "person", id: "1" }]
+                data: [{ type: 'person', id: '1' }]
               }
             }
           }, {
-            type: "tool",
-            id: "1",
+            type: 'tool',
+            id: '1',
             relationships: {
               person: {
-                data: { type: "person", id: "1" }
+                data: { type: 'person', id: '1' }
               }
             }
           }]
         });
-        scumbag = store.peekRecord("person", 1);
-        tag = store.peekRecord("tag", 1);
-        tool = store.peekRecord("tool", 1);
+        scumbag = store.peekRecord('person', 1);
+        tag = store.peekRecord('tag', 1);
+        tool = store.peekRecord('tool', 1);
       });
 
-      equal(tag.get("people.length"), 1, "record is in the record array");
-      equal(tool.get("person"), scumbag, "the tool belongs to the record");
+      equal(tag.get('people.length'), 1, "record is in the record array");
+      equal(tool.get('person'), scumbag, "the tool belongs to the record");
 
       run(function () {
         scumbag.deleteRecord();
       });
 
-      equal(tag.get("people.length"), 1, "record is stil in the record array");
-      equal(tool.get("person"), scumbag, "the tool still belongs to the record");
+      equal(tag.get('people.length'), 1, "record is stil in the record array");
+      equal(tool.get('person'), scumbag, "the tool still belongs to the record");
     });
 
     // GitHub Issue #168
@@ -25893,32 +25899,32 @@ define(
       var store = createStore({
         person: Person
       });
-      var recordArray = store.peekAll("person");
+      var recordArray = store.peekAll('person');
       var scumbag;
 
       run(function () {
-        scumbag = store.createRecord("person", {
+        scumbag = store.createRecord('person', {
           name: "Scumbag Dale"
         });
       });
 
-      equal(get(recordArray, "length"), 1, "precond - record array already has the first created item");
+      equal(get(recordArray, 'length'), 1, "precond - record array already has the first created item");
 
       // guarantee coalescence
       Ember.run(function () {
-        store.createRecord("person", { name: "p1" });
-        store.createRecord("person", { name: "p2" });
-        store.createRecord("person", { name: "p3" });
+        store.createRecord('person', { name: 'p1' });
+        store.createRecord('person', { name: 'p2' });
+        store.createRecord('person', { name: 'p3' });
       });
 
-      equal(get(recordArray, "length"), 4, "precond - record array has the created item");
+      equal(get(recordArray, 'length'), 4, "precond - record array has the created item");
       equal(recordArray.objectAt(0), scumbag, "item at index 0 is record with id 1");
 
       run(function () {
         scumbag.deleteRecord();
       });
 
-      equal(get(recordArray, "length"), 3, "record array still has the created item");
+      equal(get(recordArray, 'length'), 3, "record array still has the created item");
     });
 
     test("a record array returns undefined when asking for a member outside of its content Array's range", function () {
@@ -25929,28 +25935,28 @@ define(
       run(function () {
         store.push({
           data: [{
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "Scumbag Dale"
+              name: 'Scumbag Dale'
             }
           }, {
-            type: "person",
-            id: "2",
+            type: 'person',
+            id: '2',
             attributes: {
-              name: "Scumbag Katz"
+              name: 'Scumbag Katz'
             }
           }, {
-            type: "person",
-            id: "3",
+            type: 'person',
+            id: '3',
             attributes: {
-              name: "Scumbag Bryn"
+              name: 'Scumbag Bryn'
             }
           }]
         });
       });
 
-      var recordArray = store.peekAll("person");
+      var recordArray = store.peekAll('person');
 
       strictEqual(recordArray.objectAt(20), undefined, "objects outside of the range just return undefined");
     });
@@ -25963,32 +25969,32 @@ define(
       run(function () {
         store.push({
           data: [{
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
-              name: "Scumbag Dale"
+              name: 'Scumbag Dale'
             }
           }, {
-            type: "person",
-            id: "2",
+            type: 'person',
+            id: '2',
             attributes: {
-              name: "Scumbag Katz"
+              name: 'Scumbag Katz'
             }
           }, {
-            type: "person",
-            id: "3",
+            type: 'person',
+            id: '3',
             attributes: {
-              name: "Scumbag Bryn"
+              name: 'Scumbag Bryn'
             }
           }]
         });
       });
 
-      var recordArray = store.peekAll("person");
+      var recordArray = store.peekAll('person');
 
-      equal(get(recordArray.objectAt(2), "id"), 3, "should retrieve correct record at index 2");
-      equal(get(recordArray.objectAt(1), "id"), 2, "should retrieve correct record at index 1");
-      equal(get(recordArray.objectAt(0), "id"), 1, "should retrieve correct record at index 0");
+      equal(get(recordArray.objectAt(2), 'id'), 3, "should retrieve correct record at index 2");
+      equal(get(recordArray.objectAt(1), 'id'), 2, "should retrieve correct record at index 1");
+      equal(get(recordArray.objectAt(0), 'id'), 1, "should retrieve correct record at index 0");
     });
 
     test("an AdapterPopulatedRecordArray knows if it's loaded or not", function () {
@@ -26002,8 +26008,8 @@ define(
       };
 
       run(function () {
-        store.query("person", { page: 1 }).then(function (people) {
-          equal(get(people, "isLoaded"), true, "The array is now loaded");
+        store.query('person', { page: 1 }).then(function (people) {
+          equal(get(people, 'isLoaded'), true, "The array is now loaded");
         });
       });
     });
@@ -26017,7 +26023,7 @@ define(
         return Ember.RSVP.resolve(array);
       };
 
-      recordArray = store.peekAll("person");
+      recordArray = store.peekAll('person');
       run(function () {
         promise = recordArray.update();
       });
@@ -26039,7 +26045,7 @@ define(
 
     var filteredArray;
 
-    module('unit/record-arrays/filtered-record-array - DS.FilteredRecordArray', {
+    module("unit/record-arrays/filtered-record-array - DS.FilteredRecordArray", {
       setup: function () {
         filteredArray = DS.FilteredRecordArray.create({ type: 'recordType' });
       }
@@ -26048,7 +26054,7 @@ define(
     test('recordArray.replace() throws error', function () {
       throws(function () {
         filteredArray.replace();
-      }, Error('The result of a client-side filter (on recordType) is immutable.'), 'throws error');
+      }, Error("The result of a client-side filter (on recordType) is immutable."), 'throws error');
     });
   }
 );
@@ -26185,23 +26191,23 @@ define(
     test("Adapter can be set as a factory", function () {
       store = createStore({ adapter: TestAdapter });
 
-      ok(store.get("defaultAdapter") instanceof TestAdapter);
+      ok(store.get('defaultAdapter') instanceof TestAdapter);
     });
 
-    test("Adapter can be set as a name", function () {
-      store = createStore({ adapter: "-rest" });
+    test('Adapter can be set as a name', function () {
+      store = createStore({ adapter: '-rest' });
 
-      ok(store.get("defaultAdapter") instanceof DS.RESTAdapter);
+      ok(store.get('defaultAdapter') instanceof DS.RESTAdapter);
     });
 
-    test("Adapter can not be set as an instance", function () {
+    test('Adapter can not be set as an instance', function () {
       expect(1);
 
       store = DS.Store.create({
         adapter: DS.Adapter.create()
       });
       expectAssertion(function () {
-        return store.get("defaultAdapter");
+        return store.get('defaultAdapter');
       });
     });
 
@@ -26212,9 +26218,9 @@ define(
         findRecord: function (store, type, id, snapshot) {
           ok(true, "Adapter#find was called");
           equal(store, currentStore, "Adapter#find was called with the right store");
-          equal(type, store.modelFor("test"), "Adapter#find was called with the type passed into Store#find");
+          equal(type, store.modelFor('test'), "Adapter#find was called with the type passed into Store#find");
           equal(id, 1, "Adapter#find was called with the id passed into Store#find");
-          equal(snapshot.id, "1", "Adapter#find was called with the record created from Store#find");
+          equal(snapshot.id, '1', "Adapter#find was called with the record created from Store#find");
 
           return Ember.RSVP.resolve({ id: 1 });
         }
@@ -26224,7 +26230,7 @@ define(
       var currentStore = createStore({ adapter: adapter, test: currentType });
 
       run(function () {
-        currentStore.findRecord("test", 1);
+        currentStore.findRecord('test', 1);
       });
     });
 
@@ -26238,7 +26244,7 @@ define(
         findMany: function (store, type, ids, snapshots) {
           start();
           ok(true, "Adapter#findMany was called");
-          deepEqual(ids, ["1", "2"], "Correct ids were passed in to findMany");
+          deepEqual(ids, ["1", "2"], 'Correct ids were passed in to findMany');
           return Ember.RSVP.resolve([{ id: 1 }, { id: 2 }]);
         },
         coalesceFindRequests: true
@@ -26249,8 +26255,8 @@ define(
 
       stop();
       run(function () {
-        currentStore.findRecord("test", 1);
-        currentStore.findRecord("test", 2);
+        currentStore.findRecord('test', 1);
+        currentStore.findRecord('test', 2);
       });
     });
 
@@ -26264,13 +26270,13 @@ define(
       });
 
       var currentType = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
       var currentStore = createStore({ adapter: adapter, test: currentType });
 
       run(function () {
-        currentStore.findRecord("test", 1).then(async(function (object) {
-          strictEqual(get(object, "name"), "Scumbag Dale", "the data was pushed");
+        currentStore.findRecord('test', 1).then(async(function (object) {
+          strictEqual(get(object, 'name'), "Scumbag Dale", "the data was pushed");
         }));
       });
     });
@@ -26280,34 +26286,34 @@ define(
 
       var adapter = TestAdapter.extend({
         findRecord: function (store, type, id, snapshot) {
-          equal(typeof id, "string", "id has been normalized to a string");
+          equal(typeof id, 'string', "id has been normalized to a string");
           return resolve({ id: 1, name: "Scumbag Sylvain" });
         }
       });
 
       var currentType = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
       var currentStore = createStore({ adapter: adapter, test: currentType });
 
       run(function () {
-        currentStore.findRecord("test", 1).then(async(function (object) {
-          equal(typeof object.get("id"), "string", "id was coerced to a string");
+        currentStore.findRecord('test', 1).then(async(function (object) {
+          equal(typeof object.get('id'), 'string', "id was coerced to a string");
           run(function () {
             currentStore.push({
               data: {
-                type: "test",
-                id: "2",
+                type: 'test',
+                id: '2',
                 attributes: {
                   name: "Scumbag Sam Saffron"
                 }
               }
             });
           });
-          return currentStore.findRecord("test", 2);
+          return currentStore.findRecord('test', 2);
         })).then(async(function (object) {
           ok(object, "object was found");
-          equal(typeof object.get("id"), "string", "id is a string despite being supplied and searched for as a number");
+          equal(typeof object.get('id'), 'string', "id is a string despite being supplied and searched for as a number");
         }));
       });
     });
@@ -26316,7 +26322,7 @@ define(
       expect(3);
 
       var Person = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
 
       var store = createStore({
@@ -26326,28 +26332,28 @@ define(
       run(function () {
         store.push({
           data: {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
               name: "Tom Dale"
             }
           }
         });
 
-        store.findRecord("person", 1).then(async(function (tom) {
-          equal(get(tom, "hasDirtyAttributes"), false, "precond - record is not dirty");
-          equal(get(tom, "name"), "Tom Dale", "returns the correct name");
+        store.findRecord('person', 1).then(async(function (tom) {
+          equal(get(tom, 'hasDirtyAttributes'), false, "precond - record is not dirty");
+          equal(get(tom, 'name'), "Tom Dale", "returns the correct name");
 
           store.push({
             data: {
-              type: "person",
-              id: "1",
+              type: 'person',
+              id: '1',
               attributes: {
                 name: "Captain Underpants"
               }
             }
           });
-          equal(get(tom, "name"), "Captain Underpants", "updated record with new date");
+          equal(get(tom, 'name'), "Captain Underpants", "updated record with new date");
         }));
       });
     });
@@ -26370,12 +26376,12 @@ define(
       var passedQuery = { page: 1 };
 
       var Person = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
 
       var adapter = TestAdapter.extend({
         query: function (store, type, query) {
-          equal(type, store.modelFor("person"), "The type was Person");
+          equal(type, store.modelFor('person'), 'The type was Person');
           equal(query, passedQuery, "The query was passed in");
           return Ember.RSVP.resolve([]);
         }
@@ -26387,7 +26393,7 @@ define(
       });
 
       run(function () {
-        store.query("person", passedQuery);
+        store.query('person', passedQuery);
       });
     });
 
@@ -26395,7 +26401,7 @@ define(
       var passedQuery = { page: 1 };
 
       var Person = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
 
       var adapter = TestAdapter.extend({
@@ -26419,17 +26425,17 @@ define(
       });
       var store = env.store;
 
-      env.registry.register("serializer:application", ApplicationSerializer);
+      env.registry.register('serializer:application', ApplicationSerializer);
 
       run(function () {
-        store.query("person", passedQuery);
+        store.query('person', passedQuery);
       });
-      equal(callCount, 1, "normalizeQueryResponse was called");
+      equal(callCount, 1, 'normalizeQueryResponse was called');
     });
 
     test("peekAll(type) returns a record array of all records of a specific type", function () {
       var Person = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
 
       var store = createStore({
@@ -26439,8 +26445,8 @@ define(
       run(function () {
         store.push({
           data: {
-            type: "person",
-            id: "1",
+            type: 'person',
+            id: '1',
             attributes: {
               name: "Tom Dale"
             }
@@ -26448,30 +26454,30 @@ define(
         });
       });
 
-      var results = store.peekAll("person");
-      equal(get(results, "length"), 1, "record array should have the original object");
-      equal(get(results.objectAt(0), "name"), "Tom Dale", "record has the correct information");
+      var results = store.peekAll('person');
+      equal(get(results, 'length'), 1, "record array should have the original object");
+      equal(get(results.objectAt(0), 'name'), "Tom Dale", "record has the correct information");
 
       run(function () {
         store.push({
           data: {
-            type: "person",
-            id: "2",
+            type: 'person',
+            id: '2',
             attributes: {
               name: "Yehuda Katz"
             }
           }
         });
       });
-      equal(get(results, "length"), 2, "record array should have the new object");
-      equal(get(results.objectAt(1), "name"), "Yehuda Katz", "record has the correct information");
+      equal(get(results, 'length'), 2, "record array should have the new object");
+      equal(get(results.objectAt(1), 'name'), "Yehuda Katz", "record has the correct information");
 
-      strictEqual(results, store.peekAll("person"), "subsequent calls to peekAll return the same recordArray)");
+      strictEqual(results, store.peekAll('person'), "subsequent calls to peekAll return the same recordArray)");
     });
 
     test("a new record of a particular type is created via store.createRecord(type)", function () {
       var Person = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
       var person;
 
@@ -26480,28 +26486,28 @@ define(
       });
 
       run(function () {
-        person = store.createRecord("person");
+        person = store.createRecord('person');
       });
 
-      equal(get(person, "isLoaded"), true, "A newly created record is loaded");
-      equal(get(person, "isNew"), true, "A newly created record is new");
-      equal(get(person, "hasDirtyAttributes"), true, "A newly created record is dirty");
+      equal(get(person, 'isLoaded'), true, "A newly created record is loaded");
+      equal(get(person, 'isNew'), true, "A newly created record is new");
+      equal(get(person, 'hasDirtyAttributes'), true, "A newly created record is dirty");
 
       run(function () {
-        set(person, "name", "Braaahm Dale");
+        set(person, 'name', "Braaahm Dale");
       });
 
-      equal(get(person, "name"), "Braaahm Dale", "Even if no hash is supplied, `set` still worked");
+      equal(get(person, 'name'), "Braaahm Dale", "Even if no hash is supplied, `set` still worked");
     });
 
     test("a new record with a specific id can't be created if this id is already used in the store", function () {
       var Person = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
 
       Person.reopenClass({
         toString: function () {
-          return "Person";
+          return 'Person';
         }
       });
 
@@ -26510,19 +26516,19 @@ define(
       });
 
       run(function () {
-        store.createRecord("person", { id: 5 });
+        store.createRecord('person', { id: 5 });
       });
 
       expectAssertion(function () {
         run(function () {
-          store.createRecord("person", { id: 5 });
+          store.createRecord('person', { id: 5 });
         });
       }, /The id 5 has already been used with another record of type Person/);
     });
 
     test("an initial data hash can be provided via store.createRecord(type, hash)", function () {
       var Person = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
 
       var store = createStore({
@@ -26530,21 +26536,21 @@ define(
       });
 
       run(function () {
-        person = store.createRecord("person", { name: "Brohuda Katz" });
+        person = store.createRecord('person', { name: "Brohuda Katz" });
       });
 
-      equal(get(person, "isLoaded"), true, "A newly created record is loaded");
-      equal(get(person, "isNew"), true, "A newly created record is new");
-      equal(get(person, "hasDirtyAttributes"), true, "A newly created record is dirty");
+      equal(get(person, 'isLoaded'), true, "A newly created record is loaded");
+      equal(get(person, 'isNew'), true, "A newly created record is new");
+      equal(get(person, 'hasDirtyAttributes'), true, "A newly created record is dirty");
 
-      equal(get(person, "name"), "Brohuda Katz", "The initial data hash is provided");
+      equal(get(person, 'name'), "Brohuda Katz", "The initial data hash is provided");
     });
 
     test("if an id is supplied in the initial data hash, it can be looked up using `store.find`", function () {
       expect(1);
 
       var Person = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
       var store = createStore({
         person: Person
@@ -26552,8 +26558,8 @@ define(
       var person;
 
       run(function () {
-        person = store.createRecord("person", { id: 1, name: "Brohuda Katz" });
-        store.findRecord("person", 1).then(async(function (again) {
+        person = store.createRecord('person', { id: 1, name: "Brohuda Katz" });
+        store.findRecord('person', 1).then(async(function (again) {
           strictEqual(person, again, "the store returns the loaded object");
         }));
       });
@@ -26564,13 +26570,13 @@ define(
 
       var adapter = TestAdapter.extend({
         findRecord: function (store, type, id, snapshot) {
-          equal(snapshot.attr("name"), "Test", "Preloaded attribtue set");
-          return Ember.RSVP.resolve({ id: "1", name: "Test" });
+          equal(snapshot.attr('name'), 'Test', 'Preloaded attribtue set');
+          return Ember.RSVP.resolve({ id: '1', name: 'Test' });
         }
       });
 
       var Person = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
 
       var store = createStore({
@@ -26579,7 +26585,7 @@ define(
       });
 
       run(function () {
-        store.findRecord("test", 1, { preload: { name: "Test" } });
+        store.findRecord('test', 1, { preload: { name: 'Test' } });
       });
     });
 
@@ -26587,7 +26593,7 @@ define(
       expect(1);
       var adapter = TestAdapter.extend({
         findRecord: function (store, type, id, snapshot) {
-          equal(snapshot.belongsTo("friend").attr("name"), "Tom", "Preloaded belongsTo set");
+          equal(snapshot.belongsTo('friend').attr('name'), 'Tom', 'Preloaded belongsTo set');
           return new Ember.RSVP.Promise(function () {});
         }
       });
@@ -26598,25 +26604,25 @@ define(
       var store = env.store;
 
       var Person = DS.Model.extend({
-        name: DS.attr("string"),
-        friend: DS.belongsTo("person", { inverse: null, async: true })
+        name: DS.attr('string'),
+        friend: DS.belongsTo('person', { inverse: null, async: true })
       });
 
-      env.registry.register("model:person", Person);
+      env.registry.register('model:person', Person);
       var tom;
 
       run(function () {
         store.push({
           data: {
-            type: "person",
-            id: "2",
+            type: 'person',
+            id: '2',
             attributes: {
-              name: "Tom"
+              name: 'Tom'
             }
           }
         });
-        tom = store.peekRecord("person", 2);
-        store.findRecord("person", 1, { preload: { friend: tom } });
+        tom = store.peekRecord('person', 2);
+        store.findRecord('person', 1, { preload: { friend: tom } });
       });
     });
 
@@ -26635,16 +26641,16 @@ define(
       var store = env.store;
 
       var Person = DS.Model.extend({
-        name: DS.attr("string"),
-        friend: DS.belongsTo("person", { async: true, inverse: null })
+        name: DS.attr('string'),
+        friend: DS.belongsTo('person', { async: true, inverse: null })
       });
 
-      env.registry.register("model:person", Person);
+      env.registry.register('model:person', Person);
 
       run(function () {
-        store.findRecord("person", 1, { preload: { friend: 2 } }).then(async(function () {
-          store.peekRecord("person", 1).get("friend").then(async(function (friend) {
-            equal(friend.get("id"), "2", "Preloaded belongsTo set");
+        store.findRecord('person', 1, { preload: { friend: 2 } }).then(async(function () {
+          store.peekRecord('person', 1).get('friend').then(async(function (friend) {
+            equal(friend.get('id'), '2', 'Preloaded belongsTo set');
           }));
         }));
       });
@@ -26654,7 +26660,7 @@ define(
       expect(1);
       var adapter = TestAdapter.extend({
         findRecord: function (store, type, id, snapshot) {
-          equal(snapshot.hasMany("friends")[0].attr("name"), "Tom", "Preloaded hasMany set");
+          equal(snapshot.hasMany('friends')[0].attr('name'), 'Tom', 'Preloaded hasMany set');
           return new Ember.RSVP.Promise(function () {});
         }
       });
@@ -26665,25 +26671,25 @@ define(
       var store = env.store;
 
       var Person = DS.Model.extend({
-        name: DS.attr("string"),
-        friends: DS.hasMany("person", { inverse: null, async: true })
+        name: DS.attr('string'),
+        friends: DS.hasMany('person', { inverse: null, async: true })
       });
 
-      env.registry.register("model:person", Person);
+      env.registry.register('model:person', Person);
       var tom;
 
       run(function () {
         store.push({
           data: {
-            type: "person",
-            id: "2",
+            type: 'person',
+            id: '2',
             attributes: {
-              name: "Tom"
+              name: 'Tom'
             }
           }
         });
-        tom = store.peekRecord("person", 2);
-        store.findRecord("person", 1, { preload: { friends: [tom] } });
+        tom = store.peekRecord('person', 2);
+        store.findRecord('person', 1, { preload: { friends: [tom] } });
       });
     });
 
@@ -26692,7 +26698,7 @@ define(
 
       var adapter = TestAdapter.extend({
         findRecord: function (store, type, id, snapshot) {
-          equal(snapshot.hasMany("friends")[0].id, "2", "Preloaded hasMany set");
+          equal(snapshot.hasMany('friends')[0].id, '2', 'Preloaded hasMany set');
           return Ember.RSVP.resolve({ id: id });
         }
       });
@@ -26703,14 +26709,14 @@ define(
       var store = env.store;
 
       var Person = DS.Model.extend({
-        name: DS.attr("string"),
-        friends: DS.hasMany("person", { async: true, inverse: null })
+        name: DS.attr('string'),
+        friends: DS.hasMany('person', { async: true, inverse: null })
       });
 
-      env.registry.register("model:person", Person);
+      env.registry.register('model:person', Person);
 
       run(function () {
-        store.findRecord("person", 1, { preload: { friends: [2] } });
+        store.findRecord('person', 1, { preload: { friends: [2] } });
       });
     });
 
@@ -26718,13 +26724,13 @@ define(
       expect(2);
 
       var Person = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
 
       var idCounter = 1;
       var adapter = TestAdapter.extend({
         createRecord: function (store, type, snapshot) {
-          return Ember.RSVP.resolve({ name: snapshot.attr("name"), id: idCounter++ });
+          return Ember.RSVP.resolve({ name: snapshot.attr('name'), id: idCounter++ });
         }
       });
 
@@ -26733,18 +26739,18 @@ define(
         person: Person
       });
 
-      var people = store.peekAll("person");
+      var people = store.peekAll('person');
       var tom, yehuda;
 
       run(function () {
-        tom = store.createRecord("person", { name: "Tom Dale" });
-        yehuda = store.createRecord("person", { name: "Yehuda Katz" });
+        tom = store.createRecord('person', { name: 'Tom Dale' });
+        yehuda = store.createRecord('person', { name: 'Yehuda Katz' });
       });
 
       run(function () {
         Ember.RSVP.all([tom.save(), yehuda.save()]).then(async(function () {
           people.forEach(function (person, index) {
-            equal(person.get("id"), index + 1, "The record's id should be correct.");
+            equal(person.get('id'), index + 1, "The record's id should be correct.");
           });
         }));
       });
@@ -26759,7 +26765,7 @@ define(
         person: Person
       });
       run(function () {
-        store.createRecord("person");
+        store.createRecord('person');
       });
       var records = Ember.A([]);
       var results;
@@ -26816,15 +26822,15 @@ define(
       });
 
       run(function () {
-        store.createRecord("test");
+        store.createRecord('test');
       });
 
-      var records = Ember.A([store.recordForId("test", 10), store.recordForId("phone", 20), store.recordForId("phone", 21)]);
+      var records = Ember.A([store.recordForId('test', 10), store.recordForId('phone', 20), store.recordForId('phone', 21)]);
 
       run(function () {
         store.scheduleFetchMany(records).then(async(function () {
-          var unloadedRecords = records.filterBy("isEmpty");
-          equal(get(unloadedRecords, "length"), 0, "All unloaded records should be loaded");
+          var unloadedRecords = records.filterBy('isEmpty');
+          equal(get(unloadedRecords, 'length'), 0, 'All unloaded records should be loaded');
         }));
       });
     });
@@ -26862,11 +26868,11 @@ define(
         test: Person
       });
 
-      var records = Ember.A([store.recordForId("test", 10), store.recordForId("test", 20), store.recordForId("test", 21)]);
+      var records = Ember.A([store.recordForId('test', 10), store.recordForId('test', 20), store.recordForId('test', 21)]);
 
       run(function () {
         store.scheduleFetchMany(records).then(async(function () {
-          var ids = records.mapBy("id");
+          var ids = records.mapBy('id');
           deepEqual(ids, ["10", "20", "21"], "The promise fulfills with the records");
         }));
       });
@@ -26887,7 +26893,7 @@ define(
           var record = { id: id };
 
           return new Ember.RSVP.Promise(function (resolve, reject) {
-            if (id === "igor") {
+            if (id === 'igor') {
               resolve(record);
             } else {
               run.later(function () {
@@ -26905,8 +26911,8 @@ define(
       });
 
       run(function () {
-        var davidPromise = store.findRecord("test", "david");
-        var igorPromise = store.findRecord("test", "igor");
+        var davidPromise = store.findRecord('test', 'david');
+        var igorPromise = store.findRecord('test', 'igor');
 
         igorPromise.then(async(function () {
           equal(davidResolved, false, "Igor did not need to wait for David");
@@ -26933,7 +26939,7 @@ define(
           var record = { id: id };
 
           return new Ember.RSVP.Promise(function (resolve, reject) {
-            if (id === "igor") {
+            if (id === 'igor') {
               reject(record);
             } else {
               run.later(function () {
@@ -26951,8 +26957,8 @@ define(
       });
 
       run(function () {
-        var davidPromise = store.findRecord("test", "david");
-        var igorPromise = store.findRecord("test", "igor");
+        var davidPromise = store.findRecord('test', 'david');
+        var igorPromise = store.findRecord('test', 'igor');
 
         igorPromise.then(null, async(function () {
           equal(davidResolved, false, "Igor did not need to wait for David");
@@ -26988,8 +26994,8 @@ define(
 
       warns(function () {
         run(function () {
-          var davidPromise = store.findRecord("test", "david");
-          var igorPromise = store.findRecord("test", "igor");
+          var davidPromise = store.findRecord('test', 'david');
+          var igorPromise = store.findRecord('test', 'igor');
 
           davidPromise.then(async(function () {
             ok(true, "David resolved");
@@ -27006,16 +27012,16 @@ define(
       expect(1);
 
       var Person = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
 
       var TestAdapter = DS.Adapter.extend({
         shouldReloadRecord: function (store, type, id, snapshot) {
-          ok(false, "shouldReloadRecord should not be called when the record is not loaded");
+          ok(false, 'shouldReloadRecord should not be called when the record is not loaded');
           return false;
         },
         findRecord: function () {
-          ok(true, "find is always called when the record is not in the store");
+          ok(true, 'find is always called when the record is not in the store');
           return { id: 1 };
         }
       });
@@ -27026,7 +27032,7 @@ define(
       });
 
       run(function () {
-        store.findRecord("person", 1);
+        store.findRecord('person', 1);
       });
     });
 
@@ -27034,16 +27040,16 @@ define(
       expect(1);
 
       var Person = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
 
       var TestAdapter = DS.Adapter.extend({
         shouldReloadRecord: function (store, type, id, snapshot) {
-          ok(true, "shouldReloadRecord should be called when the record is in the store");
+          ok(true, 'shouldReloadRecord should be called when the record is in the store');
           return false;
         },
         findRecord: function () {
-          ok(false, "find should not be called when shouldReloadRecord returns false");
+          ok(false, 'find should not be called when shouldReloadRecord returns false');
         }
       });
 
@@ -27055,11 +27061,11 @@ define(
       run(function () {
         store.push({
           data: {
-            type: "person",
-            id: "1"
+            type: 'person',
+            id: '1'
           }
         });
-        store.findRecord("person", 1);
+        store.findRecord('person', 1);
       });
     });
 
@@ -27067,17 +27073,17 @@ define(
       expect(3);
 
       var Person = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
 
       var TestAdapter = DS.Adapter.extend({
         shouldReloadRecord: function (store, type, id, snapshot) {
-          ok(true, "shouldReloadRecord should be called when the record is in the store");
+          ok(true, 'shouldReloadRecord should be called when the record is in the store');
           return true;
         },
         findRecord: function () {
-          ok(true, "find should not be called when shouldReloadRecord returns false");
-          return { id: 1, name: "Tom" };
+          ok(true, 'find should not be called when shouldReloadRecord returns false');
+          return { id: 1, name: 'Tom' };
         }
       });
 
@@ -27089,12 +27095,12 @@ define(
       run(function () {
         store.push({
           data: {
-            type: "person",
-            id: "1"
+            type: 'person',
+            id: '1'
           }
         });
-        store.findRecord("person", 1).then(function (record) {
-          equal(record.get("name"), "Tom");
+        store.findRecord('person', 1).then(function (record) {
+          equal(record.get('name'), 'Tom');
         });
       });
     });
@@ -27103,7 +27109,7 @@ define(
       expect(2);
 
       var Person = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
 
       var TestAdapter = DS.Adapter.extend({
@@ -27111,11 +27117,11 @@ define(
           return true;
         },
         shouldBackgroundReloadRecord: function (store, type, id, snapshot) {
-          ok(false, "shouldBackgroundReloadRecord is not called when shouldReloadRecord returns true");
+          ok(false, 'shouldBackgroundReloadRecord is not called when shouldReloadRecord returns true');
         },
         findRecord: function () {
-          ok(true, "find should be called");
-          return { id: 1, name: "Tom" };
+          ok(true, 'find should be called');
+          return { id: 1, name: 'Tom' };
         }
       });
 
@@ -27127,12 +27133,12 @@ define(
       run(function () {
         store.push({
           data: {
-            type: "person",
-            id: "1"
+            type: 'person',
+            id: '1'
           }
         });
-        store.findRecord("person", 1).then(function (record) {
-          equal(record.get("name"), "Tom");
+        store.findRecord('person', 1).then(function (record) {
+          equal(record.get('name'), 'Tom');
         });
       });
     });
@@ -27141,17 +27147,17 @@ define(
       expect(2);
 
       var Person = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
 
       var TestAdapter = DS.Adapter.extend({
         shouldBackgroundReloadRecord: function (store, type, id, snapshot) {
-          ok(true, "shouldBackgroundReloadRecord is called when record is loaded form the cache");
+          ok(true, 'shouldBackgroundReloadRecord is called when record is loaded form the cache');
           return false;
         },
         findRecord: function () {
-          ok(false, "find should not be called");
-          return { id: 1, name: "Tom" };
+          ok(false, 'find should not be called');
+          return { id: 1, name: 'Tom' };
         }
       });
 
@@ -27163,12 +27169,12 @@ define(
       run(function () {
         store.push({
           data: {
-            type: "person",
-            id: "1"
+            type: 'person',
+            id: '1'
           }
         });
-        store.findRecord("person", 1).then(function (record) {
-          equal(record.get("name"), undefined);
+        store.findRecord('person', 1).then(function (record) {
+          equal(record.get('name'), undefined);
         });
       });
     });
@@ -27177,17 +27183,17 @@ define(
       expect(4);
 
       var Person = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
 
       var TestAdapter = DS.Adapter.extend({
         shouldBackgroundReloadRecord: function (store, type, id, snapshot) {
-          ok(true, "shouldBackgroundReloadRecord is called when record is loaded form the cache");
+          ok(true, 'shouldBackgroundReloadRecord is called when record is loaded form the cache');
           return true;
         },
         findRecord: function () {
-          ok(true, "find should not be called");
-          return { id: 1, name: "Tom" };
+          ok(true, 'find should not be called');
+          return { id: 1, name: 'Tom' };
         }
       });
 
@@ -27199,35 +27205,35 @@ define(
       run(function () {
         store.push({
           data: {
-            type: "person",
-            id: "1"
+            type: 'person',
+            id: '1'
           }
         });
-        store.findRecord("person", 1).then(function (record) {
-          equal(record.get("name"), undefined);
+        store.findRecord('person', 1).then(function (record) {
+          equal(record.get('name'), undefined);
         });
       });
 
-      equal(store.peekRecord("person", 1).get("name"), "Tom");
+      equal(store.peekRecord('person', 1).get('name'), 'Tom');
     });
 
     test("store should not reload record array when shouldReloadAll returns false", function () {
       expect(1);
 
       var Person = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
 
       var TestAdapter = DS.Adapter.extend({
         shouldReloadAll: function (store, snapshot) {
-          ok(true, "shouldReloadAll should be called when the record is in the store");
+          ok(true, 'shouldReloadAll should be called when the record is in the store');
           return false;
         },
         shouldBackgroundReloadAll: function (store, snapshot) {
           return false;
         },
         findAll: function () {
-          ok(false, "findAll should not be called when shouldReloadAll returns false");
+          ok(false, 'findAll should not be called when shouldReloadAll returns false');
         }
       });
 
@@ -27237,7 +27243,7 @@ define(
       });
 
       run(function () {
-        store.findAll("person");
+        store.findAll('person');
       });
     });
 
@@ -27245,17 +27251,17 @@ define(
       expect(3);
 
       var Person = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
 
       var TestAdapter = DS.Adapter.extend({
         shouldReloadAll: function (store, type, id, snapshot) {
-          ok(true, "shouldReloadAll should be called when the record is in the store");
+          ok(true, 'shouldReloadAll should be called when the record is in the store');
           return true;
         },
         findAll: function () {
-          ok(true, "findAll should be called when shouldReloadAll returns true");
-          return [{ id: 1, name: "Tom" }];
+          ok(true, 'findAll should be called when shouldReloadAll returns true');
+          return [{ id: 1, name: 'Tom' }];
         }
       });
 
@@ -27265,8 +27271,8 @@ define(
       });
 
       run(function () {
-        store.findAll("person").then(function (records) {
-          equal(records.get("firstObject.name"), "Tom");
+        store.findAll('person').then(function (records) {
+          equal(records.get('firstObject.name'), 'Tom');
         });
       });
     });
@@ -27275,7 +27281,7 @@ define(
       expect(2);
 
       var Person = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
 
       var TestAdapter = DS.Adapter.extend({
@@ -27283,11 +27289,11 @@ define(
           return true;
         },
         shouldBackgroundReloadAll: function (store, type, id, snapshot) {
-          ok(false, "shouldBackgroundReloadRecord is not called when shouldReloadRecord returns true");
+          ok(false, 'shouldBackgroundReloadRecord is not called when shouldReloadRecord returns true');
         },
         findAll: function () {
-          ok(true, "find should be called");
-          return [{ id: 1, name: "Tom" }];
+          ok(true, 'find should be called');
+          return [{ id: 1, name: 'Tom' }];
         }
       });
 
@@ -27297,8 +27303,8 @@ define(
       });
 
       run(function () {
-        store.findAll("person").then(function (records) {
-          equal(records.get("firstObject.name"), "Tom");
+        store.findAll('person').then(function (records) {
+          equal(records.get('firstObject.name'), 'Tom');
         });
       });
     });
@@ -27307,21 +27313,21 @@ define(
       expect(3);
 
       var Person = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
 
       var TestAdapter = DS.Adapter.extend({
         shouldReloadAll: function (store, type, id, snapshot) {
-          ok(true, "shouldReloadAll is called when record is loaded form the cache");
+          ok(true, 'shouldReloadAll is called when record is loaded form the cache');
           return false;
         },
         shouldBackgroundReloadAll: function (store, type, id, snapshot) {
-          ok(true, "shouldBackgroundReloadAll is called when record is loaded form the cache");
+          ok(true, 'shouldBackgroundReloadAll is called when record is loaded form the cache');
           return false;
         },
         findAll: function () {
-          ok(false, "findAll should not be called");
-          return [{ id: 1, name: "Tom" }];
+          ok(false, 'findAll should not be called');
+          return [{ id: 1, name: 'Tom' }];
         }
       });
 
@@ -27331,8 +27337,8 @@ define(
       });
 
       run(function () {
-        store.findAll("person").then(function (records) {
-          equal(records.get("firstObject"), undefined);
+        store.findAll('person').then(function (records) {
+          equal(records.get('firstObject'), undefined);
         });
       });
     });
@@ -27341,21 +27347,21 @@ define(
       expect(5);
 
       var Person = DS.Model.extend({
-        name: DS.attr("string")
+        name: DS.attr('string')
       });
 
       var TestAdapter = DS.Adapter.extend({
         shouldReloadAll: function () {
-          ok(true, "shouldReloadAll is called");
+          ok(true, 'shouldReloadAll is called');
           return false;
         },
         shouldBackgroundReloadAll: function (store, snapshot) {
-          ok(true, "shouldBackgroundReloadAll is called when record is loaded form the cache");
+          ok(true, 'shouldBackgroundReloadAll is called when record is loaded form the cache');
           return true;
         },
         findAll: function () {
-          ok(true, "find should not be called");
-          return [{ id: 1, name: "Tom" }];
+          ok(true, 'find should not be called');
+          return [{ id: 1, name: 'Tom' }];
         }
       });
 
@@ -27365,23 +27371,23 @@ define(
       });
 
       run(function () {
-        store.findAll("person").then(function (records) {
-          equal(records.get("firstObject.name"), undefined);
+        store.findAll('person').then(function (records) {
+          equal(records.get('firstObject.name'), undefined);
         });
       });
 
-      equal(store.peekRecord("person", 1).get("name"), "Tom");
+      equal(store.peekRecord('person', 1).get('name'), 'Tom');
     });
 
     module("unit/store/adapter_interop - find preload deprecations", {
       setup: function () {
         var Person = DS.Model.extend({
-          name: DS.attr("string")
+          name: DS.attr('string')
         });
 
         var TestAdapter = DS.Adapter.extend({
           findRecord: function (store, type, id, snapshot) {
-            equal(snapshot.attr("name"), "Tom");
+            equal(snapshot.attr('name'), 'Tom');
             return Ember.RSVP.resolve({ id: id });
           }
         });
@@ -27416,7 +27422,7 @@ define(
     var store, container, Record, Storage;
     var run = Ember.run;
 
-    module('unit/store/createRecord - Store creating records', {
+    module("unit/store/createRecord - Store creating records", {
       setup: function () {
         Record = DS.Model.extend({
           title: DS.attr('string')
@@ -27435,17 +27441,17 @@ define(
       }
     });
 
-    test('doesn\'t modify passed in properties hash', function () {
+    test("doesn't modify passed in properties hash", function () {
       var attributes = { foo: 'bar' };
       run(function () {
         store.createRecord('record', attributes);
         store.createRecord('record', attributes);
       });
 
-      deepEqual(attributes, { foo: 'bar' }, 'The properties hash is not modified');
+      deepEqual(attributes, { foo: 'bar' }, "The properties hash is not modified");
     });
 
-    test('allow passing relationships as well as attributes', function () {
+    test("allow passing relationships as well as attributes", function () {
       var records, storage;
       run(function () {
         store.push({
@@ -27453,13 +27459,13 @@ define(
             type: 'record',
             id: '1',
             attributes: {
-              title: 'it\'s a beautiful day'
+              title: "it's a beautiful day"
             }
           }, {
             type: 'record',
             id: '2',
             attributes: {
-              title: 'it\'s a beautiful day'
+              title: "it's a beautiful day"
             }
           }]
         });
@@ -27467,12 +27473,12 @@ define(
         storage = store.createRecord('storage', { name: 'Great store', records: records });
       });
 
-      equal(storage.get('name'), 'Great store', 'The attribute is well defined');
-      equal(storage.get('records').findBy('id', '1'), Ember.A(records).findBy('id', '1'), 'Defined relationships are allowed in createRecord');
-      equal(storage.get('records').findBy('id', '2'), Ember.A(records).findBy('id', '2'), 'Defined relationships are allowed in createRecord');
+      equal(storage.get('name'), 'Great store', "The attribute is well defined");
+      equal(storage.get('records').findBy('id', '1'), Ember.A(records).findBy('id', '1'), "Defined relationships are allowed in createRecord");
+      equal(storage.get('records').findBy('id', '2'), Ember.A(records).findBy('id', '2'), "Defined relationships are allowed in createRecord");
     });
 
-    module('unit/store/createRecord - Store with models by dash', {
+    module("unit/store/createRecord - Store with models by dash", {
       setup: function () {
         var env = setupStore({
           someThing: DS.Model.extend({ foo: DS.attr('string') })
@@ -27481,7 +27487,7 @@ define(
         container = env.container;
       }
     });
-    test('creating a record by camel-case string finds the model', function () {
+    test("creating a record by camel-case string finds the model", function () {
       var attributes = { foo: 'bar' };
       var record;
 
@@ -27489,11 +27495,11 @@ define(
         record = store.createRecord('some-thing', attributes);
       });
 
-      equal(record.get('foo'), attributes.foo, 'The record is created');
+      equal(record.get('foo'), attributes.foo, "The record is created");
       equal(store.modelFor('someThing').modelName, 'some-thing');
     });
 
-    test('creating a record by dasherize string finds the model', function () {
+    test("creating a record by dasherize string finds the model", function () {
       var attributes = { foo: 'bar' };
       var record;
 
@@ -27501,11 +27507,11 @@ define(
         record = store.createRecord('some-thing', attributes);
       });
 
-      equal(record.get('foo'), attributes.foo, 'The record is created');
+      equal(record.get('foo'), attributes.foo, "The record is created");
       equal(store.modelFor('some-thing').modelName, 'some-thing');
     });
 
-    module('unit/store/createRecord - Store with models by camelCase', {
+    module("unit/store/createRecord - Store with models by camelCase", {
       setup: function () {
         var env = setupStore({
           someThing: DS.Model.extend({ foo: DS.attr('string') })
@@ -27515,7 +27521,7 @@ define(
       }
     });
 
-    test('creating a record by camel-case string finds the model', function () {
+    test("creating a record by camel-case string finds the model", function () {
       var attributes = { foo: 'bar' };
       var record;
 
@@ -27523,11 +27529,11 @@ define(
         record = store.createRecord('some-thing', attributes);
       });
 
-      equal(record.get('foo'), attributes.foo, 'The record is created');
+      equal(record.get('foo'), attributes.foo, "The record is created");
       equal(store.modelFor('someThing').modelName, 'some-thing');
     });
 
-    test('creating a record by dasherize string finds the model', function () {
+    test("creating a record by dasherize string finds the model", function () {
       var attributes = { foo: 'bar' };
       var record;
 
@@ -27535,7 +27541,7 @@ define(
         record = store.createRecord('some-thing', attributes);
       });
 
-      equal(record.get('foo'), attributes.foo, 'The record is created');
+      equal(record.get('foo'), attributes.foo, "The record is created");
       equal(store.modelFor('some-thing').modelName, 'some-thing');
     });
   }
@@ -27558,7 +27564,7 @@ define(
     var belongsTo = DS.belongsTo;
     var run = Ember.run;
 
-    module('unit/store/hasRecordForId - Store hasRecordForId', {
+    module("unit/store/hasRecordForId - Store hasRecordForId", {
       setup: function () {
 
         Person = DS.Model.extend({
@@ -27580,7 +27586,7 @@ define(
 
         env = setupStore({
           person: Person,
-          'phone-number': PhoneNumber
+          "phone-number": PhoneNumber
         });
 
         store = env.store;
@@ -27591,7 +27597,7 @@ define(
       }
     });
 
-    test('hasRecordForId should return false for records in the empty state ', function () {
+    test("hasRecordForId should return false for records in the empty state ", function () {
 
       run(function () {
         store.push({
@@ -27599,8 +27605,8 @@ define(
             type: 'person',
             id: '1',
             attributes: {
-              firstName: 'Yehuda',
-              lastName: 'Katz'
+              firstName: "Yehuda",
+              lastName: "Katz"
             },
             relationships: {
               phoneNumbers: {
@@ -27614,15 +27620,15 @@ define(
       });
     });
 
-    test('hasRecordForId should return true for records in the loaded state ', function () {
+    test("hasRecordForId should return true for records in the loaded state ", function () {
       run(function () {
         store.push({
           data: {
             type: 'person',
             id: '1',
             attributes: {
-              firstName: 'Yehuda',
-              lastName: 'Katz'
+              firstName: "Yehuda",
+              lastName: "Katz"
             },
             relationships: {
               phoneNumbers: {
@@ -27829,7 +27835,7 @@ define(
         return dasherize(camelize(key));
       });
 
-      equal(registry.normalize("some.post"), "some-post", "precond - container camelizes");
+      equal(registry.normalize('some.post'), 'some-post', 'precond - container camelizes');
       equal(store.modelFor("blog.post").modelName, "blog.post", "modelName is normalized to dasherized");
     });
 
@@ -27837,13 +27843,13 @@ define(
       env.replaceContainerNormalize(function (key) {
         return dasherize(camelize(key));
       });
-      equal(registry.normalize("some.post"), "some-post", "precond - container dasherizes");
+      equal(registry.normalize('some.post'), 'some-post', 'precond - container dasherizes');
       equal(store.modelFor("blog.post").modelName, "blog.post", "modelName is normalized to dasherized");
     });
 
     test("when fetching something that doesn't exist, throws error", function () {
       throws(function () {
-        store.modelFor("wild-stuff");
+        store.modelFor('wild-stuff');
       }, /No model was found/);
     });
   }
@@ -27863,7 +27869,7 @@ define(
     var env, store, Person;
     var run = Ember.run;
 
-    module('unit/store/peekRecord - Store peekRecord', {
+    module("unit/store/peekRecord - Store peekRecord", {
       setup: function () {
 
         Person = DS.Model.extend();
@@ -27882,7 +27888,7 @@ define(
       }
     });
 
-    test('peekRecord should return the record if it is in the store ', function () {
+    test("peekRecord should return the record if it is in the store ", function () {
       run(function () {
         var person = store.push({
           data: {
@@ -27894,7 +27900,7 @@ define(
       });
     });
 
-    test('peekRecord should return null if the record is not in the store ', function () {
+    test("peekRecord should return null if the record is not in the store ", function () {
       run(function () {
         equal(null, store.peekRecord('person', 1), 'peekRecord returns null if the corresponding record is not in the store');
       });
@@ -27919,7 +27925,7 @@ define(
     var belongsTo = DS.belongsTo;
     var run = Ember.run;
 
-    module('unit/store/push - DS.Store#push', {
+    module("unit/store/push - DS.Store#push", {
       setup: function () {
         Person = DS.Model.extend({
           firstName: attr('string'),
@@ -27948,7 +27954,7 @@ define(
         env = setupStore({
           post: Post,
           person: Person,
-          'phone-number': PhoneNumber
+          "phone-number": PhoneNumber
         });
 
         store = env.store;
@@ -27963,7 +27969,7 @@ define(
       }
     });
 
-    test('Calling push with a normalized hash returns a record', function () {
+    test("Calling push with a normalized hash returns a record", function () {
       expect(2);
 
       run(function () {
@@ -27978,7 +27984,7 @@ define(
           }
         });
         store.findRecord('person', 'wat').then(function (foundPerson) {
-          equal(foundPerson, person, 'record returned via load() is the same as the record returned from findRecord()');
+          equal(foundPerson, person, "record returned via load() is the same as the record returned from findRecord()");
           deepEqual(foundPerson.getProperties('id', 'firstName', 'lastName'), {
             id: 'wat',
             firstName: 'Yehuda',
@@ -27988,7 +27994,7 @@ define(
       });
     });
 
-    test('Supplying a model class for `push` is the same as supplying a string', function () {
+    test("Supplying a model class for `push` is the same as supplying a string", function () {
       expect(1);
 
       var Programmer = Person.extend();
@@ -28016,12 +28022,12 @@ define(
       });
     });
 
-    test('Calling push triggers `didLoad` even if the record hasn\'t been requested from the adapter', function () {
+    test("Calling push triggers `didLoad` even if the record hasn't been requested from the adapter", function () {
       expect(1);
 
       Person.reopen({
         didLoad: async(function () {
-          ok(true, 'The didLoad callback was called');
+          ok(true, "The didLoad callback was called");
         })
       });
 
@@ -28039,7 +28045,7 @@ define(
       });
     });
 
-    test('Calling push with partial records updates just those attributes', function () {
+    test("Calling push with partial records updates just those attributes", function () {
       expect(2);
 
       run(function () {
@@ -28060,23 +28066,23 @@ define(
             type: 'person',
             id: 'wat',
             attributes: {
-              lastName: 'Katz!'
+              lastName: "Katz!"
             }
           }
         });
 
         store.findRecord('person', 'wat').then(function (foundPerson) {
-          equal(foundPerson, person, 'record returned via load() is the same as the record returned from findRecord()');
+          equal(foundPerson, person, "record returned via load() is the same as the record returned from findRecord()");
           deepEqual(foundPerson.getProperties('id', 'firstName', 'lastName'), {
             id: 'wat',
             firstName: 'Yehuda',
-            lastName: 'Katz!'
+            lastName: "Katz!"
           });
         });
       });
     });
 
-    test('Calling push on normalize allows partial updates with raw JSON', function () {
+    test("Calling push on normalize allows partial updates with raw JSON", function () {
       env.registry.register('serializer:person', DS.RESTSerializer);
       var person;
 
@@ -28094,15 +28100,15 @@ define(
 
         store.push(store.normalize('person', {
           id: '1',
-          firstName: 'Jacquie'
+          firstName: "Jacquie"
         }));
       });
 
-      equal(person.get('firstName'), 'Jacquie', 'you can push raw JSON into the store');
-      equal(person.get('lastName'), 'Jackson', 'existing fields are untouched');
+      equal(person.get('firstName'), "Jacquie", "you can push raw JSON into the store");
+      equal(person.get('lastName'), "Jackson", "existing fields are untouched");
     });
 
-    test('Calling push with a normalized hash containing IDs of related records returns a record', function () {
+    test("Calling push with a normalized hash containing IDs of related records returns a record", function () {
       expect(1);
 
       Person.reopen({
@@ -28110,7 +28116,7 @@ define(
       });
 
       env.adapter.findRecord = function (store, type, id) {
-        if (id === '1') {
+        if (id === "1") {
           return Ember.RSVP.resolve({
             id: 1,
             number: '5551212',
@@ -28118,7 +28124,7 @@ define(
           });
         }
 
-        if (id === '2') {
+        if (id === "2") {
           return Ember.RSVP.resolve({
             id: 2,
             number: '5552121',
@@ -28133,17 +28139,17 @@ define(
           id: 'wat',
           firstName: 'John',
           lastName: 'Smith',
-          phoneNumbers: ['1', '2']
+          phoneNumbers: ["1", "2"]
         }));
         person.get('phoneNumbers').then(function (phoneNumbers) {
           deepEqual(phoneNumbers.map(function (item) {
             return item.getProperties('id', 'number', 'person');
           }), [{
-            id: '1',
+            id: "1",
             number: '5551212',
             person: person
           }, {
-            id: '2',
+            id: "2",
             number: '5552121',
             person: person
           }]);
@@ -28151,69 +28157,69 @@ define(
       });
     });
 
-    test('Calling pushPayload allows pushing raw JSON', function () {
+    test("Calling pushPayload allows pushing raw JSON", function () {
       run(function () {
         store.pushPayload('post', {
           posts: [{
             id: '1',
-            postTitle: 'Ember rocks'
+            postTitle: "Ember rocks"
           }]
         });
       });
 
       var post = store.peekRecord('post', 1);
 
-      equal(post.get('postTitle'), 'Ember rocks', 'you can push raw JSON into the store');
+      equal(post.get('postTitle'), "Ember rocks", "you can push raw JSON into the store");
 
       run(function () {
         store.pushPayload('post', {
           posts: [{
             id: '1',
-            postTitle: 'Ember rocks (updated)'
+            postTitle: "Ember rocks (updated)"
           }]
         });
       });
 
-      equal(post.get('postTitle'), 'Ember rocks (updated)', 'You can update data in the store');
+      equal(post.get('postTitle'), "Ember rocks (updated)", "You can update data in the store");
     });
 
-    test('Calling pushPayload allows pushing singular payload properties', function () {
+    test("Calling pushPayload allows pushing singular payload properties", function () {
       run(function () {
         store.pushPayload('post', {
           post: {
             id: '1',
-            postTitle: 'Ember rocks'
+            postTitle: "Ember rocks"
           }
         });
       });
 
       var post = store.peekRecord('post', 1);
 
-      equal(post.get('postTitle'), 'Ember rocks', 'you can push raw JSON into the store');
+      equal(post.get('postTitle'), "Ember rocks", "you can push raw JSON into the store");
 
       run(function () {
         store.pushPayload('post', {
           post: {
             id: '1',
-            postTitle: 'Ember rocks (updated)'
+            postTitle: "Ember rocks (updated)"
           }
         });
       });
 
-      equal(post.get('postTitle'), 'Ember rocks (updated)', 'You can update data in the store');
+      equal(post.get('postTitle'), "Ember rocks (updated)", "You can update data in the store");
     });
 
-    test('Calling pushPayload should use the type\'s serializer for normalizing', function () {
+    test("Calling pushPayload should use the type's serializer for normalizing", function () {
       expect(4);
       env.registry.register('serializer:post', DS.RESTSerializer.extend({
         normalize: function (store, payload) {
-          ok(true, 'normalized is called on Post serializer');
+          ok(true, "normalized is called on Post serializer");
           return this._super(store, payload);
         }
       }));
       env.registry.register('serializer:person', DS.RESTSerializer.extend({
         normalize: function (store, payload) {
-          ok(true, 'normalized is called on Person serializer');
+          ok(true, "normalized is called on Person serializer");
           return this._super(store, payload);
         }
       }));
@@ -28222,54 +28228,54 @@ define(
         store.pushPayload('post', {
           posts: [{
             id: 1,
-            postTitle: 'Ember rocks'
+            postTitle: "Ember rocks"
           }],
           people: [{
             id: 2,
-            firstName: 'Yehuda'
+            firstName: "Yehuda"
           }]
         });
       });
 
       var post = store.peekRecord('post', 1);
 
-      equal(post.get('postTitle'), 'Ember rocks', 'you can push raw JSON into the store');
+      equal(post.get('postTitle'), "Ember rocks", "you can push raw JSON into the store");
 
       var person = store.peekRecord('person', 2);
 
-      equal(person.get('firstName'), 'Yehuda', 'you can push raw JSON into the store');
+      equal(person.get('firstName'), "Yehuda", "you can push raw JSON into the store");
     });
 
-    test('Calling pushPayload without a type uses application serializer\'s pushPayload method', function () {
+    test("Calling pushPayload without a type uses application serializer's pushPayload method", function () {
       expect(1);
 
       env.registry.register('serializer:application', DS.RESTSerializer.extend({
         pushPayload: function (store, payload) {
-          ok(true, 'pushPayload is called on Application serializer');
+          ok(true, "pushPayload is called on Application serializer");
           return this._super(store, payload);
         }
       }));
 
       run(function () {
         store.pushPayload({
-          posts: [{ id: '1', postTitle: 'Ember rocks' }]
+          posts: [{ id: '1', postTitle: "Ember rocks" }]
         });
       });
     });
 
-    test('Calling pushPayload without a type should use a model\'s serializer when normalizing', function () {
+    test("Calling pushPayload without a type should use a model's serializer when normalizing", function () {
       expect(4);
 
       env.registry.register('serializer:post', DS.RESTSerializer.extend({
         normalize: function (store, payload) {
-          ok(true, 'normalized is called on Post serializer');
+          ok(true, "normalized is called on Post serializer");
           return this._super(store, payload);
         }
       }));
 
       env.registry.register('serializer:application', DS.RESTSerializer.extend({
         normalize: function (store, payload) {
-          ok(true, 'normalized is called on Application serializer');
+          ok(true, "normalized is called on Application serializer");
           return this._super(store, payload);
         }
       }));
@@ -28278,7 +28284,7 @@ define(
         store.pushPayload({
           posts: [{
             id: '1',
-            postTitle: 'Ember rocks'
+            postTitle: "Ember rocks"
           }],
           people: [{
             id: '2',
@@ -28289,14 +28295,14 @@ define(
 
       var post = store.peekRecord('post', 1);
 
-      equal(post.get('postTitle'), 'Ember rocks', 'you can push raw JSON into the store');
+      equal(post.get('postTitle'), "Ember rocks", "you can push raw JSON into the store");
 
       var person = store.peekRecord('person', 2);
 
-      equal(person.get('firstName'), 'Yehuda', 'you can push raw JSON into the store');
+      equal(person.get('firstName'), "Yehuda", "you can push raw JSON into the store");
     });
 
-    test('Calling pushPayload allows partial updates with raw JSON', function () {
+    test("Calling pushPayload allows partial updates with raw JSON", function () {
       env.registry.register('serializer:person', DS.RESTSerializer);
 
       var person;
@@ -28305,28 +28311,28 @@ define(
         store.pushPayload('person', {
           people: [{
             id: '1',
-            firstName: 'Robert',
-            lastName: 'Jackson'
+            firstName: "Robert",
+            lastName: "Jackson"
           }]
         });
       });
 
       person = store.peekRecord('person', 1);
 
-      equal(person.get('firstName'), 'Robert', 'you can push raw JSON into the store');
-      equal(person.get('lastName'), 'Jackson', 'you can push raw JSON into the store');
+      equal(person.get('firstName'), "Robert", "you can push raw JSON into the store");
+      equal(person.get('lastName'), "Jackson", "you can push raw JSON into the store");
 
       run(function () {
         store.pushPayload('person', {
           people: [{
             id: '1',
-            firstName: 'Jacquie'
+            firstName: "Jacquie"
           }]
         });
       });
 
-      equal(person.get('firstName'), 'Jacquie', 'you can push raw JSON into the store');
-      equal(person.get('lastName'), 'Jackson', 'existing fields are untouched');
+      equal(person.get('firstName'), "Jacquie", "you can push raw JSON into the store");
+      equal(person.get('lastName'), "Jackson", "existing fields are untouched");
     });
 
     test('calling push without data argument as an object raises an error', function () {
@@ -28390,7 +28396,7 @@ define(
             }
           }));
         });
-      }, 'You have pushed a record of type \'person\' with \'phoneNumbers\' as a link, but the value of that link is not a string.');
+      }, "You have pushed a record of type 'person' with 'phoneNumbers' as a link, but the value of that link is not a string.");
     });
 
     test('Calling push with a link containing the value null', function () {
@@ -28406,7 +28412,7 @@ define(
 
       var person = store.peekRecord('person', 1);
 
-      equal(person.get('firstName'), 'Tan', 'you can use links that contain null as a value');
+      equal(person.get('firstName'), "Tan", "you can use links that contain null as a value");
     });
 
     test('calling push with hasMany relationship the value must be an array', function () {
@@ -28467,7 +28473,7 @@ define(
       }, /must not be an array/);
     });
 
-    test('Enabling Ember.ENV.DS_WARN_ON_UNKNOWN_KEYS should warn on unknown keys', function () {
+    test("Enabling Ember.ENV.DS_WARN_ON_UNKNOWN_KEYS should warn on unknown keys", function () {
       run(function () {
         var originalFlagValue = Ember.ENV.DS_WARN_ON_UNKNOWN_KEYS;
         try {
@@ -28491,7 +28497,7 @@ define(
       });
     });
 
-    test('Calling push with unknown keys should not warn by default', function () {
+    test("Calling push with unknown keys should not warn by default", function () {
       noWarns(function () {
         run(function () {
           store.push({
@@ -28509,7 +28515,7 @@ define(
       }, /The payload for 'person' contains these unknown keys: \[emailAddress,isMascot\]. Make sure they've been defined in your model./);
     });
 
-    module('unit/store/push - DS.Store#push with JSON-API', {
+    module("unit/store/push - DS.Store#push with JSON-API", {
       setup: function () {
         var Person = DS.Model.extend({
           name: DS.attr('string'),
@@ -28517,7 +28523,7 @@ define(
         });
 
         Person.toString = function () {
-          return 'Person';
+          return "Person";
         };
 
         var Car = DS.Model.extend({
@@ -28527,7 +28533,7 @@ define(
         });
 
         Car.toString = function () {
-          return 'Car';
+          return "Car";
         };
 
         env = setupStore({
@@ -28545,7 +28551,7 @@ define(
       }
     });
 
-    test('Should support pushing multiple models into the store', function () {
+    test("Should support pushing multiple models into the store", function () {
       expect(2);
 
       run(function () {
@@ -28560,7 +28566,7 @@ define(
             type: 'person',
             id: 2,
             attributes: {
-              name: 'Tomster'
+              name: "Tomster"
             }
           }]
         });
@@ -28573,7 +28579,7 @@ define(
       equal(tomster.get('name'), 'Tomster', 'Tomster should be in the store');
     });
 
-    test('Should support pushing included models into the store', function () {
+    test("Should support pushing included models into the store", function () {
       expect(2);
 
       run(function () {
@@ -28652,21 +28658,21 @@ define(
     test("Calling serializerFor looks up 'serializer:<type>' from the container", function () {
       var PersonSerializer = DS.JSONSerializer.extend();
 
-      registry.register("serializer:person", PersonSerializer);
+      registry.register('serializer:person', PersonSerializer);
 
-      ok(store.serializerFor("person") instanceof PersonSerializer, "serializer returned from serializerFor is an instance of the registered Serializer class");
+      ok(store.serializerFor('person') instanceof PersonSerializer, "serializer returned from serializerFor is an instance of the registered Serializer class");
     });
 
     test("Calling serializerFor with a type that has not been registered looks up the default ApplicationSerializer", function () {
       var ApplicationSerializer = DS.JSONSerializer.extend();
 
-      registry.register("serializer:application", ApplicationSerializer);
+      registry.register('serializer:application', ApplicationSerializer);
 
-      ok(store.serializerFor("person") instanceof ApplicationSerializer, "serializer returned from serializerFor is an instance of ApplicationSerializer");
+      ok(store.serializerFor('person') instanceof ApplicationSerializer, "serializer returned from serializerFor is an instance of ApplicationSerializer");
     });
 
     test("Calling serializerFor with a type that has not been registered and in an application that does not have an ApplicationSerializer looks up the default Ember Data serializer", function () {
-      ok(store.serializerFor("person") instanceof DS.JSONSerializer, "serializer returned from serializerFor is an instance of DS.JSONSerializer");
+      ok(store.serializerFor('person') instanceof DS.JSONSerializer, "serializer returned from serializerFor is an instance of DS.JSONSerializer");
     });
   }
 );
@@ -28686,7 +28692,7 @@ define(
     var run = Ember.run;
     var store, tryToFind, Record;
 
-    module('unit/store/unload - Store unloading records', {
+    module("unit/store/unload - Store unloading records", {
       setup: function () {
 
         Record = DS.Model.extend({
@@ -28709,7 +28715,7 @@ define(
       }
     });
 
-    test('unload a dirty record', function () {
+    test("unload a dirty record", function () {
       expect(2);
 
       run(function () {
@@ -28727,11 +28733,11 @@ define(
           record.set('title', 'toto2');
           record._internalModel.send('willCommit');
 
-          equal(get(record, 'hasDirtyAttributes'), true, 'record is dirty');
+          equal(get(record, 'hasDirtyAttributes'), true, "record is dirty");
 
           expectAssertion(function () {
             record.unloadRecord();
-          }, 'You can only unload a record which is not inFlight. `' + Ember.inspect(record) + '`', 'can not unload dirty record');
+          }, "You can only unload a record which is not inFlight. `" + Ember.inspect(record) + "`", "can not unload dirty record");
 
           // force back into safe to unload mode.
           run(function () {
@@ -28741,7 +28747,7 @@ define(
       });
     });
 
-    test('unload a record', function () {
+    test("unload a record", function () {
       expect(5);
 
       run(function () {
@@ -28755,27 +28761,27 @@ define(
           }
         });
         store.findRecord('record', 1).then(function (record) {
-          equal(get(record, 'id'), 1, 'found record with id 1');
-          equal(get(record, 'hasDirtyAttributes'), false, 'record is not dirty');
+          equal(get(record, 'id'), 1, "found record with id 1");
+          equal(get(record, 'hasDirtyAttributes'), false, "record is not dirty");
 
           run(function () {
             store.unloadRecord(record);
           });
 
-          equal(get(record, 'hasDirtyAttributes'), false, 'record is not dirty');
-          equal(get(record, 'isDeleted'), true, 'record is deleted');
+          equal(get(record, 'hasDirtyAttributes'), false, "record is not dirty");
+          equal(get(record, 'isDeleted'), true, "record is deleted");
 
           tryToFind = false;
           return store.findRecord('record', 1).then(function () {
-            equal(tryToFind, true, 'not found record with id 1');
+            equal(tryToFind, true, "not found record with id 1");
           });
         });
       });
     });
 
-    module('DS.Store - unload record with relationships');
+    module("DS.Store - unload record with relationships");
 
-    test('can commit store after unload record with relationships', function () {
+    test("can commit store after unload record with relationships", function () {
       expect(1);
 
       var like, product;
@@ -28842,7 +28848,7 @@ define(
           store.unloadRecord(records.product);
           return store.findRecord('product', 1);
         }).then(function (product) {
-          equal(product.get('description'), 'cuisinart', 'The record was unloaded and the adapter\'s `findRecord` was called');
+          equal(product.get('description'), 'cuisinart', "The record was unloaded and the adapter's `findRecord` was called");
           store.destroy();
         });
       });
@@ -29038,7 +29044,7 @@ define("ember-data/tests/unit/utils-test", ["exports"], function(__exports__) {
 
   var env, User, Message, Post, Person, Video, Medium;
 
-  module('unit/utils', {
+  module("unit/utils", {
     setup: function () {
       Person = DS.Model.extend();
       User = DS.Model.extend({
@@ -29069,7 +29075,7 @@ define("ember-data/tests/unit/utils-test", ["exports"], function(__exports__) {
     }
   });
 
-  test('assertPolymorphicType works for subclasses', function () {
+  test("assertPolymorphicType works for subclasses", function () {
     var user, post, person;
 
     Ember.run(function () {
@@ -29110,7 +29116,7 @@ define("ember-data/tests/unit/utils-test", ["exports"], function(__exports__) {
       // TODO enable once we can do "import { assertPolymorphicType } from "ember-data/utils"
       // assertPolymorphicType(user, relationship, post);
     } catch (e) {
-      ok(false, 'should not throw an error');
+      ok(false, "should not throw an error");
     }
 
     expectAssertion(function () {
@@ -29120,10 +29126,10 @@ define("ember-data/tests/unit/utils-test", ["exports"], function(__exports__) {
 
       // TODO enable once we can do "import { assertPolymorphicType } from "ember-data/utils"
       // assertPolymorphicType(user, relationship, person);
-    }, 'You cannot add a record of type \'person\' to the \'user.messages\' relationship (only \'message\' allowed)');
+    }, "You cannot add a record of type 'person' to the 'user.messages' relationship (only 'message' allowed)");
   });
 
-  test('assertPolymorphicType works for mixins', function () {
+  test("assertPolymorphicType works for mixins", function () {
     var post, video, person;
 
     Ember.run(function () {
@@ -29158,7 +29164,7 @@ define("ember-data/tests/unit/utils-test", ["exports"], function(__exports__) {
       // TODO enable once we can do "import { assertPolymorphicType } from "ember-data/utils"
       // assertPolymorphicType(post, relationship, video);
     } catch (e) {
-      ok(false, 'should not throw an error');
+      ok(false, "should not throw an error");
     }
 
     expectAssertion(function () {
@@ -29168,7 +29174,7 @@ define("ember-data/tests/unit/utils-test", ["exports"], function(__exports__) {
 
       // TODO enable once we can do "import { assertPolymorphicType } from "ember-data/utils"
       // assertPolymorphicType(post, relationship, person);
-    }, 'You cannot add a record of type \'person\' to the \'post.medias\' relationship (only \'medium\' allowed)');
+    }, "You cannot add a record of type 'person' to the 'post.medias' relationship (only 'medium' allowed)");
   });
 });
 
