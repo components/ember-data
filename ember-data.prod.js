@@ -8,9 +8,8 @@
       @class AdapterError
       @namespace DS
     */var ember$data$lib$adapters$errors$$EmberError = Ember.Error;
-
     var ember$data$lib$adapters$errors$$forEach = Ember.ArrayPolyfills.forEach;
-    var ember$data$lib$adapters$errors$$SOURCE_POINTER_REGEXP = /data\/(attributes|relationships)\/(.*)/;
+    var ember$data$lib$adapters$errors$$SOURCE_POINTER_REGEXP = /^\/?data\/(attributes|relationships)\/(.*)/;
     function ember$data$lib$adapters$errors$$AdapterError(errors, message) {
       message = message || "Adapter operation failed";
 
@@ -125,7 +124,7 @@
               title: 'Invalid Attribute',
               detail: messages[i],
               source: {
-                pointer: "data/attributes/" + key
+                pointer: "/data/attributes/" + key
               }
             });
           }
@@ -4334,10 +4333,12 @@
       @uses Ember.Evented
      */
     var ember$data$lib$system$model$errors$$get = Ember.get;
+    var ember$data$lib$system$model$errors$$set = Ember.set;
     var ember$data$lib$system$model$errors$$isEmpty = Ember.isEmpty;
     var ember$data$lib$system$model$errors$$map = Ember.ArrayPolyfills.map;
+    var ember$data$lib$system$model$errors$$makeArray = Ember.makeArray;
 
-    var ember$data$lib$system$model$errors$$default = Ember.Object.extend(Ember.Enumerable, Ember.Evented, {
+    var ember$data$lib$system$model$errors$$default = Ember.ArrayProxy.extend(Ember.Evented, {
       /**
         Register with target handler
          @method registerHandlers
@@ -4420,20 +4421,11 @@
       },
 
       /**
-        @method nextObject
-        @private
-      */
-      nextObject: function (index, previousObject, context) {
-        return ember$data$lib$system$model$errors$$get(this, 'content').objectAt(index);
-      },
-
-      /**
         Total number of errors.
          @property length
         @type {Number}
         @readOnly
       */
-      length: Ember.computed.oneWay('content.length').readOnly(),
 
       /**
         @property isEmpty
@@ -4459,11 +4451,10 @@
         var wasEmpty = ember$data$lib$system$model$errors$$get(this, 'isEmpty');
 
         messages = this._findOrCreateMessages(attribute, messages);
-        ember$data$lib$system$model$errors$$get(this, 'content').addObjects(messages);
+        this.addObjects(messages);
         ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName').get(attribute).addObjects(messages);
 
         this.notifyPropertyChange(attribute);
-        this.enumerableContentDidChange();
 
         if (wasEmpty && !ember$data$lib$system$model$errors$$get(this, 'isEmpty')) {
           this.trigger('becameInvalid');
@@ -4477,7 +4468,7 @@
       _findOrCreateMessages: function (attribute, messages) {
         var errors = this.errorsFor(attribute);
 
-        return ember$data$lib$system$model$errors$$map.call(Ember.makeArray(messages), function (message) {
+        return ember$data$lib$system$model$errors$$map.call(ember$data$lib$system$model$errors$$makeArray(messages), function (message) {
           return errors.findBy('message', message) || {
             attribute: attribute,
             message: message
@@ -4518,12 +4509,11 @@
           return;
         }
 
-        var content = ember$data$lib$system$model$errors$$get(this, 'content').rejectBy('attribute', attribute);
-        ember$data$lib$system$model$errors$$get(this, 'content').setObjects(content);
+        var content = this.rejectBy('attribute', attribute);
+        ember$data$lib$system$model$errors$$set(this, 'content', content);
         ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName')["delete"](attribute);
 
         this.notifyPropertyChange(attribute);
-        this.enumerableContentDidChange();
 
         if (ember$data$lib$system$model$errors$$get(this, 'isEmpty')) {
           this.trigger('becameValid');
@@ -4552,9 +4542,19 @@
           return;
         }
 
-        ember$data$lib$system$model$errors$$get(this, 'content').clear();
-        ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName').clear();
-        this.enumerableContentDidChange();
+        var errorsByAttributeName = ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName');
+        var attributes = Ember.A();
+
+        errorsByAttributeName.forEach(function (_, attribute) {
+          attributes.push(attribute);
+        });
+
+        errorsByAttributeName.clear();
+        attributes.forEach(function (attribute) {
+          this.notifyPropertyChange(attribute);
+        }, this);
+
+        this._super();
 
         this.trigger('becameValid');
       },
@@ -7645,14 +7645,51 @@
       }, null, "DS: Extract payload of queryRecord " + typeClass);
     }
     function ember$data$lib$system$snapshot$record$array$$SnapshotRecordArray(recordArray, meta, adapterOptions) {
+      /**
+        An array of snapshots
+        @private
+        @property _snapshots
+        @type {Array}
+      */
       this._snapshots = null;
+      /**
+        An array of records
+        @private
+        @property _recordArray
+        @type {Array}
+      */
       this._recordArray = recordArray;
+      /**
+        Number of records in the array
+        @property length
+        @type {Number}
+      */
       this.length = recordArray.get('length');
+      /**
+        The type of the underlying records for the snapshots in the array, as a DS.Model
+        @property type
+        @type {DS.Model}
+      */
       this.type = recordArray.get('type');
+      /**
+        Meta object
+        @property meta
+        @type {Object}
+      */
       this.meta = meta;
+      /**
+        A hash of adapter options
+        @property adapterOptions
+        @type {Object}
+      */
       this.adapterOptions = adapterOptions;
     }
 
+    /**
+      Get snapshots of the underlying record array
+      @method snapshots
+      @return {Array} Array of snapshots
+    */
     ember$data$lib$system$snapshot$record$array$$SnapshotRecordArray.prototype.snapshots = function () {
       if (this._snapshots) {
         return this._snapshots;
@@ -8748,6 +8785,7 @@
 
         rolledBack: function (internalModel) {
           internalModel.clearErrorMessages();
+          internalModel.transitionTo('loaded.saved');
           internalModel.triggerLater('ready');
         },
 
