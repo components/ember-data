@@ -21664,6 +21664,28 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
       }, /DS.Model#isDirty has been deprecated/);
     });
   });
+
+  test('error should log a deprecation warning', function () {
+    expect(2);
+    var Person = DS.Model.extend({});
+
+    var env = setupStore({
+      person: Person
+    });
+    var store = env.store;
+
+    run(function () {
+      var person = store.createRecord('person');
+      var error = {};
+      person.set('adapterError', error);
+
+      expectDeprecation(function () {
+        person.get('error');
+      }, /DS.Model#error has been deprecated/);
+
+      equal(person.get('error'), error, 'error should be set');
+    });
+  });
 });
 
 
