@@ -922,7 +922,8 @@
     });
 
     function ember$data$lib$adapters$build$url$mixin$$urlForFind(id, modelName, snapshot) {
-            return this._buildURL(modelName, id);
+      
+      return this._buildURL(modelName, id);
     }
 
     function ember$data$lib$adapters$build$url$mixin$$urlForFindQuery(query, modelName) {
@@ -8410,7 +8411,10 @@
 
       instanceFor: function (key) {
         if (key === 'adapter:-rest') {
-          ember$lib$main$$default.deprecate('You are currently using the default DS.RESTAdapter adapter. For Ember 2.0 the default adapter will be DS.JSONAPIAdapter. If you would like to continue using DS.RESTAdapter please create an application adapter that extends DS.RESTAdapter.');
+          ember$lib$main$$default.deprecate('You are currently using the default DS.RESTAdapter adapter. For Ember 2.0 the default adapter will be DS.JSONAPIAdapter. If you would like to continue using DS.RESTAdapter please create an application adapter that extends DS.RESTAdapter.', false, {
+            id: 'ds.adapter.default-adapter-changing-to-json-api',
+            until: '2.0.0'
+          });
         }
 
         var cache = this._cache;
@@ -13151,11 +13155,10 @@
       adapterFor: function (modelOrClass) {
         var modelName;
 
-        
-        if (typeof modelOrClass !== 'string') {
-          modelName = modelOrClass.modelName;
-        } else {
+        if (typeof modelOrClass === 'string') {
           modelName = modelOrClass;
+        } else {
+                    modelName = modelOrClass.modelName;
         }
 
         return this.lookupAdapter(modelName);
@@ -13189,10 +13192,10 @@
       serializerFor: function (modelOrClass) {
         var modelName;
 
-                if (typeof modelOrClass !== 'string') {
-          modelName = modelOrClass.modelName;
-        } else {
+        if (typeof modelOrClass === 'string') {
           modelName = modelOrClass;
+        } else {
+                    modelName = modelOrClass.modelName;
         }
 
         var fallbacks = ['application', this.adapterFor(modelName).get('defaultSerializer'), '-default'];
@@ -15417,7 +15420,12 @@
 
       return ember$new$computed$lib$main$$default({
         get: function (key) {
-                    
+          if (opts.hasOwnProperty('serialize')) {
+                      }
+
+          if (opts.hasOwnProperty('embedded')) {
+                      }
+
           if (meta.shouldWarnAsync) {
                         meta.shouldWarnAsycn = false;
           }
@@ -15861,7 +15869,6 @@
 
         var inverseName, inverseKind, inverse;
 
-        
         //If inverse is specified manually, return the inverse
         if (options.inverse) {
           inverseName = options.inverse;
@@ -15871,6 +15878,9 @@
           inverseKind = inverse.kind;
         } else {
           //No inverse was specified manually, we need to use a heuristic to guess one
+          if (propertyMeta.type === propertyMeta.parentType.modelName) {
+                      }
+
           var possibleRelationships = findPossibleInverses(this, inverseType);
 
           if (possibleRelationships.length === 0) {
