@@ -823,8 +823,7 @@
         @return {Boolean}
       */
       shouldReloadAll: function (store, snapshotRecordArray) {
-        var modelName = snapshotRecordArray.type.modelName;
-                return true;
+        return !snapshotRecordArray.length;
       },
 
       /**
@@ -841,7 +840,7 @@
         @return {Boolean}
       */
       shouldBackgroundReloadRecord: function (store, snapshot) {
-                return false;
+        return true;
       },
 
       /**
@@ -2126,7 +2125,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.e7ae436edb'
+      VERSION: '2.0.0+canary.79de9316f8'
     });
 
     if (Ember.libraries) {

@@ -580,18 +580,6 @@ define(
       }, "You cannot pass `null` as id to the store's find method");
     });
 
-    test("store.findAll should trigger a deprecation warning about store.shouldReloadAll", function () {
-      env.adapter.findAll = function () {
-        return Ember.RSVP.resolve([]);
-      };
-
-      run(function () {
-        expectDeprecation(function () {
-          store.findAll('person');
-        }, 'The default behavior of shouldReloadAll will change in Ember Data 2.0 to always return false when there is at least one "person" record in the store. If you would like to preserve the current behavior please override shouldReloadAll in your adapter:application and return true.');
-      });
-    });
-
     test("When a single record is requested, the adapter's find method should be called unless it's loaded.", function () {
       expect(2);
 
@@ -1688,7 +1676,14 @@ define(
           return "Person";
         };
 
-        env = setupStore({ person: Person });
+        env = setupStore({
+          adapter: DS.Adapter.extend({
+            shouldBackgroundReloadRecord: function () {
+              return false;
+            }
+          }),
+          person: Person
+        });
         store = env.store;
       },
 
@@ -1721,11 +1716,13 @@ define(
 
       var tom;
 
-      env.store.find('person', 1).then(async(function (person) {
-        tom = person;
-        set(tom, "name", "Tom Dale");
-        tom.save();
-      }));
+      run(function () {
+        env.store.findRecord('person', 1).then(async(function (person) {
+          tom = person;
+          set(tom, "name", "Tom Dale");
+          tom.save();
+        }));
+      });
     });
 
     test("When a store is committed, the adapter's `commit` method should be called with records that have been created.", function () {
@@ -2556,24 +2553,28 @@ define(
         });
       });
 
-      store.find('post', 1).then(async(function (post) {
+      run(function () {
+        var post = store.peekRecord('post', 1);
         ajaxResponse();
 
         post.set('name', "The Parley Letter");
-        return post.save();
-      })).then(async(function (post) {
-        equal(passedUrl, "/posts/1");
-        equal(passedVerb, "PUT");
-        deepEqual(passedHash.data, { post: { name: "The Parley Letter" } });
+        post.save().then(async(function (post) {
+          equal(passedUrl, "/posts/1");
+          equal(passedVerb, "PUT");
+          deepEqual(passedHash.data, { post: { name: "The Parley Letter" } });
 
-        equal(post.get('hasDirtyAttributes'), false, "the post isn't dirty anymore");
-        equal(post.get('name'), "The Parley Letter", "the post was updated");
-      }));
+          equal(post.get('hasDirtyAttributes'), false, "the post isn't dirty anymore");
+          equal(post.get('name'), "The Parley Letter", "the post was updated");
+        }));
+      });
     });
 
     test("update - passes the requestType to buildURL", function () {
       adapter.buildURL = function (type, id, snapshot, requestType) {
         return "/posts/" + id + "/" + requestType;
+      };
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
       };
 
       run(function () {
@@ -2588,17 +2589,22 @@ define(
         });
       });
 
-      store.find('post', 1).then(async(function (post) {
-        ajaxResponse();
+      run(function () {
+        store.findRecord('post', 1).then(async(function (post) {
+          ajaxResponse();
 
-        post.set('name', "The Parley Letter");
-        return post.save();
-      })).then(async(function (post) {
-        equal(passedUrl, "/posts/1/updateRecord");
-      }));
+          post.set('name', "The Parley Letter");
+          return post.save();
+        })).then(async(function (post) {
+          equal(passedUrl, "/posts/1/updateRecord");
+        }));
+      });
     });
 
     test("update - a payload with updates applies the updates", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       run(function () {
         store.push({
           data: {
@@ -2611,7 +2617,7 @@ define(
         });
       });
 
-      store.find('post', 1).then(async(function (post) {
+      store.findRecord('post', 1).then(async(function (post) {
         ajaxResponse({ posts: [{ id: 1, name: "Dat Parley Letter" }] });
 
         post.set('name', "The Parley Letter");
@@ -2627,6 +2633,9 @@ define(
     });
 
     test("update - a payload with updates applies the updates (with legacy singular name)", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       run(function () {
         store.push({
           data: {
@@ -2639,7 +2648,7 @@ define(
         });
       });
 
-      store.find('post', 1).then(async(function (post) {
+      store.findRecord('post', 1).then(async(function (post) {
         ajaxResponse({ post: { id: 1, name: "Dat Parley Letter" } });
 
         post.set('name', "The Parley Letter");
@@ -2678,6 +2687,9 @@ define(
     });
 
     test("update - a payload with sideloaded updates pushes the updates", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       run(function () {
         store.push({
           data: {
@@ -2690,7 +2702,7 @@ define(
         });
       });
 
-      store.find('post', 1).then(async(function (post) {
+      store.findRecord('post', 1).then(async(function (post) {
         ajaxResponse({
           posts: [{ id: 1, name: "Dat Parley Letter" }],
           comments: [{ id: 1, name: "FIRST" }]
@@ -2712,6 +2724,9 @@ define(
     });
 
     test("update - a serializer's primary key and attributes are consulted when building the payload", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       env.registry.register('serializer:post', DS.RESTSerializer.extend({
         primaryKey: '_id_',
 
@@ -2731,7 +2746,7 @@ define(
       });
       ajaxResponse();
 
-      store.find('post', 1).then(async(function (post) {
+      store.findRecord('post', 1).then(async(function (post) {
         post.set('name', "The Parley Letter");
         return post.save();
       })).then(async(function (post) {
@@ -2742,6 +2757,9 @@ define(
     test("update - hasMany relationships faithfully reflect simultaneous adds and removes", function () {
       Post.reopen({ comments: DS.hasMany('comment', { async: false }) });
       Comment.reopen({ post: DS.belongsTo('post', { async: false }) });
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       run(function () {
         store.push({
@@ -2777,8 +2795,8 @@ define(
         posts: { id: 1, name: "Not everyone uses Rails", comments: [2] }
       });
 
-      store.find('comment', 2).then(async(function () {
-        return store.find('post', 1);
+      store.findRecord('comment', 2).then(async(function () {
+        return store.findRecord('post', 1);
       })).then(async(function (post) {
         var newComment = store.peekRecord('comment', 2);
         var comments = post.get('comments');
@@ -2795,6 +2813,9 @@ define(
     });
 
     test("delete - an empty payload is a basic success", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       run(function () {
         store.push({
           data: {
@@ -2807,7 +2828,7 @@ define(
         });
       });
 
-      store.find('post', 1).then(async(function (post) {
+      store.findRecord('post', 1).then(async(function (post) {
         ajaxResponse();
 
         post.deleteRecord();
@@ -2823,6 +2844,9 @@ define(
     });
 
     test("delete - passes the requestType to buildURL", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.buildURL = function (type, id, snapshot, requestType) {
         return "/posts/" + id + "/" + requestType;
       };
@@ -2839,7 +2863,7 @@ define(
         });
       });
 
-      store.find('post', 1).then(async(function (post) {
+      store.findRecord('post', 1).then(async(function (post) {
         ajaxResponse();
 
         post.deleteRecord();
@@ -2850,6 +2874,9 @@ define(
     });
 
     test("delete - a payload with sideloaded updates pushes the updates", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       run(function () {
         store.push({
           data: {
@@ -2862,7 +2889,7 @@ define(
         });
       });
 
-      store.find('post', 1).then(async(function (post) {
+      store.findRecord('post', 1).then(async(function (post) {
         ajaxResponse({ comments: [{ id: 1, name: "FIRST" }] });
 
         post.deleteRecord();
@@ -2881,6 +2908,9 @@ define(
     });
 
     test("delete - a payload with sidloaded updates pushes the updates when the original record is omitted", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       run(function () {
         store.push({
           data: {
@@ -2893,7 +2923,7 @@ define(
         });
       });
 
-      store.find('post', 1).then(async(function (post) {
+      store.findRecord('post', 1).then(async(function (post) {
         ajaxResponse({ posts: [{ id: 2, name: "The Parley Letter" }] });
 
         post.deleteRecord();
@@ -3320,6 +3350,9 @@ define(
     });
 
     test("findMany - returning an array populates the array", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
       adapter.coalesceFindRequests = true;
 
@@ -3340,7 +3373,7 @@ define(
         });
       });
 
-      store.find('post', 1).then(async(function (post) {
+      store.findRecord('post', 1).then(async(function (post) {
         ajaxResponse({
           comments: [{ id: 1, name: "FIRST" }, { id: 2, name: "Rails is unagi" }, { id: 3, name: "What is omakase?" }]
         });
@@ -3360,6 +3393,9 @@ define(
     });
 
     test("findMany - returning sideloaded data loads the data", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
       adapter.coalesceFindRequests = true;
 
@@ -3380,7 +3416,7 @@ define(
         });
       });
 
-      store.find('post', 1).then(async(function (post) {
+      store.findRecord('post', 1).then(async(function (post) {
         ajaxResponse({
           comments: [{ id: 1, name: "FIRST" }, { id: 2, name: "Rails is unagi" }, { id: 3, name: "What is omakase?" }, { id: 4, name: "Unrelated comment" }],
           posts: [{ id: 2, name: "The Parley Letter" }]
@@ -3402,6 +3438,9 @@ define(
     });
 
     test("findMany - a custom serializer is used if present", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       env.registry.register('serializer:post', DS.RESTSerializer.extend({
         primaryKey: '_ID_',
         attrs: { name: '_NAME_' }
@@ -3432,7 +3471,7 @@ define(
         });
       });
 
-      store.find('post', 1).then(async(function (post) {
+      store.findRecord('post', 1).then(async(function (post) {
         ajaxResponse({
           comments: [{ _ID_: 1, _NAME_: "FIRST" }, { _ID_: 2, _NAME_: "Rails is unagi" }, { _ID_: 3, _NAME_: "What is omakase?" }]
         });
@@ -3452,6 +3491,9 @@ define(
     });
 
     test("findHasMany - returning an array populates the array", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
 
       run(function () {
@@ -3473,7 +3515,7 @@ define(
         });
       });
 
-      run(store, 'find', 'post', '1').then(async(function (post) {
+      run(store, 'findRecord', 'post', '1').then(async(function (post) {
         ajaxResponse({
           comments: [{ id: 1, name: "FIRST" }, { id: 2, name: "Rails is unagi" }, { id: 3, name: "What is omakase?" }]
         });
@@ -3497,6 +3539,9 @@ define(
     });
 
     test("findHasMany - passes buildURL the requestType", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.buildURL = function (type, id, snapshot, requestType) {
         equal(requestType, 'findHasMany');
       };
@@ -3522,7 +3567,7 @@ define(
         });
       });
 
-      run(store, 'find', 'post', '1').then(async(function (post) {
+      run(store, 'findRecord', 'post', '1').then(async(function (post) {
         ajaxResponse({
           comments: [{ id: 1, name: "FIRST" }, { id: 2, name: "Rails is unagi" }, { id: 3, name: "What is omakase?" }]
         });
@@ -3534,6 +3579,9 @@ define(
     });
 
     test("findMany - returning sideloaded data loads the data", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
       adapter.coalesceFindRequests = true;
 
@@ -3556,7 +3604,7 @@ define(
         });
       });
 
-      store.find('post', 1).then(async(function (post) {
+      store.findRecord('post', 1).then(async(function (post) {
         ajaxResponse({
           comments: [{ id: 1, name: "FIRST" }, { id: 2, name: "Rails is unagi" }, { id: 3, name: "What is omakase?" }],
           posts: [{ id: 2, name: "The Parley Letter" }]
@@ -3576,6 +3624,9 @@ define(
     });
 
     test("findMany - a custom serializer is used if present", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       env.registry.register('serializer:post', DS.RESTSerializer.extend({
         primaryKey: '_ID_',
         attrs: { name: '_NAME_' }
@@ -3607,7 +3658,7 @@ define(
         });
       });
 
-      store.find('post', 1).then(async(function (post) {
+      store.findRecord('post', 1).then(async(function (post) {
         ajaxResponse({
           comments: [{ _ID_: 1, _NAME_: "FIRST" }, { _ID_: 2, _NAME_: "Rails is unagi" }, { _ID_: 3, _NAME_: "What is omakase?" }]
         });
@@ -3626,6 +3677,9 @@ define(
     });
 
     test('findBelongsTo - passes buildURL the requestType', function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.buildURL = function (type, id, snapshot, requestType) {
         equal(requestType, 'findBelongsTo');
       };
@@ -3651,7 +3705,7 @@ define(
         });
       });
 
-      run(store, 'find', 'comment', 1).then(async(function (comment) {
+      run(store, 'findRecord', 'comment', 1).then(async(function (comment) {
         ajaxResponse({ post: { id: 1, name: 'Rails is omakase' } });
         return comment.get('post');
       })).then(async(function (post) {
@@ -4285,7 +4339,9 @@ define(
 
     test("by default, createRecords calls createRecord once per record", function () {
       var count = 1;
-
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.createRecord = function (store, type, snapshot) {
         equal(type, Person, "the type is correct");
 
@@ -4330,7 +4386,9 @@ define(
 
     test("by default, updateRecords calls updateRecord once per record", function () {
       var count = 0;
-
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.updateRecord = function (store, type, snapshot) {
         equal(type, Person, "the type is correct");
 
@@ -4396,7 +4454,9 @@ define(
 
     test("calling store.didSaveRecord can provide an optional hash", function () {
       var count = 0;
-
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.updateRecord = function (store, type, snapshot) {
         equal(type, Person, "the type is correct");
 
@@ -4460,7 +4520,9 @@ define(
       expect(4);
 
       var count = 0;
-
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.deleteRecord = function (store, type, snapshot) {
         equal(type, Person, "the type is correct");
 
@@ -4518,7 +4580,9 @@ define(
       expect(4);
 
       var count = 0;
-
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.deleteRecord = function (store, type, snapshot) {
         equal(type, Person, "the type is correct");
 
@@ -4573,7 +4637,9 @@ define(
       expect(5);
 
       var count = 0;
-
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.deleteRecord = function (store, type, snapshot) {
         count++;
         equal(snapshot.id, 'deleted-record', "should pass correct record to deleteRecord");
@@ -4617,6 +4683,9 @@ define(
       var count = 0;
       var error = new DS.AdapterError();
 
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.deleteRecord = function (store, type, snapshot) {
         if (count++ === 0) {
           return Ember.RSVP.reject(error);
@@ -4804,6 +4873,9 @@ define(
     });
 
     test("if an updated record is marked as invalid by the server, it enters an error state", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.updateRecord = function (store, type, snapshot) {
         equal(type, Person, "the type is correct");
 
@@ -4858,6 +4930,9 @@ define(
     });
 
     test("records can have errors on arbitrary properties after update", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.updateRecord = function (store, type, snapshot) {
         if (snapshot.attr('name').indexOf('Bro') === -1) {
           return Ember.RSVP.reject(new DS.InvalidError({ base: ['is a generally unsavoury character'] }));
@@ -4915,6 +4990,9 @@ define(
 
     test("if an updated record is marked as invalid by the server, you can attempt the save again", function () {
       var saveCount = 0;
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.updateRecord = function (store, type, snapshot) {
         equal(type, Person, "the type is correct");
         saveCount++;
@@ -4974,6 +5052,9 @@ define(
     test("if a updated record is marked as erred by the server, it enters an error state", function () {
       var error = new DS.AdapterError();
 
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.updateRecord = function (store, type, snapshot) {
         return Ember.RSVP.reject(error);
       };
@@ -5015,6 +5096,9 @@ define(
     });
 
     test("the filter method can optionally take a server query as well", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.query = function (store, type, query, array) {
         return Ember.RSVP.resolve([{ id: 1, name: "Yehuda Katz" }, { id: 2, name: "Tom Dale" }]);
       };
@@ -5100,6 +5184,9 @@ define(
     });
 
     test("relationships don't get reset if the links is the same", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       Person.reopen({
         dogs: DS.hasMany({ async: true })
       });
@@ -6028,8 +6115,12 @@ define(
             return 'App';
           };
 
-          App.StoreService = DS.Store.extend({
-            adapter: DS.Adapter.extend()
+          App.StoreService = DS.Store.extend({});
+
+          App.ApplicationAdapter = DS.Adapter.extend({
+            shouldBackgroundReloadRecord: function () {
+              return false;
+            }
           });
 
           App.Post = DS.Model.extend({
@@ -6392,6 +6483,9 @@ define(
       customAdapter(env, DS.Adapter.extend({
         deleteRecord: function (store, type, snapshot) {
           return Ember.RSVP.resolve();
+        },
+        shouldBackgroundReloadRecord: function () {
+          return false;
         }
       }));
 
@@ -6469,6 +6563,9 @@ define(
       customAdapter(env, DS.Adapter.extend({
         deleteRecord: function (store, type, snapshot) {
           return Ember.RSVP.resolve();
+        },
+        shouldBackgroundReloadRecord: function () {
+          return false;
         }
       }));
 
@@ -6571,6 +6668,11 @@ define(
     });
 
     test("it is possible to filter by computed properties", function () {
+      customAdapter(env, DS.Adapter.extend({
+        shouldBackgroundReloadRecord: function () {
+          return false;
+        }
+      }));
       Person.reopen({
         name: DS.attr('string'),
         upperName: Ember.computed(function () {
@@ -6611,6 +6713,11 @@ define(
     });
 
     test("a filter created after a record is already loaded works", function () {
+      customAdapter(env, DS.Adapter.extend({
+        shouldBackgroundReloadRecord: function () {
+          return false;
+        }
+      }));
       Person.reopen({
         name: DS.attr('string'),
         upperName: Ember.computed(function () {
@@ -6702,6 +6809,9 @@ define(
       customAdapter(env, DS.Adapter.extend({
         updateRecord: function () {
           return Ember.RSVP.resolve();
+        },
+        shouldBackgroundReloadRecord: function () {
+          return false;
         }
       }));
 
@@ -6743,6 +6853,9 @@ define(
         customAdapter(env, DS.Adapter.extend({
           createRecord: function () {
             return Ember.RSVP.resolve();
+          },
+          shouldBackgroundReloadRecord: function () {
+            return false;
           }
         }));
       });
@@ -6853,6 +6966,9 @@ define(
       setup({
         updateRecord: function (store, type, snapshot) {
           return Ember.RSVP.resolve({ id: 1, name: "Scumbag Server-side Dale" });
+        },
+        shouldBackgroundReloadRecord: function () {
+          return false;
         }
       });
 
@@ -6872,6 +6988,9 @@ define(
             case "2":
               return Ember.RSVP.resolve({ id: 2, name: "Scumbag Server-side Katz" });
           }
+        },
+        shouldBackgroundReloadRecord: function () {
+          return false;
         }
       });
 
@@ -6938,6 +7057,11 @@ define(
       var filterFn = tapFn(function () {
         return true;
       });
+      customAdapter(env, DS.Adapter.extend({
+        shouldBackgroundReloadRecord: function () {
+          return false;
+        }
+      }));
       run(function () {
         store.push({
           data: [{
@@ -7253,6 +7377,12 @@ define(
     });
 
     test("should be able to push into multiple stores", function () {
+      env.registry.register('adapter:home-planet', DS.RESTAdapter.extend({
+        shouldBackgroundReloadRecord: function () {
+          return false;
+        }
+      }));
+
       var home_planet_main = { id: '1', name: 'Earth' };
       var home_planet_a = { id: '1', name: 'Mars' };
       var home_planet_b = { id: '1', name: 'Saturn' };
@@ -7263,15 +7393,15 @@ define(
         env.store_b.push(env.store_b.normalize('home-planet', home_planet_b));
       });
 
-      run(env.store, 'find', 'home-planet', 1).then(async(function (homePlanet) {
+      run(env.store, 'findRecord', 'home-planet', 1).then(async(function (homePlanet) {
         equal(homePlanet.get('name'), "Earth");
       }));
 
-      run(env.store_a, 'find', 'home-planet', 1).then(async(function (homePlanet) {
+      run(env.store_a, 'findRecord', 'home-planet', 1).then(async(function (homePlanet) {
         equal(homePlanet.get('name'), "Mars");
       }));
 
-      run(env.store_b, 'find', 'home-planet', 1).then(async(function (homePlanet) {
+      run(env.store_b, 'findRecord', 'home-planet', 1).then(async(function (homePlanet) {
         equal(homePlanet.get('name'), "Saturn");
       }));
     });
@@ -8274,6 +8404,9 @@ define(
     });
 
     test("When a record is loaded a second time, isLoaded stays true", function () {
+      env.adapter.findRecord = function (store, type, id, snapshot) {
+        return { id: 1, name: "Tom Dale" };
+      };
       run(function () {
         env.store.push({
           data: {
@@ -8747,6 +8880,12 @@ define(
 
     test("unloading a record also clears its relationship", function () {
       var adam, bob;
+
+      // disable background reloading so we do not re-create the relationship.
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
+
       run(function () {
         env.store.push({
           data: {
@@ -8785,7 +8924,7 @@ define(
       });
 
       run(function () {
-        env.store.find('person', 1).then(function (person) {
+        env.store.findRecord('person', 1).then(function (person) {
           equal(person.get('cars.length'), 1, 'The inital length of cars is correct');
 
           run(function () {
@@ -8799,6 +8938,11 @@ define(
 
     test("unloading a record also clears the implicit inverse relationships", function () {
       var adam, bob;
+      // disable background reloading so we do not re-create the relationship.
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
+
       run(function () {
         env.store.push({
           data: {
@@ -8828,7 +8972,7 @@ define(
       });
 
       run(function () {
-        env.store.find('group', 1).then(function (group) {
+        env.store.findRecord('group', 1).then(function (group) {
           equal(group.get('people.length'), 1, 'The inital length of people is correct');
           var person = env.store.peekRecord('person', 1);
           run(function () {
@@ -8960,7 +9104,9 @@ define(
           inverse: 'messages'
         })
       });
-
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       env.adapter.findRecord = function (store, type, id, snapshot) {
         ok(true, "The adapter's find method should be called");
         return Ember.RSVP.resolve({
@@ -8994,7 +9140,9 @@ define(
 
     test("Only a record of the same type can be used with a monomorphic belongsTo relationship", function () {
       expect(1);
-
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       run(function () {
         store.push({
           data: {
@@ -9023,6 +9171,9 @@ define(
     });
 
     test("Only a record of the same base type can be used with a polymorphic belongsTo relationship", function () {
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       expect(1);
       run(function () {
         store.push({
@@ -9071,6 +9222,9 @@ define(
     });
 
     test("The store can load a polymorphic belongsTo association", function () {
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       run(function () {
         env.store.push({
           data: {
@@ -9106,6 +9260,9 @@ define(
     });
 
     test("The store can serialize a polymorphic belongsTo association", function () {
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       var serializerInstance = store.serializerFor('comment');
 
       serializerInstance.serializePolymorphicType = function (record, json, relationship) {
@@ -9143,6 +9300,9 @@ define(
     });
 
     test("A serializer can materialize a belongsTo as a link that gets sent back to findBelongsTo", function () {
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       var Group = DS.Model.extend({
         people: DS.hasMany('person', { async: false })
       });
@@ -9193,6 +9353,9 @@ define(
     });
 
     test('A record with an async belongsTo relationship always returns a promise for that relationship', function () {
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       var Seat = DS.Model.extend({
         person: DS.belongsTo('person', { async: false })
       });
@@ -9243,6 +9406,9 @@ define(
     test("A record with an async belongsTo relationship returning null should resolve null", function () {
       expect(1);
 
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       var Group = DS.Model.extend({
         people: DS.hasMany('person', { async: false })
       });
@@ -9288,6 +9454,9 @@ define(
     test("A record can be created with a resolved belongsTo promise", function () {
       expect(1);
 
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       var Group = DS.Model.extend({
         people: DS.hasMany('person', { async: false })
       });
@@ -9938,6 +10107,10 @@ define(
         ok(false, "The adapter's find method should not be called");
       };
 
+      env.adapter.findRecord = function (store, type, ids, snapshots) {
+        return { id: 1, comments: [1] };
+      };
+
       run(function () {
         env.store.push({
           data: {
@@ -9968,6 +10141,10 @@ define(
         deepEqual(ids, ['2', '3'], 'ids passed to adapter.findMany are unique');
 
         return Ember.RSVP.resolve([{ id: 2, title: 'Chapter One' }, { id: 3, title: 'Chapter Two' }]);
+      };
+
+      env.adapter.findRecord = function (store, type, ids, snapshots) {
+        return { id: 1, chapters: [2, 3, 3] };
       };
 
       run(function () {
@@ -10537,6 +10714,10 @@ define(
         ok(false, "The adapter's find method should not be called");
       };
 
+      env.adapter.findRecord = function (store, type, ids, snapshots) {
+        return { id: 1, messages: [{ id: 1, type: 'post' }, { id: 3, type: 'comment' }] };
+      };
+
       run(function () {
         env.store.push({
           data: {
@@ -10570,7 +10751,9 @@ define(
       User.reopen({
         messages: hasMany('message', { polymorphic: true, async: true })
       });
-
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       env.adapter.findRecord = function (store, type, id, snapshot) {
         if (type === Post) {
           return Ember.RSVP.resolve({ id: 1 });
@@ -10624,6 +10807,11 @@ define(
 
     test("Type can be inferred from the key of a hasMany relationship", function () {
       expect(1);
+
+      env.adapter.findRecord = function (store, type, ids, snapshots) {
+        return { id: 1, contacts: [1] };
+      };
+
       run(function () {
         env.store.push({
           data: {
@@ -10651,11 +10839,16 @@ define(
     });
 
     test("Type can be inferred from the key of an async hasMany relationship", function () {
+      expect(1);
+
       User.reopen({
         contacts: DS.hasMany({ async: true })
       });
 
-      expect(1);
+      env.adapter.findRecord = function (store, type, ids, snapshots) {
+        return { id: 1, contacts: [1] };
+      };
+
       run(function () {
         env.store.push({
           data: {
@@ -10686,6 +10879,10 @@ define(
       User.reopen({
         contacts: DS.hasMany({ polymorphic: true, async: false })
       });
+
+      env.adapter.findRecord = function (store, type, ids, snapshots) {
+        return { id: 1 };
+      };
 
       expect(1);
       run(function () {
@@ -10741,6 +10938,9 @@ define(
     });
 
     test("A record can't be created from a polymorphic hasMany relationship", function () {
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       run(function () {
         env.store.push({
           data: {
@@ -10768,6 +10968,9 @@ define(
 
     test("Only records of the same type can be added to a monomorphic hasMany relationship", function () {
       expect(1);
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       run(function () {
         env.store.push({
           data: [{
@@ -10796,6 +10999,9 @@ define(
 
     test("Only records of the same base type can be added to a polymorphic hasMany relationship", function () {
       expect(2);
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       run(function () {
         env.store.push({
           data: [{
@@ -10856,7 +11062,9 @@ define(
 
     test("A record can be removed from a polymorphic association", function () {
       expect(4);
-
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       run(function () {
         env.store.push({
           data: {
@@ -11678,7 +11886,11 @@ define(
       env = setupStore({
         post: Post,
         comment: Comment,
-        adapter: DS.RESTAdapter
+        adapter: DS.RESTAdapter.extend({
+          shouldBackgroundReloadRecord: function () {
+            return false;
+          }
+        })
       });
 
       env.registry.register('adapter:comment', DS.RESTAdapter.extend({
@@ -20459,6 +20671,9 @@ define(
 
     test("destroying the store correctly cleans everything up", function () {
       var car, person;
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       run(function () {
         store.push({
           data: [{
@@ -20649,8 +20864,8 @@ define(
       });
     });
 
-    test("Using store#findAll with existing records performs a query, updating existing records and returning new ones", function () {
-      expect(3);
+    test("Using store#findAll with existing records performs a query in the background, updating existing records and returning new ones", function () {
+      expect(4);
 
       run(function () {
         store.push({
@@ -20682,15 +20897,20 @@ define(
 
       run(function () {
         store.findAll('car').then(function (cars) {
-          equal(cars.get('length'), 2, 'There is 2 cars in the store now');
-          var mini = cars.findBy('id', '1');
-          equal(mini.get('model'), 'New Mini', 'Existing records have been updated');
+          equal(cars.get('length'), 1, 'Store resolves with the existing records');
         });
+      });
+
+      run(function () {
+        var cars = store.peekAll('car');
+        equal(cars.get('length'), 2, 'There is 2 cars in the store now');
+        var mini = cars.findBy('id', '1');
+        equal(mini.get('model'), 'New Mini', 'Existing records have been updated');
       });
     });
 
-    test("store#findAll should return all known records even if they are not in the adapter response", function () {
-      expect(4);
+    test("store#findAll should eventually return all known records even if they are not in the adapter response", function () {
+      expect(5);
 
       run(function () {
         store.push({
@@ -20726,12 +20946,19 @@ define(
       run(function () {
         store.findAll('car').then(function (cars) {
           equal(cars.get('length'), 2, 'It returns all cars');
-          var mini = cars.findBy('id', '1');
-          equal(mini.get('model'), 'New Mini', 'Existing records have been updated');
 
           var carsInStore = store.peekAll('car');
           equal(carsInStore.get('length'), 2, 'There is 2 cars in the store');
         });
+      });
+
+      run(function () {
+        var cars = store.peekAll('car');
+        var mini = cars.findBy('id', '1');
+        equal(mini.get('model'), 'New Mini', 'Existing records have been updated');
+
+        var carsInStore = store.peekAll('car');
+        equal(carsInStore.get('length'), 2, 'There is 2 cars in the store');
       });
     });
 
@@ -20897,9 +21124,9 @@ define(
       }));
 
       run(function () {
-        store.queryRecord('person', {}).then(null, async(function (reason) {
+        store.queryRecord('person', {})["catch"](function (reason) {
           ok(true, "The rejection handler was called");
-        }));
+        });
       });
     });
 
@@ -21853,7 +22080,9 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
   test("setting a property on a record that has not changed does not cause it to become dirty", function () {
     expect(2);
-
+    env.adapter.shouldBackgroundReloadRecord = function () {
+      return false;
+    };
     run(function () {
       store.push({
         data: {
@@ -21879,6 +22108,9 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
   test("resetting a property on a record cause it to become clean again", function () {
     expect(3);
+    env.adapter.shouldBackgroundReloadRecord = function () {
+      return false;
+    };
 
     run(function () {
       store.push({
@@ -21903,6 +22135,9 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
   test("a record becomes clean again only if all changed properties are reset", function () {
     expect(5);
+    env.adapter.shouldBackgroundReloadRecord = function () {
+      return false;
+    };
 
     run(function () {
       store.push({
@@ -21931,6 +22166,9 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
   test("a record reports its unique id via the `id` property", function () {
     expect(1);
+    env.adapter.shouldBackgroundReloadRecord = function () {
+      return false;
+    };
 
     run(function () {
       store.push({
@@ -21947,6 +22185,9 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
   test("a record's id is included in its toString representation", function () {
     expect(1);
+    env.adapter.shouldBackgroundReloadRecord = function () {
+      return false;
+    };
 
     run(function () {
       store.push({
@@ -21989,6 +22230,9 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
   test("a collision of a record's id with object function's name", function () {
     expect(1);
+    env.adapter.shouldBackgroundReloadRecord = function () {
+      return false;
+    };
 
     var hasWatchMethod = Object.prototype.watch;
     try {
@@ -22241,6 +22485,9 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
   test("a DS.Model can update its attributes", function () {
     expect(1);
+    env.adapter.shouldBackgroundReloadRecord = function () {
+      return false;
+    };
 
     run(function () {
       store.findRecord('person', 2).then(function (person) {
@@ -22372,6 +22619,9 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
   // thrown out if/when the current `_attributes` hash logic is removed.
   test("setting a property back to its original value removes the property from the `_attributes` hash", function () {
     expect(3);
+    env.adapter.shouldBackgroundReloadRecord = function () {
+      return false;
+    };
 
     run(function () {
       store.findRecord('person', 1).then(function (person) {
@@ -22520,9 +22770,8 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     run(function () {
       testStore.push(testStore.normalize('model', { id: 1, name: provided }));
       testStore.push(testStore.normalize('model', { id: 2 }));
-      testStore.findRecord('model', 1).then(function (record) {
-        deepEqual(get(record, 'name'), expected, type + " coerces " + provided + " to " + expected);
-      });
+      var record = testStore.peekRecord('model', 1);
+      deepEqual(get(record, 'name'), expected, type + " coerces " + provided + " to " + expected);
     });
 
     // See: Github issue #421
@@ -22544,7 +22793,14 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
       container = new Ember.Container();
       registry = container;
     }
-    var testStore = createStore({ model: Model });
+    var testStore = createStore({
+      model: Model,
+      adapter: DS.Adapter.extend({
+        shouldBackgroundReloadRecord: function () {
+          return false;
+        }
+      })
+    });
 
     run(function () {
       testStore.push(testStore.normalize('model', { id: "1", name: provided }));
@@ -22559,7 +22815,14 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
       name: DS.attr(type)
     });
 
-    var testStore = createStore({ model: Model });
+    var testStore = createStore({
+      model: Model,
+      adapter: DS.Adapter.extend({
+        shouldBackgroundReloadRecord: function () {
+          return false;
+        }
+      })
+    });
 
     run(function () {
       testStore.push({
@@ -22626,7 +22889,12 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     });
 
     var store = createStore({
-      person: Person
+      person: Person,
+      adapter: DS.Adapter.extend({
+        shouldBackgroundReloadRecord: function () {
+          return false;
+        }
+      })
     });
 
     run(function () {
@@ -23735,6 +24003,9 @@ define(
 
       var env = setupStore({ tag: Tag, person: Person });
       var store = env.store;
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       run(function () {
         store.push({
@@ -23864,12 +24135,11 @@ define(
       });
 
       run(function () {
-        store.findRecord('person', 1).then(async(function (person) {
-          equal(get(person, 'name'), "Tom Dale", "The person is now populated");
-          return run(function () {
-            return get(person, 'tag');
-          });
-        })).then(async(function (tag) {
+        var person = store.peekRecord('person', 1);
+        equal(get(person, 'name'), "Tom Dale", "The person is now populated");
+        return run(function () {
+          return get(person, 'tag');
+        }).then(async(function (tag) {
           equal(get(tag, 'name'), "friendly", "Tom Dale is now friendly");
           equal(get(tag, 'isLoaded'), true, "Tom Dale is now loaded");
         }));
@@ -23891,6 +24161,9 @@ define(
 
       var env = setupStore({ tag: Tag, person: Person });
       var store = env.store;
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       run(function () {
         store.createRecord('person', { id: 1, tag: undefined });
@@ -23924,6 +24197,9 @@ define(
 
       var env = setupStore({ occupation: Occupation, person: Person });
       var store = env.store;
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       env.adapter.findMany = function (store, type, ids, snapshots) {
         equal(snapshots[0].belongsTo('person').id, '1');
@@ -24036,6 +24312,9 @@ define(
 
       var env = setupStore({ tag: Tag, person: Person });
       var store = env.store;
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       run(function () {
         store.push({
@@ -24103,6 +24382,9 @@ define(
 
       var env = setupStore({ hobby: Hobby, person: Person });
       var store = env.store;
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       run(function () {
         store.push({
@@ -24160,6 +24442,9 @@ define(
 
       var env = setupStore({ hobby: Hobby, person: Person });
       var store = env.store;
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       run(function () {
         store.push({
@@ -24272,6 +24557,9 @@ define(
         } else {
           ok(false, "findRecord() should not be called with these values");
         }
+      };
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
       };
 
       var store = env.store;
@@ -24458,6 +24746,9 @@ define(
           ok(false, "findRecord() should not be called with these values");
         }
       };
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       var store = env.store;
 
@@ -24630,6 +24921,9 @@ define(
         person: Person,
         tag: Tag
       });
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       run(function () {
         env.store.push({
@@ -24745,6 +25039,9 @@ define(
         tag: Tag,
         person: Person
       });
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       var store = env.store;
 
@@ -24870,6 +25167,9 @@ define(
 
       var env = setupStore({ tag: Tag, person: Person });
       var store = env.store;
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       run(function () {
         store.push({
@@ -25060,6 +25360,9 @@ define(
 
       var env = setupStore({ tag: Tag, person: Person });
       var store = env.store;
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       run(function () {
         store.push({
@@ -25648,7 +25951,12 @@ define(
       expect(3);
 
       var store = createStore({
-        person: Person
+        person: Person,
+        adapter: DS.Adapter.extend({
+          shouldBackgroundReloadRecord: function () {
+            return false;
+          }
+        })
       });
       run(function () {
         store.push({
@@ -25778,6 +26086,9 @@ define(
         adapter: DS.Adapter.extend({
           deleteRecord: function () {
             return Ember.RSVP.resolve();
+          },
+          shouldBackgroundReloadRecord: function () {
+            return false;
           }
         })
       });
@@ -26230,7 +26541,7 @@ define(
     var TestAdapter, store, person;
     var run = Ember.run;
 
-    module("unit/store/adapter_interop - DS.Store working with a DS.Adapter", {
+    module("unit/store/adapter-interop - DS.Store working with a DS.Adapter", {
       setup: function () {
         TestAdapter = DS.Adapter.extend();
       },
@@ -26337,7 +26648,7 @@ define(
     });
 
     test("IDs provided as numbers are coerced to strings", function () {
-      expect(4);
+      expect(5);
 
       var adapter = TestAdapter.extend({
         findRecord: function (store, type, id, snapshot) {
@@ -26381,7 +26692,12 @@ define(
       });
 
       var store = createStore({
-        person: Person
+        person: Person,
+        adapter: DS.Adapter.extend({
+          shouldBackgroundReloadRecord: function () {
+            return false;
+          }
+        })
       });
 
       run(function () {
@@ -26608,7 +26924,12 @@ define(
         name: DS.attr('string')
       });
       var store = createStore({
-        person: Person
+        person: Person,
+        adapter: DS.Adapter.extend({
+          shouldBackgroundReloadRecord: function () {
+            return false;
+          }
+        })
       });
       var person;
 
@@ -27101,6 +27422,9 @@ define(
       var TestAdapter = DS.Adapter.extend({
         shouldReloadRecord: function (store, type, id, snapshot) {
           ok(true, 'shouldReloadRecord should be called when the record is in the store');
+          return false;
+        },
+        shouldBackgroundReloadRecord: function () {
           return false;
         },
         findRecord: function () {
@@ -28026,6 +28350,9 @@ define(
 
     test("Calling push with a normalized hash returns a record", function () {
       expect(2);
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       run(function () {
         var person = store.push({
@@ -28051,6 +28378,9 @@ define(
 
     test("Supplying a model class for `push` is the same as supplying a string", function () {
       expect(1);
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       var Programmer = Person.extend();
       env.registry.register('model:programmer', Programmer);
@@ -28102,6 +28432,9 @@ define(
 
     test("Calling push with partial records updates just those attributes", function () {
       expect(2);
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       run(function () {
         store.push({
