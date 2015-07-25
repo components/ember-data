@@ -2125,7 +2125,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.79de9316f8'
+      VERSION: '2.0.0+canary.9c83224bc0'
     });
 
     if (Ember.libraries) {
@@ -2643,6 +2643,8 @@
     */
 
     var ember$data$lib$system$model$model$$get = Ember.get;
+    var ember$data$lib$system$model$model$$merge = Ember.merge;
+    var ember$data$lib$system$model$model$$copy = Ember.copy;
 
     function ember$data$lib$system$model$model$$intersection(array1, array2) {
       var result = [];
@@ -3171,7 +3173,9 @@
       */
       changedAttributes: function () {
         var oldData = ember$data$lib$system$model$model$$get(this._internalModel, '_data');
-        var newData = ember$data$lib$system$model$model$$get(this._internalModel, '_attributes');
+        var currentData = ember$data$lib$system$model$model$$get(this._internalModel, '_attributes');
+        var inFlightData = ember$data$lib$system$model$model$$get(this._internalModel, '_inFlightAttributes');
+        var newData = ember$data$lib$system$model$model$$merge(ember$data$lib$system$model$model$$copy(inFlightData), currentData);
         var diffData = Object.create(null);
 
         var newDataKeys = Object.keys(newData);
