@@ -7506,7 +7506,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.13.7'
+      VERSION: '1.13.6'
     });
 
     if (Ember.libraries) {
