@@ -327,7 +327,7 @@
     */
     function ember$data$lib$adapters$errors$$InvalidError(errors) {
       if (!Ember.isArray(errors)) {
-        Ember.deprecate('`InvalidError` expects json-api formatted errors.');
+        Ember.deprecate('`InvalidError` expects json-api formatted errors.', false, { id: 'ds.errors.invalid-error-expects-json-api-format', until: '2.0.0' });
         errors = ember$data$lib$adapters$errors$$errorsHashToArray(errors);
       }
       ember$data$lib$adapters$errors$$AdapterError.call(this, errors, 'The adapter rejected the commit because it was invalid');
@@ -2131,7 +2131,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.9c83224bc0'
+      VERSION: '2.0.0+canary.d842890357'
     });
 
     if (Ember.libraries) {
@@ -5532,7 +5532,9 @@
       },
 
       updateLink: function (link) {
-        Ember.warn("You have pushed a record of type '" + this.record.type.modelName + "' with '" + this.key + "' as a link, but the association is not an async relationship.", this.isAsync);
+        Ember.warn('You have pushed a record of type \'' + this.record.type.modelName + '\' with \'' + this.key + '\' as a link, but the association is not an async relationship.', this.isAsync, {
+          id: 'ds.store.push-link-for-sync-relationship'
+        });
         Ember.assert("You have pushed a record of type '" + this.record.type.modelName + "' with '" + this.key + "' as a link, but the value of that link is not a string.", typeof link === 'string' || link === null);
         if (link !== this.link) {
           this.link = link;
@@ -7852,7 +7854,9 @@
               return resolvedRecords.contains(record);
             });
             if (missingRecords.length) {
-              Ember.warn('Ember Data expected to find records with the following ids in the adapter response but they were missing: ' + Ember.inspect(Ember.A(missingRecords).mapBy('id')), false);
+              Ember.warn('Ember Data expected to find records with the following ids in the adapter response but they were missing: ' + Ember.inspect(Ember.A(missingRecords).mapBy('id')), false, {
+                id: 'ds.store.missing-records-from-adapter'
+              });
             }
             rejectRecords(missingRecords);
           };
@@ -8306,7 +8310,9 @@
 
         if (!Ember.ENV.ENABLE_DS_FILTER) {
           Ember.deprecate('The filter API will be moved into a plugin soon. To enable store.filter using an environment flag, or to use an alternative, you can visit the ember-data-filter addon page', false, {
-            url: 'https://github.com/ember-data/ember-data-filter'
+            url: 'https://github.com/ember-data/ember-data-filter',
+            id: 'ds.store.filter-deprecated',
+            until: '2.0.0'
           });
         }
 
@@ -8701,8 +8707,6 @@
       push: function (data) {
         var _this3 = this;
 
-        Ember.assert("Expected an object as `data` in a call to `push` but was " + Ember.typeOf(data), Ember.typeOf(data) === 'object');
-
         if (data.included) {
           data.included.forEach(function (recordData) {
             return _this3._pushInternalModel(recordData);
@@ -8745,7 +8749,7 @@
             return !(key === 'id' || key === 'links' || ember$data$lib$system$store$$get(type, 'fields').has(key) || key.match(/Type$/));
           })) + ". Make sure they've been defined in your model.", Object.keys(data).filter(function (key) {
             return !(key === 'id' || key === 'links' || ember$data$lib$system$store$$get(type, 'fields').has(key) || key.match(/Type$/));
-          }).length === 0);
+          }).length === 0, { id: 'ds.store.unknown-keys-in-payload' });
         }
 
         // Actually load the record into the store.
@@ -8943,12 +8947,11 @@
       adapterFor: function (modelOrClass) {
         var modelName;
 
-        Ember.deprecate("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelOrClass === 'string');
-
-        if (typeof modelOrClass !== 'string') {
-          modelName = modelOrClass.modelName;
-        } else {
+        if (typeof modelOrClass === 'string') {
           modelName = modelOrClass;
+        } else {
+          Ember.deprecate("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), false, { id: 'ds.store.passing-classes-deprecated', until: '2.0.0' });
+          modelName = modelOrClass.modelName;
         }
 
         return this.lookupAdapter(modelName);
@@ -8982,11 +8985,11 @@
       serializerFor: function (modelOrClass) {
         var modelName;
 
-        Ember.deprecate("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelOrClass), typeof modelOrClass === 'string');
-        if (typeof modelOrClass !== 'string') {
-          modelName = modelOrClass.modelName;
-        } else {
+        if (typeof modelOrClass === 'string') {
           modelName = modelOrClass;
+        } else {
+          Ember.deprecate("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), false, { id: 'ds.store.passing-classes-deprecated', until: '2.0.0' });
+          modelName = modelOrClass.modelName;
         }
 
         var fallbacks = ['application', this.adapterFor(modelName).get('defaultSerializer'), '-default'];
@@ -11345,7 +11348,9 @@
 
           var typeName = this.modelNameFromPayloadKey(modelName);
           if (!store.modelFactoryFor(typeName)) {
-            Ember.warn(this.warnMessageNoModelForKey(modelName, typeName), false);
+            Ember.warn(this.warnMessageNoModelForKey(modelName, typeName), false, {
+              id: 'ds.serializer.model-for-key-missing'
+            });
             continue;
           }
 
@@ -11469,7 +11474,9 @@
         for (var prop in payload) {
           var modelName = this.modelNameFromPayloadKey(prop);
           if (!store.modelFactoryFor(modelName)) {
-            Ember.warn(this.warnMessageNoModelForKey(prop, modelName), false);
+            Ember.warn(this.warnMessageNoModelForKey(prop, modelName), false, {
+              id: 'ds.serializer.model-for-key-missing'
+            });
             continue;
           }
           var type = store.modelFor(modelName);
@@ -13018,7 +13025,7 @@
           key = this.keyForAttribute(attr, 'serialize');
           hasMany = snapshot.hasMany(attr);
 
-          Ember.warn("The embedded relationship '" + key + "' is undefined for '" + snapshot.modelName + "' with id '" + snapshot.id + "'. Please include it in your original payload.", Ember.typeOf(hasMany) !== 'undefined');
+          Ember.warn('The embedded relationship \'' + key + '\' is undefined for \'' + snapshot.modelName + '\' with id \'' + snapshot.id + '\'. Please include it in your original payload.', Ember.typeOf(hasMany) !== 'undefined', { id: 'ds.serializer.embedded-relationship-undefined' });
 
           json[key] = Ember.A(hasMany).map(function (embeddedSnapshot) {
             var embeddedJson = embeddedSnapshot.record.serialize({ includeId: true });
@@ -13296,8 +13303,17 @@
 
       return Ember.computed({
         get: function (key) {
-          Ember.warn('You provided a serialize option on the "' + key + '" property in the "' + this._internalModel.modelName + '" class, this belongs in the serializer. See DS.Serializer and it\'s implementations http://emberjs.com/api/data/classes/DS.Serializer.html', !opts.hasOwnProperty('serialize'));
-          Ember.warn('You provided an embedded option on the "' + key + '" property in the "' + this._internalModel.modelName + '" class, this belongs in the serializer. See DS.EmbeddedRecordsMixin http://emberjs.com/api/data/classes/DS.EmbeddedRecordsMixin.html', !opts.hasOwnProperty('embedded'));
+          if (opts.hasOwnProperty('serialize')) {
+            Ember.warn('You provided a serialize option on the "' + key + '" property in the "' + this._internalModel.modelName + '" class, this belongs in the serializer. See DS.Serializer and it\'s implementations http://emberjs.com/api/data/classes/DS.Serializer.html', false, {
+              id: 'ds.model.serialize-option-in-belongs-to'
+            });
+          }
+
+          if (opts.hasOwnProperty('embedded')) {
+            Ember.warn('You provided an embedded option on the "' + key + '" property in the "' + this._internalModel.modelName + '" class, this belongs in the serializer. See DS.EmbeddedRecordsMixin http://emberjs.com/api/data/classes/DS.EmbeddedRecordsMixin.html', false, {
+              id: 'ds.model.embedded-option-in-belongs-to'
+            });
+          }
 
           return this._internalModel._relationships.get(key).getRecord();
         },
@@ -13765,8 +13781,6 @@
 
         var inverseName, inverseKind, inverse;
 
-        Ember.warn("Detected a reflexive relationship by the name of '" + name + "' without an inverse option. Look at http://emberjs.com/guides/models/defining-models/#toc_reflexive-relation for how to explicitly specify inverses.", options.inverse || propertyMeta.type !== propertyMeta.parentType.modelName);
-
         //If inverse is specified manually, return the inverse
         if (options.inverse) {
           inverseName = options.inverse;
@@ -13777,6 +13791,12 @@
           inverseKind = inverse.kind;
         } else {
           //No inverse was specified manually, we need to use a heuristic to guess one
+          if (propertyMeta.type === propertyMeta.parentType.modelName) {
+            Ember.warn("Detected a reflexive relationship by the name of '" + name + "' without an inverse option. Look at http://emberjs.com/guides/models/defining-models/#toc_reflexive-relation for how to explicitly specify inverses.", false, {
+              id: 'ds.model.reflexive-relationship-without-inverse'
+            });
+          }
+
           var possibleRelationships = findPossibleInverses(this, inverseType);
 
           if (possibleRelationships.length === 0) {
@@ -14160,7 +14180,10 @@
 
     ember$data$lib$system$container$proxy$$ContainerProxy.prototype.registerDeprecation = function (deprecated, valid) {
       var preLookupCallback = function () {
-        Ember.deprecate("You tried to look up '" + deprecated + "', " + "but this has been deprecated in favor of '" + valid + "'.", false);
+        Ember.deprecate('You tried to look up \'' + deprecated + '\', but this has been deprecated in favor of \'' + valid + '\'.', false, {
+          id: 'ds.store.deprecated-lookup',
+          until: '2.0.0'
+        });
       };
 
       return this.registerAlias(deprecated, valid, preLookupCallback);
@@ -14263,7 +14286,10 @@
     Object.defineProperty(ember$data$lib$core$$default, 'FixtureAdapter', {
       get: function () {
         if (ember$data$lib$main$$_FixtureAdapter === ember$data$lib$adapters$fixture$adapter$$default) {
-          Ember.deprecate('DS.FixtureAdapter has been deprecated and moved into an unsupported addon: https://github.com/emberjs/ember-data-fixture-adapter/tree/master');
+          Ember.deprecate('DS.FixtureAdapter has been deprecated and moved into an unsupported addon: https://github.com/emberjs/ember-data-fixture-adapter/tree/master', false, {
+            id: 'ds.adapter.fixture-adapter-deprecated',
+            until: '2.0.0'
+          });
         }
         return ember$data$lib$main$$_FixtureAdapter;
       },

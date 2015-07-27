@@ -2125,7 +2125,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.9c83224bc0'
+      VERSION: '2.0.0+canary.d842890357'
     });
 
     if (Ember.libraries) {
@@ -8630,7 +8630,6 @@
       push: function (data) {
         var _this3 = this;
 
-        
         if (data.included) {
           data.included.forEach(function (recordData) {
             return _this3._pushInternalModel(recordData);
@@ -8858,11 +8857,10 @@
       adapterFor: function (modelOrClass) {
         var modelName;
 
-        
-        if (typeof modelOrClass !== 'string') {
-          modelName = modelOrClass.modelName;
-        } else {
+        if (typeof modelOrClass === 'string') {
           modelName = modelOrClass;
+        } else {
+                    modelName = modelOrClass.modelName;
         }
 
         return this.lookupAdapter(modelName);
@@ -8896,10 +8894,10 @@
       serializerFor: function (modelOrClass) {
         var modelName;
 
-                if (typeof modelOrClass !== 'string') {
-          modelName = modelOrClass.modelName;
-        } else {
+        if (typeof modelOrClass === 'string') {
           modelName = modelOrClass;
+        } else {
+                    modelName = modelOrClass.modelName;
         }
 
         var fallbacks = ['application', this.adapterFor(modelName).get('defaultSerializer'), '-default'];
@@ -13190,7 +13188,12 @@
 
       return Ember.computed({
         get: function (key) {
-                    
+          if (opts.hasOwnProperty('serialize')) {
+                      }
+
+          if (opts.hasOwnProperty('embedded')) {
+                      }
+
           return this._internalModel._relationships.get(key).getRecord();
         },
         set: function (key, value) {
@@ -13653,7 +13656,6 @@
 
         var inverseName, inverseKind, inverse;
 
-        
         //If inverse is specified manually, return the inverse
         if (options.inverse) {
           inverseName = options.inverse;
@@ -13663,6 +13665,9 @@
           inverseKind = inverse.kind;
         } else {
           //No inverse was specified manually, we need to use a heuristic to guess one
+          if (propertyMeta.type === propertyMeta.parentType.modelName) {
+                      }
+
           var possibleRelationships = findPossibleInverses(this, inverseType);
 
           if (possibleRelationships.length === 0) {
