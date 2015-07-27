@@ -20975,6 +20975,70 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     equal(keysFunc(mascot.changedAttributes()).length, 0, 'after rollback attributes there are no changes');
   });
 
+  test("changedAttributes() works while the record is being saved", function () {
+    expect(1);
+    var cat;
+    var adapter = DS.Adapter.extend({
+      createRecord: function (store, model, snapshot) {
+        deepEqual(cat.changedAttributes(), { name: [undefined, 'Argon'], likes: [undefined, 'Cheese'] });
+        return {};
+      }
+    });
+    var Mascot = DS.Model.extend({
+      name: DS.attr('string'),
+      likes: DS.attr('string'),
+      isMascot: DS.attr('boolean')
+    });
+
+    var store = createStore({
+      mascot: Mascot,
+      adapter: adapter
+    });
+
+    run(function () {
+      cat = store.createRecord('mascot');
+      cat.setProperties({ name: 'Argon', likes: 'Cheese' });
+      cat.save();
+    });
+  });
+
+  test("changedAttributes() works while the record is being updated", function () {
+    expect(1);
+    var cat;
+    var adapter = DS.Adapter.extend({
+      updateRecord: function (store, model, snapshot) {
+        deepEqual(cat.changedAttributes(), { name: ['Argon', 'Helia'], likes: ['Cheese', 'Mussels'] });
+        return { id: '1', type: 'mascot' };
+      }
+    });
+    var Mascot = DS.Model.extend({
+      name: DS.attr('string'),
+      likes: DS.attr('string'),
+      isMascot: DS.attr('boolean')
+    });
+
+    var store = createStore({
+      mascot: Mascot,
+      adapter: adapter
+    });
+
+    run(function () {
+      store.push({
+        data: {
+          type: 'mascot',
+          id: '1',
+          attributes: {
+            name: 'Argon',
+            likes: 'Cheese'
+          }
+        }
+      });
+      cat = store.peekRecord('mascot', 1);
+      cat.setProperties({ name: 'Helia', likes: 'Mussels' });
+      cat.save();
+    });
+  });
+
   test("a DS.Model does not require an attribute type", function () {
     var Tag = DS.Model.extend({
       name: DS.attr()
