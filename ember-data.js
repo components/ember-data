@@ -5,9 +5,8 @@
     var ember$data$lib$system$object$polyfills$$create = Object.create || Ember.create;
 
     var ember$data$lib$adapters$errors$$EmberError = Ember.Error;
-
     var ember$data$lib$adapters$errors$$forEach = Ember.ArrayPolyfills.forEach;
-    var ember$data$lib$adapters$errors$$SOURCE_POINTER_REGEXP = /data\/(attributes|relationships)\/(.*)/;/**
+    var ember$data$lib$adapters$errors$$SOURCE_POINTER_REGEXP = /^\/?data\/(attributes|relationships)\/(.*)/;/**
       @class AdapterError
       @namespace DS
     */
@@ -84,7 +83,7 @@
     */
     function ember$data$lib$adapters$errors$$InvalidError(errors) {
       if (!Ember.isArray(errors)) {
-        Ember.deprecate("`InvalidError` expects json-api formatted errors.");
+        Ember.deprecate("`InvalidError` expects json-api formatted errors.", false, { id: "ds.errors.invalid-error-expects-json-api-format", until: "2.0.0" });
         errors = ember$data$lib$adapters$errors$$errorsHashToArray(errors);
       }
       ember$data$lib$adapters$errors$$AdapterError.call(this, errors, "The adapter rejected the commit because it was invalid");
@@ -126,7 +125,7 @@
               title: "Invalid Attribute",
               detail: messages[i],
               source: {
-                pointer: "data/attributes/" + key
+                pointer: "/data/attributes/" + key
               }
             });
           }
@@ -577,7 +576,7 @@
       */
       shouldReloadAll: function (store, snapshotRecordArray) {
         var modelName = snapshotRecordArray.type.modelName;
-        Ember.deprecate('The default behavior of shouldReloadAll will change in Ember Data 2.0 to always return false when there is at least one "' + modelName + '" record in the store. If you would like to preserve the current behavior please override shouldReloadAll in your adapter:application and return true.');
+        Ember.deprecate('The default behavior of shouldReloadAll will change in Ember Data 2.0 to always return false when there is at least one "' + modelName + '" record in the store. If you would like to preserve the current behavior please override shouldReloadAll in your adapter:application and return true.', false, { id: 'ds.adapter.should-reload-all-default-behavior', until: '2.0.0' });
         return true;
       },
 
@@ -595,7 +594,7 @@
         @return {Boolean}
       */
       shouldBackgroundReloadRecord: function (store, snapshot) {
-        Ember.deprecate('The default behavior of `shouldBackgroundReloadRecord` will change in Ember Data 2.0 to always return true. If you would like to preserve the current behavior please override `shouldBackgroundReloadRecord` in your adapter:application and return false.');
+        Ember.deprecate('The default behavior of `shouldBackgroundReloadRecord` will change in Ember Data 2.0 to always return true. If you would like to preserve the current behavior please override `shouldBackgroundReloadRecord` in your adapter:application and return false.', false, { id: 'ds.adapter.should-background-reload-record-default-behavior', until: '2.0.0' });
         return false;
       },
 
@@ -754,7 +753,10 @@
        */
       urlForFindRecord: function (id, modelName, snapshot) {
         if (this.urlForFind !== ember$data$lib$adapters$build$url$mixin$$urlForFind) {
-          Ember.deprecate('BuildURLMixin#urlForFind has been deprecated and renamed to `urlForFindRecord`.');
+          Ember.deprecate('BuildURLMixin#urlForFind has been deprecated and renamed to `urlForFindRecord`.', false, {
+            id: 'ds.adapter.url-for-find-deprecated',
+            until: '2.0.0'
+          });
           return this.urlForFind(id, modelName, snapshot);
         }
         return this._buildURL(modelName, id);
@@ -786,7 +788,10 @@
        */
       urlForQuery: function (query, modelName) {
         if (this.urlForFindQuery !== ember$data$lib$adapters$build$url$mixin$$urlForFindQuery) {
-          Ember.deprecate('BuildURLMixin#urlForFindQuery has been deprecated and renamed to `urlForQuery`.');
+          Ember.deprecate('BuildURLMixin#urlForFindQuery has been deprecated and renamed to `urlForQuery`.', false, {
+            id: 'ds.adapter.url-for-find-query-deprecated',
+            until: '2.0.0'
+          });
           return this.urlForFindQuery(query, modelName);
         }
         return this._buildURL(modelName);
@@ -923,12 +928,19 @@
     });
 
     function ember$data$lib$adapters$build$url$mixin$$urlForFind(id, modelName, snapshot) {
-      Ember.deprecate('BuildURLMixin#urlForFind has been deprecated and renamed to `urlForFindRecord`.');
+      Ember.deprecate('BuildURLMixin#urlForFind has been deprecated and renamed to `urlForFindRecord`.', false, {
+        id: 'ds.adapter.url-for-find-deprecated',
+        until: '2.0.0'
+      });
+
       return this._buildURL(modelName, id);
     }
 
     function ember$data$lib$adapters$build$url$mixin$$urlForFindQuery(query, modelName) {
-      Ember.deprecate('BuildURLMixin#urlForFindQuery has been deprecated and renamed to `urlForQuery`.');
+      Ember.deprecate('BuildURLMixin#urlForFindQuery has been deprecated and renamed to `urlForQuery`.', false, {
+        id: 'ds.adapter.url-for-find-query-deprecated',
+        until: '2.0.0'
+      });
       return this._buildURL(modelName);
     }
 
@@ -1247,7 +1259,10 @@
         @deprecated Use [findRecord](#method_findRecord) instead
       */
       find: function (store, type, id, snapshot) {
-        Ember.deprecate("RestAdapter#find has been deprecated and renamed to `findRecord`.");
+        Ember.deprecate("RestAdapter#find has been deprecated and renamed to `findRecord`.", false, {
+          id: "ds.adapter.find-renamed-to-find-record",
+          until: "2.0.0"
+        });
         return this.ajax(this.buildURL(type.modelName, id, snapshot, "find"), "GET");
       },
 
@@ -1267,7 +1282,10 @@
       findRecord: function (store, type, id, snapshot) {
         var find = ember$data$lib$adapters$rest$adapter$$RestAdapter.prototype.find;
         if (find !== this.find) {
-          Ember.deprecate("RestAdapter#find has been deprecated and renamed to `findRecord`.");
+          Ember.deprecate("RestAdapter#find has been deprecated and renamed to `findRecord`.", false, {
+            id: "ds.adapter.find-renamed-to-find-record",
+            until: "2.0.0"
+          });
           return this.find(store, type, id, snapshot);
         }
         return this.ajax(this.buildURL(type.modelName, id, snapshot, "findRecord"), "GET");
@@ -1313,7 +1331,10 @@
         @deprecated Use [query](#method_query) instead
       */
       findQuery: function (store, type, query) {
-        Ember.deprecate("RestAdapter#findQuery has been deprecated and renamed to `query`.");
+        Ember.deprecate("RestAdapter#findQuery has been deprecated and renamed to `query`.", false, {
+          id: "ds.adapter.find-query-renamed-to-query",
+          until: "2.0.0"
+        });
         var url = this.buildURL(type.modelName, null, null, "findQuery", query);
 
         if (this.sortQueryParams) {
@@ -1340,11 +1361,39 @@
       query: function (store, type, query) {
         var findQuery = ember$data$lib$adapters$rest$adapter$$RestAdapter.prototype.findQuery;
         if (findQuery !== this.findQuery) {
-          Ember.deprecate("RestAdapter#findQuery has been deprecated and renamed to `query`.");
+          Ember.deprecate("RestAdapter#findQuery has been deprecated and renamed to `query`.", false, {
+            id: "ds.adapter.find-query-renamed-to-query",
+            until: "2.0.0"
+          });
           return this.findQuery(store, type, query);
         }
 
         var url = this.buildURL(type.modelName, null, null, "query", query);
+
+        if (this.sortQueryParams) {
+          query = this.sortQueryParams(query);
+        }
+
+        return this.ajax(url, "GET", { data: query });
+      },
+
+      /**
+        Called by the store in order to fetch a JSON object for
+        the record that matches a particular query.
+         The `queryRecord` method makes an Ajax (HTTP GET) request to a URL
+        computed by `buildURL`, and returns a promise for the resulting
+        payload.
+         The `query` argument is a simple JavaScript object that will be passed directly
+        to the server as parameters.
+         @private
+        @method queryRecord
+        @param {DS.Store} store
+        @param {DS.Model} type
+        @param {Object} query
+        @return {Promise} promise
+      */
+      queryRecord: function (store, type, query) {
+        var url = this.buildURL(type.modelName, null, null, "queryRecord", query);
 
         if (this.sortQueryParams) {
           query = this.sortQueryParams(query);
@@ -1701,7 +1750,10 @@
             var response = undefined;
 
             if (adapter.ajaxSuccess) {
-              Ember.deprecate("`ajaxSuccess` has been deprecated. Use `isSuccess`, `isInvalid` or `handleResponse` instead.");
+              Ember.deprecate("`ajaxSuccess` has been deprecated. Use `isSuccess`, `isInvalid` or `handleResponse` instead.", false, {
+                id: "ds.adapter.ajax-success-deprecated",
+                until: "2.0.0"
+              });
               response = adapter.ajaxSuccess(jqXHR, payload);
             }
 
@@ -1720,7 +1772,10 @@
             var error = undefined;
 
             if (adapter.ajaxError) {
-              Ember.deprecate("`ajaxError` has been deprecated. Use `isSuccess`, `isInvalid` or `handleResponse` instead.");
+              Ember.deprecate("`ajaxError` has been deprecated. Use `isSuccess`, `isInvalid` or `handleResponse` instead.", false, {
+                id: "ds.adapter.ajax-error-deprecated",
+                until: "2.0.0"
+              });
               error = adapter.ajaxError(jqXHR, textStatus, errorThrown);
             }
 
@@ -1847,12 +1902,18 @@
       Ember.defineProperty(ember$data$lib$adapters$rest$adapter$$RestAdapter.prototype, "maxUrlLength", {
         enumerable: false,
         get: function () {
-          Ember.deprecate("maxUrlLength has been deprecated (wrong casing). You should use maxURLLength instead.");
+          Ember.deprecate("maxUrlLength has been deprecated (wrong casing). You should use maxURLLength instead.", false, {
+            id: "ds.adapter.max-url-length-deprecated-case",
+            until: "2.0.0"
+          });
           return this.maxURLLength;
         },
 
         set: function (value) {
-          Ember.deprecate("maxUrlLength has been deprecated (wrong casing). You should use maxURLLength instead.");
+          Ember.deprecate("maxUrlLength has been deprecated (wrong casing). You should use maxURLLength instead.", false, {
+            id: "ds.adapter.max-url-length-deprecated-case",
+            until: "2.0.0"
+          });
           ember$data$lib$adapters$rest$adapter$$set(this, "maxURLLength", value);
         }
       });
@@ -3907,7 +3968,10 @@
       extractSingle: function (store, typeClass, payload, id, requestType) {
         if (!this.get("didDeprecateNormalizePayload")) {
           this.set("didDeprecateNormalizePayload", true);
-          Ember.deprecate("`serializer.normalizePayload` has been deprecated. Please use `serializer.normalizeResponse` with the new Serializer API to modify the payload.", this.normalizePayload === ember$data$lib$serializers$json$serializer$$JSONSerializer.prototype.normalizePayload);
+          Ember.deprecate("`serializer.normalizePayload` has been deprecated. Please use `serializer.normalizeResponse` with the new Serializer API to modify the payload.", this.normalizePayload === ember$data$lib$serializers$json$serializer$$JSONSerializer.prototype.normalizePayload, {
+            id: "ds.serializer.normalize-payload-deprecated",
+            until: "2.0.0"
+          });
         }
         var normalizedPayload = this.normalizePayload(payload);
         return this.normalize(typeClass, normalizedPayload);
@@ -3938,7 +4002,10 @@
       extractArray: function (store, typeClass, arrayPayload, id, requestType) {
         if (!this.get("didDeprecateNormalizePayload")) {
           this.set("didDeprecateNormalizePayload", true);
-          Ember.deprecate("`serializer.normalizePayload` has been deprecated. Please use `serializer.normalizeResponse` with the new Serializer API to modify the payload.", this.normalizePayload === ember$data$lib$serializers$json$serializer$$JSONSerializer.prototype.normalizePayload);
+          Ember.deprecate("`serializer.normalizePayload` has been deprecated. Please use `serializer.normalizeResponse` with the new Serializer API to modify the payload.", this.normalizePayload === ember$data$lib$serializers$json$serializer$$JSONSerializer.prototype.normalizePayload, {
+            id: "ds.serializer.normalize-payload-deprecated",
+            until: "2.0.0"
+          });
         }
         var normalizedPayload = this.normalizePayload(arrayPayload);
         var serializer = this;
@@ -4260,10 +4327,12 @@
     };
 
     var ember$data$lib$system$model$errors$$get = Ember.get;
+    var ember$data$lib$system$model$errors$$set = Ember.set;
     var ember$data$lib$system$model$errors$$isEmpty = Ember.isEmpty;
     var ember$data$lib$system$model$errors$$map = Ember.ArrayPolyfills.map;
+    var ember$data$lib$system$model$errors$$makeArray = Ember.makeArray;
 
-    var ember$data$lib$system$model$errors$$default = Ember.Object.extend(Ember.Enumerable, Ember.Evented, {
+    var ember$data$lib$system$model$errors$$default = Ember.ArrayProxy.extend(Ember.Evented, {
       /**
         Register with target handler
          @method registerHandlers
@@ -4346,20 +4415,11 @@
       },
 
       /**
-        @method nextObject
-        @private
-      */
-      nextObject: function (index, previousObject, context) {
-        return ember$data$lib$system$model$errors$$get(this, 'content').objectAt(index);
-      },
-
-      /**
         Total number of errors.
          @property length
         @type {Number}
         @readOnly
       */
-      length: Ember.computed.oneWay('content.length').readOnly(),
 
       /**
         @property isEmpty
@@ -4385,11 +4445,10 @@
         var wasEmpty = ember$data$lib$system$model$errors$$get(this, 'isEmpty');
 
         messages = this._findOrCreateMessages(attribute, messages);
-        ember$data$lib$system$model$errors$$get(this, 'content').addObjects(messages);
+        this.addObjects(messages);
         ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName').get(attribute).addObjects(messages);
 
         this.notifyPropertyChange(attribute);
-        this.enumerableContentDidChange();
 
         if (wasEmpty && !ember$data$lib$system$model$errors$$get(this, 'isEmpty')) {
           this.trigger('becameInvalid');
@@ -4403,7 +4462,7 @@
       _findOrCreateMessages: function (attribute, messages) {
         var errors = this.errorsFor(attribute);
 
-        return ember$data$lib$system$model$errors$$map.call(Ember.makeArray(messages), function (message) {
+        return ember$data$lib$system$model$errors$$map.call(ember$data$lib$system$model$errors$$makeArray(messages), function (message) {
           return errors.findBy('message', message) || {
             attribute: attribute,
             message: message
@@ -4444,12 +4503,11 @@
           return;
         }
 
-        var content = ember$data$lib$system$model$errors$$get(this, 'content').rejectBy('attribute', attribute);
-        ember$data$lib$system$model$errors$$get(this, 'content').setObjects(content);
+        var content = this.rejectBy('attribute', attribute);
+        ember$data$lib$system$model$errors$$set(this, 'content', content);
         ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName')["delete"](attribute);
 
         this.notifyPropertyChange(attribute);
-        this.enumerableContentDidChange();
 
         if (ember$data$lib$system$model$errors$$get(this, 'isEmpty')) {
           this.trigger('becameValid');
@@ -4478,9 +4536,19 @@
           return;
         }
 
-        ember$data$lib$system$model$errors$$get(this, 'content').clear();
-        ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName').clear();
-        this.enumerableContentDidChange();
+        var errorsByAttributeName = ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName');
+        var attributes = Ember.A();
+
+        errorsByAttributeName.forEach(function (_, attribute) {
+          attributes.push(attribute);
+        });
+
+        errorsByAttributeName.clear();
+        attributes.forEach(function (attribute) {
+          this.notifyPropertyChange(attribute);
+        }, this);
+
+        this._super();
 
         this.trigger('becameValid');
       },
@@ -4509,6 +4577,63 @@
       }
     });
 
+    var ember$new$computed$lib$utils$can$use$new$syntax$$supportsSetterGetter;
+
+    try {
+      ember$lib$main$$default.computed({
+        set: function () {},
+        get: function () {}
+      });
+      ember$new$computed$lib$utils$can$use$new$syntax$$supportsSetterGetter = true;
+    } catch (e) {
+      ember$new$computed$lib$utils$can$use$new$syntax$$supportsSetterGetter = false;
+    }
+
+    var ember$new$computed$lib$utils$can$use$new$syntax$$default = ember$new$computed$lib$utils$can$use$new$syntax$$supportsSetterGetter;
+    var ember$new$computed$lib$main$$default = ember$new$computed$lib$main$$newComputed;
+
+    var ember$new$computed$lib$main$$computed = ember$lib$main$$default.computed;
+
+    function ember$new$computed$lib$main$$newComputed() {
+      var polyfillArguments = [];
+      var config = arguments[arguments.length - 1];
+
+      if (typeof config === 'function' || ember$new$computed$lib$utils$can$use$new$syntax$$default) {
+        return ember$new$computed$lib$main$$computed.apply(undefined, arguments);
+      }
+
+      for (var i = 0, l = arguments.length - 1; i < l; i++) {
+        polyfillArguments.push(arguments[i]);
+      }
+
+      var func;
+      if (config.set) {
+        func = function (key, value) {
+          if (arguments.length > 1) {
+            return config.set.call(this, key, value);
+          } else {
+            return config.get.call(this, key);
+          }
+        };
+      } else {
+        func = function (key) {
+          return config.get.call(this, key);
+        };
+      }
+
+      polyfillArguments.push(func);
+
+      return ember$new$computed$lib$main$$computed.apply(undefined, polyfillArguments);
+    }
+
+    var ember$new$computed$lib$main$$getKeys = Object.keys || ember$lib$main$$default.keys;
+    var ember$new$computed$lib$main$$computedKeys = ember$new$computed$lib$main$$getKeys(ember$new$computed$lib$main$$computed);
+
+    for (var ember$new$computed$lib$main$$i = 0, ember$new$computed$lib$main$$l = ember$new$computed$lib$main$$computedKeys.length; ember$new$computed$lib$main$$i < ember$new$computed$lib$main$$l; ember$new$computed$lib$main$$i++) {
+      ember$new$computed$lib$main$$newComputed[ember$new$computed$lib$main$$computedKeys[ember$new$computed$lib$main$$i]] = ember$new$computed$lib$main$$computed[ember$new$computed$lib$main$$computedKeys[ember$new$computed$lib$main$$i]];
+    }
+    var ember$data$lib$system$model$model$$errorDeprecationShown = false;
+
     /**
       @module ember-data
     */
@@ -4516,6 +4641,8 @@
     var ember$data$lib$system$model$model$$get = Ember.get;
     var ember$data$lib$system$model$model$$forEach = Ember.ArrayPolyfills.forEach;
     var ember$data$lib$system$model$model$$indexOf = Ember.ArrayPolyfills.indexOf;
+    var ember$data$lib$system$model$model$$merge = Ember.merge;
+    var ember$data$lib$system$model$model$$copy = Ember.copy;
 
     function ember$data$lib$system$model$model$$intersection(array1, array2) {
       var result = [];
@@ -4616,9 +4743,28 @@
         @deprecated
       */
       isDirty: Ember.computed("currentState.isDirty", function () {
-        Ember.deprecate("DS.Model#isDirty has been deprecated please use hasDirtyAttributes instead");
+        Ember.deprecate("DS.Model#isDirty has been deprecated please use hasDirtyAttributes instead", false, {
+          id: "ds.model.is-dirty-deprecated",
+          until: "2.0.0"
+        });
         return this.get("currentState.isDirty");
       }),
+
+      /**
+        @property error
+        @type {Boolean}
+        @deprecated
+      */
+      error: ember$new$computed$lib$main$$default("adapterError", {
+        get: function () {
+          if (!ember$data$lib$system$model$model$$errorDeprecationShown) {
+            Ember.deprecate("DS.Model#error has been deprecated please use adapterError instead");
+            ember$data$lib$system$model$model$$errorDeprecationShown = true;
+          }
+          return Ember.get(this, "adapterError");
+        }
+      }),
+
       /**
         If this property is `true` the record is in the `dirty` state. The
         record has local changes that have not yet been saved by the
@@ -5068,7 +5214,9 @@
       */
       changedAttributes: function () {
         var oldData = ember$data$lib$system$model$model$$get(this._internalModel, "_data");
-        var newData = ember$data$lib$system$model$model$$get(this._internalModel, "_attributes");
+        var currentData = ember$data$lib$system$model$model$$get(this._internalModel, "_attributes");
+        var inFlightData = ember$data$lib$system$model$model$$get(this._internalModel, "_inFlightAttributes");
+        var newData = ember$data$lib$system$model$model$$merge(ember$data$lib$system$model$model$$copy(inFlightData), currentData);
         var diffData = ember$data$lib$system$object$polyfills$$create(null);
 
         var newDataKeys = ember$data$lib$system$object$polyfills$$keysFunc(newData);
@@ -5113,7 +5261,10 @@
         @deprecated Use `rollbackAttributes()` instead
       */
       rollback: function () {
-        Ember.deprecate("Using model.rollback() has been deprecated. Use model.rollbackAttributes() to discard any unsaved changes to a model.");
+        Ember.deprecate("Using model.rollback() has been deprecated. Use model.rollbackAttributes() to discard any unsaved changes to a model.", false, {
+          id: "ds.model.rollback-deprecated",
+          until: "2.0.0"
+        });
         this.rollbackAttributes();
       },
 
@@ -5334,7 +5485,10 @@
         }
         return normalizedResponse;
       } else {
-        Ember.deprecate('Your custom serializer uses the old version of the Serializer API, with `extract` hooks. Please upgrade your serializers to the new Serializer API using `normalizeResponse` hooks instead.');
+        Ember.deprecate('Your custom serializer uses the old version of the Serializer API, with `extract` hooks. Please upgrade your serializers to the new Serializer API using `normalizeResponse` hooks instead.', false, {
+          id: 'ds.serializer.extract-hooks-deprecated',
+          until: '2.0.0'
+        });
         var serializerPayload = serializer.extract(store, modelClass, payload, id, requestType);
         return ember$data$lib$system$store$serializer$response$$_normalizeSerializerPayload(modelClass, serializerPayload);
       }
@@ -5732,7 +5886,10 @@
         this.normalizeUsingDeclaredMapping(typeClass, hash);
 
         if (this.normalizeHash && this.normalizeHash[prop]) {
-          Ember.deprecate("`RESTSerializer.normalizeHash` has been deprecated. Please use `serializer.normalize` to modify the payload of single resources.");
+          Ember.deprecate("`RESTSerializer.normalizeHash` has been deprecated. Please use `serializer.normalize` to modify the payload of single resources.", false, {
+            id: "ds.serializer.normalize-hash-deprecated",
+            until: "2.0.0"
+          });
           this.normalizeHash[prop](hash);
         }
 
@@ -5833,7 +5990,9 @@
 
           var typeName = this.modelNameFromPayloadKey(modelName);
           if (!store.modelFactoryFor(typeName)) {
-            Ember.warn(this.warnMessageNoModelForKey(modelName, typeName), false);
+            Ember.warn(this.warnMessageNoModelForKey(modelName, typeName), false, {
+              id: "ds.serializer.model-for-key-missing"
+            });
             continue;
           }
 
@@ -5980,7 +6139,10 @@
         @return {Object} the primary response to the original request
       */
       extractSingle: function (store, primaryTypeClass, rawPayload, recordId) {
-        Ember.deprecate("`serializer.normalizePayload` has been deprecated. Please use `serializer.normalizeResponse` with the new Serializer API to modify the payload.", this.normalizePayload === ember$data$lib$serializers$json$serializer$$default.prototype.normalizePayload);
+        Ember.deprecate("`serializer.normalizePayload` has been deprecated. Please use `serializer.normalizeResponse` with the new Serializer API to modify the payload.", this.normalizePayload === ember$data$lib$serializers$json$serializer$$default.prototype.normalizePayload, {
+          id: "ds.serializer.normalize-payload-deprecated",
+          until: "2.0.0"
+        });
         var payload = this.normalizePayload(rawPayload);
         var primaryRecord;
 
@@ -5988,7 +6150,9 @@
           var modelName = this.modelNameFromPayloadKey(prop);
 
           if (!store.modelFactoryFor(modelName)) {
-            Ember.warn(this.warnMessageNoModelForKey(prop, modelName), false);
+            Ember.warn(this.warnMessageNoModelForKey(prop, modelName), false, {
+              id: "ds.serializer.model-for-key-missing"
+            });
             continue;
           }
           var isPrimary = this.isPrimaryType(store, modelName, primaryTypeClass);
@@ -6120,7 +6284,10 @@
           to the original query.
       */
       extractArray: function (store, primaryTypeClass, rawPayload) {
-        Ember.deprecate("`serializer.normalizePayload` has been deprecated. Please use `serializer.normalizeResponse` with the new Serializer API to modify the payload.", this.normalizePayload === ember$data$lib$serializers$json$serializer$$default.prototype.normalizePayload);
+        Ember.deprecate("`serializer.normalizePayload` has been deprecated. Please use `serializer.normalizeResponse` with the new Serializer API to modify the payload.", this.normalizePayload === ember$data$lib$serializers$json$serializer$$default.prototype.normalizePayload, {
+          id: "ds.serializer.normalize-payload-deprecated",
+          until: "2.0.0"
+        });
         var payload = this.normalizePayload(rawPayload);
         var primaryArray;
 
@@ -6135,7 +6302,9 @@
 
           var typeName = this.modelNameFromPayloadKey(modelName);
           if (!store.modelFactoryFor(typeName)) {
-            Ember.warn(this.warnMessageNoModelForKey(prop, typeName), false);
+            Ember.warn(this.warnMessageNoModelForKey(prop, typeName), false, {
+              id: "ds.serializer.model-for-key-missing"
+            });
             continue;
           }
           var type = store.modelFor(typeName);
@@ -6199,13 +6368,18 @@
           return;
         }
 
-        Ember.deprecate("`serializer.normalizePayload` has been deprecated. Please use `serializer.normalizeResponse` with the new Serializer API to modify the payload.", this.normalizePayload === ember$data$lib$serializers$json$serializer$$default.prototype.normalizePayload);
+        Ember.deprecate("`serializer.normalizePayload` has been deprecated. Please use `serializer.normalizeResponse` with the new Serializer API to modify the payload.", this.normalizePayload === ember$data$lib$serializers$json$serializer$$default.prototype.normalizePayload, {
+          id: "ds.serializer.normalize-payload-deprecated",
+          until: "2.0.0"
+        });
         var payload = this.normalizePayload(rawPayload);
 
         for (var prop in payload) {
           var modelName = this.modelNameFromPayloadKey(prop);
           if (!store.modelFactoryFor(modelName)) {
-            Ember.warn(this.warnMessageNoModelForKey(prop, modelName), false);
+            Ember.warn(this.warnMessageNoModelForKey(prop, modelName), false, {
+              id: "ds.serializer.model-for-key-missing"
+            });
             continue;
           }
           var typeClass = store.modelFor(modelName);
@@ -6466,7 +6640,10 @@
         @deprecated
       */
       typeForRoot: function (modelName) {
-        Ember.deprecate("typeForRoot is deprecated. Use modelNameFromPayloadKey instead.");
+        Ember.deprecate("typeForRoot is deprecated. Use modelNameFromPayloadKey instead.", false, {
+          id: "ds.serializer.type-for-root-deprecated",
+          until: "2.0.0"
+        });
         return this.modelNameFromPayloadKey(modelName);
       },
 
@@ -6511,7 +6688,10 @@
     */
     function ember$data$lib$serializers$rest$serializer$$_newNormalize(modelClass, resourceHash, prop) {
       if (this.normalizeHash && this.normalizeHash[prop]) {
-        Ember.deprecate("`RESTSerializer.normalizeHash` has been deprecated. Please use `serializer.normalize` to modify the payload of single resources.");
+        Ember.deprecate("`RESTSerializer.normalizeHash` has been deprecated. Please use `serializer.normalize` to modify the payload of single resources.", false, {
+          id: "ds.serializer.normalize-hash-deprecated",
+          until: "2.0.0"
+        });
         this.normalizeHash[prop](resourceHash);
       }
     }
@@ -6527,13 +6707,18 @@
         included: []
       };
 
-      Ember.deprecate("`serializer.normalizePayload` has been deprecated. Please use `serializer.normalizeResponse` with the new Serializer API to modify the payload.", this.normalizePayload === ember$data$lib$serializers$json$serializer$$default.prototype.normalizePayload);
+      Ember.deprecate("`serializer.normalizePayload` has been deprecated. Please use `serializer.normalizeResponse` with the new Serializer API to modify the payload.", this.normalizePayload === ember$data$lib$serializers$json$serializer$$default.prototype.normalizePayload, {
+        id: "ds.serializer.normalize-payload-deprecated",
+        until: "2.0.0"
+      });
       var payload = this.normalizePayload(rawPayload);
 
       for (var prop in payload) {
         var modelName = this.modelNameFromPayloadKey(prop);
         if (!store.modelFactoryFor(modelName)) {
-          Ember.warn(this.warnMessageNoModelForKey(prop, modelName), false);
+          Ember.warn(this.warnMessageNoModelForKey(prop, modelName), false, {
+            id: "ds.serializer.model-for-key-missing"
+          });
           continue;
         }
         var type = store.modelFor(modelName);
@@ -6933,7 +7118,10 @@
 
     ember$data$lib$system$container$proxy$$ContainerProxy.prototype.registerDeprecation = function (deprecated, valid) {
       var preLookupCallback = function () {
-        Ember.deprecate("You tried to look up '" + deprecated + "', " + "but this has been deprecated in favor of '" + valid + "'.", false);
+        Ember.deprecate('You tried to look up \'' + deprecated + '\', but this has been deprecated in favor of \'' + valid + '\'.', false, {
+          id: 'ds.store.deprecated-lookup',
+          until: '2.0.0'
+        });
       };
 
       return this.registerAlias(deprecated, valid, preLookupCallback);
@@ -6944,8 +7132,8 @@
 
       for (i = proxyPairs.length; i > 0; i--) {
         proxyPair = proxyPairs[i - 1];
-        deprecated = proxyPair["deprecated"];
-        valid = proxyPair["valid"];
+        deprecated = proxyPair['deprecated'];
+        valid = proxyPair['valid'];
 
         this.registerDeprecation(deprecated, valid);
       }
@@ -7354,7 +7542,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.13.6'
+      VERSION: '1.13.7'
     });
 
     if (Ember.libraries) {
@@ -7398,7 +7586,10 @@
       }
 
       if (serializer === null || serializer === undefined) {
-        Ember.deprecate('Ember Data 2.0 will no longer support adapters with a null serializer property. Please define `defaultSerializer: "-default"` your adapter and make sure the `serializer` property is not null.');
+        Ember.deprecate('Ember Data 2.0 will no longer support adapters with a null serializer property. Please define `defaultSerializer: "-default"` your adapter and make sure the `serializer` property is not null.', false, {
+          id: 'ds.adapter.null-serializer-property',
+          until: '2.0.0'
+        });
         serializer = {
           extract: function (store, type, payload) {
             return payload;
@@ -7416,7 +7607,10 @@
       var snapshot = internalModel.createSnapshot(options);
       var promise;
       if (!adapter.findRecord) {
-        Ember.deprecate("Adapter#find has been deprecated and renamed to `findRecord`.");
+        Ember.deprecate("Adapter#find has been deprecated and renamed to `findRecord`.", false, {
+          id: "ds.adapter.find-renamed-to-find-record",
+          until: "2.0.0"
+        });
         promise = adapter.find(store, typeClass, id, snapshot);
       } else {
         promise = adapter.findRecord(store, typeClass, id, snapshot);
@@ -7552,7 +7746,10 @@
       var promise;
 
       if (!adapter.query) {
-        Ember.deprecate("Adapter#findQuery has been deprecated and renamed to `query`.");
+        Ember.deprecate("Adapter#findQuery has been deprecated and renamed to `query`.", false, {
+          id: "ds.adapter.find-query-renamed-to-query",
+          until: "2.0.0"
+        });
         promise = adapter.findQuery(store, typeClass, query, recordArray);
       } else {
         promise = adapter.query(store, typeClass, query, recordArray);
@@ -7599,14 +7796,51 @@
       }, null, "DS: Extract payload of queryRecord " + typeClass);
     }
     function ember$data$lib$system$snapshot$record$array$$SnapshotRecordArray(recordArray, meta, adapterOptions) {
+      /**
+        An array of snapshots
+        @private
+        @property _snapshots
+        @type {Array}
+      */
       this._snapshots = null;
+      /**
+        An array of records
+        @private
+        @property _recordArray
+        @type {Array}
+      */
       this._recordArray = recordArray;
+      /**
+        Number of records in the array
+        @property length
+        @type {Number}
+      */
       this.length = recordArray.get('length');
+      /**
+        The type of the underlying records for the snapshots in the array, as a DS.Model
+        @property type
+        @type {DS.Model}
+      */
       this.type = recordArray.get('type');
+      /**
+        Meta object
+        @property meta
+        @type {Object}
+      */
       this.meta = meta;
+      /**
+        A hash of adapter options
+        @property adapterOptions
+        @type {Object}
+      */
       this.adapterOptions = adapterOptions;
     }
 
+    /**
+      Get snapshots of the underlying record array
+      @method snapshots
+      @return {Array} Array of snapshots
+    */
     ember$data$lib$system$snapshot$record$array$$SnapshotRecordArray.prototype.snapshots = function () {
       if (this._snapshots) {
         return this._snapshots;
@@ -7839,9 +8073,9 @@
         manager.updateFilter(this, ember$data$lib$system$record$arrays$filtered$record$array$$get(this, "type"), ember$data$lib$system$record$arrays$filtered$record$array$$get(this, "filterFunction"));
       },
 
-      updateFilter: Ember.observer(function () {
+      updateFilter: Ember.observer("filterFunction", function () {
         Ember.run.once(this, this._updateFilter);
-      }, "filterFunction")
+      })
     });
 
     var ember$data$lib$system$clone$null$$default = ember$data$lib$system$clone$null$$cloneNull;
@@ -8302,7 +8536,10 @@
 
       instanceFor: function (key) {
         if (key === 'adapter:-rest') {
-          ember$lib$main$$default.deprecate('You are currently using the default DS.RESTAdapter adapter. For Ember 2.0 the default adapter will be DS.JSONAPIAdapter. If you would like to continue using DS.RESTAdapter please create an application adapter that extends DS.RESTAdapter.');
+          ember$lib$main$$default.deprecate('You are currently using the default DS.RESTAdapter adapter. For Ember 2.0 the default adapter will be DS.JSONAPIAdapter. If you would like to continue using DS.RESTAdapter please create an application adapter that extends DS.RESTAdapter.', false, {
+            id: 'ds.adapter.default-adapter-changing-to-json-api',
+            until: '2.0.0'
+          });
         }
 
         var cache = this._cache;
@@ -8702,6 +8939,7 @@
 
         rolledBack: function (internalModel) {
           internalModel.clearErrorMessages();
+          internalModel.transitionTo('loaded.saved');
           internalModel.triggerLater('ready');
         },
 
@@ -9322,13 +9560,15 @@
         this.willSync = true;
         var self = this;
         this.store._backburner.join(function () {
-          self.store._backburner.schedule("syncRelationships", self, self.flushCanonical);
+          self.store._backburner.schedule('syncRelationships', self, self.flushCanonical);
         });
       },
 
       updateLink: function (link) {
-        Ember.warn("You have pushed a record of type '" + this.record.type.modelName + "' with '" + this.key + "' as a link, but the association is not an async relationship.", this.isAsync);
-        Ember.assert("You have pushed a record of type '" + this.record.type.modelName + "' with '" + this.key + "' as a link, but the value of that link is not a string.", typeof link === "string" || link === null);
+        Ember.warn('You have pushed a record of type \'' + this.record.type.modelName + '\' with \'' + this.key + '\' as a link, but the association is not an async relationship.', this.isAsync, {
+          id: 'ds.store.push-link-for-sync-relationship'
+        });
+        Ember.assert('You have pushed a record of type \'' + this.record.type.modelName + '\' with \'' + this.key + '\' as a link, but the value of that link is not a string.', typeof link === 'string' || link === null);
         if (link !== this.link) {
           this.link = link;
           this.linkPromise = null;
@@ -9597,7 +9837,10 @@
         @deprecated Use `addObject()` instead
       */
       addRecord: function (record) {
-        Ember.deprecate('Using manyArray.addRecord() has been deprecated. You should use manyArray.addObject() instead.');
+        Ember.deprecate('Using manyArray.addRecord() has been deprecated. You should use manyArray.addObject() instead.', false, {
+          id: 'ds.many-array.add-record-deprecated',
+          until: '2.0.0'
+        });
         this.addObject(record);
       },
 
@@ -9607,7 +9850,10 @@
         @deprecated Use `removeObject()` instead
       */
       removeRecord: function (record) {
-        Ember.deprecate('Using manyArray.removeRecord() has been deprecated. You should use manyArray.removeObject() instead.');
+        Ember.deprecate('Using manyArray.removeRecord() has been deprecated. You should use manyArray.removeObject() instead.', false, {
+          id: 'ds.many-array.remove-record-deprecated',
+          until: '2.0.0'
+        });
         this.removeObject(record);
       }
     });
@@ -10093,7 +10339,10 @@
             // again.
             if (callDeprecate) {
               callDeprecate = false;
-              Ember.deprecate('Usage of `snapshot.constructor` is deprecated, use `snapshot.type` instead.');
+              Ember.deprecate('Usage of `snapshot.constructor` is deprecated, use `snapshot.type` instead.', false, {
+                id: 'ds.snapshot.constructor-deprecator',
+                until: '2.0.0'
+              });
               callDeprecate = true;
             }
 
@@ -10378,7 +10627,10 @@
         @deprecated Use [attr](#method_attr), [belongsTo](#method_belongsTo) or [hasMany](#method_hasMany) instead
       */
       get: function (keyName) {
-        Ember.deprecate('Using DS.Snapshot.get() is deprecated. Use .attr(), .belongsTo() or .hasMany() instead.');
+        Ember.deprecate('Using DS.Snapshot.get() is deprecated. Use .attr(), .belongsTo() or .hasMany() instead.', false, {
+          id: 'ds.snapshot.get-deprecated',
+          until: '2.0.0'
+        });
 
         if (keyName === 'id') {
           return this.id;
@@ -10424,7 +10676,10 @@
         @private
       */
       _createSnapshot: function () {
-        Ember.deprecate('You called _createSnapshot on what\'s already a DS.Snapshot. You shouldn\'t manually create snapshots in your adapter since the store passes snapshots to adapters by default.');
+        Ember.deprecate('You called _createSnapshot on what\'s already a DS.Snapshot. You shouldn\'t manually create snapshots in your adapter since the store passes snapshots to adapters by default.', false, {
+          id: 'ds.snapshot.create-snapshot-on-snapshot',
+          until: '2.0.0'
+        });
         return this;
       }
     };
@@ -10432,7 +10687,10 @@
     Ember.defineProperty(ember$data$lib$system$snapshot$$Snapshot.prototype, 'typeKey', {
       enumerable: false,
       get: function () {
-        Ember.deprecate('Snapshot.typeKey is deprecated. Use snapshot.modelName instead.');
+        Ember.deprecate('Snapshot.typeKey is deprecated. Use snapshot.modelName instead.', false, {
+          id: 'ds.snapshot.type-key-deprecated',
+          until: '2.0.0'
+        });
         return this.modelName;
       },
       set: function () {
@@ -11594,13 +11852,19 @@
         Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string");
 
         if (arguments.length === 1) {
-          Ember.deprecate("Using store.find(type) has been deprecated. Use store.findAll(type) to retrieve all records for a given type.");
+          Ember.deprecate("Using store.find(type) has been deprecated. Use store.findAll(type) to retrieve all records for a given type.", false, {
+            id: "ds.store.find-with-type-deprecated",
+            until: "2.0.0"
+          });
           return this.findAll(modelName);
         }
 
         // We are passed a query instead of an id.
         if (Ember.typeOf(id) === "object") {
-          Ember.deprecate("Calling store.find() with a query object is deprecated. Use store.query() instead.");
+          Ember.deprecate("Calling store.find() with a query object is deprecated. Use store.query() instead.", false, {
+            id: "ds.store.find-with-type-deprecated",
+            until: "2.0.0"
+          });
           return this.query(modelName, id);
         }
         var options = ember$data$lib$system$store$$deprecatePreload(preload, this.modelFor(modelName), "find");
@@ -11619,7 +11883,10 @@
       fetchById: function (modelName, id, preload) {
         Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string");
         var options = ember$data$lib$system$store$$deprecatePreload(preload, this.modelFor(modelName), "fetchById");
-        Ember.deprecate("Using store.fetchById(type, id) has been deprecated. Use store.findRecord(type, id, { reload: true }) to reload a record for a given type.");
+        Ember.deprecate("Using store.fetchById(type, id) has been deprecated. Use store.findRecord(type, id, { reload: true }) to reload a record for a given type.", false, {
+          id: "ds.store.fetch-by-id-deprecated",
+          until: "2.0.0"
+        });
         if (this.hasRecordForId(modelName, id)) {
           return this.peekRecord(modelName, id).reload();
         } else {
@@ -11636,7 +11903,10 @@
         @return {Promise} promise
       */
       fetchAll: function (modelName) {
-        Ember.deprecate("Using store.fetchAll(type) has been deprecated. Use store.findAll(type, { reload: true }) to retrieve all records for a given type.");
+        Ember.deprecate("Using store.fetchAll(type) has been deprecated. Use store.findAll(type, { reload: true }) to retrieve all records for a given type.", false, {
+          id: "ds.store.fetch-all-deprecated",
+          until: "2.0.0"
+        });
         return this.findAll(modelName, { reload: true });
       },
 
@@ -11650,7 +11920,10 @@
       */
       fetch: function (modelName, id, preload) {
         Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string");
-        Ember.deprecate("Using store.fetch() has been deprecated. Use store.findRecord for fetching individual records or store.findAll for collections");
+        Ember.deprecate("Using store.fetch() has been deprecated. Use store.findRecord for fetching individual records or store.findAll for collections", false, {
+          id: "ds.store.fetch-deprecated",
+          until: "2.0.0"
+        });
         return this.findRecord(modelName, id, { reload: true, preload: preload });
       },
 
@@ -11664,7 +11937,10 @@
         @return {Promise} promise
       */
       findById: function (modelName, id, preload) {
-        Ember.deprecate("Using store.findById() has been deprecated. Use store.findRecord() to return a record for a given type and id combination.");
+        Ember.deprecate("Using store.findById() has been deprecated. Use store.findRecord() to return a record for a given type and id combination.", false, {
+          id: "ds.store.find-by-id-deprecated",
+          until: "2.0.0"
+        });
         var options = ember$data$lib$system$store$$deprecatePreload(preload, this.modelFor(modelName), "findById");
         return this.findRecord(modelName, id, options);
       },
@@ -11877,7 +12153,9 @@
               return resolvedRecords.contains(record);
             });
             if (missingRecords.length) {
-              Ember.warn("Ember Data expected to find records with the following ids in the adapter response but they were missing: " + Ember.inspect(Ember.A(missingRecords).mapBy("id")), false);
+              Ember.warn("Ember Data expected to find records with the following ids in the adapter response but they were missing: " + Ember.inspect(Ember.A(missingRecords).mapBy("id")), false, {
+                id: "ds.store.missing-records-from-adapter"
+              });
             }
             rejectRecords(missingRecords);
           };
@@ -11950,7 +12228,10 @@
         @return {DS.Model|null} record
       */
       getById: function (modelName, id) {
-        Ember.deprecate("Using store.getById() has been deprecated. Use store.peekRecord to get a record by a given type and ID without triggering a fetch.");
+        Ember.deprecate("Using store.getById() has been deprecated. Use store.peekRecord to get a record by a given type and ID without triggering a fetch.", false, {
+          id: "ds.store.get-by-id-deprecated",
+          until: "2.0.0"
+        });
         return this.peekRecord(modelName, id);
       },
 
@@ -12186,7 +12467,10 @@
         @deprecated Use `store.query instead`
       */
       findQuery: function (modelName, query) {
-        Ember.deprecate("store#findQuery is deprecated. You should use store#query instead.");
+        Ember.deprecate("store#findQuery is deprecated. You should use store#query instead.", false, {
+          id: "ds.store.find-query-deprecated",
+          until: "2.0.0"
+        });
         return this.query(modelName, query);
       },
 
@@ -12274,7 +12558,10 @@
         @return {DS.RecordArray}
       */
       all: function (modelName) {
-        Ember.deprecate("Using store.all() has been deprecated. Use store.peekAll() to get all records by a given type without triggering a fetch.");
+        Ember.deprecate("Using store.all() has been deprecated. Use store.peekAll() to get all records by a given type without triggering a fetch.", false, {
+          id: "ds.store.all-renamed-deprecated",
+          until: "2.0.0"
+        });
         return this.peekAll(modelName);
       },
 
@@ -12392,7 +12679,9 @@
 
         if (!Ember.ENV.ENABLE_DS_FILTER) {
           Ember.deprecate("The filter API will be moved into a plugin soon. To enable store.filter using an environment flag, or to use an alternative, you can visit the ember-data-filter addon page", false, {
-            url: "https://github.com/ember-data/ember-data-filter"
+            url: "https://github.com/ember-data/ember-data-filter",
+            id: "ds.store.filter-deprecated",
+            until: "2.0.0"
           });
         }
 
@@ -12452,7 +12741,10 @@
         @deprecated
       */
       metadataFor: function (modelName) {
-        Ember.deprecate("`store.metadataFor()` has been deprecated. You can use `.get('meta')` on relationships and arrays returned from `store.query()`.");
+        Ember.deprecate("`store.metadataFor()` has been deprecated. You can use `.get('meta')` on relationships and arrays returned from `store.query()`.", false, {
+          id: "ds.store.metadata-for-deprecated",
+          until: "2.0.0"
+        });
         return this._metadataFor(modelName);
       },
 
@@ -12477,7 +12769,10 @@
         @deprecated
       */
       setMetadataFor: function (modelName, metadata) {
-        Ember.deprecate("`store.setMetadataFor()` has been deprecated. Please return meta from your serializer's `extractMeta` hook.");
+        Ember.deprecate("`store.setMetadataFor()` has been deprecated. Please return meta from your serializer's `extractMeta` hook.", false, {
+          id: "ds.store.set-metadata-for-deprecated",
+          until: "2.0.0"
+        });
         this._setMetadataFor(modelName, metadata);
       },
 
@@ -12750,7 +13045,10 @@
             enumerable: true,
             configurable: false,
             get: function () {
-              Ember.deprecate("Usage of `typeKey` has been deprecated and will be removed in Ember Data 1.0. It has been replaced by `modelName` on the model class.");
+              Ember.deprecate("Usage of `typeKey` has been deprecated and will be removed in Ember Data 2.0. It has been replaced by `modelName` on the model class.", false, {
+                id: "ds.model.type-key-replace-by-model-name",
+                until: "2.0.0"
+              });
               var typeKey = this.modelName;
               if (typeKey) {
                 typeKey = Ember.String.camelize(this.modelName);
@@ -12835,7 +13133,10 @@
         if (Ember.typeOf(modelNameArg) === "object" && Ember.typeOf(dataArg) === "undefined") {
           data = modelNameArg;
         } else {
-          Ember.deprecate("store.push(type, data) has been deprecated. Please provide a JSON-API document object as the first and only argument to store.push.");
+          Ember.deprecate("store.push(type, data) has been deprecated. Please provide a JSON-API document object as the first and only argument to store.push.", false, {
+            id: "ds.store.push-with-type-and-data-deprecated",
+            until: "2.0.0"
+          });
           Ember.assert("Expected an object as `data` in a call to `push` for " + modelNameArg + " , but was " + Ember.typeOf(dataArg), Ember.typeOf(dataArg) === "object");
           Ember.assert("You must include an `id` for " + modelNameArg + " in an object passed to `push`", dataArg.id != null && dataArg.id !== "");
           data = ember$data$lib$system$store$serializer$response$$_normalizeSerializerPayload(this.modelFor(modelNameArg), dataArg);
@@ -12884,7 +13185,7 @@
             return !(key === "id" || key === "links" || ember$data$lib$system$store$$get(type, "fields").has(key) || key.match(/Type$/));
           })) + ". Make sure they've been defined in your model.", filter.call(ember$data$lib$system$object$polyfills$$keysFunc(data), function (key) {
             return !(key === "id" || key === "links" || ember$data$lib$system$store$$get(type, "fields").has(key) || key.match(/Type$/));
-          }).length === 0);
+          }).length === 0, { id: "ds.store.unknown-keys-in-payload" });
         }
 
         // Actually load the record into the store.
@@ -13008,7 +13309,10 @@
       */
       update: function (modelName, data) {
         Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string");
-        Ember.deprecate("Using store.update() has been deprecated since store.push() now handles partial updates. You should use store.push() instead.");
+        Ember.deprecate("Using store.update() has been deprecated since store.push() now handles partial updates. You should use store.push() instead.", false, {
+          id: "ds.store.update-deprecated",
+          until: "2.0.0"
+        });
         return this.push(modelName, data);
       },
 
@@ -13023,7 +13327,10 @@
       */
       pushMany: function (modelName, datas) {
         Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string");
-        Ember.deprecate("Using store.pushMany() has been deprecated since store.push() now handles multiple items. You should use store.push() instead.");
+        Ember.deprecate("Using store.pushMany() has been deprecated since store.push() now handles multiple items. You should use store.push() instead.", false, {
+          id: "ds.store.push-many-deprecated",
+          until: "2.0.0"
+        });
         var length = datas.length;
         var result = new Array(length);
 
@@ -13042,7 +13349,10 @@
       */
       metaForType: function (modelName, metadata) {
         Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === "string");
-        Ember.deprecate("Using store.metaForType() has been deprecated. Use store.setMetadataFor() to set metadata for a specific type.");
+        Ember.deprecate("Using store.metaForType() has been deprecated. Use store.setMetadataFor() to set metadata for a specific type.", false, {
+          id: "ds.store.meta-for-type-deprecated",
+          until: "2.0.0"
+        });
         this.setMetadataFor(modelName, metadata);
       },
 
@@ -13094,7 +13404,10 @@
         @deprecated Use [unloadRecord](#method_unloadRecord) instead
       */
       dematerializeRecord: function (record) {
-        Ember.deprecate("Using store.dematerializeRecord() has been deprecated since it was intended for private use only. You should use store.unloadRecord() instead.");
+        Ember.deprecate("Using store.dematerializeRecord() has been deprecated since it was intended for private use only. You should use store.unloadRecord() instead.", false, {
+          id: "ds.store.dematerialize-record-deprecated",
+          until: "2.0.0"
+        });
         this._dematerializeRecord(record);
       },
 
@@ -13141,12 +13454,11 @@
       adapterFor: function (modelOrClass) {
         var modelName;
 
-        Ember.deprecate("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelOrClass === "string");
-
-        if (typeof modelOrClass !== "string") {
-          modelName = modelOrClass.modelName;
-        } else {
+        if (typeof modelOrClass === "string") {
           modelName = modelOrClass;
+        } else {
+          Ember.deprecate("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), false, { id: "ds.store.passing-classes-deprecated", until: "2.0.0" });
+          modelName = modelOrClass.modelName;
         }
 
         return this.lookupAdapter(modelName);
@@ -13180,11 +13492,11 @@
       serializerFor: function (modelOrClass) {
         var modelName;
 
-        Ember.deprecate("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelOrClass), typeof modelOrClass === "string");
-        if (typeof modelOrClass !== "string") {
-          modelName = modelOrClass.modelName;
-        } else {
+        if (typeof modelOrClass === "string") {
           modelName = modelOrClass;
+        } else {
+          Ember.deprecate("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), false, { id: "ds.store.passing-classes-deprecated", until: "2.0.0" });
+          modelName = modelOrClass.modelName;
         }
 
         var fallbacks = ["application", this.adapterFor(modelName).get("defaultSerializer"), "-default"];
@@ -13383,7 +13695,10 @@
         }
 
         if (preloadDetected) {
-          Ember.deprecate("Passing a preload argument to `store." + methodName + "` is deprecated. Please move it to the preload key on the " + methodName + " `options` argument.");
+          Ember.deprecate("Passing a preload argument to `store." + methodName + "` is deprecated. Please move it to the preload key on the " + methodName + " `options` argument.", false, {
+            id: "ds.store.preload-outside-options",
+            until: "2.0.0"
+          });
           var preload = preloadOrOptions;
           return {
             preload: preload
@@ -13606,7 +13921,22 @@
       },
 
       /**
-       @method keyForAttribute
+       `keyForAttribute` can be used to define rules for how to convert an
+       attribute name in your model to a key in your JSON.
+       By default `JSONAPISerializer` follows the format used on the examples of
+       http://jsonapi.org/format and uses dashes as the word separator in the JSON
+       attribute keys.
+        This behaviour can be easily customized by extending this method.
+        Example
+        ```app/serializers/application.js
+       import DS from 'ember-data';
+        export default DS.JSONAPISerializer.extend({
+         keyForAttribute: function(attr, method) {
+           return Ember.String.dasherize(attr).toUpperCase();
+         }
+       });
+       ```
+        @method keyForAttribute
        @param {String} key
        @param {String} method
        @return {String} normalized key
@@ -13616,6 +13946,21 @@
       },
 
       /**
+       `keyForRelationship` can be used to define a custom key when
+       serializing and deserializing relationship properties.
+       By default `JSONAPISerializer` follows the format used on the examples of
+       http://jsonapi.org/format and uses dashes as word separators in
+       relationship properties.
+        This behaviour can be easily customized by extending this method.
+        Example
+         ```app/serializers/post.js
+        import DS from 'ember-data';
+         export default DS.JSONAPISerializer.extend({
+          keyForRelationship: function(key, relationship, method) {
+            return Ember.String.underscore(key);
+          }
+        });
+        ```
        @method keyForRelationship
        @param {String} key
        @param {String} typeClass
@@ -13745,7 +14090,7 @@
       @param {Object} [application] an application namespace
     */
     function ember$data$lib$initializers$store$$initializeStore(registry, application) {
-      Ember.deprecate("Specifying a custom Store for Ember Data on your global namespace as `App.Store` " + "has been deprecated. Please use `App.ApplicationStore` instead.", !(application && application.Store));
+      Ember.deprecate("Specifying a custom Store for Ember Data on your global namespace as `App.Store` " + "has been deprecated. Please use `App.ApplicationStore` instead.", !(application && application.Store), { id: "ds.initializer.specifying-custom-store-on-global-namespace-deprecated", until: "2.0.0" });
 
       registry.optionsForType("serializer", { singleton: false });
       registry.optionsForType("adapter", { singleton: false });
@@ -13764,7 +14109,10 @@
 
       var store;
       if (registry.has("store:main")) {
-        Ember.deprecate("Registering a custom store as `store:main` or defining a store in app/store.js has been deprecated. Please move you store to `service:store` or define your custom store in `app/services/store.js`");
+        Ember.deprecate("Registering a custom store as `store:main` or defining a store in app/store.js has been deprecated. Please move you store to `service:store` or define your custom store in `app/services/store.js`", false, {
+          id: "ds.initializer.custom-store-as-store-main-deprecated",
+          until: "2.0.0"
+        });
         store = registry.lookup("store:main");
       } else {
         var storeMainProxy = new ember$data$lib$system$container$proxy$$default(registry);
@@ -13772,7 +14120,10 @@
       }
 
       if (registry.has("store:application")) {
-        Ember.deprecate("Registering a custom store as `store:application` or defining a store in app/stores/application.js has been deprecated. Please move you store to `service:store` or define your custom store in `app/services/store.js`");
+        Ember.deprecate("Registering a custom store as `store:main` or defining a store in app/store.js has been deprecated. Please move you store to `service:store` or define your custom store in `app/services/store.js`", false, {
+          id: "ds.initializer.custom-store-as-store-main-deprecated",
+          until: "2.0.0"
+        });
         store = registry.lookup("store:application");
       } else {
         var storeApplicationProxy = new ember$data$lib$system$container$proxy$$default(registry);
@@ -13953,61 +14304,6 @@
       registry.injection('controller', 'store', 'service:store');
       registry.injection('route', 'store', 'service:store');
       registry.injection('data-adapter', 'store', 'service:store');
-    }
-    var ember$new$computed$lib$utils$can$use$new$syntax$$supportsSetterGetter;
-
-    try {
-      ember$lib$main$$default.computed({
-        set: function () {},
-        get: function () {}
-      });
-      ember$new$computed$lib$utils$can$use$new$syntax$$supportsSetterGetter = true;
-    } catch (e) {
-      ember$new$computed$lib$utils$can$use$new$syntax$$supportsSetterGetter = false;
-    }
-
-    var ember$new$computed$lib$utils$can$use$new$syntax$$default = ember$new$computed$lib$utils$can$use$new$syntax$$supportsSetterGetter;
-    var ember$new$computed$lib$main$$default = ember$new$computed$lib$main$$newComputed;
-
-    var ember$new$computed$lib$main$$computed = ember$lib$main$$default.computed;
-
-    function ember$new$computed$lib$main$$newComputed() {
-      var polyfillArguments = [];
-      var config = arguments[arguments.length - 1];
-
-      if (typeof config === 'function' || ember$new$computed$lib$utils$can$use$new$syntax$$default) {
-        return ember$new$computed$lib$main$$computed.apply(undefined, arguments);
-      }
-
-      for (var i = 0, l = arguments.length - 1; i < l; i++) {
-        polyfillArguments.push(arguments[i]);
-      }
-
-      var func;
-      if (config.set) {
-        func = function (key, value) {
-          if (arguments.length > 1) {
-            return config.set.call(this, key, value);
-          } else {
-            return config.get.call(this, key);
-          }
-        };
-      } else {
-        func = function (key) {
-          return config.get.call(this, key);
-        };
-      }
-
-      polyfillArguments.push(func);
-
-      return ember$new$computed$lib$main$$computed.apply(undefined, polyfillArguments);
-    }
-
-    var ember$new$computed$lib$main$$getKeys = Object.keys || ember$lib$main$$default.keys;
-    var ember$new$computed$lib$main$$computedKeys = ember$new$computed$lib$main$$getKeys(ember$new$computed$lib$main$$computed);
-
-    for (var ember$new$computed$lib$main$$i = 0, ember$new$computed$lib$main$$l = ember$new$computed$lib$main$$computedKeys.length; ember$new$computed$lib$main$$i < ember$new$computed$lib$main$$l; ember$new$computed$lib$main$$i++) {
-      ember$new$computed$lib$main$$newComputed[ember$new$computed$lib$main$$computedKeys[ember$new$computed$lib$main$$i]] = ember$new$computed$lib$main$$computed[ember$new$computed$lib$main$$computedKeys[ember$new$computed$lib$main$$i]];
     }
     var ember$data$lib$system$model$attributes$$default = ember$data$lib$system$model$attributes$$attr;
 
@@ -14986,7 +15282,7 @@
           key = this.keyForAttribute(attr, 'serialize');
           hasMany = snapshot.hasMany(attr);
 
-          Ember.warn('The embedded relationship \'' + key + '\' is undefined for \'' + snapshot.modelName + '\' with id \'' + snapshot.id + '\'. Please include it in your original payload.', Ember.typeOf(hasMany) !== 'undefined');
+          Ember.warn('The embedded relationship \'' + key + '\' is undefined for \'' + snapshot.modelName + '\' with id \'' + snapshot.id + '\'. Please include it in your original payload.', Ember.typeOf(hasMany) !== 'undefined', { id: 'ds.serializer.embedded-relationship-undefined' });
 
           json[key] = Ember.A(hasMany).map(function (embeddedSnapshot) {
             var embeddedJson = embeddedSnapshot.record.serialize({ includeId: true });
@@ -15418,11 +15714,23 @@
 
       return ember$new$computed$lib$main$$default({
         get: function (key) {
-          Ember.warn("You provided a serialize option on the \"" + key + "\" property in the \"" + this._internalModel.modelName + "\" class, this belongs in the serializer. See DS.Serializer and it's implementations http://emberjs.com/api/data/classes/DS.Serializer.html", !opts.hasOwnProperty("serialize"));
-          Ember.warn("You provided an embedded option on the \"" + key + "\" property in the \"" + this._internalModel.modelName + "\" class, this belongs in the serializer. See DS.EmbeddedRecordsMixin http://emberjs.com/api/data/classes/DS.EmbeddedRecordsMixin.html", !opts.hasOwnProperty("embedded"));
+          if (opts.hasOwnProperty("serialize")) {
+            Ember.warn("You provided a serialize option on the \"" + key + "\" property in the \"" + this._internalModel.modelName + "\" class, this belongs in the serializer. See DS.Serializer and it's implementations http://emberjs.com/api/data/classes/DS.Serializer.html", false, {
+              id: "ds.model.serialize-option-in-belongs-to"
+            });
+          }
+
+          if (opts.hasOwnProperty("embedded")) {
+            Ember.warn("You provided an embedded option on the \"" + key + "\" property in the \"" + this._internalModel.modelName + "\" class, this belongs in the serializer. See DS.EmbeddedRecordsMixin http://emberjs.com/api/data/classes/DS.EmbeddedRecordsMixin.html", false, {
+              id: "ds.model.embedded-option-in-belongs-to"
+            });
+          }
 
           if (meta.shouldWarnAsync) {
-            Ember.deprecate("In Ember Data 2.0, relationships will be asynchronous by default. You must set `" + key + ": DS.belongsTo('" + modelName + "', { async: false })` if you wish for a relationship remain synchronous.");
+            Ember.deprecate("In Ember Data 2.0, relationships will be asynchronous by default. You must set `" + key + ": DS.belongsTo('" + modelName + "', { async: false })` if you wish for a relationship remain synchronous.", false, {
+              id: "ds.model.relationship-changing-to-asynchrounous-by-default",
+              until: "2.0.0"
+            });
             meta.shouldWarnAsycn = false;
           }
 
@@ -15598,7 +15906,10 @@
       return ember$new$computed$lib$main$$default({
         get: function (key) {
           if (meta.shouldWarnAsync) {
-            Ember.deprecate("In Ember Data 2.0, relationships will be asynchronous by default. You must set `" + key + ": DS.hasMany('" + type + "', { async: false })` if you wish for a relationship remain synchronous.");
+            Ember.deprecate("In Ember Data 2.0, relationships will be asynchronous by default. You must set `" + key + ": DS.hasMany('" + type + "', { async: false })` if you wish for a relationship remain synchronous.", false, {
+              id: "ds.model.relationship-changing-to-asynchrounous-by-default",
+              until: "2.0.0"
+            });
             meta.shouldWarnAsync = false;
           }
           var relationship = this._internalModel._relationships.get(key);
@@ -15870,8 +16181,6 @@
 
         var inverseName, inverseKind, inverse;
 
-        Ember.warn("Detected a reflexive relationship by the name of '" + name + "' without an inverse option. Look at http://emberjs.com/guides/models/defining-models/#toc_reflexive-relation for how to explicitly specify inverses.", options.inverse || propertyMeta.type !== propertyMeta.parentType.modelName);
-
         //If inverse is specified manually, return the inverse
         if (options.inverse) {
           inverseName = options.inverse;
@@ -15882,6 +16191,12 @@
           inverseKind = inverse.kind;
         } else {
           //No inverse was specified manually, we need to use a heuristic to guess one
+          if (propertyMeta.type === propertyMeta.parentType.modelName) {
+            Ember.warn("Detected a reflexive relationship by the name of '" + name + "' without an inverse option. Look at http://emberjs.com/guides/models/defining-models/#toc_reflexive-relation for how to explicitly specify inverses.", false, {
+              id: "ds.model.reflexive-relationship-without-inverse"
+            });
+          }
+
           var possibleRelationships = findPossibleInverses(this, inverseType);
 
           if (possibleRelationships.length === 0) {
@@ -16303,7 +16618,9 @@
         get: function () {
           if (ember$data$lib$main$$_ActiveModelSerializer === activemodel$adapter$lib$system$active$model$adapter$$default) {
             Ember.deprecate("The ActiveModelAdapter has been moved into a plugin. It will not be bundled with Ember Data in 2.0", false, {
-              url: "https://github.com/ember-data/active-model-adapter"
+              url: "https://github.com/ember-data/active-model-adapter",
+              id: "ds.adapter.active-model-adapter-deprecated",
+              until: "2.0.0"
             });
           }
           return ember$data$lib$main$$_ActiveModelAdapter;
@@ -16316,7 +16633,9 @@
         get: function () {
           if (ember$data$lib$main$$_ActiveModelSerializer === activemodel$adapter$lib$system$active$model$serializer$$default) {
             Ember.deprecate("The ActiveModelSerializer has been moved into a plugin. It will not be bundled with Ember Data in 2.0", false, {
-              url: "https://github.com/ember-data/active-model-adapter"
+              url: "https://github.com/ember-data/active-model-adapter",
+              id: "ds.serializer.active-model-serializer-deprecated",
+              until: "2.0.0"
             });
           }
           return ember$data$lib$main$$_ActiveModelSerializer;
@@ -16353,7 +16672,10 @@
       Ember.defineProperty(ember$data$lib$core$$default, "FixtureAdapter", {
         get: function () {
           if (ember$data$lib$main$$_FixtureAdapter === ember$data$lib$adapters$fixture$adapter$$default) {
-            Ember.deprecate("DS.FixtureAdapter has been deprecated and moved into an unsupported addon: https://github.com/emberjs/ember-data-fixture-adapter/tree/master");
+            Ember.deprecate("DS.FixtureAdapter has been deprecated and moved into an unsupported addon: https://github.com/emberjs/ember-data-fixture-adapter/tree/master", false, {
+              id: "ds.adapter.fixture-adapter-deprecated",
+              until: "2.0.0"
+            });
           }
           return ember$data$lib$main$$_FixtureAdapter;
         },

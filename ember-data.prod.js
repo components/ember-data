@@ -5,9 +5,8 @@
     var ember$data$lib$system$object$polyfills$$create = Object.create || Ember.create;
 
     var ember$data$lib$adapters$errors$$EmberError = Ember.Error;
-
     var ember$data$lib$adapters$errors$$forEach = Ember.ArrayPolyfills.forEach;
-    var ember$data$lib$adapters$errors$$SOURCE_POINTER_REGEXP = /data\/(attributes|relationships)\/(.*)/;/**
+    var ember$data$lib$adapters$errors$$SOURCE_POINTER_REGEXP = /^\/?data\/(attributes|relationships)\/(.*)/;/**
       @class AdapterError
       @namespace DS
     */
@@ -125,7 +124,7 @@
               title: "Invalid Attribute",
               detail: messages[i],
               source: {
-                pointer: "data/attributes/" + key
+                pointer: "/data/attributes/" + key
               }
             });
           }
@@ -918,7 +917,8 @@
     });
 
     function ember$data$lib$adapters$build$url$mixin$$urlForFind(id, modelName, snapshot) {
-            return this._buildURL(modelName, id);
+      
+      return this._buildURL(modelName, id);
     }
 
     function ember$data$lib$adapters$build$url$mixin$$urlForFindQuery(query, modelName) {
@@ -1334,6 +1334,31 @@
         }
 
         var url = this.buildURL(type.modelName, null, null, "query", query);
+
+        if (this.sortQueryParams) {
+          query = this.sortQueryParams(query);
+        }
+
+        return this.ajax(url, "GET", { data: query });
+      },
+
+      /**
+        Called by the store in order to fetch a JSON object for
+        the record that matches a particular query.
+         The `queryRecord` method makes an Ajax (HTTP GET) request to a URL
+        computed by `buildURL`, and returns a promise for the resulting
+        payload.
+         The `query` argument is a simple JavaScript object that will be passed directly
+        to the server as parameters.
+         @private
+        @method queryRecord
+        @param {DS.Store} store
+        @param {DS.Model} type
+        @param {Object} query
+        @return {Promise} promise
+      */
+      queryRecord: function (store, type, query) {
+        var url = this.buildURL(type.modelName, null, null, "queryRecord", query);
 
         if (this.sortQueryParams) {
           query = this.sortQueryParams(query);
@@ -4240,10 +4265,12 @@
     };
 
     var ember$data$lib$system$model$errors$$get = Ember.get;
+    var ember$data$lib$system$model$errors$$set = Ember.set;
     var ember$data$lib$system$model$errors$$isEmpty = Ember.isEmpty;
     var ember$data$lib$system$model$errors$$map = Ember.ArrayPolyfills.map;
+    var ember$data$lib$system$model$errors$$makeArray = Ember.makeArray;
 
-    var ember$data$lib$system$model$errors$$default = Ember.Object.extend(Ember.Enumerable, Ember.Evented, {
+    var ember$data$lib$system$model$errors$$default = Ember.ArrayProxy.extend(Ember.Evented, {
       /**
         Register with target handler
          @method registerHandlers
@@ -4326,20 +4353,11 @@
       },
 
       /**
-        @method nextObject
-        @private
-      */
-      nextObject: function (index, previousObject, context) {
-        return ember$data$lib$system$model$errors$$get(this, 'content').objectAt(index);
-      },
-
-      /**
         Total number of errors.
          @property length
         @type {Number}
         @readOnly
       */
-      length: Ember.computed.oneWay('content.length').readOnly(),
 
       /**
         @property isEmpty
@@ -4365,11 +4383,10 @@
         var wasEmpty = ember$data$lib$system$model$errors$$get(this, 'isEmpty');
 
         messages = this._findOrCreateMessages(attribute, messages);
-        ember$data$lib$system$model$errors$$get(this, 'content').addObjects(messages);
+        this.addObjects(messages);
         ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName').get(attribute).addObjects(messages);
 
         this.notifyPropertyChange(attribute);
-        this.enumerableContentDidChange();
 
         if (wasEmpty && !ember$data$lib$system$model$errors$$get(this, 'isEmpty')) {
           this.trigger('becameInvalid');
@@ -4383,7 +4400,7 @@
       _findOrCreateMessages: function (attribute, messages) {
         var errors = this.errorsFor(attribute);
 
-        return ember$data$lib$system$model$errors$$map.call(Ember.makeArray(messages), function (message) {
+        return ember$data$lib$system$model$errors$$map.call(ember$data$lib$system$model$errors$$makeArray(messages), function (message) {
           return errors.findBy('message', message) || {
             attribute: attribute,
             message: message
@@ -4424,12 +4441,11 @@
           return;
         }
 
-        var content = ember$data$lib$system$model$errors$$get(this, 'content').rejectBy('attribute', attribute);
-        ember$data$lib$system$model$errors$$get(this, 'content').setObjects(content);
+        var content = this.rejectBy('attribute', attribute);
+        ember$data$lib$system$model$errors$$set(this, 'content', content);
         ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName')["delete"](attribute);
 
         this.notifyPropertyChange(attribute);
-        this.enumerableContentDidChange();
 
         if (ember$data$lib$system$model$errors$$get(this, 'isEmpty')) {
           this.trigger('becameValid');
@@ -4458,9 +4474,19 @@
           return;
         }
 
-        ember$data$lib$system$model$errors$$get(this, 'content').clear();
-        ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName').clear();
-        this.enumerableContentDidChange();
+        var errorsByAttributeName = ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName');
+        var attributes = Ember.A();
+
+        errorsByAttributeName.forEach(function (_, attribute) {
+          attributes.push(attribute);
+        });
+
+        errorsByAttributeName.clear();
+        attributes.forEach(function (attribute) {
+          this.notifyPropertyChange(attribute);
+        }, this);
+
+        this._super();
 
         this.trigger('becameValid');
       },
@@ -4489,6 +4515,63 @@
       }
     });
 
+    var ember$new$computed$lib$utils$can$use$new$syntax$$supportsSetterGetter;
+
+    try {
+      ember$lib$main$$default.computed({
+        set: function () {},
+        get: function () {}
+      });
+      ember$new$computed$lib$utils$can$use$new$syntax$$supportsSetterGetter = true;
+    } catch (e) {
+      ember$new$computed$lib$utils$can$use$new$syntax$$supportsSetterGetter = false;
+    }
+
+    var ember$new$computed$lib$utils$can$use$new$syntax$$default = ember$new$computed$lib$utils$can$use$new$syntax$$supportsSetterGetter;
+    var ember$new$computed$lib$main$$default = ember$new$computed$lib$main$$newComputed;
+
+    var ember$new$computed$lib$main$$computed = ember$lib$main$$default.computed;
+
+    function ember$new$computed$lib$main$$newComputed() {
+      var polyfillArguments = [];
+      var config = arguments[arguments.length - 1];
+
+      if (typeof config === 'function' || ember$new$computed$lib$utils$can$use$new$syntax$$default) {
+        return ember$new$computed$lib$main$$computed.apply(undefined, arguments);
+      }
+
+      for (var i = 0, l = arguments.length - 1; i < l; i++) {
+        polyfillArguments.push(arguments[i]);
+      }
+
+      var func;
+      if (config.set) {
+        func = function (key, value) {
+          if (arguments.length > 1) {
+            return config.set.call(this, key, value);
+          } else {
+            return config.get.call(this, key);
+          }
+        };
+      } else {
+        func = function (key) {
+          return config.get.call(this, key);
+        };
+      }
+
+      polyfillArguments.push(func);
+
+      return ember$new$computed$lib$main$$computed.apply(undefined, polyfillArguments);
+    }
+
+    var ember$new$computed$lib$main$$getKeys = Object.keys || ember$lib$main$$default.keys;
+    var ember$new$computed$lib$main$$computedKeys = ember$new$computed$lib$main$$getKeys(ember$new$computed$lib$main$$computed);
+
+    for (var ember$new$computed$lib$main$$i = 0, ember$new$computed$lib$main$$l = ember$new$computed$lib$main$$computedKeys.length; ember$new$computed$lib$main$$i < ember$new$computed$lib$main$$l; ember$new$computed$lib$main$$i++) {
+      ember$new$computed$lib$main$$newComputed[ember$new$computed$lib$main$$computedKeys[ember$new$computed$lib$main$$i]] = ember$new$computed$lib$main$$computed[ember$new$computed$lib$main$$computedKeys[ember$new$computed$lib$main$$i]];
+    }
+    var ember$data$lib$system$model$model$$errorDeprecationShown = false;
+
     /**
       @module ember-data
     */
@@ -4496,6 +4579,8 @@
     var ember$data$lib$system$model$model$$get = Ember.get;
     var ember$data$lib$system$model$model$$forEach = Ember.ArrayPolyfills.forEach;
     var ember$data$lib$system$model$model$$indexOf = Ember.ArrayPolyfills.indexOf;
+    var ember$data$lib$system$model$model$$merge = Ember.merge;
+    var ember$data$lib$system$model$model$$copy = Ember.copy;
 
     function ember$data$lib$system$model$model$$intersection(array1, array2) {
       var result = [];
@@ -4598,6 +4683,21 @@
       isDirty: Ember.computed("currentState.isDirty", function () {
                 return this.get("currentState.isDirty");
       }),
+
+      /**
+        @property error
+        @type {Boolean}
+        @deprecated
+      */
+      error: ember$new$computed$lib$main$$default("adapterError", {
+        get: function () {
+          if (!ember$data$lib$system$model$model$$errorDeprecationShown) {
+                        ember$data$lib$system$model$model$$errorDeprecationShown = true;
+          }
+          return Ember.get(this, "adapterError");
+        }
+      }),
+
       /**
         If this property is `true` the record is in the `dirty` state. The
         record has local changes that have not yet been saved by the
@@ -5047,7 +5147,9 @@
       */
       changedAttributes: function () {
         var oldData = ember$data$lib$system$model$model$$get(this._internalModel, "_data");
-        var newData = ember$data$lib$system$model$model$$get(this._internalModel, "_attributes");
+        var currentData = ember$data$lib$system$model$model$$get(this._internalModel, "_attributes");
+        var inFlightData = ember$data$lib$system$model$model$$get(this._internalModel, "_inFlightAttributes");
+        var newData = ember$data$lib$system$model$model$$merge(ember$data$lib$system$model$model$$copy(inFlightData), currentData);
         var diffData = ember$data$lib$system$object$polyfills$$create(null);
 
         var newDataKeys = ember$data$lib$system$object$polyfills$$keysFunc(newData);
@@ -6888,8 +6990,8 @@
 
       for (i = proxyPairs.length; i > 0; i--) {
         proxyPair = proxyPairs[i - 1];
-        deprecated = proxyPair["deprecated"];
-        valid = proxyPair["valid"];
+        deprecated = proxyPair['deprecated'];
+        valid = proxyPair['valid'];
 
         this.registerDeprecation(deprecated, valid);
       }
@@ -7293,7 +7395,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.13.6'
+      VERSION: '1.13.7'
     });
 
     if (Ember.libraries) {
@@ -7534,14 +7636,51 @@
       }, null, "DS: Extract payload of queryRecord " + typeClass);
     }
     function ember$data$lib$system$snapshot$record$array$$SnapshotRecordArray(recordArray, meta, adapterOptions) {
+      /**
+        An array of snapshots
+        @private
+        @property _snapshots
+        @type {Array}
+      */
       this._snapshots = null;
+      /**
+        An array of records
+        @private
+        @property _recordArray
+        @type {Array}
+      */
       this._recordArray = recordArray;
+      /**
+        Number of records in the array
+        @property length
+        @type {Number}
+      */
       this.length = recordArray.get('length');
+      /**
+        The type of the underlying records for the snapshots in the array, as a DS.Model
+        @property type
+        @type {DS.Model}
+      */
       this.type = recordArray.get('type');
+      /**
+        Meta object
+        @property meta
+        @type {Object}
+      */
       this.meta = meta;
+      /**
+        A hash of adapter options
+        @property adapterOptions
+        @type {Object}
+      */
       this.adapterOptions = adapterOptions;
     }
 
+    /**
+      Get snapshots of the underlying record array
+      @method snapshots
+      @return {Array} Array of snapshots
+    */
     ember$data$lib$system$snapshot$record$array$$SnapshotRecordArray.prototype.snapshots = function () {
       if (this._snapshots) {
         return this._snapshots;
@@ -7774,9 +7913,9 @@
         manager.updateFilter(this, ember$data$lib$system$record$arrays$filtered$record$array$$get(this, "type"), ember$data$lib$system$record$arrays$filtered$record$array$$get(this, "filterFunction"));
       },
 
-      updateFilter: Ember.observer(function () {
+      updateFilter: Ember.observer("filterFunction", function () {
         Ember.run.once(this, this._updateFilter);
-      }, "filterFunction")
+      })
     });
 
     var ember$data$lib$system$clone$null$$default = ember$data$lib$system$clone$null$$cloneNull;
@@ -8237,7 +8376,10 @@
 
       instanceFor: function (key) {
         if (key === 'adapter:-rest') {
-          ember$lib$main$$default.deprecate('You are currently using the default DS.RESTAdapter adapter. For Ember 2.0 the default adapter will be DS.JSONAPIAdapter. If you would like to continue using DS.RESTAdapter please create an application adapter that extends DS.RESTAdapter.');
+          ember$lib$main$$default.deprecate('You are currently using the default DS.RESTAdapter adapter. For Ember 2.0 the default adapter will be DS.JSONAPIAdapter. If you would like to continue using DS.RESTAdapter please create an application adapter that extends DS.RESTAdapter.', false, {
+            id: 'ds.adapter.default-adapter-changing-to-json-api',
+            until: '2.0.0'
+          });
         }
 
         var cache = this._cache;
@@ -8637,6 +8779,7 @@
 
         rolledBack: function (internalModel) {
           internalModel.clearErrorMessages();
+          internalModel.transitionTo('loaded.saved');
           internalModel.triggerLater('ready');
         },
 
@@ -9256,7 +9399,7 @@
         this.willSync = true;
         var self = this;
         this.store._backburner.join(function () {
-          self.store._backburner.schedule("syncRelationships", self, self.flushCanonical);
+          self.store._backburner.schedule('syncRelationships', self, self.flushCanonical);
         });
       },
 
@@ -12977,11 +13120,10 @@
       adapterFor: function (modelOrClass) {
         var modelName;
 
-        
-        if (typeof modelOrClass !== "string") {
-          modelName = modelOrClass.modelName;
-        } else {
+        if (typeof modelOrClass === "string") {
           modelName = modelOrClass;
+        } else {
+                    modelName = modelOrClass.modelName;
         }
 
         return this.lookupAdapter(modelName);
@@ -13015,10 +13157,10 @@
       serializerFor: function (modelOrClass) {
         var modelName;
 
-                if (typeof modelOrClass !== "string") {
-          modelName = modelOrClass.modelName;
-        } else {
+        if (typeof modelOrClass === "string") {
           modelName = modelOrClass;
+        } else {
+                    modelName = modelOrClass.modelName;
         }
 
         var fallbacks = ["application", this.adapterFor(modelName).get("defaultSerializer"), "-default"];
@@ -13435,7 +13577,22 @@
       },
 
       /**
-       @method keyForAttribute
+       `keyForAttribute` can be used to define rules for how to convert an
+       attribute name in your model to a key in your JSON.
+       By default `JSONAPISerializer` follows the format used on the examples of
+       http://jsonapi.org/format and uses dashes as the word separator in the JSON
+       attribute keys.
+        This behaviour can be easily customized by extending this method.
+        Example
+        ```app/serializers/application.js
+       import DS from 'ember-data';
+        export default DS.JSONAPISerializer.extend({
+         keyForAttribute: function(attr, method) {
+           return Ember.String.dasherize(attr).toUpperCase();
+         }
+       });
+       ```
+        @method keyForAttribute
        @param {String} key
        @param {String} method
        @return {String} normalized key
@@ -13445,6 +13602,21 @@
       },
 
       /**
+       `keyForRelationship` can be used to define a custom key when
+       serializing and deserializing relationship properties.
+       By default `JSONAPISerializer` follows the format used on the examples of
+       http://jsonapi.org/format and uses dashes as word separators in
+       relationship properties.
+        This behaviour can be easily customized by extending this method.
+        Example
+         ```app/serializers/post.js
+        import DS from 'ember-data';
+         export default DS.JSONAPISerializer.extend({
+          keyForRelationship: function(key, relationship, method) {
+            return Ember.String.underscore(key);
+          }
+        });
+        ```
        @method keyForRelationship
        @param {String} key
        @param {String} typeClass
@@ -13779,61 +13951,6 @@
       registry.injection('controller', 'store', 'service:store');
       registry.injection('route', 'store', 'service:store');
       registry.injection('data-adapter', 'store', 'service:store');
-    }
-    var ember$new$computed$lib$utils$can$use$new$syntax$$supportsSetterGetter;
-
-    try {
-      ember$lib$main$$default.computed({
-        set: function () {},
-        get: function () {}
-      });
-      ember$new$computed$lib$utils$can$use$new$syntax$$supportsSetterGetter = true;
-    } catch (e) {
-      ember$new$computed$lib$utils$can$use$new$syntax$$supportsSetterGetter = false;
-    }
-
-    var ember$new$computed$lib$utils$can$use$new$syntax$$default = ember$new$computed$lib$utils$can$use$new$syntax$$supportsSetterGetter;
-    var ember$new$computed$lib$main$$default = ember$new$computed$lib$main$$newComputed;
-
-    var ember$new$computed$lib$main$$computed = ember$lib$main$$default.computed;
-
-    function ember$new$computed$lib$main$$newComputed() {
-      var polyfillArguments = [];
-      var config = arguments[arguments.length - 1];
-
-      if (typeof config === 'function' || ember$new$computed$lib$utils$can$use$new$syntax$$default) {
-        return ember$new$computed$lib$main$$computed.apply(undefined, arguments);
-      }
-
-      for (var i = 0, l = arguments.length - 1; i < l; i++) {
-        polyfillArguments.push(arguments[i]);
-      }
-
-      var func;
-      if (config.set) {
-        func = function (key, value) {
-          if (arguments.length > 1) {
-            return config.set.call(this, key, value);
-          } else {
-            return config.get.call(this, key);
-          }
-        };
-      } else {
-        func = function (key) {
-          return config.get.call(this, key);
-        };
-      }
-
-      polyfillArguments.push(func);
-
-      return ember$new$computed$lib$main$$computed.apply(undefined, polyfillArguments);
-    }
-
-    var ember$new$computed$lib$main$$getKeys = Object.keys || ember$lib$main$$default.keys;
-    var ember$new$computed$lib$main$$computedKeys = ember$new$computed$lib$main$$getKeys(ember$new$computed$lib$main$$computed);
-
-    for (var ember$new$computed$lib$main$$i = 0, ember$new$computed$lib$main$$l = ember$new$computed$lib$main$$computedKeys.length; ember$new$computed$lib$main$$i < ember$new$computed$lib$main$$l; ember$new$computed$lib$main$$i++) {
-      ember$new$computed$lib$main$$newComputed[ember$new$computed$lib$main$$computedKeys[ember$new$computed$lib$main$$i]] = ember$new$computed$lib$main$$computed[ember$new$computed$lib$main$$computedKeys[ember$new$computed$lib$main$$i]];
     }
     var ember$data$lib$system$model$attributes$$default = ember$data$lib$system$model$attributes$$attr;
 
@@ -15234,7 +15351,12 @@
 
       return ember$new$computed$lib$main$$default({
         get: function (key) {
-                    
+          if (opts.hasOwnProperty("serialize")) {
+                      }
+
+          if (opts.hasOwnProperty("embedded")) {
+                      }
+
           if (meta.shouldWarnAsync) {
                         meta.shouldWarnAsycn = false;
           }
@@ -15678,7 +15800,6 @@
 
         var inverseName, inverseKind, inverse;
 
-        
         //If inverse is specified manually, return the inverse
         if (options.inverse) {
           inverseName = options.inverse;
@@ -15688,6 +15809,9 @@
           inverseKind = inverse.kind;
         } else {
           //No inverse was specified manually, we need to use a heuristic to guess one
+          if (propertyMeta.type === propertyMeta.parentType.modelName) {
+                      }
+
           var possibleRelationships = findPossibleInverses(this, inverseType);
 
           if (possibleRelationships.length === 0) {
