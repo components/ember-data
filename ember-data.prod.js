@@ -2125,7 +2125,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.6a9c60dd7f'
+      VERSION: '2.0.0+canary.fb79a08bbc'
     });
 
     if (Ember.libraries) {
@@ -9090,7 +9090,7 @@
         @public
       */
 
-      /*
+      /**
         The `normalizeResponse` method is used to normalize a payload from the
         server to a JSON-API Document.
          http://jsonapi.org/format/#document-structure
