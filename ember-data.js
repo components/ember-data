@@ -7653,7 +7653,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.13.6'
+      VERSION: '1.13.7'
     });
 
     if (Ember.libraries) {
@@ -12571,7 +12571,7 @@
         implement them.
          This method returns a promise, which is resolved with a `RecordArray`
         once the server returns.
-         @method query
+         @method findQuery
         @param {String} modelName
         @param {any} query an opaque query to be used by the adapter
         @return {Promise} promise
