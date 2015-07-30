@@ -29,6 +29,8 @@
             return this.urlForFindAll(modelName);
           case 'query':
             return this.urlForQuery(query, modelName);
+          case 'queryRecord':
+            return this.urlForQueryRecord(query, modelName);
           case 'findMany':
             return this.urlForFindMany(id, modelName, snapshot);
           case 'findHasMany':
@@ -108,6 +110,16 @@
        * @return {String} url
        */
       urlForQuery: function (query, modelName) {
+        return this._buildURL(modelName);
+      },
+
+      /**
+       * @method urlForQueryRecord
+       * @param {Object} query
+       * @param {String} modelName
+       * @return {String} url
+       */
+      urlForQueryRecord: function (query, modelName) {
         return this._buildURL(modelName);
       },
 
@@ -2125,7 +2137,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.944f7e4b53'
+      VERSION: '2.0.0+canary.258bb28be3'
     });
 
     if (Ember.libraries) {
