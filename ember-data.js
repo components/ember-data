@@ -2131,7 +2131,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.fb79a08bbc'
+      VERSION: '2.0.0+canary.944f7e4b53'
     });
 
     if (Ember.libraries) {
@@ -9232,7 +9232,7 @@
     var ember$data$lib$serializers$json$serializer$$isNone = Ember.isNone;
     var ember$data$lib$serializers$json$serializer$$merge = Ember.merge;
 
-    /*
+    /**
       Ember Data 2.0 Serializer:
 
       In Ember Data a Serializer is used to serialize and deserialize
@@ -9254,8 +9254,10 @@
           house: DS.belongsTo('location'),
         });
       ```
+
       ```js
-        { id: 1,
+        {
+          id: 1,
           name: 'Sebastian',
           friends: [3, 4],
           links: {
@@ -9263,6 +9265,7 @@
           }
         }
       ```
+
       to JSONApi format that the Ember Data store expects.
 
       You can customize how JSONSerializer processes it's payload by passing options in
@@ -9285,23 +9288,6 @@
           calls it once. This is the method you most likely want to subclass
         - `extractId` | `extractAttributes` | `extractRelationships` - normalize delegates to these methods to
           turn the record payload into the JSONApi format
-
-      @class JSONSerializer
-      @namespace DS
-      @extends DS.Serializer
-    */
-
-    /**
-      In Ember Data a Serializer is used to serialize and deserialize
-      records when they are transferred in and out of an external source.
-      This process involves normalizing property names, transforming
-      attribute values and serializing relationships.
-
-      For maximum performance Ember Data recommends you use the
-      [RESTSerializer](DS.RESTSerializer.html) or one of its subclasses.
-
-      `JSONSerializer` is useful for simpler or legacy backends that may
-      not support the http://jsonapi.org/ spec.
 
       @class JSONSerializer
       @namespace DS
@@ -9407,7 +9393,7 @@
         return data;
       },
 
-      /*
+      /**
         The `normalizeResponse` method is used to normalize a payload from the
         server to a JSON-API Document.
          http://jsonapi.org/format/#document-structure
@@ -9459,7 +9445,7 @@
         }
       },
 
-      /*
+      /**
         @method normalizeFindRecordResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -9472,7 +9458,7 @@
         return this.normalizeSingleResponse.apply(this, arguments);
       },
 
-      /*
+      /**
         @method normalizeQueryRecordResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -9485,7 +9471,7 @@
         return this.normalizeSingleResponse.apply(this, arguments);
       },
 
-      /*
+      /**
         @method normalizeFindAllResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -9498,7 +9484,7 @@
         return this.normalizeArrayResponse.apply(this, arguments);
       },
 
-      /*
+      /**
         @method normalizeFindBelongsToResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -9511,7 +9497,7 @@
         return this.normalizeSingleResponse.apply(this, arguments);
       },
 
-      /*
+      /**
         @method normalizeFindHasManyResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -9524,7 +9510,7 @@
         return this.normalizeArrayResponse.apply(this, arguments);
       },
 
-      /*
+      /**
         @method normalizeFindManyResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -9537,7 +9523,7 @@
         return this.normalizeArrayResponse.apply(this, arguments);
       },
 
-      /*
+      /**
         @method normalizeQueryResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -9550,7 +9536,7 @@
         return this.normalizeArrayResponse.apply(this, arguments);
       },
 
-      /*
+      /**
         @method normalizeCreateRecordResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -9563,7 +9549,7 @@
         return this.normalizeSaveResponse.apply(this, arguments);
       },
 
-      /*
+      /**
         @method normalizeDeleteRecordResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -9576,7 +9562,7 @@
         return this.normalizeSaveResponse.apply(this, arguments);
       },
 
-      /*
+      /**
         @method normalizeUpdateRecordResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -9589,7 +9575,7 @@
         return this.normalizeSaveResponse.apply(this, arguments);
       },
 
-      /*
+      /**
         @method normalizeSaveResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -9602,7 +9588,7 @@
         return this.normalizeSingleResponse.apply(this, arguments);
       },
 
-      /*
+      /**
         @method normalizeSingleResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -9615,7 +9601,7 @@
         return this._normalizeResponse(store, primaryModelClass, payload, id, requestType, true);
       },
 
-      /*
+      /**
         @method normalizeArrayResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -9628,7 +9614,7 @@
         return this._normalizeResponse(store, primaryModelClass, payload, id, requestType, false);
       },
 
-      /*
+      /**
         @method _normalizeResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -9731,7 +9717,7 @@
         return { data: data };
       },
 
-      /*
+      /**
         Returns the resource's ID.
          @method extractId
         @param {Object} modelClass
@@ -9744,7 +9730,7 @@
         return ember$data$lib$system$coerce$id$$default(id);
       },
 
-      /*
+      /**
         Returns the resource's attributes formatted as a JSON-API "attributes object".
          http://jsonapi.org/format/#document-resource-object-attributes
          @method extractAttributes
@@ -9768,7 +9754,7 @@
         return attributes;
       },
 
-      /*
+      /**
         Returns a relationship formatted as a JSON-API "relationship object".
          http://jsonapi.org/format/#document-resource-object-relationships
          @method extractRelationship
@@ -9797,7 +9783,7 @@
         return { id: ember$data$lib$system$coerce$id$$default(relationshipHash), type: relationshipModelName };
       },
 
-      /*
+      /**
         Returns the resource's relationships formatted as a JSON-API "relationships object".
          http://jsonapi.org/format/#document-resource-object-relationships
          @method extractRelationships
@@ -10827,7 +10813,7 @@
 
     var ember$data$lib$serializers$json$api$serializer$$default = ember$data$lib$serializers$json$serializer$$default.extend({
 
-      /*
+      /**
         @method _normalizeDocumentHelper
         @param {Object} documentHash
         @return {Object}
@@ -10848,7 +10834,7 @@
         return documentHash;
       },
 
-      /*
+      /**
         @method _normalizeRelationshipDataHelper
         @param {Object} relationshipDataHash
         @return {Object}
@@ -10860,7 +10846,7 @@
         return relationshipDataHash;
       },
 
-      /*
+      /**
         @method _normalizeResourceHelper
         @param {Object} resourceHash
         @return {Object}
@@ -10904,7 +10890,7 @@
         return normalizedPayload;
       },
 
-      /*
+      /**
         @method extractAttributes
         @param {DS.Model} modelClass
         @param {Object} resourceHash
@@ -10927,7 +10913,7 @@
         return attributes;
       },
 
-      /*
+      /**
         @method extractRelationship
         @param {Object} relationshipHash
         @return {Object}
@@ -10945,7 +10931,7 @@
         return relationshipHash;
       },
 
-      /*
+      /**
         @method extractRelationships
         @param {Object} modelClass
         @param {Object} resourceHash
@@ -10970,8 +10956,8 @@
         return relationships;
       },
 
-      /*
-        @method extractType
+      /**
+        @method _extractType
         @param {DS.Model} modelClass
         @param {Object} resourceHash
         @return {String}
@@ -10999,7 +10985,7 @@
         return ember$inflector$lib$lib$system$string$$pluralize(modelName);
       },
 
-      /*
+      /**
         @method normalize
         @param {DS.Model} modelClass
         @param {Object} resourceHash
@@ -11287,7 +11273,7 @@
         return this._super(modelClass, resourceHash, prop);
       },
 
-      /*
+      /**
         Normalizes an array of resource payloads and returns a JSON-API Document
         with primary data and, if any, included data as `{ data, included }`.
          @method _normalizeArray
@@ -11324,7 +11310,7 @@
         return documentHash;
       },
 
-      /*
+      /**
         @method _normalizeResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
