@@ -84,7 +84,7 @@
       },
 
       /**
-       * @method urlForFind
+       * @method urlForFindRecord
        * @param {String} id
        * @param {String} modelName
        * @param {DS.Snapshot} snapshot
@@ -2149,7 +2149,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.7f354f5135'
+      VERSION: '2.0.0+canary.4fadace58f'
     });
 
     if (Ember.libraries) {
