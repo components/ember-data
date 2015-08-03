@@ -598,12 +598,14 @@
         to push the record into the store.
          Here is an example `queryRecord` implementation:
          Example
-         ```javascript
-        App.ApplicationAdapter = DS.Adapter.extend({
-          queryRecord: function(store, typeClass, query) {
-            var url = [type.typeKey, id].join('/');
+         ```app/adapters/application.js
+        import DS from 'ember-data';
+        import Ember from 'ember';
+         export default DS.Adapter.extend(DS.BuildURLMixin, {
+          queryRecord: function(store, type, query) {
+            var urlForQueryRecord = this.buildURL(type.modelName, null, null, 'queryRecord', query);
              return new Ember.RSVP.Promise(function(resolve, reject) {
-              Ember.$.getJSON(url, query).then(function(data) {
+              Ember.$.getJSON(urlForQueryRecord, query).then(function(data) {
                 Ember.run(null, resolve, data);
               }, function(jqXHR) {
                 jqXHR.then = null; // tame jQuery's ill mannered promises
@@ -617,7 +619,6 @@
         @param {DS.Store} store
         @param {subclass of DS.Model} type
         @param {Object} query
-        @param {String} id
         @return {Promise} promise
       */
       queryRecord: null,
@@ -2149,7 +2150,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.3366e85b4b'
+      VERSION: '2.0.0+canary.f989308dbe'
     });
 
     if (Ember.libraries) {
