@@ -2143,7 +2143,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.4fadace58f'
+      VERSION: '2.0.0+canary.3366e85b4b'
     });
 
     if (Ember.libraries) {
@@ -3411,6 +3411,64 @@
     var ember$data$lib$system$store$serializer$response$$get = Ember.get;
 
     /**
+      This is a helper method that validates a JSON API top-level document
+
+      The format of a document is described here:
+      http://jsonapi.org/format/#document-top-level
+
+      @method validateDocumentStructure
+      @param {Object} doc JSON API document
+      @return {array} An array of errors found in the document structure
+    */
+
+    function ember$data$lib$system$store$serializer$response$$validateDocumentStructure(doc) {
+      var errors = [];
+      if (!doc || typeof doc !== 'object') {
+        errors.push('Top level of a JSON API document must be an object');
+      } else {
+        if (!('data' in doc) && !('errors' in doc) && !('meta' in doc)) {
+          errors.push('One or more of the following keys must be present: "data", "errors", "meta".');
+        } else {
+          if ('data' in doc && 'errors' in doc) {
+            errors.push('Top level keys "errors" and "data" cannot both be present in a JSON API document');
+          }
+        }
+        if ('data' in doc) {
+          if (!(doc.data === null || Ember.isArray(doc.data) || typeof doc.data === 'object')) {
+            errors.push('data must be null, an object, or an array');
+          }
+        }
+        if ('meta' in doc) {
+          if (typeof doc.meta !== 'object') {
+            errors.push('meta must be an object');
+          }
+        }
+        if ('errors' in doc) {
+          if (!Ember.isArray(doc.errors)) {
+            errors.push('errors must be an array');
+          }
+        }
+        if ('links' in doc) {
+          if (typeof doc.links !== 'object') {
+            errors.push('links must be an object');
+          }
+        }
+        if ('jsonapi' in doc) {
+          if (typeof doc.jsonapi !== 'object') {
+            errors.push('jsonapi must be an object');
+          }
+        }
+        if ('included' in doc) {
+          if (typeof doc.included !== 'object') {
+            errors.push('included must be an array');
+          }
+        }
+      }
+
+      return errors;
+    }
+
+    /**
       This is a helper method that always returns a JSON-API Document.
 
       @method normalizeResponseHelper
@@ -3425,8 +3483,8 @@
 
     function ember$data$lib$system$store$serializer$response$$normalizeResponseHelper(serializer, store, modelClass, payload, id, requestType) {
       var normalizedResponse = serializer.normalizeResponse(store, modelClass, payload, id, requestType);
-
-      // TODO: Remove after metadata refactor
+      var validationErrors = [];
+                  // TODO: Remove after metadata refactor
       if (normalizedResponse.meta) {
         store._setMetadataFor(modelClass.modelName, normalizedResponse.meta);
       }
@@ -12539,93 +12597,6 @@
 
     ember$inflector$lib$lib$system$inflector$$default.inflector = new ember$inflector$lib$lib$system$inflector$$default(ember$inflector$lib$lib$system$inflections$$default);
 
-    var ember$inflector$lib$lib$utils$register$helper$$default = ember$inflector$lib$lib$utils$register$helper$$registerHelper;
-
-    function ember$inflector$lib$lib$utils$register$helper$$registerHelperIteration1(name, helperFunction) {
-      //earlier versions of ember with htmlbars used this
-      ember$lib$main$$default.HTMLBars.helpers[name] = helperFunction;
-    }
-
-    function ember$inflector$lib$lib$utils$register$helper$$registerHelperIteration2(name, helperFunction) {
-      //registerHelper has been made private as _registerHelper
-      //this is kept here if anyone is using it
-      ember$lib$main$$default.HTMLBars.registerHelper(name, helperFunction);
-    }
-
-    function ember$inflector$lib$lib$utils$register$helper$$registerHelperIteration3(name, helperFunction) {
-      //latest versin of ember uses this
-      ember$lib$main$$default.HTMLBars._registerHelper(name, helperFunction);
-    }
-    function ember$inflector$lib$lib$utils$register$helper$$registerHelper(name, helperFunction) {
-      if (ember$lib$main$$default.HTMLBars) {
-        var fn = ember$lib$main$$default.HTMLBars.makeBoundHelper(helperFunction);
-
-        if (ember$lib$main$$default.HTMLBars._registerHelper) {
-          if (ember$lib$main$$default.HTMLBars.helpers) {
-            ember$inflector$lib$lib$utils$register$helper$$registerHelperIteration1(name, fn);
-          } else {
-            ember$inflector$lib$lib$utils$register$helper$$registerHelperIteration3(name, fn);
-          }
-        } else if (ember$lib$main$$default.HTMLBars.registerHelper) {
-          ember$inflector$lib$lib$utils$register$helper$$registerHelperIteration2(name, fn);
-        }
-      } else if (ember$lib$main$$default.Handlebars) {
-        ember$lib$main$$default.Handlebars.helper(name, helperFunction);
-      }
-    }
-
-    /**
-     *
-     * If you have Ember Inflector (such as if Ember Data is present),
-     * singularize a word. For example, turn "oxen" into "ox".
-     *
-     * Example:
-     *
-     * {{singularize myProperty}}
-     * {{singularize "oxen"}}
-     *
-     * @for Ember.HTMLBars.helpers
-     * @method singularize
-     * @param {String|Property} word word to singularize
-    */
-    ember$inflector$lib$lib$utils$register$helper$$default('singularize', function (params) {
-      return ember$inflector$lib$lib$system$string$$singularize(params[0]);
-    });
-
-    /**
-     *
-     * If you have Ember Inflector (such as if Ember Data is present),
-     * pluralize a word. For example, turn "ox" into "oxen".
-     *
-     * Example:
-     *
-     * {{pluralize count myProperty}}
-     * {{pluralize 1 "oxen"}}
-     * {{pluralize myProperty}}
-     * {{pluralize "ox"}}
-     *
-     * @for Ember.HTMLBars.helpers
-     * @method pluralize
-     * @param {Number|Property} [count] count of objects
-     * @param {String|Property} word word to pluralize
-    */
-    ember$inflector$lib$lib$utils$register$helper$$default('pluralize', function (params) {
-      var count, word;
-
-      if (params.length === 1) {
-        word = params[0];
-        return ember$inflector$lib$lib$system$string$$pluralize(word);
-      } else {
-        count = params[0];
-        word = params[1];
-
-        if (count !== 1) {
-          word = ember$inflector$lib$lib$system$string$$pluralize(word);
-        }
-        return count + " " + word;
-      }
-    });
-
     if (ember$lib$main$$default.EXTEND_PROTOTYPES === true || ember$lib$main$$default.EXTEND_PROTOTYPES.String) {
       /**
         See {{#crossLink "Ember.String/pluralize"}}{{/crossLink}}
@@ -14288,5 +14259,36 @@
     }
 
     ember$data$lib$system$model$errors$invalid$$InvalidError.prototype = Object.create(ember$data$lib$system$model$errors$invalid$$EmberError.prototype);
+    var ember$inflector$lib$lib$utils$make$helper$$default = ember$inflector$lib$lib$utils$make$helper$$makeHelper;
+    function ember$inflector$lib$lib$utils$make$helper$$makeHelper(helperFunction) {
+      if (ember$lib$main$$default.Helper) {
+        return ember$lib$main$$default.Helper.helper(helperFunction);
+      }
+      if (ember$lib$main$$default.HTMLBars) {
+        return ember$lib$main$$default.HTMLBars.makeBoundHelper(helperFunction);
+      }
+      return ember$lib$main$$default.Handlebars.makeBoundHelper(helperFunction);
+    }
+
+    var ember$inflector$lib$lib$helpers$pluralize$$default = ember$inflector$lib$lib$utils$make$helper$$default(function (params) {
+      var count, word;
+
+      if (params.length === 1) {
+        word = params[0];
+        return ember$inflector$lib$lib$system$string$$pluralize(word);
+      } else {
+        count = params[0];
+        word = params[1];
+
+        if ((count | 0) !== 1) {
+          word = ember$inflector$lib$lib$system$string$$pluralize(word);
+        }
+        return count + " " + word;
+      }
+    });
+
+    var ember$inflector$lib$lib$helpers$singularize$$default = ember$inflector$lib$lib$utils$make$helper$$default(function (params) {
+      return ember$inflector$lib$lib$system$string$$singularize(params[0]);
+    });
 }).call(this);
 
