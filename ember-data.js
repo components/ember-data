@@ -2150,7 +2150,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.2b7f1e07a8'
+      VERSION: '2.0.0+canary.7572fbed30'
     });
 
     if (Ember.libraries) {
@@ -3930,12 +3930,7 @@
       this._snapshots = recordArray.invoke('createSnapshot');
 
       return this._snapshots;
-    };
-
-    var ember$data$lib$system$record$arrays$record$array$$get = Ember.get;
-    var ember$data$lib$system$record$arrays$record$array$$set = Ember.set;
-
-    var ember$data$lib$system$record$arrays$record$array$$FilteredSubset = Ember.ArrayProxy.extend({
+    };var ember$data$lib$system$record$arrays$filtered$subset$$FilteredSubset = Ember.ArrayProxy.extend({
       init: function () {
         this._super.apply(this, arguments);
 
@@ -3945,12 +3940,17 @@
         var recordArray = _getProperties.recordArray;
         var key = filterByArgs[0];
 
-        var path = "recordArray.@each." + key;
+        var path = 'recordArray.@each.' + key;
         Ember.defineProperty(this, 'content', Ember.computed(path, function () {
           return this.filterBy.apply(recordArray, filterByArgs);
         }));
       }
     });
+
+    var ember$data$lib$system$record$arrays$filtered$subset$$default = ember$data$lib$system$record$arrays$filtered$subset$$FilteredSubset;
+
+    var ember$data$lib$system$record$arrays$record$array$$get = Ember.get;
+    var ember$data$lib$system$record$arrays$record$array$$set = Ember.set;
 
     var ember$data$lib$system$record$arrays$record$array$$default = Ember.ArrayProxy.extend(Ember.Evented, {
       /**
@@ -4042,7 +4042,7 @@
           filterByArgs.push(value);
         }
 
-        return ember$data$lib$system$record$arrays$record$array$$FilteredSubset.create({
+        return ember$data$lib$system$record$arrays$filtered$subset$$default.create({
           filterByArgs: filterByArgs,
           recordArray: this
         });
@@ -5926,6 +5926,34 @@
         this.pushObject(record);
 
         return record;
+      },
+
+      /**
+        Get a filtered subset of the underlying `ManyArray`.
+        The subset updates when a record would match or mismatch the
+        specified filter parameters.
+         Example
+         ```javascript
+        var post = store.peekRecord('post', 1)
+        // All the comments that are deleted locally but not yet saved to the server.
+        var deletedComments = post.get('comments').filterBy('isDeleted');
+        ```
+         @method filterBy
+        @param {String} key property path
+        @param {*} value optional
+       */
+      filterBy: function (key, value) {
+        // only pass value to the arguments if it is present; this mimics the same
+        // behavior for `filterBy`: http://git.io/vIurH
+        var filterByArgs = [key];
+        if (arguments.length === 2) {
+          filterByArgs.push(value);
+        }
+
+        return ember$data$lib$system$record$arrays$filtered$subset$$default.create({
+          filterByArgs: filterByArgs,
+          recordArray: this
+        });
       }
     });
 
