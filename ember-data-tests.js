@@ -28067,6 +28067,13 @@ test('ember-data/lib/system/record-arrays/filtered-record-array.js should pass j
 }
 if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/lib/system/record-arrays');
+test('ember-data/lib/system/record-arrays/filtered-subset.js should pass jshint', function() { 
+  ok(true, 'ember-data/lib/system/record-arrays/filtered-subset.js should pass jshint.'); 
+});
+
+}
+if (!QUnit.urlParams.nojshint) {
+module('JSHint - ember-data/lib/system/record-arrays');
 test('ember-data/lib/system/record-arrays/record-array.js should pass jshint', function() { 
   ok(true, 'ember-data/lib/system/record-arrays/record-array.js should pass jshint.'); 
 });
