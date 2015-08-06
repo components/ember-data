@@ -11,6 +11,7 @@
 
   var extendPrototypes = QUnit.urlParams.extendprototypes;
   ENV['EXTEND_PROTOTYPES'] = !!extendPrototypes;
+  ENV['ENABLE_DS_FILTER'] = true;
 
   // Handle testing feature flags
   ENV['ENABLE_OPTIONAL_FEATURES'] = !!QUnit.urlParams.enableoptionalfeatures;
@@ -82,7 +83,7 @@
       registry.register('model:' + Ember.String.dasherize(prop), options[prop]);
     }
 
-    registry.register('store:main', DS.Store.extend({
+    registry.register('service:store', DS.Store.extend({
       adapter: adapter
     }));
 
@@ -92,15 +93,15 @@
 
     registry.register('serializer:-default', DS.JSONSerializer);
     registry.register('serializer:-rest', DS.RESTSerializer);
-    registry.register('adapter:-active-model', DS.ActiveModelAdapter);
-    registry.register('serializer:-active-model', DS.ActiveModelSerializer);
+
     registry.register('adapter:-rest', DS.RESTAdapter);
 
-    registry.injection('serializer', 'store', 'store:main');
+    registry.register('adapter:-json-api', DS.JSONAPIAdapter);
+    registry.register('serializer:-json-api', DS.JSONAPISerializer);
 
-    env.serializer = container.lookup('serializer:-default');
     env.restSerializer = container.lookup('serializer:-rest');
-    env.store = container.lookup('store:main');
+    env.store = container.lookup('service:store');
+    env.serializer = env.store.serializerFor('-default');
     env.adapter = env.store.get('defaultAdapter');
 
     return env;

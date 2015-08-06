@@ -6,7 +6,6 @@
     <link rel="stylesheet" href="/bower_components/qunit/qunit/qunit.css">
     <script src="/bower_components/qunit/qunit/qunit.js"></script>
     <script src="qunit-configuration.js"></script>
-    <script src="/bower_components/handlebars/handlebars.js" ></script>
 
     <script type="text/javascript">
       window.loadScript = function(url) {
@@ -29,14 +28,6 @@
         loadScript('/bower_components/jquery/jquery.js');
       }
       // Close the script tag to make sure document.write happens
-    </script>
-
-    <script type="text/javascript">
-      var emberChannel = QUnit.urlParams.emberchannel || "release";
-      if (emberChannel === 'canary' || emberChannel === 'beta') {
-        window.Handlebars = null;
-        loadScript("http://builds.handlebarsjs.com.s3.amazonaws.com/handlebars-v2.0.0.js");
-      }
     </script>
 
     <script src="ember-configuration.js"></script>
@@ -71,7 +62,7 @@
 
         var skipPackageRegexp = new RegExp('^('+skipPackages.join('|')+')/');
 
-        var keys = Ember.keys(requirejs.entries);
+        var keys = Object.keys(requirejs.entries);
 
         for (var i = 0, length = keys.length; i < length; i++) {
           var moduleName = keys[i];
