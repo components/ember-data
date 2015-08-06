@@ -331,12 +331,14 @@
         to push the record into the store.
          Here is an example `queryRecord` implementation:
          Example
-         ```javascript
-        App.ApplicationAdapter = DS.Adapter.extend({
-          queryRecord: function(store, typeClass, query) {
-            var url = [type.typeKey, id].join('/');
+         ```app/adapters/application.js
+        import DS from 'ember-data';
+        import Ember from 'ember';
+         export default DS.Adapter.extend(DS.BuildURLMixin, {
+          queryRecord: function(store, type, query) {
+            var urlForQueryRecord = this.buildURL(type.modelName, null, null, 'queryRecord', query);
              return new Ember.RSVP.Promise(function(resolve, reject) {
-              jQuery.getJSON(url, query).then(function(data) {
+              Ember.$.getJSON(urlForQueryRecord, query).then(function(data) {
                 Ember.run(null, resolve, data);
               }, function(jqXHR) {
                 jqXHR.then = null; // tame jQuery's ill mannered promises
@@ -350,7 +352,6 @@
         @param {DS.Store} store
         @param {subclass of DS.Model} type
         @param {Object} query
-        @param {String} id
         @return {Promise} promise
       */
       queryRecord: null,
@@ -682,6 +683,8 @@
             return this.urlForFindQuery(query, modelName);
           case 'query':
             return this.urlForQuery(query, modelName);
+          case 'queryRecord':
+            return this.urlForQueryRecord(query, modelName);
           case 'findMany':
             return this.urlForFindMany(id, modelName, snapshot);
           case 'findHasMany':
@@ -735,7 +738,7 @@
       },
 
       /**
-       * @method urlForFind
+       * @method urlForFindRecord
        * @param {String} id
        * @param {String} modelName
        * @param {DS.Snapshot} snapshot
@@ -794,6 +797,16 @@
           });
           return this.urlForFindQuery(query, modelName);
         }
+        return this._buildURL(modelName);
+      },
+
+      /**
+       * @method urlForQueryRecord
+       * @param {Object} query
+       * @param {String} modelName
+       * @return {String} url
+       */
+      urlForQueryRecord: function (query, modelName) {
         return this._buildURL(modelName);
       },
 
@@ -2612,7 +2625,7 @@
     var ember$data$lib$serializers$json$serializer$$map = Ember.ArrayPolyfills.map;
     var ember$data$lib$serializers$json$serializer$$merge = Ember.merge;
 
-    /*
+    /**
       Ember Data 2.0 Serializer:
 
       In Ember Data a Serializer is used to serialize and deserialize
@@ -2634,8 +2647,10 @@
           house: DS.belongsTo('location'),
         });
       ```
+
       ```js
-        { id: 1,
+        {
+          id: 1,
           name: 'Sebastian',
           friends: [3, 4],
           links: {
@@ -2643,6 +2658,7 @@
           }
         }
       ```
+
       to JSONApi format that the Ember Data store expects.
 
       You can customize how JSONSerializer processes it's payload by passing options in
@@ -2665,23 +2681,6 @@
           calls it once. This is the method you most likely want to subclass
         - `extractId` | `extractAttributes` | `extractRelationships` - normalize delegates to these methods to
           turn the record payload into the JSONApi format
-
-      @class JSONSerializer
-      @namespace DS
-      @extends DS.Serializer
-    */
-
-    /**
-      In Ember Data a Serializer is used to serialize and deserialize
-      records when they are transferred in and out of an external source.
-      This process involves normalizing property names, transforming
-      attribute values and serializing relationships.
-
-      For maximum performance Ember Data recommends you use the
-      [RESTSerializer](DS.RESTSerializer.html) or one of its subclasses.
-
-      `JSONSerializer` is useful for simpler or legacy backends that may
-      not support the http://jsonapi.org/ spec.
 
       @class JSONSerializer
       @namespace DS
@@ -2785,7 +2784,7 @@
         return data;
       },
 
-      /*
+      /**
         The `normalizeResponse` method is used to normalize a payload from the
         server to a JSON-API Document.
          http://jsonapi.org/format/#document-structure
@@ -2837,7 +2836,7 @@
         }
       },
 
-      /*
+      /**
         @method normalizeFindRecordResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -2850,7 +2849,7 @@
         return this.normalizeSingleResponse.apply(this, arguments);
       },
 
-      /*
+      /**
         @method normalizeQueryRecordResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -2863,7 +2862,7 @@
         return this.normalizeSingleResponse.apply(this, arguments);
       },
 
-      /*
+      /**
         @method normalizeFindAllResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -2876,7 +2875,7 @@
         return this.normalizeArrayResponse.apply(this, arguments);
       },
 
-      /*
+      /**
         @method normalizeFindBelongsToResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -2889,7 +2888,7 @@
         return this.normalizeSingleResponse.apply(this, arguments);
       },
 
-      /*
+      /**
         @method normalizeFindHasManyResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -2902,7 +2901,7 @@
         return this.normalizeArrayResponse.apply(this, arguments);
       },
 
-      /*
+      /**
         @method normalizeFindManyResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -2915,7 +2914,7 @@
         return this.normalizeArrayResponse.apply(this, arguments);
       },
 
-      /*
+      /**
         @method normalizeQueryResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -2928,7 +2927,7 @@
         return this.normalizeArrayResponse.apply(this, arguments);
       },
 
-      /*
+      /**
         @method normalizeCreateRecordResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -2941,7 +2940,7 @@
         return this.normalizeSaveResponse.apply(this, arguments);
       },
 
-      /*
+      /**
         @method normalizeDeleteRecordResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -2954,7 +2953,7 @@
         return this.normalizeSaveResponse.apply(this, arguments);
       },
 
-      /*
+      /**
         @method normalizeUpdateRecordResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -2967,7 +2966,7 @@
         return this.normalizeSaveResponse.apply(this, arguments);
       },
 
-      /*
+      /**
         @method normalizeSaveResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -2980,7 +2979,7 @@
         return this.normalizeSingleResponse.apply(this, arguments);
       },
 
-      /*
+      /**
         @method normalizeSingleResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -2993,7 +2992,7 @@
         return this._normalizeResponse(store, primaryModelClass, payload, id, requestType, true);
       },
 
-      /*
+      /**
         @method normalizeArrayResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -3006,7 +3005,7 @@
         return this._normalizeResponse(store, primaryModelClass, payload, id, requestType, false);
       },
 
-      /*
+      /**
         @method _normalizeResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -3108,7 +3107,7 @@
         return hash;
       },
 
-      /*
+      /**
         Returns the resource's ID.
          @method extractId
         @param {Object} modelClass
@@ -3121,7 +3120,7 @@
         return ember$data$lib$system$coerce$id$$default(id);
       },
 
-      /*
+      /**
         Returns the resource's attributes formatted as a JSON-API "attributes object".
          http://jsonapi.org/format/#document-resource-object-attributes
          @method extractAttributes
@@ -3143,7 +3142,7 @@
         return attributes;
       },
 
-      /*
+      /**
         Returns a relationship formatted as a JSON-API "relationship object".
          http://jsonapi.org/format/#document-resource-object-relationships
          @method extractRelationship
@@ -3172,7 +3171,7 @@
         return { id: ember$data$lib$system$coerce$id$$default(relationshipHash), type: relationshipModelName };
       },
 
-      /*
+      /**
         Returns the resource's relationships formatted as a JSON-API "relationships object".
          http://jsonapi.org/format/#document-resource-object-relationships
          @method extractRelationships
@@ -5459,6 +5458,63 @@
     var ember$data$lib$system$store$serializer$response$$get = Ember.get;
 
     /**
+      This is a helper method that validates a JSON API top-level document
+
+      The format of a document is described here:
+      http://jsonapi.org/format/#document-top-level
+
+      @method validateDocumentStructure
+      @param {Object} doc JSON API document
+      @return {array} An array of errors found in the document structure
+    */
+    function ember$data$lib$system$store$serializer$response$$validateDocumentStructure(doc) {
+      var errors = [];
+      if (!doc || typeof doc !== 'object') {
+        errors.push('Top level of a JSON API document must be an object');
+      } else {
+        if (!('data' in doc) && !('errors' in doc) && !('meta' in doc)) {
+          errors.push('One or more of the following keys must be present: "data", "errors", "meta".');
+        } else {
+          if ('data' in doc && 'errors' in doc) {
+            errors.push('Top level keys "errors" and "data" cannot both be present in a JSON API document');
+          }
+        }
+        if ('data' in doc) {
+          if (!(doc.data === null || Ember.isArray(doc.data) || typeof doc.data === 'object')) {
+            errors.push('data must be null, an object, or an array');
+          }
+        }
+        if ('meta' in doc) {
+          if (typeof doc.meta !== 'object') {
+            errors.push('meta must be an object');
+          }
+        }
+        if ('errors' in doc) {
+          if (!Ember.isArray(doc.errors)) {
+            errors.push('errors must be an array');
+          }
+        }
+        if ('links' in doc) {
+          if (typeof doc.links !== 'object') {
+            errors.push('links must be an object');
+          }
+        }
+        if ('jsonapi' in doc) {
+          if (typeof doc.jsonapi !== 'object') {
+            errors.push('jsonapi must be an object');
+          }
+        }
+        if ('included' in doc) {
+          if (typeof doc.included !== 'object') {
+            errors.push('included must be an array');
+          }
+        }
+      }
+
+      return errors;
+    }
+
+    /**
       This is a helper method that always returns a JSON-API Document.
 
       If the current serializer has `isNewSerializerAPI` set to `true`
@@ -5478,12 +5534,23 @@
     */
     function ember$data$lib$system$store$serializer$response$$normalizeResponseHelper(serializer, store, modelClass, payload, id, requestType) {
       if (ember$data$lib$system$store$serializer$response$$get(serializer, 'isNewSerializerAPI')) {
-        var normalizedResponse = serializer.normalizeResponse(store, modelClass, payload, id, requestType);
-        // TODO: Remove after metadata refactor
-        if (normalizedResponse.meta) {
-          store._setMetadataFor(modelClass.modelName, normalizedResponse.meta);
-        }
-        return normalizedResponse;
+        var _ret = (function () {
+          var normalizedResponse = serializer.normalizeResponse(store, modelClass, payload, id, requestType);
+          var validationErrors = [];
+          Ember.runInDebug(function () {
+            validationErrors = ember$data$lib$system$store$serializer$response$$validateDocumentStructure(normalizedResponse);
+          });
+          Ember.assert('normalizeResponse must return a valid JSON API document:\n\t* ' + validationErrors.join('\n\t* '), Ember.isEmpty(validationErrors));
+          // TODO: Remove after metadata refactor
+          if (normalizedResponse.meta) {
+            store._setMetadataFor(modelClass.modelName, normalizedResponse.meta);
+          }
+          return {
+            v: normalizedResponse
+          };
+        })();
+
+        if (typeof _ret === 'object') return _ret.v;
       } else {
         Ember.deprecate('Your custom serializer uses the old version of the Serializer API, with `extract` hooks. Please upgrade your serializers to the new Serializer API using `normalizeResponse` hooks instead.', false, {
           id: 'ds.serializer.extract-hooks-deprecated',
@@ -5897,7 +5964,7 @@
         return hash;
       },
 
-      /*
+      /**
         Normalizes an array of resource payloads and returns a JSON-API Document
         with primary data and, if any, included data as `{ data, included }`.
          @method normalizeArray
@@ -5936,7 +6003,7 @@
         return documentHash;
       },
 
-      /*
+      /**
         @method _normalizeResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -7542,7 +7609,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.13.7'
+      VERSION: '1.13.8'
     });
 
     if (Ember.libraries) {
@@ -7852,6 +7919,24 @@
     };
 
     var ember$data$lib$system$snapshot$record$array$$default = ember$data$lib$system$snapshot$record$array$$SnapshotRecordArray;
+    var ember$data$lib$system$record$arrays$filtered$subset$$FilteredSubset = Ember.ArrayProxy.extend({
+      init: function () {
+        this._super.apply(this, arguments);
+
+        var _getProperties = this.getProperties('filterByArgs', 'recordArray');
+
+        var filterByArgs = _getProperties.filterByArgs;
+        var recordArray = _getProperties.recordArray;
+        var key = filterByArgs[0];
+
+        var path = 'recordArray.@each.' + key;
+        Ember.defineProperty(this, 'content', Ember.computed(path, function () {
+          return this.filterBy.apply(recordArray, filterByArgs);
+        }));
+      }
+    });
+
+    var ember$data$lib$system$record$arrays$filtered$subset$$default = ember$data$lib$system$record$arrays$filtered$subset$$FilteredSubset;
 
     var ember$data$lib$system$record$arrays$record$array$$get = Ember.get;
     var ember$data$lib$system$record$arrays$record$array$$set = Ember.set;
@@ -7919,6 +8004,37 @@
         var content = ember$data$lib$system$record$arrays$record$array$$get(this, "content");
         var internalModel = content.objectAt(index);
         return internalModel && internalModel.getRecord();
+      },
+
+      /**
+        Get a filtered subset of the underlying `RecordArray`.
+        The subset updates when a record would match or mismatch the
+        specified filter parameters.
+         Example
+         ```javascript
+        var allToms = store.all('person').filterBy('name', 'Tom');
+         allToms.get('length'); // 0, since no toms yet in store
+         var tom = store.push('person', { id: 1, name: 'Tom' });
+        allToms.get('length'); // Tom is added
+         tom.set('name', 'Thomas');
+        allToms.get('length'); // 0, since no more records with name === 'Tom'
+        ```
+         @method filterBy
+        @param {String} key property path
+        @param {*} value optional
+       */
+      filterBy: function (key, value) {
+        // only pass value to the arguments if it is present; this mimics the same
+        // behavior for `filterBy`: http://git.io/vIurH
+        var filterByArgs = [key];
+        if (arguments.length === 2) {
+          filterByArgs.push(value);
+        }
+
+        return ember$data$lib$system$record$arrays$filtered$subset$$default.create({
+          filterByArgs: filterByArgs,
+          recordArray: this
+        });
       },
 
       /**
@@ -9644,7 +9760,7 @@
         toSet = toSet.concat(newRecords);
         var oldLength = this.length;
         this.arrayContentWillChange(0, this.length, toSet.length);
-        this.set('length', toSet.length);
+        this.set("length", toSet.length);
         this.currentState = toSet;
         this.arrayContentDidChange(0, oldLength, this.length);
         //TODO Figure out to notify only on additions and maybe only if unloaded
@@ -9709,7 +9825,7 @@
         }
         this.arrayContentWillChange(idx, amt, objects.length);
         this.currentState.splice.apply(this.currentState, [idx, amt].concat(objects));
-        this.set('length', this.currentState.length);
+        this.set("length", this.currentState.length);
         this.arrayContentDidChange(idx, amt, objects.length);
         if (objects) {
           //TODO(Igor) probably needed only for unloaded records
@@ -9739,11 +9855,11 @@
         var records;
         if (amt > 0) {
           records = this.currentState.slice(idx, idx + amt);
-          this.get('relationship').removeRecords(records);
+          this.get("relationship").removeRecords(records);
         }
         var map = objects.map || Ember.ArrayPolyfills.map;
         if (objects) {
-          this.get('relationship').addRecords(map.call(objects, function (obj) {
+          this.get("relationship").addRecords(map.call(objects, function (obj) {
             return obj._internalModel;
           }), idx);
         }
@@ -9772,8 +9888,8 @@
       loadedRecord: function () {
         this.loadingRecordsCount--;
         if (this.loadingRecordsCount === 0) {
-          ember$data$lib$system$many$array$$set(this, 'isLoaded', true);
-          this.trigger('didLoad');
+          ember$data$lib$system$many$array$$set(this, "isLoaded", true);
+          this.trigger("didLoad");
         }
       },
 
@@ -9803,10 +9919,10 @@
       */
       save: function () {
         var manyArray = this;
-        var promiseLabel = 'DS: ManyArray#save ' + ember$data$lib$system$many$array$$get(this, 'type');
-        var promise = Ember.RSVP.all(this.invoke('save'), promiseLabel).then(function (array) {
+        var promiseLabel = "DS: ManyArray#save " + ember$data$lib$system$many$array$$get(this, "type");
+        var promise = Ember.RSVP.all(this.invoke("save"), promiseLabel).then(function (array) {
           return manyArray;
-        }, null, 'DS: ManyArray#save return ManyArray');
+        }, null, "DS: ManyArray#save return ManyArray");
 
         return ember$data$lib$system$promise$proxies$$PromiseArray.create({ promise: promise });
       },
@@ -9819,11 +9935,11 @@
         @return {DS.Model} record
       */
       createRecord: function (hash) {
-        var store = ember$data$lib$system$many$array$$get(this, 'store');
-        var type = ember$data$lib$system$many$array$$get(this, 'type');
+        var store = ember$data$lib$system$many$array$$get(this, "store");
+        var type = ember$data$lib$system$many$array$$get(this, "type");
         var record;
 
-        Ember.assert('You cannot add \'' + type.modelName + '\' records to this polymorphic relationship.', !ember$data$lib$system$many$array$$get(this, 'isPolymorphic'));
+        Ember.assert("You cannot add '" + type.modelName + "' records to this polymorphic relationship.", !ember$data$lib$system$many$array$$get(this, "isPolymorphic"));
 
         record = store.createRecord(type.modelName, hash);
         this.pushObject(record);
@@ -9837,9 +9953,9 @@
         @deprecated Use `addObject()` instead
       */
       addRecord: function (record) {
-        Ember.deprecate('Using manyArray.addRecord() has been deprecated. You should use manyArray.addObject() instead.', false, {
-          id: 'ds.many-array.add-record-deprecated',
-          until: '2.0.0'
+        Ember.deprecate("Using manyArray.addRecord() has been deprecated. You should use manyArray.addObject() instead.", false, {
+          id: "ds.many-array.add-record-deprecated",
+          until: "2.0.0"
         });
         this.addObject(record);
       },
@@ -9850,11 +9966,39 @@
         @deprecated Use `removeObject()` instead
       */
       removeRecord: function (record) {
-        Ember.deprecate('Using manyArray.removeRecord() has been deprecated. You should use manyArray.removeObject() instead.', false, {
-          id: 'ds.many-array.remove-record-deprecated',
-          until: '2.0.0'
+        Ember.deprecate("Using manyArray.removeRecord() has been deprecated. You should use manyArray.removeObject() instead.", false, {
+          id: "ds.many-array.remove-record-deprecated",
+          until: "2.0.0"
         });
         this.removeObject(record);
+      },
+
+      /**
+        Get a filtered subset of the underlying `ManyArray`.
+        The subset updates when a record would match or mismatch the
+        specified filter parameters.
+         Example
+         ```javascript
+        var post = store.peekRecord('post', 1)
+        // All the comments that are deleted locally but not yet saved to the server.
+        var deletedComments = post.get('comments').filterBy('isDeleted');
+        ```
+         @method filterBy
+        @param {String} key property path
+        @param {*} value optional
+       */
+      filterBy: function (key, value) {
+        // only pass value to the arguments if it is present; this mimics the same
+        // behavior for `filterBy`: http://git.io/vIurH
+        var filterByArgs = [key];
+        if (arguments.length === 2) {
+          filterByArgs.push(value);
+        }
+
+        return ember$data$lib$system$record$arrays$filtered$subset$$default.create({
+          filterByArgs: filterByArgs,
+          recordArray: this
+        });
       }
     });
 
@@ -12460,7 +12604,7 @@
         implement them.
          This method returns a promise, which is resolved with a `RecordArray`
         once the server returns.
-         @method query
+         @method findQuery
         @param {String} modelName
         @param {any} query an opaque query to be used by the adapter
         @return {Promise} promise
@@ -13716,7 +13860,7 @@
 
     var ember$data$lib$serializers$json$api$serializer$$default = ember$data$lib$serializers$json$serializer$$default.extend({
 
-      /*
+      /**
         This is only to be used temporarily during the transition from the old
         serializer API to the new one.
          `JSONAPISerializer` only supports the new Serializer API.
@@ -13724,7 +13868,7 @@
       */
       isNewSerializerAPI: true,
 
-      /*
+      /**
         @method _normalizeDocumentHelper
         @param {Object} documentHash
         @return {Object}
@@ -13745,7 +13889,7 @@
         return documentHash;
       },
 
-      /*
+      /**
         @method _normalizeRelationshipDataHelper
         @param {Object} relationshipDataHash
         @return {Object}
@@ -13757,7 +13901,7 @@
         return relationshipDataHash;
       },
 
-      /*
+      /**
         @method _normalizeResourceHelper
         @param {Object} resourceHash
         @return {Object}
@@ -13804,7 +13948,7 @@
         return normalizedPayload;
       },
 
-      /*
+      /**
         @method extractAttributes
         @param {DS.Model} modelClass
         @param {Object} resourceHash
@@ -13827,7 +13971,7 @@
         return attributes;
       },
 
-      /*
+      /**
         @method extractRelationship
         @param {Object} relationshipHash
         @return {Object}
@@ -13845,7 +13989,7 @@
         return relationshipHash;
       },
 
-      /*
+      /**
         @method extractRelationships
         @param {Object} modelClass
         @param {Object} resourceHash
@@ -13870,8 +14014,8 @@
         return relationships;
       },
 
-      /*
-        @method extractType
+      /**
+        @method _extractType
         @param {DS.Model} modelClass
         @param {Object} resourceHash
         @return {String}
@@ -13899,7 +14043,7 @@
         return ember$inflector$lib$lib$system$string$$pluralize(modelName);
       },
 
-      /*
+      /**
         @method normalize
         @param {DS.Model} modelClass
         @param {Object} resourceHash
