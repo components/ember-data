@@ -15547,7 +15547,7 @@
                       }
 
           if (meta.shouldWarnAsync) {
-                        meta.shouldWarnAsycn = false;
+                        meta.shouldWarnAsync = false;
           }
 
           return this._internalModel._relationships.get(key).getRecord();
