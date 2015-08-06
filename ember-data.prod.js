@@ -2144,7 +2144,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0+canary.7572fbed30'
+      VERSION: '2.0.0+canary.0a5e816840'
     });
 
     if (Ember.libraries) {
@@ -12314,15 +12314,6 @@
     var ember$data$lib$system$debug$debug$adapter$$capitalize = Ember.String.capitalize;
     var ember$data$lib$system$debug$debug$adapter$$underscore = Ember.String.underscore;
     var ember$data$lib$system$debug$debug$adapter$$_Ember = Ember;
-
-    /**
-      Extend `Ember.DataAdapter` with ED specific code.
-
-      @class DebugAdapter
-      @namespace DS
-      @extends Ember.DataAdapter
-      @private
-    */
     var ember$data$lib$system$debug$debug$adapter$$assert = ember$data$lib$system$debug$debug$adapter$$_Ember.assert;
 
     var ember$data$lib$system$debug$debug$adapter$$default = Ember.DataAdapter.extend({
