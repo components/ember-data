@@ -6703,14 +6703,32 @@
     };
 
     var ember$data$lib$system$snapshot$$default = ember$data$lib$system$snapshot$$Snapshot;
+    var ember$data$lib$system$empty$object$$default = ember$data$lib$system$empty$object$$EmptyObject;
+    // This exists because `Object.create(null)` is absurdly slow compared
+    // to `new EmptyObject()`. In either case, you want a null prototype
+    // when you're treating the object instances as arbitrary dictionaries
+    // and don't want your keys colliding with build-in methods on the
+    // default object prototype.
+    var ember$data$lib$system$empty$object$$proto = Object.create(null, {
+      // without this, we will always still end up with (new
+      // EmptyObject()).constructor === Object
+      constructor: {
+        value: undefined,
+        enumerable: false,
+        writable: true
+      }
+    });
+    function ember$data$lib$system$empty$object$$EmptyObject() {}
+
+    ember$data$lib$system$empty$object$$EmptyObject.prototype = ember$data$lib$system$empty$object$$proto;
     var ember$data$lib$system$model$internal$model$$default = ember$data$lib$system$model$internal$model$$InternalModel;
 
     var ember$data$lib$system$model$internal$model$$Promise = Ember.RSVP.Promise;
     var ember$data$lib$system$model$internal$model$$get = Ember.get;
     var ember$data$lib$system$model$internal$model$$set = Ember.set;
 
-    var ember$data$lib$system$model$internal$model$$_extractPivotNameCache = Object.create(null);
-    var ember$data$lib$system$model$internal$model$$_splitOnDotCache = Object.create(null);
+    var ember$data$lib$system$model$internal$model$$_extractPivotNameCache = new ember$data$lib$system$empty$object$$default();
+    var ember$data$lib$system$model$internal$model$$_splitOnDotCache = new ember$data$lib$system$empty$object$$default();
 
     function ember$data$lib$system$model$internal$model$$splitOnDot(name) {
       return ember$data$lib$system$model$internal$model$$_splitOnDotCache[name] || (ember$data$lib$system$model$internal$model$$_splitOnDotCache[name] = name.split('.'));
@@ -6726,6 +6744,7 @@
       };
     }
 
+    var ember$data$lib$system$model$internal$model$$guid = 0;
     /**
       `InternalModel` is the Model class that we use internally inside Ember Data to represent models.
       Internal ED methods should only deal with `InternalModel` objects. It is a fast, plain Javascript class.
@@ -6746,18 +6765,19 @@
       this.id = id;
       this.store = store;
       this.container = container;
-      this._data = data || Object.create(null);
+      this._data = data || new ember$data$lib$system$empty$object$$default();
       this.modelName = type.modelName;
       this.dataHasInitialized = false;
       //Look into making this lazy
       this._deferredTriggers = [];
-      this._attributes = Object.create(null);
-      this._inFlightAttributes = Object.create(null);
+      this._attributes = new ember$data$lib$system$empty$object$$default();
+      this._inFlightAttributes = new ember$data$lib$system$empty$object$$default();
       this._relationships = new ember$data$lib$system$relationships$state$create$$default(this);
       this.currentState = ember$data$lib$system$model$states$$default.empty;
       this.isReloading = false;
       this.isError = false;
       this.error = null;
+      this[Ember.GUID_KEY] = ember$data$lib$system$model$internal$model$$guid++ + 'internal-model';
       /*
         implicit relationships are relationship which have not been declared but the inverse side exists on
         another record somewhere
@@ -6779,7 +6799,7 @@
          would have a implicit post relationship in order to be do things like remove ourselves from the post
         when we are deleted
       */
-      this._implicitRelationships = Object.create(null);
+      this._implicitRelationships = new ember$data$lib$system$empty$object$$default();
     }
 
     ember$data$lib$system$model$internal$model$$InternalModel.prototype = {
@@ -6955,7 +6975,7 @@
 
       flushChangedAttributes: function () {
         this._inFlightAttributes = this._attributes;
-        this._attributes = Object.create(null);
+        this._attributes = new ember$data$lib$system$empty$object$$default();
       },
 
       /**
@@ -7018,10 +7038,10 @@
       rollbackAttributes: function () {
         var dirtyKeys = Object.keys(this._attributes);
 
-        this._attributes = Object.create(null);
+        this._attributes = new ember$data$lib$system$empty$object$$default();
 
         if (ember$data$lib$system$model$internal$model$$get(this, 'isError')) {
-          this._inFlightAttributes = Object.create(null);
+          this._inFlightAttributes = new ember$data$lib$system$empty$object$$default();
           this.didCleanError();
         }
 
@@ -7038,7 +7058,7 @@
         }
 
         if (this.isValid()) {
-          this._inFlightAttributes = Object.create(null);
+          this._inFlightAttributes = new ember$data$lib$system$empty$object$$default();
         }
 
         this.send('rolledBack');
@@ -7282,7 +7302,7 @@
           ember$data$lib$system$merge$$default(this._data, data);
         }
 
-        this._inFlightAttributes = Object.create(null);
+        this._inFlightAttributes = new ember$data$lib$system$empty$object$$default();
 
         this.send('didCommit');
         this.updateRecordArraysLater();
@@ -7357,7 +7377,7 @@
             this._attributes[keys[i]] = this._inFlightAttributes[keys[i]];
           }
         }
-        this._inFlightAttributes = Object.create(null);
+        this._inFlightAttributes = new ember$data$lib$system$empty$object$$default();
       },
 
       /**
@@ -7400,7 +7420,7 @@
           var keys = Object.keys(updates);
           var length = keys.length;
 
-          original = ember$data$lib$system$merge$$default(Object.create(null), this._data);
+          original = ember$data$lib$system$merge$$default(new ember$data$lib$system$empty$object$$default(), this._data);
           original = ember$data$lib$system$merge$$default(original, this._inFlightAttributes);
 
           for (i = 0; i < length; i++) {

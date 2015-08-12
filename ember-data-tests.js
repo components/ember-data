@@ -20793,8 +20793,8 @@ define(
         });
       });
 
-      var filterdPeopleWillDestroy = tap(filterdPeople.content, 'willDestroy');
-      var adapterPopulatedPeopleWillDestroy = tap(adapterPopulatedPeople.content, 'willDestroy');
+      var filterdPeopleWillDestroy = tap(filterdPeople.get('content'), 'willDestroy');
+      var adapterPopulatedPeopleWillDestroy = tap(adapterPopulatedPeople.get('content'), 'willDestroy');
 
       run(function () {
         store.findRecord('person', 2);
@@ -30209,6 +30209,13 @@ if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/lib/system/debug');
 test('ember-data/lib/system/debug/debug-info.js should pass jshint', function() { 
   ok(true, 'ember-data/lib/system/debug/debug-info.js should pass jshint.'); 
+});
+
+}
+if (!QUnit.urlParams.nojshint) {
+module('JSHint - ember-data/lib/system');
+test('ember-data/lib/system/empty-object.js should pass jshint', function() { 
+  ok(true, 'ember-data/lib/system/empty-object.js should pass jshint.'); 
 });
 
 }
