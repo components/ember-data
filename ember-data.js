@@ -1219,6 +1219,24 @@
     var ember$data$lib$system$map$$MapWithDefault = Ember.MapWithDefault;
 
     var ember$data$lib$system$map$$default = ember$data$lib$system$map$$Map;
+    var ember$data$lib$system$empty$object$$default = ember$data$lib$system$empty$object$$EmptyObject;
+    // This exists because `Object.create(null)` is absurdly slow compared
+    // to `new EmptyObject()`. In either case, you want a null prototype
+    // when you're treating the object instances as arbitrary dictionaries
+    // and don't want your keys colliding with build-in methods on the
+    // default object prototype.
+    var ember$data$lib$system$empty$object$$proto = Object.create(null, {
+      // without this, we will always still end up with (new
+      // EmptyObject()).constructor === Object
+      constructor: {
+        value: undefined,
+        enumerable: false,
+        writable: true
+      }
+    });
+    function ember$data$lib$system$empty$object$$EmptyObject() {}
+
+    ember$data$lib$system$empty$object$$EmptyObject.prototype = ember$data$lib$system$empty$object$$proto;
 
     /**
       The REST adapter allows your store to communicate with an HTTP server by
@@ -2043,7 +2061,7 @@
     });
 
     function ember$data$lib$adapters$rest$adapter$$parseResponseHeaders(headerStr) {
-      var headers = Object.create(null);
+      var headers = new ember$data$lib$system$empty$object$$default();
       if (!headerStr) {
         return headers;
       }
@@ -3202,7 +3220,7 @@
         var currentData = ember$data$lib$system$model$model$$get(this._internalModel, '_attributes');
         var inFlightData = ember$data$lib$system$model$model$$get(this._internalModel, '_inFlightAttributes');
         var newData = ember$data$lib$system$model$model$$merge(ember$data$lib$system$model$model$$copy(inFlightData), currentData);
-        var diffData = Object.create(null);
+        var diffData = new ember$data$lib$system$empty$object$$default();
 
         var newDataKeys = Object.keys(newData);
 
@@ -4205,9 +4223,8 @@
     });
 
     var ember$data$lib$system$clone$null$$default = ember$data$lib$system$clone$null$$cloneNull;
-
     function ember$data$lib$system$clone$null$$cloneNull(source) {
-      var clone = Object.create(null);
+      var clone = new ember$data$lib$system$empty$object$$default();
       for (var key in source) {
         clone[key] = source[key];
       }
@@ -4636,10 +4653,10 @@
     */
     function ember$data$lib$system$store$container$instance$cache$$ContainerInstanceCache(container) {
       this._container = container;
-      this._cache = Object.create(null);
+      this._cache = new ember$data$lib$system$empty$object$$default();
     }
 
-    ember$data$lib$system$store$container$instance$cache$$ContainerInstanceCache.prototype = Object.create(null);
+    ember$data$lib$system$store$container$instance$cache$$ContainerInstanceCache.prototype = new ember$data$lib$system$empty$object$$default();
 
     ember$lib$main$$default.merge(ember$data$lib$system$store$container$instance$cache$$ContainerInstanceCache.prototype, {
       get: function (type, preferredKey, fallbacks) {
@@ -4716,7 +4733,6 @@
 
       return original;
     }
-
     var ember$data$lib$system$model$states$$get = Ember.get;
     /*
       This file encapsulates the various states that a record can transition
@@ -5071,7 +5087,7 @@
         },
 
         exit: function (internalModel) {
-          internalModel._inFlightAttributes = Object.create(null);
+          internalModel._inFlightAttributes = new ember$data$lib$system$empty$object$$default();
         }
       }
     };
@@ -6372,7 +6388,7 @@
     }
     function ember$data$lib$system$relationships$state$create$$Relationships(record) {
       this.record = record;
-      this.initializedRelationships = Object.create(null);
+      this.initializedRelationships = new ember$data$lib$system$empty$object$$default();
     }
 
     ember$data$lib$system$relationships$state$create$$Relationships.prototype.has = function (key) {
@@ -6388,11 +6404,6 @@
       return relationships[key];
     };
     var ember$data$lib$system$snapshot$$default = ember$data$lib$system$snapshot$$Snapshot;
-
-    /**
-      @module ember-data
-    */
-
     var ember$data$lib$system$snapshot$$get = Ember.get;
 
     /**
@@ -6405,11 +6416,11 @@
     function ember$data$lib$system$snapshot$$Snapshot(internalModel) {
       var _this = this;
 
-      this._attributes = Object.create(null);
-      this._belongsToRelationships = Object.create(null);
-      this._belongsToIds = Object.create(null);
-      this._hasManyRelationships = Object.create(null);
-      this._hasManyIds = Object.create(null);
+      this._attributes = new ember$data$lib$system$empty$object$$default();
+      this._belongsToRelationships = new ember$data$lib$system$empty$object$$default();
+      this._belongsToIds = new ember$data$lib$system$empty$object$$default();
+      this._hasManyRelationships = new ember$data$lib$system$empty$object$$default();
+      this._hasManyIds = new ember$data$lib$system$empty$object$$default();
 
       var record = internalModel.getRecord();
       this.record = record;
@@ -6512,7 +6523,7 @@
         @return {Object} All changed attributes of the current snapshot
       */
       changedAttributes: function () {
-        var changedAttributes = Object.create(null);
+        var changedAttributes = new ember$data$lib$system$empty$object$$default();
         var changedAttributeKeys = Object.keys(this._changedAttributes);
 
         for (var i = 0, _length = changedAttributeKeys.length; i < _length; i++) {
@@ -6702,24 +6713,6 @@
     };
 
     var ember$data$lib$system$snapshot$$default = ember$data$lib$system$snapshot$$Snapshot;
-    var ember$data$lib$system$empty$object$$default = ember$data$lib$system$empty$object$$EmptyObject;
-    // This exists because `Object.create(null)` is absurdly slow compared
-    // to `new EmptyObject()`. In either case, you want a null prototype
-    // when you're treating the object instances as arbitrary dictionaries
-    // and don't want your keys colliding with build-in methods on the
-    // default object prototype.
-    var ember$data$lib$system$empty$object$$proto = Object.create(null, {
-      // without this, we will always still end up with (new
-      // EmptyObject()).constructor === Object
-      constructor: {
-        value: undefined,
-        enumerable: false,
-        writable: true
-      }
-    });
-    function ember$data$lib$system$empty$object$$EmptyObject() {}
-
-    ember$data$lib$system$empty$object$$EmptyObject.prototype = ember$data$lib$system$empty$object$$proto;
     var ember$data$lib$system$model$internal$model$$default = ember$data$lib$system$model$internal$model$$InternalModel;
 
     var ember$data$lib$system$model$internal$model$$Promise = Ember.RSVP.Promise;
@@ -7706,7 +7699,7 @@
       createRecord: function (modelName, inputProperties) {
         Ember.assert("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === 'string');
         var typeClass = this.modelFor(modelName);
-        var properties = ember$data$lib$system$store$$copy(inputProperties) || Object.create(null);
+        var properties = ember$data$lib$system$store$$copy(inputProperties) || new ember$data$lib$system$empty$object$$default();
 
         // If the passed properties do not include a primary key,
         // give the adapter an opportunity to generate one. Typically,
@@ -8437,7 +8430,7 @@
             record.destroy(); // maybe within unloadRecord
           }
 
-          typeMap.metadata = Object.create(null);
+          typeMap.metadata = new ember$data$lib$system$empty$object$$default();
         }
 
         function byType(entry) {
@@ -8736,9 +8729,9 @@
         }
 
         typeMap = {
-          idToRecord: Object.create(null),
+          idToRecord: new ember$data$lib$system$empty$object$$default(),
           records: [],
-          metadata: Object.create(null),
+          metadata: new ember$data$lib$system$empty$object$$default(),
           type: typeClass
         };
 
@@ -13831,7 +13824,7 @@
       },
 
       inverseMap: Ember.computed(function () {
-        return Object.create(null);
+        return new ember$data$lib$system$empty$object$$default();
       }),
 
       /**
