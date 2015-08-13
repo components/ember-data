@@ -580,8 +580,7 @@
           }
         });
         ```
-         @private
-        @method query
+         @method query
         @param {DS.Store} store
         @param {DS.Model} type
         @param {Object} query
