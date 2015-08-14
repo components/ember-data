@@ -12224,70 +12224,6 @@ define(
         });
       });
     });
-
-    test("filterBy - returns a filtered subset", function () {
-      var chapter, page;
-      run(function () {
-        env.store.push({
-          data: {
-            type: 'chapter',
-            id: '1',
-            relationships: {
-              pages: {
-                data: [{ type: 'page', id: '2' }, { type: 'page', id: '3' }]
-              }
-            }
-          },
-          included: [{
-            type: 'page',
-            id: '2'
-          }, {
-            type: 'page',
-            id: '3'
-          }]
-        });
-        chapter = env.store.peekRecord('chapter', 1);
-        page = env.store.peekRecord('page', 2);
-      });
-      run(function () {
-        page.deleteRecord();
-      });
-      run(function () {
-        equal(chapter.get('pages').filterBy('isDeleted').get('length'), 1, "Can filter by deleted records");
-      });
-    });
-
-    test("filterBy - returns a filtered subset", function () {
-      var chapter;
-      run(function () {
-        env.store.push({
-          data: {
-            type: 'chapter',
-            id: '1',
-            relationships: {
-              pages: {
-                data: [{ type: 'page', id: '2' }, { type: 'page', id: '3' }]
-              }
-            }
-          },
-          included: [{
-            type: 'page',
-            id: '2'
-          }, {
-            type: 'page',
-            id: '3'
-          }]
-        });
-        chapter = env.store.peekRecord('chapter', 1);
-      });
-      run(function () {
-        env.store.peekRecord('page', 2).deleteRecord();
-        var deletedChapters = chapter.get('pages').filterBy('isDeleted');
-        equal(deletedChapters.get('length'), 1);
-        env.store.peekRecord('page', 3).deleteRecord();
-        equal(deletedChapters.get('length'), 2);
-      });
-    });
   }
 );
 
@@ -26740,121 +26676,6 @@ define(
       });
       ok(promise.then && typeof promise.then === "function", "#update returns a promise");
     });
-
-    test('filterBy - returns a filtered subset', function () {
-      var store = createStore({
-        person: Person
-      });
-
-      run(function () {
-        store.push({ data: [{
-            id: '1',
-            type: 'person',
-            attributes: {
-              name: "Tom"
-            }
-          }, {
-            id: '2',
-            type: 'person',
-            attributes: {
-              name: "Yehuda"
-            }
-          }, {
-            id: '2',
-            type: 'person',
-            attributes: {
-              name: "Yehuda"
-            }
-          }] });
-      });
-
-      var all = store.peekAll('person');
-      var toms = all.filterBy('name', 'Tom');
-      equal(toms.get('length'), 1);
-      deepEqual(toms.getEach('id'), ['1']);
-
-      // a new record is added if filter matches
-      run(function () {
-        store.push({ data: { type: 'person', id: '4', attributes: { name: "Tom" } } });
-      });
-      equal(toms.get('length'), 2);
-      deepEqual(toms.getEach('id'), ['1', '4']);
-
-      // a new record is not added if filter doesn't match
-      run(function () {
-        store.push({ data: { type: 'person', id: '5', attributes: { name: "Igor" } } });
-      });
-      equal(toms.get('length'), 2);
-      deepEqual(toms.getEach('id'), ['1', '4']);
-
-      // changing the filtered value remvoves the record from the list
-      run(function () {
-        // we are using a private method here to get the record immediatly
-        store.recordForId('person', '1').set('name', "Thomas");
-      });
-      equal(toms.get('length'), 1);
-      deepEqual(toms.getEach('id'), ['4']);
-
-      // change value back to original
-      run(function () {
-        store.recordForId('person', '1').set('name', "Tom");
-      });
-      equal(toms.get('length'), 2);
-      deepEqual(toms.getEach('id'), ['1', '4']);
-    });
-
-    test('filterBy - value is optional', function () {
-      var store = createStore({
-        person: Person
-      });
-
-      run(function () {
-        store.push({ data: [{
-            id: '1',
-            type: 'person',
-            attributes: {
-              name: "Tom"
-            }
-          }, {
-            id: '2',
-            type: 'person'
-          }] });
-      });
-
-      var all = store.peekAll('person');
-      var allWithNames = all.filterBy('name');
-      equal(allWithNames.get('length'), 1);
-      deepEqual(allWithNames.getEach('id'), ['1']);
-
-      // a new record is added if filter matches
-      run(function () {
-        store.push({ data: { type: 'person', id: '3', attributes: { name: "Igor" } } });
-      });
-      equal(allWithNames.get('length'), 2);
-      deepEqual(allWithNames.getEach('id'), ['1', '3']);
-
-      // a new record is not added if filter doesn't match
-      run(function () {
-        store.push({ data: { type: 'person', id: '4' } });
-      });
-      equal(allWithNames.get('length'), 2);
-      deepEqual(allWithNames.getEach('id'), ['1', '3']);
-
-      // changing the filtered value remvoves the record from the list
-      run(function () {
-        // we are using a private method here to get the record immediatly
-        store.recordForId('person', '1').set('name', null);
-      });
-      equal(allWithNames.get('length'), 1);
-      deepEqual(allWithNames.getEach('id'), ['3']);
-
-      // change value back to original
-      run(function () {
-        store.recordForId('person', '1').set('name', "Tom");
-      });
-      equal(allWithNames.get('length'), 2);
-      deepEqual(allWithNames.getEach('id'), ['1', '3']);
-    });
   }
 );
 
@@ -30353,13 +30174,6 @@ if (!QUnit.urlParams.nojshint) {
 module('JSHint - ember-data/lib/system/record-arrays');
 test('ember-data/lib/system/record-arrays/filtered-record-array.js should pass jshint', function() { 
   ok(true, 'ember-data/lib/system/record-arrays/filtered-record-array.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/record-arrays');
-test('ember-data/lib/system/record-arrays/filtered-subset.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/record-arrays/filtered-subset.js should pass jshint.'); 
 });
 
 }
