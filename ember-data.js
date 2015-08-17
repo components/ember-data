@@ -7550,7 +7550,7 @@
         adapter: 'custom'
         ```
          @property adapter
-        @default DS.RESTAdapter
+        @default DS.JSONAPIAdapter
         @type {(DS.Adapter|String)}
       */
       adapter: '-json-api',
@@ -8704,8 +8704,11 @@
 
       _modelForMixin: function (modelName) {
         var normalizedModelName = ember$data$lib$system$normalize$model$name$$default(modelName);
-        var registry = this.container._registry ? this.container._registry : this.container;
-        var mixin = registry.resolve('mixin:' + normalizedModelName);
+        // container.registry = 2.1
+        // container._registry = 1.11 - 2.0
+        // container = < 1.11
+        var registry = this.container.registry || this.container._registry || this.container;
+        var mixin = this.container.lookupFactory('mixin:' + normalizedModelName);
         if (mixin) {
           //Cache the class as a model
           registry.register('model:' + normalizedModelName, DS.Model.extend(mixin));
@@ -10600,8 +10603,8 @@
     var ember$inflector$lib$lib$system$inflector$$capitalize = ember$lib$main$$default.String.capitalize;
 
     var ember$inflector$lib$lib$system$inflector$$BLANK_REGEX = /^\s*$/;
-    var ember$inflector$lib$lib$system$inflector$$LAST_WORD_DASHED_REGEX = /([\w/-]+[_/-])([a-z\d]+$)/;
-    var ember$inflector$lib$lib$system$inflector$$LAST_WORD_CAMELIZED_REGEX = /([\w/-]+)([A-Z][a-z\d]*$)/;
+    var ember$inflector$lib$lib$system$inflector$$LAST_WORD_DASHED_REGEX = /([\w/-]+[_/-\s])([a-z\d]+$)/;
+    var ember$inflector$lib$lib$system$inflector$$LAST_WORD_CAMELIZED_REGEX = /([\w/-\s]+)([A-Z][a-z\d]*$)/;
     var ember$inflector$lib$lib$system$inflector$$CAMELIZED_REGEX = /[A-Z][a-z\d]*$/;
 
     function ember$inflector$lib$lib$system$inflector$$loadUncountable(rules, uncountable) {
@@ -10840,7 +10843,7 @@
         @param {Object} irregular
       */
       inflect: function (word, typeRules, irregular) {
-        var inflection, substitution, result, lowercase, wordSplit, firstPhrase, lastWord, isBlank, isCamelized, rule;
+        var inflection, substitution, result, lowercase, wordSplit, firstPhrase, lastWord, isBlank, isCamelized, rule, isUncountable;
 
         isBlank = !word || ember$inflector$lib$lib$system$inflector$$BLANK_REGEX.test(word);
 
@@ -10859,10 +10862,10 @@
           lastWord = wordSplit[2].toLowerCase();
         }
 
-        for (rule in this.rules.uncountable) {
-          if (lowercase.match(rule + "$")) {
-            return word;
-          }
+        isUncountable = this.rules.uncountable[lowercase] || this.rules.uncountable[lastWord];
+
+        if (isUncountable) {
+          return word;
         }
 
         for (rule in this.rules.irregular) {
