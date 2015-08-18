@@ -1325,7 +1325,7 @@
         namespace: 'api/1'
       });
       ```
-      Requests for `App.Person` would now target `/api/1/people/1`.
+      Requests for the `Person` model would now target `/api/1/people/1`.
 
       ### Host customization
 
@@ -1496,7 +1496,7 @@
           namespace: 'api/1'
         });
         ```
-         Requests for `App.Post` would now target `/api/1/post/`.
+         Requests for the `Post` model would now target `/api/1/post/`.
          @property namespace
         @type {String}
       */
@@ -1509,7 +1509,7 @@
           host: 'https://api.example.com'
         });
         ```
-         Requests for `App.Post` would now target `https://api.example.com/post/`.
+         Requests for the `Post` model would now target `https://api.example.com/post/`.
          @property host
         @type {String}
       */
