@@ -1314,7 +1314,7 @@
         namespace: 'api/1'
       });
       ```
-      Requests for `App.Person` would now target `/api/1/people/1`.
+      Requests for the `Person` model would now target `/api/1/people/1`.
 
       ### Host customization
 
@@ -1354,12 +1354,12 @@
       import DS from 'ember-data';
 
       export default DS.RESTAdapter.extend({
-        headers: function() {
+        headers: Ember.computed('session.authToken', function() {
           return {
             "API_KEY": this.get("session.authToken"),
             "ANOTHER_HEADER": "Some header value"
           };
-        }.property("session.authToken")
+        })
       });
       ```
 
@@ -1374,12 +1374,12 @@
       import DS from 'ember-data';
 
       export default DS.RESTAdapter.extend({
-        headers: function() {
+        headers: Ember.computed(function() {
           return {
             "API_KEY": Ember.get(document.cookie.match(/apiKey\=([^;]*)/), "1"),
             "ANOTHER_HEADER": "Some header value"
           };
-        }.property().volatile()
+        }).volatile()
       });
       ```
 
@@ -1485,7 +1485,7 @@
           namespace: 'api/1'
         });
         ```
-         Requests for `App.Post` would now target `/api/1/post/`.
+         Requests for the `Post` model would now target `/api/1/post/`.
          @property namespace
         @type {String}
       */
@@ -1498,7 +1498,7 @@
           host: 'https://api.example.com'
         });
         ```
-         Requests for `App.Post` would now target `https://api.example.com/post/`.
+         Requests for the `Post` model would now target `https://api.example.com/post/`.
          @property host
         @type {String}
       */
@@ -2150,7 +2150,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.0.0-beta.2'
+      VERSION: '2.0.0'
     });
 
     if (Ember.libraries) {
@@ -7538,7 +7538,7 @@
         adapter: 'custom'
         ```
          @property adapter
-        @default DS.RESTAdapter
+        @default DS.JSONAPIAdapter
         @type {(DS.Adapter|String)}
       */
       adapter: '-json-api',
@@ -8692,8 +8692,11 @@
 
       _modelForMixin: function (modelName) {
         var normalizedModelName = ember$data$lib$system$normalize$model$name$$default(modelName);
-        var registry = this.container._registry ? this.container._registry : this.container;
-        var mixin = registry.resolve('mixin:' + normalizedModelName);
+        // container.registry = 2.1
+        // container._registry = 1.11 - 2.0
+        // container = < 1.11
+        var registry = this.container.registry || this.container._registry || this.container;
+        var mixin = this.container.lookupFactory('mixin:' + normalizedModelName);
         if (mixin) {
           //Cache the class as a model
           registry.register('model:' + normalizedModelName, DS.Model.extend(mixin));
@@ -10588,8 +10591,8 @@
     var ember$inflector$lib$lib$system$inflector$$capitalize = ember$lib$main$$default.String.capitalize;
 
     var ember$inflector$lib$lib$system$inflector$$BLANK_REGEX = /^\s*$/;
-    var ember$inflector$lib$lib$system$inflector$$LAST_WORD_DASHED_REGEX = /([\w/-]+[_/-])([a-z\d]+$)/;
-    var ember$inflector$lib$lib$system$inflector$$LAST_WORD_CAMELIZED_REGEX = /([\w/-]+)([A-Z][a-z\d]*$)/;
+    var ember$inflector$lib$lib$system$inflector$$LAST_WORD_DASHED_REGEX = /([\w/-]+[_/-\s])([a-z\d]+$)/;
+    var ember$inflector$lib$lib$system$inflector$$LAST_WORD_CAMELIZED_REGEX = /([\w/-\s]+)([A-Z][a-z\d]*$)/;
     var ember$inflector$lib$lib$system$inflector$$CAMELIZED_REGEX = /[A-Z][a-z\d]*$/;
 
     function ember$inflector$lib$lib$system$inflector$$loadUncountable(rules, uncountable) {
@@ -10828,7 +10831,7 @@
         @param {Object} irregular
       */
       inflect: function (word, typeRules, irregular) {
-        var inflection, substitution, result, lowercase, wordSplit, firstPhrase, lastWord, isBlank, isCamelized, rule;
+        var inflection, substitution, result, lowercase, wordSplit, firstPhrase, lastWord, isBlank, isCamelized, rule, isUncountable;
 
         isBlank = !word || ember$inflector$lib$lib$system$inflector$$BLANK_REGEX.test(word);
 
@@ -10847,10 +10850,10 @@
           lastWord = wordSplit[2].toLowerCase();
         }
 
-        for (rule in this.rules.uncountable) {
-          if (lowercase.match(rule + "$")) {
-            return word;
-          }
+        isUncountable = this.rules.uncountable[lowercase] || this.rules.uncountable[lastWord];
+
+        if (isUncountable) {
+          return word;
         }
 
         for (rule in this.rules.irregular) {
@@ -11372,6 +11375,8 @@
         @private
       */
       _normalizeArray: function (store, modelName, arrayHash, prop) {
+        var _this = this;
+
         var documentHash = {
           data: [],
           included: []
@@ -11381,10 +11386,10 @@
         var serializer = store.serializerFor(modelName);
 
         arrayHash.forEach(function (hash) {
-          var _serializer$normalize = serializer.normalize(modelClass, hash, prop);
+          var _normalizePolymorphicRecord = _this._normalizePolymorphicRecord(store, hash, prop, modelClass, serializer);
 
-          var data = _serializer$normalize.data;
-          var included = _serializer$normalize.included;
+          var data = _normalizePolymorphicRecord.data;
+          var included = _normalizePolymorphicRecord.included;
 
           documentHash.data.push(data);
           if (included) {
@@ -11397,7 +11402,21 @@
         return documentHash;
       },
 
-      /**
+      _normalizePolymorphicRecord: function (store, hash, prop, primaryModelClass, primarySerializer) {
+        var serializer = undefined,
+            modelClass = undefined;
+        // Support polymorphic records in async relationships
+        if (hash.type && store._hasModelFor(this.modelNameFromPayloadKey(hash.type))) {
+          serializer = store.serializerFor(hash.type);
+          modelClass = store.modelFor(hash.type);
+        } else {
+          serializer = primarySerializer;
+          modelClass = primaryModelClass;
+        }
+        return serializer.normalize(modelClass, hash, prop);
+      },
+
+      /*
         @method _normalizeResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -11474,10 +11493,10 @@
             ```
            */
           if (isPrimary && Ember.typeOf(value) !== 'array') {
-            var _normalize = this.normalize(primaryModelClass, value, prop);
+            var _normalizePolymorphicRecord2 = this._normalizePolymorphicRecord(store, value, prop, primaryModelClass, this);
 
-            var _data = _normalize.data;
-            var _included = _normalize.included;
+            var _data = _normalizePolymorphicRecord2.data;
+            var _included = _normalizePolymorphicRecord2.included;
 
             documentHash.data = _data;
             if (_included) {
@@ -11872,17 +11891,29 @@
     var ember$data$lib$serializers$rest$serializer$$default = ember$data$lib$serializers$rest$serializer$$RESTSerializer;
     var ember$data$lib$initializers$store$$default = ember$data$lib$initializers$store$$initializeStore;
 
+    function ember$data$lib$initializers$store$$has(applicationOrRegistry, fullName) {
+      if (applicationOrRegistry.has) {
+        // < 2.1.0
+        return applicationOrRegistry.has(fullName);
+      } else {
+        // 2.1.0+
+        return applicationOrRegistry.hasRegistration(fullName);
+      }
+    }
+
     /**
       Configures a registry for use with an Ember-Data
       store. Accepts an optional namespace argument.
 
       @method initializeStore
       @param {Ember.Registry} registry
-      @param {Object} [application] an application namespace
     */
-    function ember$data$lib$initializers$store$$initializeStore(registry, application) {
-      registry.optionsForType('serializer', { singleton: false });
-      registry.optionsForType('adapter', { singleton: false });
+    function ember$data$lib$initializers$store$$initializeStore(registry) {
+      // registry.optionsForType for Ember < 2.1.0
+      // application.registerOptionsForType for Ember 2.1.0+
+      var registerOptionsForType = registry.registerOptionsForType || registry.optionsForType;
+      registerOptionsForType.call(registry, 'serializer', { singleton: false });
+      registerOptionsForType.call(registry, 'adapter', { singleton: false });
 
       registry.register('serializer:-default', ember$data$lib$serializers$json$serializer$$default);
       registry.register('serializer:-rest', ember$data$lib$serializers$rest$serializer$$default);
@@ -11891,7 +11922,7 @@
       registry.register('adapter:-json-api', ember$data$lib$adapters$json$api$adapter$$default);
       registry.register('serializer:-json-api', ember$data$lib$serializers$json$api$serializer$$default);
 
-      if (!registry.has('service:store')) {
+      if (!ember$data$lib$initializers$store$$has(registry, 'service:store')) {
         registry.register('service:store', ember$data$lib$system$store$$default);
       }
     }
@@ -12041,9 +12072,12 @@
       @param {Ember.Registry} registry
     */
     function ember$data$lib$initializers$store$injections$$initializeStoreInjections(registry) {
-      registry.injection('controller', 'store', 'service:store');
-      registry.injection('route', 'store', 'service:store');
-      registry.injection('data-adapter', 'store', 'service:store');
+      // registry.injection for Ember < 2.1.0
+      // application.inject for Ember 2.1.0+
+      var inject = registry.inject || registry.injection;
+      inject.call(registry, 'controller', 'store', 'service:store');
+      inject.call(registry, 'route', 'store', 'service:store');
+      inject.call(registry, 'data-adapter', 'store', 'service:store');
     }
     var ember$data$lib$system$model$attributes$$default = ember$data$lib$system$model$attributes$$attr;
 
@@ -12486,15 +12520,11 @@
       registry.register('data-adapter:main', ember$data$lib$system$debug$debug$adapter$$default);
     }
     var ember$data$lib$setup$container$$default = ember$data$lib$setup$container$$setupContainer;
-    function ember$data$lib$setup$container$$setupContainer(registry, application) {
-      // application is not a required argument. This ensures
-      // testing setups can setup a container without booting an
-      // entire ember application.
-
-      ember$data$lib$initializers$data$adapter$$default(registry, application);
-      ember$data$lib$initializers$transforms$$default(registry, application);
-      ember$data$lib$initializers$store$injections$$default(registry, application);
-      ember$data$lib$initializers$store$$default(registry, application);
+    function ember$data$lib$setup$container$$setupContainer(application) {
+      ember$data$lib$initializers$data$adapter$$default(application);
+      ember$data$lib$initializers$transforms$$default(application);
+      ember$data$lib$initializers$store$injections$$default(application);
+      ember$data$lib$initializers$store$$default(application);
     }
     var ember$data$lib$instance$initializers$initialize$store$service$$default = ember$data$lib$instance$initializers$initialize$store$service$$initializeStoreService;
     /**
@@ -12505,7 +12535,7 @@
      @param {Ember.ApplicationInstance} applicationOrRegistry
      */
     function ember$data$lib$instance$initializers$initialize$store$service$$initializeStoreService(application) {
-      var container = application.container;
+      var container = application.lookup ? application : application.container;
       // Eagerly generate the store so defaultStore is populated.
       container.lookup('service:store');
     }
