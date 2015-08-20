@@ -11792,7 +11792,7 @@
     function ember$data$lib$initializers$store$$initializeStore(registry) {
       // registry.optionsForType for Ember < 2.1.0
       // application.registerOptionsForType for Ember 2.1.0+
-      var registerOptionsForType = registry.optionsForType || registry.registerOptionsForType;
+      var registerOptionsForType = registry.registerOptionsForType || registry.optionsForType;
       registerOptionsForType.call(registry, 'serializer', { singleton: false });
       registerOptionsForType.call(registry, 'adapter', { singleton: false });
 
@@ -11955,7 +11955,7 @@
     function ember$data$lib$initializers$store$injections$$initializeStoreInjections(registry) {
       // registry.injection for Ember < 2.1.0
       // application.inject for Ember 2.1.0+
-      var inject = registry.injection || registry.inject;
+      var inject = registry.inject || registry.injection;
       inject.call(registry, 'controller', 'store', 'service:store');
       inject.call(registry, 'route', 'store', 'service:store');
       inject.call(registry, 'data-adapter', 'store', 'service:store');
