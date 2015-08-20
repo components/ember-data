@@ -18966,7 +18966,9 @@ define(
           superVillain: DS.belongsTo('super-villain', { async: false }),
           name: DS.attr('string')
         });
-        YellowMinion = EvilMinion.extend();
+        YellowMinion = EvilMinion.extend({
+          eyes: DS.attr('number')
+        });
         DoomsdayDevice = DS.Model.extend({
           name: DS.attr('string'),
           evilMinion: DS.belongsTo('evil-minion', { polymorphic: true, async: true })
@@ -19404,6 +19406,81 @@ define(
         'home-planet': {
           name: "Umber"
         }
+      });
+    });
+
+    test('normalizeResponse with async polymorphic belongsTo', function () {
+      env.registry.register('serializer:application', DS.RESTSerializer.extend({
+        isNewSerializerAPI: true
+      }));
+      var store = env.store;
+      env.adapter.findRecord = function () {
+        return {
+          doomsdayDevices: [{
+            id: 1,
+            name: "DeathRay",
+            links: {
+              evilMinion: '/doomsday-device/1/evil-minion'
+            }
+          }]
+        };
+      };
+
+      env.adapter.findBelongsTo = function () {
+        return {
+          evilMinion: {
+            id: 1,
+            type: 'yellowMinion',
+            name: 'Alex',
+            eyes: 3
+          }
+        };
+      };
+      run(function () {
+        store.findRecord('doomsday-device', 1).then(function (deathRay) {
+          return deathRay.get('evilMinion');
+        }).then(function (evilMinion) {
+          equal(evilMinion.get('eyes'), 3);
+        });
+      });
+    });
+
+    test('normalizeResponse with async polymorphic hasMany', function () {
+      SuperVillain.reopen({ evilMinions: DS.hasMany('evil-minion', { async: true, polymorphic: true }) });
+      env.registry.register('serializer:application', DS.RESTSerializer.extend({
+        isNewSerializerAPI: true
+      }));
+      var store = env.store;
+      env.adapter.findRecord = function () {
+        return {
+          superVillains: [{
+            id: "1",
+            firstName: "Yehuda",
+            lastName: "Katz",
+            links: {
+              evilMinions: '/super-villain/1/evil-minions'
+            }
+          }]
+        };
+      };
+
+      env.adapter.findHasMany = function () {
+        return {
+          evilMinion: [{
+            id: 1,
+            type: 'yellowMinion',
+            name: 'Alex',
+            eyes: 3
+          }]
+        };
+      };
+      run(function () {
+        store.findRecord('super-villain', 1).then(function (superVillain) {
+          return superVillain.get('evilMinions');
+        }).then(function (evilMinions) {
+          ok(evilMinions.get('firstObject') instanceof YellowMinion);
+          equal(evilMinions.get('firstObject.eyes'), 3);
+        });
       });
     });
 
