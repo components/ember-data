@@ -62,8 +62,7 @@
 
         var skipPackageRegexp = new RegExp('^('+skipPackages.join('|')+')/');
 
-        const keysFunc = Object.keys || Ember.keys;
-        var keys = keysFunc(requirejs.entries);
+        var keys = Object.keys(requirejs.entries);
 
         for (var i = 0, length = keys.length; i < length; i++) {
           var moduleName = keys[i];

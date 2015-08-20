@@ -1,1576 +1,3 @@
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - activemodel-adapter/lib');
-test('activemodel-adapter/lib/main.js should pass jshint', function() { 
-  ok(true, 'activemodel-adapter/lib/main.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - activemodel-adapter/lib');
-test('activemodel-adapter/lib/setup-container.js should pass jshint', function() { 
-  ok(true, 'activemodel-adapter/lib/setup-container.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - activemodel-adapter/lib');
-test('activemodel-adapter/lib/system.js should pass jshint', function() { 
-  ok(true, 'activemodel-adapter/lib/system.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - activemodel-adapter/lib/system');
-test('activemodel-adapter/lib/system/active-model-adapter.js should pass jshint', function() { 
-  ok(true, 'activemodel-adapter/lib/system/active-model-adapter.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - activemodel-adapter/lib/system');
-test('activemodel-adapter/lib/system/active-model-serializer.js should pass jshint', function() { 
-  ok(true, 'activemodel-adapter/lib/system/active-model-serializer.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - activemodel-adapter/tests/integration');
-test('activemodel-adapter/tests/integration/active-model-adapter-serializer-test.js should pass jshint', function() { 
-  ok(true, 'activemodel-adapter/tests/integration/active-model-adapter-serializer-test.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - activemodel-adapter/tests/integration');
-test('activemodel-adapter/tests/integration/active-model-adapter-test.js should pass jshint', function() { 
-  ok(true, 'activemodel-adapter/tests/integration/active-model-adapter-test.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - activemodel-adapter/tests/integration');
-test('activemodel-adapter/tests/integration/active-model-serializer-namespaced-model-name-new-test.js should pass jshint', function() { 
-  ok(true, 'activemodel-adapter/tests/integration/active-model-serializer-namespaced-model-name-new-test.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - activemodel-adapter/tests/integration');
-test('activemodel-adapter/tests/integration/active-model-serializer-namespaced-model-name-test.js should pass jshint', function() { 
-  ok(true, 'activemodel-adapter/tests/integration/active-model-serializer-namespaced-model-name-test.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - activemodel-adapter/tests/integration');
-test('activemodel-adapter/tests/integration/active-model-serializer-new-test.js should pass jshint', function() { 
-  ok(true, 'activemodel-adapter/tests/integration/active-model-serializer-new-test.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - activemodel-adapter/tests/integration');
-test('activemodel-adapter/tests/integration/active-model-serializer-test.js should pass jshint', function() { 
-  ok(true, 'activemodel-adapter/tests/integration/active-model-serializer-test.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - activemodel-adapter/tests/unit/adapter');
-test('activemodel-adapter/tests/unit/adapter/path-for-type-test.js should pass jshint', function() { 
-  ok(true, 'activemodel-adapter/tests/unit/adapter/path-for-type-test.js should pass jshint.'); 
-});
-
-}
-define(
-  "activemodel-adapter/tests/integration/active-model-adapter-serializer-test",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-
-    function __es6_export__(name, value) {
-      __exports__[name] = value;
-    }
-
-    var env, store, adapter, User;
-
-    var originalAjax;
-    var _DS = DS;
-    var ActiveModelAdapter = _DS.ActiveModelAdapter;
-
-    module("integration/active_model_adapter_serializer - AMS Adapter and Serializer", {
-      setup: function () {
-        originalAjax = Ember.$.ajax;
-
-        User = DS.Model.extend({
-          firstName: DS.attr()
-        });
-
-        env = setupStore({
-          user: User,
-          adapter: ActiveModelAdapter
-        });
-
-        store = env.store;
-        adapter = env.adapter;
-
-        env.registry.register('serializer:application', DS.ActiveModelSerializer);
-      },
-
-      teardown: function () {
-        Ember.$.ajax = originalAjax;
-      }
-    });
-
-    test('errors are camelCased and are expected under the `errors` property of the payload', function (assert) {
-      var jqXHR = {
-        status: 422,
-        getAllResponseHeaders: function () {
-          return '';
-        },
-        responseText: JSON.stringify({
-          errors: {
-            first_name: ["firstName error"]
-          }
-        })
-      };
-
-      Ember.$.ajax = function (hash) {
-        hash.error(jqXHR);
-      };
-
-      var user;
-      Ember.run(function () {
-        user = store.push('user', { id: 1 });
-      });
-
-      Ember.run(function () {
-        user.save().then(null, function () {
-          var errors = user.get('errors');
-          assert.ok(errors.has('firstName'), "there are errors for the firstName attribute");
-          assert.deepEqual(errors.errorsFor('firstName').getEach('message'), ['firstName error']);
-        });
-      });
-    });
-  }
-);
-
-
-define(
-  "activemodel-adapter/tests/integration/active-model-adapter-test",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-
-    function __es6_export__(name, value) {
-      __exports__[name] = value;
-    }
-
-    var _DS = DS;
-    var ActiveModelAdapter = _DS.ActiveModelAdapter;
-
-    var env, store, adapter, SuperUser;
-    var passedUrl, passedVerb, passedHash;
-    module("integration/active_model_adapter - AMS Adapter", {
-      setup: function () {
-        SuperUser = DS.Model.extend();
-
-        env = setupStore({
-          superUser: SuperUser,
-          adapter: ActiveModelAdapter
-        });
-
-        store = env.store;
-        adapter = env.adapter;
-
-        passedUrl = passedVerb = passedHash = null;
-      }
-    });
-
-    test('buildURL - decamelizes names', function (assert) {
-      assert.equal(adapter.buildURL('superUser', 1), "/super_users/1");
-    });
-
-    test('handleResponse - returns invalid error if 422 response', function (assert) {
-
-      var jqXHR = {
-        status: 422,
-        responseText: JSON.stringify({ errors: { name: "can't be blank" } })
-      };
-
-      var json = adapter.parseErrorResponse(jqXHR.responseText);
-
-      var error = adapter.handleResponse(jqXHR.status, {}, json).errors[0];
-
-      equal(error.detail, "can't be blank");
-      equal(error.source.pointer, "/data/attributes/name");
-    });
-
-    test('handleResponse - returns ajax response if not 422 response', function (assert) {
-      var jqXHR = {
-        status: 500,
-        responseText: "Something went wrong"
-      };
-
-      var json = adapter.parseErrorResponse(jqXHR.responseText);
-
-      assert.ok(adapter.handleResponse(jqXHR.status, {}, json) instanceof DS.AdapterError, 'must be a DS.AdapterError');
-    });
-  }
-);
-
-
-define(
-  "activemodel-adapter/tests/integration/active-model-serializer-namespaced-model-name-new-test",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-
-    function __es6_export__(name, value) {
-      __exports__[name] = value;
-    }
-
-    var _DS = DS;
-    var ActiveModelSerializer = _DS.ActiveModelSerializer;
-
-    var SuperVillain, EvilMinion, YellowMinion, DoomsdayDevice, MediocreVillain, TestSerializer, env;
-    var run = Ember.run;
-
-    module("integration/active_model - AMS-namespaced-model-names (new API)", {
-      setup: function () {
-        SuperVillain = DS.Model.extend({
-          firstName: DS.attr('string'),
-          lastName: DS.attr('string'),
-          evilMinions: DS.hasMany("evilMinion")
-        });
-
-        EvilMinion = DS.Model.extend({
-          superVillain: DS.belongsTo('superVillain'),
-          name: DS.attr('string')
-        });
-        YellowMinion = EvilMinion.extend();
-        DoomsdayDevice = DS.Model.extend({
-          name: DS.attr('string'),
-          evilMinion: DS.belongsTo('evilMinion', { polymorphic: true })
-        });
-        MediocreVillain = DS.Model.extend({
-          name: DS.attr('string'),
-          evilMinions: DS.hasMany('evilMinion', { polymorphic: true })
-        });
-        TestSerializer = ActiveModelSerializer.extend({
-          isNewSerializerAPI: true
-        });
-        env = setupStore({
-          superVillain: SuperVillain,
-          evilMinion: EvilMinion,
-          'evilMinions/yellowMinion': YellowMinion,
-          doomsdayDevice: DoomsdayDevice,
-          mediocreVillain: MediocreVillain
-        });
-        env.store.modelFor('superVillain');
-        env.store.modelFor('evilMinion');
-        env.store.modelFor('evilMinions/yellowMinion');
-        env.store.modelFor('doomsdayDevice');
-        env.store.modelFor('mediocreVillain');
-        env.registry.register('serializer:application', TestSerializer);
-        env.registry.register('serializer:-active-model', TestSerializer);
-        env.registry.register('adapter:-active-model', TestSerializer);
-        env.amsSerializer = env.container.lookup("serializer:-active-model");
-        env.amsAdapter = env.container.lookup("adapter:-active-model");
-      },
-
-      teardown: function () {
-        run(env.store, 'destroy');
-      }
-    });
-
-    if (Ember.FEATURES.isEnabled('ds-new-serializer-api')) {
-
-      test("extractPolymorphic hasMany", function (assert) {
-        var json_hash = {
-          mediocre_villain: { id: 1, name: "Dr Horrible", evil_minion_ids: [{ type: "EvilMinions::YellowMinion", id: 12 }] },
-          "evil-minions/yellow-minion": [{ id: 12, name: "Alex", doomsday_device_ids: [1] }]
-        };
-        var json;
-
-        run(function () {
-          json = env.amsSerializer.normalizeResponse(env.store, MediocreVillain, json_hash, '1', 'find');
-        });
-
-        assert.deepEqual(json, {
-          "data": {
-            "id": "1",
-            "type": "mediocre-villain",
-            "attributes": {
-              "name": "Dr Horrible"
-            },
-            "relationships": {
-              "evilMinions": {
-                "data": [{ "id": "12", "type": "evil-minions/yellow-minion" }]
-              }
-            }
-          },
-          "included": [{
-            "id": "12",
-            "type": "evil-minions/yellow-minion",
-            "attributes": {
-              "name": "Alex"
-            },
-            "relationships": {}
-          }]
-        });
-      });
-
-      test("extractPolymorphic belongsTo", function (assert) {
-        var json_hash = {
-          doomsday_device: { id: 1, name: "DeathRay", evil_minion_id: { type: "EvilMinions::YellowMinion", id: 12 } },
-          "evil-minions/yellow-minion": [{ id: 12, name: "Alex", doomsday_device_ids: [1] }]
-        };
-        var json;
-
-        run(function () {
-          json = env.amsSerializer.normalizeResponse(env.store, DoomsdayDevice, json_hash, '1', 'find');
-        });
-
-        assert.deepEqual(json, {
-          "data": {
-            "id": "1",
-            "type": "doomsday-device",
-            "attributes": {
-              "name": "DeathRay"
-            },
-            "relationships": {
-              "evilMinion": {
-                "data": { "id": "12", "type": "evil-minions/yellow-minion" }
-              }
-            }
-          },
-          "included": [{
-            "id": "12",
-            "type": "evil-minions/yellow-minion",
-            "attributes": {
-              "name": "Alex"
-            },
-            "relationships": {}
-          }]
-        });
-      });
-    }
-  }
-);
-
-
-define(
-  "activemodel-adapter/tests/integration/active-model-serializer-namespaced-model-name-test",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-
-    function __es6_export__(name, value) {
-      __exports__[name] = value;
-    }
-
-    var _DS = DS;
-    var ActiveModelAdapter = _DS.ActiveModelAdapter;
-    var ActiveModelSerializer = _DS.ActiveModelSerializer;
-
-    var SuperVillain, EvilMinion, YellowMinion, DoomsdayDevice, MediocreVillain, env;
-    var _Ember = Ember;
-    var run = _Ember.run;
-
-    module("integration/active_model - AMS-namespaced-model-names", {
-      setup: function () {
-        SuperVillain = DS.Model.extend({
-          firstName: DS.attr('string'),
-          lastName: DS.attr('string'),
-          evilMinions: DS.hasMany('evil-minion')
-        });
-
-        EvilMinion = DS.Model.extend({
-          superVillain: DS.belongsTo('super-villain'),
-          name: DS.attr('string')
-        });
-        YellowMinion = EvilMinion.extend();
-        DoomsdayDevice = DS.Model.extend({
-          name: DS.attr('string'),
-          evilMinion: DS.belongsTo('evil-minion', { polymorphic: true })
-        });
-        MediocreVillain = DS.Model.extend({
-          name: DS.attr('string'),
-          evilMinions: DS.hasMany('evil-minion', { polymorphic: true })
-        });
-        env = setupStore({
-          superVillain: SuperVillain,
-          evilMinion: EvilMinion,
-          'evilMinions/yellowMinion': YellowMinion,
-          doomsdayDevice: DoomsdayDevice,
-          mediocreVillain: MediocreVillain,
-          yellowMinion: YellowMinion
-        });
-        env.store.modelFor('super-villain');
-        env.store.modelFor('evil-minion');
-        env.store.modelFor('evil-minions/yellow-minion');
-        env.store.modelFor('doomsday-device');
-        env.store.modelFor('mediocre-villain');
-        env.registry.register('serializer:application', ActiveModelSerializer.extend({ isNewSerializerAPI: true }));
-        env.registry.register('serializer:-active-model', ActiveModelSerializer.extend({ isNewSerializerAPI: true }));
-        env.registry.register('adapter:-active-model', ActiveModelAdapter);
-        env.amsSerializer = env.container.lookup("serializer:-active-model");
-        env.amsAdapter = env.container.lookup("adapter:-active-model");
-      },
-
-      teardown: function () {
-        run(env.store, 'destroy');
-      }
-    });
-
-    test("serialize polymorphic", function (assert) {
-      var tom, ray;
-      run(function () {
-        tom = env.store.createRecord('evil-minions/yellow-minion', { name: "Alex", id: "124" });
-        ray = env.store.createRecord('doomsday-device', { evilMinion: tom, name: "DeathRay" });
-      });
-
-      var json = env.amsSerializer.serialize(ray._createSnapshot());
-
-      assert.deepEqual(json, {
-        name: "DeathRay",
-        evil_minion_type: "EvilMinions::YellowMinion",
-        evil_minion_id: "124"
-      });
-    });
-
-    test("serialize polymorphic when type key is not camelized", function (assert) {
-      YellowMinion.modelName = 'evil-minions/yellow-minion';
-      var tom, ray;
-      run(function () {
-        tom = env.store.createRecord('yellow-minion', { name: "Alex", id: "124" });
-        ray = env.store.createRecord('doomsday-device', { evilMinion: tom, name: "DeathRay" });
-      });
-
-      var json = env.amsSerializer.serialize(ray._createSnapshot());
-
-      assert.deepEqual(json["evil_minion_type"], "EvilMinions::YellowMinion");
-    });
-
-    test("extractPolymorphic hasMany", function (assert) {
-      var json_hash = {
-        mediocre_villain: { id: 1, name: "Dr Horrible", evil_minion_ids: [{ type: "EvilMinions::YellowMinion", id: 12 }] },
-        "evil-minions/yellow-minion": [{ id: 12, name: "Alex", doomsday_device_ids: [1] }]
-      };
-      var json;
-
-      run(function () {
-        json = env.amsSerializer.normalizeResponse(env.store, MediocreVillain, json_hash, '1', 'findRecord');
-      });
-
-      assert.deepEqual(json, {
-        "data": {
-          "id": "1",
-          "type": "mediocre-villain",
-          "attributes": {
-            "name": "Dr Horrible"
-          },
-          "relationships": {
-            "evilMinions": {
-              "data": [{ "id": "12", "type": "evil-minions/yellow-minion" }]
-            }
-          }
-        },
-        "included": [{
-          "id": "12",
-          "type": "evil-minions/yellow-minion",
-          "attributes": {
-            "name": "Alex"
-          },
-          "relationships": {}
-        }]
-      });
-    });
-
-    test("extractPolymorphic belongsTo", function (assert) {
-      var json_hash = {
-        doomsday_device: { id: 1, name: "DeathRay", evil_minion_id: { type: "EvilMinions::YellowMinion", id: 12 } },
-        "evil-minions/yellow-minion": [{ id: 12, name: "Alex", doomsday_device_ids: [1] }]
-      };
-      var json;
-
-      run(function () {
-        json = env.amsSerializer.normalizeResponse(env.store, DoomsdayDevice, json_hash, '1', 'findRecord');
-      });
-
-      assert.deepEqual(json, {
-        "data": {
-          "id": "1",
-          "type": "doomsday-device",
-          "attributes": {
-            "name": "DeathRay"
-          },
-          "relationships": {
-            "evilMinion": {
-              "data": { "id": "12", "type": "evil-minions/yellow-minion" }
-            }
-          }
-        },
-        "included": [{
-          "id": "12",
-          "type": "evil-minions/yellow-minion",
-          "attributes": {
-            "name": "Alex"
-          },
-          "relationships": {}
-        }]
-      });
-    });
-  }
-);
-
-
-define(
-  "activemodel-adapter/tests/integration/active-model-serializer-new-test",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-
-    function __es6_export__(name, value) {
-      __exports__[name] = value;
-    }
-
-    var _DS = DS;
-    var ActiveModelAdapter = _DS.ActiveModelAdapter;
-    var ActiveModelSerializer = _DS.ActiveModelSerializer;
-
-    var HomePlanet, SuperVillain, EvilMinion, YellowMinion, DoomsdayDevice, MediocreVillain, TestSerializer, env;
-    var run = Ember.run;
-
-    module("integration/active_model - ActiveModelSerializer (new API)", {
-      setup: function () {
-        SuperVillain = DS.Model.extend({
-          firstName: DS.attr('string'),
-          lastName: DS.attr('string'),
-          homePlanet: DS.belongsTo("homePlanet"),
-          evilMinions: DS.hasMany("evilMinion")
-        });
-        HomePlanet = DS.Model.extend({
-          name: DS.attr('string'),
-          superVillains: DS.hasMany('superVillain', { async: true })
-        });
-        EvilMinion = DS.Model.extend({
-          superVillain: DS.belongsTo('superVillain'),
-          name: DS.attr('string')
-        });
-        YellowMinion = EvilMinion.extend();
-        DoomsdayDevice = DS.Model.extend({
-          name: DS.attr('string'),
-          evilMinion: DS.belongsTo('evilMinion', { polymorphic: true })
-        });
-        MediocreVillain = DS.Model.extend({
-          name: DS.attr('string'),
-          evilMinions: DS.hasMany('evilMinion', { polymorphic: true })
-        });
-        TestSerializer = ActiveModelSerializer.extend({
-          isNewSerializerAPI: true
-        });
-        env = setupStore({
-          superVillain: SuperVillain,
-          homePlanet: HomePlanet,
-          evilMinion: EvilMinion,
-          yellowMinion: YellowMinion,
-          doomsdayDevice: DoomsdayDevice,
-          mediocreVillain: MediocreVillain
-        });
-        env.store.modelFor('superVillain');
-        env.store.modelFor('homePlanet');
-        env.store.modelFor('evilMinion');
-        env.store.modelFor('yellowMinion');
-        env.store.modelFor('doomsdayDevice');
-        env.store.modelFor('mediocreVillain');
-        env.registry.register('serializer:application', TestSerializer);
-        env.registry.register('serializer:-active-model', TestSerializer);
-        env.registry.register('adapter:-active-model', ActiveModelAdapter);
-        env.amsSerializer = env.container.lookup("serializer:-active-model");
-        env.amsAdapter = env.container.lookup("adapter:-active-model");
-      },
-
-      teardown: function () {
-        run(env.store, 'destroy');
-      }
-    });
-
-    if (Ember.FEATURES.isEnabled('ds-new-serializer-api')) {
-
-      test("normalize", function (assert) {
-        SuperVillain.reopen({
-          yellowMinion: DS.belongsTo('yellowMinion')
-        });
-
-        var superVillain_hash = {
-          id: "1",
-          first_name: "Tom",
-          last_name: "Dale",
-          home_planet_id: "123",
-          evil_minion_ids: [1, 2]
-        };
-
-        var json = env.amsSerializer.normalize(SuperVillain, superVillain_hash, "superVillain");
-
-        assert.deepEqual(json, {
-          "data": {
-            "id": "1",
-            "type": "super-villain",
-            "attributes": {
-              "firstName": "Tom",
-              "lastName": "Dale"
-            },
-            "relationships": {
-              "evilMinions": {
-                "data": [{ "id": "1", "type": "evil-minion" }, { "id": "2", "type": "evil-minion" }]
-              },
-              "homePlanet": {
-                "data": { "id": "123", "type": "home-planet" }
-              }
-            }
-          }
-        });
-      });
-
-      test("normalize links", function (assert) {
-        var home_planet = {
-          id: "1",
-          name: "Umber",
-          links: { super_villains: "/api/super_villians/1" }
-        };
-
-        var json = env.amsSerializer.normalize(HomePlanet, home_planet, "homePlanet");
-
-        assert.equal(json.data.relationships.superVillains.links.related, "/api/super_villians/1", "normalize links");
-      });
-
-      test("normalizeSingleResponse", function (assert) {
-        env.registry.register('adapter:superVillain', ActiveModelAdapter);
-
-        var json_hash = {
-          home_planet: { id: "1", name: "Umber", super_villain_ids: [1] },
-          super_villains: [{
-            id: "1",
-            first_name: "Tom",
-            last_name: "Dale",
-            home_planet_id: "1"
-          }]
-        };
-
-        var json;
-        run(function () {
-          json = env.amsSerializer.normalizeSingleResponse(env.store, HomePlanet, json_hash, '1', 'find');
-        });
-
-        assert.deepEqual(json, {
-          "data": {
-            "id": "1",
-            "type": "home-planet",
-            "attributes": {
-              "name": "Umber"
-            },
-            "relationships": {
-              "superVillains": {
-                "data": [{ "id": "1", "type": "super-villain" }]
-              }
-            }
-          },
-          "included": [{
-            "id": "1",
-            "type": "super-villain",
-            "attributes": {
-              "firstName": "Tom",
-              "lastName": "Dale"
-            },
-            "relationships": {
-              "homePlanet": {
-                "data": { "id": "1", "type": "home-planet" }
-              }
-            }
-          }]
-        });
-      });
-
-      test("normalizeArrayResponse", function (assert) {
-        env.registry.register('adapter:superVillain', ActiveModelAdapter);
-        var array;
-
-        var json_hash = {
-          home_planets: [{ id: "1", name: "Umber", super_villain_ids: [1] }],
-          super_villains: [{ id: "1", first_name: "Tom", last_name: "Dale", home_planet_id: "1" }]
-        };
-
-        run(function () {
-          array = env.amsSerializer.normalizeArrayResponse(env.store, HomePlanet, json_hash, null, 'findAll');
-        });
-
-        assert.deepEqual(array, {
-          "data": [{
-            "id": "1",
-            "type": "home-planet",
-            "attributes": {
-              "name": "Umber"
-            },
-            "relationships": {
-              "superVillains": {
-                "data": [{ "id": "1", "type": "super-villain" }]
-              }
-            }
-          }],
-          "included": [{
-            "id": "1",
-            "type": "super-villain",
-            "attributes": {
-              "firstName": "Tom",
-              "lastName": "Dale"
-            },
-            "relationships": {
-              "homePlanet": {
-                "data": { "id": "1", "type": "home-planet" }
-              }
-            }
-          }]
-        });
-      });
-
-      test("extractPolymorphic hasMany", function (assert) {
-        env.registry.register('adapter:yellowMinion', ActiveModelAdapter);
-        MediocreVillain.toString = function () {
-          return "MediocreVillain";
-        };
-        YellowMinion.toString = function () {
-          return "YellowMinion";
-        };
-
-        var json_hash = {
-          mediocre_villain: { id: 1, name: "Dr Horrible", evil_minion_ids: [{ type: "yellow_minion", id: 12 }] },
-          yellow_minions: [{ id: 12, name: "Alex" }]
-        };
-        var json;
-
-        run(function () {
-          json = env.amsSerializer.normalizeResponse(env.store, MediocreVillain, json_hash, '1', 'find');
-        });
-
-        assert.deepEqual(json, {
-          "data": {
-            "id": "1",
-            "type": "mediocre-villain",
-            "attributes": {
-              "name": "Dr Horrible"
-            },
-            "relationships": {
-              "evilMinions": {
-                "data": [{ "id": "12", "type": "yellow-minion" }]
-              }
-            }
-          },
-          "included": [{
-            "id": "12",
-            "type": "yellow-minion",
-            "attributes": {
-              "name": "Alex"
-            },
-            "relationships": {}
-          }]
-        });
-      });
-
-      test("extractPolymorphic belongsTo", function (assert) {
-        env.registry.register('adapter:yellowMinion', ActiveModelAdapter);
-        EvilMinion.toString = function () {
-          return "EvilMinion";
-        };
-        YellowMinion.toString = function () {
-          return "YellowMinion";
-        };
-
-        var json_hash = {
-          doomsday_device: { id: 1, name: "DeathRay", evil_minion_id: { type: "yellow_minion", id: 12 } },
-          yellow_minions: [{ id: 12, name: "Alex", doomsday_device_ids: [1] }]
-        };
-        var json;
-
-        run(function () {
-          json = env.amsSerializer.normalizeResponse(env.store, DoomsdayDevice, json_hash, '1', 'find');
-        });
-
-        assert.deepEqual(json, {
-          "data": {
-            "id": "1",
-            "type": "doomsday-device",
-            "attributes": {
-              "name": "DeathRay"
-            },
-            "relationships": {
-              "evilMinion": {
-                "data": { "id": "12", "type": "yellow-minion" }
-              }
-            }
-          },
-          "included": [{
-            "id": "12",
-            "type": "yellow-minion",
-            "attributes": {
-              "name": "Alex"
-            },
-            "relationships": {}
-          }]
-        });
-      });
-
-      test("extractPolymorphic when the related data is not specified", function (assert) {
-        var json = {
-          doomsday_device: { id: 1, name: "DeathRay" },
-          evil_minions: [{ id: 12, name: "Alex", doomsday_device_ids: [1] }]
-        };
-
-        run(function () {
-          json = env.amsSerializer.normalizeResponse(env.store, DoomsdayDevice, json, '1', 'find');
-        });
-
-        assert.deepEqual(json, {
-          "data": {
-            "id": "1",
-            "type": "doomsday-device",
-            "attributes": {
-              "name": "DeathRay"
-            },
-            "relationships": {}
-          },
-          "included": [{
-            "id": "12",
-            "type": "evil-minion",
-            "attributes": {
-              "name": "Alex"
-            },
-            "relationships": {}
-          }]
-        });
-      });
-
-      test("extractPolymorphic hasMany when the related data is not specified", function (assert) {
-        var json = {
-          mediocre_villain: { id: 1, name: "Dr Horrible" }
-        };
-
-        run(function () {
-          json = env.amsSerializer.normalizeResponse(env.store, MediocreVillain, json, '1', 'find');
-        });
-
-        assert.deepEqual(json, {
-          "data": {
-            "id": "1",
-            "type": "mediocre-villain",
-            "attributes": {
-              "name": "Dr Horrible"
-            },
-            "relationships": {}
-          },
-          "included": []
-        });
-      });
-
-      test("extractPolymorphic does not break hasMany relationships", function (assert) {
-        var json = {
-          mediocre_villain: { id: 1, name: "Dr. Evil", evil_minion_ids: [] }
-        };
-
-        run(function () {
-          json = env.amsSerializer.normalizeResponse(env.store, MediocreVillain, json, '1', 'find');
-        });
-
-        assert.deepEqual(json, {
-          "data": {
-            "id": "1",
-            "type": "mediocre-villain",
-            "attributes": {
-              "name": "Dr. Evil"
-            },
-            "relationships": {
-              "evilMinions": {
-                "data": []
-              }
-            }
-          },
-          "included": []
-        });
-      });
-    }
-  }
-);
-
-
-define(
-  "activemodel-adapter/tests/integration/active-model-serializer-test",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-
-    function __es6_export__(name, value) {
-      __exports__[name] = value;
-    }
-
-    var _DS = DS;
-    var ActiveModelAdapter = _DS.ActiveModelAdapter;
-    var ActiveModelSerializer = _DS.ActiveModelSerializer;
-
-    var get = Ember.get;
-    var HomePlanet, league, SuperVillain, EvilMinion, YellowMinion, DoomsdayDevice, MediocreVillain, env;
-    var run = Ember.run;
-
-    module("integration/active_model - ActiveModelSerializer", {
-      setup: function () {
-        SuperVillain = DS.Model.extend({
-          firstName: DS.attr('string'),
-          lastName: DS.attr('string'),
-          homePlanet: DS.belongsTo('home-planet'),
-          evilMinions: DS.hasMany('evil-minion')
-        });
-        HomePlanet = DS.Model.extend({
-          name: DS.attr('string'),
-          superVillains: DS.hasMany('super-villain', { async: true })
-        });
-        EvilMinion = DS.Model.extend({
-          superVillain: DS.belongsTo('super-villain'),
-          name: DS.attr('string')
-        });
-        YellowMinion = EvilMinion.extend();
-        DoomsdayDevice = DS.Model.extend({
-          name: DS.attr('string'),
-          evilMinion: DS.belongsTo('evil-minion', { polymorphic: true })
-        });
-        MediocreVillain = DS.Model.extend({
-          name: DS.attr('string'),
-          evilMinions: DS.hasMany('evil-minion', { polymorphic: true })
-        });
-        env = setupStore({
-          superVillain: SuperVillain,
-          homePlanet: HomePlanet,
-          evilMinion: EvilMinion,
-          yellowMinion: YellowMinion,
-          doomsdayDevice: DoomsdayDevice,
-          mediocreVillain: MediocreVillain
-        });
-        env.store.modelFor('super-villain');
-        env.store.modelFor('home-planet');
-        env.store.modelFor('evil-minion');
-        env.store.modelFor('yellow-minion');
-        env.store.modelFor('doomsday-device');
-        env.store.modelFor('mediocre-villain');
-        env.registry.register('serializer:application', ActiveModelSerializer.extend({ isNewSerializerAPI: true }));
-        env.registry.register('serializer:-active-model', ActiveModelSerializer.extend({ isNewSerializerAPI: true }));
-        env.registry.register('adapter:-active-model', ActiveModelAdapter);
-        env.amsSerializer = env.container.lookup("serializer:-active-model");
-        env.amsAdapter = env.container.lookup("adapter:-active-model");
-      },
-
-      teardown: function () {
-        run(env.store, 'destroy');
-      }
-    });
-
-    test("serialize", function (assert) {
-      var tom;
-      run(function () {
-        league = env.store.createRecord('home-planet', { name: "Villain League", id: "123" });
-        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", homePlanet: league });
-      });
-
-      var json = env.amsSerializer.serialize(tom._createSnapshot());
-
-      assert.deepEqual(json, {
-        first_name: "Tom",
-        last_name: "Dale",
-        home_planet_id: get(league, "id")
-      });
-    });
-
-    test("serializeIntoHash", function (assert) {
-      run(function () {
-        league = env.store.createRecord('home-planet', { name: "Umber", id: "123" });
-      });
-      var json = {};
-
-      env.amsSerializer.serializeIntoHash(json, HomePlanet, league._createSnapshot());
-
-      assert.deepEqual(json, {
-        home_planet: {
-          name: "Umber"
-        }
-      });
-    });
-
-    test("serializeIntoHash with decamelized types", function (assert) {
-      HomePlanet.modelName = 'home-planet';
-      run(function () {
-        league = env.store.createRecord('home-planet', { name: "Umber", id: "123" });
-      });
-      var json = {};
-
-      env.amsSerializer.serializeIntoHash(json, HomePlanet, league._createSnapshot());
-
-      assert.deepEqual(json, {
-        home_planet: {
-          name: "Umber"
-        }
-      });
-    });
-
-    test("normalize", function (assert) {
-      SuperVillain.reopen({
-        yellowMinion: DS.belongsTo('yellowMinion')
-      });
-
-      var superVillain_hash = {
-        id: "1",
-        first_name: "Tom",
-        last_name: "Dale",
-        home_planet_id: "123",
-        evil_minion_ids: [1, 2]
-      };
-
-      var json = env.amsSerializer.normalize(SuperVillain, superVillain_hash, "superVillain");
-
-      assert.deepEqual(json, {
-        "data": {
-          "id": "1",
-          "type": "super-villain",
-          "attributes": {
-            "firstName": "Tom",
-            "lastName": "Dale"
-          },
-          "relationships": {
-            "evilMinions": {
-              "data": [{ "id": "1", "type": "evil-minion" }, { "id": "2", "type": "evil-minion" }]
-            },
-            "homePlanet": {
-              "data": { "id": "123", "type": "home-planet" }
-            }
-          }
-        }
-      });
-    });
-
-    test("normalize links", function (assert) {
-      var home_planet = {
-        id: "1",
-        name: "Umber",
-        links: { super_villains: "/api/super_villians/1" }
-      };
-
-      var json = env.amsSerializer.normalize(HomePlanet, home_planet, "homePlanet");
-
-      assert.equal(json.data.relationships.superVillains.links.related, "/api/super_villians/1", "normalize links");
-    });
-
-    test("normalizeResponse", function (assert) {
-      env.registry.register('adapter:superVillain', ActiveModelAdapter);
-
-      var json_hash = {
-        home_planet: { id: "1", name: "Umber", super_villain_ids: [1] },
-        super_villains: [{
-          id: "1",
-          first_name: "Tom",
-          last_name: "Dale",
-          home_planet_id: "1"
-        }]
-      };
-
-      var json;
-      run(function () {
-        json = env.amsSerializer.normalizeResponse(env.store, HomePlanet, json_hash, '1', 'findRecord');
-      });
-
-      assert.deepEqual(json, {
-        "data": {
-          "id": "1",
-          "type": "home-planet",
-          "attributes": {
-            "name": "Umber"
-          },
-          "relationships": {
-            "superVillains": {
-              "data": [{ "id": "1", "type": "super-villain" }]
-            }
-          }
-        },
-        "included": [{
-          "id": "1",
-          "type": "super-villain",
-          "attributes": {
-            "firstName": "Tom",
-            "lastName": "Dale"
-          },
-          "relationships": {
-            "homePlanet": {
-              "data": { "id": "1", "type": "home-planet" }
-            }
-          }
-        }]
-      });
-    });
-
-    test("normalizeResponse", function (assert) {
-      env.registry.register('adapter:superVillain', ActiveModelAdapter);
-      var array;
-
-      var json_hash = {
-        home_planets: [{ id: "1", name: "Umber", super_villain_ids: [1] }],
-        super_villains: [{ id: "1", first_name: "Tom", last_name: "Dale", home_planet_id: "1" }]
-      };
-
-      run(function () {
-        array = env.amsSerializer.normalizeResponse(env.store, HomePlanet, json_hash, null, 'findAll');
-      });
-
-      assert.deepEqual(array, {
-        "data": [{
-          "id": "1",
-          "type": "home-planet",
-          "attributes": {
-            "name": "Umber"
-          },
-          "relationships": {
-            "superVillains": {
-              "data": [{ "id": "1", "type": "super-villain" }]
-            }
-          }
-        }],
-        "included": [{
-          "id": "1",
-          "type": "super-villain",
-          "attributes": {
-            "firstName": "Tom",
-            "lastName": "Dale"
-          },
-          "relationships": {
-            "homePlanet": {
-              "data": { "id": "1", "type": "home-planet" }
-            }
-          }
-        }]
-      });
-    });
-
-    test("serialize polymorphic", function (assert) {
-      var tom, ray;
-      run(function () {
-        tom = env.store.createRecord('yellow-minion', { name: "Alex", id: "124" });
-        ray = env.store.createRecord('doomsday-device', { evilMinion: tom, name: "DeathRay" });
-      });
-
-      var json = env.amsSerializer.serialize(ray._createSnapshot());
-
-      assert.deepEqual(json, {
-        name: "DeathRay",
-        evil_minion_type: "YellowMinion",
-        evil_minion_id: "124"
-      });
-    });
-
-    test("serialize polymorphic when type key is not camelized", function (assert) {
-      YellowMinion.modelName = 'yellow-minion';
-      var tom, ray;
-      run(function () {
-        tom = env.store.createRecord('yellow-minion', { name: "Alex", id: "124" });
-        ray = env.store.createRecord('doomsday-device', { evilMinion: tom, name: "DeathRay" });
-      });
-
-      var json = env.amsSerializer.serialize(ray._createSnapshot());
-
-      assert.deepEqual(json["evil_minion_type"], "YellowMinion");
-    });
-
-    test("serialize polymorphic when associated object is null", function (assert) {
-      var ray, json;
-      run(function () {
-        ray = env.store.createRecord('doomsday-device', { name: "DeathRay" });
-        json = env.amsSerializer.serialize(ray._createSnapshot());
-      });
-
-      assert.deepEqual(json["evil_minion_type"], null);
-    });
-
-    test("extractPolymorphic hasMany", function (assert) {
-      env.registry.register('adapter:yellowMinion', ActiveModelAdapter);
-      MediocreVillain.toString = function () {
-        return "MediocreVillain";
-      };
-      YellowMinion.toString = function () {
-        return "YellowMinion";
-      };
-
-      var json_hash = {
-        mediocre_villain: { id: 1, name: "Dr Horrible", evil_minion_ids: [{ type: "yellow_minion", id: 12 }] },
-        yellow_minions: [{ id: 12, name: "Alex" }]
-      };
-      var json;
-
-      run(function () {
-        json = env.amsSerializer.normalizeResponse(env.store, MediocreVillain, json_hash, '1', 'findRecord');
-      });
-
-      assert.deepEqual(json, {
-        "data": {
-          "id": "1",
-          "type": "mediocre-villain",
-          "attributes": {
-            "name": "Dr Horrible"
-          },
-          "relationships": {
-            "evilMinions": {
-              "data": [{ "id": "12", "type": "yellow-minion" }]
-            }
-          }
-        },
-        "included": [{
-          "id": "12",
-          "type": "yellow-minion",
-          "attributes": {
-            "name": "Alex"
-          },
-          "relationships": {}
-        }]
-      });
-    });
-
-    test("extractPolymorphic belongsTo", function (assert) {
-      env.registry.register('adapter:yellowMinion', ActiveModelAdapter);
-      EvilMinion.toString = function () {
-        return "EvilMinion";
-      };
-      YellowMinion.toString = function () {
-        return "YellowMinion";
-      };
-
-      var json_hash = {
-        doomsday_device: { id: 1, name: "DeathRay", evil_minion_id: { type: "yellow_minion", id: 12 } },
-        yellow_minions: [{ id: 12, name: "Alex" }]
-      };
-      var json;
-
-      run(function () {
-        json = env.amsSerializer.normalizeResponse(env.store, DoomsdayDevice, json_hash, '1', 'findRecord');
-      });
-
-      assert.deepEqual(json, {
-        "data": {
-          "id": "1",
-          "type": "doomsday-device",
-          "attributes": {
-            "name": "DeathRay"
-          },
-          "relationships": {
-            "evilMinion": {
-              "data": { "id": "12", "type": "yellow-minion" }
-            }
-          }
-        },
-        "included": [{
-          "id": "12",
-          "type": "yellow-minion",
-          "attributes": {
-            "name": "Alex"
-          },
-          "relationships": {}
-        }]
-      });
-    });
-
-    test("extractPolymorphic belongsTo (weird format)", function (assert) {
-      env.registry.register('adapter:yellowMinion', ActiveModelAdapter);
-      EvilMinion.toString = function () {
-        return "EvilMinion";
-      };
-      YellowMinion.toString = function () {
-        return "YellowMinion";
-      };
-
-      var json_hash = {
-        doomsday_device: {
-          id: 1,
-          name: "DeathRay",
-          evil_minion_id: 12,
-          evil_minion_type: "yellow_minion"
-        },
-        yellow_minions: [{ id: 12, name: "Alex" }]
-      };
-      var json;
-
-      run(function () {
-        json = env.amsSerializer.normalizeResponse(env.store, DoomsdayDevice, json_hash, '1', 'findRecord');
-      });
-
-      assert.deepEqual(json, {
-        "data": {
-          "id": "1",
-          "type": "doomsday-device",
-          "attributes": {
-            "name": "DeathRay"
-          },
-          "relationships": {
-            "evilMinion": {
-              "data": { "id": "12", "type": "yellow-minion" }
-            }
-          }
-        },
-        "included": [{
-          "id": "12",
-          "type": "yellow-minion",
-          "attributes": {
-            "name": "Alex"
-          },
-          "relationships": {}
-        }]
-      });
-    });
-
-    test("belongsTo (weird format) does not screw if there is a relationshipType attribute", function (assert) {
-      env.registry.register('adapter:yellowMinion', ActiveModelAdapter);
-      EvilMinion.toString = function () {
-        return "EvilMinion";
-      };
-      YellowMinion.toString = function () {
-        return "YellowMinion";
-      };
-      DoomsdayDevice.reopen({
-        evilMinionType: DS.attr()
-      });
-
-      var json_hash = {
-        doomsday_device: {
-          id: 1,
-          name: "DeathRay",
-          evil_minion_id: {
-            id: 12,
-            type: 'yellow_minion'
-          },
-          evil_minion_type: "what a minion" },
-        yellow_minions: [{ id: 12, name: "Alex" }]
-      };
-      var json;
-
-      run(function () {
-        json = env.amsSerializer.normalizeResponse(env.store, DoomsdayDevice, json_hash, '1', 'findRecord');
-      });
-
-      assert.deepEqual(json, {
-        "data": {
-          "id": "1",
-          "type": "doomsday-device",
-          "attributes": {
-            "name": "DeathRay",
-            "evilMinionType": "what a minion"
-          },
-          "relationships": {
-            "evilMinion": {
-              "data": { "id": "12", "type": "yellow-minion" }
-            }
-          }
-        },
-        "included": [{
-          "id": "12",
-          "type": "yellow-minion",
-          "attributes": {
-            "name": "Alex"
-          },
-          "relationships": {}
-        }]
-      });
-    });
-
-    test("extractPolymorphic when the related data is not specified", function (assert) {
-      var json = {
-        doomsday_device: { id: 1, name: "DeathRay" },
-        evil_minions: [{ id: 12, name: "Alex" }]
-      };
-
-      run(function () {
-        json = env.amsSerializer.normalizeResponse(env.store, DoomsdayDevice, json, '1', 'findRecord');
-      });
-
-      assert.deepEqual(json, {
-        "data": {
-          "id": "1",
-          "type": "doomsday-device",
-          "attributes": {
-            "name": "DeathRay"
-          },
-          "relationships": {}
-        },
-        "included": [{
-          "id": "12",
-          "type": "evil-minion",
-          "attributes": {
-            "name": "Alex"
-          },
-          "relationships": {}
-        }]
-      });
-    });
-
-    test("extractPolymorphic hasMany when the related data is not specified", function (assert) {
-      var json = {
-        mediocre_villain: { id: 1, name: "Dr Horrible" }
-      };
-
-      run(function () {
-        json = env.amsSerializer.normalizeResponse(env.store, MediocreVillain, json, '1', 'findRecord');
-      });
-
-      assert.deepEqual(json, {
-        "data": {
-          "id": "1",
-          "type": "mediocre-villain",
-          "attributes": {
-            "name": "Dr Horrible"
-          },
-          "relationships": {}
-        },
-        "included": []
-      });
-    });
-
-    test("extractPolymorphic does not break hasMany relationships", function (assert) {
-      var json = {
-        mediocre_villain: { id: 1, name: "Dr. Evil", evil_minion_ids: [] }
-      };
-
-      run(function () {
-        json = env.amsSerializer.normalizeResponse(env.store, MediocreVillain, json, '1', 'findRecord');
-      });
-
-      assert.deepEqual(json, {
-        "data": {
-          "id": "1",
-          "type": "mediocre-villain",
-          "attributes": {
-            "name": "Dr. Evil"
-          },
-          "relationships": {
-            "evilMinions": {
-              "data": []
-            }
-          }
-        },
-        "included": []
-      });
-    });
-
-    test("extractErrors camelizes keys", function (assert) {
-      var error = {
-        errors: [{
-          source: {
-            pointer: 'data/attributes/first_name'
-          },
-          detail: "firstName not evil enough"
-        }]
-      };
-
-      var payload;
-
-      run(function () {
-        payload = env.amsSerializer.extractErrors(env.store, SuperVillain, error);
-      });
-
-      assert.deepEqual(payload, {
-        firstName: ["firstName not evil enough"]
-      });
-    });
-
-    test('supports the default format for polymorphic belongsTo', function (assert) {
-      var payload = {
-        doomsday_devices: [{
-          id: 1,
-          evil_minion: {
-            id: 1,
-            type: 'yellow_minion'
-          }
-        }],
-        yellow_minions: [{
-          id: 1,
-          name: 'Sally'
-        }]
-      };
-      var json, minion;
-
-      run(function () {
-        json = env.amsSerializer.normalizeResponse(env.store, DoomsdayDevice, payload, '1', 'findRecord');
-        env.store.push(json);
-        minion = env.store.findRecord('doomsday-device', 1);
-      });
-
-      assert.equal(minion.get('evilMinion.name'), 'Sally');
-    });
-
-    test('supports the default format for polymorphic hasMany', function (assert) {
-      var payload = {
-        mediocre_villain: {
-          id: 1,
-          evil_minions: [{
-            id: 1,
-            type: 'evil_minion'
-          }]
-        },
-        evil_minions: [{
-          id: 1,
-          name: 'Harry'
-        }]
-      };
-
-      var json, villain;
-
-      run(function () {
-        json = env.amsSerializer.normalizeResponse(env.store, MediocreVillain, payload, '1', 'findRecord');
-        env.store.push(json);
-        villain = env.store.findRecord('mediocre-villain', '1');
-      });
-
-      assert.equal(villain.get('evilMinions.firstObject.name'), 'Harry');
-    });
-  }
-);
-
-
-define(
-  "activemodel-adapter/tests/unit/adapter/path-for-type-test",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-
-    function __es6_export__(name, value) {
-      __exports__[name] = value;
-    }
-
-    var env, adapter;
-    module("unit/adapter/path_for_type - DS.ActiveModelAdapter#pathForType", {
-      setup: function () {
-        env = setupStore({
-          adapter: DS.ActiveModelAdapter
-        });
-
-        adapter = env.adapter;
-      }
-    });
-
-    test('pathForType - works with camelized types', function () {
-      equal(adapter.pathForType('superUser'), "super_users");
-    });
-
-    test('pathForType - works with dasherized types', function () {
-      equal(adapter.pathForType('super-user'), "super_users");
-    });
-
-    test('pathForType - works with underscored types', function () {
-      equal(adapter.pathForType('super_user'), "super_users");
-    });
-  }
-);
-
-
 define(
   "ember-data/tests/helpers/custom-adapter",
   ["exports"],
@@ -1778,7 +205,12 @@ define(
 
       var post;
       run(function () {
-        post = store.push('post', { id: 2 });
+        post = store.push({
+          data: {
+            type: 'post',
+            id: '2'
+          }
+        });
       });
 
       run(function () {
@@ -1804,7 +236,17 @@ define(
       var post;
 
       run(function () {
-        post = store.push('post', { id: 2, comments: [1, 2, 3] });
+        post = store.push({
+          data: {
+            type: 'post',
+            id: '2',
+            relationships: {
+              comments: {
+                data: [{ id: '1', type: 'comment' }, { id: '2', type: 'comment' }, { id: '3', type: 'comment' }]
+              }
+            }
+          }
+        });
         post.get('comments').then(async(function (post) {
           equal(passedUrl, "/posts/2/comments/");
         }));
@@ -1820,7 +262,12 @@ define(
       ajaxResponse({ comments: [{ id: 1 }] });
 
       run(function () {
-        var post = store.push('post', { id: 2 });
+        var post = store.push({
+          data: {
+            type: 'post',
+            id: '2'
+          }
+        });
         var comment = store.createRecord('comment');
         comment.set('post', post);
         comment.save().then(async(function (post) {
@@ -1863,8 +310,18 @@ define(
 
       var post, comment;
       run(function () {
-        post = store.push('post', { id: 2 });
-        comment = store.push('comment', { id: 1 });
+        post = store.push({
+          data: {
+            type: 'post',
+            id: '2'
+          }
+        });
+        comment = store.push({
+          data: {
+            type: 'comment',
+            id: '1'
+          }
+        });
         comment.set('post', post);
       });
       run(function () {
@@ -1885,8 +342,18 @@ define(
 
       var post, comment;
       run(function () {
-        post = store.push('post', { id: 2 });
-        comment = store.push('comment', { id: 1 });
+        post = store.push({
+          data: {
+            type: 'post',
+            id: '2'
+          }
+        });
+        comment = store.push({
+          data: {
+            type: 'comment',
+            id: '1'
+          }
+        });
 
         comment.set('post', post);
         comment.deleteRecord();
@@ -1910,34 +377,6 @@ define(
       run(store, 'findRecord', 'post', 1).then(async(function (post) {
         equal(passedUrl, "/api/v1/posts/1");
       }));
-    });
-
-    test('buildURL - urlForFindRecord calls deprecated urlForFind', function () {
-      expect(2);
-
-      var adapter = DS.RESTAdapter.extend({
-        urlForFind: function () {
-          ok(true, 'urlForFind should be called');
-        }
-      }).create();
-
-      expectDeprecation(function () {
-        adapter.buildURL('post', 1, {}, 'findRecord');
-      }, /urlForFindRecord/);
-    });
-
-    test('buildURL - urlForQuery calls deprecated urlForFindQuery', function () {
-      expect(2);
-
-      var adapter = DS.RESTAdapter.extend({
-        urlForFindQuery: function () {
-          ok(true, 'urlForFindQuery should be called');
-        }
-      }).create();
-
-      expectDeprecation(function () {
-        adapter.buildURL('post', 1, {}, 'query');
-      }, /urlForQuery/);
     });
   }
 );
@@ -2055,7 +494,15 @@ define(
 
       run(function () {
         // Load a record from the server
-        store.push('person', { id: 1, name: "Jeremy Ashkenas" });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Jeremy Ashkenas'
+            }
+          }
+        });
         // Create a new, unsaved record in the store
         store.createRecord('person', { name: "Alex MacCaw" });
       });
@@ -2123,46 +570,14 @@ define(
       }
     });
 
-    test("It raises an assertion when no type is passed", function () {
-      expectAssertion(function () {
-        store.find();
-      }, "You need to pass a type to the store's find method");
-    });
-
     test("It raises an assertion when `undefined` is passed as id (#1705)", function () {
       expectAssertion(function () {
         store.find('person', undefined);
-      }, "You may not pass `undefined` as id to the store's find method");
+      }, "You cannot pass `undefined` as id to the store's find method");
 
       expectAssertion(function () {
         store.find('person', null);
-      }, "You may not pass `null` as id to the store's find method");
-    });
-
-    test("store.find(type) is deprecated", function () {
-      env.registry.register('adapter:person', DS.Adapter.extend({
-        findAll: function (store, typeClass) {
-          return [];
-        }
-      }));
-
-      expectDeprecation(function () {
-        run(function () {
-          store.find('person');
-        });
-      }, 'Using store.find(type) has been deprecated. Use store.findAll(type) to retrieve all records for a given type.');
-    });
-
-    test("store.findAll should trigger a deprecation warning about store.shouldReloadAll", function () {
-      env.adapter.findAll = function () {
-        return Ember.RSVP.resolve([]);
-      };
-
-      run(function () {
-        expectDeprecation(function () {
-          store.findAll('person');
-        }, 'The default behavior of shouldReloadAll will change in Ember Data 2.0 to always return false when there is at least one "person" record in the store. If you would like to preserve the current behavior please override shouldReloadAll in your adapter:application and return true.');
-      });
+      }, "You cannot pass `null` as id to the store's find method");
     });
 
     test("When a single record is requested, the adapter's find method should be called unless it's loaded.", function () {
@@ -2480,7 +895,7 @@ define(
       }]);
 
       run(function () {
-        store.find('post', { filter: { id: 1 } }).then(function (posts) {
+        store.query('post', { filter: { id: 1 } }).then(function (posts) {
           equal(passedUrl[0], '/posts');
           deepEqual(passedHash[0], { data: { filter: { id: 1 } } });
 
@@ -3261,7 +1676,14 @@ define(
           return "Person";
         };
 
-        env = setupStore({ person: Person });
+        env = setupStore({
+          adapter: DS.Adapter.extend({
+            shouldBackgroundReloadRecord: function () {
+              return false;
+            }
+          }),
+          person: Person
+        });
         store = env.store;
       },
 
@@ -3281,16 +1703,26 @@ define(
       };
 
       run(function () {
-        env.store.push('person', { id: 1, name: "Braaaahm Dale" });
+        env.store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Braaaahm Dale'
+            }
+          }
+        });
       });
 
       var tom;
 
-      env.store.find('person', 1).then(async(function (person) {
-        tom = person;
-        set(tom, "name", "Tom Dale");
-        tom.save();
-      }));
+      run(function () {
+        env.store.findRecord('person', 1).then(async(function (person) {
+          tom = person;
+          set(tom, "name", "Tom Dale");
+          tom.save();
+        }));
+      });
     });
 
     test("When a store is committed, the adapter's `commit` method should be called with records that have been created.", function () {
@@ -3337,7 +1769,15 @@ define(
       var tom;
 
       run(function () {
-        env.store.push('person', { id: 1, name: "Tom Dale" });
+        env.store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: "Tom Dale"
+            }
+          }
+        });
       });
       env.store.find('person', 1).then(async(function (person) {
         tom = person;
@@ -3358,8 +1798,15 @@ define(
       };
 
       run(function () {
-        env.store.push('person', { id: 1 });
-        env.store.push('person', { id: 2 });
+        env.store.push({
+          data: [{
+            type: 'person',
+            id: '1'
+          }, {
+            type: 'person',
+            id: '2'
+          }]
+        });
       });
 
       all([env.store.find('person', 1), env.store.find('person', 2)]).then(async(function (array) {
@@ -3392,8 +1839,21 @@ define(
       };
 
       run(function () {
-        env.store.push('person', { id: 1, name: "Braaaahm Dale" });
-        env.store.push('person', { id: 2, name: "Gentile Katz" });
+        env.store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Braaaahm Dale'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Gentile Katz'
+            }
+          }]
+        });
       });
 
       hash({ tom: env.store.find('person', 1), yehuda: env.store.find('person', 2) }).then(async(function (people) {
@@ -3415,8 +1875,15 @@ define(
       };
 
       run(function () {
-        store.push('person', { id: 1 });
-        store.push('person', { id: 2 });
+        store.push({
+          data: [{
+            type: 'person',
+            id: '1'
+          }, {
+            type: 'person',
+            id: '2'
+          }]
+        });
       });
 
       hash({ tom: store.find('person', 1), yehuda: store.find('person', 2) }).then(async(function (people) {
@@ -3442,8 +1909,21 @@ define(
       };
 
       run(function () {
-        env.store.push('person', { id: 1, name: "Braaaahm Dale" });
-        env.store.push('person', { id: 2, name: "Gentile Katz" });
+        env.store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Braaaahm Dale'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Gentile Katz'
+            }
+          }]
+        });
       });
 
       hash({ tom: store.find('person', 1), yehuda: store.find('person', 2) }).then(async(function (people) {
@@ -3465,8 +1945,21 @@ define(
       };
 
       run(function () {
-        env.store.push('person', { id: 1, name: "Braaaahm Dale" });
-        env.store.push('person', { id: 2, name: "Gentile Katz" });
+        env.store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Braaaahm Dale'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Gentile Katz'
+            }
+          }]
+        });
       });
 
       hash({ tom: store.find('person', 1), yehuda: store.find('person', 2) }).then(async(function (people) {
@@ -3482,109 +1975,6 @@ define(
 
 
 define(
-  "ember-data/tests/integration/adapter/rest-adapter-new-test",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-
-    function __es6_export__(name, value) {
-      __exports__[name] = value;
-    }
-
-    var env, store, adapter;
-
-    var passedUrl, passedVerb, passedHash;
-
-    var get = Ember.get;
-    var run = Ember.run;
-
-    var Post, Comment;
-
-    module("integration/adapter/rest_adapter - REST Adapter (new API)", {
-      setup: function () {
-        Post = DS.Model.extend({
-          title: DS.attr("string"),
-          comments: DS.hasMany('comment')
-        });
-
-        Post.toString = function () {
-          return "Post";
-        };
-
-        Comment = DS.Model.extend({
-          text: DS.attr("string")
-        });
-
-        env = setupStore({
-          post: Post,
-          comment: Comment,
-
-          adapter: DS.RESTAdapter.extend({
-            defaultSerializer: '-rest-new'
-          })
-        });
-
-        store = env.store;
-        adapter = env.adapter;
-
-        passedUrl = passedVerb = passedHash = null;
-      }
-    });
-
-    function ajaxResponse(value) {
-      adapter.ajax = function (url, verb, hash) {
-        passedUrl = url;
-        passedVerb = verb;
-        passedHash = hash;
-
-        return run(Ember.RSVP, 'resolve', Ember.copy(value, true));
-      };
-    }
-
-    test("metadata is accessible", function () {
-      ajaxResponse({
-        meta: { offset: 5 },
-        posts: [{ id: 1, title: "Rails is very expensive sushi" }]
-      });
-
-      store.findAll('post').then(async(function (posts) {
-        equal(store.metadataFor('post').offset, 5, "Metadata can be accessed with metadataFor.");
-      }));
-    });
-
-    test("create - sideloaded records are pushed to the store", function () {
-      ajaxResponse({
-        post: {
-          id: 1,
-          title: 'The Parley Letter',
-          comments: [2, 3]
-        },
-        comments: [{
-          id: 2,
-          text: 'First comment'
-        }, {
-          id: 3,
-          text: 'Second comment'
-        }]
-      });
-      var post;
-
-      run(function () {
-        post = store.createRecord('post', { name: 'The Parley Letter' });
-        post.save().then(function (post) {
-          var comments = store.peekAll('comment');
-
-          equal(get(comments, 'length'), 2, 'comments.length is correct');
-          equal(get(comments, 'firstObject.text'), 'First comment', 'comments.firstObject.text is correct');
-          equal(get(comments, 'lastObject.text'), 'Second comment', 'comments.lastObject.text is correct');
-        });
-      });
-    });
-  }
-);
-
-
-define(
   "ember-data/tests/integration/adapter/rest-adapter-test",
   ["exports"],
   function(__exports__) {
@@ -3593,8 +1983,6 @@ define(
     function __es6_export__(name, value) {
       __exports__[name] = value;
     }
-
-    var keysFunc = Object.keys || Ember.keys;
 
     var env, store, adapter, Post, Comment, SuperUser;
     var passedUrl, passedVerb, passedHash;
@@ -3836,7 +2224,20 @@ define(
       Comment.reopen({ post: DS.belongsTo('post', { async: false }) });
 
       run(function () {
-        store.push('post', { id: 1, name: "Rails is omakase", comments: [] });
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              name: "Rails is omakase"
+            },
+            relationships: {
+              comments: {
+                data: []
+              }
+            }
+          }
+        });
       });
       var post = store.peekRecord('post', 1);
 
@@ -4000,8 +2401,34 @@ define(
       Comment.reopen({ post: DS.belongsTo('post', { async: false }) });
 
       run(function () {
-        store.push('post', { id: 1, name: "Rails is omakase", comments: [1] });
-        store.push('comment', { id: 1, name: "Dat Parlay Letter", post: 1 });
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              name: "Rails is omakase"
+            },
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }]
+              }
+            }
+          }
+        });
+        store.push({
+          data: {
+            type: 'comment',
+            id: '1',
+            attributes: {
+              name: "Dat Parlay Letter"
+            },
+            relationships: {
+              post: {
+                data: { type: 'post', id: '1' }
+              }
+            }
+          }
+        });
       });
 
       var post = store.peekRecord('post', 1);
@@ -4115,49 +2542,82 @@ define(
 
     test("update - an empty payload is a basic success", function () {
       run(function () {
-        store.push('post', { id: 1, name: "Rails is omakase" });
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              name: "Rails is omakase"
+            }
+          }
+        });
       });
 
-      store.find('post', 1).then(async(function (post) {
+      run(function () {
+        var post = store.peekRecord('post', 1);
         ajaxResponse();
 
         post.set('name', "The Parley Letter");
-        return post.save();
-      })).then(async(function (post) {
-        equal(passedUrl, "/posts/1");
-        equal(passedVerb, "PUT");
-        deepEqual(passedHash.data, { post: { name: "The Parley Letter" } });
+        post.save().then(async(function (post) {
+          equal(passedUrl, "/posts/1");
+          equal(passedVerb, "PUT");
+          deepEqual(passedHash.data, { post: { name: "The Parley Letter" } });
 
-        equal(post.get('hasDirtyAttributes'), false, "the post isn't dirty anymore");
-        equal(post.get('name'), "The Parley Letter", "the post was updated");
-      }));
+          equal(post.get('hasDirtyAttributes'), false, "the post isn't dirty anymore");
+          equal(post.get('name'), "The Parley Letter", "the post was updated");
+        }));
+      });
     });
 
     test("update - passes the requestType to buildURL", function () {
       adapter.buildURL = function (type, id, snapshot, requestType) {
         return "/posts/" + id + "/" + requestType;
       };
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       run(function () {
-        store.push('post', { id: 1, name: "Rails is omakase" });
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              name: "Rails is omakase"
+            }
+          }
+        });
       });
 
-      store.find('post', 1).then(async(function (post) {
-        ajaxResponse();
+      run(function () {
+        store.findRecord('post', 1).then(async(function (post) {
+          ajaxResponse();
 
-        post.set('name', "The Parley Letter");
-        return post.save();
-      })).then(async(function (post) {
-        equal(passedUrl, "/posts/1/updateRecord");
-      }));
+          post.set('name', "The Parley Letter");
+          return post.save();
+        })).then(async(function (post) {
+          equal(passedUrl, "/posts/1/updateRecord");
+        }));
+      });
     });
 
     test("update - a payload with updates applies the updates", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       run(function () {
-        store.push('post', { id: 1, name: "Rails is omakase" });
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              name: "Rails is omakase"
+            }
+          }
+        });
       });
 
-      store.find('post', 1).then(async(function (post) {
+      store.findRecord('post', 1).then(async(function (post) {
         ajaxResponse({ posts: [{ id: 1, name: "Dat Parley Letter" }] });
 
         post.set('name', "The Parley Letter");
@@ -4173,11 +2633,22 @@ define(
     });
 
     test("update - a payload with updates applies the updates (with legacy singular name)", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       run(function () {
-        store.push('post', { id: 1, name: "Rails is omakase" });
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              name: "Rails is omakase"
+            }
+          }
+        });
       });
 
-      store.find('post', 1).then(async(function (post) {
+      store.findRecord('post', 1).then(async(function (post) {
         ajaxResponse({ post: { id: 1, name: "Dat Parley Letter" } });
 
         post.set('name', "The Parley Letter");
@@ -4216,11 +2687,22 @@ define(
     });
 
     test("update - a payload with sideloaded updates pushes the updates", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       run(function () {
-        store.push('post', { id: 1, name: "Rails is omakase" });
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              name: "Rails is omakase"
+            }
+          }
+        });
       });
 
-      store.find('post', 1).then(async(function (post) {
+      store.findRecord('post', 1).then(async(function (post) {
         ajaxResponse({
           posts: [{ id: 1, name: "Dat Parley Letter" }],
           comments: [{ id: 1, name: "FIRST" }]
@@ -4242,6 +2724,9 @@ define(
     });
 
     test("update - a serializer's primary key and attributes are consulted when building the payload", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       env.registry.register('serializer:post', DS.RESTSerializer.extend({
         primaryKey: '_id_',
 
@@ -4251,11 +2736,17 @@ define(
       }));
 
       run(function () {
-        store.push('post', { id: 1, name: "Rails is omakase" });
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            name: "Rails is omakase"
+          }
+        });
       });
       ajaxResponse();
 
-      store.find('post', 1).then(async(function (post) {
+      store.findRecord('post', 1).then(async(function (post) {
         post.set('name', "The Parley Letter");
         return post.save();
       })).then(async(function (post) {
@@ -4266,19 +2757,46 @@ define(
     test("update - hasMany relationships faithfully reflect simultaneous adds and removes", function () {
       Post.reopen({ comments: DS.hasMany('comment', { async: false }) });
       Comment.reopen({ post: DS.belongsTo('post', { async: false }) });
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       run(function () {
-        store.push('post', { id: 1, name: "Not everyone uses Rails", comments: [1] });
-        store.push('comment', { id: 1, name: "Rails is omakase" });
-        store.push('comment', { id: 2, name: "Yes. Yes it is." });
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              name: "Not everyone uses Rails"
+            },
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }]
+              }
+            }
+          },
+          included: [{
+            type: 'comment',
+            id: '1',
+            attributes: {
+              name: "Rails is omakase"
+            }
+          }, {
+            type: 'comment',
+            id: '2',
+            attributes: {
+              name: "Yes. Yes it is."
+            }
+          }]
+        });
       });
 
       ajaxResponse({
         posts: { id: 1, name: "Not everyone uses Rails", comments: [2] }
       });
 
-      store.find('comment', 2).then(async(function () {
-        return store.find('post', 1);
+      store.findRecord('comment', 2).then(async(function () {
+        return store.findRecord('post', 1);
       })).then(async(function (post) {
         var newComment = store.peekRecord('comment', 2);
         var comments = post.get('comments');
@@ -4295,11 +2813,22 @@ define(
     });
 
     test("delete - an empty payload is a basic success", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       run(function () {
-        store.push('post', { id: 1, name: "Rails is omakase" });
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              name: "Rails is omakase"
+            }
+          }
+        });
       });
 
-      store.find('post', 1).then(async(function (post) {
+      store.findRecord('post', 1).then(async(function (post) {
         ajaxResponse();
 
         post.deleteRecord();
@@ -4315,15 +2844,26 @@ define(
     });
 
     test("delete - passes the requestType to buildURL", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.buildURL = function (type, id, snapshot, requestType) {
         return "/posts/" + id + "/" + requestType;
       };
 
       run(function () {
-        store.push('post', { id: 1, name: "Rails is omakase" });
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              name: "Rails is omakase"
+            }
+          }
+        });
       });
 
-      store.find('post', 1).then(async(function (post) {
+      store.findRecord('post', 1).then(async(function (post) {
         ajaxResponse();
 
         post.deleteRecord();
@@ -4334,11 +2874,22 @@ define(
     });
 
     test("delete - a payload with sideloaded updates pushes the updates", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       run(function () {
-        store.push('post', { id: 1, name: "Rails is omakase" });
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              name: "Rails is omakase"
+            }
+          }
+        });
       });
 
-      store.find('post', 1).then(async(function (post) {
+      store.findRecord('post', 1).then(async(function (post) {
         ajaxResponse({ comments: [{ id: 1, name: "FIRST" }] });
 
         post.deleteRecord();
@@ -4357,11 +2908,22 @@ define(
     });
 
     test("delete - a payload with sidloaded updates pushes the updates when the original record is omitted", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       run(function () {
-        store.push('post', { id: 1, name: "Rails is omakase" });
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              name: "Rails is omakase"
+            }
+          }
+        });
       });
 
-      store.find('post', 1).then(async(function (post) {
+      store.findRecord('post', 1).then(async(function (post) {
         ajaxResponse({ posts: [{ id: 2, name: "The Parley Letter" }] });
 
         post.deleteRecord();
@@ -4470,40 +3032,13 @@ define(
       }));
     });
 
-    test("findAll - since token is passed to the adapter", function () {
-      ajaxResponse({
-        meta: { since: 'later' },
-        posts: [{ id: 1, name: "Rails is omakase" }, { id: 2, name: "The Parley Letter" }]
-      });
-
-      store.setMetadataFor('post', { since: 'now' });
-
-      store.findAll('post').then(async(function (posts) {
-        equal(passedUrl, '/posts');
-        equal(passedVerb, 'GET');
-        equal(store.typeMapFor(Post).metadata.since, 'later');
-        deepEqual(passedHash.data, { since: 'now' });
-      }));
-    });
-
-    test("metadata is accessible", function () {
-      ajaxResponse({
-        meta: { offset: 5 },
-        posts: [{ id: 1, name: "Rails is very expensive sushi" }]
-      });
-
-      store.findAll('post').then(async(function (posts) {
-        equal(store.metadataFor('post').offset, 5, "Metadata can be accessed with metadataFor.");
-      }));
-    });
-
     test("findQuery - if `sortQueryParams` option is not provided, query params are sorted alphabetically", function () {
       adapter.ajax = function (url, verb, hash) {
         passedUrl = url;
         passedVerb = verb;
         passedHash = hash;
 
-        deepEqual(keysFunc(hash.data), ["in", "order", "params", "wrong"], 'query params are received in alphabetical order');
+        deepEqual(Object.keys(hash.data), ["in", "order", "params", "wrong"], 'query params are received in alphabetical order');
 
         return run(Ember.RSVP, 'resolve', { posts: [{ id: 1, name: "Rails is very expensive sushi" }] });
       };
@@ -4535,7 +3070,7 @@ define(
         passedVerb = verb;
         passedHash = hash;
 
-        deepEqual(keysFunc(hash.data), ["params", "in", "wrong", "order"], 'query params are received in their original order');
+        deepEqual(Object.keys(hash.data), ["params", "in", "wrong", "order"], 'query params are received in their original order');
 
         return run(Ember.RSVP, 'resolve', { posts: [{ id: 1, name: "Rails is very expensive sushi" }] });
       };
@@ -4553,13 +3088,13 @@ define(
         passedVerb = verb;
         passedHash = hash;
 
-        deepEqual(keysFunc(hash.data), ["wrong", "params", "order", "in"], 'query params are received in reverse alphabetical order');
+        deepEqual(Object.keys(hash.data), ["wrong", "params", "order", "in"], 'query params are received in reverse alphabetical order');
 
         return run(Ember.RSVP, 'resolve', { posts: [{ id: 1, name: "Rails is very expensive sushi" }] });
       };
 
       adapter.sortQueryParams = function (obj) {
-        var sortedKeys = keysFunc(obj).sort().reverse();
+        var sortedKeys = Object.keys(obj).sort().reverse();
         var len = sortedKeys.length;
         var newQueryParams = {};
 
@@ -4723,7 +3258,20 @@ define(
       adapter.coalesceFindRequests = true;
 
       run(function () {
-        store.push('post', { id: 1, name: "Rails is omakase", comments: [1, 2, 3] });
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              name: "Rails is omakase"
+            },
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
+              }
+            }
+          }
+        });
       });
 
       var post = store.peekRecord('post', 1);
@@ -4745,7 +3293,20 @@ define(
       adapter.coalesceFindRequests = true;
 
       run(function () {
-        store.push('post', { id: 1, name: "Rails is omakase", comments: [1, 2, 3] });
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              name: "Rails is omakase"
+            },
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
+              }
+            }
+          }
+        });
       });
 
       var post = store.peekRecord('post', 1);
@@ -4761,7 +3322,20 @@ define(
       Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
 
       run(function () {
-        store.push('post', { id: 1, name: "Rails is omakase", comments: [1, 2, 3] });
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              name: "Rails is omakase"
+            },
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
+              }
+            }
+          }
+        });
       });
 
       var post = store.peekRecord('post', 1);
@@ -4776,14 +3350,30 @@ define(
     });
 
     test("findMany - returning an array populates the array", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
       adapter.coalesceFindRequests = true;
 
       run(function () {
-        store.push('post', { id: 1, name: "Rails is omakase", comments: [1, 2, 3] });
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              name: "Rails is omakase"
+            },
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
+              }
+            }
+          }
+        });
       });
 
-      store.find('post', 1).then(async(function (post) {
+      store.findRecord('post', 1).then(async(function (post) {
         ajaxResponse({
           comments: [{ id: 1, name: "FIRST" }, { id: 2, name: "Rails is unagi" }, { id: 3, name: "What is omakase?" }]
         });
@@ -4803,14 +3393,30 @@ define(
     });
 
     test("findMany - returning sideloaded data loads the data", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
       adapter.coalesceFindRequests = true;
 
       run(function () {
-        store.push('post', { id: 1, name: "Rails is omakase", comments: [1, 2, 3] });
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              name: "Rails is omakase"
+            },
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
+              }
+            }
+          }
+        });
       });
 
-      store.find('post', 1).then(async(function (post) {
+      store.findRecord('post', 1).then(async(function (post) {
         ajaxResponse({
           comments: [{ id: 1, name: "FIRST" }, { id: 2, name: "Rails is unagi" }, { id: 3, name: "What is omakase?" }, { id: 4, name: "Unrelated comment" }],
           posts: [{ id: 2, name: "The Parley Letter" }]
@@ -4832,6 +3438,9 @@ define(
     });
 
     test("findMany - a custom serializer is used if present", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       env.registry.register('serializer:post', DS.RESTSerializer.extend({
         primaryKey: '_ID_',
         attrs: { name: '_NAME_' }
@@ -4846,10 +3455,23 @@ define(
       Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
 
       run(function () {
-        store.push('post', { id: 1, name: "Rails is omakase", comments: [1, 2, 3] });
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              name: "Rails is omakase"
+            },
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
+              }
+            }
+          }
+        });
       });
 
-      store.find('post', 1).then(async(function (post) {
+      store.findRecord('post', 1).then(async(function (post) {
         ajaxResponse({
           comments: [{ _ID_: 1, _NAME_: "FIRST" }, { _ID_: 2, _NAME_: "Rails is unagi" }, { _ID_: 3, _NAME_: "What is omakase?" }]
         });
@@ -4869,17 +3491,31 @@ define(
     });
 
     test("findHasMany - returning an array populates the array", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
 
       run(function () {
-        store.push('post', {
-          id: 1,
-          name: "Rails is omakase",
-          links: { comments: '/posts/1/comments' }
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              name: "Rails is omakase"
+            },
+            relationships: {
+              comments: {
+                links: {
+                  related: '/posts/1/comments'
+                }
+              }
+            }
+          }
         });
       });
 
-      run(store, 'find', 'post', '1').then(async(function (post) {
+      run(store, 'findRecord', 'post', '1').then(async(function (post) {
         ajaxResponse({
           comments: [{ id: 1, name: "FIRST" }, { id: 2, name: "Rails is unagi" }, { id: 3, name: "What is omakase?" }]
         });
@@ -4903,6 +3539,9 @@ define(
     });
 
     test("findHasMany - passes buildURL the requestType", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.buildURL = function (type, id, snapshot, requestType) {
         equal(requestType, 'findHasMany');
       };
@@ -4910,14 +3549,25 @@ define(
       Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
 
       run(function () {
-        store.push('post', {
-          id: 1,
-          name: "Rails is omakase",
-          links: { comments: '/posts/1/comments' }
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              name: "Rails is omakase"
+            },
+            relationships: {
+              comments: {
+                links: {
+                  related: '/posts/1/comments'
+                }
+              }
+            }
+          }
         });
       });
 
-      run(store, 'find', 'post', '1').then(async(function (post) {
+      run(store, 'findRecord', 'post', '1').then(async(function (post) {
         ajaxResponse({
           comments: [{ id: 1, name: "FIRST" }, { id: 2, name: "Rails is unagi" }, { id: 3, name: "What is omakase?" }]
         });
@@ -4929,18 +3579,32 @@ define(
     });
 
     test("findMany - returning sideloaded data loads the data", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
       adapter.coalesceFindRequests = true;
 
       run(function () {
-        store.push('post', {
-          id: 1,
-          name: "Rails is omakase",
-          links: { comments: '/posts/1/comments' }
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              name: "Rails is omakase"
+            },
+            relationships: {
+              comments: {
+                links: {
+                  related: '/posts/1/comments'
+                }
+              }
+            }
+          }
         });
       });
 
-      store.find('post', 1).then(async(function (post) {
+      store.findRecord('post', 1).then(async(function (post) {
         ajaxResponse({
           comments: [{ id: 1, name: "FIRST" }, { id: 2, name: "Rails is unagi" }, { id: 3, name: "What is omakase?" }],
           posts: [{ id: 2, name: "The Parley Letter" }]
@@ -4960,6 +3624,9 @@ define(
     });
 
     test("findMany - a custom serializer is used if present", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       env.registry.register('serializer:post', DS.RESTSerializer.extend({
         primaryKey: '_ID_',
         attrs: { name: '_NAME_' }
@@ -4973,14 +3640,25 @@ define(
       Post.reopen({ comments: DS.hasMany('comment', { async: true }) });
 
       run(function () {
-        store.push('post', {
-          id: 1,
-          name: "Rails is omakase",
-          links: { comments: '/posts/1/comments' }
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              name: "Rails is omakase"
+            },
+            relationships: {
+              comments: {
+                links: {
+                  related: '/posts/1/comments'
+                }
+              }
+            }
+          }
         });
       });
 
-      store.find('post', 1).then(async(function (post) {
+      store.findRecord('post', 1).then(async(function (post) {
         ajaxResponse({
           comments: [{ _ID_: 1, _NAME_: "FIRST" }, { _ID_: 2, _NAME_: "Rails is unagi" }, { _ID_: 3, _NAME_: "What is omakase?" }]
         });
@@ -4999,6 +3677,9 @@ define(
     });
 
     test('findBelongsTo - passes buildURL the requestType', function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.buildURL = function (type, id, snapshot, requestType) {
         equal(requestType, 'findBelongsTo');
       };
@@ -5006,13 +3687,25 @@ define(
       Comment.reopen({ post: DS.belongsTo('post', { async: true }) });
 
       run(function () {
-        store.push('comment', {
-          id: 1, name: "FIRST",
-          links: { post: '/posts/1' }
+        store.push({
+          data: {
+            type: 'comment',
+            id: '1',
+            attributes: {
+              name: "FIRST"
+            },
+            relationships: {
+              post: {
+                links: {
+                  related: '/posts/1'
+                }
+              }
+            }
+          }
         });
       });
 
-      run(store, 'find', 'comment', 1).then(async(function (comment) {
+      run(store, 'findRecord', 'comment', 1).then(async(function (comment) {
         ajaxResponse({ post: { id: 1, name: 'Rails is omakase' } });
         return comment.get('post');
       })).then(async(function (post) {
@@ -5031,7 +3724,19 @@ define(
 
       warns(function () {
         run(function () {
-          post = store.push('post', { id: 2, comments: [1, 2, 3] });
+          store.push({
+            data: {
+              type: 'post',
+              id: '2',
+              relationships: {
+                comments: {
+                  data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
+                }
+              }
+            }
+          });
+
+          post = store.peekRecord('post', 2);
           post.get('comments');
         });
       }, /expected to find records with the following ids in the adapter response but they were missing: \[2,3\]/);
@@ -5062,7 +3767,18 @@ define(
 
       var post;
       run(function () {
-        post = store.push('post', { id: 2, comments: [1, 2, 3] });
+        store.push({
+          data: {
+            type: 'post',
+            id: '2',
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
+              }
+            }
+          }
+        });
+        post = store.peekRecord('post', 2);
       });
 
       run(function () {
@@ -5095,7 +3811,18 @@ define(
       var post;
 
       run(function () {
-        post = store.push('post', { id: 2, comments: [1, 2, 3] });
+        store.push({
+          data: {
+            type: 'post',
+            id: '2',
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
+              }
+            }
+          }
+        });
+        post = store.peekRecord('post', 2);
       });
 
       run(function () {
@@ -5184,7 +3911,18 @@ define(
       var b2000 = repeatChar('b', 2000);
       var post;
       run(function () {
-        post = store.push('post', { id: 1, comments: [a2000, b2000] });
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: a2000 }, { type: 'comment', id: b2000 }]
+              }
+            }
+          }
+        });
+        post = store.peekRecord('post', 1);
       });
 
       adapter.coalesceFindRequests = true;
@@ -5222,7 +3960,18 @@ define(
       var post;
 
       run(function () {
-        post = store.push('post', { id: 1, comments: [a100, b100] });
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: a100 }, { type: 'comment', id: b100 }]
+              }
+            }
+          }
+        });
+        post = store.peekRecord('post', 1);
       });
 
       adapter.coalesceFindRequests = true;
@@ -5427,6 +4176,39 @@ define(
         }));
       });
     });
+
+    test("create - sideloaded records are pushed to the store", function () {
+      Post.reopen({
+        comments: DS.hasMany('comment')
+      });
+
+      ajaxResponse({
+        post: {
+          id: 1,
+          name: 'The Parley Letter',
+          comments: [2, 3]
+        },
+        comments: [{
+          id: 2,
+          name: 'First comment'
+        }, {
+          id: 3,
+          name: 'Second comment'
+        }]
+      });
+      var post;
+
+      run(function () {
+        post = store.createRecord('post', { name: 'The Parley Letter' });
+        post.save().then(function (post) {
+          var comments = store.peekAll('comment');
+
+          equal(get(comments, 'length'), 2, 'comments.length is correct');
+          equal(get(comments, 'firstObject.name'), 'First comment', 'comments.firstObject.name is correct');
+          equal(get(comments, 'lastObject.name'), 'Second comment', 'comments.lastObject.name is correct');
+        });
+      });
+    });
   }
 );
 
@@ -5557,7 +4339,9 @@ define(
 
     test("by default, createRecords calls createRecord once per record", function () {
       var count = 1;
-
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.createRecord = function (store, type, snapshot) {
         equal(type, Person, "the type is correct");
 
@@ -5602,7 +4386,9 @@ define(
 
     test("by default, updateRecords calls updateRecord once per record", function () {
       var count = 0;
-
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.updateRecord = function (store, type, snapshot) {
         equal(type, Person, "the type is correct");
 
@@ -5622,8 +4408,21 @@ define(
       };
 
       run(function () {
-        store.push('person', { id: 1, name: "Braaaahm Dale" });
-        store.push('person', { id: 2, name: "Brohuda Katz" });
+        env.store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Braaaahm Dale'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Brohuda Katz'
+            }
+          }]
+        });
       });
 
       var promise = run(function () {
@@ -5655,7 +4454,9 @@ define(
 
     test("calling store.didSaveRecord can provide an optional hash", function () {
       var count = 0;
-
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.updateRecord = function (store, type, snapshot) {
         equal(type, Person, "the type is correct");
 
@@ -5672,8 +4473,21 @@ define(
       };
 
       run(function () {
-        store.push('person', { id: 1, name: "Braaaahm Dale" });
-        store.push('person', { id: 2, name: "Brohuda Katz" });
+        env.store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Braaaahm Dale'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Brohuda Katz'
+            }
+          }]
+        });
       });
 
       var promise = run(function () {
@@ -5706,7 +4520,9 @@ define(
       expect(4);
 
       var count = 0;
-
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.deleteRecord = function (store, type, snapshot) {
         equal(type, Person, "the type is correct");
 
@@ -5724,8 +4540,21 @@ define(
       };
 
       run(function () {
-        store.push('person', { id: 1, name: "Tom Dale" });
-        store.push('person', { id: 2, name: "Yehuda Katz" });
+        env.store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Yehuda Katz'
+            }
+          }]
+        });
       });
 
       var promise = run(function () {
@@ -5751,7 +4580,9 @@ define(
       expect(4);
 
       var count = 0;
-
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.deleteRecord = function (store, type, snapshot) {
         equal(type, Person, "the type is correct");
 
@@ -5769,8 +4600,21 @@ define(
       };
 
       run(function () {
-        store.push('person', { id: 1, name: "Tom Dale" });
-        store.push('person', { id: 2, name: "Yehuda Katz" });
+        env.store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Yehuda Katz'
+            }
+          }]
+        });
       });
 
       var promise = run(function () {
@@ -5793,7 +4637,9 @@ define(
       expect(5);
 
       var count = 0;
-
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.deleteRecord = function (store, type, snapshot) {
         count++;
         equal(snapshot.id, 'deleted-record', "should pass correct record to deleteRecord");
@@ -5808,7 +4654,15 @@ define(
 
       // Load data for a record into the store.
       run(function () {
-        store.push('person', { id: 'deleted-record', name: "Tom Dale" });
+        env.store.push({
+          data: {
+            type: 'person',
+            id: 'deleted-record',
+            attributes: {
+              name: 'Tom Dale'
+            }
+          }
+        });
       });
 
       // Retrieve that loaded record and edit it so it becomes dirty
@@ -5829,6 +4683,9 @@ define(
       var count = 0;
       var error = new DS.AdapterError();
 
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.deleteRecord = function (store, type, snapshot) {
         if (count++ === 0) {
           return Ember.RSVP.reject(error);
@@ -5838,7 +4695,15 @@ define(
       };
 
       run(function () {
-        store.push('person', { id: 'deleted-record', name: "Tom Dale" });
+        env.store.push({
+          data: {
+            type: 'person',
+            id: 'deleted-record',
+            attributes: {
+              name: 'Tom Dale'
+            }
+          }
+        });
       });
 
       var tom;
@@ -6008,6 +4873,9 @@ define(
     });
 
     test("if an updated record is marked as invalid by the server, it enters an error state", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.updateRecord = function (store, type, snapshot) {
         equal(type, Person, "the type is correct");
 
@@ -6019,7 +4887,16 @@ define(
       };
 
       var yehuda = run(function () {
-        return store.push('person', { id: 1, name: "Brohuda Brokatz" });
+        env.store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Brohuda Brokatz'
+            }
+          }
+        });
+        return store.peekRecord('person', 1);
       });
 
       Ember.run(function () {
@@ -6053,6 +4930,9 @@ define(
     });
 
     test("records can have errors on arbitrary properties after update", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.updateRecord = function (store, type, snapshot) {
         if (snapshot.attr('name').indexOf('Bro') === -1) {
           return Ember.RSVP.reject(new DS.InvalidError({ base: ['is a generally unsavoury character'] }));
@@ -6062,7 +4942,16 @@ define(
       };
 
       var yehuda = run(function () {
-        return store.push('person', { id: 1, name: "Brohuda Brokatz" });
+        env.store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Brohuda Brokatz'
+            }
+          }
+        });
+        return store.peekRecord('person', 1);
       });
 
       run(function () {
@@ -6101,6 +4990,9 @@ define(
 
     test("if an updated record is marked as invalid by the server, you can attempt the save again", function () {
       var saveCount = 0;
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.updateRecord = function (store, type, snapshot) {
         equal(type, Person, "the type is correct");
         saveCount++;
@@ -6112,7 +5004,16 @@ define(
       };
 
       var yehuda = run(function () {
-        return store.push('person', { id: 1, name: "Brohuda Brokatz" });
+        env.store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Brohuda Brokatz'
+            }
+          }
+        });
+        return store.peekRecord('person', 1);
       });
 
       Ember.run(function () {
@@ -6151,12 +5052,24 @@ define(
     test("if a updated record is marked as erred by the server, it enters an error state", function () {
       var error = new DS.AdapterError();
 
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.updateRecord = function (store, type, snapshot) {
         return Ember.RSVP.reject(error);
       };
 
       var person = run(function () {
-        return store.push('person', { id: 1, name: "John Doe" });
+        env.store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'John Doe'
+            }
+          }
+        });
+        return store.peekRecord('person', 1);
       });
 
       run(store, 'findRecord', 'person', 1).then(async(function (record) {
@@ -6183,6 +5096,9 @@ define(
     });
 
     test("the filter method can optionally take a server query as well", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       adapter.query = function (store, type, query, array) {
         return Ember.RSVP.resolve([{ id: 1, name: "Yehuda Katz" }, { id: 2, name: "Tom Dale" }]);
       };
@@ -6208,7 +5124,15 @@ define(
       });
 
       run(function () {
-        store.push('dog', { id: 1, name: "Scruffy" });
+        env.store.push({
+          data: {
+            type: 'dog',
+            id: '1',
+            attributes: {
+              name: 'Scruffy'
+            }
+          }
+        });
       });
 
       adapter.findRecord = function (store, type, id, snapshot) {
@@ -6217,8 +5141,28 @@ define(
 
       adapter.updateRecord = function (store, type, snapshot) {
         return new Ember.RSVP.Promise(function (resolve, reject) {
-          store.push('person', { id: 1, name: "Tom Dale", dogs: [1, 2] });
-          store.push('dog', { id: 2, name: "Scruffles" });
+          env.store.push({
+            data: {
+              type: 'person',
+              id: '1',
+              attributes: {
+                name: 'Tom Dale'
+              },
+              relationships: {
+                dogs: {
+                  data: [{ type: 'dog', id: '1' }, { type: 'dog', id: '2' }]
+                }
+              }
+            },
+            included: [{
+              type: 'dog',
+              id: '2',
+              attributes: {
+                name: 'Scruffles'
+              }
+            }]
+          });
+
           resolve({ id: 1, name: "Scruffy" });
         });
       };
@@ -6240,6 +5184,9 @@ define(
     });
 
     test("relationships don't get reset if the links is the same", function () {
+      adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       Person.reopen({
         dogs: DS.hasMany({ async: true })
       });
@@ -6253,7 +5200,22 @@ define(
       };
 
       run(function () {
-        store.push('person', { id: 1, name: "Tom Dale", links: { dogs: "/dogs" } });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            },
+            relationships: {
+              dogs: {
+                links: {
+                  related: '/dogs'
+                }
+              }
+            }
+          }
+        });
       });
 
       var tom, dogs;
@@ -6264,7 +5226,22 @@ define(
         return dogs;
       })).then(async(function (dogs) {
         equal(dogs.get('length'), 1, "The dogs are loaded");
-        store.push('person', { id: 1, name: "Tom Dale", links: { dogs: "/dogs" } });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            },
+            relationships: {
+              dogs: {
+                links: {
+                  related: '/dogs'
+                }
+              }
+            }
+          }
+        });
         ok(tom.get('dogs') instanceof DS.PromiseArray, 'dogs is a promise');
         return tom.get('dogs');
       })).then(async(function (dogs) {
@@ -6325,7 +5302,16 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', { id: 1, name: "Tom Dale" });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            }
+          }
+        });
+        person = store.peekRecord('person', 1);
       });
 
       run(function () {
@@ -6345,7 +5331,16 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', { id: 1, name: "Tom Dale" });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            }
+          }
+        });
+        person = store.peekRecord('person', 1);
       });
 
       run(function () {
@@ -6384,7 +5379,18 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', { id: 1, dogs: [2, 3] });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            relationships: {
+              dogs: {
+                data: [{ type: 'dog', id: '2' }, { type: 'dog', id: '3' }]
+              }
+            }
+          }
+        });
+        person = store.peekRecord('person', 1);
       });
 
       run(function () {
@@ -6407,7 +5413,20 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', { id: 1, links: { dogs: 'dogs' } });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            relationships: {
+              dogs: {
+                links: {
+                  related: 'dogs'
+                }
+              }
+            }
+          }
+        });
+        person = store.peekRecord('person', 1);
       });
 
       run(function () {
@@ -6430,7 +5449,20 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', { id: 1, links: { dog: 'dog' } });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            relationships: {
+              dog: {
+                links: {
+                  related: 'dog'
+                }
+              }
+            }
+          }
+        });
+        person = store.peekRecord('person', 1);
       });
 
       run(function () {
@@ -6447,7 +5479,16 @@ define(
       });
 
       run(function () {
-        var person = store.push('person', { id: 1, name: 'Tom' });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom'
+            }
+          }
+        });
+        var person = store.peekRecord('person', 1);
         person.save({ adapterOptions: { subscribe: true } });
       });
     });
@@ -6475,7 +5516,16 @@ define(
       });
 
       run(function () {
-        var person = store.push('person', { id: 1, name: 'Tom' });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom'
+            }
+          }
+        });
+        var person = store.peekRecord('person', 1);
         person.destroyRecord({ adapterOptions: { subscribe: true } });
       });
     });
@@ -6505,21 +5555,6 @@ define(
       run(function () {
         store.findAll('person', { adapterOptions: { query: { embed: true } } });
       });
-    });
-
-    test("Store does not error when the serializer is null", function () {
-      adapter.findRecord = function (store, type, query, recordArray) {
-        return {
-          id: 1,
-          name: "Mickael Ramírez"
-        };
-      };
-
-      adapter.serializer = null;
-
-      run(store, 'findRecord', 'person', 1).then(async(function (person) {
-        equal(person.get('id'), 1);
-      }));
     });
 
     test("An async hasMany relationship with links should not trigger shouldBackgroundReloadRecord", function () {
@@ -6581,7 +5616,6 @@ define(
     var run = Ember.run;
     var Application = Ember.Application;
     var Controller = Ember.Controller;
-    var View = Ember.View;
     var Store = DS.Store;
     var Namespace = Ember.Namespace;
 
@@ -6604,9 +5638,8 @@ define(
       setup: function () {
         run(function () {
           app = Application.create({
-            ApplicationStore: Store.extend({ isCustom: true }),
+            StoreService: Store.extend({ isCustom: true }),
             FooController: Controller.extend(),
-            ApplicationView: View.extend(),
             BazController: {},
             ApplicationController: Controller.extend(),
             rootElement: '#qunit-fixture'
@@ -6634,26 +5667,13 @@ define(
       ok(isCustom, "the custom store was injected");
     });
 
-    test("registering App.Store is deprecated but functional", function () {
-      run(app, 'destroy');
-
-      expectDeprecation(function () {
-        run(function () {
-          app = Application.create({
-            Store: DS.Store.extend({ isCustomButDeprecated: true }),
-            FooController: Controller.extend()
-          });
-        });
-        container = app.__container__;
-      }, 'Specifying a custom Store for Ember Data on your global namespace as `App.Store` ' + 'has been deprecated. Please use `App.ApplicationStore` instead.');
-
+    test("The JSONAPIAdapter is the default adapter when no custom adapter is provided", function () {
       run(function () {
-        ok(lookup('service:store').get('isCustomButDeprecated'), "the custom store was instantiated");
-      });
+        var store = getStore();
 
-      var fooController = lookup('controller:foo');
-      run(function () {
-        ok(fooController.get('store.isCustomButDeprecated'), "the custom store was injected");
+        var adapter = store.adapterFor('application');
+
+        ok(adapter instanceof DS.JSONAPIAdapter, 'default adapter should be the JSONAPIAdapter');
       });
     });
 
@@ -6662,7 +5682,6 @@ define(
         run(function () {
           app = Application.create({
             FooController: Controller.extend(),
-            ApplicationView: View.extend(),
             BazController: {},
             ApplicationController: Controller.extend()
           });
@@ -6699,7 +5718,7 @@ define(
         setup: function () {
           run(function () {
             app = Application.create({
-              DoodleService: Ember.Object.extend({ store: Ember.inject.service() })
+              DoodleService: Ember.Service.extend({ store: Ember.inject.service() })
             });
           });
 
@@ -6823,62 +5842,6 @@ define(
 
       ok(ran, 'transforms initializer was found');
     });
-
-    test("activeModelAdapter initializer is run (DEPRECATED)", function () {
-      var ran = false;
-      App.initializer({
-        name: "after-store",
-        after: 'activeModelAdapter',
-        initialize: function () {
-          ran = true;
-        }
-      });
-
-      run(function () {
-        app = App.create();
-      });
-
-      ok(ran, 'activeModelAdapter initializer was found');
-    });
-  }
-);
-
-
-define(
-  "ember-data/tests/integration/backwards-compat/deprecate-type-key-test",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-
-    function __es6_export__(name, value) {
-      __exports__[name] = value;
-    }
-
-    var Post, env;
-    module('integration/backwards-compat/deprecate-type-key', {
-      setup: function () {
-        env = setupStore({
-          post: DS.Model.extend()
-        });
-        Post = env.store.modelFor('post');
-      },
-
-      teardown: function () {}
-    });
-
-    if (Ember.platform.hasPropertyAccessors) {
-      test('typeKey is deprecated', function () {
-        expectDeprecation(function () {
-          return Post.typeKey;
-        });
-      });
-
-      test('setting typeKey is not allowed', function () {
-        throws(function () {
-          Post.typeKey = 'hello';
-        });
-      });
-    }
   }
 );
 
@@ -7152,8 +6115,12 @@ define(
             return 'App';
           };
 
-          App.ApplicationStore = DS.Store.extend({
-            adapter: DS.Adapter.extend()
+          App.StoreService = DS.Store.extend({});
+
+          App.ApplicationAdapter = DS.Adapter.extend({
+            shouldBackgroundReloadRecord: function () {
+              return false;
+            }
           });
 
           App.Post = DS.Model.extend({
@@ -7197,7 +6164,15 @@ define(
       debugAdapter.watchModelTypes(added, updated);
 
       run(function () {
-        store.push('post', { id: 1, title: 'Post Title' });
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              title: 'Post Title'
+            }
+          }
+        });
       });
     });
 
@@ -7205,7 +6180,15 @@ define(
       var post, record, addedRecords, updatedRecords, removedIndex, removedCount;
 
       Ember.run(function () {
-        store.push('post', { id: '1', title: 'Clean Post' });
+        store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              title: 'Clean Post'
+            }
+          }
+        });
       });
 
       var recordsAdded = function (wrappedRecords) {
@@ -7259,7 +6242,7 @@ define(
       deepEqual(record.searchKeywords, ['2', 'New Post']);
       deepEqual(record.color, 'green');
 
-      Ember.run(post, 'deleteRecord');
+      Ember.run(post, 'unloadRecord');
 
       equal(removedIndex, 1);
       equal(removedCount, 1);
@@ -7283,8 +6266,6 @@ define(
 
     var get = Ember.get;
     var set = Ember.set;
-    var forEach = Ember.ArrayPolyfills.forEach;
-    var indexOf = Ember.ArrayPolyfills.indexOf;
     var run = Ember.run;
 
     var Person, store, env, array, recordArray;
@@ -7294,12 +6275,38 @@ define(
     };
 
     var shouldNotContain = function (array, item) {
-      ok(indexOf.call(array, item) === -1, "array should not contain " + item.get('name'));
+      ok(array.indexOf(item) === -1, "array should not contain " + item.get('name'));
     };
 
     module("integration/filter - DS.Model updating", {
       setup: function () {
-        array = [{ id: 1, name: "Scumbag Dale", bestFriend: 2 }, { id: 2, name: "Scumbag Katz" }, { id: 3, name: "Scumbag Bryn" }];
+        array = [{
+          id: '1',
+          type: 'person',
+          attributes: {
+            name: 'Scumbag Dale'
+          },
+          relationships: {
+            bestFriend: {
+              data: {
+                id: '2',
+                type: 'person'
+              }
+            }
+          }
+        }, {
+          id: '2',
+          type: 'person',
+          attributes: {
+            name: 'Scumbag Katz'
+          }
+        }, {
+          id: '3',
+          type: 'person',
+          attributes: {
+            name: 'Scumbag Bryn'
+          }
+        }];
         Person = DS.Model.extend({ name: DS.attr('string'), bestFriend: DS.belongsTo('person', { inverse: null, async: false }) });
 
         env = setupStore({ person: Person });
@@ -7330,7 +6337,7 @@ define(
 
     test("when a DS.Model updates its attributes, its changes affect its filtered Array membership", function () {
       run(function () {
-        store.pushMany('person', array);
+        store.push({ data: array });
       });
       var people;
 
@@ -7367,7 +6374,7 @@ define(
 
     test("when a DS.Model updates its relationships, its changes affect its filtered Array membership", function () {
       run(function () {
-        store.pushMany('person', array);
+        store.push({ data: array });
       });
       var people;
 
@@ -7406,7 +6413,7 @@ define(
 
     test("a record array can have a filter on it", function () {
       run(function () {
-        store.pushMany('person', array);
+        store.push({ data: array });
       });
       var recordArray;
 
@@ -7421,13 +6428,29 @@ define(
       equal(get(recordArray, 'length'), 2, "The Record Array should have the filtered objects on it");
 
       run(function () {
-        store.push('person', { id: 4, name: "Scumbag Koz" });
+        store.push({
+          data: [{
+            id: '4',
+            type: 'person',
+            attributes: {
+              name: 'Scumbag Koz'
+            }
+          }]
+        });
       });
 
       equal(get(recordArray, 'length'), 3, "The Record Array should be updated as new items are added to the store");
 
       run(function () {
-        store.push('person', { id: 1, name: "Scumbag Tom" });
+        store.push({
+          data: [{
+            id: '1',
+            type: 'person',
+            attributes: {
+              name: 'Scumbag Tom'
+            }
+          }]
+        });
       });
 
       equal(get(recordArray, 'length'), 2, "The Record Array should be updated as existing members are updated");
@@ -7435,7 +6458,7 @@ define(
 
     test("a filtered record array includes created elements", function () {
       run(function () {
-        store.pushMany('person', array);
+        store.push({ data: array });
       });
       var recordArray;
 
@@ -7460,11 +6483,14 @@ define(
       customAdapter(env, DS.Adapter.extend({
         deleteRecord: function (store, type, snapshot) {
           return Ember.RSVP.resolve();
+        },
+        shouldBackgroundReloadRecord: function () {
+          return false;
         }
       }));
 
       run(function () {
-        store.pushMany('person', array);
+        store.push({ data: array });
       });
 
       var dickens = run(function () {
@@ -7503,13 +6529,29 @@ define(
           equal(get(recordArray, 'length'), 1, "The Record Array should have one object on it");
 
           Ember.run(function () {
-            store.push('person', { id: 5, name: "Other Katz" });
+            store.push({
+              data: [{
+                id: '5',
+                type: 'person',
+                attributes: {
+                  name: 'Other Katz'
+                }
+              }]
+            });
           });
 
           equal(get(recordArray, 'length'), 2, "The Record Array now has the new object matching the filter");
 
           Ember.run(function () {
-            store.push('person', { id: 6, name: "Scumbag Demon" });
+            store.push({
+              data: [{
+                id: '6',
+                type: 'person',
+                attributes: {
+                  name: 'Scumbag Demon'
+                }
+              }]
+            });
           });
 
           equal(get(recordArray, 'length'), 2, "The Record Array doesn't have objects matching the old filter");
@@ -7521,11 +6563,14 @@ define(
       customAdapter(env, DS.Adapter.extend({
         deleteRecord: function (store, type, snapshot) {
           return Ember.RSVP.resolve();
+        },
+        shouldBackgroundReloadRecord: function () {
+          return false;
         }
       }));
 
       run(function () {
-        store.pushMany('person', array);
+        store.push({ data: array });
       });
       var dickens;
 
@@ -7577,7 +6622,15 @@ define(
           didChangeRemoved = 0;
 
           Ember.run(function () {
-            store.push('person', { id: 5, name: "Other Katz" });
+            store.push({
+              data: [{
+                id: '5',
+                type: 'person',
+                attributes: {
+                  name: 'Other Katz'
+                }
+              }]
+            });
           });
 
           equal(didChangeAdded, 1, "one item was added");
@@ -7586,7 +6639,15 @@ define(
           equal(recordArray.objectAt(didChangeIdx).get('name'), "Other Katz");
 
           Ember.run(function () {
-            store.push('person', { id: 6, name: "Scumbag Demon" });
+            store.push({
+              data: [{
+                id: '6',
+                type: 'person',
+                attributes: {
+                  name: 'Scumbag Demon'
+                }
+              }]
+            });
           });
 
           equal(didChangeAdded, 0, "did not get called when an object that doesn't match is added");
@@ -7607,6 +6668,11 @@ define(
     });
 
     test("it is possible to filter by computed properties", function () {
+      customAdapter(env, DS.Adapter.extend({
+        shouldBackgroundReloadRecord: function () {
+          return false;
+        }
+      }));
       Person.reopen({
         name: DS.attr('string'),
         upperName: Ember.computed(function () {
@@ -7624,7 +6690,15 @@ define(
       equal(filter.get('length'), 0, "precond - the filter starts empty");
 
       run(function () {
-        store.push('person', { id: 1, name: "Tom Dale" });
+        store.push({
+          data: [{
+            id: '1',
+            type: 'person',
+            attributes: {
+              name: 'Tom Dale'
+            }
+          }]
+        });
       });
 
       equal(filter.get('length'), 1, "the filter now has a record in it");
@@ -7639,6 +6713,11 @@ define(
     });
 
     test("a filter created after a record is already loaded works", function () {
+      customAdapter(env, DS.Adapter.extend({
+        shouldBackgroundReloadRecord: function () {
+          return false;
+        }
+      }));
       Person.reopen({
         name: DS.attr('string'),
         upperName: Ember.computed(function () {
@@ -7647,7 +6726,15 @@ define(
       });
 
       run(function () {
-        store.push('person', { id: 1, name: "Tom Dale" });
+        store.push({
+          data: [{
+            id: '1',
+            type: 'person',
+            attributes: {
+              name: 'Tom Dale'
+            }
+          }]
+        });
       });
       var filter;
 
@@ -7722,6 +6809,9 @@ define(
       customAdapter(env, DS.Adapter.extend({
         updateRecord: function () {
           return Ember.RSVP.resolve();
+        },
+        shouldBackgroundReloadRecord: function () {
+          return false;
         }
       }));
 
@@ -7730,7 +6820,15 @@ define(
       });
 
       run(function () {
-        store.push('person', { id: 1, name: "Tom Dale" });
+        store.push({
+          data: [{
+            id: '1',
+            type: 'person',
+            attributes: {
+              name: 'Tom Dale'
+            }
+          }]
+        });
       });
 
       store.findRecord('person', 1).then(async(function (person) {
@@ -7755,6 +6853,9 @@ define(
         customAdapter(env, DS.Adapter.extend({
           createRecord: function () {
             return Ember.RSVP.resolve();
+          },
+          shouldBackgroundReloadRecord: function () {
+            return false;
           }
         }));
       });
@@ -7815,7 +6916,7 @@ define(
     var clientEdits = function (ids) {
       edited = [];
 
-      forEach.call(ids, function (id) {
+      ids.forEach(function (id) {
         // wrap in an Ember.run to guarantee coalescence of the
         // iterated `set` calls and promise resolution.
         Ember.run(function () {
@@ -7833,14 +6934,14 @@ define(
       // wrap in an Ember.run to guarantee coalescence of the
       // iterated `set` calls.
       Ember.run(function () {
-        forEach.call(names, function (name) {
+        names.forEach(function (name) {
           edited.push(store.createRecord('person', { name: 'Client-side ' + name }));
         });
       });
     };
 
     var serverResponds = function () {
-      forEach.call(edited, function (person) {
+      edited.forEach(function (person) {
         run(person, 'save');
       });
     };
@@ -7849,7 +6950,7 @@ define(
       run(function () {
         customAdapter(env, DS.Adapter.extend(serverCallbacks));
 
-        store.pushMany('person', array);
+        store.push({ data: array });
 
         recordArray = store.filter('person', function (hash) {
           if (hash.get('name').match(/Scumbag/)) {
@@ -7865,6 +6966,9 @@ define(
       setup({
         updateRecord: function (store, type, snapshot) {
           return Ember.RSVP.resolve({ id: 1, name: "Scumbag Server-side Dale" });
+        },
+        shouldBackgroundReloadRecord: function () {
+          return false;
         }
       });
 
@@ -7884,6 +6988,9 @@ define(
             case "2":
               return Ember.RSVP.resolve({ id: 2, name: "Scumbag Server-side Katz" });
           }
+        },
+        shouldBackgroundReloadRecord: function () {
+          return false;
         }
       });
 
@@ -7950,12 +7057,20 @@ define(
       var filterFn = tapFn(function () {
         return true;
       });
-      var person;
-
+      customAdapter(env, DS.Adapter.extend({
+        shouldBackgroundReloadRecord: function () {
+          return false;
+        }
+      }));
       run(function () {
-        person = store.push('person', {
-          id: 1,
-          name: 'Tom Dale'
+        store.push({
+          data: [{
+            id: '1',
+            type: 'person',
+            attributes: {
+              name: 'Tom Dale'
+            }
+          }]
         });
       });
 
@@ -8044,9 +7159,6 @@ define(
     });
 
     test("Finds the inverse when there is only one possible available", function () {
-      //Maybe store is evaluated lazily, so we need this :(
-      run(store, 'push', 'user', { id: 1 });
-
       deepEqual(Job.inverseFor('user', store), {
         type: User,
         name: 'job',
@@ -8061,13 +7173,6 @@ define(
 
       User.reopen({
         previousJob: belongsTo('job', { async: false })
-      });
-
-      //Maybe store is evaluated lazily, so we need this :(
-      var user, job;
-      run(function () {
-        user = store.push('user', { id: 1 });
-        job = store.push('user', { id: 1 });
       });
 
       deepEqual(Job.inverseFor('owner', store), {
@@ -8091,11 +7196,6 @@ define(
       User.reopen({
         job: belongsTo('job', { async: false })
       });
-      //Maybe store is evaluated lazily, so we need this :(
-      var user;
-      run(function () {
-        user = store.push('user', { id: 1 });
-      });
 
       equal(User.inverseFor('job', store), null, 'There is no inverse');
     });
@@ -8110,21 +7210,13 @@ define(
         job: belongsTo('job', { async: false })
       });
 
-      //Maybe store is evaluated lazily, so we need this :(
       expectAssertion(function () {
-        run(function () {
-          store.push('user', { id: 1 });
-        });
         User.inverseFor('job', store);
       }, "You defined the 'job' relationship on user, but you defined the inverse relationships of type job multiple times. Look at http://emberjs.com/guides/models/defining-models/#toc_explicit-inverses for how to explicitly specify inverses");
     });
 
     test("Caches findInverseFor return value", function () {
       expect(1);
-      //Maybe store is evaluated lazily, so we need this :(
-      run(function () {
-        store.push('user', { id: 1 });
-      });
 
       var inverseForUser = Job.inverseFor('user', store);
       Job.findInverseFor = function () {
@@ -8140,7 +7232,13 @@ define(
       warns(function () {
         var reflexiveModel;
         run(function () {
-          reflexiveModel = store.push('reflexive-model', { id: 1 });
+          store.push({
+            data: {
+              type: 'reflexive-model',
+              id: '1'
+            }
+          });
+          reflexiveModel = store.peekRecord('reflexive-model', 1);
           reflexiveModel.get('reflexiveProp');
         });
       }, /Detected a reflexive relationship by the name of 'reflexiveProp'/);
@@ -8263,9 +7361,8 @@ define(
           evilMinion: EvilMinion
         });
 
-        env.registry.register('serializer:application', DS.ActiveModelSerializer);
-        env.registry.register('serializer:-active-model', DS.ActiveModelSerializer);
-        env.registry.register('adapter:-active-model', DS.ActiveModelAdapter);
+        env.registry.register('adapter:application', DS.RESTAdapter);
+        env.registry.register('serializer:application', DS.RESTSerializer);
 
         env.registry.register('store:store-a', DS.Store);
         env.registry.register('store:store-b', DS.Store);
@@ -8280,35 +7377,37 @@ define(
     });
 
     test("should be able to push into multiple stores", function () {
-      env.registry.register('adapter:home-planet', DS.ActiveModelAdapter);
-      env.registry.register('serializer:home-planet', DS.ActiveModelSerializer);
+      env.registry.register('adapter:home-planet', DS.RESTAdapter.extend({
+        shouldBackgroundReloadRecord: function () {
+          return false;
+        }
+      }));
 
       var home_planet_main = { id: '1', name: 'Earth' };
       var home_planet_a = { id: '1', name: 'Mars' };
       var home_planet_b = { id: '1', name: 'Saturn' };
 
-      run(env.store, 'push', 'homePlanet', home_planet_main);
-      run(env.store_a, 'push', 'homePlanet', home_planet_a);
-      run(env.store_b, 'push', 'homePlanet', home_planet_b);
+      run(function () {
+        env.store.push(env.store.normalize('home-planet', home_planet_main));
+        env.store_a.push(env.store_a.normalize('home-planet', home_planet_a));
+        env.store_b.push(env.store_b.normalize('home-planet', home_planet_b));
+      });
 
-      run(env.store, 'find', 'homePlanet', 1).then(async(function (homePlanet) {
+      run(env.store, 'findRecord', 'home-planet', 1).then(async(function (homePlanet) {
         equal(homePlanet.get('name'), "Earth");
       }));
 
-      run(env.store_a, 'find', 'homePlanet', 1).then(async(function (homePlanet) {
+      run(env.store_a, 'findRecord', 'home-planet', 1).then(async(function (homePlanet) {
         equal(homePlanet.get('name'), "Mars");
       }));
 
-      run(env.store_b, 'find', 'homePlanet', 1).then(async(function (homePlanet) {
+      run(env.store_b, 'findRecord', 'home-planet', 1).then(async(function (homePlanet) {
         equal(homePlanet.get('name'), "Saturn");
       }));
     });
 
     test("embedded records should be created in multiple stores", function () {
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('adapter:home-planet', DS.ActiveModelAdapter);
-
-      env.registry.register('serializer:home-planet', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           villains: { embedded: 'always' }
         }
@@ -8319,52 +7418,55 @@ define(
       var serializer_b = env.store_b.serializerFor('home-planet');
 
       var json_hash_main = {
-        home_planet: {
+        homePlanet: {
           id: "1",
           name: "Earth",
           villains: [{
             id: "1",
-            first_name: "Tom",
-            last_name: "Dale"
+            firstName: "Tom",
+            lastName: "Dale"
           }]
         }
       };
       var json_hash_a = {
-        home_planet: {
+        homePlanet: {
           id: "1",
           name: "Mars",
           villains: [{
             id: "1",
-            first_name: "James",
-            last_name: "Murphy"
+            firstName: "James",
+            lastName: "Murphy"
           }]
         }
       };
       var json_hash_b = {
-        home_planet: {
+        homePlanet: {
           id: "1",
           name: "Saturn",
           villains: [{
             id: "1",
-            first_name: "Jade",
-            last_name: "John"
+            firstName: "Jade",
+            lastName: "John"
           }]
         }
       };
       var json_main, json_a, json_b;
 
       run(function () {
-        json_main = serializer_main.extractSingle(env.store, env.store.modelFor('home-planet'), json_hash_main);
+        json_main = serializer_main.normalizeResponse(env.store, env.store.modelFor('home-planet'), json_hash_main, 1, 'findRecord');
+        env.store.push(json_main);
         equal(env.store.hasRecordForId('super-villain', "1"), true, "superVillain should exist in service:store");
       });
 
       run(function () {
-        json_a = serializer_a.extractSingle(env.store_a, env.store_a.modelFor('home-planet'), json_hash_a);
+        json_a = serializer_a.normalizeResponse(env.store_a, env.store_a.modelFor('home-planet'), json_hash_a, 1, 'findRecord');
+        env.store_a.push(json_a);
         equal(env.store_a.hasRecordForId("super-villain", "1"), true, "superVillain should exist in store:store-a");
       });
 
       run(function () {
-        json_b = serializer_b.extractSingle(env.store_b, env.store_a.modelFor('home-planet'), json_hash_b);
+        json_b = serializer_b.normalizeResponse(env.store_b, env.store_a.modelFor('home-planet'), json_hash_b, 1, 'findRecord');
+        env.store_b.push(json_b);
         equal(env.store_b.hasRecordForId("super-villain", "1"), true, "superVillain should exist in store:store-b");
       });
     });
@@ -8387,10 +7489,33 @@ define(
 
     var Person, store, array, moreArray;
 
-    module("integration/peek_all - DS.Store#peekAll()", {
+    module("integration/peek-all - DS.Store#peekAll()", {
       setup: function () {
-        array = [{ id: 1, name: "Scumbag Dale" }, { id: 2, name: "Scumbag Katz" }];
-        moreArray = [{ id: 3, name: "Scumbag Bryn" }];
+        array = {
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: "Scumbag Dale"
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: "Scumbag Katz"
+            }
+          }]
+        };
+        moreArray = {
+          data: [{
+            type: 'person',
+            id: '3',
+            attributes: {
+              name: "Scumbag Bryn"
+            }
+          }]
+        };
+
         Person = DS.Model.extend({ name: DS.attr('string') });
 
         store = createStore({ person: Person });
@@ -8404,14 +7529,14 @@ define(
 
     test("store.peekAll('person') should return all records and should update with new ones", function () {
       run(function () {
-        store.pushMany('person', array);
+        store.push(array);
       });
 
       var all = store.peekAll('person');
       equal(get(all, 'length'), 2);
 
       run(function () {
-        store.pushMany('person', moreArray);
+        store.push(moreArray);
       });
 
       equal(get(all, 'length'), 3);
@@ -8424,7 +7549,15 @@ define(
         equal(get(store.peekAll('person'), 'length'), 0, 'should initially be empty');
         store.createRecord('person', { name: "Tomster" });
         equal(get(store.peekAll('person'), 'length'), 1, 'should contain one person');
-        store.push('person', { id: 1, name: "Tomster's friend" });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: "Tomster's friend"
+            }
+          }
+        });
         equal(get(store.peekAll('person'), 'length'), 2, 'should contain two people');
       });
     });
@@ -8436,14 +7569,6 @@ define(
         store.createRecord('person', { name: "Tomster" });
         equal(get(store.peekAll('person'), 'length'), 1, 'should contain one person');
       });
-    });
-
-    test("store.all() is deprecated", function () {
-      expectDeprecation(function () {
-        run(function () {
-          store.all('person');
-        });
-      }, 'Using store.all() has been deprecated. Use store.peekAll() to get all records by a given type without triggering a fetch.');
     });
   }
 );
@@ -8519,20 +7644,39 @@ define(
       var person;
 
       run(function () {
-        store.push('car', {
-          id: 1,
-          make: 'BMC',
-          model: 'Mini Cooper',
-          person: 1
+        store.push({
+          data: {
+            type: 'car',
+            id: '1',
+            attributes: {
+              make: 'BMC',
+              model: 'Mini Cooper'
+            },
+            relationships: {
+              person: {
+                data: { type: 'person', id: '1' }
+              }
+            }
+          }
         });
       });
 
       run(function () {
-        person = store.push('person', {
-          id: 1,
-          name: 'Tom Dale',
-          cars: [1]
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            },
+            relationships: {
+              cars: {
+                data: [{ type: 'car', id: '1' }]
+              }
+            }
+          }
         });
+        person = store.peekRecord('person', 1);
       });
 
       var filterd = manager.createFilteredRecordArray(Person, function () {
@@ -8583,12 +7727,22 @@ define(
       store.peekAll('car');
 
       run(function () {
-        car = store.push('car', {
-          id: 1,
-          make: 'BMC',
-          model: 'Mini Cooper',
-          person: 1
+        store.push({
+          data: {
+            type: 'car',
+            id: '1',
+            attributes: {
+              make: 'BMC',
+              model: 'Mini Cooper'
+            },
+            relationships: {
+              person: {
+                data: { type: 'person', id: '1' }
+              }
+            }
+          }
         });
+        car = store.peekRecord('car', 1);
       });
 
       equal(populateLiveRecordArray.called.length, 1);
@@ -8765,11 +7919,72 @@ define(
       }
     });
 
+    test("records should not be removed from record arrays just after deleting, but only after commiting them", function () {
+      var adam, dave;
+
+      env.adapter.deleteRecord = function () {
+        return Ember.RSVP.Promise.resolve();
+      };
+
+      var all;
+      run(function () {
+        env.store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Adam Sunderland'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Dave Sunderland'
+            }
+          }]
+        });
+        adam = env.store.peekRecord('person', 1);
+        dave = env.store.peekRecord('person', 2);
+        all = env.store.peekAll('person');
+      });
+
+      // pre-condition
+      equal(all.get('length'), 2, 'pre-condition: 2 records in array');
+
+      Ember.run(adam, 'deleteRecord');
+
+      equal(all.get('length'), 2, '2 records in array after deleteRecord');
+
+      Ember.run(adam, 'save');
+
+      equal(all.get('length'), 1, '1 record in array after deleteRecord and save');
+    });
+
     test("records can be deleted during record array enumeration", function () {
       var adam, dave;
+
+      env.adapter.deleteRecord = function () {
+        return Ember.RSVP.Promise.resolve();
+      };
+
       run(function () {
-        adam = env.store.push('person', { id: 1, name: "Adam Sunderland" });
-        dave = env.store.push('person', { id: 2, name: "Dave Sunderland" });
+        env.store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Adam Sunderland'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Dave Sunderland'
+            }
+          }]
+        });
+        adam = env.store.peekRecord('person', 1);
+        dave = env.store.peekRecord('person', 2);
       });
       var all = env.store.peekAll('person');
 
@@ -8778,7 +7993,7 @@ define(
 
       Ember.run(function () {
         all.forEach(function (record) {
-          record.deleteRecord();
+          record.destroyRecord();
         });
       });
 
@@ -8789,8 +8004,23 @@ define(
     test("when deleted records are rolled back, they are still in their previous record arrays", function () {
       var jaime, cersei;
       run(function () {
-        jaime = env.store.push('person', { id: 1, name: "Jaime Lannister" });
-        cersei = env.store.push('person', { id: 2, name: "Cersei Lannister" });
+        env.store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Jaime Lannister'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Cersei Lannister'
+            }
+          }]
+        });
+        jaime = env.store.peekRecord('person', 1);
+        cersei = env.store.peekRecord('person', 2);
       });
       var all = env.store.peekAll('person');
       var filtered;
@@ -8913,11 +8143,17 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', {
-          id: 'wat',
-          firstName: 'Yehuda',
-          lastName: 'Katz'
+        store.push({
+          data: {
+            type: 'person',
+            id: 'wat',
+            attributes: {
+              firstName: 'Yehuda',
+              lastName: 'Katz'
+            }
+          }
         });
+        person = store.peekRecord('person', 'wat');
       });
 
       person.addObserver('firstName', function () {
@@ -8929,10 +8165,15 @@ define(
       });
 
       run(function () {
-        store.push('person', {
-          id: 'wat',
-          firstName: 'Yehuda',
-          lastName: 'Katz!'
+        store.push({
+          data: {
+            type: 'person',
+            id: 'wat',
+            attributes: {
+              firstName: 'Yehuda',
+              lastName: 'Katz!'
+            }
+          }
         });
       });
     });
@@ -8942,12 +8183,17 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', {
-          id: 'wat',
-          firstName: 'Yehuda',
-          lastName: 'Katz'
+        store.push({
+          data: {
+            type: 'person',
+            id: 'wat',
+            attributes: {
+              firstName: 'Yehuda',
+              lastName: 'Katz'
+            }
+          }
         });
-
+        person = store.peekRecord('person', 'wat');
         person.set('lastName', 'Katz!');
       });
 
@@ -8960,10 +8206,15 @@ define(
       });
 
       run(function () {
-        store.push('person', {
-          id: 'wat',
-          firstName: 'Yehuda',
-          lastName: 'Katz!'
+        store.push({
+          data: {
+            type: 'person',
+            id: 'wat',
+            attributes: {
+              firstName: 'Yehuda',
+              lastName: 'Katz!'
+            }
+          }
         });
       });
     });
@@ -8977,12 +8228,17 @@ define(
       };
 
       run(function () {
-        person = store.push('person', {
-          id: 'wat',
-          firstName: 'Yehuda',
-          lastName: 'Katz'
+        store.push({
+          data: {
+            type: 'person',
+            id: 'wat',
+            attributes: {
+              firstName: 'Yehuda',
+              lastName: 'Katz'
+            }
+          }
         });
-
+        person = store.peekRecord('person', 'wat');
         person.set('lastName', 'Katz!');
       });
 
@@ -9004,12 +8260,17 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', {
-          id: 'wat',
-          firstName: 'Yehuda',
-          lastName: 'Katz'
+        store.push({
+          data: {
+            type: 'person',
+            id: 'wat',
+            attributes: {
+              firstName: 'Yehuda',
+              lastName: 'Katz'
+            }
+          }
         });
-
+        person = store.peekRecord('person', 'wat');
         person.set('lastName', 'Katz!');
       });
 
@@ -9022,10 +8283,15 @@ define(
       });
 
       run(function () {
-        person = store.push('person', {
-          id: 'wat',
-          firstName: 'Tom',
-          lastName: 'Dale'
+        store.push({
+          data: {
+            type: 'person',
+            id: 'wat',
+            attributes: {
+              firstName: 'Tom',
+              lastName: 'Dale'
+            }
+          }
         });
       });
     });
@@ -9101,7 +8367,16 @@ define(
     test("When a record is reloaded and fails, it can try again", function () {
       var tom;
       run(function () {
-        tom = env.store.push('person', { id: 1, name: "Tom Dale" });
+        env.store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            }
+          }
+        });
+        tom = env.store.peekRecord('person', 1);
       });
 
       var count = 0;
@@ -9129,8 +8404,19 @@ define(
     });
 
     test("When a record is loaded a second time, isLoaded stays true", function () {
+      env.adapter.findRecord = function (store, type, id, snapshot) {
+        return { id: 1, name: "Tom Dale" };
+      };
       run(function () {
-        env.store.push('person', { id: 1, name: "Tom Dale" });
+        env.store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            }
+          }
+        });
       });
 
       run(function () {
@@ -9139,7 +8425,16 @@ define(
           person.addObserver('isLoaded', isLoadedDidChange);
 
           // Reload the record
-          env.store.push('person', { id: 1, name: "Tom Dale" });
+          env.store.push({
+            data: {
+              type: 'person',
+              id: '1',
+              attributes: {
+                name: 'Tom Dale'
+              }
+            }
+          });
+
           equal(get(person, 'isLoaded'), true, "The person is still loaded after load");
 
           person.removeObserver('isLoaded', isLoadedDidChange);
@@ -9352,8 +8647,6 @@ define(
       __exports__[name] = value;
     }
 
-    var keysFunc = Object.keys || Ember.keys;
-
     var attr = DS.attr;
     var belongsTo = DS.belongsTo;
     var hasMany = DS.hasMany;
@@ -9406,7 +8699,16 @@ define(
     test("can unload a single record", function () {
       var adam;
       run(function () {
-        adam = env.store.push('person', { id: 1, name: "Adam Sunderland" });
+        env.store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Adam Sunderland'
+            }
+          }
+        });
+        adam = env.store.peekRecord('person', 1);
       });
 
       Ember.run(function () {
@@ -9421,15 +8723,40 @@ define(
 
       var adam, bob, dudu;
       run(function () {
-        adam = env.store.push('person', { id: 1, name: "Adam Sunderland" });
-        bob = env.store.push('person', { id: 2, name: "Bob Bobson" });
-
-        dudu = env.store.push('car', {
-          id: 1,
-          make: "VW",
-          model: "Beetle",
-          person: 1
+        env.store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Adam Sunderland'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Bob Bobson'
+            }
+          }]
         });
+        adam = env.store.peekRecord('person', 1);
+        bob = env.store.peekRecord('person', 2);
+
+        env.store.push({
+          data: {
+            type: 'car',
+            id: '1',
+            attributes: {
+              make: "VW",
+              model: "Beetle"
+            },
+            relationships: {
+              person: {
+                data: { type: 'person', id: '1' }
+              }
+            }
+          }
+        });
+        dudu = bob = env.store.peekRecord('car', 1);
       });
 
       Ember.run(function () {
@@ -9445,15 +8772,40 @@ define(
 
       var adam, bob, dudu;
       run(function () {
-        adam = env.store.push('person', { id: 1, name: "Adam Sunderland" });
-        bob = env.store.push('person', { id: 2, name: "Bob Bobson" });
-
-        dudu = env.store.push('car', {
-          id: 1,
-          make: "VW",
-          model: "Beetle",
-          person: 1
+        env.store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Adam Sunderland'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Bob Bobson'
+            }
+          }]
         });
+        adam = env.store.peekRecord('person', 1);
+        bob = env.store.peekRecord('person', 2);
+
+        env.store.push({
+          data: {
+            type: 'car',
+            id: '1',
+            attributes: {
+              make: "VW",
+              model: "Beetle"
+            },
+            relationships: {
+              person: {
+                data: { type: 'person', id: '1' }
+              }
+            }
+          }
+        });
+        dudu = bob = env.store.peekRecord('car', 1);
       });
 
       Ember.run(function () {
@@ -9464,28 +8816,26 @@ define(
       equal(env.store.peekAll('car').get('length'), 0);
     });
 
-    test("Unloading all records for a given type clears saved meta data.", function () {
-
-      function metadataKeys(type) {
-        return keysFunc(env.store.metadataFor(type));
-      }
-
-      run(function () {
-        env.store.setMetadataFor('person', { count: 10 });
-      });
-
-      Ember.run(function () {
-        env.store.unloadAll('person');
-      });
-
-      deepEqual(metadataKeys('person'), [], 'Metadata for person is empty');
-    });
-
     test("removes findAllCache after unloading all records", function () {
       var adam, bob;
       run(function () {
-        adam = env.store.push('person', { id: 1, name: "Adam Sunderland" });
-        bob = env.store.push('person', { id: 2, name: "Bob Bobson" });
+        env.store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Adam Sunderland'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Bob Bobson'
+            }
+          }]
+        });
+        adam = env.store.peekRecord('person', 1);
+        bob = env.store.peekRecord('person', 2);
       });
 
       Ember.run(function () {
@@ -9499,8 +8849,23 @@ define(
     test("unloading all records also updates record array from peekAll()", function () {
       var adam, bob;
       run(function () {
-        adam = env.store.push('person', { id: 1, name: "Adam Sunderland" });
-        bob = env.store.push('person', { id: 2, name: "Bob Bobson" });
+        env.store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Adam Sunderland'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Bob Bobson'
+            }
+          }]
+        });
+        adam = env.store.peekRecord('person', 1);
+        bob = env.store.peekRecord('person', 2);
       });
       var all = env.store.peekAll('person');
 
@@ -9515,25 +8880,51 @@ define(
 
     test("unloading a record also clears its relationship", function () {
       var adam, bob;
+
+      // disable background reloading so we do not re-create the relationship.
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
+
       run(function () {
-        adam = env.store.push('person', {
-          id: 1,
-          name: "Adam Sunderland",
-          cars: [1]
+        env.store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Adam Sunderland'
+            },
+            relationships: {
+              cars: {
+                data: [{ type: 'car', id: '1' }]
+              }
+            }
+          }
         });
+        adam = env.store.peekRecord('person', 1);
       });
 
       run(function () {
-        bob = env.store.push('car', {
-          id: 1,
-          make: "Lotus",
-          model: "Exige",
-          person: 1
+        env.store.push({
+          data: {
+            type: 'car',
+            id: '1',
+            attributes: {
+              make: "Lotus",
+              model: "Exige"
+            },
+            relationships: {
+              person: {
+                data: { type: 'person', id: '1' }
+              }
+            }
+          }
         });
+        bob = env.store.peekRecord('car', 1);
       });
 
       run(function () {
-        env.store.find('person', 1).then(function (person) {
+        env.store.findRecord('person', 1).then(function (person) {
           equal(person.get('cars.length'), 1, 'The inital length of cars is correct');
 
           run(function () {
@@ -9547,22 +8938,41 @@ define(
 
     test("unloading a record also clears the implicit inverse relationships", function () {
       var adam, bob;
+      // disable background reloading so we do not re-create the relationship.
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
+
       run(function () {
-        adam = env.store.push('person', {
-          id: 1,
-          name: "Adam Sunderland"
+        env.store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Adam Sunderland'
+            }
+          }
         });
+        adam = env.store.peekRecord('person', 1);
       });
 
       run(function () {
-        bob = env.store.push('group', {
-          id: 1,
-          people: [1]
+        env.store.push({
+          data: {
+            type: 'group',
+            id: '1',
+            relationships: {
+              people: {
+                data: [{ type: 'person', id: '1' }]
+              }
+            }
+          }
         });
+        bob = env.store.peekRecord('group', 1);
       });
 
       run(function () {
-        env.store.find('group', 1).then(function (group) {
+        env.store.findRecord('group', 1).then(function (group) {
           equal(group.get('people.length'), 1, 'The inital length of people is correct');
           var person = env.store.peekRecord('person', 1);
           run(function () {
@@ -9694,7 +9104,9 @@ define(
           inverse: 'messages'
         })
       });
-
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       env.adapter.findRecord = function (store, type, id, snapshot) {
         ok(true, "The adapter's find method should be called");
         return Ember.RSVP.resolve({
@@ -9703,9 +9115,19 @@ define(
       };
 
       run(function () {
-        env.store.push('post', {
-          id: 1,
-          user: 2
+        env.store.push({
+          data: {
+            id: '1',
+            type: 'post',
+            relationships: {
+              user: {
+                data: {
+                  id: '2',
+                  type: 'user'
+                }
+              }
+            }
+          }
         });
       });
 
@@ -9718,10 +9140,22 @@ define(
 
     test("Only a record of the same type can be used with a monomorphic belongsTo relationship", function () {
       expect(1);
-
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       run(function () {
-        store.push('post', { id: 1 });
-        store.push('comment', { id: 2 });
+        store.push({
+          data: {
+            id: '1',
+            type: 'post'
+          }
+        });
+        store.push({
+          data: {
+            id: '2',
+            type: 'comment'
+          }
+        });
       });
 
       run(function () {
@@ -9737,12 +9171,32 @@ define(
     });
 
     test("Only a record of the same base type can be used with a polymorphic belongsTo relationship", function () {
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       expect(1);
       run(function () {
-        store.push('comment', { id: 1 });
-        store.push('comment', { id: 2 });
-        store.push('post', { id: 1 });
-        store.push('user', { id: 3 });
+        store.push({
+          data: [{
+            id: '1',
+            type: 'comment'
+          }, {
+            id: '2',
+            type: 'comment'
+          }]
+        });
+        store.push({
+          data: {
+            id: '1',
+            type: 'post'
+          }
+        });
+        store.push({
+          data: {
+            id: '3',
+            type: 'user'
+          }
+        });
       });
 
       run(function () {
@@ -9768,9 +9222,31 @@ define(
     });
 
     test("The store can load a polymorphic belongsTo association", function () {
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       run(function () {
-        env.store.push('post', { id: 1 });
-        env.store.push('comment', { id: 2, message: 1, messageType: 'post' });
+        env.store.push({
+          data: {
+            id: '1',
+            type: 'post'
+          }
+        });
+
+        env.store.push({
+          data: {
+            id: '2',
+            type: 'comment',
+            relationships: {
+              message: {
+                data: {
+                  id: '1',
+                  type: 'post'
+                }
+              }
+            }
+          }
+        });
       });
 
       run(function () {
@@ -9784,6 +9260,9 @@ define(
     });
 
     test("The store can serialize a polymorphic belongsTo association", function () {
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       var serializerInstance = store.serializerFor('comment');
 
       serializerInstance.serializePolymorphicType = function (record, json, relationship) {
@@ -9791,8 +9270,26 @@ define(
         json["message_type"] = "post";
       };
       run(function () {
-        env.store.push('post', { id: 1 });
-        env.store.push('comment', { id: 2, message: 1, messageType: 'post' });
+        env.store.push({
+          data: {
+            id: '1',
+            type: 'post'
+          }
+        });
+        env.store.push({
+          data: {
+            id: '2',
+            type: 'comment',
+            relationships: {
+              message: {
+                data: {
+                  id: '1',
+                  type: 'post'
+                }
+              }
+            }
+          }
+        });
 
         store.findRecord('comment', 2).then(function (comment) {
           var serialized = store.serialize(comment, { includeId: true });
@@ -9803,6 +9300,9 @@ define(
     });
 
     test("A serializer can materialize a belongsTo as a link that gets sent back to findBelongsTo", function () {
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       var Group = DS.Model.extend({
         people: DS.hasMany('person', { async: false })
       });
@@ -9815,7 +9315,19 @@ define(
       env.registry.register('model:person', Person);
 
       run(function () {
-        store.push('person', { id: 1, links: { group: '/people/1/group' } });
+        store.push({
+          data: {
+            id: '1',
+            type: 'person',
+            relationships: {
+              group: {
+                links: {
+                  related: '/people/1/group'
+                }
+              }
+            }
+          }
+        });
       });
 
       env.adapter.findRecord = function (store, type, id, snapshot) {
@@ -9841,6 +9353,9 @@ define(
     });
 
     test('A record with an async belongsTo relationship always returns a promise for that relationship', function () {
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       var Seat = DS.Model.extend({
         person: DS.belongsTo('person', { async: false })
       });
@@ -9853,7 +9368,19 @@ define(
       env.registry.register('model:person', Person);
 
       run(function () {
-        store.push('person', { id: 1, links: { seat: '/people/1/seat' } });
+        store.push({
+          data: {
+            id: '1',
+            type: 'person',
+            relationships: {
+              seat: {
+                links: {
+                  related: '/people/1/seat'
+                }
+              }
+            }
+          }
+        });
       });
 
       env.adapter.findRecord = function (store, type, id, snapshot) {
@@ -9879,6 +9406,9 @@ define(
     test("A record with an async belongsTo relationship returning null should resolve null", function () {
       expect(1);
 
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       var Group = DS.Model.extend({
         people: DS.hasMany('person', { async: false })
       });
@@ -9891,7 +9421,19 @@ define(
       env.registry.register('model:person', Person);
 
       run(function () {
-        store.push('person', { id: 1, links: { group: '/people/1/group' } });
+        store.push({
+          data: {
+            id: '1',
+            type: 'person',
+            relationships: {
+              group: {
+                links: {
+                  related: '/people/1/group'
+                }
+              }
+            }
+          }
+        });
       });
 
       env.adapter.findRecord = function (store, type, id, snapshot) {
@@ -9902,7 +9444,7 @@ define(
         return Ember.RSVP.resolve(null);
       });
 
-      env.store.findRecord('person', 1).then(async(function (person) {
+      env.store.findRecord('person', '1').then(async(function (person) {
         return person.get('group');
       })).then(async(function (group) {
         ok(group === null, "group should be null");
@@ -9912,6 +9454,9 @@ define(
     test("A record can be created with a resolved belongsTo promise", function () {
       expect(1);
 
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       var Group = DS.Model.extend({
         people: DS.hasMany('person', { async: false })
       });
@@ -9925,7 +9470,12 @@ define(
 
       var group;
       run(function () {
-        group = store.push('group', { id: 1 });
+        group = store.push({
+          data: {
+            id: 1,
+            type: 'group'
+          }
+        });
       });
 
       var groupPromise = store.findRecord('group', 1);
@@ -10090,14 +9640,40 @@ define(
       });
       var post, comment;
       run(function () {
-        post = env.store.push('post', {
-          id: 1,
-          comments: [1, 2, 3]
+        post = env.store.push({
+          data: {
+            id: '1',
+            type: 'post',
+            relationships: {
+              comments: {
+                data: [{
+                  id: '1',
+                  type: 'comment'
+                }, {
+                  id: '2',
+                  type: 'comment'
+                }, {
+                  id: '3',
+                  type: 'comment'
+                }]
+              }
+            }
+          }
         });
 
-        comment = env.store.push('comment', {
-          id: 1,
-          post: 1
+        comment = env.store.push({
+          data: {
+            id: '1',
+            type: 'comment',
+            relationships: {
+              post: {
+                data: {
+                  id: '1',
+                  type: 'post'
+                }
+              }
+            }
+          }
         });
       });
 
@@ -10132,9 +9708,19 @@ define(
       });
 
       run(function () {
-        post = env.store.push('post', {
-          id: 1,
-          user: 2
+        post = env.store.push({
+          data: {
+            id: '1',
+            type: 'post',
+            relationships: {
+              user: {
+                data: {
+                  id: '2',
+                  type: 'user'
+                }
+              }
+            }
+          }
         });
       });
 
@@ -10146,7 +9732,7 @@ define(
         ok(snapshot.record instanceof type);
         equal(snapshot.id, 1, 'should first post');
         return {
-          id: "1",
+          id: '1',
           title: null,
           created_at: null,
           user: "2"
@@ -10159,7 +9745,20 @@ define(
     test("A sync belongsTo errors out if the record is unlaoded", function () {
       var message;
       run(function () {
-        message = env.store.push('message', { id: 1, user: 2 });
+        message = env.store.push({
+          data: {
+            id: '1',
+            type: 'message',
+            relationships: {
+              user: {
+                data: {
+                  id: '2',
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
       });
 
       expectAssertion(function () {
@@ -10173,8 +9772,32 @@ define(
       });
       var book, author;
       run(function () {
-        book = env.store.push('book', { id: 1, name: "Stanley's Amazing Adventures", author: 2 });
-        author = env.store.push('author', { id: 2, name: 'Stanley' });
+        book = env.store.push({
+          data: {
+            id: '1',
+            type: 'book',
+            attributes: {
+              name: "Stanley's Amazing Adventures"
+            },
+            relationships: {
+              author: {
+                data: {
+                  id: '2',
+                  type: 'author'
+                }
+              }
+            }
+          }
+        });
+        author = env.store.push({
+          data: {
+            id: '2',
+            type: 'author',
+            attributes: {
+              name: 'Stanley'
+            }
+          }
+        });
       });
       run(function () {
         author.deleteRecord();
@@ -10188,8 +9811,32 @@ define(
     test("Rollbacking attributes for a deleted record restores implicit relationship - sync", function () {
       var book, author;
       run(function () {
-        book = env.store.push('book', { id: 1, name: "Stanley's Amazing Adventures", author: 2 });
-        author = env.store.push('author', { id: 2, name: 'Stanley' });
+        book = env.store.push({
+          data: {
+            id: '1',
+            type: 'book',
+            attributes: {
+              name: "Stanley's Amazing Adventures"
+            },
+            relationships: {
+              author: {
+                data: {
+                  id: '2',
+                  type: 'author'
+                }
+              }
+            }
+          }
+        });
+        author = env.store.push({
+          data: {
+            id: '2',
+            type: 'author',
+            attributes: {
+              name: "Stanley"
+            }
+          }
+        });
       });
       run(function () {
         author.deleteRecord();
@@ -10305,7 +9952,13 @@ define(
     test("Model's belongsTo relationship should not be created during model creation", function () {
       var user;
       run(function () {
-        user = env.store.push('user', { id: 1 });
+        user = env.store.push({
+          data: {
+            id: '1',
+            type: 'user'
+          }
+        });
+
         ok(!user._internalModel._relationships.has('favouriteMessage'), 'Newly created record should not have relationships');
       });
     });
@@ -10454,9 +10107,26 @@ define(
         ok(false, "The adapter's find method should not be called");
       };
 
+      env.adapter.findRecord = function (store, type, ids, snapshots) {
+        return { id: 1, comments: [1] };
+      };
+
       run(function () {
-        env.store.push('post', { id: 1, comments: [1] });
-        env.store.push('comment', { id: 1 });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }]
+              }
+            }
+          },
+          included: [{
+            type: 'comment',
+            id: '1'
+          }]
+        });
         env.store.findRecord('post', 1).then(function (post) {
           return post.get('comments');
         });
@@ -10473,8 +10143,22 @@ define(
         return Ember.RSVP.resolve([{ id: 2, title: 'Chapter One' }, { id: 3, title: 'Chapter Two' }]);
       };
 
+      env.adapter.findRecord = function (store, type, ids, snapshots) {
+        return { id: 1, chapters: [2, 3, 3] };
+      };
+
       run(function () {
-        env.store.push('book', { id: 1, chapters: [2, 3, 3] });
+        env.store.push({
+          data: {
+            type: 'book',
+            id: '1',
+            relationships: {
+              chapters: {
+                data: [{ type: 'chapter', id: '2' }, { type: 'chapter', id: '3' }, { type: 'chapter', id: '3' }]
+              }
+            }
+          }
+        });
         env.store.findRecord('book', 1).then(function (book) {
           return book.get('chapters');
         });
@@ -10534,7 +10218,20 @@ define(
       var post;
 
       run(function () {
-        post = env.store.push('post', { id: 1, links: { comments: '/posts/1/comments' } });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                links: {
+                  related: '/posts/1/comments'
+                }
+              }
+            }
+          }
+        });
+        post = env.store.peekRecord('post', 1);
       });
 
       env.adapter.findHasMany = function (store, snapshot, link, relationship) {
@@ -10555,7 +10252,17 @@ define(
       run(function () {
         promise1 = post.get('comments');
         //Invalidate the post.comments CP
-        env.store.push('comment', { id: 1, message: 1 });
+        env.store.push({
+          data: {
+            type: 'comment',
+            id: '1',
+            relationships: {
+              message: {
+                data: { type: 'post', id: '1' }
+              }
+            }
+          }
+        });
         promise2 = post.get('comments');
       });
       Ember.RSVP.all([promise1, promise2]).then(function () {
@@ -10579,12 +10286,35 @@ define(
       };
       var post;
       run(function () {
-        post = env.store.push('post', { id: 1, links: { comments: '/posts/1/comments' } });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                links: {
+                  related: '/posts/1/comments'
+                }
+              }
+            }
+          }
+        });
+        post = env.store.peekRecord('post', 1);
       });
 
       run(function () {
         post.get('comments').then(function () {
-          env.store.push('comment', { id: 3, message: 1 });
+          env.store.push({
+            data: {
+              type: 'comment',
+              id: '3',
+              relationships: {
+                message: {
+                  data: { type: 'post', id: '1' }
+                }
+              }
+            }
+          });
           post.get('comments').then(function () {
             ok(true, 'Promise was called');
           });
@@ -10721,7 +10451,21 @@ define(
       };
 
       run(function () {
-        env.store.pushMany('comment', [{ id: 1, body: "First" }, { id: 2, body: "Second" }]);
+        env.store.push({
+          data: [{
+            type: 'comment',
+            id: '1',
+            attributes: {
+              body: 'First'
+            }
+          }, {
+            type: 'comment',
+            id: '2',
+            attributes: {
+              body: 'Second'
+            }
+          }]
+        });
 
         env.store.findRecord('post', '1').then(function (post) {
           var comments = post.get('comments');
@@ -10813,7 +10557,20 @@ define(
       var post;
 
       run(function () {
-        post = env.store.push('post', { id: 1, links: { comments: 'someLink' } });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                links: {
+                  related: 'someLink'
+                }
+              }
+            }
+          }
+        });
+        post = env.store.peekRecord('post', 1);
       });
 
       run(function () {
@@ -10841,7 +10598,20 @@ define(
       var post, comments;
 
       run(function () {
-        post = env.store.push('post', { id: 1, links: { comments: 'someLink' } });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                links: {
+                  related: 'someLink'
+                }
+              }
+            }
+          }
+        });
+        post = env.store.peekRecord('post', 1);
         comments = post.get('comments');
       });
 
@@ -10894,7 +10664,20 @@ define(
       var post;
 
       run(function () {
-        post = env.store.push('post', { id: 1, links: { comments: '/first' } });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                links: {
+                  related: '/first'
+                }
+              }
+            }
+          }
+        });
+        post = env.store.peekRecord('post', 1);
       });
 
       run(function () {
@@ -10902,7 +10685,19 @@ define(
           equal(comments.get('isLoaded'), true, "comments are loaded");
           equal(comments.get('length'), 2, "comments have 2 length");
           equal(comments.objectAt(0).get('body'), 'First', "comment 1 successfully loaded");
-          env.store.push('post', { id: 1, links: { comments: '/second' } });
+          env.store.push({
+            data: {
+              type: 'post',
+              id: '1',
+              relationships: {
+                comments: {
+                  links: {
+                    related: '/second'
+                  }
+                }
+              }
+            }
+          });
           post.get('comments').then(function (newComments) {
             equal(comments, newComments, "hasMany array was kept the same");
             equal(newComments.get('length'), 3, "comments updated successfully");
@@ -10919,10 +10714,29 @@ define(
         ok(false, "The adapter's find method should not be called");
       };
 
+      env.adapter.findRecord = function (store, type, ids, snapshots) {
+        return { id: 1, messages: [{ id: 1, type: 'post' }, { id: 3, type: 'comment' }] };
+      };
+
       run(function () {
-        env.store.push('user', { id: 1, messages: [{ id: 1, type: 'post' }, { id: 3, type: 'comment' }] });
-        env.store.push('post', { id: 1 });
-        env.store.push('comment', { id: 3 });
+        env.store.push({
+          data: {
+            type: 'user',
+            id: '1',
+            relationships: {
+              messages: {
+                data: [{ type: 'post', id: '1' }, { type: 'comment', id: '3' }]
+              }
+            }
+          },
+          included: [{
+            type: 'post',
+            id: '1'
+          }, {
+            type: 'comment',
+            id: '3'
+          }]
+        });
       });
 
       run(function () {
@@ -10937,7 +10751,9 @@ define(
       User.reopen({
         messages: hasMany('message', { polymorphic: true, async: true })
       });
-
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       env.adapter.findRecord = function (store, type, id, snapshot) {
         if (type === Post) {
           return Ember.RSVP.resolve({ id: 1 });
@@ -10947,7 +10763,17 @@ define(
       };
 
       run(function () {
-        env.store.push('user', { id: 1, messages: [{ id: 1, type: 'post' }, { id: 3, type: 'comment' }] });
+        env.store.push({
+          data: {
+            type: 'user',
+            id: '1',
+            relationships: {
+              messages: {
+                data: [{ type: 'post', id: '1' }, { type: 'comment', id: '3' }]
+              }
+            }
+          }
+        });
       });
 
       run(function () {
@@ -10981,9 +10807,27 @@ define(
 
     test("Type can be inferred from the key of a hasMany relationship", function () {
       expect(1);
+
+      env.adapter.findRecord = function (store, type, ids, snapshots) {
+        return { id: 1, contacts: [1] };
+      };
+
       run(function () {
-        env.store.push('user', { id: 1, contacts: [1] });
-        env.store.push('contact', { id: 1 });
+        env.store.push({
+          data: {
+            type: 'user',
+            id: '1',
+            relationships: {
+              contacts: {
+                data: [{ type: 'contact', id: '1' }]
+              }
+            }
+          },
+          included: [{
+            type: 'contact',
+            id: '1'
+          }]
+        });
       });
       run(function () {
         env.store.findRecord('user', 1).then(function (user) {
@@ -10995,14 +10839,32 @@ define(
     });
 
     test("Type can be inferred from the key of an async hasMany relationship", function () {
+      expect(1);
+
       User.reopen({
         contacts: DS.hasMany({ async: true })
       });
 
-      expect(1);
+      env.adapter.findRecord = function (store, type, ids, snapshots) {
+        return { id: 1, contacts: [1] };
+      };
+
       run(function () {
-        env.store.push('user', { id: 1, contacts: [1] });
-        env.store.push('contact', { id: 1 });
+        env.store.push({
+          data: {
+            type: 'user',
+            id: '1',
+            relationships: {
+              contacts: {
+                data: [{ type: 'contact', id: '1' }]
+              }
+            }
+          },
+          included: [{
+            type: 'contact',
+            id: '1'
+          }]
+        });
       });
       run(function () {
         env.store.findRecord('user', 1).then(function (user) {
@@ -11018,11 +10880,30 @@ define(
         contacts: DS.hasMany({ polymorphic: true, async: false })
       });
 
+      env.adapter.findRecord = function (store, type, ids, snapshots) {
+        return { id: 1 };
+      };
+
       expect(1);
       run(function () {
-        env.store.push('user', { id: 1, contacts: [{ id: 1, type: 'email' }, { id: 2, type: 'phone' }] });
-        env.store.push('email', { id: 1 });
-        env.store.push('phone', { id: 2 });
+        env.store.push({
+          data: {
+            type: 'user',
+            id: '1',
+            relationships: {
+              contacts: {
+                data: [{ type: 'email', id: '1' }, { type: 'phone', id: '2' }]
+              }
+            }
+          },
+          included: [{
+            type: 'email',
+            id: '1'
+          }, {
+            type: 'phone',
+            id: '2'
+          }]
+        });
       });
       run(function () {
         env.store.findRecord('user', 1).then(function (user) {
@@ -11057,8 +10938,21 @@ define(
     });
 
     test("A record can't be created from a polymorphic hasMany relationship", function () {
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       run(function () {
-        env.store.push('user', { id: 1, messages: [] });
+        env.store.push({
+          data: {
+            type: 'user',
+            id: '1',
+            relationships: {
+              messages: {
+                data: []
+              }
+            }
+          }
+        });
       });
 
       run(function () {
@@ -11074,9 +10968,24 @@ define(
 
     test("Only records of the same type can be added to a monomorphic hasMany relationship", function () {
       expect(1);
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       run(function () {
-        env.store.push('post', { id: 1, comments: [] });
-        env.store.push('post', { id: 2 });
+        env.store.push({
+          data: [{
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: []
+              }
+            }
+          }, {
+            type: 'post',
+            id: '2'
+          }]
+        });
       });
 
       run(function () {
@@ -11090,11 +10999,41 @@ define(
 
     test("Only records of the same base type can be added to a polymorphic hasMany relationship", function () {
       expect(2);
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       run(function () {
-        env.store.push('user', { id: 1, messages: [] });
-        env.store.push('user', { id: 2, messages: [] });
-        env.store.push('post', { id: 1, comments: [] });
-        env.store.push('comment', { id: 3 });
+        env.store.push({
+          data: [{
+            type: 'user',
+            id: '1',
+            relationships: {
+              messages: {
+                data: []
+              }
+            }
+          }, {
+            type: 'user',
+            id: '2',
+            relationships: {
+              messages: {
+                data: []
+              }
+            }
+          }],
+          included: [{
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: []
+              }
+            }
+          }, {
+            type: 'comment',
+            id: '3'
+          }]
+        });
       });
       var asyncRecords;
 
@@ -11123,10 +11062,25 @@ define(
 
     test("A record can be removed from a polymorphic association", function () {
       expect(4);
-
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       run(function () {
-        env.store.push('user', { id: 1, messages: [{ id: 3, type: 'comment' }] });
-        env.store.push('comment', { id: 3 });
+        env.store.push({
+          data: {
+            type: 'user',
+            id: '1',
+            relationships: {
+              messages: {
+                data: [{ type: 'comment', id: '3' }]
+              }
+            }
+          },
+          included: [{
+            type: 'comment',
+            id: '3'
+          }]
+        });
       });
       var asyncRecords;
 
@@ -11199,7 +11153,22 @@ define(
         return env.store.createRecord('post');
       });
       run(function () {
-        post.set('comments', env.store.pushMany('comment', [{ id: 1, body: "First" }, { id: 2, body: "Second" }]));
+        env.store.push({
+          data: [{
+            type: 'comment',
+            id: '1',
+            attributes: {
+              body: 'First'
+            }
+          }, {
+            type: 'comment',
+            id: '2',
+            attributes: {
+              body: 'Second'
+            }
+          }]
+        });
+        post.set('comments', env.store.peekAll('comment'));
       });
       equal(get(post, 'comments.length'), 2, "we can set HM relationship");
     });
@@ -11214,7 +11183,22 @@ define(
         return env.store.createRecord('post');
       });
       run(function () {
-        post.set('comments', env.store.pushMany('comment', [{ id: 1, body: "First" }, { id: 2, body: "Second" }]));
+        env.store.push({
+          data: [{
+            type: 'comment',
+            id: '1',
+            attributes: {
+              body: 'First'
+            }
+          }, {
+            type: 'comment',
+            id: '2',
+            attributes: {
+              body: 'Second'
+            }
+          }]
+        });
+        post.set('comments', env.store.peekAll('comment'));
       });
 
       post.get('comments').then(async(function (comments) {
@@ -11258,8 +11242,30 @@ define(
       var post, firstComment;
 
       run(function () {
-        post = env.store.push('post', { id: 1, comments: [1] });
-        firstComment = env.store.push('comment', { id: 1, post: 1 });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }]
+              }
+            }
+          }
+        });
+        env.store.push({
+          data: {
+            type: 'comment',
+            id: '1',
+            relationships: {
+              comments: {
+                post: { type: 'post', id: '1' }
+              }
+            }
+          }
+        });
+        post = env.store.peekRecord('post', 1);
+        firstComment = env.store.peekRecord('comment', 1);
 
         env.store.createRecord('comment', {
           post: post
@@ -11292,14 +11298,35 @@ define(
       var post;
 
       run(function () {
-        post = env.store.push('post', { id: 1, comments: [1, 2] });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }]
+              }
+            }
+          }
+        });
+        post = env.store.peekRecord('post', 1);
       });
 
       run(function () {
         post.get('comments').then(async(function (fetchedComments) {
           equal(fetchedComments.get('length'), 2, 'comments fetched successfully');
           equal(fetchedComments.objectAt(0).get('body'), 'first', 'first comment loaded successfully');
-          env.store.push('post', { id: 1, comments: [1, 2, 3] });
+          env.store.push({
+            data: {
+              type: 'post',
+              id: '1',
+              relationships: {
+                comments: {
+                  data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
+                }
+              }
+            }
+          });
           post.get('comments').then(async(function (newlyFetchedComments) {
             equal(newlyFetchedComments.get('length'), 3, 'all three comments fetched successfully');
             equal(newlyFetchedComments.objectAt(2).get('body'), 'third', 'third comment loaded successfully');
@@ -11311,7 +11338,18 @@ define(
     test("A sync hasMany errors out if there are unlaoded records in it", function () {
       var post;
       run(function () {
-        post = env.store.push('post', { id: 1, comments: [1, 2] });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }]
+              }
+            }
+          }
+        });
+        post = env.store.peekRecord('post', 1);
       });
 
       expectAssertion(function () {
@@ -11323,39 +11361,116 @@ define(
       var comment1, comment2, comment3, comment4;
       var post;
       run(function () {
-        comment1 = env.store.push('comment', { id: 1 });
-        comment2 = env.store.push('comment', { id: 2 });
-        comment3 = env.store.push('comment', { id: 3 });
-        comment4 = env.store.push('comment', { id: 4 });
+        env.store.push({
+          data: [{
+            type: 'comment',
+            id: '1'
+          }, {
+            type: 'comment',
+            id: '2'
+          }, {
+            type: 'comment',
+            id: '3'
+          }, {
+            type: 'comment',
+            id: '4'
+          }]
+        });
+
+        comment1 = env.store.peekRecord('comment', 1);
+        comment2 = env.store.peekRecord('comment', 2);
+        comment3 = env.store.peekRecord('comment', 3);
+        comment4 = env.store.peekRecord('comment', 4);
       });
 
       run(function () {
-        post = env.store.push('post', { id: 1, comments: [1, 2] });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }]
+              }
+            }
+          }
+        });
+        post = env.store.peekRecord('post', 1);
       });
       deepEqual(post.get('comments').toArray(), [comment1, comment2], 'Initial ordering is correct');
 
       run(function () {
-        env.store.push('post', { id: 1, comments: [2, 1] });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '2' }, { type: 'comment', id: '1' }]
+              }
+            }
+          }
+        });
       });
       deepEqual(post.get('comments').toArray(), [comment2, comment1], 'Updated ordering is correct');
 
       run(function () {
-        env.store.push('post', { id: 1, comments: [2] });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '2' }]
+              }
+            }
+          }
+        });
       });
       deepEqual(post.get('comments').toArray(), [comment2], 'Updated ordering is correct');
 
       run(function () {
-        env.store.push('post', { id: 1, comments: [1, 2, 3, 4] });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }, { type: 'comment', id: '4' }]
+              }
+            }
+          }
+        });
       });
       deepEqual(post.get('comments').toArray(), [comment1, comment2, comment3, comment4], 'Updated ordering is correct');
 
       run(function () {
-        env.store.push('post', { id: 1, comments: [4, 3] });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '4' }, { type: 'comment', id: '3' }]
+              }
+            }
+          }
+        });
       });
       deepEqual(post.get('comments').toArray(), [comment4, comment3], 'Updated ordering is correct');
 
       run(function () {
-        env.store.push('post', { id: 1, comments: [4, 2, 3, 1] });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '4' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }, { type: 'comment', id: '1' }]
+              }
+            }
+          }
+        });
       });
       deepEqual(post.get('comments').toArray(), [comment4, comment2, comment3, comment1], 'Updated ordering is correct');
     });
@@ -11363,8 +11478,29 @@ define(
     test("Rollbacking attributes for deleted record restores implicit relationship correctly when the hasMany side has been deleted - async", function () {
       var book, chapter;
       run(function () {
-        book = env.store.push('book', { id: 1, title: "Stanley's Amazing Adventures", chapters: [2] });
-        chapter = env.store.push('chapter', { id: 2, title: 'Sailing the Seven Seas' });
+        env.store.push({
+          data: {
+            type: 'book',
+            id: '1',
+            attributes: {
+              title: "Stanley's Amazing Adventures"
+            },
+            relationships: {
+              chapters: {
+                data: [{ type: 'chapter', id: '2' }]
+              }
+            }
+          },
+          included: [{
+            type: 'chapter',
+            id: '2',
+            attributes: {
+              title: 'Sailing the Seven Seas'
+            }
+          }]
+        });
+        book = env.store.peekRecord('book', 1);
+        chapter = env.store.peekRecord('chapter', 2);
       });
       run(function () {
         chapter.deleteRecord();
@@ -11380,8 +11516,29 @@ define(
     test("Rollbacking attributes for deleted record restores implicit relationship correctly when the hasMany side has been deleted - sync", function () {
       var book, chapter;
       run(function () {
-        book = env.store.push('book', { id: 1, title: "Stanley's Amazing Adventures", chapters: [2] });
-        chapter = env.store.push('chapter', { id: 2, title: 'Sailing the Seven Seas' });
+        env.store.push({
+          data: {
+            type: 'book',
+            id: '1',
+            attributes: {
+              title: "Stanley's Amazing Adventures"
+            },
+            relationships: {
+              chapters: {
+                data: [{ type: 'chapter', id: '2' }]
+              }
+            }
+          },
+          included: [{
+            type: 'chapter',
+            id: '2',
+            attributes: {
+              title: 'Sailing the Seven Seas'
+            }
+          }]
+        });
+        book = env.store.peekRecord('book', 1);
+        chapter = env.store.peekRecord('chapter', 2);
       });
       run(function () {
         chapter.deleteRecord();
@@ -11398,8 +11555,29 @@ define(
       });
       var chapter, page;
       run(function () {
-        chapter = env.store.push('chapter', { id: 2, title: 'Sailing the Seven Seas' });
-        page = env.store.push('page', { id: 3, number: 1, chapter: 2 });
+        env.store.push({
+          data: {
+            type: 'chapter',
+            id: '2',
+            attributes: {
+              title: 'Sailing the Seven Seas'
+            }
+          },
+          included: [{
+            type: 'page',
+            id: '3',
+            attributes: {
+              number: 1
+            },
+            relationships: {
+              chapter: {
+                data: { type: 'chapter', id: '2' }
+              }
+            }
+          }]
+        });
+        chapter = env.store.peekRecord('chapter', 2);
+        page = env.store.peekRecord('page', 3);
       });
       run(function () {
         chapter.deleteRecord();
@@ -11415,8 +11593,29 @@ define(
     test("Rollbacking attributes for deleted record restores implicit relationship correctly when the belongsTo side has been deleted - sync", function () {
       var chapter, page;
       run(function () {
-        chapter = env.store.push('chapter', { id: 2, title: 'Sailing the Seven Seas' });
-        page = env.store.push('page', { id: 3, number: 1, chapter: 2 });
+        env.store.push({
+          data: {
+            type: 'chapter',
+            id: '2',
+            attributes: {
+              title: 'Sailing the Seven Seas'
+            }
+          },
+          included: [{
+            type: 'page',
+            id: '3',
+            attributes: {
+              number: 1
+            },
+            relationships: {
+              chapter: {
+                data: { type: 'chapter', id: '2' }
+              }
+            }
+          }]
+        });
+        chapter = env.store.peekRecord('chapter', 2);
+        page = env.store.peekRecord('page', 3);
       });
       run(function () {
         chapter.deleteRecord();
@@ -11433,9 +11632,36 @@ define(
       var observe = false;
 
       run(function () {
-        page = env.store.push('page', { id: 1, number: 1 });
-        page2 = env.store.push('page', { id: 2, number: 2 });
-        chapter = env.store.push('chapter', { id: 1, title: 'Sailing the Seven Seas', pages: [1, 2] });
+        env.store.push({
+          data: [{
+            type: 'page',
+            id: '1',
+            attributes: {
+              number: 1
+            }
+          }, {
+            type: 'page',
+            id: '2',
+            attributes: {
+              number: 2
+            }
+          }, {
+            type: 'chapter',
+            id: '1',
+            attributes: {
+              title: 'Sailing the Seven Seas'
+            },
+            relationships: {
+              pages: {
+                data: [{ type: 'page', id: '1' }, { type: 'page', id: '2' }]
+              }
+            }
+          }]
+        });
+        page = env.store.peekRecord('page', 1);
+        page2 = env.store.peekRecord('page', 2);
+        chapter = env.store.peekRecord('chapter', 1);
+
         chapter.get('pages').addEnumerableObserver(this, {
           willChange: function (pages, removing, addCount) {
             if (observe) {
@@ -11462,9 +11688,36 @@ define(
       var observe = false;
 
       run(function () {
-        page = env.store.push('page', { id: 1, number: 1 });
-        page2 = env.store.push('page', { id: 2, number: 2 });
-        chapter = env.store.push('chapter', { id: 1, title: 'Sailing the Seven Seas', pages: [1] });
+        env.store.push({
+          data: [{
+            type: 'page',
+            id: '1',
+            attributes: {
+              number: 1
+            }
+          }, {
+            type: 'page',
+            id: '2',
+            attributes: {
+              number: 2
+            }
+          }, {
+            type: 'chapter',
+            id: '1',
+            attributes: {
+              title: 'Sailing the Seven Seas'
+            },
+            relationships: {
+              pages: {
+                data: [{ type: 'page', id: '1' }]
+              }
+            }
+          }]
+        });
+        page = env.store.peekRecord('page', 1);
+        page2 = env.store.peekRecord('page', 2);
+        chapter = env.store.peekRecord('chapter', 1);
+
         chapter.get('pages').addEnumerableObserver(this, {
           willChange: function (pages, removing, addCount) {
             if (observe) {
@@ -11509,8 +11762,45 @@ define(
       });
 
       run(function () {
-        post = env.store.push('post', { id: 2, title: 'Sailing the Seven Seas', comments: [1, 2] });
-        env.store.pushMany('comment', [{ id: 1, post: 2 }, { id: 2, post: 2 }, { id: 3, post: 2 }]);
+        env.store.push({
+          data: [{
+            type: 'post',
+            id: '2',
+            attributes: {
+              title: 'Sailing the Seven Seas'
+            },
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }]
+              }
+            }
+          }, {
+            type: 'comment',
+            id: '1',
+            relationships: {
+              post: {
+                data: { type: 'post', id: '2' }
+              }
+            }
+          }, {
+            type: 'comment',
+            id: '2',
+            relationships: {
+              post: {
+                data: { type: 'post', id: '2' }
+              }
+            }
+          }, {
+            type: 'comment',
+            id: '3',
+            relationships: {
+              post: {
+                data: { type: 'post', id: '2' }
+              }
+            }
+          }]
+        });
+        post = env.store.peekRecord('post', 2);
       });
 
       run(function () {
@@ -11532,8 +11822,37 @@ define(
       });
 
       run(function () {
-        post = env.store.push('post', { id: 2, title: 'Sailing the Seven Seas', comments: [1, 2] });
-        env.store.pushMany('comment', [{ id: 1, post: 2 }, { id: 2, post: 2 }]);
+        env.store.push({
+          data: [{
+            type: 'post',
+            id: '2',
+            attributes: {
+              title: 'Sailing the Seven Seas'
+            },
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }]
+              }
+            }
+          }, {
+            type: 'comment',
+            id: '1',
+            relationships: {
+              post: {
+                data: { type: 'post', id: '2' }
+              }
+            }
+          }, {
+            type: 'comment',
+            id: '2',
+            relationships: {
+              post: {
+                data: { type: 'post', id: '2' }
+              }
+            }
+          }]
+        });
+        post = env.store.peekRecord('post', 2);
 
         // This line triggers the original bug that gets manifested
         // in teardown for apps, e.g. store.destroy that is caused by
@@ -11559,18 +11878,19 @@ define(
       var Post = DS.Model.extend({
         comments: DS.hasMany('comment', { async: true })
       });
-      var POST_FIXTURES = [{ id: 1, comments: [1, 2, 3] }];
 
       var Comment = DS.Model.extend({
         post: DS.belongsTo('post', { async: false })
       });
 
-      var COMMENT_FIXTURES = [{ id: 1 }, { id: 2 }, { id: 3 }];
-
       env = setupStore({
         post: Post,
         comment: Comment,
-        adapter: DS.RESTAdapter
+        adapter: DS.RESTAdapter.extend({
+          shouldBackgroundReloadRecord: function () {
+            return false;
+          }
+        })
       });
 
       env.registry.register('adapter:comment', DS.RESTAdapter.extend({
@@ -11586,8 +11906,26 @@ define(
       }));
 
       run(function () {
-        env.store.pushMany('post', POST_FIXTURES);
-        env.store.pushMany('comment', COMMENT_FIXTURES);
+        env.store.push({
+          data: [{
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
+              }
+            }
+          }, {
+            type: 'comment',
+            id: '1'
+          }, {
+            type: 'comment',
+            id: '2'
+          }, {
+            type: 'comment',
+            id: '3'
+          }]
+        });
       });
 
       run(function () {
@@ -11607,7 +11945,7 @@ define(
             return comments.get('lastObject').destroyRecord();
           }).then(function () {
             var comments = post.get('comments');
-            equal(comments.get('length'), 3, "Comments count after delete");
+            equal(comments.get('length'), 3, "Comments count after destroy");
 
             // Add another comment #4
             var comment = env.store.createRecord('comment');
@@ -11717,7 +12055,13 @@ define(
     test("Model's hasMany relationship should not be created during model creation", function () {
       var user;
       run(function () {
-        user = env.store.push('user', { id: 1 });
+        env.store.push({
+          data: {
+            type: 'user',
+            id: '1'
+          }
+        });
+        user = env.store.peekRecord('user', 1);
         ok(!user._internalModel._relationships.has('messages'), 'Newly created record should not have relationships');
       });
     });
@@ -11739,17 +12083,36 @@ define(
       };
 
       run(function () {
-        book = env.store.push('book', { id: 1, title: 'Sailing the Seven Seas', meta: { chapters: 'the lefkada sea' }, links: { chapters: '/chapters' } });
+        env.store.push({
+          data: {
+            type: 'book',
+            id: '1',
+            attributes: {
+              title: 'Sailing the Seven Seas'
+            },
+            relationships: {
+              chapters: {
+                meta: {
+                  where: 'the lefkada sea'
+                },
+                links: {
+                  related: '/chapters'
+                }
+              }
+            }
+          }
+        });
+        book = env.store.peekRecord('book', 1);
       });
 
       run(function () {
-        equal(book._internalModel._relationships.get('chapters').meta, 'the lefkada sea', 'meta is there');
+        equal(book._internalModel._relationships.get('chapters').meta.where, 'the lefkada sea', 'meta is there');
       });
     });
 
     test("metadata is accessible when return from a fetchLink", function () {
       expect(1);
-      env.registry.register('serializer:application', DS.RESTSerializer.extend({ isNewSerializerAPI: true }));
+      env.registry.register('serializer:application', DS.RESTSerializer);
 
       env.adapter.findHasMany = function () {
         return resolve({
@@ -11763,7 +12126,23 @@ define(
       var book;
 
       run(function () {
-        book = env.store.push('book', { id: 1, title: 'Sailing the Seven Seas', links: { chapters: '/chapters' } });
+        env.store.push({
+          data: {
+            type: 'book',
+            id: '1',
+            attributes: {
+              title: 'Sailing the Seven Seas'
+            },
+            relationships: {
+              chapters: {
+                links: {
+                  related: '/chapters'
+                }
+              }
+            }
+          }
+        });
+        book = env.store.peekRecord('book', 1);
       });
 
       run(function () {
@@ -11776,7 +12155,7 @@ define(
 
     test("metadata should be reset between requests", function () {
       var counter = 0;
-      env.registry.register('serializer:application', DS.RESTSerializer.extend({ isNewSerializerAPI: true }));
+      env.registry.register('serializer:application', DS.RESTSerializer);
 
       env.adapter.findHasMany = function () {
         var data = {
@@ -11800,8 +12179,37 @@ define(
       var book1, book2;
 
       run(function () {
-        book1 = env.store.push('book', { id: 1, title: 'Sailing the Seven Seas', links: { chapters: 'chapters' } });
-        book2 = env.store.push('book', { id: 2, title: 'Another book title', links: { chapters: 'chapters' } });
+        env.store.push({
+          data: [{
+            type: 'book',
+            id: '1',
+            attributes: {
+              title: 'Sailing the Seven Seas'
+            },
+            relationships: {
+              chapters: {
+                links: {
+                  related: 'chapters'
+                }
+              }
+            }
+          }, {
+            type: 'book',
+            id: '2',
+            attributes: {
+              title: 'Another book title'
+            },
+            relationships: {
+              chapters: {
+                links: {
+                  related: 'chapters'
+                }
+              }
+            }
+          }]
+        });
+        book1 = env.store.peekRecord('book', 1);
+        book2 = env.store.peekRecord('book', 2);
       });
 
       run(function () {
@@ -12343,7 +12751,12 @@ define(
         env = setupStore({
           user: User,
           topic: Topic,
-          account: Account
+          account: Account,
+          adapter: DS.Adapter.extend({
+            deleteRecord: function () {
+              return Ember.RSVP.resolve();
+            }
+          })
         });
 
         store = env.store;
@@ -12362,11 +12775,40 @@ define(
 
     test("Loading from one hasMany side reflects on the other hasMany side - async", function () {
       run(function () {
-        store.push('user', { id: 1, name: 'Stanley', topics: [2, 3] });
+        store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              topics: {
+                data: [{
+                  id: '2',
+                  type: 'topic'
+                }, {
+                  id: '3',
+                  type: 'topic'
+                }]
+              }
+            }
+          }
+        });
       });
+
       var topic = run(function () {
-        return store.push('topic', { id: 2, title: 'EmberFest was great' });
+        return store.push({
+          data: {
+            id: '2',
+            type: 'topic',
+            attributes: {
+              title: 'EmberFest was great'
+            }
+          }
+        });
       });
+
       run(function () {
         topic.get('users').then(async(function (fetchedUsers) {
           equal(fetchedUsers.get('length'), 1, 'User relationship was set up correctly');
@@ -12377,9 +12819,34 @@ define(
     test("Relationship is available from the belongsTo side even if only loaded from the hasMany side - sync", function () {
       var account;
       run(function () {
-        account = store.push('account', { id: 2, state: 'lonely' });
-        store.push('user', { id: 1, name: 'Stanley', accounts: [2] });
+        account = store.push({
+          data: {
+            id: '2',
+            type: 'account',
+            attributes: {
+              state: 'lonely'
+            }
+          }
+        });
+        store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              accounts: {
+                data: [{
+                  id: '2',
+                  type: 'account'
+                }]
+              }
+            }
+          }
+        });
       });
+
       run(function () {
         equal(account.get('users.length'), 1, 'User relationship was set up correctly');
       });
@@ -12388,8 +12855,37 @@ define(
     test("Fetching a hasMany where a record was removed reflects on the other hasMany side - async", function () {
       var user, topic;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', topics: [2] });
-        topic = store.push('topic', { id: 2, title: 'EmberFest was great', users: [] });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              topics: {
+                data: [{
+                  id: '2',
+                  type: 'topic'
+                }]
+              }
+            }
+          }
+        });
+        topic = store.push({
+          data: {
+            id: '2',
+            type: 'topic',
+            attributes: {
+              title: 'EmberFest was great'
+            },
+            relationships: {
+              users: {
+                data: []
+              }
+            }
+          }
+        });
       });
       run(function () {
         user.get('topics').then(async(function (fetchedTopics) {
@@ -12406,10 +12902,48 @@ define(
     test("Fetching a hasMany where a record was removed reflects on the other hasMany side - async", function () {
       var account, user;
       run(function () {
-        account = store.push('account', { id: 2, state: 'lonely' });
-        user = store.push('user', { id: 1, name: 'Stanley', accounts: [2] });
-        account = store.push('account', { id: 2, state: 'lonely', users: [] });
+        account = store.push({
+          data: {
+            id: '2',
+            type: 'account',
+            attributes: {
+              state: 'lonely'
+            }
+          }
+        });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              accounts: {
+                data: [{
+                  id: '2',
+                  type: 'account'
+                }]
+              }
+            }
+          }
+        });
+        account = store.push({
+          data: {
+            id: '2',
+            type: 'account',
+            attributes: {
+              state: 'lonely'
+            },
+            relationships: {
+              users: {
+                data: []
+              }
+            }
+          }
+        });
       });
+
       equal(user.get('accounts.length'), 0, 'Accounts were removed correctly');
       equal(account.get('users.length'), 0, 'Users were removed correctly');
     });
@@ -12423,9 +12957,31 @@ define(
       var user, topic;
 
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', topics: [] });
-        topic = store.push('topic', { id: 2, title: 'EmberFest was great' });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              topics: {
+                data: []
+              }
+            }
+          }
+        });
+        topic = store.push({
+          data: {
+            id: '2',
+            type: 'topic',
+            attributes: {
+              title: 'EmberFest was great'
+            }
+          }
+        });
       });
+
       run(function () {
         topic.get('users').then(async(function (fetchedUsers) {
           fetchedUsers.pushObject(user);
@@ -12439,19 +12995,61 @@ define(
     test("Pushing to a hasMany reflects on the other hasMany side - sync", function () {
       var account, stanley;
       run(function () {
-        account = store.push('account', { id: 2, state: 'lonely' });
-        stanley = store.push('user', { id: 1, name: 'Stanley' });
+        account = store.push({
+          data: {
+            id: '2',
+            type: 'account',
+            attributes: {
+              state: 'lonely'
+            }
+          }
+        });
+        stanley = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            }
+          }
+        });
         stanley.get('accounts').pushObject(account);
       });
+
       equal(account.get('users.length'), 1, 'User relationship was set up correctly');
     });
 
     test("Removing a record from a hasMany reflects on the other hasMany side - async", function () {
       var user, topic;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', topics: [2] });
-        topic = store.push('topic', { id: 2, title: 'EmberFest was great' });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              topics: {
+                data: [{
+                  id: '2',
+                  type: 'topic'
+                }]
+              }
+            }
+          }
+        });
+        topic = store.push({
+          data: {
+            id: '2',
+            type: 'topic',
+            attributes: {
+              title: 'EmberFest was great'
+            }
+          }
+        });
       });
+
       run(function () {
         user.get('topics').then(async(function (fetchedTopics) {
           equal(fetchedTopics.get('length'), 1, 'Topics were setup correctly');
@@ -12467,9 +13065,34 @@ define(
     test("Removing a record from a hasMany reflects on the other hasMany side - sync", function () {
       var account, user;
       run(function () {
-        account = store.push('account', { id: 2, state: 'lonely' });
-        user = store.push('user', { id: 1, name: 'Stanley', accounts: [2] });
+        account = store.push({
+          data: {
+            id: '2',
+            type: 'account',
+            attributes: {
+              state: 'lonely'
+            }
+          }
+        });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              accounts: {
+                data: [{
+                  id: '2',
+                  type: 'account'
+                }]
+              }
+            }
+          }
+        });
       });
+
       equal(account.get('users.length'), 1, 'Users were setup correctly');
       run(function () {
         account.get('users').removeObject(user);
@@ -12479,48 +13102,40 @@ define(
     });
 
     /*
-    Deleting tests
-    */
-
-    test("Deleting a record that has a hasMany relationship removes it from the otherMany array but does not remove the other record from itself - async", function () {
-      var user, topic;
-      run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', topics: [2] });
-        topic = store.push('topic', { id: 2, title: 'EmberFest was great' });
-      });
-      run(topic, 'deleteRecord');
-      run(function () {
-        topic.get('users').then(async(function (fetchedUsers) {
-          equal(fetchedUsers.get('length'), 1, 'Users are still there');
-        }));
-        user.get('topics').then(async(function (fetchedTopics) {
-          equal(fetchedTopics.get('length'), 0, 'Topic got removed from the user');
-          equal(fetchedTopics.objectAt(0), null, "Topic can't be fetched");
-        }));
-      });
-    });
-
-    test("Deleting a record that has a hasMany relationship removes it from the otherMany array but does not remove the other record from itself - sync", function () {
-      var account, user;
-      run(function () {
-        account = store.push('account', { id: 2, state: 'lonely' });
-        user = store.push('user', { id: 1, name: 'Stanley', accounts: [2] });
-      });
-      run(account, 'deleteRecord');
-      equal(account.get('users.length'), 1, 'Users are still there');
-      equal(user.get('accounts.length'), 0, 'Acocount got removed from the user');
-    });
-
-    /*
       Rollback Attributes tests
     */
 
     test("Rollbacking attributes for a deleted record that has a ManyToMany relationship works correctly - async", function () {
       var user, topic;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', topics: [2] });
-        topic = store.push('topic', { id: 2, title: 'EmberFest was great' });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              topics: {
+                data: [{
+                  id: '2',
+                  type: 'topic'
+                }]
+              }
+            }
+          }
+        });
+        topic = store.push({
+          data: {
+            id: '2',
+            type: 'topic',
+            attributes: {
+              title: 'EmberFest was great'
+            }
+          }
+        });
       });
+
       run(function () {
         topic.deleteRecord();
         topic.rollbackAttributes();
@@ -12538,9 +13153,34 @@ define(
     test("Deleting a record that has a hasMany relationship removes it from the otherMany array but does not remove the other record from itself - sync", function () {
       var account, user;
       run(function () {
-        account = store.push('account', { id: 2, state: 'lonely' });
-        user = store.push('user', { id: 1, name: 'Stanley', accounts: [2] });
+        account = store.push({
+          data: {
+            id: '2',
+            type: 'account',
+            attributes: {
+              state: 'lonely'
+            }
+          }
+        });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              accounts: {
+                data: [{
+                  id: '2',
+                  type: 'account'
+                }]
+              }
+            }
+          }
+        });
       });
+
       run(function () {
         account.deleteRecord();
         account.rollbackAttributes();
@@ -12552,7 +13192,16 @@ define(
     test("Rollbacking attributes for a created record that has a ManyToMany relationship works correctly - async", function () {
       var user, topic;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley' });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            }
+          }
+        });
+
         topic = store.createRecord('topic');
       });
       run(function () {
@@ -12574,7 +13223,16 @@ define(
     test("Deleting a record that has a hasMany relationship removes it from the otherMany array but does not remove the other record from itself - sync", function () {
       var account, user;
       run(function () {
-        account = store.push('account', { id: 2, state: 'lonely' });
+        account = store.push({
+          data: {
+            id: '2',
+            type: 'account',
+            attributes: {
+              state: 'lonely'
+            }
+          }
+        });
+
         user = store.createRecord('user');
       });
       run(function () {
@@ -12588,11 +13246,70 @@ define(
     test("Re-loading a removed record should re add it to the relationship when the removed record is the last one in the relationship", function () {
       var account, ada, byron;
       run(function () {
-        account = store.push('account', { id: 2, state: 'account 1' });
-        ada = store.push('user', { id: 1, name: 'Ada Lovelace', accounts: [2] });
-        byron = store.push('user', { id: 2, name: 'Lord Byron', accounts: [2] });
+        account = store.push({
+          data: {
+            id: '2',
+            type: 'account',
+            attributes: {
+              state: 'account 1'
+            }
+          }
+        });
+        ada = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Ada Lovelace'
+            },
+            relationships: {
+              accounts: {
+                data: [{
+                  id: '2',
+                  type: 'account'
+                }]
+              }
+            }
+          }
+        });
+        byron = store.push({
+          data: {
+            id: '2',
+            type: 'user',
+            attributes: {
+              name: 'Lord Byron'
+            },
+            relationships: {
+              accounts: {
+                data: [{
+                  id: '2',
+                  type: 'account'
+                }]
+              }
+            }
+          }
+        });
         account.get('users').removeObject(byron);
-        account = store.push('account', { id: 2, state: 'account 1', users: [1, 2] });
+        account = store.push({
+          data: {
+            id: '2',
+            type: 'account',
+            attributes: {
+              state: 'account 1'
+            },
+            relationships: {
+              users: {
+                data: [{
+                  id: '1',
+                  type: 'user'
+                }, {
+                  id: '2',
+                  type: 'user'
+                }]
+              }
+            }
+          }
+        });
       });
 
       equal(account.get('users.length'), 2, 'Accounts were updated correctly');
@@ -12649,7 +13366,12 @@ define(
         env = setupStore({
           user: User,
           message: Message,
-          account: Account
+          account: Account,
+          adapter: DS.Adapter.extend({
+            deleteRecord: function () {
+              return Ember.RSVP.resolve();
+            }
+          })
         });
 
         store = env.store;
@@ -12667,8 +13389,32 @@ define(
     test("Relationship is available from the belongsTo side even if only loaded from the hasMany side - async", function () {
       var user, message;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', messages: [2, 3] });
-        message = store.push('message', { id: 2, title: 'EmberFest was great' });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              messages: {
+                data: [{
+                  id: '2',
+                  type: 'message'
+                }]
+              }
+            }
+          }
+        });
+        message = store.push({
+          data: {
+            id: '2',
+            type: 'message',
+            attributes: {
+              title: 'EmberFest was great'
+            }
+          }
+        });
       });
       run(function () {
         message.get('user').then(function (fetchedUser) {
@@ -12680,8 +13426,32 @@ define(
     test("Relationship is available from the belongsTo side even if only loaded from the hasMany side - sync", function () {
       var account, user;
       run(function () {
-        account = store.push('account', { id: 2, state: 'lonely' });
-        user = store.push('user', { id: 1, name: 'Stanley', accounts: [2] });
+        account = store.push({
+          data: {
+            id: '2',
+            type: 'account',
+            attributes: {
+              state: 'lonely'
+            }
+          }
+        });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              accounts: {
+                data: [{
+                  id: '2',
+                  type: 'account'
+                }]
+              }
+            }
+          }
+        });
       });
       equal(account.get('user'), user, 'User relationship was set up correctly');
     });
@@ -12689,8 +13459,32 @@ define(
     test("Relationship is available from the hasMany side even if only loaded from the belongsTo side - async", function () {
       var user, message;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley' });
-        message = store.push('message', { id: 2, title: 'EmberFest was great', user: 1 });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            }
+          }
+        });
+        message = store.push({
+          data: {
+            id: '2',
+            type: 'message',
+            attributes: {
+              title: 'EmberFest was great'
+            },
+            relationships: {
+              user: {
+                data: {
+                  id: '1',
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
       });
       run(function () {
         user.get('messages').then(function (fetchedMessages) {
@@ -12702,8 +13496,32 @@ define(
     test("Relationship is available from the hasMany side even if only loaded from the belongsTo side - sync", function () {
       var user, account;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley' });
-        account = store.push('account', { id: 2, state: 'lonely', user: 1 });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            }
+          }
+        });
+        account = store.push({
+          data: {
+            id: '2',
+            type: 'account',
+            attributes: {
+              state: 'lonely'
+            },
+            relationships: {
+              user: {
+                data: {
+                  id: '1',
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
       });
       equal(user.get('accounts').objectAt(0), account, 'Accounts relationship was set up correctly');
     });
@@ -12711,11 +13529,56 @@ define(
     test("Fetching a belongsTo that is set to null removes the record from a relationship - async", function () {
       var user;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', messages: [1, 2] });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              messages: {
+                data: [{
+                  id: '1',
+                  type: 'message'
+                }, {
+                  id: '2',
+                  type: 'message'
+                }]
+              }
+            }
+          }
+        });
       });
       run(function () {
-        store.push('message', { id: 1, title: 'EmberFest was great', user: 1 });
-        store.push('message', { id: 2, title: 'EmberConf will be better', user: null });
+        store.push({
+          data: [{
+            id: '1',
+            type: 'message',
+            attributes: {
+              title: 'EmberFest was great'
+            },
+            relationships: {
+              user: {
+                data: {
+                  id: '1',
+                  type: 'user'
+                }
+              }
+            }
+          }, {
+            id: '2',
+            type: 'message',
+            attributes: {
+              title: 'EmberConf will be better'
+            },
+            relationships: {
+              user: {
+                data: null
+              }
+            }
+          }]
+        });
       });
       run(function () {
         user.get('messages').then(function (fetchedMessages) {
@@ -12727,9 +13590,46 @@ define(
     test("Fetching a belongsTo that is set to null removes the record from a relationship - sync", function () {
       var account, user;
       run(function () {
-        account = store.push('account', { id: 2, state: 'lonely' });
-        user = store.push('user', { id: 1, name: 'Stanley', accounts: [2] });
-        account = store.push('account', { id: 2, state: 'lonely', user: null });
+        account = store.push({
+          data: {
+            id: '2',
+            type: 'account',
+            attributes: {
+              state: 'lonely'
+            }
+          }
+        });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              accounts: {
+                data: [{
+                  id: '2',
+                  type: 'account'
+                }]
+              }
+            }
+          }
+        });
+        account = store.push({
+          data: {
+            id: '2',
+            type: 'account',
+            attributes: {
+              state: 'lonely'
+            },
+            relationships: {
+              user: {
+                data: null
+              }
+            }
+          }
+        });
       });
       equal(user.get('accounts').objectAt(0), null, 'Account was sucesfully removed');
     });
@@ -12737,11 +13637,51 @@ define(
     test("Fetching a belongsTo that is not defined does not remove the record from a relationship - async", function () {
       var user;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', messages: [1, 2] });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              messages: {
+                data: [{
+                  id: '1',
+                  type: 'message'
+                }, {
+                  id: '2',
+                  type: 'message'
+                }]
+              }
+            }
+          }
+        });
       });
       run(function () {
-        store.push('message', { id: 1, title: 'EmberFest was great', user: 1 });
-        store.push('message', { id: 2, title: 'EmberConf will be better' });
+        store.push({
+          data: [{
+            id: '1',
+            type: 'message',
+            attributes: {
+              title: 'EmberFest was great'
+            },
+            relationships: {
+              user: {
+                data: {
+                  id: '1',
+                  type: 'user'
+                }
+              }
+            }
+          }, {
+            id: '2',
+            type: 'message',
+            attributes: {
+              title: 'EmberConf will be better'
+            }
+          }]
+        });
       });
       run(function () {
         user.get('messages').then(function (fetchedMessages) {
@@ -12753,9 +13693,41 @@ define(
     test("Fetching a belongsTo that is not defined does not remove the record from a relationship - sync", function () {
       var account, user;
       run(function () {
-        account = store.push('account', { id: 2, state: 'lonely' });
-        user = store.push('user', { id: 1, name: 'Stanley', accounts: [2] });
-        account = store.push('account', { id: 2, state: 'lonely' });
+        account = store.push({
+          data: {
+            id: '2',
+            type: 'account',
+            attributes: {
+              state: 'lonely'
+            }
+          }
+        });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              accounts: {
+                data: [{
+                  id: '2',
+                  type: 'account'
+                }]
+              }
+            }
+          }
+        });
+        account = store.push({
+          data: {
+            id: '2',
+            type: 'account',
+            attributes: {
+              state: 'lonely'
+            }
+          }
+        });
       });
       equal(user.get('accounts').objectAt(0), account, 'Account was sucesfully removed');
     });
@@ -12763,14 +13735,69 @@ define(
     test("Fetching the hasMany that doesn't contain the belongsTo, sets the belongsTo to null - async", function () {
       var user, message, message2;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', messages: [1] });
-        message = store.push('message', { id: 1, title: 'EmberFest was great', user: 1 });
-        message2 = store.push('message', { id: 2, title: 'EmberConf is gonna be better' });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              messages: {
+                data: [{
+                  id: '1',
+                  type: 'message'
+                }]
+              }
+            }
+          }
+        });
+        message = store.push({
+          data: {
+            id: '1',
+            type: 'message',
+            attributes: {
+              title: 'EmberFest was great'
+            },
+            relationships: {
+              user: {
+                data: {
+                  id: '1',
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
+        message2 = store.push({
+          data: {
+            id: '2',
+            type: 'message',
+            attributes: {
+              title: 'EmberConf is gonna be better'
+            }
+          }
+        });
       });
       run(function () {
-        store.push('user', { id: 1, name: 'Stanley', messages: [2] });
+        store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              messages: {
+                data: [{
+                  id: '2',
+                  type: 'message'
+                }]
+              }
+            }
+          }
+        });
       });
-
       run(function () {
         message.get('user').then(function (fetchedUser) {
           equal(fetchedUser, null, 'User was removed correctly');
@@ -12785,21 +13812,116 @@ define(
     test("Fetching the hasMany that doesn't contain the belongsTo, sets the belongsTo to null - sync", function () {
       var account;
       run(function () {
-        store.push('user', { id: 1, name: 'Stanley', accounts: [1] });
-        account = store.push('account', { id: 1, state: 'great', user: 1 });
-        store.push('account', { id: 2, state: 'awesome' });
-        store.push('user', { id: 1, name: 'Stanley', accounts: [2] });
+        store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              accounts: {
+                data: [{
+                  id: '1',
+                  type: 'account'
+                }]
+              }
+            }
+          }
+        });
+        account = store.push({
+          data: {
+            id: '1',
+            type: 'account',
+            attributes: {
+              state: 'great'
+            },
+            relationships: {
+              user: {
+                data: {
+                  id: '1',
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
+        store.push({
+          data: {
+            id: '2',
+            type: 'account',
+            attributes: {
+              state: 'awesome'
+            }
+          }
+        });
+        store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              accounts: {
+                data: [{
+                  id: '2',
+                  type: 'account'
+                }]
+              }
+            }
+          }
+        });
       });
-
       equal(account.get('user'), null, 'User was removed correctly');
     });
 
     test("Fetching the hasMany side where the hasMany is undefined does not change the belongsTo side - async", function () {
       var message, user;
       run(function () {
-        store.push('user', { id: 1, name: 'Stanley', messages: [1] });
-        message = store.push('message', { id: 1, title: 'EmberFest was great', user: 1 });
-        user = store.push('user', { id: 1, name: 'Stanley' });
+        store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              messages: {
+                data: [{
+                  id: '1',
+                  type: 'message'
+                }]
+              }
+            }
+          }
+        });
+        message = store.push({
+          data: {
+            id: '1',
+            type: 'message',
+            attributes: {
+              title: 'EmberFest was great'
+            },
+            relationships: {
+              user: {
+                data: {
+                  id: '1',
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            }
+          }
+        });
       });
 
       run(function () {
@@ -12812,10 +13934,58 @@ define(
     test("Fetching the hasMany side where the hasMany is undefined does not change the belongsTo side - sync", function () {
       var account, user;
       run(function () {
-        store.push('user', { id: 1, name: 'Stanley', accounts: [1] });
-        account = store.push('account', { id: 1, state: 'great', user: 1 });
-        store.push('account', { id: 2, state: 'awesome' });
-        user = store.push('user', { id: 1, name: 'Stanley' });
+        store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              accounts: {
+                data: [{
+                  id: '1',
+                  type: 'account'
+                }]
+              }
+            }
+          }
+        });
+        account = store.push({
+          data: {
+            id: '1',
+            type: 'account',
+            attributes: {
+              state: 'great'
+            },
+            relationships: {
+              user: {
+                data: {
+                  id: '1',
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
+        store.push({
+          data: {
+            id: '2',
+            type: 'account',
+            attributes: {
+              state: 'awesome'
+            }
+          }
+        });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            }
+          }
+        });
       });
 
       equal(account.get('user'), user, 'User was not removed');
@@ -12828,9 +13998,41 @@ define(
     test("Pushing to the hasMany reflects the change on the belongsTo side - async", function () {
       var user, message2;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', messages: [1] });
-        store.push('message', { id: 1, title: 'EmberFest was great' });
-        message2 = store.push('message', { id: 2, title: 'EmberFest was great' });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              messages: {
+                data: [{
+                  id: '1',
+                  type: 'message'
+                }]
+              }
+            }
+          }
+        });
+        store.push({
+          data: {
+            id: '1',
+            type: 'message',
+            attributes: {
+              title: 'EmberFest was great'
+            }
+          }
+        });
+        message2 = store.push({
+          data: {
+            id: '2',
+            type: 'message',
+            attributes: {
+              title: 'EmberFest was great'
+            }
+          }
+        });
       });
 
       run(function () {
@@ -12846,10 +14048,50 @@ define(
     test("Pushing to the hasMany reflects the change on the belongsTo side - sync", function () {
       var user, account2;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', accounts: [1] });
-        store.push('account', { id: 1, state: 'great', user: 1 });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              accounts: {
+                data: [{
+                  id: '1',
+                  type: 'account'
+                }]
+              }
+            }
+          }
+        });
+        store.push({
+          data: {
+            id: '1',
+            type: 'account',
+            attributes: {
+              state: 'great'
+            },
+            relationships: {
+              user: {
+                data: {
+                  id: '1',
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
 
-        account2 = store.push('account', { id: 2, state: 'awesome' });
+        account2 = store.push({
+          data: {
+            id: '2',
+            type: 'account',
+            attributes: {
+              state: 'awesome'
+            }
+          }
+        });
         user.get('accounts').pushObject(account2);
       });
 
@@ -12859,8 +14101,32 @@ define(
     test("Removing from the hasMany side reflects the change on the belongsTo side - async", function () {
       var user, message;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', messages: [1] });
-        message = store.push('message', { id: 1, title: 'EmberFest was great' });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              messages: {
+                data: [{
+                  id: '1',
+                  type: 'message'
+                }]
+              }
+            }
+          }
+        });
+        message = store.push({
+          data: {
+            id: '1',
+            type: 'message',
+            attributes: {
+              title: 'EmberFest was great'
+            }
+          }
+        });
       });
 
       run(function () {
@@ -12876,8 +14142,40 @@ define(
     test("Removing from the hasMany side reflects the change on the belongsTo side - sync", function () {
       var user, account;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', accounts: [1] });
-        account = store.push('account', { id: 1, state: 'great', user: 1 });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attirbutes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              accounts: {
+                data: [{
+                  id: '1',
+                  type: 'account'
+                }]
+              }
+            }
+          }
+        });
+        account = store.push({
+          data: {
+            id: '1',
+            type: 'account',
+            attirbutes: {
+              state: 'great'
+            },
+            relationships: {
+              user: {
+                data: {
+                  id: '1',
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
       });
       run(function () {
         user.get('accounts').removeObject(account);
@@ -12890,9 +14188,41 @@ define(
       expect(2);
       var user, user2, message;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', messages: [1] });
-        user2 = store.push('user', { id: 2, name: 'Tomhuda' });
-        message = store.push('message', { id: 1, title: 'EmberFest was great' });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              messages: {
+                data: [{
+                  id: '1',
+                  type: 'message'
+                }]
+              }
+            }
+          }
+        });
+        user2 = store.push({
+          data: {
+            id: '2',
+            type: 'user',
+            attributes: {
+              name: 'Tomhuda'
+            }
+          }
+        });
+        message = store.push({
+          data: {
+            id: '1',
+            type: 'message',
+            attributes: {
+              title: 'EmberFest was great'
+            }
+          }
+        });
       });
 
       run(function () {
@@ -12913,12 +14243,43 @@ define(
     test("Pushing to the hasMany side keeps the oneToMany invariant - sync", function () {
       var user, user2, account;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', accounts: [1] });
-        user2 = store.push('user', { id: 2, name: 'Stanley' });
-        account = store.push('account', { id: 1, state: 'great' });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              accounts: {
+                data: [{
+                  id: '1',
+                  type: 'account'
+                }]
+              }
+            }
+          }
+        });
+        user2 = store.push({
+          data: {
+            id: '2',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            }
+          }
+        });
+        account = store.push({
+          data: {
+            id: '1',
+            type: 'account',
+            attributes: {
+              state: 'great'
+            }
+          }
+        });
         user2.get('accounts').pushObject(account);
       });
-
       equal(account.get('user'), user2, 'user got set correctly');
       equal(user.get('accounts.length'), 0, 'the account got removed correctly');
       equal(user2.get('accounts.length'), 1, 'the account got pushed correctly');
@@ -12928,9 +14289,49 @@ define(
       expect(2);
       var user, user2, message;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', messages: [1] });
-        user2 = store.push('user', { id: 2, name: 'Tomhuda' });
-        message = store.push('message', { id: 1, title: 'EmberFest was great', user: 1 });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              messages: {
+                data: [{
+                  id: '1',
+                  type: 'message'
+                }]
+              }
+            }
+          }
+        });
+        user2 = store.push({
+          data: {
+            id: '2',
+            type: 'user',
+            attributes: {
+              name: 'Tomhuda'
+            }
+          }
+        });
+        message = store.push({
+          data: {
+            id: '1',
+            type: 'message',
+            attributes: {
+              title: 'EmberFest was great'
+            },
+            relationships: {
+              user: {
+                data: {
+                  id: '1',
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
         message.set('user', user2);
       });
 
@@ -12949,14 +14350,52 @@ define(
     test("Setting the belongsTo side keeps the oneToMany invariant on the hasMany- sync", function () {
       var user, user2, account;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', accounts: [1] });
-        user2 = store.push('user', { id: 2, name: 'Stanley' });
-        account = store.push('account', { id: 1, state: 'great', user: 1 });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              accounts: {
+                data: [{
+                  id: '1',
+                  type: 'account'
+                }]
+              }
+            }
+          }
+        });
+        user2 = store.push({
+          data: {
+            id: '2',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            }
+          }
+        });
+        account = store.push({
+          data: {
+            id: '1',
+            type: 'account',
+            attributes: {
+              state: 'great'
+            },
+            relationships: {
+              user: {
+                data: {
+                  id: '1',
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
         account.set('user', user2);
       });
-
       equal(account.get('user'), user2, 'user got set correctly');
-
       equal(user.get('accounts.length'), 0, 'the account got removed correctly');
       equal(user2.get('accounts.length'), 1, 'the account got pushed correctly');
     });
@@ -12965,11 +14404,42 @@ define(
       expect(2);
       var user, message;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', messages: [1] });
-        message = store.push('message', { id: 1, title: 'EmberFest was great', user: 1 });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              messages: {
+                data: [{
+                  id: '1',
+                  type: 'message'
+                }]
+              }
+            }
+          }
+        });
+        message = store.push({
+          data: {
+            id: '1',
+            type: 'message',
+            attributes: {
+              title: 'EmberFest was great'
+            },
+            relationships: {
+              user: {
+                data: {
+                  id: '1',
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
         message.set('user', null);
       });
-
       run(function () {
         user.get('messages').then(function (fetchedMessages) {
           equal(get(fetchedMessages, 'length'), 0, 'message got removed from the  user correctly');
@@ -12986,8 +14456,40 @@ define(
     test("Setting the belongsTo side to null removes the record from the hasMany side - sync", function () {
       var user, account;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', accounts: [1] });
-        account = store.push('account', { id: 1, state: 'great', user: 1 });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              accounts: {
+                data: [{
+                  id: '1',
+                  type: 'account'
+                }]
+              }
+            }
+          }
+        });
+        account = store.push({
+          data: {
+            id: '1',
+            type: 'account',
+            attributes: {
+              state: 'great'
+            },
+            relationships: {
+              user: {
+                data: {
+                  id: '1',
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
         account.set('user', null);
       });
 
@@ -12997,77 +14499,38 @@ define(
     });
 
     /*
-    Deleting
-    */
-
-    test("When deleting a record that has a belongsTo it is removed from the hasMany side but not the belongsTo side- async", function () {
-      var user, message;
-      run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', messages: [2] });
-        message = store.push('message', { id: 2, title: 'EmberFest was great' });
-      });
-      run(message, 'deleteRecord');
-      run(function () {
-        message.get('user').then(function (fetchedUser) {
-          equal(fetchedUser, user, 'Message still has the user');
-        });
-        user.get('messages').then(function (fetchedMessages) {
-          equal(fetchedMessages.get('length'), 0, 'User was removed from the messages');
-          equal(fetchedMessages.get('firstObject'), null, "Message can't be accessed");
-        });
-      });
-    });
-
-    test("When deleting a record that has a belongsTo it is removed from the hasMany side but not the belongsTo side- sync", function () {
-      var account, user;
-      run(function () {
-        account = store.push('account', { id: 2, state: 'lonely' });
-        user = store.push('user', { id: 1, name: 'Stanley', accounts: [2] });
-        account.deleteRecord();
-      });
-      equal(user.get('accounts.length'), 0, "User was removed from the accounts");
-      equal(account.get('user'), user, 'Account still has the user');
-    });
-
-    test("When deleting a record that has a hasMany it is removed from the belongsTo side but not the hasMany side- async", function () {
-      var user, message;
-      run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', messages: [2] });
-        message = store.push('message', { id: 2, title: 'EmberFest was great' });
-      });
-      run(user, 'deleteRecord');
-      run(function () {
-        message.get('user').then(function (fetchedUser) {
-          equal(fetchedUser, null, 'Message does not have the user anymore');
-        });
-        user.get('messages').then(function (fetchedMessages) {
-          equal(fetchedMessages.get('length'), 1, 'User still has the messages');
-        });
-      });
-    });
-
-    test("When deleting a record that has a hasMany it is removed from the belongsTo side but not the hasMany side - sync", function () {
-      var account, user;
-      run(function () {
-        account = store.push('account', { id: 2, state: 'lonely' });
-        user = store.push('user', { id: 1, name: 'Stanley', accounts: [2] });
-      });
-      run(function () {
-        user.deleteRecord();
-      });
-      equal(user.get('accounts.length'), 1, "User still has the accounts");
-      equal(account.get('user'), null, 'Account no longer has the user');
-    });
-
-    /*
     Rollback attributes from deleted state
     */
 
     test("Rollbacking attributes of a deleted record works correctly when the hasMany side has been deleted - async", function () {
       var user, message;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', messages: [2] });
-        message = store.push('message', { id: 2, title: 'EmberFest was great' });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              messages: {
+                data: [{
+                  id: '2',
+                  type: 'message'
+                }]
+              }
+            }
+          }
+        });
+        message = store.push({
+          data: {
+            id: '2',
+            type: 'message',
+            attributes: {
+              title: 'EmberFest was great'
+            }
+          }
+        });
       });
       run(function () {
         message.deleteRecord();
@@ -13086,8 +14549,32 @@ define(
     test("Rollbacking attributes of a deleted record works correctly when the hasMany side has been deleted - sync", function () {
       var account, user;
       run(function () {
-        account = store.push('account', { id: 2, state: 'lonely' });
-        user = store.push('user', { id: 1, name: 'Stanley', accounts: [2] });
+        account = store.push({
+          data: {
+            id: '2',
+            type: 'account',
+            attributes: {
+              state: 'lonely'
+            }
+          }
+        });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              accounts: {
+                data: [{
+                  id: '2',
+                  type: 'account'
+                }]
+              }
+            }
+          }
+        });
       });
       run(function () {
         account.deleteRecord();
@@ -13100,8 +14587,32 @@ define(
     test("Rollbacking attributes of deleted record works correctly when the belongsTo side has been deleted - async", function () {
       var user, message;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', messages: [2] });
-        message = store.push('message', { id: 2, title: 'EmberFest was great' });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              messages: {
+                data: [{
+                  id: '2',
+                  type: 'message'
+                }]
+              }
+            }
+          }
+        });
+        message = store.push({
+          data: {
+            id: '2',
+            type: 'message',
+            attributes: {
+              title: 'EmberFest was great'
+            }
+          }
+        });
       });
       run(function () {
         user.deleteRecord();
@@ -13120,8 +14631,32 @@ define(
     test("Rollbacking attributes of a deleted record works correctly when the belongsTo side has been deleted - sync", function () {
       var account, user;
       run(function () {
-        account = store.push('account', { id: 2, state: 'lonely' });
-        user = store.push('user', { id: 1, name: 'Stanley', accounts: [2] });
+        account = store.push({
+          data: {
+            id: '2',
+            type: 'account',
+            attributes: {
+              state: 'lonely'
+            }
+          }
+        });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              accounts: {
+                data: [{
+                  id: '2',
+                  type: 'account'
+                }]
+              }
+            }
+          }
+        });
       });
       run(function () {
         user.deleteRecord();
@@ -13138,8 +14673,18 @@ define(
     test("Rollbacking attributes of a created record works correctly when the hasMany side has been created - async", function () {
       var user, message;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley' });
-        message = store.createRecord('message', { user: user });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            }
+          }
+        });
+        message = store.createRecord('message', {
+          user: user
+        });
       });
       run(message, 'rollbackAttributes');
       run(function () {
@@ -13156,8 +14701,18 @@ define(
     test("Rollbacking attributes of a created record works correctly when the hasMany side has been created - sync", function () {
       var user, account;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley' });
-        account = store.createRecord('account', { user: user });
+        user = store.push({
+          data: {
+            id: '1',
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            }
+          }
+        });
+        account = store.createRecord('account', {
+          user: user
+        });
       });
       run(account, 'rollbackAttributes');
       equal(user.get('accounts.length'), 0, "Accounts are rolled back");
@@ -13167,7 +14722,15 @@ define(
     test("Rollbacking attributes of a created record works correctly when the belongsTo side has been created - async", function () {
       var message, user;
       run(function () {
-        message = store.push('message', { id: 2, title: 'EmberFest was great' });
+        message = store.push({
+          data: {
+            id: '2',
+            type: 'message',
+            attributes: {
+              title: 'EmberFest was great'
+            }
+          }
+        });
         user = store.createRecord('user');
       });
       run(function () {
@@ -13188,7 +14751,15 @@ define(
     test("Rollbacking attributes of a created record works correctly when the belongsTo side has been created - sync", function () {
       var account, user;
       run(function () {
-        account = store.push('account', { id: 2, state: 'lonely' });
+        account = store.push({
+          data: {
+            id: '2',
+            type: 'account',
+            attributes: {
+              state: 'lonely'
+            }
+          }
+        });
         user = store.createRecord('user');
       });
       run(function () {
@@ -13241,7 +14812,12 @@ define(
 
         env = setupStore({
           user: User,
-          job: Job
+          job: Job,
+          adapter: DS.Adapter.extend({
+            deleteRecord: function () {
+              return Ember.RSVP.resolve();
+            }
+          })
         });
 
         store = env.store;
@@ -13259,8 +14835,33 @@ define(
     test("Relationship is available from both sides even if only loaded from one side - async", function () {
       var stanley, stanleysFriend;
       run(function () {
-        stanley = store.push('user', { id: 1, name: 'Stanley', bestFriend: 2 });
-        stanleysFriend = store.push('user', { id: 2, name: "Stanley's friend" });
+        stanley = store.push({
+          data: {
+            id: 1,
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              bestFriend: {
+                data: {
+                  id: 2,
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
+        stanleysFriend = store.push({
+          data: {
+            id: 2,
+            type: 'user',
+            attributes: {
+              name: "Stanley's friend"
+            }
+          }
+        });
+
         stanleysFriend.get('bestFriend').then(function (fetchedUser) {
           equal(fetchedUser, stanley, 'User relationship was set up correctly');
         });
@@ -13270,8 +14871,32 @@ define(
     test("Relationship is available from both sides even if only loaded from one side - sync", function () {
       var job, user;
       run(function () {
-        job = store.push('job', { id: 2, isGood: true });
-        user = store.push('user', { id: 1, name: 'Stanley', job: 2 });
+        job = store.push({
+          data: {
+            id: 2,
+            type: 'job',
+            attributes: {
+              isGood: true
+            }
+          }
+        });
+        user = store.push({
+          data: {
+            id: 1,
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              job: {
+                data: {
+                  id: 2,
+                  type: 'job'
+                }
+              }
+            }
+          }
+        });
       });
       equal(job.get('user'), user, 'User relationship was set up correctly');
     });
@@ -13279,8 +14904,37 @@ define(
     test("Fetching a belongsTo that is set to null removes the record from a relationship - async", function () {
       var stanleysFriend;
       run(function () {
-        stanleysFriend = store.push('user', { id: 2, name: "Stanley's friend", bestFriend: 1 });
-        store.push('user', { id: 1, name: 'Stanley', bestFriend: null });
+        stanleysFriend = store.push({
+          data: {
+            id: 2,
+            type: 'user',
+            attributes: {
+              name: "Stanley's friend"
+            },
+            relationships: {
+              bestFriend: {
+                data: {
+                  id: 1,
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
+        store.push({
+          data: {
+            id: 1,
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              bestFriend: {
+                data: null
+              }
+            }
+          }
+        });
         stanleysFriend.get('bestFriend').then(function (fetchedUser) {
           equal(fetchedUser, null, 'User relationship was removed correctly');
         });
@@ -13290,11 +14944,48 @@ define(
     test("Fetching a belongsTo that is set to null removes the record from a relationship - sync", function () {
       var job;
       run(function () {
-        job = store.push('job', { id: 2, isGood: true });
-        store.push('user', { id: 1, name: 'Stanley', job: 2 });
+        job = store.push({
+          data: {
+            id: 2,
+            type: 'job',
+            attributes: {
+              isGood: true
+            }
+          }
+        });
+        store.push({
+          data: {
+            id: 1,
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              job: {
+                data: {
+                  id: 2,
+                  type: 'job'
+                }
+              }
+            }
+          }
+        });
       });
       run(function () {
-        job = store.push('job', { id: 2, isGood: true, user: null });
+        job = store.push({
+          data: {
+            id: 2,
+            type: 'job',
+            attributes: {
+              isGood: true
+            },
+            relationships: {
+              user: {
+                data: null
+              }
+            }
+          }
+        });
       });
       equal(job.get('user'), null, 'User relationship was removed correctly');
     });
@@ -13303,14 +14994,62 @@ define(
       expect(3);
       var stanley, stanleysFriend;
       run(function () {
-        stanley = store.push('user', { id: 1, name: 'Stanley', bestFriend: 2 });
-        stanleysFriend = store.push('user', { id: 2, name: "Stanley's friend", bestFriend: 1 });
+        stanley = store.push({
+          data: {
+            id: 1,
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              bestFriend: {
+                data: {
+                  id: 2,
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
+        stanleysFriend = store.push({
+          data: {
+            id: 2,
+            type: 'user',
+            attributes: {
+              name: "Stanley's friend"
+            },
+            relationships: {
+              bestFriend: {
+                data: {
+                  id: 1,
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
 
         stanleysFriend.get('bestFriend').then(function (fetchedUser) {
           equal(fetchedUser, stanley, 'User relationship was initally setup correctly');
           var stanleysNewFriend;
           run(function () {
-            stanleysNewFriend = store.push('user', { id: 3, name: "Stanley's New friend", bestFriend: 1 });
+            stanleysNewFriend = store.push({
+              data: {
+                id: 3,
+                type: 'user',
+                attributes: {
+                  name: "Stanley's New friend"
+                },
+                relationships: {
+                  bestFriend: {
+                    data: {
+                      id: 1,
+                      type: 'user'
+                    }
+                  }
+                }
+              }
+            });
           });
 
           stanley.get('bestFriend').then(function (fetchedNewFriend) {
@@ -13327,12 +15066,52 @@ define(
     test("Fetching a belongsTo that is set to a different record, sets the old relationship to null - sync", function () {
       var job, user, newBetterJob;
       run(function () {
-        job = store.push('job', { id: 2, isGood: false });
-        user = store.push('user', { id: 1, name: 'Stanley', job: 2 });
+        job = store.push({
+          data: {
+            id: 2,
+            type: 'job',
+            attributes: {
+              isGood: false
+            }
+          }
+        });
+        user = store.push({
+          data: {
+            id: 1,
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              job: {
+                data: {
+                  id: 2,
+                  type: 'job'
+                }
+              }
+            }
+          }
+        });
       });
       equal(job.get('user'), user, 'Job and user initially setup correctly');
       run(function () {
-        newBetterJob = store.push('job', { id: 3, isGood: true, user: 1 });
+        newBetterJob = store.push({
+          data: {
+            id: 3,
+            type: 'job',
+            attributes: {
+              isGood: true
+            },
+            relationships: {
+              user: {
+                data: {
+                  id: 1,
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
       });
 
       equal(user.get('job'), newBetterJob, 'Job updated correctly');
@@ -13347,8 +15126,24 @@ define(
     test("Setting a OneToOne relationship reflects correctly on the other side- async", function () {
       var stanley, stanleysFriend;
       run(function () {
-        stanley = store.push('user', { id: 1, name: 'Stanley' });
-        stanleysFriend = store.push('user', { id: 2, name: "Stanley's friend" });
+        stanley = store.push({
+          data: {
+            id: 1,
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            }
+          }
+        });
+        stanleysFriend = store.push({
+          data: {
+            id: 2,
+            type: 'user',
+            attributes: {
+              name: "Stanley's friend"
+            }
+          }
+        });
       });
       run(function () {
         stanley.set('bestFriend', stanleysFriend);
@@ -13361,8 +15156,24 @@ define(
     test("Setting a OneToOne relationship reflects correctly on the other side- sync", function () {
       var job, user;
       run(function () {
-        job = store.push('job', { id: 2, isGood: true });
-        user = store.push('user', { id: 1, name: 'Stanley' });
+        job = store.push({
+          data: {
+            id: 2,
+            type: 'job',
+            attributes: {
+              isGood: true
+            }
+          }
+        });
+        user = store.push({
+          data: {
+            id: 1,
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            }
+          }
+        });
       });
       run(function () {
         user.set('job', job);
@@ -13373,9 +15184,41 @@ define(
     test("Setting a BelongsTo to a promise unwraps the promise before setting- async", function () {
       var stanley, stanleysFriend, newFriend;
       run(function () {
-        stanley = store.push('user', { id: 1, name: 'Stanley', bestFriend: 2 });
-        stanleysFriend = store.push('user', { id: 2, name: "Stanley's friend" });
-        newFriend = store.push('user', { id: 3, name: "New friend" });
+        stanley = store.push({
+          data: {
+            id: 1,
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              bestFriend: {
+                data: {
+                  id: 2,
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
+        stanleysFriend = store.push({
+          data: {
+            id: 2,
+            type: 'user',
+            attributes: {
+              name: "Stanley's friend"
+            }
+          }
+        });
+        newFriend = store.push({
+          data: {
+            id: 3,
+            type: 'user',
+            attributes: {
+              name: "New friend"
+            }
+          }
+        });
       });
       run(function () {
         newFriend.set('bestFriend', stanleysFriend.get('bestFriend'));
@@ -13391,9 +15234,41 @@ define(
     test("Setting a BelongsTo to a promise works when the promise returns null- async", function () {
       var igor, newFriend;
       run(function () {
-        store.push('user', { id: 1, name: 'Stanley' });
-        igor = store.push('user', { id: 2, name: "Igor" });
-        newFriend = store.push('user', { id: 3, name: "New friend", bestFriend: 1 });
+        store.push({
+          data: {
+            id: 1,
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            }
+          }
+        });
+        igor = store.push({
+          data: {
+            id: 2,
+            type: 'user',
+            attributes: {
+              name: "Igor"
+            }
+          }
+        });
+        newFriend = store.push({
+          data: {
+            id: 3,
+            type: 'user',
+            attributes: {
+              name: "New friend"
+            },
+            relationships: {
+              bestFriend: {
+                data: {
+                  id: 1,
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
       });
       run(function () {
         newFriend.set('bestFriend', igor.get('bestFriend'));
@@ -13406,9 +15281,34 @@ define(
     test("Setting a BelongsTo to a promise that didn't come from a relationship errors out", function () {
       var stanley, igor;
       run(function () {
-        stanley = store.push('user', { id: 1, name: 'Stanley', bestFriend: 2 });
-        igor = store.push('user', { id: 3, name: 'Igor' });
+        stanley = store.push({
+          data: {
+            id: 1,
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              bestFriend: {
+                data: {
+                  id: 2,
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
+        igor = store.push({
+          data: {
+            id: 3,
+            type: 'user',
+            attributes: {
+              name: 'Igor'
+            }
+          }
+        });
       });
+
       expectAssertion(function () {
         run(function () {
           stanley.set('bestFriend', Ember.RSVP.resolve(igor));
@@ -13420,10 +15320,51 @@ define(
       expect(1);
       var stanley, igor, newFriend;
       run(function () {
-        stanley = store.push('user', { id: 1, name: 'Stanley', bestFriend: 2 });
-        igor = store.push('user', { id: 3, name: "Igor", bestFriend: 5 });
-        newFriend = store.push('user', { id: 7, name: "New friend" });
+        stanley = store.push({
+          data: {
+            id: 1,
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              bestFriend: {
+                data: {
+                  id: 2,
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
+        igor = store.push({
+          data: {
+            id: 3,
+            type: 'user',
+            attributes: {
+              name: "Igor"
+            },
+            relationships: {
+              bestFriend: {
+                data: {
+                  id: 5,
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
+        newFriend = store.push({
+          data: {
+            id: 7,
+            type: 'user',
+            attributes: {
+              name: "New friend"
+            }
+          }
+        });
       });
+
       env.adapter.findRecord = function (store, type, id, snapshot) {
         if (id === '5') {
           return Ember.RSVP.resolve({ id: 5, name: "Igor's friend" });
@@ -13450,9 +15391,42 @@ define(
     test("Setting a OneToOne relationship to null reflects correctly on the other side - async", function () {
       var stanley, stanleysFriend;
       run(function () {
-        stanley = store.push('user', { id: 1, name: 'Stanley', bestFriend: 2 });
-        stanleysFriend = store.push('user', { id: 2, name: "Stanley's friend", bestFriend: 1 });
+        stanley = store.push({
+          data: {
+            id: 1,
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              bestFriend: {
+                data: {
+                  id: 2,
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
+        stanleysFriend = store.push({
+          data: {
+            id: 2,
+            type: 'user',
+            attributes: {
+              name: "Stanley's friend"
+            },
+            relationships: {
+              bestFriend: {
+                data: {
+                  id: 1,
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
       });
+
       run(function () {
         stanley.set('bestFriend', null); // :(
         stanleysFriend.get('bestFriend').then(function (fetchedUser) {
@@ -13464,9 +15438,42 @@ define(
     test("Setting a OneToOne relationship to null reflects correctly on the other side - sync", function () {
       var job, user;
       run(function () {
-        job = store.push('job', { id: 2, isGood: false, user: 1 });
-        user = store.push('user', { id: 1, name: 'Stanley', job: 2 });
+        job = store.push({
+          data: {
+            id: 2,
+            type: 'job',
+            attributes: {
+              isGood: false
+            },
+            relationships: {
+              user: {
+                data: {
+                  id: 1,
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
+        user = store.push({
+          data: {
+            id: 1,
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              job: {
+                data: {
+                  id: 2,
+                  type: 'job'
+                }
+              }
+            }
+          }
+        });
       });
+
       run(function () {
         user.set('job', null);
       });
@@ -13478,12 +15485,53 @@ define(
 
       var stanley, stanleysFriend;
       run(function () {
-        stanley = store.push('user', { id: 1, name: 'Stanley', bestFriend: 2 });
-        stanleysFriend = store.push('user', { id: 2, name: "Stanley's friend", bestFriend: 1 });
+        stanley = store.push({
+          data: {
+            id: 1,
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              bestFriend: {
+                data: {
+                  id: 2,
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
+        stanleysFriend = store.push({
+          data: {
+            id: 2,
+            type: 'user',
+            attributes: {
+              name: "Stanley's friend"
+            },
+            relationships: {
+              bestFriend: {
+                data: {
+                  id: 1,
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
 
         stanleysFriend.get('bestFriend').then(function (fetchedUser) {
           equal(fetchedUser, stanley, 'User relationship was initally setup correctly');
-          var stanleysNewFriend = store.push('user', { id: 3, name: "Stanley's New friend" });
+          var stanleysNewFriend = store.push({
+            data: {
+              id: 3,
+              type: 'user',
+              attributes: {
+                name: "Stanley's New friend"
+              }
+            }
+          });
+
           run(function () {
             stanleysNewFriend.set('bestFriend', stanley);
           });
@@ -13502,14 +15550,47 @@ define(
     test("Setting a belongsTo to a different record, sets the old relationship to null - sync", function () {
       var job, user, newBetterJob;
       run(function () {
-        job = store.push('job', { id: 2, isGood: false });
-        user = store.push('user', { id: 1, name: 'Stanley', job: 2 });
+        job = store.push({
+          data: {
+            id: 2,
+            type: 'job',
+            attributes: {
+              isGood: false
+            }
+          }
+        });
+        user = store.push({
+          data: {
+            id: 1,
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              job: {
+                data: {
+                  id: 2,
+                  type: 'job'
+                }
+              }
+            }
+          }
+        });
       });
 
       equal(job.get('user'), user, 'Job and user initially setup correctly');
 
       run(function () {
-        newBetterJob = store.push('job', { id: 3, isGood: true });
+        newBetterJob = store.push({
+          data: {
+            id: 3,
+            type: 'job',
+            attributes: {
+              isGood: true
+            }
+          }
+        });
+
         newBetterJob.set('user', user);
       });
 
@@ -13519,58 +15600,38 @@ define(
     });
 
     /*
-    Deleting tests
-    */
-
-    test("When deleting a record that has a belongsTo relationship, the record is removed from the inverse but still has access to its own relationship - async", function () {
-      // This observer is here to make sure that inverseRecord gets cleared, when
-      // the record is deleted, before notifyRecordRelationshipRemoved() and in turn
-      // notifyPropertyChange() gets called. If not properly cleared observers will
-      // trigger with the old value of the relationship.
-      User.reopen({
-        bestFriendObserver: Ember.observer('bestFriend', function () {
-          this.get('bestFriend');
-        })
-      });
-      var stanleysFriend, stanley;
-
-      run(function () {
-        stanleysFriend = store.push('user', { id: 2, name: "Stanley's friend" });
-        stanley = store.push('user', { id: 1, name: 'Stanley', bestFriend: 2 });
-      });
-      run(function () {
-        stanley.deleteRecord();
-        stanleysFriend.get('bestFriend').then(function (fetchedUser) {
-          equal(fetchedUser, null, 'Stanley got removed');
-        });
-        stanley.get('bestFriend').then(function (fetchedUser) {
-          equal(fetchedUser, stanleysFriend, 'Stanleys friend did not get removed');
-        });
-      });
-    });
-
-    test("When deleting a record that has a belongsTo relationship, the record is removed from the inverse but still has access to its own relationship - sync", function () {
-      var job, user;
-      run(function () {
-        job = store.push('job', { id: 2, isGood: true });
-        user = store.push('user', { id: 1, name: 'Stanley', job: 2 });
-      });
-      run(function () {
-        job.deleteRecord();
-      });
-      equal(user.get('job'), null, 'Job got removed from the user');
-      equal(job.get('user'), user, 'Job still has the user');
-    });
-
-    /*
     Rollback attributes tests
     */
 
     test("Rollbacking attributes of deleted record restores the relationship on both sides - async", function () {
       var stanley, stanleysFriend;
       run(function () {
-        stanley = store.push('user', { id: 1, name: 'Stanley', bestFriend: 2 });
-        stanleysFriend = store.push('user', { id: 2, name: "Stanley's friend" });
+        stanley = store.push({
+          data: {
+            id: 1,
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              bestFriend: {
+                data: {
+                  id: 2,
+                  type: 'user'
+                }
+              }
+            }
+          }
+        });
+        stanleysFriend = store.push({
+          data: {
+            id: 2,
+            type: 'user',
+            attributes: {
+              name: "Stanley's friend"
+            }
+          }
+        });
       });
       run(function () {
         stanley.deleteRecord();
@@ -13589,8 +15650,32 @@ define(
     test("Rollbacking attributes of deleted record restores the relationship on both sides - sync", function () {
       var job, user;
       run(function () {
-        job = store.push('job', { id: 2, isGood: true });
-        user = store.push('user', { id: 1, name: 'Stanley', job: 2 });
+        job = store.push({
+          data: {
+            id: 2,
+            type: 'job',
+            attributes: {
+              isGood: true
+            }
+          }
+        });
+        user = store.push({
+          data: {
+            id: 1,
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              job: {
+                data: {
+                  id: 2,
+                  type: 'job'
+                }
+              }
+            }
+          }
+        });
       });
       run(function () {
         job.deleteRecord();
@@ -13603,7 +15688,16 @@ define(
     test("Rollbacking attributes of created record removes the relationship on both sides - async", function () {
       var stanleysFriend, stanley;
       run(function () {
-        stanleysFriend = store.push('user', { id: 2, name: "Stanley's friend" });
+        stanleysFriend = store.push({
+          data: {
+            id: 2,
+            type: 'user',
+            attributes: {
+              name: "Stanley's friend"
+            }
+          }
+        });
+
         stanley = store.createRecord('user', { bestFriend: stanleysFriend });
       });
       run(function () {
@@ -13620,7 +15714,16 @@ define(
     test("Rollbacking attributes of created record removes the relationship on both sides - sync", function () {
       var user, job;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley' });
+        user = store.push({
+          data: {
+            id: 1,
+            type: 'user',
+            attributes: {
+              name: 'Stanley'
+            }
+          }
+        });
+
         job = store.createRecord('job', { user: user });
       });
       run(function () {
@@ -13699,8 +15802,28 @@ define(
     test("Relationship is available from the belongsTo side even if only loaded from the inverse side - async", function () {
       var user, video;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', bestMessage: 2, bestMessageType: 'video' });
-        video = store.push('video', { id: 2, video: 'Here comes Youtube' });
+        store.push({
+          data: [{
+            type: 'user',
+            id: '1',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              bestMessage: {
+                data: { type: 'video', id: '2' }
+              }
+            }
+          }, {
+            type: 'video',
+            id: '2',
+            attributes: {
+              video: 'Here comes Youtube'
+            }
+          }]
+        });
+        user = store.peekRecord('user', 1);
+        video = store.peekRecord('video', 2);
       });
       run(function () {
         user.get('bestMessage').then(function (message) {
@@ -13718,8 +15841,23 @@ define(
     test("Setting the polymorphic belongsTo gets propagated to the inverse side - async", function () {
       var user, video;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley' });
-        video = store.push('video', { id: 2, video: 'Here comes Youtube' });
+        store.push({
+          data: [{
+            type: 'user',
+            id: '1',
+            attributes: {
+              name: 'Stanley'
+            }
+          }, {
+            type: 'video',
+            id: '2',
+            attributes: {
+              video: 'Here comes Youtube'
+            }
+          }]
+        });
+        user = store.peekRecord('user', 1);
+        video = store.peekRecord('video', 2);
       });
 
       run(function () {
@@ -13736,8 +15874,23 @@ define(
     test("Setting the polymorphic belongsTo with an object that does not implement the mixin errors out", function () {
       var user, video;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley' });
-        video = store.push('not-message', { id: 2, video: 'Here comes Youtube' });
+        store.push({
+          data: [{
+            type: 'user',
+            id: '1',
+            attributes: {
+              name: 'Stanley'
+            }
+          }, {
+            type: 'not-message',
+            id: '2',
+            attributes: {
+              video: 'Here comes Youtube'
+            }
+          }]
+        });
+        user = store.peekRecord('user', 1);
+        video = store.peekRecord('not-message', 2);
       });
 
       run(function () {
@@ -13755,8 +15908,23 @@ define(
       try {
         var user, video;
         run(function () {
-          user = store.push('user', { id: 1, name: 'Stanley' });
-          video = store.push('video', { id: 2, video: 'Here comes Youtube' });
+          store.push({
+            data: [{
+              type: 'user',
+              id: '1',
+              attributes: {
+                name: 'Stanley'
+              }
+            }, {
+              type: 'video',
+              id: '2',
+              attributes: {
+                video: 'Here comes Youtube'
+              }
+            }]
+          });
+          user = store.peekRecord('user', 1);
+          video = store.peekRecord('video', 2);
         });
 
         run(function () {
@@ -13780,8 +15948,23 @@ define(
       try {
         var user, video;
         run(function () {
-          user = store.push('user', { id: 1, name: 'Stanley' });
-          video = store.push('not-message', { id: 2, video: 'Here comes Youtube' });
+          store.push({
+            data: [{
+              type: 'user',
+              id: '1',
+              attributes: {
+                name: 'Stanley'
+              }
+            }, {
+              type: 'not-message',
+              id: '2',
+              attributes: {
+                video: 'Here comes Youtube'
+              }
+            }]
+          });
+          user = store.peekRecord('user', 1);
+          video = store.peekRecord('not-message', 2);
         });
 
         run(function () {
@@ -13864,8 +16047,28 @@ define(
     test("Relationship is available from the belongsTo side even if only loaded from the hasMany side - async", function () {
       var user, video;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', messages: [{ id: 2, type: 'video' }] });
-        video = store.push('video', { id: 2, video: 'Here comes Youtube' });
+        store.push({
+          data: [{
+            type: 'user',
+            id: '1',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              messages: {
+                data: [{ type: 'video', id: '2' }]
+              }
+            }
+          }, {
+            type: 'video',
+            id: '2',
+            attributes: {
+              video: 'Here comes Youtube'
+            }
+          }]
+        });
+        user = store.peekRecord('user', 1);
+        video = store.peekRecord('video', 2);
       });
       run(function () {
         user.get('messages').then(function (messages) {
@@ -13883,8 +16086,28 @@ define(
     test("Pushing to the hasMany reflects the change on the belongsTo side - async", function () {
       var user, video;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', messages: [] });
-        video = store.push('video', { id: 2, video: 'Here comes Youtube' });
+        store.push({
+          data: [{
+            type: 'user',
+            id: '1',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              messages: {
+                data: []
+              }
+            }
+          }, {
+            type: 'video',
+            id: '2',
+            attributes: {
+              video: 'Here comes Youtube'
+            }
+          }]
+        });
+        user = store.peekRecord('user', 1);
+        video = store.peekRecord('video', 2);
       });
 
       run(function () {
@@ -13903,8 +16126,28 @@ define(
     test("Pushing a an object that does not implement the mixin to the mixin accepting array errors out", function () {
       var user, notMessage;
       run(function () {
-        user = store.push('user', { id: 1, name: 'Stanley', messages: [] });
-        notMessage = store.push('not-message', { id: 2, video: 'Here comes Youtube' });
+        store.push({
+          data: [{
+            type: 'user',
+            id: '1',
+            attributes: {
+              name: 'Stanley'
+            },
+            relationships: {
+              messages: {
+                data: []
+              }
+            }
+          }, {
+            type: 'not-message',
+            id: '2',
+            attributes: {
+              video: 'Here comes Youtube'
+            }
+          }]
+        });
+        user = store.peekRecord('user', 1);
+        notMessage = store.peekRecord('not-message', 2);
       });
 
       run(function () {
@@ -13923,8 +16166,28 @@ define(
       try {
         var user, video;
         run(function () {
-          user = store.push('user', { id: 1, name: 'Stanley', messages: [] });
-          video = store.push('video', { id: 2, video: 'Here comes Youtube' });
+          store.push({
+            data: [{
+              type: 'user',
+              id: '1',
+              attributes: {
+                name: 'Stanley'
+              },
+              relationships: {
+                messages: {
+                  data: []
+                }
+              }
+            }, {
+              type: 'video',
+              id: '2',
+              attributes: {
+                video: 'Here comes Youtube'
+              }
+            }]
+          });
+          user = store.peekRecord('user', 1);
+          video = store.peekRecord('video', 2);
         });
 
         run(function () {
@@ -13950,8 +16213,28 @@ define(
       try {
         var user, notMessage;
         run(function () {
-          user = store.push('user', { id: 1, name: 'Stanley', messages: [] });
-          notMessage = store.push('not-message', { id: 2, video: 'Here comes Youtube' });
+          store.push({
+            data: [{
+              type: 'user',
+              id: '1',
+              attributes: {
+                name: 'Stanley'
+              },
+              relationships: {
+                messages: {
+                  data: []
+                }
+              }
+            }, {
+              type: 'not-message',
+              id: '2',
+              attributes: {
+                video: 'Here comes Youtube'
+              }
+            }]
+          });
+          user = store.peekRecord('user', 1);
+          notMessage = store.peekRecord('not-message', 2);
         });
 
         run(function () {
@@ -13970,7 +16253,7 @@ define(
 
 
 define(
-  "ember-data/tests/integration/serializers/embedded-records-mixin-new-test",
+  "ember-data/tests/integration/serializers/embedded-records-mixin-test",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -13979,51 +16262,48 @@ define(
       __exports__[name] = value;
     }
 
-    var HomePlanet, SuperVillain, EvilMinion, SecretLab, SecretWeapon, BatCave, Comment, env;
+    var get = Ember.get;
+    var HomePlanet, SuperVillain, EvilMinion, SecretLab, SecretWeapon, BatCave, Comment, league, superVillain, evilMinion, secretWeapon, homePlanet, secretLab, env;
     var run = Ember.run;
     var LightSaber;
-    var TestSerializer;
 
-    module("integration/embedded_records_mixin - EmbeddedRecordsMixin (new API)", {
+    module("integration/embedded_records_mixin - EmbeddedRecordsMixin", {
       setup: function () {
         SuperVillain = DS.Model.extend({
           firstName: DS.attr('string'),
           lastName: DS.attr('string'),
-          homePlanet: DS.belongsTo("homePlanet", { inverse: 'villains', async: true }),
-          secretLab: DS.belongsTo("secretLab", { async: false }),
-          secretWeapons: DS.hasMany("secretWeapon", { async: false }),
-          evilMinions: DS.hasMany("evilMinion", { async: false })
+          homePlanet: DS.belongsTo('home-planet', { inverse: 'villains', async: true }),
+          secretLab: DS.belongsTo('secret-lab', { async: false }),
+          secretWeapons: DS.hasMany('secret-weapon', { async: false }),
+          evilMinions: DS.hasMany('evil-minion', { async: false })
         });
         HomePlanet = DS.Model.extend({
           name: DS.attr('string'),
-          villains: DS.hasMany('superVillain', { inverse: 'homePlanet', async: false })
+          villains: DS.hasMany('super-villain', { inverse: 'homePlanet', async: false })
         });
         SecretLab = DS.Model.extend({
           minionCapacity: DS.attr('number'),
           vicinity: DS.attr('string'),
-          superVillain: DS.belongsTo('superVillain', { async: false })
+          superVillain: DS.belongsTo('super-villain', { async: false })
         });
         BatCave = SecretLab.extend({
           infiltrated: DS.attr('boolean')
         });
         SecretWeapon = DS.Model.extend({
           name: DS.attr('string'),
-          superVillain: DS.belongsTo('superVillain', { async: false })
+          superVillain: DS.belongsTo('super-villain', { async: false })
         });
         LightSaber = SecretWeapon.extend({
           color: DS.attr('string')
         });
         EvilMinion = DS.Model.extend({
-          superVillain: DS.belongsTo('superVillain', { async: false }),
+          superVillain: DS.belongsTo('super-villain', { async: false }),
           name: DS.attr('string')
         });
         Comment = DS.Model.extend({
           body: DS.attr('string'),
           root: DS.attr('boolean'),
           children: DS.hasMany('comment', { inverse: null, async: false })
-        });
-        TestSerializer = DS.RESTSerializer.extend({
-          isNewSerializerAPI: true
         });
         env = setupStore({
           superVillain: SuperVillain,
@@ -14035,16 +16315,20 @@ define(
           evilMinion: EvilMinion,
           comment: Comment
         });
-        env.store.modelFor('superVillain');
-        env.store.modelFor('homePlanet');
-        env.store.modelFor('secretLab');
-        env.store.modelFor('batCave');
-        env.store.modelFor('secretWeapon');
-        env.store.modelFor('lightSaber');
-        env.store.modelFor('evilMinion');
+        env.store.modelFor('super-villain');
+        env.store.modelFor('home-planet');
+        env.store.modelFor('secret-lab');
+        env.store.modelFor('bat-cave');
+        env.store.modelFor('secret-weapon');
+        env.store.modelFor('light-saber');
+        env.store.modelFor('evil-minion');
         env.store.modelFor('comment');
 
-        env.registry.register('serializer:application', TestSerializer.extend(DS.EmbeddedRecordsMixin));
+        env.registry.register('adapter:application', DS.RESTAdapter);
+        env.registry.register('serializer:application', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin));
+
+        //env.amsSerializer = env.container.lookup("serializer:-active-model");
+        //env.amsAdapter    = env.container.lookup("adapter:-active-model");
       },
 
       teardown: function () {
@@ -14052,10 +16336,8 @@ define(
       }
     });
 
-    test("normalizeSingleResponse with embedded objects", function () {
-      env.registry.register('adapter:super-villain', DS.RESTAdapter);
-      env.registry.register('serializer:super-villain', TestSerializer.extend());
-      env.registry.register('serializer:home-planet', TestSerializer.extend(DS.EmbeddedRecordsMixin, {
+    test("normalizeResponse with embedded objects", function () {
+      env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           villains: { embedded: 'always' }
         }
@@ -14076,7 +16358,7 @@ define(
       var json;
 
       run(function () {
-        json = serializer.normalizeSingleResponse(env.store, HomePlanet, json_hash, '1', 'findRecord');
+        json = serializer.normalizeResponse(env.store, HomePlanet, json_hash, '1', 'findRecord');
       });
 
       deepEqual(json, {
@@ -14104,19 +16386,17 @@ define(
       });
     });
 
-    test("normalizeSingleResponse with embedded objects inside embedded objects", function () {
-      env.registry.register('adapter:super-villain', DS.RESTAdapter);
-      env.registry.register('serializer:home-planet', TestSerializer.extend(DS.EmbeddedRecordsMixin, {
+    test("normalizeResponse with embedded objects inside embedded objects", function () {
+      env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           villains: { embedded: 'always' }
         }
       }));
-      env.registry.register('serializer:super-villain', TestSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           evilMinions: { embedded: 'always' }
         }
       }));
-      env.registry.register('serializer:evil-minion', TestSerializer);
 
       var serializer = env.store.serializerFor("home-planet");
       var json_hash = {
@@ -14137,7 +16417,7 @@ define(
       var json;
 
       run(function () {
-        json = serializer.normalizeSingleResponse(env.store, HomePlanet, json_hash, '1', 'findRecord');
+        json = serializer.normalizeResponse(env.store, HomePlanet, json_hash, '1', 'findRecord');
       });
 
       deepEqual(json, {
@@ -14176,15 +16456,15 @@ define(
       });
     });
 
-    test("normalizeSingleResponse with embedded objects of same type", function () {
-      env.registry.register('adapter:comment', DS.RESTAdapter);
-      env.registry.register('serializer:comment', TestSerializer.extend(DS.EmbeddedRecordsMixin, {
+    test("normalizeResponse with embedded objects of same type", function () {
+      env.registry.register('serializer:comment', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           children: { embedded: 'always' }
         }
       }));
 
       var serializer = env.store.serializerFor("comment");
+
       var json_hash = {
         comment: {
           id: "1",
@@ -14203,7 +16483,7 @@ define(
       };
       var json;
       run(function () {
-        json = serializer.normalizeSingleResponse(env.store, Comment, json_hash, '1', 'findRecord');
+        json = serializer.normalizeResponse(env.store, Comment, json_hash, '1', 'findRecord');
       });
 
       deepEqual(json, {
@@ -14240,9 +16520,8 @@ define(
       }, "Primary record was correct");
     });
 
-    test("normalizeSingleResponse with embedded objects inside embedded objects of same type", function () {
-      env.registry.register('adapter:comment', DS.RESTAdapter);
-      env.registry.register('serializer:comment', TestSerializer.extend(DS.EmbeddedRecordsMixin, {
+    test("normalizeResponse with embedded objects inside embedded objects of same type", function () {
+      env.registry.register('serializer:comment', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           children: { embedded: 'always' }
         }
@@ -14272,7 +16551,7 @@ define(
       };
       var json;
       run(function () {
-        json = serializer.normalizeSingleResponse(env.store, Comment, json_hash, '1', 'findRecord');
+        json = serializer.normalizeResponse(env.store, Comment, json_hash, '1', 'findRecord');
       });
 
       deepEqual(json, {
@@ -14321,19 +16600,17 @@ define(
       }, "Primary record was correct");
     });
 
-    test("normalizeSingleResponse with embedded objects of same type, but from separate attributes", function () {
+    test("normalizeResponse with embedded objects of same type, but from separate attributes", function () {
       HomePlanet.reopen({
         reformedVillains: DS.hasMany('superVillain', { inverse: null, async: false })
       });
 
-      env.registry.register('adapter:home-planet', DS.RESTAdapter);
-      env.registry.register('serializer:home-planet', TestSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           villains: { embedded: 'always' },
           reformedVillains: { embedded: 'always' }
         }
       }));
-      env.registry.register('serializer:super-villain', TestSerializer);
 
       var serializer = env.store.serializerFor("home-planet");
       var json_hash = {
@@ -14358,7 +16635,7 @@ define(
       };
       var json;
       run(function () {
-        json = serializer.normalizeSingleResponse(env.store, HomePlanet, json_hash, '1', 'findRecord');
+        json = serializer.normalizeResponse(env.store, HomePlanet, json_hash, '1', 'findRecord');
       });
 
       deepEqual(json, {
@@ -14409,14 +16686,12 @@ define(
       }, "Primary hash was correct");
     });
 
-    test("normalizeArrayResponse with embedded objects", function () {
-      env.registry.register('adapter:super-villain', DS.RESTAdapter);
-      env.registry.register('serializer:home-planet', TestSerializer.extend(DS.EmbeddedRecordsMixin, {
+    test("normalizeResponse with embedded objects", function () {
+      env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           villains: { embedded: 'always' }
         }
       }));
-      env.registry.register('serializer:super-villain', TestSerializer);
 
       var serializer = env.store.serializerFor("home-planet");
 
@@ -14434,7 +16709,7 @@ define(
       var array;
 
       run(function () {
-        array = serializer.normalizeArrayResponse(env.store, HomePlanet, json_hash, null, 'findAll');
+        array = serializer.normalizeResponse(env.store, HomePlanet, json_hash, null, 'findAll');
       });
 
       deepEqual(array, {
@@ -14462,13 +16737,12 @@ define(
       });
     });
 
-    test("normalizeArrayResponse with embedded objects with custom primary key", function () {
+    test("normalizeResponse with embedded objects with custom primary key", function () {
       expect(1);
-      env.registry.register('adapter:super-villain', DS.RESTAdapter);
-      env.registry.register('serializer:super-villain', TestSerializer.extend({
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend({
         primaryKey: 'villain_id'
       }));
-      env.registry.register('serializer:home-planet', TestSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           villains: { embedded: 'always' }
         }
@@ -14490,7 +16764,7 @@ define(
       var array;
 
       run(function () {
-        array = serializer.normalizeArrayResponse(env.store, HomePlanet, json_hash, null, 'findAll');
+        array = serializer.normalizeResponse(env.store, HomePlanet, json_hash, null, 'findAll');
       });
 
       deepEqual(array, {
@@ -14518,10 +16792,9 @@ define(
       });
     });
 
-    test("normalizeArrayResponse with embedded objects with identical relationship and attribute key ", function () {
+    test("normalizeResponse with embedded objects with identical relationship and attribute key ", function () {
       expect(1);
-      env.registry.register('adapter:super-villain', DS.RESTAdapter);
-      env.registry.register('serializer:home-planet', TestSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           villains: { embedded: 'always' }
         },
@@ -14530,7 +16803,6 @@ define(
           return this.keyForAttribute(key, type);
         }
       }));
-      env.registry.register('serializer:super-villain', TestSerializer);
 
       var serializer = env.store.serializerFor("home-planet");
 
@@ -14548,7 +16820,7 @@ define(
       var array;
 
       run(function () {
-        array = serializer.normalizeArrayResponse(env.store, HomePlanet, json_hash, null, 'findAll');
+        array = serializer.normalizeResponse(env.store, HomePlanet, json_hash, null, 'findAll');
       });
 
       deepEqual(array, {
@@ -14575,9 +16847,9 @@ define(
         }]
       });
     });
-    test("normalizeArrayResponse with embedded objects of same type as primary type", function () {
-      env.registry.register('adapter:comment', DS.RESTAdapter);
-      env.registry.register('serializer:comment', TestSerializer.extend(DS.EmbeddedRecordsMixin, {
+
+    test("normalizeResponse with embedded objects of same type as primary type", function () {
+      env.registry.register('serializer:comment', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           children: { embedded: 'always' }
         }
@@ -14604,7 +16876,7 @@ define(
       var array;
 
       run(function () {
-        array = serializer.normalizeArrayResponse(env.store, Comment, json_hash, null, 'findAll');
+        array = serializer.normalizeResponse(env.store, Comment, json_hash, null, 'findAll');
       });
 
       deepEqual(array, {
@@ -14641,19 +16913,17 @@ define(
       }, "Primary array is correct");
     });
 
-    test("normalizeArrayResponse with embedded objects of same type, but from separate attributes", function () {
+    test("normalizeResponse with embedded objects of same type, but from separate attributes", function () {
       HomePlanet.reopen({
         reformedVillains: DS.hasMany('superVillain', { async: false })
       });
 
-      env.registry.register('adapter:home-planet', DS.RESTAdapter);
-      env.registry.register('serializer:home-planet', TestSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           villains: { embedded: 'always' },
           reformedVillains: { embedded: 'always' }
         }
       }));
-      env.registry.register('serializer:super-villain', TestSerializer);
 
       var serializer = env.store.serializerFor("home-planet");
       var json_hash = {
@@ -14696,7 +16966,7 @@ define(
 
       var json;
       run(function () {
-        json = serializer.normalizeArrayResponse(env.store, HomePlanet, json_hash, null, 'findAll');
+        json = serializer.normalizeResponse(env.store, HomePlanet, json_hash, null, 'findAll');
       });
 
       deepEqual(json, {
@@ -14789,19 +17059,194 @@ define(
       }, "Primary array was correct");
     });
 
-    test("normalizeSingleResponse with embedded object (belongsTo relationship)", function () {
-      env.registry.register('adapter:super-villain', DS.RESTAdapter);
-      env.registry.register('serializer:super-villain', TestSerializer.extend(DS.EmbeddedRecordsMixin, {
+    test("serialize supports serialize:false on non-relationship properties", function () {
+      var tom;
+      run(function () {
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: '1' });
+      });
+
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          firstName: { serialize: false }
+        }
+      }));
+      var serializer, json;
+      run(function () {
+        serializer = env.store.serializerFor("super-villain");
+        json = serializer.serialize(tom._createSnapshot());
+      });
+
+      deepEqual(json, {
+        lastName: "Dale",
+        homePlanet: null,
+        secretLab: null
+      });
+    });
+
+    test("serialize with embedded objects (hasMany relationship)", function () {
+      var tom, league;
+      run(function () {
+        league = env.store.createRecord('home-planet', { name: "Villain League", id: "123" });
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", homePlanet: league, id: '1' });
+      });
+
+      env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          villains: { embedded: 'always' }
+        }
+      }));
+
+      var serializer, json;
+      run(function () {
+        serializer = env.store.serializerFor("home-planet");
+
+        json = serializer.serialize(league._createSnapshot());
+      });
+
+      deepEqual(json, {
+        name: "Villain League",
+        villains: [{
+          id: get(tom, "id"),
+          firstName: "Tom",
+          lastName: "Dale",
+          homePlanet: get(league, "id"),
+          secretLab: null
+        }]
+      });
+    });
+
+    test("serialize with embedded objects (unknown hasMany relationship)", function () {
+      var league;
+      run(function () {
+        env.store.push({
+          data: {
+            type: 'home-planet',
+            id: '123',
+            attributes: {
+              name: "Villain League"
+            }
+          }
+        });
+        league = env.store.peekRecord('home-planet', 123);
+      });
+
+      env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          villains: { embedded: 'always' }
+        }
+      }));
+
+      var serializer, json;
+      warns(function () {
+        run(function () {
+          serializer = env.store.serializerFor("home-planet");
+          json = serializer.serialize(league._createSnapshot());
+        });
+      }, /The embedded relationship 'villains' is undefined for 'home-planet' with id '123'. Please include it in your original payload./);
+
+      deepEqual(json, {
+        name: "Villain League",
+        villains: []
+      });
+    });
+
+    test("serialize with embedded objects (hasMany relationship) supports serialize:false", function () {
+      run(function () {
+        league = env.store.createRecord('home-planet', { name: "Villain League", id: "123" });
+        env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", homePlanet: league, id: '1' });
+      });
+
+      env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          villains: { serialize: false }
+        }
+      }));
+      var serializer, json;
+      run(function () {
+        serializer = env.store.serializerFor("home-planet");
+
+        json = serializer.serialize(league._createSnapshot());
+      });
+
+      deepEqual(json, {
+        name: "Villain League"
+      });
+    });
+
+    test("serialize with (new) embedded objects (hasMany relationship)", function () {
+      run(function () {
+        league = env.store.createRecord('home-planet', { name: "Villain League", id: "123" });
+        env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", homePlanet: league });
+      });
+
+      env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          villains: { embedded: 'always' }
+        }
+      }));
+      var serializer, json;
+      run(function () {
+        serializer = env.store.serializerFor("home-planet");
+
+        json = serializer.serialize(league._createSnapshot());
+      });
+      deepEqual(json, {
+        name: "Villain League",
+        villains: [{
+          firstName: "Tom",
+          lastName: "Dale",
+          homePlanet: get(league, "id"),
+          secretLab: null
+        }]
+      });
+    });
+
+    test("serialize with embedded objects (hasMany relationships, including related objects not embedded)", function () {
+      run(function () {
+        superVillain = env.store.createRecord('super-villain', { id: 1, firstName: "Super", lastName: "Villian" });
+        evilMinion = env.store.createRecord('evil-minion', { id: 1, name: "Evil Minion", superVillian: superVillain });
+        secretWeapon = env.store.createRecord('secret-weapon', { id: 1, name: "Secret Weapon", superVillain: superVillain });
+        superVillain.get('evilMinions').pushObject(evilMinion);
+        superVillain.get('secretWeapons').pushObject(secretWeapon);
+      });
+
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          evilMinions: { serialize: 'records', deserialize: 'records' },
+          secretWeapons: { serialize: 'ids' }
+        }
+      }));
+      var serializer, json;
+      run(function () {
+        serializer = env.container.lookup("serializer:super-villain");
+
+        json = serializer.serialize(superVillain._createSnapshot());
+      });
+      deepEqual(json, {
+        firstName: get(superVillain, "firstName"),
+        lastName: get(superVillain, "lastName"),
+        homePlanet: null,
+        evilMinions: [{
+          id: get(evilMinion, "id"),
+          name: get(evilMinion, "name"),
+          superVillain: "1"
+        }],
+        secretLab: null,
+        secretWeapons: ["1"]
+      });
+    });
+
+    test("normalizeResponse with embedded object (belongsTo relationship)", function () {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           secretLab: { embedded: 'always' }
         }
       }));
-      //env.registry.register('serializer:secret-lab', TestSerializer);
 
       var serializer = env.store.serializerFor("super-villain");
 
       var json_hash = {
-        superVillain: {
+        super_villain: {
           id: "1",
           firstName: "Tom",
           lastName: "Dale",
@@ -14818,7 +17263,7 @@ define(
       var json;
 
       run(function () {
-        json = serializer.normalizeSingleResponse(env.store, SuperVillain, json_hash, '1', 'findRecord');
+        json = serializer.normalizeResponse(env.store, SuperVillain, json_hash, '1', 'findRecord');
       });
 
       deepEqual(json, {
@@ -14856,14 +17301,294 @@ define(
       });
     });
 
-    test("normalizeSingleResponse with multiply-nested belongsTo", function () {
-      env.registry.register('adapter:evil-minion', DS.RESTAdapter);
-      env.registry.register('serializer:evil-minion', TestSerializer.extend(DS.EmbeddedRecordsMixin, {
+    test("serialize with embedded object (belongsTo relationship)", function () {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          secretLab: { embedded: 'always' }
+        }
+      }));
+      var serializer, json, tom;
+      run(function () {
+        serializer = env.store.serializerFor("super-villain");
+
+        // records with an id, persisted
+
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
+          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA", id: "101" }),
+          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
+        });
+      });
+
+      run(function () {
+        json = serializer.serialize(tom._createSnapshot());
+      });
+
+      deepEqual(json, {
+        firstName: get(tom, "firstName"),
+        lastName: get(tom, "lastName"),
+        homePlanet: get(tom, "homePlanet").get("id"),
+        secretLab: {
+          id: get(tom, "secretLab").get("id"),
+          minionCapacity: get(tom, "secretLab").get("minionCapacity"),
+          vicinity: get(tom, "secretLab").get("vicinity")
+        }
+      });
+    });
+
+    test("serialize with embedded object (belongsTo relationship) works with different primaryKeys", function () {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        primaryKey: '_id',
+        attrs: {
+          secretLab: { embedded: 'always' }
+        }
+      }));
+      env.registry.register('serializer:secret-lab', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        primaryKey: 'crazy_id'
+      }));
+
+      var serializer = env.store.serializerFor("super-villain");
+
+      // records with an id, persisted
+      var tom, json;
+
+      run(function () {
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
+          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA", id: "101" }),
+          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
+        });
+      });
+
+      run(function () {
+        json = serializer.serialize(tom._createSnapshot());
+      });
+
+      deepEqual(json, {
+        firstName: get(tom, "firstName"),
+        lastName: get(tom, "lastName"),
+        homePlanet: get(tom, "homePlanet").get("id"),
+        secretLab: {
+          crazy_id: get(tom, "secretLab").get("id"),
+          minionCapacity: get(tom, "secretLab").get("minionCapacity"),
+          vicinity: get(tom, "secretLab").get("vicinity")
+        }
+      });
+    });
+
+    test("serialize with embedded object (belongsTo relationship, new no id)", function () {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          secretLab: { embedded: 'always' }
+        }
+      }));
+
+      var serializer = env.store.serializerFor("super-villain");
+
+      // records without ids, new
+      var tom, json;
+
+      run(function () {
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale",
+          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA" }),
+          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
+        });
+      });
+
+      run(function () {
+        json = serializer.serialize(tom._createSnapshot());
+      });
+
+      deepEqual(json, {
+        firstName: get(tom, "firstName"),
+        lastName: get(tom, "lastName"),
+        homePlanet: get(tom, "homePlanet").get("id"),
+        secretLab: {
+          minionCapacity: get(tom, "secretLab").get("minionCapacity"),
+          vicinity: get(tom, "secretLab").get("vicinity")
+        }
+      });
+    });
+
+    test("serialize with embedded object (belongsTo relationship) supports serialize:ids", function () {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          secretLab: { serialize: 'ids' }
+        }
+      }));
+      var serializer = env.store.serializerFor("super-villain");
+
+      // records with an id, persisted
+      var tom, json;
+
+      run(function () {
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
+          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA", id: "101" }),
+          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
+        });
+      });
+
+      run(function () {
+        json = serializer.serialize(tom._createSnapshot());
+      });
+
+      deepEqual(json, {
+        firstName: get(tom, "firstName"),
+        lastName: get(tom, "lastName"),
+        homePlanet: get(tom, "homePlanet").get("id"),
+        secretLab: get(tom, "secretLab").get("id")
+      });
+    });
+
+    test("serialize with embedded object (belongsTo relationship) supports serialize:id", function () {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          secretLab: { serialize: 'id' }
+        }
+      }));
+
+      var serializer = env.store.serializerFor("super-villain");
+
+      // records with an id, persisted
+      var tom, json;
+
+      run(function () {
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
+          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA", id: "101" }),
+          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
+        });
+      });
+
+      run(function () {
+        json = serializer.serialize(tom._createSnapshot());
+      });
+
+      deepEqual(json, {
+        firstName: get(tom, "firstName"),
+        lastName: get(tom, "lastName"),
+        homePlanet: get(tom, "homePlanet").get("id"),
+        secretLab: get(tom, "secretLab").get("id")
+      });
+    });
+
+    test("serialize with embedded object (belongsTo relationship) supports serialize:id in conjunction with deserialize:records", function () {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          secretLab: { serialize: 'id', deserialize: 'records' }
+        }
+      }));
+
+      var serializer = env.store.serializerFor("super-villain");
+
+      // records with an id, persisted
+      var tom, json;
+
+      run(function () {
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
+          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA", id: "101" }),
+          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
+        });
+      });
+
+      run(function () {
+        json = serializer.serialize(tom._createSnapshot());
+      });
+
+      deepEqual(json, {
+        firstName: get(tom, "firstName"),
+        lastName: get(tom, "lastName"),
+        homePlanet: get(tom, "homePlanet").get("id"),
+        secretLab: get(tom, "secretLab").get("id")
+      });
+    });
+
+    test("serialize with embedded object (belongsTo relationship) supports serialize:false", function () {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          secretLab: { serialize: false }
+        }
+      }));
+      var serializer = env.store.serializerFor("super-villain");
+
+      // records with an id, persisted
+      var tom, json;
+      run(function () {
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
+          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA", id: "101" }),
+          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
+        });
+      });
+
+      run(function () {
+        json = serializer.serialize(tom._createSnapshot());
+      });
+
+      deepEqual(json, {
+        firstName: get(tom, "firstName"),
+        lastName: get(tom, "lastName"),
+        homePlanet: get(tom, "homePlanet").get("id")
+      });
+    });
+
+    test("serialize with embedded object (belongsTo relationship) serializes the id by default if no option specified", function () {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin));
+      var serializer = env.store.serializerFor("super-villain");
+
+      // records with an id, persisted
+
+      var tom, json;
+
+      run(function () {
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
+          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA", id: "101" }),
+          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
+        });
+      });
+
+      run(function () {
+        json = serializer.serialize(tom._createSnapshot());
+      });
+
+      deepEqual(json, {
+        firstName: get(tom, "firstName"),
+        lastName: get(tom, "lastName"),
+        homePlanet: get(tom, "homePlanet").get("id"),
+        secretLab: get(tom, "secretLab").get("id")
+      });
+    });
+
+    test("when related record is not present, serialize embedded record (with a belongsTo relationship) as null", function () {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          secretLab: { embedded: 'always' }
+        }
+      }));
+      var serializer = env.store.serializerFor("super-villain");
+      var tom, json;
+
+      run(function () {
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
+          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
+        });
+      });
+
+      run(function () {
+        json = serializer.serialize(tom._createSnapshot());
+      });
+
+      deepEqual(json, {
+        firstName: get(tom, "firstName"),
+        lastName: get(tom, "lastName"),
+        homePlanet: get(tom, "homePlanet").get("id"),
+        secretLab: null
+      });
+    });
+
+    test("normalizeResponse with multiply-nested belongsTo", function () {
+      env.registry.register('serializer:evil-minion', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           superVillain: { embedded: 'always' }
         }
       }));
-      env.registry.register('serializer:super-villain', TestSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           homePlanet: { embedded: 'always' }
         }
@@ -14890,7 +17615,7 @@ define(
       var json;
 
       run(function () {
-        json = serializer.normalizeSingleResponse(env.store, EvilMinion, json_hash, '1', 'findRecord');
+        json = serializer.normalizeResponse(env.store, EvilMinion, json_hash, '1', 'findRecord');
       });
 
       deepEqual(json, {
@@ -14936,13 +17661,12 @@ define(
       }, "Primary hash was correct");
     });
 
-    test("normalizeSingleResponse with polymorphic hasMany", function () {
+    test("normalizeResponse with polymorphic hasMany", function () {
       SuperVillain.reopen({
         secretWeapons: DS.hasMany("secretWeapon", { polymorphic: true, async: false })
       });
 
-      env.registry.register('adapter:super-villain', DS.RESTAdapter);
-      env.registry.register('serializer:super-villain', TestSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           secretWeapons: { embedded: 'always' }
         }
@@ -14950,7 +17674,7 @@ define(
       var serializer = env.store.serializerFor("super-villain");
 
       var json_hash = {
-        superVillain: {
+        super_villain: {
           id: "1",
           firstName: "Tom",
           lastName: "Dale",
@@ -14969,7 +17693,7 @@ define(
       var json;
 
       run(function () {
-        json = serializer.normalizeSingleResponse(env.store, SuperVillain, json_hash, '1', 'findAll');
+        json = serializer.normalizeResponse(env.store, SuperVillain, json_hash, '1', 'findAll');
       });
 
       deepEqual(json, {
@@ -15005,13 +17729,83 @@ define(
       }, "Primary hash was correct");
     });
 
-    test("normalizeSingleResponse with polymorphic belongsTo", function () {
+    test("normalizeResponse with polymorphic hasMany and custom primary key", function () {
+      SuperVillain.reopen({
+        secretWeapons: DS.hasMany("secretWeapon", { polymorphic: true, async: false })
+      });
+
+      env.registry.register('serializer:light-saber', DS.RESTSerializer.extend({
+        primaryKey: 'custom'
+      }));
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          secretWeapons: { embedded: 'always' }
+        }
+      }));
+      var serializer = env.store.serializerFor("super-villain");
+
+      var json_hash = {
+        super_villain: {
+          id: "1",
+          firstName: "Tom",
+          lastName: "Dale",
+          secretWeapons: [{
+            custom: "1",
+            type: "LightSaber",
+            name: "Tom's LightSaber",
+            color: "Red"
+          }, {
+            id: "1",
+            type: "SecretWeapon",
+            name: "The Death Star"
+          }]
+        }
+      };
+      var json;
+
+      run(function () {
+        json = serializer.normalizeResponse(env.store, SuperVillain, json_hash, '1', 'findRecord');
+      });
+
+      deepEqual(json, {
+        "data": {
+          "attributes": {
+            "firstName": "Tom",
+            "lastName": "Dale"
+          },
+          "id": "1",
+          "relationships": {
+            "secretWeapons": {
+              "data": [{ "type": "light-saber", "id": "1" }, { "type": "secret-weapon", "id": "1" }]
+            }
+          },
+          "type": "super-villain"
+        },
+        "included": [{
+          "attributes": {
+            "color": "Red",
+            "name": "Tom's LightSaber"
+          },
+          "id": "1",
+          "relationships": {},
+          "type": "light-saber"
+        }, {
+          "attributes": {
+            "name": "The Death Star"
+          },
+          "id": "1",
+          "relationships": {},
+          "type": "secret-weapon"
+        }]
+      }, "Custom primary key of embedded hasMany is correctly normalized");
+    });
+
+    test("normalizeResponse with polymorphic belongsTo", function () {
       SuperVillain.reopen({
         secretLab: DS.belongsTo("secretLab", { polymorphic: true, async: true })
       });
 
-      env.registry.register('adapter:super-villain', DS.RESTAdapter);
-      env.registry.register('serializer:super-villain', TestSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           secretLab: { embedded: 'always' }
         }
@@ -15019,7 +17813,7 @@ define(
       var serializer = env.store.serializerFor("super-villain");
 
       var json_hash = {
-        superVillain: {
+        super_villain: {
           id: "1",
           firstName: "Tom",
           lastName: "Dale",
@@ -15034,7 +17828,7 @@ define(
       var json;
 
       run(function () {
-        json = serializer.normalizeSingleResponse(env.store, SuperVillain, json_hash, '1', 'findRecord');
+        json = serializer.normalizeResponse(env.store, SuperVillain, json_hash, '1', 'findRecord');
       });
 
       deepEqual(json, {
@@ -15062,20 +17856,123 @@ define(
       }, "Primary has was correct");
     });
 
+    test("normalizeResponse with polymorphic belongsTo and custom primary key", function () {
+      expect(1);
+
+      SuperVillain.reopen({
+        secretLab: DS.belongsTo("secretLab", { polymorphic: true, async: true })
+      });
+
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          secretLab: { embedded: 'always' }
+        }
+      }));
+      env.registry.register('serializer:bat-cave', DS.RESTSerializer.extend({
+        primaryKey: 'custom'
+      }));
+      var serializer = env.store.serializerFor("super-villain");
+
+      var json_hash = {
+        superVillain: {
+          id: "1",
+          firstName: "Tom",
+          lastName: "Dale",
+          secretLab: {
+            custom: "1",
+            type: "bat-cave",
+            infiltrated: true
+          }
+        }
+      };
+
+      var json;
+
+      run(function () {
+        json = serializer.normalizeResponse(env.store, SuperVillain, json_hash, '1', 'findRecord');
+      });
+
+      deepEqual(json, {
+        "data": {
+          "attributes": {
+            "firstName": "Tom",
+            "lastName": "Dale"
+          },
+          "id": "1",
+          "relationships": {
+            "secretLab": {
+              "data": {
+                "id": "1",
+                "type": "bat-cave"
+              }
+            }
+          },
+          "type": "super-villain"
+        },
+        "included": [{
+          "attributes": {
+            "infiltrated": true
+          },
+          "id": "1",
+          "relationships": {},
+          "type": "bat-cave"
+        }]
+      }, "Custom primary key is correctly normalized");
+    });
+
+    test("Mixin can be used with RESTSerializer which does not define keyForAttribute", function () {
+      run(function () {
+        homePlanet = env.store.createRecord('home-planet', { name: "Villain League", id: "123" });
+        secretLab = env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA", id: "101" });
+        superVillain = env.store.createRecord('super-villain', {
+          id: "1", firstName: "Super", lastName: "Villian", homePlanet: homePlanet, secretLab: secretLab
+        });
+        secretWeapon = env.store.createRecord('secret-weapon', { id: "1", name: "Secret Weapon", superVillain: superVillain });
+        superVillain.get('secretWeapons').pushObject(secretWeapon);
+        evilMinion = env.store.createRecord('evil-minion', { id: "1", name: "Evil Minion", superVillian: superVillain });
+        superVillain.get('evilMinions').pushObject(evilMinion);
+      });
+
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          evilMinions: { serialize: 'records', deserialize: 'records' }
+        }
+      }));
+      var serializer = env.store.serializerFor("super-villain");
+      var json;
+
+      run(function () {
+        json = serializer.serialize(superVillain._createSnapshot());
+      });
+
+      deepEqual(json, {
+        firstName: get(superVillain, "firstName"),
+        lastName: get(superVillain, "lastName"),
+        homePlanet: "123",
+        evilMinions: [{
+          id: get(evilMinion, "id"),
+          name: get(evilMinion, "name"),
+          superVillain: "1"
+        }],
+        secretLab: "101"
+        // "manyToOne" relation does not serialize ids
+        // sersecretWeapons: ["1"]
+      });
+    });
+
     test("normalize with custom belongsTo primary key", function () {
-      env.registry.register('adapter:evil-minion', DS.RESTAdapter);
-      env.registry.register('serializer:evil-minion', TestSerializer.extend(DS.EmbeddedRecordsMixin, {
+      env.registry.register('serializer:evil-minion', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           superVillain: { embedded: 'always' }
         }
       }));
-      env.registry.register('serializer:super-villain', TestSerializer.extend({
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend({
         primaryKey: 'custom'
       }));
 
       var serializer = env.store.serializerFor("evil-minion");
       var json_hash = {
-        evil_minion: {
+        evilMinion: {
           id: "1",
           name: "Alex",
           superVillain: {
@@ -15115,1445 +18012,6 @@ define(
         }]
       }, "Primary hash was correct");
     });
-  }
-);
-
-
-define(
-  "ember-data/tests/integration/serializers/embedded-records-mixin-test",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-
-    function __es6_export__(name, value) {
-      __exports__[name] = value;
-    }
-
-    var get = Ember.get;
-    var HomePlanet, SuperVillain, EvilMinion, SecretLab, SecretWeapon, BatCave, Comment, league, superVillain, evilMinion, secretWeapon, homePlanet, secretLab, env;
-    var indexOf = Ember.ArrayPolyfills.indexOf;
-    var run = Ember.run;
-    var LightSaber;
-
-    module("integration/embedded_records_mixin - EmbeddedRecordsMixin", {
-      setup: function () {
-        SuperVillain = DS.Model.extend({
-          firstName: DS.attr('string'),
-          lastName: DS.attr('string'),
-          homePlanet: DS.belongsTo('home-planet', { inverse: 'villains', async: true }),
-          secretLab: DS.belongsTo('secret-lab', { async: false }),
-          secretWeapons: DS.hasMany('secret-weapon', { async: false }),
-          evilMinions: DS.hasMany('evil-minion', { async: false })
-        });
-        HomePlanet = DS.Model.extend({
-          name: DS.attr('string'),
-          villains: DS.hasMany('super-villain', { inverse: 'homePlanet', async: false })
-        });
-        SecretLab = DS.Model.extend({
-          minionCapacity: DS.attr('number'),
-          vicinity: DS.attr('string'),
-          superVillain: DS.belongsTo('super-villain', { async: false })
-        });
-        BatCave = SecretLab.extend({
-          infiltrated: DS.attr('boolean')
-        });
-        SecretWeapon = DS.Model.extend({
-          name: DS.attr('string'),
-          superVillain: DS.belongsTo('super-villain', { async: false })
-        });
-        LightSaber = SecretWeapon.extend({
-          color: DS.attr('string')
-        });
-        EvilMinion = DS.Model.extend({
-          superVillain: DS.belongsTo('super-villain', { async: false }),
-          name: DS.attr('string')
-        });
-        Comment = DS.Model.extend({
-          body: DS.attr('string'),
-          root: DS.attr('boolean'),
-          children: DS.hasMany('comment', { inverse: null, async: false })
-        });
-        env = setupStore({
-          superVillain: SuperVillain,
-          homePlanet: HomePlanet,
-          secretLab: SecretLab,
-          batCave: BatCave,
-          secretWeapon: SecretWeapon,
-          lightSaber: LightSaber,
-          evilMinion: EvilMinion,
-          comment: Comment
-        });
-        env.store.modelFor('super-villain');
-        env.store.modelFor('home-planet');
-        env.store.modelFor('secret-lab');
-        env.store.modelFor('bat-cave');
-        env.store.modelFor('secret-weapon');
-        env.store.modelFor('light-saber');
-        env.store.modelFor('evil-minion');
-        env.store.modelFor('comment');
-        env.registry.register('serializer:application', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin));
-        env.registry.register('serializer:-active-model', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin));
-        env.registry.register('adapter:-active-model', DS.ActiveModelAdapter);
-        env.amsSerializer = env.container.lookup("serializer:-active-model");
-        env.amsAdapter = env.container.lookup("adapter:-active-model");
-      },
-
-      teardown: function () {
-        run(env.store, 'destroy');
-      }
-    });
-
-    test("extractSingle with embedded objects", function () {
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:home-planet', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          villains: { embedded: 'always' }
-        }
-      }));
-
-      var serializer = env.store.serializerFor("home-planet");
-      var json_hash = {
-        home_planet: {
-          id: "1",
-          name: "Umber",
-          villains: [{
-            id: "1",
-            first_name: "Tom",
-            last_name: "Dale"
-          }]
-        }
-      };
-      var json;
-
-      run(function () {
-        json = serializer.extractSingle(env.store, HomePlanet, json_hash);
-      });
-
-      deepEqual(json, {
-        id: "1",
-        name: "Umber",
-        villains: ["1"]
-      });
-      run(function () {
-        env.store.find('super-villain', 1).then(function (minion) {
-          equal(minion.get('firstName'), "Tom");
-        });
-      });
-    });
-
-    test("extractSingle with embedded objects inside embedded objects", function () {
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:home-planet', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          villains: { embedded: 'always' }
-        }
-      }));
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          evilMinions: { embedded: 'always' }
-        }
-      }));
-
-      var serializer = env.store.serializerFor("home-planet");
-      var json_hash = {
-        home_planet: {
-          id: "1",
-          name: "Umber",
-          villains: [{
-            id: "1",
-            first_name: "Tom",
-            last_name: "Dale",
-            evil_minions: [{
-              id: "1",
-              name: "Alex"
-            }]
-          }]
-        }
-      };
-      var json;
-
-      run(function () {
-        json = serializer.extractSingle(env.store, HomePlanet, json_hash);
-      });
-
-      deepEqual(json, {
-        id: "1",
-        name: "Umber",
-        villains: ["1"]
-      });
-      run(function () {
-        env.store.find('super-villain', 1).then(function (villain) {
-          equal(villain.get('firstName'), "Tom");
-          equal(villain.get('evilMinions.length'), 1, "Should load the embedded child");
-          equal(villain.get('evilMinions.firstObject.name'), "Alex", "Should load the embedded child");
-        });
-        env.store.find('evil-minion', 1).then(function (minion) {
-          equal(minion.get('name'), "Alex");
-        });
-      });
-    });
-
-    test("extractSingle with embedded objects of same type", function () {
-      env.registry.register('adapter:comment', DS.ActiveModelAdapter);
-      env.registry.register('serializer:comment', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          children: { embedded: 'always' }
-        }
-      }));
-
-      var serializer = env.store.serializerFor("comment");
-
-      var json_hash = {
-        comment: {
-          id: "1",
-          body: "Hello",
-          root: true,
-          children: [{
-            id: "2",
-            body: "World",
-            root: false
-          }, {
-            id: "3",
-            body: "Foo",
-            root: false
-          }]
-        }
-      };
-      var json;
-      run(function () {
-        json = serializer.extractSingle(env.store, Comment, json_hash);
-      });
-
-      deepEqual(json, {
-        id: "1",
-        body: "Hello",
-        root: true,
-        children: ["2", "3"]
-      }, "Primary record was correct");
-      equal(env.store.recordForId('comment', "2").get("body"), "World", "Secondary records found in the store");
-      equal(env.store.recordForId('comment', "3").get("body"), "Foo", "Secondary records found in the store");
-    });
-
-    test("extractSingle with embedded objects inside embedded objects of same type", function () {
-      env.registry.register('adapter:comment', DS.ActiveModelAdapter);
-      env.registry.register('serializer:comment', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          children: { embedded: 'always' }
-        }
-      }));
-
-      var serializer = env.store.serializerFor("comment");
-      var json_hash = {
-        comment: {
-          id: "1",
-          body: "Hello",
-          root: true,
-          children: [{
-            id: "2",
-            body: "World",
-            root: false,
-            children: [{
-              id: "4",
-              body: "Another",
-              root: false
-            }]
-          }, {
-            id: "3",
-            body: "Foo",
-            root: false
-          }]
-        }
-      };
-      var json;
-      run(function () {
-        json = serializer.extractSingle(env.store, Comment, json_hash);
-      });
-
-      deepEqual(json, {
-        id: "1",
-        body: "Hello",
-        root: true,
-        children: ["2", "3"]
-      }, "Primary record was correct");
-      equal(env.store.recordForId('comment', "2").get("body"), "World", "Secondary records found in the store");
-      equal(env.store.recordForId('comment', "3").get("body"), "Foo", "Secondary records found in the store");
-      equal(env.store.recordForId('comment', "4").get("body"), "Another", "Secondary records found in the store");
-      equal(env.store.recordForId('comment', "2").get("children.length"), 1, "Should have one embedded record");
-      equal(env.store.recordForId('comment', "2").get("children.firstObject.body"), "Another", "Should have one embedded record");
-    });
-
-    test("extractSingle with embedded objects of same type, but from separate attributes", function () {
-      HomePlanet.reopen({
-        reformedVillains: DS.hasMany('super-villain', { inverse: null, async: false })
-      });
-
-      env.registry.register('adapter:home-planet', DS.ActiveModelAdapter);
-      env.registry.register('serializer:home-planet', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          villains: { embedded: 'always' },
-          reformedVillains: { embedded: 'always' }
-        }
-      }));
-
-      var serializer = env.store.serializerFor("home-planet");
-      var json_hash = {
-        home_planet: {
-          id: "1",
-          name: "Earth",
-          villains: [{
-            id: "1",
-            first_name: "Tom"
-          }, {
-            id: "3",
-            first_name: "Yehuda"
-          }],
-          reformed_villains: [{
-            id: "2",
-            first_name: "Alex"
-          }, {
-            id: "4",
-            first_name: "Erik"
-          }]
-        }
-      };
-      var json;
-      run(function () {
-        json = serializer.extractSingle(env.store, HomePlanet, json_hash);
-      });
-
-      deepEqual(json, {
-        id: "1",
-        name: "Earth",
-        villains: ["1", "3"],
-        reformedVillains: ["2", "4"]
-      }, "Primary hash was correct");
-
-      equal(env.store.recordForId('super-villain', "1").get("firstName"), "Tom", "Secondary records found in the store");
-      equal(env.store.recordForId('super-villain', "2").get("firstName"), "Alex", "Secondary records found in the store");
-      equal(env.store.recordForId('super-villain', "3").get("firstName"), "Yehuda", "Secondary records found in the store");
-      equal(env.store.recordForId('super-villain', "4").get("firstName"), "Erik", "Secondary records found in the store");
-    });
-
-    test("extractArray with embedded objects", function () {
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:home-planet', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          villains: { embedded: 'always' }
-        }
-      }));
-
-      var serializer = env.store.serializerFor("home-planet");
-
-      var json_hash = {
-        home_planets: [{
-          id: "1",
-          name: "Umber",
-          villains: [{
-            id: "1",
-            first_name: "Tom",
-            last_name: "Dale"
-          }]
-        }]
-      };
-      var array;
-
-      run(function () {
-        array = serializer.extractArray(env.store, HomePlanet, json_hash);
-      });
-
-      deepEqual(array, [{
-        id: "1",
-        name: "Umber",
-        villains: ["1"]
-      }]);
-
-      run(function () {
-        env.store.find('super-villain', 1).then(function (minion) {
-          equal(minion.get('firstName'), "Tom");
-        });
-      });
-    });
-
-    test("extractArray with embedded objects with custom primary key", function () {
-      expect(2);
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend({
-        primaryKey: 'villain_id'
-      }));
-      env.registry.register('serializer:home-planet', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          villains: { embedded: 'always' }
-        }
-      }));
-
-      var serializer = env.store.serializerFor("home-planet");
-
-      var json_hash = {
-        home_planets: [{
-          id: "1",
-          name: "Umber",
-          villains: [{
-            villain_id: "1",
-            first_name: "Alex",
-            last_name: "Baizeau"
-          }]
-        }]
-      };
-      var array;
-
-      run(function () {
-        array = serializer.extractArray(env.store, HomePlanet, json_hash);
-      });
-
-      deepEqual(array, [{
-        id: "1",
-        name: "Umber",
-        villains: ["1"]
-      }]);
-
-      run(function () {
-        return env.store.find('super-villain', 1).then(function (minion) {
-          env.registry.unregister('serializer:superVillain');
-          equal(minion.get('firstName'), "Alex");
-        });
-      });
-    });
-    test("extractArray with embedded objects with identical relationship and attribute key ", function () {
-      expect(2);
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:home-planet', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          villains: { embedded: 'always' }
-        },
-        //Makes the keyForRelationship and keyForAttribute collide.
-        keyForRelationship: function (key, type) {
-          return this.keyForAttribute(key, type);
-        }
-      }));
-
-      var serializer = env.store.serializerFor("home-planet");
-
-      var json_hash = {
-        home_planets: [{
-          id: "1",
-          name: "Umber",
-          villains: [{
-            id: "1",
-            first_name: "Alex",
-            last_name: "Baizeau"
-          }]
-        }]
-      };
-      var array;
-
-      run(function () {
-        array = serializer.extractArray(env.store, HomePlanet, json_hash);
-      });
-
-      deepEqual(array, [{
-        id: "1",
-        name: "Umber",
-        villains: ["1"]
-      }]);
-
-      run(function () {
-        env.store.find('super-villain', 1).then(function (minion) {
-          equal(minion.get('firstName'), "Alex");
-        });
-      });
-    });
-    test("extractArray with embedded objects of same type as primary type", function () {
-      env.registry.register('adapter:comment', DS.ActiveModelAdapter);
-      env.registry.register('serializer:comment', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          children: { embedded: 'always' }
-        }
-      }));
-
-      var serializer = env.store.serializerFor("comment");
-
-      var json_hash = {
-        comments: [{
-          id: "1",
-          body: "Hello",
-          root: true,
-          children: [{
-            id: "2",
-            body: "World",
-            root: false
-          }, {
-            id: "3",
-            body: "Foo",
-            root: false
-          }]
-        }]
-      };
-      var array;
-
-      run(function () {
-        array = serializer.extractArray(env.store, Comment, json_hash);
-      });
-
-      deepEqual(array, [{
-        id: "1",
-        body: "Hello",
-        root: true,
-        children: ["2", "3"]
-      }], "Primary array is correct");
-
-      equal(env.store.recordForId('comment', "2").get("body"), "World", "Secondary record found in the store");
-      equal(env.store.recordForId('comment', "3").get("body"), "Foo", "Secondary record found in the store");
-    });
-
-    test("extractArray with embedded objects of same type, but from separate attributes", function () {
-      HomePlanet.reopen({
-        reformedVillains: DS.hasMany('super-villain', { async: false })
-      });
-
-      env.registry.register('adapter:home-planet', DS.ActiveModelAdapter);
-      env.registry.register('serializer:home-planet', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          villains: { embedded: 'always' },
-          reformedVillains: { embedded: 'always' }
-        }
-      }));
-
-      var serializer = env.store.serializerFor("home-planet");
-      var json_hash = {
-        home_planets: [{
-          id: "1",
-          name: "Earth",
-          villains: [{
-            id: "1",
-            first_name: "Tom"
-          }, {
-            id: "3",
-            first_name: "Yehuda"
-          }],
-          reformed_villains: [{
-            id: "2",
-            first_name: "Alex"
-          }, {
-            id: "4",
-            first_name: "Erik"
-          }]
-        }, {
-          id: "2",
-          name: "Mars",
-          villains: [{
-            id: "1",
-            first_name: "Tom"
-          }, {
-            id: "3",
-            first_name: "Yehuda"
-          }],
-          reformed_villains: [{
-            id: "5",
-            first_name: "Peter"
-          }, {
-            id: "6",
-            first_name: "Trek"
-          }]
-        }]
-      };
-      var json;
-      run(function () {
-        json = serializer.extractArray(env.store, HomePlanet, json_hash);
-      });
-
-      deepEqual(json, [{
-        id: "1",
-        name: "Earth",
-        villains: ["1", "3"],
-        reformedVillains: ["2", "4"]
-      }, {
-        id: "2",
-        name: "Mars",
-        villains: ["1", "3"],
-        reformedVillains: ["5", "6"]
-      }], "Primary array was correct");
-
-      equal(env.store.recordForId('super-villain', "1").get("firstName"), "Tom", "Secondary records found in the store");
-      equal(env.store.recordForId('super-villain', "2").get("firstName"), "Alex", "Secondary records found in the store");
-      equal(env.store.recordForId('super-villain', "3").get("firstName"), "Yehuda", "Secondary records found in the store");
-      equal(env.store.recordForId('super-villain', "4").get("firstName"), "Erik", "Secondary records found in the store");
-      equal(env.store.recordForId('super-villain', "5").get("firstName"), "Peter", "Secondary records found in the store");
-      equal(env.store.recordForId('super-villain', "6").get("firstName"), "Trek", "Secondary records found in the store");
-    });
-
-    test("serialize supports serialize:false on non-relationship properties", function () {
-      var tom;
-      run(function () {
-        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: '1' });
-      });
-
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          firstName: { serialize: false }
-        }
-      }));
-      var serializer, json;
-      run(function () {
-        serializer = env.store.serializerFor("super-villain");
-        json = serializer.serialize(tom._createSnapshot());
-      });
-
-      deepEqual(json, {
-        last_name: "Dale",
-        home_planet_id: null,
-        secret_lab_id: null
-      });
-    });
-
-    test("serialize with embedded objects (hasMany relationship)", function () {
-      var tom, league;
-      run(function () {
-        league = env.store.createRecord('home-planet', { name: "Villain League", id: "123" });
-        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", homePlanet: league, id: '1' });
-      });
-
-      env.registry.register('serializer:home-planet', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          villains: { embedded: 'always' }
-        }
-      }));
-
-      var serializer, json;
-      run(function () {
-        serializer = env.store.serializerFor("home-planet");
-
-        json = serializer.serialize(league._createSnapshot());
-      });
-
-      deepEqual(json, {
-        name: "Villain League",
-        villains: [{
-          id: get(tom, "id"),
-          first_name: "Tom",
-          last_name: "Dale",
-          home_planet_id: get(league, "id"),
-          secret_lab_id: null
-        }]
-      });
-    });
-
-    test("serialize with embedded objects (unknown hasMany relationship)", function () {
-      var league;
-      run(function () {
-        league = env.store.push('home-planet', { name: "Villain League", id: "123" });
-      });
-
-      env.registry.register('serializer:home-planet', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          villains: { embedded: 'always' }
-        }
-      }));
-
-      var serializer, json;
-      warns(function () {
-        run(function () {
-          serializer = env.store.serializerFor("home-planet");
-          json = serializer.serialize(league._createSnapshot());
-        });
-      }, /The embedded relationship 'villains' is undefined for 'home-planet' with id '123'. Please include it in your original payload./);
-
-      deepEqual(json, {
-        name: "Villain League",
-        villains: []
-      });
-    });
-
-    test("serialize with embedded objects (hasMany relationship) supports serialize:false", function () {
-      run(function () {
-        league = env.store.createRecord('home-planet', { name: "Villain League", id: "123" });
-        env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", homePlanet: league, id: '1' });
-      });
-
-      env.registry.register('serializer:home-planet', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          villains: { serialize: false }
-        }
-      }));
-      var serializer, json;
-      run(function () {
-        serializer = env.store.serializerFor("home-planet");
-
-        json = serializer.serialize(league._createSnapshot());
-      });
-
-      deepEqual(json, {
-        name: "Villain League"
-      });
-    });
-
-    test("serialize with (new) embedded objects (hasMany relationship)", function () {
-      run(function () {
-        league = env.store.createRecord('home-planet', { name: "Villain League", id: "123" });
-        env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", homePlanet: league });
-      });
-
-      env.registry.register('serializer:home-planet', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          villains: { embedded: 'always' }
-        }
-      }));
-      var serializer, json;
-      run(function () {
-        serializer = env.store.serializerFor("home-planet");
-
-        json = serializer.serialize(league._createSnapshot());
-      });
-      deepEqual(json, {
-        name: "Villain League",
-        villains: [{
-          first_name: "Tom",
-          last_name: "Dale",
-          home_planet_id: get(league, "id"),
-          secret_lab_id: null
-        }]
-      });
-    });
-
-    test("serialize with embedded objects (hasMany relationships, including related objects not embedded)", function () {
-      run(function () {
-        superVillain = env.store.createRecord('super-villain', { id: 1, firstName: "Super", lastName: "Villian" });
-        evilMinion = env.store.createRecord('evil-minion', { id: 1, name: "Evil Minion", superVillian: superVillain });
-        secretWeapon = env.store.createRecord('secret-weapon', { id: 1, name: "Secret Weapon", superVillain: superVillain });
-        superVillain.get('evilMinions').pushObject(evilMinion);
-        superVillain.get('secretWeapons').pushObject(secretWeapon);
-      });
-
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          evilMinions: { serialize: 'records', deserialize: 'records' },
-          secretWeapons: { serialize: 'ids' }
-        }
-      }));
-      var serializer, json;
-      run(function () {
-        serializer = env.container.lookup("serializer:super-villain");
-
-        json = serializer.serialize(superVillain._createSnapshot());
-      });
-      deepEqual(json, {
-        first_name: get(superVillain, "firstName"),
-        last_name: get(superVillain, "lastName"),
-        home_planet_id: null,
-        evil_minions: [{
-          id: get(evilMinion, "id"),
-          name: get(evilMinion, "name"),
-          super_villain_id: "1"
-        }],
-        secret_lab_id: null,
-        secret_weapon_ids: ["1"]
-      });
-    });
-
-    test("extractSingle with embedded object (belongsTo relationship)", function () {
-      expect(4);
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          secretLab: { embedded: 'always' }
-        }
-      }));
-
-      var serializer = env.store.serializerFor("super-villain");
-
-      var json_hash = {
-        super_villain: {
-          id: "1",
-          first_name: "Tom",
-          last_name: "Dale",
-          home_planet_id: "123",
-          evil_minion_ids: ["1", "2", "3"],
-          secret_lab: {
-            minion_capacity: 5000,
-            vicinity: "California, USA",
-            id: "101"
-          },
-          secret_weapon_ids: []
-        }
-      };
-      var json;
-
-      run(function () {
-        json = serializer.extractSingle(env.store, SuperVillain, json_hash);
-      });
-
-      deepEqual(json, {
-        "id": "1",
-        "firstName": "Tom",
-        "lastName": "Dale",
-        "homePlanet": "123",
-        "evilMinions": ["1", "2", "3"],
-        "secretLab": "101",
-        "secretWeapons": []
-      });
-
-      run(function () {
-        env.store.find('secret-lab', 101).then(function (secretLab) {
-          equal(secretLab.get('id'), '101');
-          equal(secretLab.get('minionCapacity'), 5000);
-          equal(secretLab.get('vicinity'), 'California, USA');
-        });
-      });
-    });
-
-    test("serialize with embedded object (belongsTo relationship)", function () {
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          secretLab: { embedded: 'always' }
-        }
-      }));
-      var serializer, json, tom;
-      run(function () {
-        serializer = env.store.serializerFor("super-villain");
-
-        // records with an id, persisted
-
-        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
-          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA", id: "101" }),
-          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
-        });
-      });
-
-      run(function () {
-        json = serializer.serialize(tom._createSnapshot());
-      });
-
-      deepEqual(json, {
-        first_name: get(tom, "firstName"),
-        last_name: get(tom, "lastName"),
-        home_planet_id: get(tom, "homePlanet").get("id"),
-        secret_lab: {
-          id: get(tom, "secretLab").get("id"),
-          minion_capacity: get(tom, "secretLab").get("minionCapacity"),
-          vicinity: get(tom, "secretLab").get("vicinity")
-        }
-      });
-    });
-
-    test("serialize with embedded object (belongsTo relationship) works with different primaryKeys", function () {
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        primaryKey: '_id',
-        attrs: {
-          secretLab: { embedded: 'always' }
-        }
-      }));
-      env.registry.register('serializer:secret-lab', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        primaryKey: 'crazy_id'
-      }));
-
-      var serializer = env.store.serializerFor("super-villain");
-
-      // records with an id, persisted
-      var tom, json;
-
-      run(function () {
-        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
-          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA", id: "101" }),
-          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
-        });
-      });
-
-      run(function () {
-        json = serializer.serialize(tom._createSnapshot());
-      });
-
-      deepEqual(json, {
-        first_name: get(tom, "firstName"),
-        last_name: get(tom, "lastName"),
-        home_planet_id: get(tom, "homePlanet").get("id"),
-        secret_lab: {
-          crazy_id: get(tom, "secretLab").get("id"),
-          minion_capacity: get(tom, "secretLab").get("minionCapacity"),
-          vicinity: get(tom, "secretLab").get("vicinity")
-        }
-      });
-    });
-
-    test("serialize with embedded object (belongsTo relationship, new no id)", function () {
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          secretLab: { embedded: 'always' }
-        }
-      }));
-
-      var serializer = env.store.serializerFor("super-villain");
-
-      // records without ids, new
-      var tom, json;
-
-      run(function () {
-        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale",
-          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA" }),
-          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
-        });
-      });
-
-      run(function () {
-        json = serializer.serialize(tom._createSnapshot());
-      });
-
-      deepEqual(json, {
-        first_name: get(tom, "firstName"),
-        last_name: get(tom, "lastName"),
-        home_planet_id: get(tom, "homePlanet").get("id"),
-        secret_lab: {
-          minion_capacity: get(tom, "secretLab").get("minionCapacity"),
-          vicinity: get(tom, "secretLab").get("vicinity")
-        }
-      });
-    });
-
-    test("serialize with embedded object (belongsTo relationship) supports serialize:ids", function () {
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          secretLab: { serialize: 'ids' }
-        }
-      }));
-      var serializer = env.store.serializerFor("super-villain");
-
-      // records with an id, persisted
-      var tom, json;
-
-      run(function () {
-        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
-          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA", id: "101" }),
-          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
-        });
-      });
-
-      run(function () {
-        json = serializer.serialize(tom._createSnapshot());
-      });
-
-      deepEqual(json, {
-        first_name: get(tom, "firstName"),
-        last_name: get(tom, "lastName"),
-        home_planet_id: get(tom, "homePlanet").get("id"),
-        secret_lab_id: get(tom, "secretLab").get("id")
-      });
-    });
-
-    test("serialize with embedded object (belongsTo relationship) supports serialize:id", function () {
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          secretLab: { serialize: 'id' }
-        }
-      }));
-
-      var serializer = env.store.serializerFor("super-villain");
-
-      // records with an id, persisted
-      var tom, json;
-
-      run(function () {
-        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
-          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA", id: "101" }),
-          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
-        });
-      });
-
-      run(function () {
-        json = serializer.serialize(tom._createSnapshot());
-      });
-
-      deepEqual(json, {
-        first_name: get(tom, "firstName"),
-        last_name: get(tom, "lastName"),
-        home_planet_id: get(tom, "homePlanet").get("id"),
-        secret_lab_id: get(tom, "secretLab").get("id")
-      });
-    });
-
-    test("serialize with embedded object (belongsTo relationship) supports serialize:id in conjunction with deserialize:records", function () {
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          secretLab: { serialize: 'id', deserialize: 'records' }
-        }
-      }));
-
-      var serializer = env.store.serializerFor("super-villain");
-
-      // records with an id, persisted
-      var tom, json;
-
-      run(function () {
-        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
-          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA", id: "101" }),
-          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
-        });
-      });
-
-      run(function () {
-        json = serializer.serialize(tom._createSnapshot());
-      });
-
-      deepEqual(json, {
-        first_name: get(tom, "firstName"),
-        last_name: get(tom, "lastName"),
-        home_planet_id: get(tom, "homePlanet").get("id"),
-        secret_lab_id: get(tom, "secretLab").get("id")
-      });
-    });
-
-    test("serialize with embedded object (belongsTo relationship) supports serialize:false", function () {
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          secretLab: { serialize: false }
-        }
-      }));
-      var serializer = env.store.serializerFor("super-villain");
-
-      // records with an id, persisted
-      var tom, json;
-      run(function () {
-        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
-          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA", id: "101" }),
-          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
-        });
-      });
-
-      run(function () {
-        json = serializer.serialize(tom._createSnapshot());
-      });
-
-      deepEqual(json, {
-        first_name: get(tom, "firstName"),
-        last_name: get(tom, "lastName"),
-        home_planet_id: get(tom, "homePlanet").get("id")
-      });
-    });
-
-    test("serialize with embedded object (belongsTo relationship) serializes the id by default if no option specified", function () {
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin));
-      var serializer = env.store.serializerFor("super-villain");
-
-      // records with an id, persisted
-
-      var tom, json;
-
-      run(function () {
-        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
-          secretLab: env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA", id: "101" }),
-          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
-        });
-      });
-
-      run(function () {
-        json = serializer.serialize(tom._createSnapshot());
-      });
-
-      deepEqual(json, {
-        first_name: get(tom, "firstName"),
-        last_name: get(tom, "lastName"),
-        home_planet_id: get(tom, "homePlanet").get("id"),
-        secret_lab_id: get(tom, "secretLab").get("id")
-      });
-    });
-
-    test("when related record is not present, serialize embedded record (with a belongsTo relationship) as null", function () {
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          secretLab: { embedded: 'always' }
-        }
-      }));
-      var serializer = env.store.serializerFor("super-villain");
-      var tom, json;
-
-      run(function () {
-        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
-          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
-        });
-      });
-
-      run(function () {
-        json = serializer.serialize(tom._createSnapshot());
-      });
-
-      deepEqual(json, {
-        first_name: get(tom, "firstName"),
-        last_name: get(tom, "lastName"),
-        home_planet_id: get(tom, "homePlanet").get("id"),
-        secret_lab: null
-      });
-    });
-
-    test("extractSingle with multiply-nested belongsTo", function () {
-      env.registry.register('adapter:evil-minion', DS.ActiveModelAdapter);
-      env.registry.register('serializer:evil-minion', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          superVillain: { embedded: 'always' }
-        }
-      }));
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          homePlanet: { embedded: 'always' }
-        }
-      }));
-
-      var serializer = env.store.serializerFor("evil-minion");
-      var json_hash = {
-        evil_minion: {
-          id: "1",
-          name: "Alex",
-          super_villain: {
-            id: "1",
-            first_name: "Tom",
-            last_name: "Dale",
-            evil_minion_ids: ["1"],
-            home_planet: {
-              id: "1",
-              name: "Umber",
-              villain_ids: ["1"]
-            }
-          }
-        }
-      };
-      var json;
-
-      run(function () {
-        json = serializer.extractSingle(env.store, EvilMinion, json_hash);
-      });
-
-      deepEqual(json, {
-        id: "1",
-        name: "Alex",
-        superVillain: "1"
-      }, "Primary hash was correct");
-
-      equal(env.store.recordForId('super-villain', "1").get("firstName"), "Tom", "Secondary record, Tom, found in the steore");
-      equal(env.store.recordForId('home-planet', "1").get("name"), "Umber", "Nested Secondary record, Umber, found in the store");
-    });
-
-    test("extractSingle with polymorphic hasMany", function () {
-      SuperVillain.reopen({
-        secretWeapons: DS.hasMany('secret-weapon', { polymorphic: true, async: false })
-      });
-
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          secretWeapons: { embedded: 'always' }
-        }
-      }));
-      var serializer = env.store.serializerFor("super-villain");
-
-      var json_hash = {
-        super_villain: {
-          id: "1",
-          first_name: "Tom",
-          last_name: "Dale",
-          secret_weapons: [{
-            id: "1",
-            type: "LightSaber",
-            name: "Tom's LightSaber",
-            color: "Red"
-          }, {
-            id: "1",
-            type: "SecretWeapon",
-            name: "The Death Star"
-          }]
-        }
-      };
-      var json;
-
-      run(function () {
-        json = serializer.extractSingle(env.store, SuperVillain, json_hash);
-      });
-
-      deepEqual(json, {
-        id: "1",
-        firstName: "Tom",
-        lastName: "Dale",
-        secretWeapons: [{ id: "1", type: "light-saber" }, { id: "1", type: "secret-weapon" }]
-      }, "Primary hash was correct");
-
-      equal(env.store.recordForId('secret-weapon', "1").get("name"), "The Death Star", "Embedded polymorphic SecretWeapon found");
-      equal(env.store.recordForId('light-saber', "1").get("name"), "Tom's LightSaber", "Embedded polymorphic LightSaber found");
-    });
-
-    test("extractSingle with polymorphic hasMany and custom primary key", function () {
-      SuperVillain.reopen({
-        secretWeapons: DS.hasMany("secretWeapon", { polymorphic: true, async: false })
-      });
-
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:light-saber', DS.ActiveModelSerializer.extend({
-        primaryKey: 'custom'
-      }));
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          secretWeapons: { embedded: 'always' }
-        }
-      }));
-      var serializer = env.store.serializerFor("super-villain");
-
-      var json_hash = {
-        super_villain: {
-          id: "1",
-          first_name: "Tom",
-          last_name: "Dale",
-          secret_weapons: [{
-            custom: "1",
-            type: "LightSaber",
-            name: "Tom's LightSaber",
-            color: "Red"
-          }, {
-            id: "1",
-            type: "SecretWeapon",
-            name: "The Death Star"
-          }]
-        }
-      };
-      var json;
-
-      run(function () {
-        json = serializer.extractSingle(env.store, SuperVillain, json_hash);
-      });
-
-      deepEqual(json, {
-        id: "1",
-        firstName: "Tom",
-        lastName: "Dale",
-        secretWeapons: [{ id: "1", type: "light-saber" }, { id: "1", type: "secret-weapon" }]
-      }, "Custom primary key of embedded hasMany is correctly normalized");
-
-      equal(env.store.recordForId("lightSaber", "1").get("name"), "Tom's LightSaber", "Embedded polymorphic LightSaber with custom primary key is found");
-      equal(env.store.recordForId("secretWeapon", "1").get("name"), "The Death Star", "Embedded polymorphic SecretWeapon found");
-    });
-
-    test("extractSingle with polymorphic belongsTo", function () {
-      expect(2);
-
-      SuperVillain.reopen({
-        secretLab: DS.belongsTo('secret-lab', { polymorphic: true, async: true })
-      });
-
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          secretLab: { embedded: 'always' }
-        }
-      }));
-      var serializer = env.store.serializerFor("super-villain");
-
-      var json_hash = {
-        super_villain: {
-          id: "1",
-          first_name: "Tom",
-          last_name: "Dale",
-          secret_lab: {
-            id: "1",
-            type: "bat-cave",
-            infiltrated: true
-          }
-        }
-      };
-
-      var json;
-
-      run(function () {
-        json = serializer.extractSingle(env.store, SuperVillain, json_hash);
-      });
-
-      deepEqual(json, {
-        id: "1",
-        firstName: "Tom",
-        lastName: "Dale",
-        secretLab: "1",
-        secretLabType: "bat-cave"
-      }, "Primary has was correct");
-
-      equal(env.store.recordForId('bat-cave', "1").get("infiltrated"), true, "Embedded polymorphic BatCave was found");
-    });
-
-    test("extractSingle with polymorphic belongsTo and custom primary key", function () {
-      expect(2);
-
-      SuperVillain.reopen({
-        secretLab: DS.belongsTo("secretLab", { polymorphic: true, async: true })
-      });
-
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          secretLab: { embedded: 'always' }
-        }
-      }));
-      env.registry.register('serializer:bat-cave', DS.ActiveModelSerializer.extend({
-        primaryKey: 'custom'
-      }));
-      var serializer = env.store.serializerFor("super-villain");
-
-      var json_hash = {
-        super_villain: {
-          id: "1",
-          first_name: "Tom",
-          last_name: "Dale",
-          secret_lab: {
-            custom: "1",
-            type: "bat-cave",
-            infiltrated: true
-          }
-        }
-      };
-
-      var json;
-
-      run(function () {
-        json = serializer.extractSingle(env.store, SuperVillain, json_hash);
-      });
-
-      deepEqual(json, {
-        id: "1",
-        firstName: "Tom",
-        lastName: "Dale",
-        secretLab: "1",
-        secretLabType: "bat-cave"
-      }, "Custom primary key is correctly normalized");
-
-      equal(env.store.recordForId("batCave", "1").get("infiltrated"), true, "Embedded polymorphic BatCave with custom primary key is found");
-    });
-
-    test("extractSingle with polymorphic belongsTo and custom primary key", function () {
-      expect(2);
-
-      SuperVillain.reopen({
-        secretLab: DS.belongsTo("secretLab", { polymorphic: true, async: true })
-      });
-
-      env.registry.register('adapter:super-villain', DS.ActiveModelAdapter);
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          secretLab: { embedded: 'always' }
-        }
-      }));
-      env.registry.register('serializer:bat-cave', DS.ActiveModelSerializer.extend({
-        primaryKey: 'custom'
-      }));
-      var serializer = env.store.serializerFor("super-villain");
-
-      var json_hash = {
-        super_villain: {
-          id: "1",
-          first_name: "Tom",
-          last_name: "Dale",
-          secret_lab: {
-            custom: "1",
-            type: "bat-cave",
-            infiltrated: true
-          }
-        }
-      };
-
-      var json;
-
-      run(function () {
-        json = serializer.extractSingle(env.store, SuperVillain, json_hash);
-      });
-
-      deepEqual(json, {
-        id: "1",
-        firstName: "Tom",
-        lastName: "Dale",
-        secretLab: "1",
-        secretLabType: "bat-cave"
-      }, "Custom primary key is correctly normalized");
-
-      equal(env.store.recordForId("batCave", "1").get("infiltrated"), true, "Embedded polymorphic BatCave with custom primary key is found");
-    });
-
-    test("Mixin can be used with RESTSerializer which does not define keyForAttribute", function () {
-      run(function () {
-        homePlanet = env.store.createRecord('home-planet', { name: "Villain League", id: "123" });
-        secretLab = env.store.createRecord('secret-lab', { minionCapacity: 5000, vicinity: "California, USA", id: "101" });
-        superVillain = env.store.createRecord('super-villain', {
-          id: "1", firstName: "Super", lastName: "Villian", homePlanet: homePlanet, secretLab: secretLab
-        });
-        secretWeapon = env.store.createRecord('secret-weapon', { id: "1", name: "Secret Weapon", superVillain: superVillain });
-        superVillain.get('secretWeapons').pushObject(secretWeapon);
-        evilMinion = env.store.createRecord('evil-minion', { id: "1", name: "Evil Minion", superVillian: superVillain });
-        superVillain.get('evilMinions').pushObject(evilMinion);
-      });
-
-      env.registry.register('serializer:evil-minion', DS.RESTSerializer);
-      env.registry.register('serializer:secret-weapon', DS.RESTSerializer);
-      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          evilMinions: { serialize: 'records', deserialize: 'records' }
-        }
-      }));
-      var serializer = env.store.serializerFor("super-villain");
-      var json;
-
-      run(function () {
-        json = serializer.serialize(superVillain._createSnapshot());
-      });
-
-      deepEqual(json, {
-        firstName: get(superVillain, "firstName"),
-        lastName: get(superVillain, "lastName"),
-        homePlanet: "123",
-        evilMinions: [{
-          id: get(evilMinion, "id"),
-          name: get(evilMinion, "name"),
-          superVillain: "1"
-        }],
-        secretLab: "101"
-        // "manyToOne" relation does not serialize ids
-        // sersecretWeapons: ["1"]
-      });
-    });
-
-    test("normalize with custom belongsTo primary key", function () {
-      env.registry.register('adapter:evil-minion', DS.ActiveModelAdapter);
-      env.registry.register('serializer:evil-minion', DS.ActiveModelSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          superVillain: { embedded: 'always' }
-        }
-      }));
-      env.registry.register('serializer:super-villain', DS.ActiveModelSerializer.extend({
-        primaryKey: 'custom'
-      }));
-
-      var serializer = env.store.serializerFor("evil-minion");
-      var json_hash = {
-        evil_minion: {
-          id: "1",
-          name: "Alex",
-          super_villain: {
-            custom: "1",
-            first_name: "Tom",
-            last_name: "Dale"
-          }
-        }
-      };
-      var json;
-
-      run(function () {
-        json = serializer.extractSingle(env.store, EvilMinion, json_hash);
-      });
-
-      deepEqual(json, {
-        id: "1",
-        name: "Alex",
-        superVillain: "1"
-      }, "Primary hash was correct");
-
-      equal(env.store.recordForId('super-villain', "1").get("firstName"), "Tom", "Secondary record, Tom, found in the steore");
-    });
 
     test("serializing relationships with an embedded and without calls super when not attr not present", function () {
       run(function () {
@@ -16581,9 +18039,9 @@ define(
           var key = relationship.key;
           var payloadKey = this.keyForRelationship ? this.keyForRelationship(key, "hasMany") : key;
           var relationshipType = snapshot.type.determineRelationshipType(relationship);
-          // "manyToOne" not supported in DS.RESTSerializer.prototype.serializeHasMany
+          // "manyToOne" not supported in DS.ActiveModelSerializer.prototype.serializeHasMany
           var relationshipTypes = Ember.String.w('manyToNone manyToMany manyToOne');
-          if (indexOf.call(relationshipTypes, relationshipType) > -1) {
+          if (relationshipTypes.indexOf(relationshipType) > -1) {
             json[payloadKey] = snapshot.hasMany(key, { ids: true });
           }
         }
@@ -16768,204 +18226,6 @@ define(
         equal(get(user, 'company.name'), 'Tilde Inc.', 'company.name is correct');
         equal(get(user, 'handles.firstObject.username'), 'wycats', 'handles.firstObject.username is correct');
         equal(get(user, 'handles.lastObject.nickname'), '@wycats', 'handles.lastObject.nickname is correct');
-      });
-    });
-  }
-);
-
-
-define(
-  "ember-data/tests/integration/serializers/json-serializer-new-test",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-
-    function __es6_export__(name, value) {
-      __exports__[name] = value;
-    }
-
-    var Post, post, Comment, Favorite, TestSerializer, env;
-    var run = Ember.run;
-
-    module("integration/serializer/json - JSONSerializer (new API)", {
-      setup: function () {
-        Post = DS.Model.extend({
-          title: DS.attr('string'),
-          comments: DS.hasMany('comment', { inverse: null, async: false })
-        });
-        Comment = DS.Model.extend({
-          body: DS.attr('string'),
-          post: DS.belongsTo('post', { async: false })
-        });
-        Favorite = DS.Model.extend({
-          post: DS.belongsTo('post', { async: true, polymorphic: true })
-        });
-        TestSerializer = DS.JSONSerializer.extend({
-          isNewSerializerAPI: true
-        });
-        env = setupStore({
-          post: Post,
-          comment: Comment,
-          favorite: Favorite
-        });
-        env.store.modelFor('post');
-        env.store.modelFor('comment');
-        env.store.modelFor('favorite');
-
-        env.registry.register('serializer:application', TestSerializer);
-      },
-
-      teardown: function () {
-        run(env.store, 'destroy');
-      }
-    });
-
-    test("normalizeArrayResponse normalizes each record in the array", function () {
-      var postNormalizeCount = 0;
-      var posts = [{ id: "1", title: "Rails is omakase" }, { id: "2", title: "Another Post" }];
-
-      env.registry.register('serializer:post', TestSerializer.extend({
-        normalize: function () {
-          postNormalizeCount++;
-          return this._super.apply(this, arguments);
-        }
-      }));
-
-      run(function () {
-        env.container.lookup("serializer:post").normalizeArrayResponse(env.store, Post, posts, null, 'findAll');
-      });
-      equal(postNormalizeCount, 2, "two posts are normalized");
-    });
-
-    test('Serializer should respect the attrs hash when extracting records', function () {
-      env.registry.register("serializer:post", TestSerializer.extend({
-        attrs: {
-          title: "title_payload_key",
-          comments: { key: 'my_comments' }
-        }
-      }));
-
-      var jsonHash = {
-        id: "1",
-        title_payload_key: "Rails is omakase",
-        my_comments: [1, 2]
-      };
-
-      var post = env.container.lookup("serializer:post").normalizeSingleResponse(env.store, Post, jsonHash, '1', 'find');
-
-      equal(post.data.attributes.title, "Rails is omakase");
-      deepEqual(post.data.relationships.comments.data, [{ id: "1", type: "comment" }, { id: "2", type: "comment" }]);
-    });
-
-    test('normalizeSingleResponse should extract meta using extractMeta', function () {
-      env.registry.register("serializer:post", TestSerializer.extend({
-        extractMeta: function (store, modelClass, payload) {
-          var meta = this._super.apply(this, arguments);
-          meta.authors.push('Tomhuda');
-          return meta;
-        }
-      }));
-
-      var jsonHash = {
-        id: "1",
-        title_payload_key: "Rails is omakase",
-        my_comments: [1, 2],
-        meta: {
-          authors: ['Tomster']
-        }
-      };
-
-      var post = env.container.lookup("serializer:post").normalizeSingleResponse(env.store, Post, jsonHash, '1', 'find');
-
-      deepEqual(post.meta.authors, ['Tomster', 'Tomhuda']);
-    });
-
-    test("Serializer should respect the primaryKey attribute when extracting records", function () {
-      env.registry.register('serializer:post', TestSerializer.extend({
-        primaryKey: '_ID_'
-      }));
-
-      var jsonHash = { "_ID_": 1, title: "Rails is omakase" };
-
-      run(function () {
-        post = env.container.lookup("serializer:post").normalizeSingleResponse(env.store, Post, jsonHash, '1', 'find');
-      });
-
-      equal(post.data.id, "1");
-      equal(post.data.attributes.title, "Rails is omakase");
-    });
-
-    test("Serializer should respect keyForAttribute when extracting records", function () {
-      env.registry.register('serializer:post', TestSerializer.extend({
-        keyForAttribute: function (key) {
-          return key.toUpperCase();
-        }
-      }));
-
-      var jsonHash = { id: 1, TITLE: 'Rails is omakase' };
-
-      post = env.container.lookup("serializer:post").normalize(Post, jsonHash);
-
-      equal(post.data.id, "1");
-      equal(post.data.attributes.title, "Rails is omakase");
-    });
-
-    test("Serializer should respect keyForRelationship when extracting records", function () {
-      env.registry.register('serializer:post', TestSerializer.extend({
-        keyForRelationship: function (key, type) {
-          return key.toUpperCase();
-        }
-      }));
-
-      var jsonHash = { id: 1, title: 'Rails is omakase', COMMENTS: ['1'] };
-
-      post = env.container.lookup("serializer:post").normalize(Post, jsonHash);
-
-      deepEqual(post.data.relationships.comments.data, [{ id: "1", type: "comment" }]);
-    });
-
-    test("Calling normalize should normalize the payload (only the passed keys)", function () {
-      expect(1);
-      var Person = DS.Model.extend({
-        posts: DS.hasMany('post', { async: false })
-      });
-      env.registry.register('serializer:post', TestSerializer.extend({
-        attrs: {
-          notInHash: 'aCustomAttrNotInHash',
-          inHash: 'aCustomAttrInHash'
-        }
-      }));
-
-      env.registry.register('model:person', Person);
-
-      Post.reopen({
-        content: DS.attr('string'),
-        author: DS.belongsTo('person', { async: false }),
-        notInHash: DS.attr('string'),
-        inHash: DS.attr('string')
-      });
-
-      var normalizedPayload = env.container.lookup("serializer:post").normalize(Post, {
-        id: '1',
-        title: 'Ember rocks',
-        author: 1,
-        aCustomAttrInHash: 'blah'
-      });
-
-      deepEqual(normalizedPayload, {
-        "data": {
-          "id": "1",
-          "type": "post",
-          "attributes": {
-            "inHash": "blah",
-            "title": "Ember rocks"
-          },
-          "relationships": {
-            "author": {
-              "data": { "id": "1", "type": "person" }
-            }
-          }
-        }
       });
     });
   }
@@ -17182,9 +18442,9 @@ define(
       env.store.serializerFor('comment').serializeBelongsTo(comment._createSnapshot(), {}, { key: 'post', options: { async: true, polymorphic: true } });
     });
 
-    test("extractArray normalizes each record in the array", function () {
+    test("normalizeResponse normalizes each record in the array", function () {
       var postNormalizeCount = 0;
-      var posts = [{ title: "Rails is omakase" }, { title: "Another Post" }];
+      var posts = [{ id: "1", title: "Rails is omakase" }, { id: "2", title: "Another Post" }];
 
       env.registry.register('serializer:post', DS.JSONSerializer.extend({
         normalize: function () {
@@ -17194,7 +18454,7 @@ define(
       }));
 
       run(function () {
-        env.store.serializerFor("post").extractArray(env.store, Post, posts);
+        env.store.serializerFor("post").normalizeResponse(env.store, Post, posts, null, 'findAll');
       });
       equal(postNormalizeCount, 2, "two posts are normalized");
     });
@@ -17208,14 +18468,15 @@ define(
       }));
 
       var jsonHash = {
+        id: "1",
         title_payload_key: "Rails is omakase",
         my_comments: [1, 2]
       };
 
-      var post = env.store.serializerFor("post").extractSingle(env.store, Post, jsonHash);
+      var post = env.store.serializerFor("post").normalizeResponse(env.store, Post, jsonHash, '1', 'findRecord');
 
-      equal(post.title, "Rails is omakase");
-      deepEqual(post.comments, [1, 2]);
+      equal(post.data.attributes.title, "Rails is omakase");
+      deepEqual(post.data.relationships.comments.data, [{ id: "1", type: "comment" }, { id: "2", type: "comment" }]);
     });
 
     test('Serializer should respect the attrs hash when serializing records', function () {
@@ -17231,7 +18492,16 @@ define(
       var parentPost;
 
       run(function () {
-        parentPost = env.store.push('post', { id: 2, title: "Rails is omakase" });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '2',
+            attributes: {
+              title: "Rails is omakase"
+            }
+          }
+        });
+        parentPost = env.store.peekRecord('post', 2);
         post = env.store.createRecord('post', { title: "Rails is omakase", parentPost: parentPost });
       });
 
@@ -17418,11 +18688,11 @@ define(
       var jsonHash = { "_ID_": 1, title: "Rails is omakase" };
 
       run(function () {
-        post = env.store.serializerFor("post").extractSingle(env.store, Post, jsonHash);
+        post = env.store.serializerFor("post").normalizeResponse(env.store, Post, jsonHash, '1', 'findRecord');
       });
 
-      equal(post.id, "1");
-      equal(post.title, "Rails is omakase");
+      equal(post.data.id, "1");
+      equal(post.data.attributes.title, "Rails is omakase");
     });
 
     test("Serializer should respect the primaryKey attribute when serializing records", function () {
@@ -17450,8 +18720,8 @@ define(
 
       post = env.store.serializerFor("post").normalize(Post, jsonHash);
 
-      equal(post.id, "1");
-      equal(post.title, "Rails is omakase");
+      equal(post.data.id, "1");
+      equal(post.data.attributes.title, "Rails is omakase");
     });
 
     test("Serializer should respect keyForRelationship when extracting records", function () {
@@ -17465,29 +18735,7 @@ define(
 
       post = env.store.serializerFor("post").normalize(Post, jsonHash);
 
-      deepEqual(post.comments, ['1']);
-    });
-
-    test("normalizePayload is called during extractSingle", function () {
-      env.registry.register('serializer:post', DS.JSONSerializer.extend({
-        normalizePayload: function (payload) {
-          return payload.response;
-        }
-      }));
-
-      var jsonHash = {
-        response: {
-          id: 1,
-          title: "Rails is omakase"
-        }
-      };
-
-      run(function () {
-        post = env.container.lookup("serializer:post").extractSingle(env.store, Post, jsonHash);
-      });
-
-      equal(post.id, "1");
-      equal(post.title, "Rails is omakase");
+      deepEqual(post.data.relationships.comments.data, [{ id: "1", type: "comment" }]);
     });
 
     test("Calling normalize should normalize the payload (only the passed keys)", function () {
@@ -17519,10 +18767,19 @@ define(
       });
 
       deepEqual(normalizedPayload, {
-        id: '1',
-        title: 'Ember rocks',
-        author: 1,
-        inHash: 'blah'
+        "data": {
+          "id": "1",
+          "type": "post",
+          "attributes": {
+            "inHash": "blah",
+            "title": "Ember rocks"
+          },
+          "relationships": {
+            "author": {
+              "data": { "id": "1", "type": "person" }
+            }
+          }
+        }
       });
     });
 
@@ -17603,7 +18860,6 @@ define(
 
     test('normalizeResponse should extract meta using extractMeta', function () {
       env.registry.register("serializer:post", DS.JSONSerializer.extend({
-        isNewSerializerAPI: true,
         extractMeta: function (store, modelClass, payload) {
           var meta = this._super.apply(this, arguments);
           meta.authors.push('Tomhuda');
@@ -17626,10 +18882,7 @@ define(
     });
 
     test('normalizeResponse returns empty `included` payload by default', function () {
-      env.registry.register("serializer:comment", DS.JSONSerializer.extend({ isNewSerializerAPI: true }));
-      env.registry.register("serializer:post", DS.JSONSerializer.extend({
-        isNewSerializerAPI: true
-      }));
+      env.registry.register("serializer:post", DS.JSONSerializer.extend());
 
       var jsonHash = {
         id: "1",
@@ -17642,9 +18895,7 @@ define(
     });
 
     test('normalizeResponse respects `included` items (single response)', function () {
-      env.registry.register("serializer:comment", DS.JSONSerializer.extend({ isNewSerializerAPI: true }));
       env.registry.register("serializer:post", DS.JSONSerializer.extend(DS.EmbeddedRecordsMixin, {
-        isNewSerializerAPI: true,
         attrs: {
           comments: { embedded: 'always' }
         }
@@ -17662,9 +18913,7 @@ define(
     });
 
     test('normalizeResponse respects `included` items (array response)', function () {
-      env.registry.register("serializer:comment", DS.JSONSerializer.extend({ isNewSerializerAPI: true }));
       env.registry.register("serializer:post", DS.JSONSerializer.extend(DS.EmbeddedRecordsMixin, {
-        isNewSerializerAPI: true,
         attrs: {
           comments: { embedded: 'always' }
         }
@@ -17689,441 +18938,6 @@ define(
 
 
 define(
-  "ember-data/tests/integration/serializers/rest-serializer-new-test",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-
-    function __es6_export__(name, value) {
-      __exports__[name] = value;
-    }
-
-    var HomePlanet, SuperVillain, EvilMinion, YellowMinion, DoomsdayDevice, Comment, TestSerializer, env;
-    var run = Ember.run;
-
-    module("integration/serializer/rest - RESTSerializer (new API)", {
-      setup: function () {
-        HomePlanet = DS.Model.extend({
-          name: DS.attr('string'),
-          superVillains: DS.hasMany('superVillain', { async: false })
-        });
-        SuperVillain = DS.Model.extend({
-          firstName: DS.attr('string'),
-          lastName: DS.attr('string'),
-          homePlanet: DS.belongsTo("homePlanet", { async: false }),
-          evilMinions: DS.hasMany("evilMinion", { async: false })
-        });
-        EvilMinion = DS.Model.extend({
-          superVillain: DS.belongsTo('superVillain', { async: false }),
-          name: DS.attr('string')
-        });
-        YellowMinion = EvilMinion.extend();
-        DoomsdayDevice = DS.Model.extend({
-          name: DS.attr('string'),
-          evilMinion: DS.belongsTo('evilMinion', { polymorphic: true, async: true })
-        });
-        Comment = DS.Model.extend({
-          body: DS.attr('string'),
-          root: DS.attr('boolean'),
-          children: DS.hasMany('comment', { inverse: null, async: false })
-        });
-        TestSerializer = DS.RESTSerializer.extend({
-          isNewSerializerAPI: true
-        });
-        env = setupStore({
-          superVillain: SuperVillain,
-          homePlanet: HomePlanet,
-          evilMinion: EvilMinion,
-          yellowMinion: YellowMinion,
-          doomsdayDevice: DoomsdayDevice,
-          comment: Comment
-        });
-
-        //env.registry.register('serializer:application', TestSerializer.extend());
-
-        env.store.modelFor('superVillain');
-        env.store.modelFor('homePlanet');
-        env.store.modelFor('evilMinion');
-        env.store.modelFor('yellowMinion');
-        env.store.modelFor('doomsdayDevice');
-        env.store.modelFor('comment');
-
-        env.registry.register('serializer:application', TestSerializer);
-      },
-
-      teardown: function () {
-        run(env.store, 'destroy');
-      }
-    });
-
-    test("normalizeSingleResponse with custom modelNameFromPayloadKey", function () {
-      expect(1);
-
-      env.restNewSerializer.modelNameFromPayloadKey = function (root) {
-        var camelized = Ember.String.camelize(root);
-        return Ember.String.singularize(camelized);
-      };
-
-      var jsonHash = {
-        home_planets: [{ id: "1", name: "Umber", superVillains: [1] }],
-        super_villains: [{ id: "1", firstName: "Tom", lastName: "Dale", homePlanet: "1" }]
-      };
-      var array;
-
-      run(function () {
-        array = env.container.lookup("serializer:application").normalizeSingleResponse(env.store, HomePlanet, jsonHash, '1', 'findRecord');
-      });
-
-      deepEqual(array, {
-        data: {
-          id: '1',
-          type: 'home-planet',
-          attributes: {
-            name: 'Umber'
-          },
-          relationships: {
-            superVillains: {
-              data: [{ id: '1', type: 'super-villain' }]
-            }
-          }
-        },
-        included: [{
-          id: '1',
-          type: 'super-villain',
-          attributes: {
-            firstName: 'Tom',
-            lastName: 'Dale'
-          },
-          relationships: {
-            homePlanet: {
-              data: { id: '1', type: 'home-planet' }
-            }
-          }
-        }]
-      });
-    });
-
-    test('normalizeArrayResponse should extract meta using extractMeta', function () {
-      env.registry.register("serializer:home-planet", TestSerializer.extend({
-        extractMeta: function (store, modelClass, payload) {
-          var meta = this._super.apply(this, arguments);
-          meta.authors.push('Tomhuda');
-          return meta;
-        }
-      }));
-
-      var jsonHash = {
-        meta: { authors: ['Tomster'] },
-        home_planets: [{ id: "1", name: "Umber", superVillains: [1] }]
-      };
-
-      var json = env.container.lookup("serializer:home-planet").normalizeArrayResponse(env.store, HomePlanet, jsonHash, null, 'findAll');
-
-      deepEqual(json.meta.authors, ['Tomster', 'Tomhuda']);
-    });
-
-    test("normalizeArrayResponse warning with custom modelNameFromPayloadKey", function () {
-      var homePlanets;
-      env.restNewSerializer.modelNameFromPayloadKey = function (root) {
-        //return some garbage that won"t resolve in the container
-        return "garbage";
-      };
-
-      var jsonHash = {
-        home_planets: [{ id: "1", name: "Umber", superVillains: [1] }]
-      };
-
-      warns(function () {
-        env.restNewSerializer.normalizeArrayResponse(env.store, HomePlanet, jsonHash, null, 'findAll');
-      }, /Encountered "home_planets" in payload, but no model was found for model name "garbage"/);
-
-      // should not warn if a model is found.
-      env.restNewSerializer.modelNameFromPayloadKey = function (root) {
-        return Ember.String.camelize(Ember.String.singularize(root));
-      };
-
-      jsonHash = {
-        home_planets: [{ id: "1", name: "Umber", superVillains: [1] }]
-      };
-
-      noWarns(function () {
-        run(function () {
-          homePlanets = env.restNewSerializer.normalizeArrayResponse(env.store, HomePlanet, jsonHash, null, 'findAll');
-        });
-      });
-
-      equal(homePlanets.data.length, 1);
-      equal(homePlanets.data[0].attributes.name, "Umber");
-      deepEqual(homePlanets.data[0].relationships.superVillains.data, [{ id: '1', type: 'super-villain' }]);
-    });
-
-    test("normalizeSingleResponse warning with custom modelNameFromPayloadKey", function () {
-      var homePlanet;
-      var oldModelNameFromPayloadKey = env.restNewSerializer.modelNameFromPayloadKey;
-      env.restNewSerializer.modelNameFromPayloadKey = function (root) {
-        //return some garbage that won"t resolve in the container
-        return "garbage";
-      };
-
-      var jsonHash = {
-        home_planet: { id: "1", name: "Umber", superVillains: [1] }
-      };
-
-      warns(Ember.run.bind(null, function () {
-        run(function () {
-          env.restNewSerializer.normalizeSingleResponse(env.store, HomePlanet, jsonHash, '1', 'findRecord');
-        });
-      }), /Encountered "home_planet" in payload, but no model was found for model name "garbage"/);
-
-      // should not warn if a model is found.
-      env.restNewSerializer.modelNameFromPayloadKey = oldModelNameFromPayloadKey;
-      jsonHash = {
-        home_planet: { id: "1", name: "Umber", superVillains: [1] }
-      };
-
-      noWarns(function () {
-        run(function () {
-
-          homePlanet = env.restNewSerializer.normalizeSingleResponse(env.store, HomePlanet, jsonHash, 1, 'findRecord');
-        });
-      });
-
-      equal(homePlanet.data.attributes.name, "Umber");
-      deepEqual(homePlanet.data.relationships.superVillains.data, [{ id: '1', type: 'super-villain' }]);
-    });
-
-    test("normalizeResponse can load secondary records of the same type without affecting the query count", function () {
-      var jsonHash = {
-        comments: [{ id: "1", body: "Parent Comment", root: true, children: [2, 3] }],
-        _comments: [{ id: "2", body: "Child Comment 1", root: false }, { id: "3", body: "Child Comment 2", root: false }]
-      };
-      var array;
-
-      run(function () {
-        array = env.restNewSerializer.normalizeResponse(env.store, Comment, jsonHash, '1', 'findRecord');
-      });
-
-      deepEqual(array, {
-        "data": {
-          "id": "1",
-          "type": "comment",
-          "attributes": {
-            "body": "Parent Comment",
-            "root": true
-          },
-          "relationships": {
-            "children": {
-              "data": [{ "id": "2", "type": "comment" }, { "id": "3", "type": "comment" }]
-            }
-          }
-        },
-        "included": [{
-          "id": "2",
-          "type": "comment",
-          "attributes": {
-            "body": "Child Comment 1",
-            "root": false
-          },
-          "relationships": {}
-        }, {
-          "id": "3",
-          "type": "comment",
-          "attributes": {
-            "body": "Child Comment 2",
-            "root": false
-          },
-          "relationships": {}
-        }]
-      });
-
-      // normalizeResponse does not push records to the store
-      //equal(env.store.recordForId("comment", "2").get("body"), "Child Comment 1", "Secondary records are in the store");
-      //equal(env.store.recordForId("comment", "3").get("body"), "Child Comment 2", "Secondary records are in the store");
-    });
-
-    test("normalizeSingleResponse loads secondary records with correct serializer", function () {
-      var superVillainNormalizeCount = 0;
-
-      env.registry.register('serializer:super-villain', TestSerializer.extend({
-        normalize: function () {
-          superVillainNormalizeCount++;
-          return this._super.apply(this, arguments);
-        }
-      }));
-
-      var jsonHash = {
-        evilMinion: { id: "1", name: "Tom Dale", superVillain: 1 },
-        superVillains: [{ id: "1", firstName: "Yehuda", lastName: "Katz", homePlanet: "1" }]
-      };
-
-      run(function () {
-        env.restNewSerializer.normalizeSingleResponse(env.store, EvilMinion, jsonHash, '1', 'findRecord');
-      });
-
-      equal(superVillainNormalizeCount, 1, "superVillain is normalized once");
-    });
-
-    test("normalizeSingleResponse returns null if payload contains null", function () {
-      expect(1);
-
-      var jsonHash = {
-        evilMinion: null
-      };
-      var value;
-
-      run(function () {
-        value = env.restNewSerializer.normalizeSingleResponse(env.store, EvilMinion, jsonHash, null, 'findRecord');
-      });
-
-      deepEqual(value, { data: null, included: [] }, "returned value is null");
-    });
-
-    test("normalizeArrayResponse loads secondary records with correct serializer", function () {
-      var superVillainNormalizeCount = 0;
-
-      env.registry.register('serializer:super-villain', TestSerializer.extend({
-        normalize: function () {
-          superVillainNormalizeCount++;
-          return this._super.apply(this, arguments);
-        }
-      }));
-
-      var jsonHash = {
-        evilMinions: [{ id: "1", name: "Tom Dale", superVillain: 1 }],
-        superVillains: [{ id: "1", firstName: "Yehuda", lastName: "Katz", homePlanet: "1" }]
-      };
-
-      run(function () {
-        env.restNewSerializer.normalizeArrayResponse(env.store, EvilMinion, jsonHash, null, 'findAll');
-      });
-
-      equal(superVillainNormalizeCount, 1, "superVillain is normalized once");
-    });
-
-    test('normalizeHash normalizes specific parts of the payload', function () {
-      env.registry.register('serializer:application', TestSerializer.extend({
-        normalizeHash: {
-          homePlanets: function (hash) {
-            hash.id = hash._id;
-            delete hash._id;
-            return hash;
-          }
-        }
-      }));
-
-      var jsonHash = {
-        homePlanets: [{ _id: "1", name: "Umber", superVillains: [1] }]
-      };
-      var array;
-
-      run(function () {
-        array = env.restNewSerializer.normalizeArrayResponse(env.store, HomePlanet, jsonHash, null, 'findAll');
-      });
-
-      deepEqual(array, {
-        "data": [{
-          "id": "1",
-          "type": "home-planet",
-          "attributes": {
-            "name": "Umber"
-          },
-          "relationships": {
-            "superVillains": {
-              "data": [{ "id": "1", "type": "super-villain" }]
-            }
-          }
-        }],
-        "included": []
-      });
-    });
-
-    test('normalizeHash works with transforms', function () {
-      env.registry.register('serializer:application', TestSerializer.extend({
-        normalizeHash: {
-          evilMinions: function (hash) {
-            hash.condition = hash._condition;
-            delete hash._condition;
-            return hash;
-          }
-        }
-      }));
-
-      env.registry.register('transform:condition', DS.Transform.extend({
-        deserialize: function (serialized) {
-          if (serialized === 1) {
-            return "healing";
-          } else {
-            return "unknown";
-          }
-        },
-        serialize: function (deserialized) {
-          if (deserialized === "healing") {
-            return 1;
-          } else {
-            return 2;
-          }
-        }
-      }));
-
-      EvilMinion.reopen({ condition: DS.attr('condition') });
-
-      var jsonHash = {
-        evilMinions: [{ id: "1", name: "Tom Dale", superVillain: 1, _condition: 1 }]
-      };
-      var array;
-
-      run(function () {
-        array = env.restNewSerializer.normalizeArrayResponse(env.store, EvilMinion, jsonHash, null, 'findAll');
-      });
-
-      equal(array.data[0].attributes.condition, "healing");
-    });
-
-    test('normalize should allow for different levels of normalization', function () {
-      env.registry.register('serializer:application', TestSerializer.extend({
-        attrs: {
-          superVillain: 'is_super_villain'
-        },
-        keyForAttribute: function (attr) {
-          return Ember.String.decamelize(attr);
-        }
-      }));
-
-      var jsonHash = {
-        evilMinions: [{ id: "1", name: "Tom Dale", is_super_villain: 1 }]
-      };
-      var array;
-
-      run(function () {
-        array = env.restNewSerializer.normalizeArrayResponse(env.store, EvilMinion, jsonHash, null, 'findAll');
-      });
-
-      equal(array.data[0].relationships.superVillain.data.id, 1);
-    });
-
-    test("should assert with collaborating with non newSerializerAPI serializers", function () {
-      expect(1);
-
-      env.registry.register('serializer:home-planet', DS.RESTSerializer.extend({
-        isNewSerializerAPI: false
-      }));
-
-      var jsonHash = {
-        home_planets: [{ id: "1", name: "Umber", superVillains: [1] }],
-        super_villains: [{ id: "1", firstName: "Tom", lastName: "Dale", homePlanet: "1" }]
-      };
-      var array;
-      expectAssertion(function () {
-        run(function () {
-          array = env.restNewSerializer.normalizeArrayResponse(env.store, SuperVillain, jsonHash, null, 'findAll');
-        });
-      }, /collaborates with to also support the new serializer API by setting its `isNewSerializerAPI` property to true./);
-    });
-  }
-);
-
-
-define(
   "ember-data/tests/integration/serializers/rest-serializer-test",
   ["exports"],
   function(__exports__) {
@@ -18133,7 +18947,6 @@ define(
       __exports__[name] = value;
     }
 
-    var get = Ember.get;
     var HomePlanet, league, SuperVillain, EvilMinion, YellowMinion, DoomsdayDevice, Comment, env;
     var run = Ember.run;
 
@@ -18153,7 +18966,9 @@ define(
           superVillain: DS.belongsTo('super-villain', { async: false }),
           name: DS.attr('string')
         });
-        YellowMinion = EvilMinion.extend();
+        YellowMinion = EvilMinion.extend({
+          eyes: DS.attr('number')
+        });
         DoomsdayDevice = DS.Model.extend({
           name: DS.attr('string'),
           evilMinion: DS.belongsTo('evil-minion', { polymorphic: true, async: true })
@@ -18192,8 +19007,75 @@ define(
       equal(env.restSerializer.modelNameFromPayloadKey('multi-words'), expectedModelName);
     });
 
-    test("extractSingle warning with custom modelNameFromPayloadKey", function () {
+    test('normalizeResponse should extract meta using extractMeta', function () {
+      env.registry.register("serializer:home-planet", DS.RESTSerializer.extend({
+        extractMeta: function (store, modelClass, payload) {
+          var meta = this._super.apply(this, arguments);
+          meta.authors.push('Tomhuda');
+          return meta;
+        }
+      }));
+
+      var jsonHash = {
+        meta: { authors: ['Tomster'] },
+        home_planets: [{ id: "1", name: "Umber", superVillains: [1] }]
+      };
+
+      var json = env.container.lookup("serializer:home-planet").normalizeResponse(env.store, HomePlanet, jsonHash, null, 'findAll');
+
+      deepEqual(json.meta.authors, ['Tomster', 'Tomhuda']);
+    });
+
+    test("normalizeResponse with custom modelNameFromPayloadKey", function () {
+      expect(1);
+
+      env.restSerializer.modelNameFromPayloadKey = function (root) {
+        var camelized = Ember.String.camelize(root);
+        return Ember.String.singularize(camelized);
+      };
+
+      var jsonHash = {
+        home_planets: [{ id: "1", name: "Umber", superVillains: [1] }],
+        super_villains: [{ id: "1", firstName: "Tom", lastName: "Dale", homePlanet: "1" }]
+      };
+      var array;
+
+      run(function () {
+        array = env.restSerializer.normalizeResponse(env.store, HomePlanet, jsonHash, '1', 'findRecord');
+      });
+
+      deepEqual(array, {
+        data: {
+          id: '1',
+          type: 'home-planet',
+          attributes: {
+            name: 'Umber'
+          },
+          relationships: {
+            superVillains: {
+              data: [{ id: '1', type: 'super-villain' }]
+            }
+          }
+        },
+        included: [{
+          id: '1',
+          type: 'super-villain',
+          attributes: {
+            firstName: 'Tom',
+            lastName: 'Dale'
+          },
+          relationships: {
+            homePlanet: {
+              data: { id: '1', type: 'home-planet' }
+            }
+          }
+        }]
+      });
+    });
+
+    test("normalizeResponse warning with custom modelNameFromPayloadKey", function () {
       var homePlanet;
+      var oldModelNameFromPayloadKey = env.restSerializer.modelNameFromPayloadKey;
       env.restSerializer.modelNameFromPayloadKey = function (root) {
         //return some garbage that won"t resolve in the container
         return "garbage";
@@ -18205,9 +19087,41 @@ define(
 
       warns(Ember.run.bind(null, function () {
         run(function () {
-          env.restSerializer.extractSingle(env.store, HomePlanet, jsonHash);
+          env.restSerializer.normalizeResponse(env.store, HomePlanet, jsonHash, '1', 'findRecord');
         });
       }), /Encountered "home_planet" in payload, but no model was found for model name "garbage"/);
+
+      // should not warn if a model is found.
+      env.restSerializer.modelNameFromPayloadKey = oldModelNameFromPayloadKey;
+      jsonHash = {
+        home_planet: { id: "1", name: "Umber", superVillains: [1] }
+      };
+
+      noWarns(function () {
+        run(function () {
+
+          homePlanet = env.restSerializer.normalizeResponse(env.store, HomePlanet, jsonHash, 1, 'findRecord');
+        });
+      });
+
+      equal(homePlanet.data.attributes.name, "Umber");
+      deepEqual(homePlanet.data.relationships.superVillains.data, [{ id: '1', type: 'super-villain' }]);
+    });
+
+    test("normalizeResponse warning with custom modelNameFromPayloadKey", function () {
+      var homePlanets;
+      env.restSerializer.modelNameFromPayloadKey = function (root) {
+        //return some garbage that won"t resolve in the container
+        return "garbage";
+      };
+
+      var jsonHash = {
+        home_planets: [{ id: "1", name: "Umber", superVillains: [1] }]
+      };
+
+      warns(function () {
+        env.restSerializer.normalizeResponse(env.store, HomePlanet, jsonHash, null, 'findAll');
+      }, /Encountered "home_planets" in payload, but no model was found for model name "garbage"/);
 
       // should not warn if a model is found.
       env.restSerializer.modelNameFromPayloadKey = function (root) {
@@ -18215,17 +19129,18 @@ define(
       };
 
       jsonHash = {
-        home_planet: { id: "1", name: "Umber", superVillains: [1] }
+        home_planets: [{ id: "1", name: "Umber", superVillains: [1] }]
       };
 
       noWarns(function () {
         run(function () {
-          homePlanet = env.restSerializer.extractSingle(env.store, HomePlanet, jsonHash);
+          homePlanets = env.restSerializer.normalizeResponse(env.store, HomePlanet, jsonHash, null, 'findAll');
         });
       });
 
-      equal(get(homePlanet, "name"), "Umber");
-      deepEqual(get(homePlanet, "superVillains"), [1]);
+      equal(homePlanets.data.length, 1);
+      equal(homePlanets.data[0].attributes.name, "Umber");
+      deepEqual(homePlanets.data[0].relationships.superVillains.data, [{ id: '1', type: 'super-villain' }]);
     });
 
     test("serialize polymorphicType", function () {
@@ -18257,29 +19172,6 @@ define(
       deepEqual(json["evilMinionType"], "yellowMinion");
     });
 
-    test("normalizePayload is called during extractSingle", function () {
-      env.registry.register('serializer:application', DS.RESTSerializer.extend({
-        normalizePayload: function (payload) {
-          return payload.response;
-        }
-      }));
-
-      var jsonHash = {
-        response: {
-          evilMinion: { id: "1", name: "Tom Dale", superVillain: 1 },
-          superVillains: [{ id: "1", firstName: "Yehuda", lastName: "Katz", homePlanet: "1" }]
-        }
-      };
-
-      var applicationSerializer = env.container.lookup('serializer:application');
-      var data;
-
-      run(function () {
-        data = applicationSerializer.extractSingle(env.store, EvilMinion, jsonHash);
-      });
-
-      equal(data.name, jsonHash.response.evilMinion.name, "normalize reads off the response");
-    });
     test("serialize polymorphic when associated object is null", function () {
       var ray;
       run(function () {
@@ -18291,7 +19183,7 @@ define(
       deepEqual(json["evilMinionType"], null);
     });
 
-    test("extractSingle loads secondary records with correct serializer", function () {
+    test("normalizeResponse loads secondary records with correct serializer", function () {
       var superVillainNormalizeCount = 0;
 
       env.registry.register('serializer:super-villain', DS.RESTSerializer.extend({
@@ -18307,13 +19199,13 @@ define(
       };
 
       run(function () {
-        env.restSerializer.extractSingle(env.store, EvilMinion, jsonHash);
+        env.restSerializer.normalizeResponse(env.store, EvilMinion, jsonHash, '1', 'findRecord');
       });
 
       equal(superVillainNormalizeCount, 1, "superVillain is normalized once");
     });
 
-    test("extractSingle returns null if payload contains null", function () {
+    test("normalizeResponse returns null if payload contains null", function () {
       expect(1);
 
       var jsonHash = {
@@ -18322,13 +19214,13 @@ define(
       var value;
 
       run(function () {
-        value = env.restSerializer.extractSingle(env.store, EvilMinion, jsonHash);
+        value = env.restSerializer.normalizeResponse(env.store, EvilMinion, jsonHash, null, 'findRecord');
       });
 
-      equal(value, null, "returned value is null");
+      deepEqual(value, { data: null, included: [] }, "returned value is null");
     });
 
-    test("extractArray loads secondary records with correct serializer", function () {
+    test("normalizeResponse loads secondary records with correct serializer", function () {
       var superVillainNormalizeCount = 0;
 
       env.registry.register('serializer:super-villain', DS.RESTSerializer.extend({
@@ -18344,7 +19236,7 @@ define(
       };
 
       run(function () {
-        env.restSerializer.extractArray(env.store, EvilMinion, jsonHash);
+        env.restSerializer.normalizeResponse(env.store, EvilMinion, jsonHash, null, 'findAll');
       });
 
       equal(superVillainNormalizeCount, 1, "superVillain is normalized once");
@@ -18367,14 +19259,24 @@ define(
       var array;
 
       run(function () {
-        array = env.restSerializer.extractArray(env.store, HomePlanet, jsonHash);
+        array = env.restSerializer.normalizeResponse(env.store, HomePlanet, jsonHash, null, 'findAll');
       });
 
-      deepEqual(array, [{
-        "id": "1",
-        "name": "Umber",
-        "superVillains": [1]
-      }]);
+      deepEqual(array, {
+        "data": [{
+          "id": "1",
+          "type": "home-planet",
+          "attributes": {
+            "name": "Umber"
+          },
+          "relationships": {
+            "superVillains": {
+              "data": [{ "id": "1", "type": "super-villain" }]
+            }
+          }
+        }],
+        "included": []
+      });
     });
 
     test('normalizeHash works with transforms', function () {
@@ -18413,10 +19315,10 @@ define(
       var array;
 
       run(function () {
-        array = env.restSerializer.extractArray(env.store, EvilMinion, jsonHash);
+        array = env.restSerializer.normalizeResponse(env.store, EvilMinion, jsonHash, null, 'findAll');
       });
 
-      equal(array[0].condition, "healing");
+      equal(array.data[0].attributes.condition, "healing");
     });
 
     test('normalize should allow for different levels of normalization', function () {
@@ -18435,10 +19337,10 @@ define(
       var array;
 
       run(function () {
-        array = env.restSerializer.extractArray(env.store, EvilMinion, jsonHash);
+        array = env.restSerializer.normalizeResponse(env.store, EvilMinion, jsonHash, null, 'findAll');
       });
 
-      equal(array[0].superVillain, 1);
+      equal(array.data[0].relationships.superVillain.data.id, 1);
     });
 
     test("serializeIntoHash", function () {
@@ -18507,12 +19409,123 @@ define(
       });
     });
 
-    test('typeForRoot is deprecated', function () {
-      expect(1);
+    test('normalizeResponse with async polymorphic belongsTo', function () {
+      env.registry.register('serializer:application', DS.RESTSerializer.extend({
+        isNewSerializerAPI: true
+      }));
+      var store = env.store;
+      env.adapter.findRecord = function () {
+        return {
+          doomsdayDevices: [{
+            id: 1,
+            name: "DeathRay",
+            links: {
+              evilMinion: '/doomsday-device/1/evil-minion'
+            }
+          }]
+        };
+      };
 
-      expectDeprecation(function () {
-        Ember.Inflector.inflector.uncountable('words');
-        return env.restSerializer.typeForRoot('multi_words');
+      env.adapter.findBelongsTo = function () {
+        return {
+          evilMinion: {
+            id: 1,
+            type: 'yellowMinion',
+            name: 'Alex',
+            eyes: 3
+          }
+        };
+      };
+      run(function () {
+        store.findRecord('doomsday-device', 1).then(function (deathRay) {
+          return deathRay.get('evilMinion');
+        }).then(function (evilMinion) {
+          equal(evilMinion.get('eyes'), 3);
+        });
+      });
+    });
+
+    test('normalizeResponse with async polymorphic hasMany', function () {
+      SuperVillain.reopen({ evilMinions: DS.hasMany('evil-minion', { async: true, polymorphic: true }) });
+      env.registry.register('serializer:application', DS.RESTSerializer.extend({
+        isNewSerializerAPI: true
+      }));
+      var store = env.store;
+      env.adapter.findRecord = function () {
+        return {
+          superVillains: [{
+            id: "1",
+            firstName: "Yehuda",
+            lastName: "Katz",
+            links: {
+              evilMinions: '/super-villain/1/evil-minions'
+            }
+          }]
+        };
+      };
+
+      env.adapter.findHasMany = function () {
+        return {
+          evilMinion: [{
+            id: 1,
+            type: 'yellowMinion',
+            name: 'Alex',
+            eyes: 3
+          }]
+        };
+      };
+      run(function () {
+        store.findRecord('super-villain', 1).then(function (superVillain) {
+          return superVillain.get('evilMinions');
+        }).then(function (evilMinions) {
+          ok(evilMinions.get('firstObject') instanceof YellowMinion);
+          equal(evilMinions.get('firstObject.eyes'), 3);
+        });
+      });
+    });
+
+    test("normalizeResponse can load secondary records of the same type without affecting the query count", function () {
+      var jsonHash = {
+        comments: [{ id: "1", body: "Parent Comment", root: true, children: [2, 3] }],
+        _comments: [{ id: "2", body: "Child Comment 1", root: false }, { id: "3", body: "Child Comment 2", root: false }]
+      };
+      var array;
+
+      run(function () {
+        array = env.restSerializer.normalizeResponse(env.store, Comment, jsonHash, '1', 'findRecord');
+      });
+
+      deepEqual(array, {
+        "data": {
+          "id": "1",
+          "type": "comment",
+          "attributes": {
+            "body": "Parent Comment",
+            "root": true
+          },
+          "relationships": {
+            "children": {
+              "data": [{ "id": "2", "type": "comment" }, { "id": "3", "type": "comment" }]
+            }
+          }
+        },
+        "included": [{
+          "id": "2",
+          "type": "comment",
+          "attributes": {
+            "body": "Child Comment 1",
+            "root": false
+          },
+          "relationships": {}
+        }, {
+          "id": "3",
+          "type": "comment",
+          "attributes": {
+            "body": "Child Comment 2",
+            "root": false
+          },
+          "relationships": {}
+        }]
       });
     });
   }
@@ -18530,13 +19543,11 @@ define(
     }
 
     var run = Ember.run;
-    var Container = Ember.Container;
-    var Registry = Ember.Registry;
     var Store = DS.Store;
     var EmberObject = Ember.Object;
     var setupContainer = DS._setupContainer;
 
-    var container, registry;
+    var container, registry, application;
 
     /*
       These tests ensure that Ember Data works with Ember.js' container
@@ -18545,18 +19556,28 @@ define(
 
     module("integration/setup-container - Setting up a container", {
       setup: function () {
-        if (Registry) {
-          registry = new Registry();
-          container = registry.container();
+        run(function () {
+          application = Ember.Application.create();
+        });
+
+        container = application.__container__;
+        registry = application.__registry__;
+
+        var setupContainerArgument;
+        if (registry) {
+          setupContainerArgument = application;
         } else {
-          container = new Container();
-          registry = container;
+          // In Ember < 2.1.0 application.__registry__ is undefined so we
+          // pass in the registry to mimic the setup behavior.
+          registry = setupContainerArgument = application.registry;
         }
-        setupContainer(registry);
+        setupContainer(setupContainerArgument);
       },
 
       teardown: function () {
-        run(container, container.destroy);
+        run(function () {
+          application.destroy();
+        });
       }
     });
 
@@ -18574,67 +19595,11 @@ define(
       ok(fooController.get('store') instanceof Store, "the store was injected");
     });
 
-    test("the deprecated serializer:_default is resolved as serializer:default", function () {
-      var deprecated;
-      var valid = container.lookup('serializer:-default');
-      expectDeprecation(function () {
-        deprecated = container.lookup('serializer:_default');
-      });
-
-      ok(deprecated.constructor === valid.constructor, "they should resolve to the same thing");
-    });
-
-    test("the deprecated serializer:_rest is resolved as serializer:rest", function () {
-      var deprecated;
-      var valid = container.lookup('serializer:-rest');
-      expectDeprecation(function () {
-        deprecated = container.lookup('serializer:_rest');
-      });
-
-      ok(deprecated.constructor === valid.constructor, "they should resolve to the same thing");
-    });
-
-    test("the deprecated adapter:_rest is resolved as adapter:rest", function () {
-      var deprecated;
-      var valid = container.lookup('adapter:-rest');
-      expectDeprecation(function () {
-        deprecated = container.lookup('adapter:_rest');
-      });
-
-      ok(deprecated.constructor === valid.constructor, "they should resolve to the same thing");
-    });
-
-    test("a deprecation is made when looking up adapter:_rest", function () {
-      expectDeprecation(function () {
-        container.lookup('serializer:_default');
-      }, "You tried to look up 'serializer:_default', but this has been deprecated in favor of 'serializer:-default'.");
-    });
-
     test("serializers are not returned as singletons - each lookup should return a different instance", function () {
       var serializer1, serializer2;
       serializer1 = container.lookup('serializer:-rest');
       serializer2 = container.lookup('serializer:-rest');
       notEqual(serializer1, serializer2);
-    });
-
-    test("the deprecated store:main is resolved as service:store", function () {
-      var deprecated;
-      var valid = container.lookup('service:store');
-      expectDeprecation(function () {
-        deprecated = container.lookup('store:main');
-      });
-
-      ok(deprecated.constructor === valid.constructor, "they should resolve to the same thing");
-    });
-
-    test("the deprecated store:application is resolved as service:store", function () {
-      var deprecated;
-      var valid = container.lookup('service:store');
-      expectDeprecation(function () {
-        deprecated = container.lookup('store:application');
-      });
-
-      ok(deprecated.constructor === valid.constructor, "they should resolve to the same thing");
     });
 
     test("adapters are not returned as singletons - each lookup should return a different instance", function () {
@@ -18689,26 +19654,19 @@ define(
       expect(1);
 
       run(function () {
-        var post = env.store.push('post', { id: 1, title: 'Hello World' });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              title: 'Hello World'
+            }
+          }
+        });
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
 
         ok(snapshot instanceof DS.Snapshot, 'snapshot is an instance of DS.Snapshot');
-      });
-    });
-
-    test("snapshot._createSnapshot() returns a snapshot (self) but is deprecated", function () {
-      expect(2);
-
-      run(function () {
-        var post = env.store.push('post', { id: 1, title: 'Hello World' });
-        var snapshot1 = post._createSnapshot();
-        var snapshot2;
-
-        expectDeprecation(function () {
-          snapshot2 = snapshot1._createSnapshot();
-        }, /You called _createSnapshot on what's already a DS.Snapshot. You shouldn't manually create snapshots in your adapter since the store passes snapshots to adapters by default./);
-
-        ok(snapshot2 === snapshot1, 'snapshot._createSnapshot() returns self');
       });
     });
 
@@ -18716,7 +19674,16 @@ define(
       expect(3);
 
       run(function () {
-        var post = env.store.push('post', { id: 1, title: 'Hello World' });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              title: 'Hello World'
+            }
+          }
+        });
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
 
         equal(snapshot.id, '1', 'id is correct');
@@ -18725,32 +19692,20 @@ define(
       });
     });
 
-    if (Ember.platform.hasPropertyAccessors) {
-      test("snapshot.constructor is unique and deprecated", function () {
-        expect(4);
-
-        run(function () {
-          var comment = env.store.push('comment', { id: 1, body: 'This is comment' });
-          var post = env.store.push('post', { id: 2, title: 'Hello World' });
-          var commentSnapshot = comment._createSnapshot();
-          var postSnapshot = post._createSnapshot();
-
-          expectDeprecation(function () {
-            equal(commentSnapshot.constructor.modelName, 'comment', 'constructor.modelName is unique per type');
-          });
-
-          expectDeprecation(function () {
-            equal(postSnapshot.constructor.modelName, 'post', 'constructor.modelName is unique per type');
-          });
-        });
-      });
-    }
-
     test("snapshot.attr() does not change when record changes", function () {
       expect(2);
 
       run(function () {
-        var post = env.store.push('post', { id: 1, title: 'Hello World' });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              title: 'Hello World'
+            }
+          }
+        });
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
 
         equal(snapshot.attr('title'), 'Hello World', 'snapshot title is correct');
@@ -18763,7 +19718,16 @@ define(
       expect(1);
 
       run(function () {
-        var post = env.store.push('post', { id: 1, title: 'Hello World' });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              title: 'Hello World'
+            }
+          }
+        });
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
 
         throws(function () {
@@ -18776,7 +19740,16 @@ define(
       expect(1);
 
       run(function () {
-        var post = env.store.push('post', { id: 1, title: 'Hello World' });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              title: 'Hello World'
+            }
+          }
+        });
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
 
         var attributes = snapshot.attributes();
@@ -18789,7 +19762,16 @@ define(
       expect(1);
 
       run(function () {
-        var post = env.store.push('post', { id: 1, title: 'Hello World' });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              title: 'Hello World'
+            }
+          }
+        });
+        var post = env.store.peekRecord('post', 1);
         post.set('title', 'Hello World!');
         var snapshot = post._createSnapshot();
 
@@ -18803,7 +19785,16 @@ define(
       expect(1);
 
       run(function () {
-        var comment = env.store.push('comment', { id: 1, body: 'This is comment' });
+        env.store.push({
+          data: {
+            type: 'comment',
+            id: '1',
+            attributes: {
+              body: 'This is comment'
+            }
+          }
+        });
+        var comment = env.store.peekRecord('comment', 1);
         var snapshot = comment._createSnapshot();
         var relationship = snapshot.belongsTo('post');
 
@@ -18815,8 +19806,27 @@ define(
       expect(1);
 
       run(function () {
-        env.store.push('post', { id: 1, title: 'Hello World' });
-        var comment = env.store.push('comment', { id: 2, body: 'This is comment', post: null });
+        env.store.push({
+          data: [{
+            type: 'post',
+            id: '1',
+            attributes: {
+              title: 'Hello World'
+            }
+          }, {
+            type: 'comment',
+            id: '2',
+            attributes: {
+              body: 'This is comment'
+            },
+            relationships: {
+              post: {
+                data: null
+              }
+            }
+          }]
+        });
+        var comment = env.store.peekRecord('comment', 2);
         var snapshot = comment._createSnapshot();
         var relationship = snapshot.belongsTo('post');
 
@@ -18828,8 +19838,27 @@ define(
       expect(3);
 
       run(function () {
-        env.store.push('post', { id: 1, title: 'Hello World' });
-        var comment = env.store.push('comment', { id: 2, body: 'This is comment', post: 1 });
+        env.store.push({
+          data: [{
+            type: 'post',
+            id: '1',
+            attributes: {
+              title: 'Hello World'
+            }
+          }, {
+            type: 'comment',
+            id: '2',
+            attributes: {
+              body: 'This is comment'
+            },
+            relationships: {
+              post: {
+                data: { type: 'post', id: '1' }
+              }
+            }
+          }]
+        });
+        var comment = env.store.peekRecord('comment', 2);
         var snapshot = comment._createSnapshot();
         var relationship = snapshot.belongsTo('post');
 
@@ -18843,8 +19872,28 @@ define(
       expect(1);
 
       run(function () {
-        var post = env.store.push('post', { id: 1, title: 'Hello World' });
-        var comment = env.store.push('comment', { id: 2, body: 'This is comment', post: 1 });
+        env.store.push({
+          data: [{
+            type: 'post',
+            id: '1',
+            attributes: {
+              title: 'Hello World'
+            }
+          }, {
+            type: 'comment',
+            id: '2',
+            attributes: {
+              body: 'This is comment'
+            },
+            relationships: {
+              post: {
+                data: { type: 'post', id: '1' }
+              }
+            }
+          }]
+        });
+        var post = env.store.peekRecord('post', 1);
+        var comment = env.store.peekRecord('comment', 2);
 
         post.deleteRecord();
 
@@ -18859,7 +19908,23 @@ define(
       expect(1);
 
       run(function () {
-        var comment = env.store.push('comment', { id: 2, body: 'This is comment', links: { post: 'post' } });
+        env.store.push({
+          data: {
+            type: 'comment',
+            id: '2',
+            attributes: {
+              body: 'This is comment'
+            },
+            relationships: {
+              post: {
+                links: {
+                  related: 'post'
+                }
+              }
+            }
+          }
+        });
+        var comment = env.store.peekRecord('comment', 2);
         var snapshot = comment._createSnapshot();
         var relationship = snapshot.belongsTo('post');
 
@@ -18871,7 +19936,16 @@ define(
       expect(1);
 
       run(function () {
-        var post = env.store.push('post', { id: 1, title: 'Hello World' });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              title: 'Hello World'
+            }
+          }
+        });
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
 
         throws(function () {
@@ -18888,7 +19962,23 @@ define(
       };
 
       run(function () {
-        var comment = env.store.push('comment', { id: 2, body: 'This is comment', links: { post: 'post' } });
+        env.store.push({
+          data: {
+            type: 'comment',
+            id: '2',
+            attributes: {
+              body: 'This is comment'
+            },
+            relationships: {
+              post: {
+                links: {
+                  related: 'post'
+                }
+              }
+            }
+          }
+        });
+        var comment = env.store.peekRecord('comment', 2);
 
         comment.get('post').then(function (post) {
           var snapshot = comment._createSnapshot();
@@ -18904,8 +19994,23 @@ define(
       expect(4);
 
       run(function () {
-        var post = env.store.push('post', { id: 1, title: 'Hello World' });
-        var comment = env.store.push('comment', { id: 2, body: 'blabla' });
+        env.store.push({
+          data: [{
+            type: 'post',
+            id: '1',
+            attributes: {
+              title: 'Hello World'
+            }
+          }, {
+            type: 'comment',
+            id: '2',
+            attributes: {
+              body: 'This is comment'
+            }
+          }]
+        });
+        var post = env.store.peekRecord('post', 1);
+        var comment = env.store.peekRecord('comment', 2);
 
         post.get('comments').then(function (comments) {
           comments.addObject(comment);
@@ -18929,8 +20034,23 @@ define(
       expect(4);
 
       run(function () {
-        var post = env.store.push('post', { id: 1, title: 'Hello World' });
-        var comment = env.store.push('comment', { id: 2, body: 'blabla' });
+        env.store.push({
+          data: [{
+            type: 'post',
+            id: '1',
+            attributes: {
+              title: 'Hello World'
+            }
+          }, {
+            type: 'comment',
+            id: '2',
+            attributes: {
+              body: 'This is comment'
+            }
+          }]
+        });
+        var post = env.store.peekRecord('post', 1);
+        var comment = env.store.peekRecord('comment', 2);
 
         comment.set('post', post);
 
@@ -18952,8 +20072,27 @@ define(
       expect(1);
 
       run(function () {
-        env.store.push('post', { id: 1, title: 'Hello World' });
-        var comment = env.store.push('comment', { id: 2, body: 'This is comment', post: 1 });
+        env.store.push({
+          data: [{
+            type: 'post',
+            id: '1',
+            attributes: {
+              title: 'Hello World'
+            }
+          }, {
+            type: 'comment',
+            id: '2',
+            attributes: {
+              body: 'This is comment'
+            },
+            relationships: {
+              post: {
+                data: { type: 'post', id: '1' }
+              }
+            }
+          }]
+        });
+        var comment = env.store.peekRecord('comment', 2);
         var snapshot = comment._createSnapshot();
         var relationship = snapshot.belongsTo('post', { id: true });
 
@@ -18965,8 +20104,28 @@ define(
       expect(1);
 
       run(function () {
-        var post = env.store.push('post', { id: 1, title: 'Hello World' });
-        var comment = env.store.push('comment', { id: 2, body: 'This is comment', post: 1 });
+        env.store.push({
+          data: [{
+            type: 'post',
+            id: '1',
+            attributes: {
+              title: 'Hello World'
+            }
+          }, {
+            type: 'comment',
+            id: '2',
+            attributes: {
+              body: 'This is comment'
+            },
+            relationships: {
+              post: {
+                data: { type: 'post', id: '1' }
+              }
+            }
+          }]
+        });
+        var post = env.store.peekRecord('post', 1);
+        var comment = env.store.peekRecord('comment', 2);
 
         post.deleteRecord();
 
@@ -18981,7 +20140,16 @@ define(
       expect(1);
 
       run(function () {
-        var post = env.store.push('post', { id: 1, title: 'Hello World' });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              title: 'Hello World'
+            }
+          }
+        });
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
         var relationship = snapshot.hasMany('comments');
 
@@ -18989,11 +20157,25 @@ define(
       });
     });
 
-    test("snapshot.hasMany() returns empty array if relationship is unset", function () {
+    test("snapshot.hasMany() returns empty array if relationship is empty", function () {
       expect(2);
 
       run(function () {
-        var post = env.store.push('post', { id: 1, title: 'Hello World', comments: null });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              title: 'Hello World'
+            },
+            relationships: {
+              comments: {
+                data: []
+              }
+            }
+          }
+        });
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
         var relationship = snapshot.hasMany('comments');
 
@@ -19006,9 +20188,33 @@ define(
       expect(5);
 
       run(function () {
-        env.store.push('comment', { id: 1, body: 'This is the first comment' });
-        env.store.push('comment', { id: 2, body: 'This is the second comment' });
-        var post = env.store.push('post', { id: 3, title: 'Hello World', comments: [1, 2] });
+        env.store.push({
+          data: [{
+            type: 'comment',
+            id: '1',
+            attributes: {
+              body: 'This is the first comment'
+            }
+          }, {
+            type: 'comment',
+            id: '2',
+            attributes: {
+              body: 'This is the second comment'
+            }
+          }, {
+            type: 'post',
+            id: '3',
+            attributes: {
+              title: 'Hello World'
+            },
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }]
+              }
+            }
+          }]
+        });
+        var post = env.store.peekRecord('post', 3);
         var snapshot = post._createSnapshot();
         var relationship = snapshot.hasMany('comments');
 
@@ -19028,9 +20234,35 @@ define(
       expect(2);
 
       run(function () {
-        var comment1 = env.store.push('comment', { id: 1, body: 'This is the first comment' });
-        var comment2 = env.store.push('comment', { id: 2, body: 'This is the second comment' });
-        var post = env.store.push('post', { id: 3, title: 'Hello World', comments: [1, 2] });
+        env.store.push({
+          data: [{
+            type: 'comment',
+            id: '1',
+            attributes: {
+              body: 'This is the first comment'
+            }
+          }, {
+            type: 'comment',
+            id: '2',
+            attributes: {
+              body: 'This is the second comment'
+            }
+          }, {
+            type: 'post',
+            id: '3',
+            attributes: {
+              title: 'Hello World'
+            },
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }]
+              }
+            }
+          }]
+        });
+        var comment1 = env.store.peekRecord('comment', 1);
+        var comment2 = env.store.peekRecord('comment', 2);
+        var post = env.store.peekRecord('post', 3);
 
         comment1.deleteRecord();
         comment2.deleteRecord();
@@ -19047,7 +20279,21 @@ define(
       expect(1);
 
       run(function () {
-        var post = env.store.push('post', { id: 1, title: 'Hello World', comments: [2, 3] });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              title: 'Hello World'
+            },
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
+              }
+            }
+          }
+        });
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
         var relationship = snapshot.hasMany('comments', { ids: true });
 
@@ -19059,9 +20305,35 @@ define(
       expect(2);
 
       run(function () {
-        var comment1 = env.store.push('comment', { id: 1, body: 'This is the first comment' });
-        var comment2 = env.store.push('comment', { id: 2, body: 'This is the second comment' });
-        var post = env.store.push('post', { id: 3, title: 'Hello World', comments: [1, 1] });
+        env.store.push({
+          data: [{
+            type: 'comment',
+            id: '1',
+            attributes: {
+              body: 'This is the first comment'
+            }
+          }, {
+            type: 'comment',
+            id: '2',
+            attributes: {
+              body: 'This is the second comment'
+            }
+          }, {
+            type: 'post',
+            id: '3',
+            attributes: {
+              title: 'Hello World'
+            },
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }]
+              }
+            }
+          }]
+        });
+        var comment1 = env.store.peekRecord('comment', 1);
+        var comment2 = env.store.peekRecord('comment', 2);
+        var post = env.store.peekRecord('post', 3);
 
         comment1.deleteRecord();
         comment2.deleteRecord();
@@ -19078,7 +20350,23 @@ define(
       expect(1);
 
       run(function () {
-        var post = env.store.push('post', { id: 1, title: 'Hello World', links: { comments: 'comments' } });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              title: 'Hello World'
+            },
+            relationships: {
+              comments: {
+                links: {
+                  related: 'comments'
+                }
+              }
+            }
+          }
+        });
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
         var relationship = snapshot.hasMany('comments');
 
@@ -19094,7 +20382,23 @@ define(
       };
 
       run(function () {
-        var post = env.store.push('post', { id: 1, title: 'Hello World', links: { comments: 'comments' } });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              title: 'Hello World'
+            },
+            relationships: {
+              comments: {
+                links: {
+                  related: 'comments'
+                }
+              }
+            }
+          }
+        });
+        var post = env.store.peekRecord('post', 1);
 
         post.get('comments').then(function (comments) {
           var snapshot = post._createSnapshot();
@@ -19110,7 +20414,16 @@ define(
       expect(1);
 
       run(function () {
-        var post = env.store.push('post', { id: 1, title: 'Hello World' });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              title: 'Hello World'
+            }
+          }
+        });
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
 
         throws(function () {
@@ -19123,10 +20436,40 @@ define(
       expect(3);
 
       run(function () {
-        env.store.push('comment', { id: 1, body: 'This is the first comment' });
-        env.store.push('comment', { id: 2, body: 'This is the second comment' });
-        var comment3 = env.store.push('comment', { id: 3, body: 'This is the third comment' });
-        var post = env.store.push('post', { id: 4, title: 'Hello World', comments: [1, 2, 3] });
+        env.store.push({
+          data: [{
+            type: 'comment',
+            id: '1',
+            attributes: {
+              body: 'This is the first comment'
+            }
+          }, {
+            type: 'comment',
+            id: '2',
+            attributes: {
+              body: 'This is the second comment'
+            }
+          }, {
+            type: 'comment',
+            id: '3',
+            attributes: {
+              body: 'This is the third comment'
+            }
+          }, {
+            type: 'post',
+            id: '4',
+            attributes: {
+              title: 'Hello World'
+            },
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '1' }, { type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
+              }
+            }
+          }]
+        });
+        var comment3 = env.store.peekRecord('comment', 3);
+        var post = env.store.peekRecord('post', 4);
 
         post.get('comments').removeObject(comment3);
         post.get('comments').insertAt(0, comment3);
@@ -19144,7 +20487,16 @@ define(
       expect(1);
 
       run(function () {
-        var post = env.store.push('post', { id: 1, title: 'Hello World' });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              title: 'Hello World'
+            }
+          }
+        });
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
 
         var attributes = [];
@@ -19167,8 +20519,23 @@ define(
       };
 
       run(function () {
-        var comment = env.store.push('comment', { id: 1, body: 'This is the first comment' });
-        var post = env.store.push('post', { id: 2, title: 'Hello World' });
+        env.store.push({
+          data: [{
+            type: 'comment',
+            id: '1',
+            attributes: {
+              body: 'This is the first comment'
+            }
+          }, {
+            type: 'post',
+            id: '2',
+            attributes: {
+              title: 'Hello World'
+            }
+          }]
+        });
+        var comment = env.store.peekRecord('comment', 1);
+        var post = env.store.peekRecord('post', 2);
         var snapshot;
 
         snapshot = comment._createSnapshot();
@@ -19187,7 +20554,21 @@ define(
       };
 
       run(function () {
-        var comment = env.store.push('comment', { id: 2, body: 'This is comment', post: 1 });
+        env.store.push({
+          data: {
+            type: 'comment',
+            id: '1',
+            attributes: {
+              body: 'This is the first comment'
+            },
+            relationships: {
+              post: {
+                data: { type: 'post', id: '2' }
+              }
+            }
+          }
+        });
+        var comment = env.store.peekRecord('comment', 1);
         var snapshot = comment._createSnapshot();
 
         snapshot.belongsTo('post');
@@ -19202,98 +20583,24 @@ define(
       };
 
       run(function () {
-        var post = env.store.push('post', { id: 1, title: 'Hello World', comments: [2, 3] });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              title: 'Hello World'
+            },
+            relationships: {
+              comments: {
+                data: [{ type: 'comment', id: '2' }, { type: 'comment', id: '3' }]
+              }
+            }
+          }
+        });
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
 
         snapshot.hasMany('comments');
-      });
-    });
-
-    test("snapshot.get() is deprecated", function () {
-      expect(1);
-
-      run(function () {
-        var post = env.store.push('post', { id: 1, title: 'Hello World' });
-        var snapshot = post._createSnapshot();
-
-        expectDeprecation(function () {
-          snapshot.get('title');
-        }, 'Using DS.Snapshot.get() is deprecated. Use .attr(), .belongsTo() or .hasMany() instead.');
-      });
-    });
-
-    test("snapshot.get() returns id", function () {
-      expect(2);
-
-      run(function () {
-        var post = env.store.push('post', { id: 1, title: 'Hello World' });
-        var snapshot = post._createSnapshot();
-
-        expectDeprecation(function () {
-          equal(snapshot.get('id'), '1', 'snapshot id is correct');
-        });
-      });
-    });
-
-    test("snapshot.get() returns attribute", function () {
-      expect(2);
-
-      run(function () {
-        var post = env.store.push('post', { id: 1, title: 'Hello World' });
-        var snapshot = post._createSnapshot();
-
-        expectDeprecation(function () {
-          equal(snapshot.get('title'), 'Hello World', 'snapshot title is correct');
-        });
-      });
-    });
-
-    test("snapshot.get() returns belongsTo", function () {
-      expect(3);
-
-      run(function () {
-        var comment = env.store.push('comment', { id: 1, body: 'This is a comment', post: 2 });
-        var snapshot = comment._createSnapshot();
-        var relationship;
-
-        expectDeprecation(function () {
-          relationship = snapshot.get('post');
-        });
-
-        ok(relationship instanceof DS.Snapshot, 'relationship is an instance of DS.Snapshot');
-        equal(relationship.id, '2', 'relationship id is correct');
-      });
-    });
-
-    test("snapshot.get() returns hasMany", function () {
-      expect(3);
-
-      run(function () {
-        var post = env.store.push('post', { id: 1, title: 'Hello World', comments: [2, 3] });
-        var snapshot = post._createSnapshot();
-        var relationship;
-
-        expectDeprecation(function () {
-          relationship = snapshot.get('comments');
-        });
-
-        ok(relationship instanceof Array, 'relationship is an instance of Array');
-        equal(relationship.length, 2, 'relationship has two items');
-      });
-    });
-
-    test("snapshot.get() proxies property to record unless identified as id, attribute or relationship", function () {
-      expect(2);
-
-      run(function () {
-        var post = env.store.push('post', { id: 1, title: 'Hello World' });
-        var snapshot = post._createSnapshot();
-
-        post.set('category', 'Ember.js'); // category is not defined as an DS.attr()
-
-        expectDeprecation(function () {
-          equal(snapshot.get('category'), 'Ember.js', 'snapshot proxies unknown property correctly');
-        });
       });
     });
 
@@ -19301,7 +20608,16 @@ define(
       expect(2);
 
       run(function () {
-        var post = env.store.push('post', { id: 1, title: 'Hello World' });
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            attributes: {
+              title: 'Hello World'
+            }
+          }
+        });
+        var post = env.store.peekRecord('post', 1);
         var snapshot = post._createSnapshot();
 
         post.set('title', 'New Title');
@@ -19310,21 +20626,6 @@ define(
         deepEqual(snapshot.serialize({ includeId: true }), { id: "1", author: undefined, title: 'Hello World' }, 'serialize takes options');
       });
     });
-
-    if (Ember.platform.hasPropertyAccessors) {
-      test('snapshot.typeKey is deprecated', function () {
-        expect(1);
-
-        run(function () {
-          var post = env.store.push('post', { id: 1, title: 'Hello World' });
-          var snapshot = post._createSnapshot();
-
-          expectDeprecation(function () {
-            return snapshot.typeKey;
-          });
-        });
-      });
-    }
   }
 );
 
@@ -19455,19 +20756,38 @@ define(
 
     test("destroying the store correctly cleans everything up", function () {
       var car, person;
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
       run(function () {
-        car = store.push('car', {
-          id: 1,
-          make: 'BMC',
-          model: 'Mini',
-          person: 1
+        store.push({
+          data: [{
+            type: 'car',
+            id: '1',
+            attributes: {
+              make: 'BMC',
+              model: 'Mini'
+            },
+            relationships: {
+              person: {
+                data: { type: 'person', id: '1' }
+              }
+            }
+          }, {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            },
+            relationships: {
+              cars: {
+                data: [{ type: 'car', id: '1' }]
+              }
+            }
+          }]
         });
-
-        person = store.push('person', {
-          id: 1,
-          name: 'Tom Dale',
-          cars: [1]
-        });
+        car = store.peekRecord('car', 1);
+        person = store.peekRecord('person', 1);
       });
 
       var personWillDestroy = tap(person, 'willDestroy');
@@ -19494,8 +20814,8 @@ define(
         });
       });
 
-      var filterdPeopleWillDestroy = tap(filterdPeople.content, 'willDestroy');
-      var adapterPopulatedPeopleWillDestroy = tap(adapterPopulatedPeople.content, 'willDestroy');
+      var filterdPeopleWillDestroy = tap(filterdPeople.get('content'), 'willDestroy');
+      var adapterPopulatedPeopleWillDestroy = tap(adapterPopulatedPeople.get('content'), 'willDestroy');
 
       run(function () {
         store.findRecord('person', 2);
@@ -19524,27 +20844,6 @@ define(
       equal(filterdPeopleWillDestroy.called.length, 1, 'expected filterdPeople.willDestroy to have been called once');
     });
 
-    module("integration/store - findById() [deprecated]", {
-      setup: function () {
-        initializeStore(DS.RESTAdapter.extend());
-      }
-    });
-
-    test("store.findById() is deprecated", function () {
-      expectDeprecation(function () {
-        run(function () {
-          store.push('person', { id: 1, name: "Tomster" });
-          store.findById('person', 1);
-        });
-      }, 'Using store.findById() has been deprecated. Use store.findRecord() to return a record for a given type and id combination.');
-    });
-
-    module("integration/store - fetch", {
-      setup: function () {
-        initializeStore(DS.RESTAdapter.extend());
-      }
-    });
-
     function ajaxResponse(value) {
       var passedUrl, passedVerb, passedHash;
       env.adapter.ajax = function (url, verb, hash) {
@@ -19556,18 +20855,6 @@ define(
       };
     }
 
-    test("Using store#fetch is deprecated", function () {
-      ajaxResponse({
-        cars: [{ id: 1, make: 'BMW', model: 'Mini' }]
-      });
-
-      expectDeprecation(function () {
-        run(function () {
-          store.fetch('car', 1);
-        });
-      }, 'Using store.fetch() has been deprecated. Use store.findRecord for fetching individual records or store.findAll for collections');
-    });
-
     module("integration/store - findRecord { reload: true }", {
       setup: function () {
         initializeStore(DS.RESTAdapter.extend());
@@ -19577,7 +20864,7 @@ define(
     test("Using store#findRecord on non existing record fetches it from the server", function () {
       expect(2);
 
-      env.registry.register('serializer:application', DS.RESTSerializer.extend({ isNewSerializerAPI: true }));
+      env.registry.register('serializer:application', DS.RESTSerializer);
       ajaxResponse({
         cars: [{
           id: 20,
@@ -19601,12 +20888,19 @@ define(
       var car;
 
       run(function () {
-        car = store.push('car', {
-          id: 1,
-          make: 'BMC',
-          model: 'Mini'
+        store.push({
+          data: {
+            type: 'car',
+            id: '1',
+            attributes: {
+              make: 'BMC',
+              model: 'Mini'
+            }
+          }
         });
+        car = store.peekRecord('car', 1);
       });
+
       ajaxResponse({
         cars: [{
           id: 1,
@@ -19628,18 +20922,6 @@ define(
       setup: function () {
         initializeStore(DS.RESTAdapter.extend());
       }
-    });
-
-    test("store#fetchAll() is deprecated", function () {
-      ajaxResponse({
-        cars: []
-      });
-
-      expectDeprecation(function () {
-        run(function () {
-          store.fetchAll('car');
-        });
-      }, 'Using store.fetchAll(type) has been deprecated. Use store.findAll(type, { reload: true }) to retrieve all records for a given type.');
     });
 
     test("Using store#findAll with no records triggers a query", function () {
@@ -19667,14 +20949,19 @@ define(
       });
     });
 
-    test("Using store#findAll with existing records performs a query, updating existing records and returning new ones", function () {
-      expect(3);
+    test("Using store#findAll with existing records performs a query in the background, updating existing records and returning new ones", function () {
+      expect(4);
 
       run(function () {
-        store.push('car', {
-          id: 1,
-          make: 'BMC',
-          model: 'Mini'
+        store.push({
+          data: {
+            type: 'car',
+            id: '1',
+            attributes: {
+              make: 'BMC',
+              model: 'Mini'
+            }
+          }
         });
       });
 
@@ -19695,19 +20982,39 @@ define(
 
       run(function () {
         store.findAll('car').then(function (cars) {
-          equal(cars.get('length'), 2, 'There is 2 cars in the store now');
-          var mini = cars.findBy('id', '1');
-          equal(mini.get('model'), 'New Mini', 'Existing records have been updated');
+          equal(cars.get('length'), 1, 'Store resolves with the existing records');
         });
+      });
+
+      run(function () {
+        var cars = store.peekAll('car');
+        equal(cars.get('length'), 2, 'There is 2 cars in the store now');
+        var mini = cars.findBy('id', '1');
+        equal(mini.get('model'), 'New Mini', 'Existing records have been updated');
       });
     });
 
-    test("store#findAll should return all known records even if they are not in the adapter response", function () {
-      expect(4);
+    test("store#findAll should eventually return all known records even if they are not in the adapter response", function () {
+      expect(5);
 
       run(function () {
-        store.push('car', { id: 1, make: 'BMC', model: 'Mini' });
-        store.push('car', { id: 2, make: 'BMCW', model: 'Isetta' });
+        store.push({
+          data: [{
+            type: 'car',
+            id: '1',
+            attributes: {
+              make: 'BMC',
+              model: 'Mini'
+            }
+          }, {
+            type: 'car',
+            id: '2',
+            attributes: {
+              make: 'BMCW',
+              model: 'Isetta'
+            }
+          }]
+        });
       });
 
       ajaxResponse({
@@ -19724,12 +21031,19 @@ define(
       run(function () {
         store.findAll('car').then(function (cars) {
           equal(cars.get('length'), 2, 'It returns all cars');
-          var mini = cars.findBy('id', '1');
-          equal(mini.get('model'), 'New Mini', 'Existing records have been updated');
 
           var carsInStore = store.peekAll('car');
           equal(carsInStore.get('length'), 2, 'There is 2 cars in the store');
         });
+      });
+
+      run(function () {
+        var cars = store.peekAll('car');
+        var mini = cars.findBy('id', '1');
+        equal(mini.get('model'), 'New Mini', 'Existing records have been updated');
+
+        var carsInStore = store.peekAll('car');
+        equal(carsInStore.get('length'), 2, 'There is 2 cars in the store');
       });
     });
 
@@ -19745,10 +21059,19 @@ define(
       });
 
       run(function () {
-        store.push('person', {
-          id: 1,
-          name: 'Tom Dale',
-          cars: [20]
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            },
+            relationships: {
+              cars: {
+                data: [{ type: 'car', id: '20' }]
+              }
+            }
+          }
         });
       });
 
@@ -19791,10 +21114,16 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', {
-          id: 1,
-          name: 'Tom Dale'
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            }
+          }
         });
+        person = store.peekRecord('person', 1);
       });
 
       ok(store.hasRecordForId('person', 1), 'expected the record to be in the store');
@@ -19848,7 +21177,6 @@ define(
     test("when normalizeResponse returns undefined (or doesn't return), throws an error", function () {
 
       env.registry.register('serializer:person', DS.Serializer.extend({
-        isNewSerializerAPI: true,
         normalizeResponse: function () {}
       }));
 
@@ -19868,7 +21196,6 @@ define(
     test("when normalizeResponse returns null, throws an error", function () {
 
       env.registry.register('serializer:person', DS.Serializer.extend({
-        isNewSerializerAPI: true,
         normalizeResponse: function () {
           return null;
         }
@@ -19890,7 +21217,6 @@ define(
     test("when normalizeResponse returns an empty object, throws an error", function () {
 
       env.registry.register('serializer:person', DS.Serializer.extend({
-        isNewSerializerAPI: true,
         normalizeResponse: function () {
           return {};
         }
@@ -19912,7 +21238,6 @@ define(
     test("when normalizeResponse returns a document with both data and errors, throws an error", function () {
 
       env.registry.register('serializer:person', DS.Serializer.extend({
-        isNewSerializerAPI: true,
         normalizeResponse: function () {
           return {
             data: [],
@@ -19936,7 +21261,6 @@ define(
 
     function testPayloadError(payload, expectedError) {
       env.registry.register('serializer:person', DS.Serializer.extend({
-        isNewSerializerAPI: true,
         normalizeResponse: function (store, type, pld) {
           return pld;
         }
@@ -20021,7 +21345,7 @@ define(
       __exports__[name] = value;
     }
 
-    var Person, store, env, TestSerializer;
+    var Person, store, env;
     var run = Ember.run;
 
     module("integration/store/query-record - Query one record with a query hash", {
@@ -20037,10 +21361,6 @@ define(
           person: Person
         });
         store = env.store;
-
-        TestSerializer = DS.JSONAPISerializer.extend({
-          isNewSerializerAPI: true
-        });
       },
 
       teardown: function () {
@@ -20083,16 +21403,16 @@ define(
       }));
 
       run(function () {
-        store.queryRecord('person', {}).then(null, async(function (reason) {
+        store.queryRecord('person', {})["catch"](function (reason) {
           ok(true, "The rejection handler was called");
-        }));
+        });
       });
     });
 
     test("When a record is requested, the serializer's normalizeQueryRecordResponse method should be called.", function () {
       expect(1);
 
-      env.registry.register('serializer:person', TestSerializer.extend({
+      env.registry.register('serializer:person', DS.JSONAPISerializer.extend({
         normalizeQueryRecordResponse: function (store, primaryModelClass, payload, id, requestType) {
           equal(payload.data.id, '1', "the normalizeQueryRecordResponse method was called with the right payload");
           return this._super.apply(this, arguments);
@@ -20221,7 +21541,7 @@ define(
       __exports__[name] = value;
     }
 
-    var Person, array, store;
+    var Person, store;
     var run = Ember.run;
 
     var adapter = DS.Adapter.extend({
@@ -20240,7 +21560,6 @@ define(
           adapter: adapter,
           person: Person
         });
-        array = [{ id: '1', name: "Scumbag Dale" }, { id: '2', name: "Scumbag Katz" }, { id: '3', name: "Scumbag Bryn" }];
       }
     });
 
@@ -20248,7 +21567,28 @@ define(
       var recordArray = store.recordArrayManager.createAdapterPopulatedRecordArray(store.modelFor('person'), null);
 
       run(function () {
-        recordArray.load(array);
+        var records = store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Scumbag Dale'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Scumbag Katz'
+            }
+          }, {
+            type: 'person',
+            id: '3',
+            attributes: {
+              name: 'Scumbag Bryn'
+            }
+          }]
+        });
+        recordArray.loadRecords(records);
       });
 
       equal(recordArray.get('length'), 3, "expected recordArray to contain exactly 3 records");
@@ -20874,44 +22214,37 @@ define(
           }
         });
 
-        store.push('tag', { id: 1, name: 'Ember.js' });
-        store.push('tag', { id: 2, name: 'Tomster' });
+        store.push({
+          data: [{
+            type: 'tag',
+            id: '1',
+            attributes: {
+              name: 'Ember.js'
+            }
+          }, {
+            type: 'tag',
+            id: '2',
+            attributes: {
+              name: 'Tomster'
+            }
+          }, {
+            type: 'post',
+            id: '3',
+            attributes: {
+              title: 'A framework for creating ambitious web applications'
+            },
+            relationships: {
+              tags: {
+                data: [{ type: 'tag', id: '1' }, { type: 'tag', id: '2' }]
+              }
+            }
+          }]
+        });
+        var post = store.peekRecord('post', 3);
 
-        var post = store.push('post', { id: 3, title: 'A framework for creating ambitious web applications', tags: [1, 2] });
         post.get('tags').save().then(function () {
           ok(true, 'manyArray.save() promise resolved');
         });
-      });
-    });
-
-    test("manyArray.addRecord() has been deprecated", function () {
-      expect(3);
-
-      run(function () {
-        var tag = store.push('tag', { id: 1, name: 'Ember.js' });
-        var post = store.push('post', { id: 2, title: 'A framework for creating ambitious web applications' });
-        var tags = post.get('tags');
-
-        equal(tags.length, 0, 'there should not be any tags');
-        expectDeprecation(function () {
-          tags.addRecord(tag);
-        });
-        equal(tags.length, 1, 'there should be 1 tag');
-      });
-    });
-
-    test("manyArray.removeRecord() has been deprecated", function () {
-      expect(3);
-      run(function () {
-        var tag = store.push('tag', { id: 1, name: 'Ember.js' });
-        var post = store.push('post', { id: 2, title: 'A framework for creating ambitious web applications', tags: [1] });
-        var tags = post.get('tags');
-
-        equal(tags.length, 1, 'there should be 1 tag');
-        expectDeprecation(function () {
-          tags.removeRecord(tag);
-        });
-        equal(tags.length, 0, 'there should not be any tags');
       });
     });
 
@@ -20927,20 +22260,60 @@ define(
           willChangeStartIdx = startIdx;
           willChangeRemoveAmt = removeAmt;
           willChangeAddAmt = addAmt;
-          return this._super.apply(arguments);
+          return this._super.apply(this, arguments);
         },
         arrayContentDidChange: function (startIdx, removeAmt, addAmt) {
           equal(startIdx, willChangeStartIdx, 'WillChange and DidChange startIdx should match');
           equal(removeAmt, willChangeRemoveAmt, 'WillChange and DidChange removeAmt should match');
           equal(addAmt, willChangeAddAmt, 'WillChange and DidChange addAmt should match');
-          return this._super.apply(arguments);
+          return this._super.apply(this, arguments);
         }
       });
       run(function () {
-        store.push('tag', { id: 1, name: 'Ember.js' });
-        store.push('tag', { id: 2, name: 'Ember Data' });
-        var post = store.push('post', { id: 2, title: 'A framework for creating ambitious web applications', tags: [1] });
-        post = store.push('post', { id: 2, title: 'A framework for creating ambitious web applications', tags: [1, 2] });
+        store.push({
+          data: [{
+            type: 'tag',
+            id: '1',
+            attributes: {
+              name: 'Ember.js'
+            }
+          }, {
+            type: 'tag',
+            id: '2',
+            attributes: {
+              name: 'Tomster'
+            }
+          }, {
+            type: 'post',
+            id: '3',
+            attributes: {
+              title: 'A framework for creating ambitious web applications'
+            },
+            relationships: {
+              tags: {
+                data: [{ type: 'tag', id: '1' }]
+              }
+            }
+          }]
+        });
+        var post = store.peekRecord('post', 3);
+
+        store.push({
+          data: {
+            type: 'post',
+            id: '3',
+            attributes: {
+              title: 'A framework for creating ambitious web applications'
+            },
+            relationships: {
+              tags: {
+                data: [{ type: 'tag', id: '1' }, { type: 'tag', id: '2' }]
+              }
+            }
+          }
+        });
+
+        post = store.peekRecord('post', 3);
       });
       DS.ManyArray.reopen({
         arrayContentWillChange: originalArrayContentWillChange,
@@ -20958,13 +22331,11 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     __exports__[name] = value;
   }
 
-  var keysFunc = Object.keys || Ember.keys;
-
   var get = Ember.get;
   var set = Ember.set;
   var run = Ember.run;
 
-  var Person, store, array, env;
+  var Person, store, env;
 
   module("unit/model - DS.Model", {
     setup: function () {
@@ -21000,9 +22371,21 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
   test("setting a property on a record that has not changed does not cause it to become dirty", function () {
     expect(2);
-
+    env.adapter.shouldBackgroundReloadRecord = function () {
+      return false;
+    };
     run(function () {
-      store.push('person', { id: 1, name: "Peter", isDrugAddict: true });
+      store.push({
+        data: {
+          type: 'person',
+          id: '1',
+          attributes: {
+            name: 'Peter',
+            isDrugAddict: true
+          }
+        }
+      });
+
       store.findRecord('person', 1).then(function (person) {
         equal(person.get('hasDirtyAttributes'), false, "precond - person record should not be dirty");
 
@@ -21016,9 +22399,21 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
   test("resetting a property on a record cause it to become clean again", function () {
     expect(3);
+    env.adapter.shouldBackgroundReloadRecord = function () {
+      return false;
+    };
 
     run(function () {
-      store.push('person', { id: 1, name: "Peter", isDrugAddict: true });
+      store.push({
+        data: {
+          type: 'person',
+          id: '1',
+          attributes: {
+            name: 'Peter',
+            isDrugAddict: true
+          }
+        }
+      });
       store.findRecord('person', 1).then(function (person) {
         equal(person.get('hasDirtyAttributes'), false, "precond - person record should not be dirty");
         person.set('isDrugAddict', false);
@@ -21031,9 +22426,21 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
   test("a record becomes clean again only if all changed properties are reset", function () {
     expect(5);
+    env.adapter.shouldBackgroundReloadRecord = function () {
+      return false;
+    };
 
     run(function () {
-      store.push('person', { id: 1, name: "Peter", isDrugAddict: true });
+      store.push({
+        data: {
+          type: 'person',
+          id: '1',
+          attributes: {
+            name: 'Peter',
+            isDrugAddict: true
+          }
+        }
+      });
       store.findRecord('person', 1).then(function (person) {
         equal(person.get('hasDirtyAttributes'), false, "precond - person record should not be dirty");
         person.set('isDrugAddict', false);
@@ -21050,9 +22457,17 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
   test("a record reports its unique id via the `id` property", function () {
     expect(1);
+    env.adapter.shouldBackgroundReloadRecord = function () {
+      return false;
+    };
 
     run(function () {
-      store.push('person', { id: 1 });
+      store.push({
+        data: {
+          type: 'person',
+          id: '1'
+        }
+      });
       store.findRecord('person', 1).then(function (record) {
         equal(get(record, 'id'), 1, "reports id as id by default");
       });
@@ -21061,9 +22476,17 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
   test("a record's id is included in its toString representation", function () {
     expect(1);
+    env.adapter.shouldBackgroundReloadRecord = function () {
+      return false;
+    };
 
     run(function () {
-      store.push('person', { id: 1 });
+      store.push({
+        data: {
+          type: 'person',
+          id: '1'
+        }
+      });
       store.findRecord('person', 1).then(function (record) {
         equal(record.toString(), '<(subclass of DS.Model):' + Ember.guidFor(record) + ':1>', "reports id in toString");
       });
@@ -21082,7 +22505,15 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
     expectAssertion(function () {
       run(function () {
-        store.push('person', { id: 1, name: "Scumdale" });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Scumdale'
+            }
+          }
+        });
         store.findRecord('person', 1);
       });
     }, /You may not set `id`/);
@@ -21090,6 +22521,9 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
   test("a collision of a record's id with object function's name", function () {
     expect(1);
+    env.adapter.shouldBackgroundReloadRecord = function () {
+      return false;
+    };
 
     var hasWatchMethod = Object.prototype.watch;
     try {
@@ -21097,7 +22531,13 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
         Object.prototype.watch = function () {};
       }
       run(function () {
-        store.push('person', { id: 'watch' });
+        store.push({
+          data: {
+            type: 'person',
+            id: 'watch'
+          }
+        });
+
         store.findRecord('person', 'watch').then(function (record) {
           equal(get(record, 'id'), 'watch', "record is successfully created and could be found by its id");
         });
@@ -21138,7 +22578,12 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     var date = new Date(dateString);
 
     run(function () {
-      store.push('post', { id: 1 });
+      store.push({
+        data: {
+          type: 'post',
+          id: '1'
+        }
+      });
       store.findRecord('post', 1).then(function (record) {
         run(function () {
           record.set('updatedAt', date);
@@ -21167,10 +22612,20 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     var mascot;
 
     run(function () {
-      mascot = store.push('mascot', { id: 1, likes: 'JavaScript', isMascot: true });
+      store.push({
+        data: {
+          type: 'mascot',
+          id: '1',
+          attributes: {
+            likes: 'JavaScript',
+            isMascot: true
+          }
+        }
+      });
+      mascot = store.peekRecord('mascot', 1);
     });
 
-    equal(keysFunc(mascot.changedAttributes()).length, 0, 'there are no initial changes');
+    equal(Object.keys(mascot.changedAttributes()).length, 0, 'there are no initial changes');
     run(function () {
       mascot.set('name', 'Tomster'); // new value
       mascot.set('likes', 'Ember.js'); // changed value
@@ -21183,7 +22638,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     run(function () {
       mascot.rollbackAttributes();
     });
-    equal(keysFunc(mascot.changedAttributes()).length, 0, 'after rollback attributes there are no changes');
+    equal(Object.keys(mascot.changedAttributes()).length, 0, 'after rollback attributes there are no changes');
   });
 
   test("changedAttributes() works while the record is being saved", function () {
@@ -21315,34 +22770,63 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
   test("supports pushedData in root.deleted.uncommitted", function () {
     var record;
-    var hash = { id: 1 };
+    var hash = {
+      data: {
+        type: 'person',
+        id: '1'
+      }
+    };
     run(function () {
-      record = store.push('person', hash);
+      record = store.push(hash);
       record.deleteRecord();
-      store.push('person', hash);
+      store.push(hash);
       equal(get(record, 'currentState.stateName'), 'root.deleted.uncommitted', 'record accepts pushedData is in root.deleted.uncommitted state');
     });
   });
 
   test("currentState is accessible when the record is created", function () {
     var record;
-    var hash = { id: 1 };
+    var hash = {
+      data: {
+        type: 'person',
+        id: '1'
+      }
+    };
     run(function () {
-      record = store.push('person', hash);
+      record = store.push(hash);
       equal(get(record, 'currentState.stateName'), 'root.loaded.saved', 'records pushed into the store start in the loaded state');
     });
   });
 
   module("unit/model - DS.Model updating", {
     setup: function () {
-      array = [{ id: 1, name: "Scumbag Dale" }, { id: 2, name: "Scumbag Katz" }, { id: 3, name: "Scumbag Bryn" }];
       Person = DS.Model.extend({ name: DS.attr('string') });
       env = setupStore({
         person: Person
       });
       store = env.store;
       run(function () {
-        store.pushMany('person', array);
+        store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Scumbag Dale'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Scumbag Katz'
+            }
+          }, {
+            type: 'person',
+            id: '3',
+            attributes: {
+              name: 'Scumbag Bryn'
+            }
+          }]
+        });
       });
     },
     teardown: function () {
@@ -21350,13 +22834,15 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
         store.destroy();
         Person = null;
         store = null;
-        array = null;
       });
     }
   });
 
   test("a DS.Model can update its attributes", function () {
     expect(1);
+    env.adapter.shouldBackgroundReloadRecord = function () {
+      return false;
+    };
 
     run(function () {
       store.findRecord('person', 2).then(function (person) {
@@ -21488,6 +22974,9 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
   // thrown out if/when the current `_attributes` hash logic is removed.
   test("setting a property back to its original value removes the property from the `_attributes` hash", function () {
     expect(3);
+    env.adapter.shouldBackgroundReloadRecord = function () {
+      return false;
+    };
 
     run(function () {
       store.findRecord('person', 1).then(function (person) {
@@ -21506,7 +22995,6 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
   module("unit/model - with a simple Person model", {
     setup: function () {
-      array = [{ id: 1, name: "Scumbag Dale" }, { id: 2, name: "Scumbag Katz" }, { id: 3, name: "Scumbag Bryn" }];
       Person = DS.Model.extend({
         name: DS.attr('string')
       });
@@ -21514,7 +23002,27 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
         person: Person
       });
       run(function () {
-        store.pushMany('person', array);
+        store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Scumbag Dale'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Scumbag Katz'
+            }
+          }, {
+            type: 'person',
+            id: '3',
+            attributes: {
+              name: 'Scumbag Bryn'
+            }
+          }]
+        });
       });
     },
     teardown: function () {
@@ -21522,7 +23030,6 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
         store.destroy();
         Person = null;
         store = null;
-        array = null;
       });
     }
   });
@@ -21614,17 +23121,12 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
       registry = container;
     }
     var testStore = createStore({ model: Model });
-    var serializer = DS.JSONSerializer.create({
-      store: testStore,
-      container: container
-    });
 
     run(function () {
-      testStore.push('model', serializer.normalize(Model, { id: 1, name: provided }));
-      testStore.push('model', serializer.normalize(Model, { id: 2 }));
-      testStore.findRecord('model', 1).then(function (record) {
-        deepEqual(get(record, 'name'), expected, type + " coerces " + provided + " to " + expected);
-      });
+      testStore.push(testStore.normalize('model', { id: 1, name: provided }));
+      testStore.push(testStore.normalize('model', { id: 2 }));
+      var record = testStore.peekRecord('model', 1);
+      deepEqual(get(record, 'name'), expected, type + " coerces " + provided + " to " + expected);
     });
 
     // See: Github issue #421
@@ -21646,14 +23148,17 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
       container = new Ember.Container();
       registry = container;
     }
-    var testStore = createStore({ model: Model });
-    var serializer = DS.JSONSerializer.create({
-      store: testStore,
-      container: container
+    var testStore = createStore({
+      model: Model,
+      adapter: DS.Adapter.extend({
+        shouldBackgroundReloadRecord: function () {
+          return false;
+        }
+      })
     });
 
     run(function () {
-      testStore.push('model', serializer.normalize(Model, { id: "1", name: provided }));
+      testStore.push(testStore.normalize('model', { id: "1", name: provided }));
       testStore.findRecord('model', 1).then(function (record) {
         deepEqual(get(record, 'name'), expected, type + " coerces " + provided + " to " + expected);
       });
@@ -21665,10 +23170,22 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
       name: DS.attr(type)
     });
 
-    var testStore = createStore({ model: Model });
+    var testStore = createStore({
+      model: Model,
+      adapter: DS.Adapter.extend({
+        shouldBackgroundReloadRecord: function () {
+          return false;
+        }
+      })
+    });
 
     run(function () {
-      testStore.push('model', { id: 2 });
+      testStore.push({
+        data: {
+          type: 'model',
+          id: '2'
+        }
+      });
       testStore.findRecord('model', 2).then(function (record) {
         set(record, 'name', provided);
         deepEqual(record.serialize().name, expected, type + " saves " + provided + " as " + expected);
@@ -21727,11 +23244,21 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     });
 
     var store = createStore({
-      person: Person
+      person: Person,
+      adapter: DS.Adapter.extend({
+        shouldBackgroundReloadRecord: function () {
+          return false;
+        }
+      })
     });
 
     run(function () {
-      store.push('person', { id: 1 });
+      store.push({
+        data: {
+          type: 'person',
+          id: '1'
+        }
+      });
       store.findRecord('person', 1).then(function (record) {
         run(function () {
           record.set('updatedAt', date);
@@ -21853,7 +23380,15 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     run(function () {
       var person = store.createRecord('person', { id: 1, name: 'TomHuda' });
       equal(person.get('isNew'), true, 'createRecord should put records into the new state');
-      store.push('person', { id: 1, name: 'TomHuda' });
+      store.push({
+        data: {
+          type: 'person',
+          id: '1',
+          attributes: {
+            name: 'TomHuda'
+          }
+        }
+      });
       equal(person.get('isNew'), false, 'push should put records into the loaded state');
     });
   });
@@ -21885,8 +23420,11 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     // present on the serializer due to using .create
     // instead of `store.serializerFor`.
     run(function () {
-      person = store.push('person', {
-        id: 1
+      person = store.push({
+        data: {
+          type: 'person',
+          id: '1'
+        }
       });
     });
     var errorThrown = false;
@@ -21918,47 +23456,6 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
     run(function () {
       return store.createRecord('person');
-    });
-  });
-
-  test('isDirty should log a deprecation warning', function () {
-    expect(1);
-    var Person = DS.Model.extend({
-      name: DS.attr('string')
-    });
-
-    var env = setupStore({
-      person: Person
-    });
-    var store = env.store;
-
-    run(function () {
-      var person = store.createRecord('person');
-      expectDeprecation(function () {
-        person.get('isDirty');
-      }, /DS.Model#isDirty has been deprecated/);
-    });
-  });
-
-  test('error should log a deprecation warning', function () {
-    expect(2);
-    var Person = DS.Model.extend({});
-
-    var env = setupStore({
-      person: Person
-    });
-    var store = env.store;
-
-    run(function () {
-      var person = store.createRecord('person');
-      var error = {};
-      person.set('adapterError', error);
-
-      expectDeprecation(function () {
-        person.get('error');
-      }, /DS.Model#error has been deprecated/);
-
-      equal(person.get('error'), error, 'error should be set');
     });
   });
 });
@@ -22424,7 +23921,15 @@ define(
       });
 
       run(function () {
-        store.push('person', { id: 0, name: "Tom Dale" });
+        store.push({
+          data: {
+            type: 'person',
+            id: '0',
+            attributes: {
+              name: "Tom Dale"
+            }
+          }
+        });
       });
 
       equal(store.peekAll('person').objectAt(0).get('name'), "Tom Dale", "found record with id 0");
@@ -22503,7 +24008,15 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', { id: 1, name: "Tom" });
+        person = store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: "Tom"
+            }
+          }
+        });
         person.set('name', "Thomas Dale");
       });
 
@@ -22542,7 +24055,15 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', { id: 1, name: "Tom" });
+        person = store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: "Tom"
+            }
+          }
+        });
         person.set('name', "Thomas Dale");
       });
 
@@ -22553,7 +24074,16 @@ define(
 
         person.set('name', "Tomasz Dale");
 
-        store.push('person', { id: 1, name: "Tommy Dale", city: "PDX" });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: "Tommy Dale",
+              city: "PDX"
+            }
+          }
+        });
 
         equal(person.get('name'), "Tomasz Dale", "the local changes applied on top");
         equal(person.get('city'), "PDX", "the pushed change is available");
@@ -22574,7 +24104,16 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', { id: 1, name: "Tom Dale", city: "San Francisco" });
+        person = store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: "Tom Dale",
+              city: "San Francisco"
+            }
+          }
+        });
         person.set('name', "Tomasz Dale");
       });
 
@@ -22583,7 +24122,16 @@ define(
       equal(person.get('city'), "San Francisco", "the original data applies");
 
       run(function () {
-        store.push('person', { id: 1, name: "Thomas Dale", city: "Portland" });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: "Thomas Dale",
+              city: "Portland"
+            }
+          }
+        });
       });
 
       equal(person.get('hasDirtyAttributes'), true, "the local changes are reapplied");
@@ -22599,7 +24147,16 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', { id: 1, name: "Brendan McLoughlin", city: "Boston" });
+        person = store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: "Brendan McLoughlin",
+              city: "Boston"
+            }
+          }
+        });
         person.set('name', "Brondan McLoughlin");
         person.send('becameInvalid');
       });
@@ -22610,7 +24167,16 @@ define(
       equal(person.get('city'), "Boston", "the original data applies");
 
       run(function () {
-        store.push('person', { id: 1, name: "bmac", city: "Prague" });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: "bmac",
+              city: "Prague"
+            }
+          }
+        });
       });
 
       equal(person.get('hasDirtyAttributes'), true, "the local changes are reapplied");
@@ -22635,7 +24201,15 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', { id: 1, name: "Tom Dale" });
+        person = store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributeS: {
+              name: "Tom Dale"
+            }
+          }
+        });
       });
 
       run(function () {
@@ -22661,7 +24235,15 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', { id: 1, name: "Tom Dale" });
+        person = store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: "Tom Dale"
+            }
+          }
+        });
         person.set('name', "Tomasz Dale");
       });
 
@@ -22776,10 +24358,43 @@ define(
 
       var env = setupStore({ tag: Tag, person: Person });
       var store = env.store;
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       run(function () {
-        store.pushMany('tag', [{ id: 5, name: "friendly" }, { id: 2, name: "smarmy" }, { id: 12, name: "oohlala" }]);
-        store.push('person', { id: 1, name: "Tom Dale", tag: 5 });
+        store.push({
+          data: [{
+            type: 'tag',
+            id: '5',
+            attributes: {
+              name: 'friendly'
+            }
+          }, {
+            type: 'tag',
+            id: '2',
+            attributes: {
+              name: 'smarmy'
+            }
+          }, {
+            type: 'tag',
+            id: '12',
+            attributes: {
+              name: 'oohlala'
+            }
+          }, {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            },
+            relationships: {
+              tag: {
+                data: { type: 'tag', id: '5' }
+              }
+            }
+          }]
+        });
       });
 
       run(function () {
@@ -22852,17 +24467,34 @@ define(
       var store = env.store;
 
       run(function () {
-        store.push('tag', { id: 2, name: "friendly" });
-        store.push('person', { id: 1, name: "Tom Dale", tag: 2 });
+        store.push({
+          data: [{
+            type: 'tag',
+            id: '2',
+            attributes: {
+              name: 'friendly'
+            }
+          }, {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            },
+            relationships: {
+              tag: {
+                data: { type: 'tag', id: '2' }
+              }
+            }
+          }]
+        });
       });
 
       run(function () {
-        store.findRecord('person', 1).then(async(function (person) {
-          equal(get(person, 'name'), "Tom Dale", "The person is now populated");
-          return run(function () {
-            return get(person, 'tag');
-          });
-        })).then(async(function (tag) {
+        var person = store.peekRecord('person', 1);
+        equal(get(person, 'name'), "Tom Dale", "The person is now populated");
+        return run(function () {
+          return get(person, 'tag');
+        }).then(async(function (tag) {
           equal(get(tag, 'name'), "friendly", "Tom Dale is now friendly");
           equal(get(tag, 'isLoaded'), true, "Tom Dale is now loaded");
         }));
@@ -22884,6 +24516,9 @@ define(
 
       var env = setupStore({ tag: Tag, person: Person });
       var store = env.store;
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       run(function () {
         store.createRecord('person', { id: 1, tag: undefined });
@@ -22917,6 +24552,9 @@ define(
 
       var env = setupStore({ occupation: Occupation, person: Person });
       var store = env.store;
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       env.adapter.findMany = function (store, type, ids, snapshots) {
         equal(snapshots[0].belongsTo('person').id, '1');
@@ -22926,7 +24564,20 @@ define(
       env.adapter.coalesceFindRequests = true;
 
       run(function () {
-        store.push('person', { id: 1, name: "Tom Dale", occupations: [5, 2] });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            },
+            relationships: {
+              occupations: {
+                data: [{ type: 'occupation', id: '5' }, { type: 'occupation', id: '2' }]
+              }
+            }
+          }
+        });
       });
 
       run(function () {
@@ -22974,7 +24625,20 @@ define(
       };
 
       run(function () {
-        store.push('person', { id: 1, name: "Tom Dale", occupation: 5 });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            },
+            relationships: {
+              occupation: {
+                data: { type: 'occupation', id: '5' }
+              }
+            }
+          }
+        });
       });
 
       run(function () {
@@ -23003,10 +24667,43 @@ define(
 
       var env = setupStore({ tag: Tag, person: Person });
       var store = env.store;
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       run(function () {
-        store.pushMany('tag', [{ id: 0, name: "friendly" }, { id: 2, name: "smarmy" }, { id: 12, name: "oohlala" }]);
-        store.push('person', { id: 1, name: "Tom Dale", tag: 0 });
+        store.push({
+          data: [{
+            type: 'tag',
+            id: '0',
+            attributes: {
+              name: 'friendly'
+            }
+          }, {
+            type: 'tag',
+            id: '2',
+            attributes: {
+              name: 'smarmy'
+            }
+          }, {
+            type: 'tag',
+            id: '12',
+            attributes: {
+              name: 'oohlala'
+            }
+          }, {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            },
+            relationships: {
+              tag: {
+                data: { type: 'tag', id: '0' }
+              }
+            }
+          }]
+        });
       });
 
       run(function () {
@@ -23040,10 +24737,37 @@ define(
 
       var env = setupStore({ hobby: Hobby, person: Person });
       var store = env.store;
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       run(function () {
-        store.pushMany('hobby', [{ id: 1, name: "fishing" }, { id: 1, name: "coding" }]);
-        store.push('person', { id: 1, name: "Tom Dale", hobby: 1 });
+        store.push({
+          data: [{
+            type: 'hobby',
+            id: '1',
+            attributes: {
+              name: 'fishing'
+            }
+          }, {
+            type: 'hobby',
+            id: '2',
+            attributes: {
+              name: 'coding'
+            }
+          }, {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            },
+            relationships: {
+              hobby: {
+                data: { type: 'hobby', id: '1' }
+              }
+            }
+          }]
+        });
       });
 
       warns(function () {
@@ -23073,10 +24797,37 @@ define(
 
       var env = setupStore({ hobby: Hobby, person: Person });
       var store = env.store;
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       run(function () {
-        store.pushMany('hobby', [{ id: 1, name: "fishing" }, { id: 1, name: "coding" }]);
-        store.push('person', { id: 1, name: "Tom Dale", hobby: 1 });
+        store.push({
+          data: [{
+            type: 'hobby',
+            id: '1',
+            attributes: {
+              name: 'fishing'
+            }
+          }, {
+            type: 'hobby',
+            id: '2',
+            attributes: {
+              name: 'coding'
+            }
+          }, {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            },
+            relationships: {
+              hobby: {
+                data: { type: 'hobby', id: '1' }
+              }
+            }
+          }]
+        });
       });
 
       warns(function () {
@@ -23088,13 +24839,7 @@ define(
       }, /You provided an embedded option on the "hobby" property in the "person" class, this belongs in the serializer. See DS.EmbeddedRecordsMixin/);
     });
 
-    module("unit/model/relationships - DS.belongsTo async by default deprecations", {
-      setup: function () {
-        setupStore();
-      }
-    });
-
-    test("setting DS.belongsTo without async false triggers deprecation", function () {
+    test("DS.belongsTo should be async by default", function () {
       var Tag = DS.Model.extend({
         name: DS.attr('string'),
         people: DS.hasMany('person', { async: false })
@@ -23108,11 +24853,11 @@ define(
       var env = setupStore({ tag: Tag, person: Person });
       var store = env.store;
 
-      expectDeprecation(function () {
-        run(function () {
-          store.createRecord('person').get('tag');
-        });
-      }, /In Ember Data 2.0, relationships will be asynchronous by default. You must set `tag: DS.belongsTo\('tag', { async: false }\)`/);
+      run(function () {
+        var person = store.createRecord('person');
+
+        ok(person.get('tag') instanceof DS.PromiseObject, 'tag should be an async relationship');
+      });
     });
   }
 );
@@ -23168,14 +24913,68 @@ define(
           ok(false, "findRecord() should not be called with these values");
         }
       };
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       var store = env.store;
 
       run(function () {
-        store.pushMany('tag', [{ id: 5, name: "friendly" }, { id: 2, name: "smarmy" }]);
-        store.pushMany('pet', [{ id: 4, name: "fluffy" }, { id: 7, name: "snowy" }, { id: 12, name: "cerberus" }]);
-        store.push('person', { id: 1, name: "Tom Dale", tags: [5] });
-        store.push('person', { id: 2, name: "Yehuda Katz", tags: [12] });
+        store.push({
+          data: [{
+            type: 'tag',
+            id: '5',
+            attributes: {
+              name: 'friendly'
+            }
+          }, {
+            type: 'tag',
+            id: '2',
+            attributes: {
+              name: 'smarmy'
+            }
+          }, {
+            type: 'pet',
+            id: '4',
+            attributes: {
+              name: 'fluffy'
+            }
+          }, {
+            type: 'pet',
+            id: '7',
+            attributes: {
+              name: 'snowy'
+            }
+          }, {
+            type: 'pet',
+            id: '12',
+            attributes: {
+              name: 'cerberus'
+            }
+          }, {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            },
+            relationships: {
+              tags: {
+                data: [{ type: 'tag', id: '5' }]
+              }
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Yehuda Katz'
+            },
+            relationships: {
+              tags: {
+                data: [{ type: 'tag', id: '12' }]
+              }
+            }
+          }]
+        });
       });
 
       run(function () {
@@ -23187,7 +24986,20 @@ define(
           equal(get(tags.objectAt(0), 'name'), "friendly", "the first tag should be a Tag");
 
           run(function () {
-            store.push('person', { id: 1, name: "Tom Dale", tags: [5, 2] });
+            store.push({
+              data: {
+                type: 'person',
+                id: '1',
+                attributes: {
+                  name: 'Tom Dale'
+                },
+                relationships: {
+                  tags: {
+                    data: [{ type: 'tag', id: '5' }, { type: 'tag', id: '2' }]
+                  }
+                }
+              }
+            });
           });
 
           equal(tags, get(person, 'tags'), "a relationship returns the same object every time");
@@ -23197,7 +25009,15 @@ define(
           asyncEqual(get(person, 'tags').objectAt(0), store.findRecord('tag', 5), "relationship objects are the same as objects retrieved directly");
 
           run(function () {
-            store.push('person', { id: 3, name: "KSelden" });
+            store.push({
+              data: {
+                type: 'person',
+                id: '3',
+                attributes: {
+                  name: 'KSelden'
+                }
+              }
+            });
           });
 
           return store.findRecord('person', 3);
@@ -23205,7 +25025,20 @@ define(
           equal(get(get(kselden, 'tags'), 'length'), 0, "a relationship that has not been supplied returns an empty array");
 
           run(function () {
-            store.push('person', { id: 4, name: "Cyvid Hamluck", pets: [4] });
+            store.push({
+              data: {
+                type: 'person',
+                id: '4',
+                attributes: {
+                  name: 'Cyvid Hamluck'
+                },
+                relationships: {
+                  pets: {
+                    data: [{ type: 'pet', id: '4' }]
+                  }
+                }
+              }
+            });
           });
           return store.findRecord('person', 4);
         }).then(function (cyvid) {
@@ -23216,7 +25049,20 @@ define(
           equal(get(pets.objectAt(0), 'name'), "fluffy", "the first pet should be correct");
 
           run(function () {
-            store.push('person', { id: 4, name: "Cyvid Hamluck", pets: [4, 12] });
+            store.push({
+              data: {
+                type: 'person',
+                id: '4',
+                attributes: {
+                  name: 'Cyvid Hamluck'
+                },
+                relationships: {
+                  pets: {
+                    data: [{ type: 'pet', id: '4' }, { type: 'pet', id: '12' }]
+                  }
+                }
+              }
+            });
           });
 
           equal(pets, get(cyvid, 'pets'), "a relationship returns the same object every time");
@@ -23255,14 +25101,68 @@ define(
           ok(false, "findRecord() should not be called with these values");
         }
       };
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       var store = env.store;
 
       run(function () {
-        store.pushMany('tag', [{ id: 5, name: "friendly" }, { id: 2, name: "smarmy" }]);
-        store.pushMany('pet', [{ id: 4, name: "fluffy" }, { id: 7, name: "snowy" }, { id: 12, name: "cerberus" }]);
-        store.push('person', { id: 1, name: "Tom Dale", tags: [5] });
-        store.push('person', { id: 2, name: "Yehuda Katz", tags: [12] });
+        store.push({
+          data: [{
+            type: 'tag',
+            id: '5',
+            attributes: {
+              name: 'friendly'
+            }
+          }, {
+            type: 'tag',
+            id: '2',
+            attributes: {
+              name: 'smarmy'
+            }
+          }, {
+            type: 'pet',
+            id: '4',
+            attributes: {
+              name: 'fluffy'
+            }
+          }, {
+            type: 'pet',
+            id: '7',
+            attributes: {
+              name: 'snowy'
+            }
+          }, {
+            type: 'pet',
+            id: '12',
+            attributes: {
+              name: 'cerberus'
+            }
+          }, {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            },
+            relationships: {
+              tags: {
+                data: [{ type: 'tag', id: '5' }]
+              }
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Yehuda Katz'
+            },
+            relationships: {
+              tags: {
+                data: [{ type: 'tag', id: '12' }]
+              }
+            }
+          }]
+        });
       });
 
       var wycats;
@@ -23376,10 +25276,43 @@ define(
         person: Person,
         tag: Tag
       });
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       run(function () {
-        env.store.pushMany('tag', [{ id: 5, name: "friendly" }, { id: 2, name: "smarmy" }, { id: 12, name: "oohlala" }]);
-        env.store.push('person', { id: 1, name: "Tom Dale", tags: [5, 2] });
+        env.store.push({
+          data: [{
+            type: 'tag',
+            id: '5',
+            attributes: {
+              name: 'friendly'
+            }
+          }, {
+            type: 'tag',
+            id: '2',
+            attributes: {
+              name: 'smarmy'
+            }
+          }, {
+            type: 'tag',
+            id: '12',
+            attributes: {
+              name: 'oohlala'
+            }
+          }, {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            },
+            relationships: {
+              tags: {
+                data: [{ type: 'tag', id: '5' }, { type: 'tag', id: '2' }]
+              }
+            }
+          }]
+        });
       });
 
       run(function () {
@@ -23461,12 +25394,33 @@ define(
         tag: Tag,
         person: Person
       });
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       var store = env.store;
 
       run(function () {
-        store.push('person', { id: 1, name: "Tom Dale", tags: [1] });
-        store.push('tag', { id: 1, name: "ember" });
+        store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            },
+            relationships: {
+              tags: {
+                data: [{ type: 'tag', id: '1' }]
+              }
+            }
+          }, {
+            type: 'tag',
+            id: '1',
+            attributes: {
+              name: 'ember'
+            }
+          }]
+        });
       });
 
       run(function () {
@@ -23500,10 +25454,43 @@ define(
       var store = env.store;
 
       run(function () {
-        store.push('person', { id: 1, name: "Tom Dale", tags: [1] });
-        store.push('person', { id: 2, name: "Sylvain Mina", tags: [2] });
-        store.push('tag', { id: 1, name: "ember" });
-        store.push('tag', { id: 2, name: "ember-data" });
+        store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            },
+            relationships: {
+              tags: {
+                data: [{ type: 'tag', id: '1' }]
+              }
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Sylvain Mina'
+            },
+            relationships: {
+              tags: {
+                data: [{ type: 'tag', id: '2' }]
+              }
+            }
+          }, {
+            type: 'tag',
+            id: '1',
+            attributes: {
+              name: 'ember'
+            }
+          }, {
+            type: 'tag',
+            id: '2',
+            attributes: {
+              name: 'ember-data'
+            }
+          }]
+        });
       });
 
       var tom, sylvain;
@@ -23535,10 +25522,31 @@ define(
 
       var env = setupStore({ tag: Tag, person: Person });
       var store = env.store;
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       run(function () {
-        store.push('person', { id: 1, name: "Tom Dale", tags: [1] });
-        store.push('tag', { id: 1, name: "ember" });
+        store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Tom Dale'
+            },
+            relationships: {
+              tags: {
+                data: [{ type: 'tag', id: '1' }]
+              }
+            }
+          }, {
+            type: 'tag',
+            id: '1',
+            attributes: {
+              name: 'ember'
+            }
+          }]
+        });
       });
 
       run(function () {
@@ -23606,13 +25614,7 @@ define(
       equal(tags.objectAt(2), tag3);
     });
 
-    module("unit/model/relationships - DS.hasMany async by default deprecations", {
-      setup: function () {
-        env = setupStore();
-      }
-    });
-
-    test("setting DS.hasMany without async false triggers deprecation", function () {
+    test("DS.hasMany is async by default", function () {
       var Tag = DS.Model.extend({
         name: DS.attr('string'),
         people: DS.hasMany('person')
@@ -23626,11 +25628,10 @@ define(
       var env = setupStore({ tag: Tag, person: Person });
       var store = env.store;
 
-      expectDeprecation(function () {
-        run(function () {
-          store.createRecord('tag').get('people');
-        });
-      }, /In Ember Data 2.0, relationships will be asynchronous by default. You must set `people: DS.hasMany\('person', { async: false }\)/);
+      run(function () {
+        var tag = store.createRecord('tag');
+        ok(tag.get('people') instanceof DS.PromiseArray, 'people should be an async relationship');
+      });
     });
   }
 );
@@ -23662,7 +25663,28 @@ define(
       var records, tags, internalModel;
 
       run(function () {
-        records = store.pushMany('tag', [{ id: 5, name: "friendly" }, { id: 2, name: "smarmy" }, { id: 12, name: "oohlala" }]);
+        store.push({
+          data: [{
+            type: 'tag',
+            id: '5',
+            attributes: {
+              name: 'friendly'
+            }
+          }, {
+            type: 'tag',
+            id: '2',
+            attributes: {
+              name: 'smarmy'
+            }
+          }, {
+            type: 'tag',
+            id: '12',
+            attributes: {
+              name: 'oohlala'
+            }
+          }]
+        });
+        records = store.peekAll('tag');
         internalModel = Ember.A(records).mapBy('_internalModel');
         tags = DS.RecordArray.create({ content: Ember.A(internalModel.slice(0, 2)), store: store, type: Tag });
       });
@@ -23693,9 +25715,20 @@ define(
 
       var env = setupStore({ tag: Tag, person: Person });
       var store = env.store;
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       run(function () {
-        store.push('person', { id: 1, name: "Tom Dale" });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: "Tom Dale"
+            }
+          }
+        });
       });
 
       run(function () {
@@ -23722,8 +25755,6 @@ define(
       __exports__[name] = value;
     }
 
-    var keysFunc = Object.keys || Ember.keys;
-
     var env, store, Person, Dog;
     var run = Ember.run;
 
@@ -23742,7 +25773,17 @@ define(
     test("changes to attributes can be rolled back", function () {
       var person;
       run(function () {
-        person = store.push('person', { id: 1, firstName: "Tom", lastName: "Dale" });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              firstName: "Tom",
+              lastName: "Dale"
+            }
+          }
+        });
+        person = store.peekRecord('person', 1);
         person.set('firstName', "Thomas");
       });
 
@@ -23759,7 +25800,16 @@ define(
     test("changes to unassigned attributes can be rolled back", function () {
       var person;
       run(function () {
-        person = store.push('person', { id: 1, lastName: "Dale" });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              lastName: "Dale"
+            }
+          }
+        });
+        person = store.peekRecord('person', 1);
         person.set('firstName', "Thomas");
       });
 
@@ -23783,7 +25833,17 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', { id: 1, firstName: "Tom", lastName: "Dale" });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              firstName: "Tom",
+              lastName: "Dale"
+            }
+          }
+        });
+        person = store.peekRecord('person', 1);
         person.set('firstName', "Thomas");
       });
 
@@ -23815,7 +25875,17 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', { id: 1, firstName: "Tom", lastName: "Dale" });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              firstName: "Tom",
+              lastName: "Dale"
+            }
+          }
+        });
+        person = store.peekRecord('person', 1);
         person.set('firstName', "Thomas");
       });
 
@@ -23830,7 +25900,7 @@ define(
 
           equal(person.get('firstName'), "Tom");
           equal(person.get('isError'), false);
-          equal(keysFunc(person.changedAttributes()).length, 0);
+          equal(Object.keys(person.changedAttributes()).length, 0);
         });
       });
     });
@@ -23843,15 +25913,25 @@ define(
       var person, people;
 
       run(function () {
-        person = store.push('person', { id: 1, firstName: "Tom", lastName: "Dale" });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              firstName: "Tom",
+              lastName: "Dale"
+            }
+          }
+        });
+        person = store.peekRecord('person', 1);
         people = store.peekAll('person');
       });
 
       run(function () {
         person.deleteRecord();
       });
-      equal(people.get('length'), 0, "a deleted record does not appear in record array anymore");
-      equal(people.objectAt(0), null, "a deleted record does not appear in record array anymore");
+      equal(people.get('length'), 1, "a deleted record appears in record array until it is saved");
+      equal(people.objectAt(0), person, "a deleted record appears in record array until it is saved");
 
       run(function () {
         person.save().then(null, function () {
@@ -23933,13 +26013,19 @@ define(
       var person, people;
 
       run(function () {
-        person = store.push('person', { id: 1 });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1'
+          }
+        });
+        person = store.peekRecord('person', 1);
         people = store.peekAll('person');
         person.deleteRecord();
       });
 
-      equal(people.get('length'), 0, "a deleted record does not appear in record array anymore");
-      equal(people.objectAt(0), null, "a deleted record does not appear in record array anymore");
+      equal(people.get('length'), 1, "a deleted record appears in the record array until it is saved");
+      equal(people.objectAt(0), person, "a deleted record appears in the record array until it is saved");
 
       equal(person.get('isDeleted'), true, "must be deleted");
 
@@ -23981,7 +26067,16 @@ define(
       env = setupStore({ dog: Dog, adapter: adapter });
       var dog;
       run(function () {
-        dog = env.store.push('dog', { id: 1, name: "Pluto" });
+        env.store.push({
+          data: {
+            type: 'dog',
+            id: '1',
+            attributes: {
+              name: "Pluto"
+            }
+          }
+        });
+        dog = env.store.peekRecord('dog', 1);
         dog.set('name', "is a dwarf planet");
       });
 
@@ -24041,7 +26136,17 @@ define(
       env = setupStore({ dog: Dog, adapter: adapter });
       var dog;
       run(function () {
-        dog = env.store.push('dog', { id: 1, name: "Pluto", breed: "Disney" });
+        env.store.push({
+          data: {
+            type: 'dog',
+            id: '1',
+            attributes: {
+              name: "Pluto",
+              breed: "Disney"
+            }
+          }
+        });
+        dog = env.store.peekRecord('dog', 1);
         dog.set('name', "is a dwarf planet");
         dog.set('breed', 'planet');
       });
@@ -24100,7 +26205,16 @@ define(
       env = setupStore({ dog: Dog, adapter: adapter });
       var dog;
       run(function () {
-        dog = env.store.push('dog', { id: 1, name: "Pluto" });
+        env.store.push({
+          data: {
+            type: 'dog',
+            id: '1',
+            attributes: {
+              name: "Pluto"
+            }
+          }
+        });
+        dog = env.store.peekRecord('dog', 1);
       });
 
       run(function () {
@@ -24119,53 +26233,6 @@ define(
           ok(dog.get('errors.length') === 0, "must not have errors");
         }));
       });
-    });
-  }
-);
-
-
-define(
-  "ember-data/tests/unit/model/rollback-test",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-
-    function __es6_export__(name, value) {
-      __exports__[name] = value;
-    }
-
-    var env, store, Person;
-    var run = Ember.run;
-
-    module("unit/model/rollback - model.rollback() - deprecated", {
-      setup: function () {
-        Person = DS.Model.extend({
-          firstName: DS.attr(),
-          lastName: DS.attr()
-        });
-
-        env = setupStore({ person: Person });
-        store = env.store;
-      }
-    });
-
-    test("changes to attributes can be rolled back - deprecated", function () {
-      var person;
-      run(function () {
-        person = store.push('person', { id: 1, firstName: 'Tom', lastName: 'Dale' });
-        person.set('firstName', 'Thomas');
-      });
-
-      equal(person.get('firstName'), 'Thomas');
-
-      expectDeprecation(function () {
-        run(function () {
-          person.rollback();
-        });
-      }, 'Using model.rollback() has been deprecated. Use model.rollbackAttributes() to discard any unsaved changes to a model.');
-
-      equal(person.get('firstName'), 'Tom');
-      equal(person.get('hasDirtyAttributes'), false);
     });
   }
 );
@@ -24239,10 +26306,35 @@ define(
       expect(3);
 
       var store = createStore({
-        person: Person
+        person: Person,
+        adapter: DS.Adapter.extend({
+          shouldBackgroundReloadRecord: function () {
+            return false;
+          }
+        })
       });
       run(function () {
-        store.pushMany('person', array);
+        store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Scumbag Dale'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Scumbag Katz'
+            }
+          }, {
+            type: 'person',
+            id: '3',
+            attributes: {
+              name: 'Scumbag Bryn'
+            }
+          }]
+        });
       });
 
       run(function () {
@@ -24261,12 +26353,28 @@ define(
       });
       var recordArray = store.peekAll('person');
       run(function () {
-        store.push('person', { id: 1, name: 'wycats' });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'wycats'
+            }
+          }
+        });
       });
       equal(get(recordArray, 'lastObject.name'), 'wycats');
 
       run(function () {
-        store.push('person', { id: 2, name: 'brohuda' });
+        store.push({
+          data: {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'brohuda'
+            }
+          }
+        });
       });
       equal(get(recordArray, 'lastObject.name'), 'brohuda');
     });
@@ -24284,7 +26392,15 @@ define(
 
       var recordArray = store.peekAll('person');
       run(function () {
-        store.push('person', { id: 1, name: 'wycats' });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'wycats'
+            }
+          }
+        });
       });
 
       run(function () {
@@ -24293,7 +26409,15 @@ define(
 
       run(function () {
         equal(recordArray.get('length'), emptyLength, "Has no more records");
-        store.push('person', { id: 2, name: 'brohuda' });
+        store.push({
+          data: {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'brohuda'
+            }
+          }
+        });
       });
 
       equal(recordArray.get('length'), emptyLength, "Has not been updated");
@@ -24301,7 +26425,7 @@ define(
     });
 
     test("a loaded record is removed from a record array when it is deleted", function () {
-      expect(4);
+      expect(5);
 
       var Tag = DS.Model.extend({
         people: DS.hasMany('person', { async: false })
@@ -24313,13 +26437,43 @@ define(
 
       var env = setupStore({
         tag: Tag,
-        person: Person
+        person: Person,
+        adapter: DS.Adapter.extend({
+          deleteRecord: function () {
+            return Ember.RSVP.resolve();
+          },
+          shouldBackgroundReloadRecord: function () {
+            return false;
+          }
+        })
       });
       var store = env.store;
 
       run(function () {
-        store.pushMany('person', array);
-        store.push('tag', { id: 1 });
+        store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Scumbag Dale'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Scumbag Katz'
+            }
+          }, {
+            type: 'person',
+            id: '3',
+            attributes: {
+              name: 'Scumbag Bryn'
+            }
+          }, {
+            type: 'tag',
+            id: '1'
+          }]
+        });
       });
 
       run(function () {
@@ -24344,33 +26498,60 @@ define(
 
           scumbag.deleteRecord();
 
-          equal(get(recordArray, 'length'), 0, "record is removed from the record array");
+          equal(get(recordArray, 'length'), 1, "record is still in the record array until it is saved");
+
+          Ember.run(scumbag, 'save');
+
+          equal(get(recordArray, 'length'), 0, "record is removed from the array when it is saved");
         });
       });
     });
 
-    test("a loaded record is removed from a record array when it is deleted even if the belongsTo side isn't defined", function () {
+    test("a loaded record is not removed from a record array when it is deleted even if the belongsTo side isn't defined", function () {
       var Tag = DS.Model.extend({
         people: DS.hasMany('person', { async: false })
       });
 
       var env = setupStore({
         tag: Tag,
-        person: Person
+        person: Person,
+        adapter: DS.Adapter.extend({
+          deleteRecord: function () {
+            return Ember.RSVP.resolve();
+          }
+        })
       });
       var store = env.store;
       var scumbag, tag;
 
       run(function () {
-        scumbag = store.push('person', { id: 1, name: 'Scumbag Tom' });
-        tag = store.push('tag', { id: 1, people: [1] });
+        store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Scumbag Tom'
+            }
+          }, {
+            type: 'tag',
+            id: '1',
+            relationships: {
+              people: {
+                data: [{ type: 'person', id: '1' }]
+              }
+            }
+          }]
+        });
+        scumbag = store.peekRecord('person', 1);
+        tag = store.peekRecord('tag', 1);
         scumbag.deleteRecord();
       });
 
-      equal(tag.get('people.length'), 0, "record is removed from the record array");
+      equal(tag.get('people.length'), 1, 'record is not removed from the record array');
+      equal(tag.get('people').objectAt(0), scumbag, 'tag still has the scumbag');
     });
 
-    test("a loaded record is removed both from the record array and from the belongs to, even if the belongsTo side isn't defined", function () {
+    test("a loaded record is not removed from both the record array and from the belongs to, even if the belongsTo side isn't defined", function () {
       var Tag = DS.Model.extend({
         people: DS.hasMany('person', { async: false })
       });
@@ -24382,15 +26563,45 @@ define(
       var env = setupStore({
         tag: Tag,
         person: Person,
-        tool: Tool
+        tool: Tool,
+        adapter: DS.Adapter.extend({
+          deleteRecord: function () {
+            return Ember.RSVP.resolve();
+          }
+        })
       });
       var store = env.store;
       var scumbag, tag, tool;
 
       run(function () {
-        scumbag = store.push('person', { id: 1, name: 'Scumbag Tom' });
-        tag = store.push('tag', { id: 1, people: [1] });
-        tool = store.push('tool', { id: 1, person: 1 });
+        store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Scumbag Tom'
+            }
+          }, {
+            type: 'tag',
+            id: '1',
+            relationships: {
+              people: {
+                data: [{ type: 'person', id: '1' }]
+              }
+            }
+          }, {
+            type: 'tool',
+            id: '1',
+            relationships: {
+              person: {
+                data: { type: 'person', id: '1' }
+              }
+            }
+          }]
+        });
+        scumbag = store.peekRecord('person', 1);
+        tag = store.peekRecord('tag', 1);
+        tool = store.peekRecord('tool', 1);
       });
 
       equal(tag.get('people.length'), 1, "record is in the record array");
@@ -24400,8 +26611,8 @@ define(
         scumbag.deleteRecord();
       });
 
-      equal(tag.get('people.length'), 0, "record is removed from the record array");
-      equal(tool.get('person'), null, "the tool is now orphan");
+      equal(tag.get('people.length'), 1, "record is stil in the record array");
+      equal(tool.get('person'), scumbag, "the tool still belongs to the record");
     });
 
     // GitHub Issue #168
@@ -24428,19 +26639,13 @@ define(
       });
 
       equal(get(recordArray, 'length'), 4, "precond - record array has the created item");
-      equal(get(recordArray.objectAt(0), 'name'), "Scumbag Dale", "item at index 0 is record with id 1");
+      equal(recordArray.objectAt(0), scumbag, "item at index 0 is record with id 1");
 
       run(function () {
         scumbag.deleteRecord();
       });
 
-      equal(get(recordArray, 'length'), 3, "record is removed from the record array");
-
-      run(function () {
-        recordArray.objectAt(0).set('name', 'toto');
-      });
-
-      equal(get(recordArray, 'length'), 3, "record is still removed from the record array");
+      equal(get(recordArray, 'length'), 3, "record array still has the created item");
     });
 
     test("a record array returns undefined when asking for a member outside of its content Array's range", function () {
@@ -24449,7 +26654,27 @@ define(
       });
 
       run(function () {
-        store.pushMany('person', array);
+        store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Scumbag Dale'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Scumbag Katz'
+            }
+          }, {
+            type: 'person',
+            id: '3',
+            attributes: {
+              name: 'Scumbag Bryn'
+            }
+          }]
+        });
       });
 
       var recordArray = store.peekAll('person');
@@ -24463,7 +26688,27 @@ define(
         person: Person
       });
       run(function () {
-        store.pushMany('person', array);
+        store.push({
+          data: [{
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: 'Scumbag Dale'
+            }
+          }, {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Scumbag Katz'
+            }
+          }, {
+            type: 'person',
+            id: '3',
+            attributes: {
+              name: 'Scumbag Bryn'
+            }
+          }]
+        });
       });
 
       var recordArray = store.peekAll('person');
@@ -24651,7 +26896,7 @@ define(
     var TestAdapter, store, person;
     var run = Ember.run;
 
-    module("unit/store/adapter_interop - DS.Store working with a DS.Adapter", {
+    module("unit/store/adapter-interop - DS.Store working with a DS.Adapter", {
       setup: function () {
         TestAdapter = DS.Adapter.extend();
       },
@@ -24674,14 +26919,6 @@ define(
       store = createStore({ adapter: '-rest' });
 
       ok(store.get('defaultAdapter') instanceof DS.RESTAdapter);
-    });
-
-    test('Default RESTAdapter has been deprecated', function () {
-      expectDeprecation(function () {
-        run(function () {
-          store = createStore({ adapter: '-rest' });
-        });
-      }, /You are currently using the default DS.RESTAdapter adapter. For Ember 2.0 the default adapter will be DS.JSONAPIAdapter. If you would like to continue using DS.RESTAdapter please create an application adapter that extends DS.RESTAdapter./);
     });
 
     test('Adapter can not be set as an instance', function () {
@@ -24766,7 +27003,7 @@ define(
     });
 
     test("IDs provided as numbers are coerced to strings", function () {
-      expect(4);
+      expect(5);
 
       var adapter = TestAdapter.extend({
         findRecord: function (store, type, id, snapshot) {
@@ -24784,7 +27021,15 @@ define(
         currentStore.findRecord('test', 1).then(async(function (object) {
           equal(typeof object.get('id'), 'string', "id was coerced to a string");
           run(function () {
-            currentStore.push('test', { id: 2, name: "Scumbag Sam Saffron" });
+            currentStore.push({
+              data: {
+                type: 'test',
+                id: '2',
+                attributes: {
+                  name: "Scumbag Sam Saffron"
+                }
+              }
+            });
           });
           return currentStore.findRecord('test', 2);
         })).then(async(function (object) {
@@ -24794,8 +27039,6 @@ define(
       });
     });
 
-    var array = [{ id: "1", name: "Scumbag Dale" }, { id: "2", name: "Scumbag Katz" }, { id: "3", name: "Scumbag Bryn" }];
-
     test("can load data for the same record if it is not dirty", function () {
       expect(3);
 
@@ -24804,17 +27047,38 @@ define(
       });
 
       var store = createStore({
-        person: Person
+        person: Person,
+        adapter: DS.Adapter.extend({
+          shouldBackgroundReloadRecord: function () {
+            return false;
+          }
+        })
       });
 
       run(function () {
-        store.push('person', { id: 1, name: "Tom Dale" });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: "Tom Dale"
+            }
+          }
+        });
 
         store.findRecord('person', 1).then(async(function (tom) {
           equal(get(tom, 'hasDirtyAttributes'), false, "precond - record is not dirty");
           equal(get(tom, 'name'), "Tom Dale", "returns the correct name");
 
-          store.push('person', { id: 1, name: "Captain Underpants" });
+          store.push({
+            data: {
+              type: 'person',
+              id: '1',
+              attributes: {
+                name: "Captain Underpants"
+              }
+            }
+          });
           equal(get(tom, 'name'), "Captain Underpants", "updated record with new date");
         }));
       });
@@ -24831,23 +27095,6 @@ define(
       equal(get(tom, 'name'), "Tom Dale", "the person was successfully loaded for the given ID");
     });
     */
-
-    test("pushMany extracts ids from an Array of hashes if no ids are specified", function () {
-      expect(1);
-
-      var Person = DS.Model.extend({ name: DS.attr('string') });
-
-      var store = createStore({
-        person: Person
-      });
-
-      run(function () {
-        store.pushMany('person', array);
-        store.findRecord('person', 1).then(async(function (person) {
-          equal(get(person, 'name'), "Scumbag Dale", "correctly extracted id for loaded data");
-        }));
-      });
-    });
 
     test("loadMany takes an optional Object and passes it on to the Adapter", function () {
       expect(2);
@@ -24876,7 +27123,7 @@ define(
       });
     });
 
-    test("Find with query calls the correct extract", function () {
+    test("Find with query calls the correct normalizeResponse", function () {
       var passedQuery = { page: 1 };
 
       var Person = DS.Model.extend({
@@ -24892,9 +27139,9 @@ define(
       var callCount = 0;
 
       var ApplicationSerializer = DS.JSONSerializer.extend({
-        extractFindQuery: function (store, type, payload) {
+        normalizeQueryResponse: function () {
           callCount++;
-          return [];
+          return this._super.apply(this, arguments);
         }
       });
 
@@ -24909,7 +27156,7 @@ define(
       run(function () {
         store.query('person', passedQuery);
       });
-      equal(callCount, 1, 'extractQuery was called');
+      equal(callCount, 1, 'normalizeQueryResponse was called');
     });
 
     test("peekAll(type) returns a record array of all records of a specific type", function () {
@@ -24922,7 +27169,15 @@ define(
       });
 
       run(function () {
-        store.push('person', { id: 1, name: "Tom Dale" });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              name: "Tom Dale"
+            }
+          }
+        });
       });
 
       var results = store.peekAll('person');
@@ -24930,7 +27185,15 @@ define(
       equal(get(results.objectAt(0), 'name'), "Tom Dale", "record has the correct information");
 
       run(function () {
-        store.push('person', { id: 2, name: "Yehuda Katz" });
+        store.push({
+          data: {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: "Yehuda Katz"
+            }
+          }
+        });
       });
       equal(get(results, 'length'), 2, "record array should have the new object");
       equal(get(results.objectAt(1), 'name'), "Yehuda Katz", "record has the correct information");
@@ -25016,7 +27279,12 @@ define(
         name: DS.attr('string')
       });
       var store = createStore({
-        person: Person
+        person: Person,
+        adapter: DS.Adapter.extend({
+          shouldBackgroundReloadRecord: function () {
+            return false;
+          }
+        })
       });
       var person;
 
@@ -25075,7 +27343,16 @@ define(
       var tom;
 
       run(function () {
-        tom = store.push('person', { id: 2, name: 'Tom' });
+        store.push({
+          data: {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Tom'
+            }
+          }
+        });
+        tom = store.peekRecord('person', 2);
         store.findRecord('person', 1, { preload: { friend: tom } });
       });
     });
@@ -25133,7 +27410,16 @@ define(
       var tom;
 
       run(function () {
-        tom = store.push('person', { id: 2, name: 'Tom' });
+        store.push({
+          data: {
+            type: 'person',
+            id: '2',
+            attributes: {
+              name: 'Tom'
+            }
+          }
+        });
+        tom = store.peekRecord('person', 2);
         store.findRecord('person', 1, { preload: { friends: [tom] } });
       });
     });
@@ -25493,6 +27779,9 @@ define(
           ok(true, 'shouldReloadRecord should be called when the record is in the store');
           return false;
         },
+        shouldBackgroundReloadRecord: function () {
+          return false;
+        },
         findRecord: function () {
           ok(false, 'find should not be called when shouldReloadRecord returns false');
         }
@@ -25504,7 +27793,12 @@ define(
       });
 
       run(function () {
-        store.push('person', { id: 1 });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1'
+          }
+        });
         store.findRecord('person', 1);
       });
     });
@@ -25533,7 +27827,12 @@ define(
       });
 
       run(function () {
-        store.push('person', { id: 1 });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1'
+          }
+        });
         store.findRecord('person', 1).then(function (record) {
           equal(record.get('name'), 'Tom');
         });
@@ -25566,7 +27865,12 @@ define(
       });
 
       run(function () {
-        store.push('person', { id: 1 });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1'
+          }
+        });
         store.findRecord('person', 1).then(function (record) {
           equal(record.get('name'), 'Tom');
         });
@@ -25597,7 +27901,12 @@ define(
       });
 
       run(function () {
-        store.push('person', { id: 1 });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1'
+          }
+        });
         store.findRecord('person', 1).then(function (record) {
           equal(record.get('name'), undefined);
         });
@@ -25628,7 +27937,12 @@ define(
       });
 
       run(function () {
-        store.push('person', { id: 1 });
+        store.push({
+          data: {
+            type: 'person',
+            id: '1'
+          }
+        });
         store.findRecord('person', 1).then(function (record) {
           equal(record.get('name'), undefined);
         });
@@ -25663,7 +27977,7 @@ define(
       });
 
       run(function () {
-        store.find('person');
+        store.findAll('person');
       });
     });
 
@@ -25825,54 +28139,6 @@ define(
         });
       }
     });
-
-    test("store#find with deprecated preload passes correct options to store#findRecord", function () {
-      expect(2);
-
-      var expectedOptions = { preload: { name: 'Tom' } };
-
-      store.reopen({
-        findRecord: function (modelName, id, options) {
-          deepEqual(options, expectedOptions, 'deprecated preload transformed to new options store#findRecord');
-        }
-      });
-
-      expectDeprecation(function () {
-        run(function () {
-          store.find('person', 1, { name: 'Tom' });
-        });
-      }, /Passing a preload argument to `store.find` is deprecated./);
-    });
-
-    test("Using store#find with preload is deprecated", function () {
-      expect(2);
-
-      expectDeprecation(function () {
-        run(function () {
-          store.find('person', 1, { name: 'Tom' });
-        });
-      }, /Passing a preload argument to `store.find` is deprecated./);
-    });
-
-    test("Using store#fetchById with preload is deprecated", function () {
-      expect(2);
-
-      expectDeprecation(function () {
-        run(function () {
-          store.fetchById('person', 1, { name: 'Tom' });
-        });
-      }, /Passing a preload argument to `store.fetchById` is deprecated./);
-    });
-
-    test("Using store#findById with preload is deprecated", function () {
-      expect(2);
-
-      expectDeprecation(function () {
-        run(function () {
-          store.findById('person', 1, { name: 'Tom' });
-        });
-      }, /Passing a preload argument to `store.findById` is deprecated/);
-    });
   }
 );
 
@@ -25922,7 +28188,22 @@ define(
     test("allow passing relationships as well as attributes", function () {
       var records, storage;
       run(function () {
-        records = store.pushMany('record', [{ id: 1, title: "it's a beautiful day" }, { id: 2, title: "it's a beautiful day" }]);
+        store.push({
+          data: [{
+            type: 'record',
+            id: '1',
+            attributes: {
+              title: "it's a beautiful day"
+            }
+          }, {
+            type: 'record',
+            id: '2',
+            attributes: {
+              title: "it's a beautiful day"
+            }
+          }]
+        });
+        records = store.peekAll('record');
         storage = store.createRecord('storage', { name: 'Great store', records: records });
       });
 
@@ -26053,11 +28334,20 @@ define(
     test("hasRecordForId should return false for records in the empty state ", function () {
 
       run(function () {
-        store.push('person', {
-          id: 1,
-          firstName: "Yehuda",
-          lastName: "Katz",
-          phoneNumbers: [1]
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              firstName: "Yehuda",
+              lastName: "Katz"
+            },
+            relationships: {
+              phoneNumbers: {
+                data: [{ type: 'phone-number', id: '1' }]
+              }
+            }
+          }
         });
 
         equal(false, store.hasRecordForId('phone-number', 1), 'hasRecordForId only returns true for loaded records');
@@ -26066,11 +28356,20 @@ define(
 
     test("hasRecordForId should return true for records in the loaded state ", function () {
       run(function () {
-        store.push('person', {
-          id: 1,
-          firstName: "Yehuda",
-          lastName: "Katz",
-          phoneNumbers: [1]
+        store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              firstName: "Yehuda",
+              lastName: "Katz"
+            },
+            relationships: {
+              phoneNumbers: {
+                data: [{ type: 'phone-number', id: '1' }]
+              }
+            }
+          }
         });
 
         equal(true, store.hasRecordForId('person', 1), 'hasRecordForId returns true for records loaded into the store');
@@ -26104,8 +28403,6 @@ define(
 
       env.registry.unregister('adapter:application');
       env.registry.unregister('serializer:application');
-
-      env.registry.register('serializer:-active-model', DS.ActiveModelSerializer);
 
       env.registry.optionsForType('serializer', { singleton: true });
       env.registry.optionsForType('adapter', { singleton: true });
@@ -26182,15 +28479,15 @@ define(
       strictEqual(personAdapter, lookupAdapter('-rest'), 'looks up the RESTAdapter first');
       resetStore();
 
-      registerAdapter('application', DS.ActiveModelSerializer.extend());
+      registerAdapter('application', DS.RESTSerializer.extend());
       personAdapter = lookupAdapter('person');
 
       strictEqual(personAdapter, lookupAdapter('application'), 'looks up application adapter before RESTAdapter if it exists');
 
       resetStore();
 
-      registerAdapter('application', DS.ActiveModelSerializer.extend());
-      registerAdapter('person', DS.ActiveModelSerializer.extend({ customThingy: true }));
+      registerAdapter('application', DS.RESTSerializer.extend());
+      registerAdapter('person', DS.RESTSerializer.extend({ customThingy: true }));
 
       ok(lookupAdapter('person').get('customThingy'), 'looks up type serializer before application');
     });
@@ -26204,96 +28501,27 @@ define(
 
       resetStore();
 
-      registerSerializer('application', DS.ActiveModelSerializer.extend());
+      registerSerializer('application', DS.RESTSerializer.extend());
       personSerializer = lookupSerializer('person');
       strictEqual(personSerializer, lookupSerializer('application'), 'looks up application before default');
 
       resetStore();
       registerAdapter('person', DS.Adapter.extend({
-        defaultSerializer: '-active-model'
+        defaultSerializer: '-rest'
       }));
       personSerializer = lookupSerializer('person');
 
-      strictEqual(personSerializer, lookupSerializer('-active-model'), 'uses defaultSerializer on adapterFor("model") if application not defined');
+      strictEqual(personSerializer, lookupSerializer('-rest'), 'uses defaultSerializer on adapterFor("model") if application not defined');
 
       resetStore();
       registerAdapter('person', DS.Adapter.extend({
-        defaultSerializer: '-active-model'
+        defaultSerializer: '-rest'
       }));
-      registerSerializer('application', DS.ActiveModelSerializer.extend());
+      registerSerializer('application', DS.RESTSerializer.extend());
       registerSerializer('person', DS.JSONSerializer.extend({ customThingy: true }));
       personSerializer = lookupSerializer('person');
 
       ok(personSerializer.get('customThingy'), 'uses the person serializer before any fallbacks if it is defined');
-    });
-  }
-);
-
-
-define(
-  "ember-data/tests/unit/store/metadata-for-test",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-
-    function __es6_export__(name, value) {
-      __exports__[name] = value;
-    }
-
-    var keysFunc = Object.keys || Ember.keys;
-
-    var store;
-
-    var run = Ember.run;
-
-    module("unit/store/metadata_for - DS.Store#metadataFor", {
-      setup: function () {
-        store = createStore({
-          post: DS.Model.extend(),
-          comment: DS.Model.extend()
-        });
-      },
-
-      teardown: function () {
-        run(function () {
-          store.destroy();
-        });
-      }
-    });
-
-    test("metaForType should be deprecated", function () {
-      expect(1);
-
-      expectDeprecation(function () {
-        store.metaForType('post', { foo: 'bar' });
-      });
-    });
-
-    test("metadataFor and setMetadataFor should return and set correct metadata", function () {
-      expect(7);
-
-      function metadataKeys(type) {
-        return keysFunc(store.metadataFor(type));
-      }
-
-      // Currently not using QUnit.deepEqual due to the way deepEqual
-      // comparing __proto__. In its check to see if an object has
-      // no proto, it checks strict equality on null instead of null or undefined.
-
-      deepEqual(metadataKeys('post'), [], 'Metadata for post is initially empty');
-
-      store.setMetadataFor('post', { foo: 'bar' });
-
-      deepEqual(metadataKeys('post'), ['foo'], 'metadata for post contains foo:bar');
-      equal(store.metadataFor('post').foo, 'bar');
-
-      store.setMetadataFor('post', { hello: 'world' });
-
-      deepEqual(metadataKeys('post'), ['foo', 'hello']);
-      equal(store.metadataFor('post').foo, 'bar', 'keeps original metadata');
-      equal(store.metadataFor('post').hello, 'world', 'merges new metadata');
-
-      deepEqual(metadataKeys('comment'), [], 'metadata for comment is empty');
     });
   }
 );
@@ -26363,7 +28591,7 @@ define(
 
 
 define(
-  "ember-data/tests/unit/store/peek-by-id-test",
+  "ember-data/tests/unit/store/peek-record-test",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -26396,7 +28624,12 @@ define(
 
     test("peekRecord should return the record if it is in the store ", function () {
       run(function () {
-        var person = store.push('person', { id: 1 });
+        var person = store.push({
+          data: {
+            type: 'person',
+            id: '1'
+          }
+        });
         equal(person, store.peekRecord('person', 1), 'peekRecord only return the corresponding record in the store');
       });
     });
@@ -26405,15 +28638,6 @@ define(
       run(function () {
         equal(null, store.peekRecord('person', 1), 'peekRecord returns null if the corresponding record is not in the store');
       });
-    });
-
-    test("getById is deprecated", function () {
-      expectDeprecation(function () {
-        run(function () {
-          store.push('person', { id: 1 });
-          store.getById('person', 1);
-        });
-      }, 'Using store.getById() has been deprecated. Use store.peekRecord to get a record by a given type and ID without triggering a fetch.');
     });
   }
 );
@@ -26434,7 +28658,6 @@ define(
     var hasMany = DS.hasMany;
     var belongsTo = DS.belongsTo;
     var run = Ember.run;
-    var forEach = Ember.ArrayPolyfills.forEach;
 
     module("unit/store/push - DS.Store#push", {
       setup: function () {
@@ -26470,7 +28693,7 @@ define(
 
         store = env.store;
 
-        env.registry.register('serializer:post', DS.ActiveModelSerializer);
+        env.registry.register('serializer:post', DS.RESTSerializer);
       },
 
       teardown: function () {
@@ -26482,19 +28705,27 @@ define(
 
     test("Calling push with a normalized hash returns a record", function () {
       expect(2);
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       run(function () {
-        var person = store.push('person', {
-          id: 'wat',
-          firstName: "Yehuda",
-          lastName: "Katz"
+        var person = store.push({
+          data: {
+            type: 'person',
+            id: 'wat',
+            attributes: {
+              firstName: 'Yehuda',
+              lastName: 'Katz'
+            }
+          }
         });
         store.findRecord('person', 'wat').then(function (foundPerson) {
           equal(foundPerson, person, "record returned via load() is the same as the record returned from findRecord()");
           deepEqual(foundPerson.getProperties('id', 'firstName', 'lastName'), {
             id: 'wat',
-            firstName: "Yehuda",
-            lastName: "Katz"
+            firstName: 'Yehuda',
+            lastName: 'Katz'
           });
         });
       });
@@ -26502,22 +28733,30 @@ define(
 
     test("Supplying a model class for `push` is the same as supplying a string", function () {
       expect(1);
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       var Programmer = Person.extend();
       env.registry.register('model:programmer', Programmer);
 
       run(function () {
-        store.push('programmer', {
-          id: 'wat',
-          firstName: "Yehuda",
-          lastName: "Katz"
+        store.push({
+          data: {
+            type: 'programmer',
+            id: 'wat',
+            attributes: {
+              firstName: 'Yehuda',
+              lastName: 'Katz'
+            }
+          }
         });
 
         store.findRecord('programmer', 'wat').then(function (foundProgrammer) {
           deepEqual(foundProgrammer.getProperties('id', 'firstName', 'lastName'), {
             id: 'wat',
-            firstName: "Yehuda",
-            lastName: "Katz"
+            firstName: 'Yehuda',
+            lastName: 'Katz'
           });
         });
       });
@@ -26533,42 +28772,53 @@ define(
       });
 
       run(function () {
-        store.push('person', {
-          id: 'wat',
-          firstName: "Yehuda",
-          lastName: "Katz"
-        });
-      });
-    });
-
-    test("Calling update should be deprecated", function () {
-      expectDeprecation(function () {
-        run(function () {
-          store.update('person', { id: '1', firstName: 'Yehuda', lastName: 'Katz' });
+        store.push({
+          data: {
+            type: 'person',
+            id: 'wat',
+            attributes: {
+              firstName: 'Yehuda',
+              lastName: 'Katz'
+            }
+          }
         });
       });
     });
 
     test("Calling push with partial records updates just those attributes", function () {
       expect(2);
+      env.adapter.shouldBackgroundReloadRecord = function () {
+        return false;
+      };
 
       run(function () {
-        var person = store.push('person', {
-          id: 'wat',
-          firstName: "Yehuda",
-          lastName: "Katz"
+        store.push({
+          data: {
+            type: 'person',
+            id: 'wat',
+            attributes: {
+              firstName: 'Yehuda',
+              lastName: 'Katz'
+            }
+          }
         });
+        var person = store.peekRecord('person', 'wat');
 
-        store.push('person', {
-          id: 'wat',
-          lastName: "Katz!"
+        store.push({
+          data: {
+            type: 'person',
+            id: 'wat',
+            attributes: {
+              lastName: "Katz!"
+            }
+          }
         });
 
         store.findRecord('person', 'wat').then(function (foundPerson) {
           equal(foundPerson, person, "record returned via load() is the same as the record returned from findRecord()");
           deepEqual(foundPerson.getProperties('id', 'firstName', 'lastName'), {
             id: 'wat',
-            firstName: "Yehuda",
+            firstName: 'Yehuda',
             lastName: "Katz!"
           });
         });
@@ -26580,13 +28830,18 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', {
-          id: '1',
-          firstName: "Robert",
-          lastName: "Jackson"
+        person = store.push({
+          data: {
+            type: 'person',
+            id: '1',
+            attributes: {
+              firstName: 'Robert',
+              lastName: 'Jackson'
+            }
+          }
         });
 
-        store.push('person', store.normalize('person', {
+        store.push(store.normalize('person', {
           id: '1',
           firstName: "Jacquie"
         }));
@@ -26594,32 +28849,6 @@ define(
 
       equal(person.get('firstName'), "Jacquie", "you can push raw JSON into the store");
       equal(person.get('lastName'), "Jackson", "existing fields are untouched");
-    });
-
-    test("Calling push with a normalized hash containing related records returns a record", function () {
-      var number1, number2, person;
-      run(function () {
-        number1 = store.push('phone-number', {
-          id: 1,
-          number: '5551212',
-          person: 'wat'
-        });
-
-        number2 = store.push('phone-number', {
-          id: 2,
-          number: '5552121',
-          person: 'wat'
-        });
-
-        person = store.push('person', {
-          id: 'wat',
-          firstName: 'John',
-          lastName: 'Smith',
-          phoneNumbers: [number1, number2]
-        });
-      });
-
-      deepEqual(person.get('phoneNumbers').toArray(), [number1, number2], "phoneNumbers array is correct");
     });
 
     test("Calling push with a normalized hash containing IDs of related records returns a record", function () {
@@ -26649,12 +28878,12 @@ define(
       var person;
 
       run(function () {
-        person = store.push('person', {
+        person = store.push(store.normalize('person', {
           id: 'wat',
           firstName: 'John',
           lastName: 'Smith',
           phoneNumbers: ["1", "2"]
-        });
+        }));
         person.get('phoneNumbers').then(function (phoneNumbers) {
           deepEqual(phoneNumbers.map(function (item) {
             return item.getProperties('id', 'number', 'person');
@@ -26676,7 +28905,7 @@ define(
         store.pushPayload('post', {
           posts: [{
             id: '1',
-            post_title: "Ember rocks"
+            postTitle: "Ember rocks"
           }]
         });
       });
@@ -26689,7 +28918,7 @@ define(
         store.pushPayload('post', {
           posts: [{
             id: '1',
-            post_title: "Ember rocks (updated)"
+            postTitle: "Ember rocks (updated)"
           }]
         });
       });
@@ -26702,7 +28931,7 @@ define(
         store.pushPayload('post', {
           post: {
             id: '1',
-            post_title: "Ember rocks"
+            postTitle: "Ember rocks"
           }
         });
       });
@@ -26715,7 +28944,7 @@ define(
         store.pushPayload('post', {
           post: {
             id: '1',
-            post_title: "Ember rocks (updated)"
+            postTitle: "Ember rocks (updated)"
           }
         });
       });
@@ -26854,7 +29083,7 @@ define(
 
       expect(invalidValues.length);
 
-      forEach.call(invalidValues, function (invalidValue) {
+      invalidValues.forEach(function (invalidValue) {
         throws(function () {
           run(function () {
             store.push('person', invalidValue);
@@ -26870,12 +29099,12 @@ define(
 
       warns(function () {
         run(function () {
-          store.push('person', {
+          store.push(store.normalize('person', {
             id: '1',
             links: {
               phoneNumbers: '/api/people/1/phone-numbers'
             }
-          });
+          }));
         });
       }, /You have pushed a record of type 'person' with 'phoneNumbers' as a link, but the association is not an async relationship./);
     });
@@ -26901,27 +29130,27 @@ define(
 
       expectAssertion(function () {
         run(function () {
-          store.push('person', {
+          store.push(store.normalize('person', {
             id: '1',
             links: {
               phoneNumbers: {
                 href: '/api/people/1/phone-numbers'
               }
             }
-          });
+          }));
         });
       }, "You have pushed a record of type 'person' with 'phoneNumbers' as a link, but the value of that link is not a string.");
     });
 
     test('Calling push with a link containing the value null', function () {
       run(function () {
-        store.push('person', {
+        store.push(store.normalize('person', {
           id: '1',
           firstName: 'Tan',
           links: {
             phoneNumbers: null
           }
-        });
+        }));
       });
 
       var person = store.peekRecord('person', 1);
@@ -26934,10 +29163,20 @@ define(
 
       expect(invalidValues.length);
 
-      forEach.call(invalidValues, function (invalidValue) {
+      invalidValues.forEach(function (invalidValue) {
         throws(function () {
           run(function () {
-            store.push('person', { id: 1, phoneNumbers: invalidValue });
+            store.push({
+              data: {
+                type: 'person',
+                id: '1',
+                relationships: {
+                  phoneNumbers: {
+                    data: invalidValue
+                  }
+                }
+              }
+            });
           });
         }, /must be an array/);
       });
@@ -26948,34 +29187,33 @@ define(
 
       expect(invalidValues.length);
 
-      forEach.call(invalidValues, function (invalidValue) {
+      invalidValues.forEach(function (invalidValue) {
         throws(function () {
           run(function () {
-            store.push('person', invalidValue);
+            store.push({
+              data: invalidValue
+            });
           });
-        }, /You must include an `id`/);
+        }, /You must include an 'id'/);
       });
     });
 
     test('calling push with belongsTo relationship the value must not be an array', function () {
       throws(function () {
         run(function () {
-          store.push('phone-number', { id: 1, person: [1] });
-        });
-      }, /must not be an array/);
-    });
-
-    test('calling push with an embedded relationship throws a useful error', function () {
-      throws(function () {
-        run(function () {
-          store.push('person', {
-            id: 1,
-            firstName: 'Ada',
-            lastName: 'Lovelace',
-            phoneNumbers: [{ number: '5551212', person: 1 }]
+          store.push({
+            data: {
+              type: 'phone-number',
+              id: '1',
+              relationships: {
+                person: {
+                  data: [1]
+                }
+              }
+            }
           });
         });
-      }, /If this is an embedded relationship/);
+      }, /must not be an array/);
     });
 
     test("Enabling Ember.ENV.DS_WARN_ON_UNKNOWN_KEYS should warn on unknown keys", function () {
@@ -26984,11 +29222,16 @@ define(
         try {
           Ember.ENV.DS_WARN_ON_UNKNOWN_KEYS = true;
           warns(function () {
-            store.push('person', {
-              id: '1',
-              firstName: 'Tomster',
-              emailAddress: 'tomster@emberjs.com',
-              isMascot: true
+            store.push({
+              data: {
+                type: 'person',
+                id: '1',
+                attributes: {
+                  firstName: 'Tomster',
+                  emailAddress: 'tomster@emberjs.com',
+                  isMascot: true
+                }
+              }
             });
           });
         } finally {
@@ -27000,37 +29243,19 @@ define(
     test("Calling push with unknown keys should not warn by default", function () {
       noWarns(function () {
         run(function () {
-          store.push('person', {
-            id: '1',
-            firstName: 'Tomster',
-            emailAddress: 'tomster@emberjs.com',
-            isMascot: true
+          store.push({
+            data: {
+              type: 'person',
+              id: '1',
+              attributes: {
+                firstName: 'Tomster',
+                emailAddress: 'tomster@emberjs.com',
+                isMascot: true
+              }
+            }
           });
         });
       }, /The payload for 'person' contains these unknown keys: \[emailAddress,isMascot\]. Make sure they've been defined in your model./);
-    });
-
-    test("Calling pushMany is deprecated", function () {
-      var person1, person2;
-      expectDeprecation(function () {
-        run(function () {
-          person1 = { id: 1, firstName: 'John', lastName: 'Smith' };
-          person2 = { id: 2, firstName: 'Suzie', lastName: 'Q' };
-
-          store.pushMany('person', [person1, person2]);
-        });
-      }, 'Using store.pushMany() has been deprecated since store.push() now handles multiple items. You should use store.push() instead.');
-    });
-
-    test("Calling push(type, data) is deprecated", function () {
-      var person1;
-      expectDeprecation(function () {
-        run(function () {
-          person1 = { id: 1, firstName: 'John', lastName: 'Smith' };
-
-          store.push('person', person1);
-        });
-      }, /store.push\(type, data\) has been deprecated/);
     });
 
     module("unit/store/push - DS.Store#push with JSON-API", {
@@ -27237,9 +29462,14 @@ define(
       expect(2);
 
       run(function () {
-        store.push('record', {
-          id: 1,
-          title: 'toto'
+        store.push({
+          data: {
+            type: 'record',
+            id: '1',
+            attributes: {
+              title: 'toto'
+            }
+          }
         });
 
         store.findRecord('record', 1).then(function (record) {
@@ -27264,7 +29494,15 @@ define(
       expect(5);
 
       run(function () {
-        store.push('record', { id: 1, title: 'toto' });
+        store.push({
+          data: {
+            type: 'record',
+            id: '1',
+            attributes: {
+              title: 'toto'
+            }
+          }
+        });
         store.findRecord('record', 1).then(function (record) {
           equal(get(record, 'id'), 1, "found record with id 1");
           equal(get(record, 'hasDirtyAttributes'), false, "record is not dirty");
@@ -27320,8 +29558,27 @@ define(
       var asyncRecords;
 
       run(function () {
-        store.push('brand', { id: 1, name: 'EmberJS' });
-        store.push('product', { id: 1, description: 'toto', brand: 1 });
+        store.push({
+          data: [{
+            type: 'brand',
+            id: '1',
+            attributes: {
+              name: 'EmberJS'
+            }
+          }, {
+            type: 'product',
+            id: '1',
+            attributes: {
+              description: 'toto'
+            },
+            relationships: {
+              brand: {
+                data: { type: 'brand', id: '1' }
+              }
+            }
+          }]
+        });
+
         asyncRecords = Ember.RSVP.hash({
           brand: store.findRecord('brand', 1),
           product: store.findRecord('product', 1)
@@ -27565,9 +29822,27 @@ define("ember-data/tests/unit/utils-test", ["exports"], function(__exports__) {
     var user, post, person;
 
     Ember.run(function () {
-      user = env.store.push('user', { id: 1, messages: [] });
-      post = env.store.push('post', { id: 1 });
-      person = env.store.push('person', { id: 1 });
+      env.store.push({
+        data: [{
+          type: 'user',
+          id: '1',
+          relationships: {
+            messages: {
+              data: []
+            }
+          }
+        }, {
+          type: 'post',
+          id: '1'
+        }, {
+          type: 'person',
+          id: '1'
+        }]
+      });
+
+      user = env.store.peekRecord('user', 1);
+      post = env.store.peekRecord('post', 1);
+      person = env.store.peekRecord('person', 1);
     });
 
     // TODO un-comment once we test the assertPolymorphicType directly
@@ -27601,9 +29876,21 @@ define("ember-data/tests/unit/utils-test", ["exports"], function(__exports__) {
     var post, video, person;
 
     Ember.run(function () {
-      post = env.store.push('post', { id: 1 });
-      video = env.store.push('video', { id: 1 });
-      person = env.store.push('person', { id: 1 });
+      env.store.push({
+        data: [{
+          type: 'post',
+          id: '1'
+        }, {
+          type: 'video',
+          id: '1'
+        }, {
+          type: 'person',
+          id: '1'
+        }]
+      });
+      post = env.store.peekRecord('post', 1);
+      video = env.store.peekRecord('video', 1);
+      person = env.store.peekRecord('person', 1);
     });
 
     // TODO un-comment once we test the assertPolymorphicType directly
@@ -27636,1115 +29923,1073 @@ define("ember-data/tests/unit/utils-test", ["exports"], function(__exports__) {
 
 
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib');
-test('ember-data/lib/adapters.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/adapters.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib');
+QUnit.test('ember-data/lib/adapters.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/adapters.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/adapters');
-test('ember-data/lib/adapters/build-url-mixin.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/adapters/build-url-mixin.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/adapters');
+QUnit.test('ember-data/lib/adapters/build-url-mixin.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/adapters/build-url-mixin.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/adapters');
-test('ember-data/lib/adapters/errors.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/adapters/errors.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/adapters');
+QUnit.test('ember-data/lib/adapters/errors.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/adapters/errors.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/adapters');
-test('ember-data/lib/adapters/fixture-adapter.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/adapters/fixture-adapter.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/adapters');
+QUnit.test('ember-data/lib/adapters/fixture-adapter.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/adapters/fixture-adapter.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/adapters');
-test('ember-data/lib/adapters/json-api-adapter.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/adapters/json-api-adapter.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/adapters');
+QUnit.test('ember-data/lib/adapters/json-api-adapter.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/adapters/json-api-adapter.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/adapters');
-test('ember-data/lib/adapters/rest-adapter.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/adapters/rest-adapter.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/adapters');
+QUnit.test('ember-data/lib/adapters/rest-adapter.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/adapters/rest-adapter.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib');
-test('ember-data/lib/core.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/core.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib');
+QUnit.test('ember-data/lib/core.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/core.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib');
-test('ember-data/lib/ember-initializer.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/ember-initializer.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib');
+QUnit.test('ember-data/lib/ember-initializer.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/ember-initializer.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/ext');
-test('ember-data/lib/ext/date.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/ext/date.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/ext');
+QUnit.test('ember-data/lib/ext/date.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/ext/date.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/initializers');
-test('ember-data/lib/initializers/data-adapter.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/initializers/data-adapter.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/initializers');
+QUnit.test('ember-data/lib/initializers/data-adapter.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/initializers/data-adapter.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/initializers');
-test('ember-data/lib/initializers/store-injections.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/initializers/store-injections.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/initializers');
+QUnit.test('ember-data/lib/initializers/store-injections.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/initializers/store-injections.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/initializers');
-test('ember-data/lib/initializers/store.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/initializers/store.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/initializers');
+QUnit.test('ember-data/lib/initializers/store.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/initializers/store.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/initializers');
-test('ember-data/lib/initializers/transforms.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/initializers/transforms.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/initializers');
+QUnit.test('ember-data/lib/initializers/transforms.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/initializers/transforms.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/instance-initializers');
-test('ember-data/lib/instance-initializers/initialize-store-service.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/instance-initializers/initialize-store-service.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/instance-initializers');
+QUnit.test('ember-data/lib/instance-initializers/initialize-store-service.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/instance-initializers/initialize-store-service.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib');
-test('ember-data/lib/main.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/main.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib');
+QUnit.test('ember-data/lib/main.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/main.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib');
-test('ember-data/lib/serializers.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/serializers.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib');
+QUnit.test('ember-data/lib/serializers.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/serializers.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/serializers');
-test('ember-data/lib/serializers/embedded-records-mixin.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/serializers/embedded-records-mixin.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/serializers');
+QUnit.test('ember-data/lib/serializers/embedded-records-mixin.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/serializers/embedded-records-mixin.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/serializers');
-test('ember-data/lib/serializers/json-api-serializer.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/serializers/json-api-serializer.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/serializers');
+QUnit.test('ember-data/lib/serializers/json-api-serializer.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/serializers/json-api-serializer.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/serializers');
-test('ember-data/lib/serializers/json-serializer.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/serializers/json-serializer.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/serializers');
+QUnit.test('ember-data/lib/serializers/json-serializer.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/serializers/json-serializer.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/serializers');
-test('ember-data/lib/serializers/rest-serializer.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/serializers/rest-serializer.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/serializers');
+QUnit.test('ember-data/lib/serializers/rest-serializer.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/serializers/rest-serializer.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib');
-test('ember-data/lib/setup-container.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/setup-container.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib');
+QUnit.test('ember-data/lib/setup-container.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/setup-container.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/adapter.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/adapter.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/adapter.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/adapter.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/clone-null.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/clone-null.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/clone-null.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/clone-null.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/coerce-id.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/coerce-id.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/coerce-id.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/coerce-id.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/container-proxy.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/container-proxy.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/container-proxy.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/container-proxy.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/debug.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/debug.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/debug.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/debug.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/debug');
-test('ember-data/lib/system/debug/debug-adapter.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/debug/debug-adapter.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/debug');
+QUnit.test('ember-data/lib/system/debug/debug-adapter.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/debug/debug-adapter.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/debug');
-test('ember-data/lib/system/debug/debug-info.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/debug/debug-info.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/debug');
+QUnit.test('ember-data/lib/system/debug/debug-info.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/debug/debug-info.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/many-array.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/many-array.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/is-array-like.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/is-array-like.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/map.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/map.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/many-array.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/many-array.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/merge.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/merge.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/map.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/map.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/model.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/model.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/merge.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/merge.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/model');
-test('ember-data/lib/system/model/attributes.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/model/attributes.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/model.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/model.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/model');
-test('ember-data/lib/system/model/errors.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/model/errors.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/model');
+QUnit.test('ember-data/lib/system/model/attributes.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/model/attributes.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/model');
-test('ember-data/lib/system/model/internal-model.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/model/internal-model.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/model');
+QUnit.test('ember-data/lib/system/model/errors.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/model/errors.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/model');
-test('ember-data/lib/system/model/model.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/model/model.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/model/errors');
+QUnit.test('ember-data/lib/system/model/errors/invalid.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/model/errors/invalid.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/model');
-test('ember-data/lib/system/model/states.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/model/states.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/model');
+QUnit.test('ember-data/lib/system/model/internal-model.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/model/internal-model.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/normalize-model-name.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/normalize-model-name.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/model');
+QUnit.test('ember-data/lib/system/model/model.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/model/model.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/object-polyfills.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/object-polyfills.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/model');
+QUnit.test('ember-data/lib/system/model/states.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/model/states.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/ordered-set.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/ordered-set.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/normalize-model-name.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/normalize-model-name.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/promise-proxies.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/promise-proxies.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/ordered-set.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/ordered-set.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/record-array-manager.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/record-array-manager.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/promise-proxies.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/promise-proxies.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/record-arrays.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/record-arrays.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/record-array-manager.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/record-array-manager.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/record-arrays');
-test('ember-data/lib/system/record-arrays/adapter-populated-record-array.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/record-arrays/adapter-populated-record-array.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/record-arrays.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/record-arrays.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/record-arrays');
-test('ember-data/lib/system/record-arrays/filtered-record-array.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/record-arrays/filtered-record-array.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/record-arrays');
+QUnit.test('ember-data/lib/system/record-arrays/adapter-populated-record-array.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/record-arrays/adapter-populated-record-array.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/record-arrays');
-test('ember-data/lib/system/record-arrays/record-array.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/record-arrays/record-array.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/record-arrays');
+QUnit.test('ember-data/lib/system/record-arrays/filtered-record-array.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/record-arrays/filtered-record-array.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/relationship-meta.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/relationship-meta.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/record-arrays');
+QUnit.test('ember-data/lib/system/record-arrays/record-array.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/record-arrays/record-array.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/relationships.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/relationships.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/relationship-meta.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/relationship-meta.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/relationships');
-test('ember-data/lib/system/relationships/belongs-to.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/relationships/belongs-to.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/relationships.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/relationships.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/relationships');
-test('ember-data/lib/system/relationships/ext.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/relationships/ext.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/relationships');
+QUnit.test('ember-data/lib/system/relationships/belongs-to.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/relationships/belongs-to.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/relationships');
-test('ember-data/lib/system/relationships/has-many.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/relationships/has-many.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/relationships');
+QUnit.test('ember-data/lib/system/relationships/ext.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/relationships/ext.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/relationships/state');
-test('ember-data/lib/system/relationships/state/belongs-to.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/relationships/state/belongs-to.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/relationships');
+QUnit.test('ember-data/lib/system/relationships/has-many.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/relationships/has-many.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/relationships/state');
-test('ember-data/lib/system/relationships/state/create.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/relationships/state/create.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/relationships/state');
+QUnit.test('ember-data/lib/system/relationships/state/belongs-to.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/relationships/state/belongs-to.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/relationships/state');
-test('ember-data/lib/system/relationships/state/has-many.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/relationships/state/has-many.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/relationships/state');
+QUnit.test('ember-data/lib/system/relationships/state/create.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/relationships/state/create.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/relationships/state');
-test('ember-data/lib/system/relationships/state/relationship.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/relationships/state/relationship.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/relationships/state');
+QUnit.test('ember-data/lib/system/relationships/state/has-many.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/relationships/state/has-many.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/serializer.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/serializer.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/relationships/state');
+QUnit.test('ember-data/lib/system/relationships/state/relationship.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/relationships/state/relationship.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/snapshot-record-array.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/snapshot-record-array.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/serializer.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/serializer.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/snapshot.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/snapshot.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/snapshot-record-array.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/snapshot-record-array.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/store.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/store.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/snapshot.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/snapshot.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/store');
-test('ember-data/lib/system/store/common.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/store/common.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/store.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/store.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/store');
-test('ember-data/lib/system/store/container-instance-cache.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/store/container-instance-cache.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/store');
+QUnit.test('ember-data/lib/system/store/common.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/store/common.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/store');
-test('ember-data/lib/system/store/finders.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/store/finders.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/store');
+QUnit.test('ember-data/lib/system/store/container-instance-cache.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/store/container-instance-cache.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/store');
-test('ember-data/lib/system/store/serializer-response.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/store/serializer-response.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/store');
+QUnit.test('ember-data/lib/system/store/finders.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/store/finders.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/store');
-test('ember-data/lib/system/store/serializers.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/store/serializers.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/store');
+QUnit.test('ember-data/lib/system/store/serializer-response.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/store/serializer-response.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib');
-test('ember-data/lib/transforms.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/transforms.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/store');
+QUnit.test('ember-data/lib/system/store/serializers.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/store/serializers.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/transforms');
-test('ember-data/lib/transforms/base.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/transforms/base.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib');
+QUnit.test('ember-data/lib/transforms.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/transforms.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/transforms');
-test('ember-data/lib/transforms/boolean.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/transforms/boolean.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/transforms');
+QUnit.test('ember-data/lib/transforms/base.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/transforms/base.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/transforms');
-test('ember-data/lib/transforms/date.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/transforms/date.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/transforms');
+QUnit.test('ember-data/lib/transforms/boolean.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/transforms/boolean.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/transforms');
-test('ember-data/lib/transforms/number.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/transforms/number.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/transforms');
+QUnit.test('ember-data/lib/transforms/date.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/transforms/date.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/transforms');
-test('ember-data/lib/transforms/string.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/transforms/string.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/transforms');
+QUnit.test('ember-data/lib/transforms/number.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/transforms/number.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib');
-test('ember-data/lib/utils.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/utils.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/transforms');
+QUnit.test('ember-data/lib/transforms/string.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/transforms/string.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/helpers');
-test('ember-data/tests/helpers/custom-adapter.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/helpers/custom-adapter.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib');
+QUnit.test('ember-data/lib/utils.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/utils.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/adapter');
-test('ember-data/tests/integration/adapter/build-url-mixin-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/adapter/build-url-mixin-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/helpers');
+QUnit.test('ember-data/tests/helpers/custom-adapter.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/helpers/custom-adapter.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/adapter');
-test('ember-data/tests/integration/adapter/find-all-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/adapter/find-all-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/adapter');
+QUnit.test('ember-data/tests/integration/adapter/build-url-mixin-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/adapter/build-url-mixin-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/adapter');
-test('ember-data/tests/integration/adapter/find-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/adapter/find-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/adapter');
+QUnit.test('ember-data/tests/integration/adapter/find-all-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/adapter/find-all-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/adapter');
-test('ember-data/tests/integration/adapter/json-api-adapter-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/adapter/json-api-adapter-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/adapter');
+QUnit.test('ember-data/tests/integration/adapter/find-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/adapter/find-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/adapter');
-test('ember-data/tests/integration/adapter/queries-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/adapter/queries-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/adapter');
+QUnit.test('ember-data/tests/integration/adapter/json-api-adapter-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/adapter/json-api-adapter-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/adapter');
-test('ember-data/tests/integration/adapter/record-persistence-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/adapter/record-persistence-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/adapter');
+QUnit.test('ember-data/tests/integration/adapter/queries-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/adapter/queries-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/adapter');
-test('ember-data/tests/integration/adapter/rest-adapter-new-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/adapter/rest-adapter-new-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/adapter');
+QUnit.test('ember-data/tests/integration/adapter/record-persistence-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/adapter/record-persistence-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/adapter');
-test('ember-data/tests/integration/adapter/rest-adapter-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/adapter/rest-adapter-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/adapter');
+QUnit.test('ember-data/tests/integration/adapter/rest-adapter-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/adapter/rest-adapter-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/adapter');
-test('ember-data/tests/integration/adapter/serialize-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/adapter/serialize-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/adapter');
+QUnit.test('ember-data/tests/integration/adapter/serialize-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/adapter/serialize-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/adapter');
-test('ember-data/tests/integration/adapter/store-adapter-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/adapter/store-adapter-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/adapter');
+QUnit.test('ember-data/tests/integration/adapter/store-adapter-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/adapter/store-adapter-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration');
-test('ember-data/tests/integration/application-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/application-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration');
+QUnit.test('ember-data/tests/integration/application-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/application-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/backwards-compat');
-test('ember-data/tests/integration/backwards-compat/deprecate-type-key-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/backwards-compat/deprecate-type-key-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/backwards-compat');
+QUnit.test('ember-data/tests/integration/backwards-compat/non-dasherized-lookups.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/backwards-compat/non-dasherized-lookups.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/backwards-compat');
-test('ember-data/tests/integration/backwards-compat/non-dasherized-lookups.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/backwards-compat/non-dasherized-lookups.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration');
+QUnit.test('ember-data/tests/integration/client-id-generation-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/client-id-generation-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration');
-test('ember-data/tests/integration/client-id-generation-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/client-id-generation-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration');
+QUnit.test('ember-data/tests/integration/debug-adapter-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/debug-adapter-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration');
-test('ember-data/tests/integration/debug-adapter-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/debug-adapter-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration');
+QUnit.test('ember-data/tests/integration/filter-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/filter-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration');
-test('ember-data/tests/integration/filter-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/filter-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration');
+QUnit.test('ember-data/tests/integration/inverse-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/inverse-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration');
-test('ember-data/tests/integration/inverse-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/inverse-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration');
+QUnit.test('ember-data/tests/integration/lifecycle-hooks-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/lifecycle-hooks-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration');
-test('ember-data/tests/integration/lifecycle-hooks-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/lifecycle-hooks-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration');
+QUnit.test('ember-data/tests/integration/multiple_stores_test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/multiple_stores_test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration');
-test('ember-data/tests/integration/multiple_stores_test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/multiple_stores_test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration');
+QUnit.test('ember-data/tests/integration/peek-all-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/peek-all-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration');
-test('ember-data/tests/integration/peek-all-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/peek-all-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration');
+QUnit.test('ember-data/tests/integration/record-array-manager-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/record-array-manager-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration');
-test('ember-data/tests/integration/record-array-manager-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/record-array-manager-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/records');
+QUnit.test('ember-data/tests/integration/records/collection-save-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/records/collection-save-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/records');
-test('ember-data/tests/integration/records/collection-save-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/records/collection-save-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/records');
+QUnit.test('ember-data/tests/integration/records/delete-record-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/records/delete-record-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/records');
-test('ember-data/tests/integration/records/delete-record-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/records/delete-record-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/records');
+QUnit.test('ember-data/tests/integration/records/load-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/records/load-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/records');
-test('ember-data/tests/integration/records/load-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/records/load-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/records');
+QUnit.test('ember-data/tests/integration/records/property-changes-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/records/property-changes-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/records');
-test('ember-data/tests/integration/records/property-changes-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/records/property-changes-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/records');
+QUnit.test('ember-data/tests/integration/records/reload-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/records/reload-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/records');
-test('ember-data/tests/integration/records/reload-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/records/reload-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/records');
+QUnit.test('ember-data/tests/integration/records/save-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/records/save-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/records');
-test('ember-data/tests/integration/records/save-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/records/save-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/records');
+QUnit.test('ember-data/tests/integration/records/unload-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/records/unload-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/records');
-test('ember-data/tests/integration/records/unload-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/records/unload-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/relationships');
+QUnit.test('ember-data/tests/integration/relationships/belongs-to-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/relationships/belongs-to-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/relationships');
-test('ember-data/tests/integration/relationships/belongs-to-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/relationships/belongs-to-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/relationships');
+QUnit.test('ember-data/tests/integration/relationships/has-many-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/relationships/has-many-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/relationships');
-test('ember-data/tests/integration/relationships/has-many-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/relationships/has-many-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/relationships');
+QUnit.test('ember-data/tests/integration/relationships/inverse-relationships-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/relationships/inverse-relationships-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/relationships');
-test('ember-data/tests/integration/relationships/inverse-relationships-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/relationships/inverse-relationships-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/relationships');
+QUnit.test('ember-data/tests/integration/relationships/many-to-many-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/relationships/many-to-many-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/relationships');
-test('ember-data/tests/integration/relationships/many-to-many-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/relationships/many-to-many-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/relationships');
+QUnit.test('ember-data/tests/integration/relationships/one-to-many-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/relationships/one-to-many-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/relationships');
-test('ember-data/tests/integration/relationships/one-to-many-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/relationships/one-to-many-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/relationships');
+QUnit.test('ember-data/tests/integration/relationships/one-to-one-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/relationships/one-to-one-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/relationships');
-test('ember-data/tests/integration/relationships/one-to-one-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/relationships/one-to-one-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/relationships');
+QUnit.test('ember-data/tests/integration/relationships/polymorphic-mixins-belongs-to-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/relationships/polymorphic-mixins-belongs-to-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/relationships');
-test('ember-data/tests/integration/relationships/polymorphic-mixins-belongs-to-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/relationships/polymorphic-mixins-belongs-to-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/relationships');
+QUnit.test('ember-data/tests/integration/relationships/polymorphic-mixins-has-many-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/relationships/polymorphic-mixins-has-many-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/relationships');
-test('ember-data/tests/integration/relationships/polymorphic-mixins-has-many-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/relationships/polymorphic-mixins-has-many-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/serializers');
+QUnit.test('ember-data/tests/integration/serializers/embedded-records-mixin-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/serializers/embedded-records-mixin-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/serializers');
-test('ember-data/tests/integration/serializers/embedded-records-mixin-new-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/serializers/embedded-records-mixin-new-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/serializers');
+QUnit.test('ember-data/tests/integration/serializers/json-api-serializer-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/serializers/json-api-serializer-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/serializers');
-test('ember-data/tests/integration/serializers/embedded-records-mixin-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/serializers/embedded-records-mixin-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/serializers');
+QUnit.test('ember-data/tests/integration/serializers/json-serializer-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/serializers/json-serializer-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/serializers');
-test('ember-data/tests/integration/serializers/json-api-serializer-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/serializers/json-api-serializer-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/serializers');
+QUnit.test('ember-data/tests/integration/serializers/rest-serializer-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/serializers/rest-serializer-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/serializers');
-test('ember-data/tests/integration/serializers/json-serializer-new-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/serializers/json-serializer-new-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration');
+QUnit.test('ember-data/tests/integration/setup-container-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/setup-container-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/serializers');
-test('ember-data/tests/integration/serializers/json-serializer-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/serializers/json-serializer-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration');
+QUnit.test('ember-data/tests/integration/snapshot-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/snapshot-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/serializers');
-test('ember-data/tests/integration/serializers/rest-serializer-new-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/serializers/rest-serializer-new-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration');
+QUnit.test('ember-data/tests/integration/store-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/store-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/serializers');
-test('ember-data/tests/integration/serializers/rest-serializer-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/serializers/rest-serializer-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/store');
+QUnit.test('ember-data/tests/integration/store/json-api-validation-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/store/json-api-validation-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration');
-test('ember-data/tests/integration/setup-container-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/setup-container-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/store');
+QUnit.test('ember-data/tests/integration/store/query-record-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/store/query-record-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration');
-test('ember-data/tests/integration/snapshot-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/snapshot-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit');
+QUnit.test('ember-data/tests/unit/adapter-errors-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/adapter-errors-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration');
-test('ember-data/tests/integration/store-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/store-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit');
+QUnit.test('ember-data/tests/unit/adapter-populated-record-array-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/adapter-populated-record-array-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/store');
-test('ember-data/tests/integration/store/json-api-validation-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/store/json-api-validation-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/adapters/build-url-mixin');
+QUnit.test('ember-data/tests/unit/adapters/build-url-mixin/path-for-type-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/adapters/build-url-mixin/path-for-type-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/store');
-test('ember-data/tests/integration/store/query-record-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/store/query-record-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/adapters/json-api-adapter');
+QUnit.test('ember-data/tests/unit/adapters/json-api-adapter/ajax-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/adapters/json-api-adapter/ajax-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit');
-test('ember-data/tests/unit/adapter-errors-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/adapter-errors-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/adapters/rest-adapter');
+QUnit.test('ember-data/tests/unit/adapters/rest-adapter/ajax-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/adapters/rest-adapter/ajax-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit');
-test('ember-data/tests/unit/adapter-populated-record-array-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/adapter-populated-record-array-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/adapters/rest-adapter');
+QUnit.test('ember-data/tests/unit/adapters/rest-adapter/deprecated-adapter-methods.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/adapters/rest-adapter/deprecated-adapter-methods.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/adapters/build-url-mixin');
-test('ember-data/tests/unit/adapters/build-url-mixin/path-for-type-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/adapters/build-url-mixin/path-for-type-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/adapters/rest-adapter');
+QUnit.test('ember-data/tests/unit/adapters/rest-adapter/group-records-for-find-many-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/adapters/rest-adapter/group-records-for-find-many-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/adapters/json-api-adapter');
-test('ember-data/tests/unit/adapters/json-api-adapter/ajax-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/adapters/json-api-adapter/ajax-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit');
+QUnit.test('ember-data/tests/unit/debug-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/debug-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/adapters/rest-adapter');
-test('ember-data/tests/unit/adapters/rest-adapter/ajax-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/adapters/rest-adapter/ajax-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit');
+QUnit.test('ember-data/tests/unit/many-array-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/many-array-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/adapters/rest-adapter');
-test('ember-data/tests/unit/adapters/rest-adapter/deprecated-adapter-methods.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/adapters/rest-adapter/deprecated-adapter-methods.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit');
+QUnit.test('ember-data/tests/unit/model-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/model-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/adapters/rest-adapter');
-test('ember-data/tests/unit/adapters/rest-adapter/group-records-for-find-many-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/adapters/rest-adapter/group-records-for-find-many-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/model');
+QUnit.test('ember-data/tests/unit/model/errors-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/model/errors-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit');
-test('ember-data/tests/unit/debug-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/debug-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/model');
+QUnit.test('ember-data/tests/unit/model/internal-model-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/model/internal-model-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit');
-test('ember-data/tests/unit/many-array-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/many-array-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/model');
+QUnit.test('ember-data/tests/unit/model/lifecycle-callbacks-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/model/lifecycle-callbacks-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit');
-test('ember-data/tests/unit/model-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/model-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/model');
+QUnit.test('ember-data/tests/unit/model/merge-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/model/merge-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/model');
-test('ember-data/tests/unit/model/errors-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/model/errors-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/model');
+QUnit.test('ember-data/tests/unit/model/relationships-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/model/relationships-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/model');
-test('ember-data/tests/unit/model/internal-model-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/model/internal-model-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/model/relationships');
+QUnit.test('ember-data/tests/unit/model/relationships/belongs-to-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/model/relationships/belongs-to-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/model');
-test('ember-data/tests/unit/model/lifecycle-callbacks-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/model/lifecycle-callbacks-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/model/relationships');
+QUnit.test('ember-data/tests/unit/model/relationships/has-many-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/model/relationships/has-many-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/model');
-test('ember-data/tests/unit/model/merge-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/model/merge-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/model/relationships');
+QUnit.test('ember-data/tests/unit/model/relationships/record-array-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/model/relationships/record-array-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/model');
-test('ember-data/tests/unit/model/relationships-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/model/relationships-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/model');
+QUnit.test('ember-data/tests/unit/model/rollback-attributes-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/model/rollback-attributes-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/model/relationships');
-test('ember-data/tests/unit/model/relationships/belongs-to-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/model/relationships/belongs-to-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit');
+QUnit.test('ember-data/tests/unit/promise-proxies-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/promise-proxies-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/model/relationships');
-test('ember-data/tests/unit/model/relationships/has-many-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/model/relationships/has-many-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit');
+QUnit.test('ember-data/tests/unit/record-array-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/record-array-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/model/relationships');
-test('ember-data/tests/unit/model/relationships/record-array-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/model/relationships/record-array-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/record-arrays');
+QUnit.test('ember-data/tests/unit/record-arrays/filtered-record-array-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/record-arrays/filtered-record-array-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/model');
-test('ember-data/tests/unit/model/rollback-attributes-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/model/rollback-attributes-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit');
+QUnit.test('ember-data/tests/unit/states-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/states-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/model');
-test('ember-data/tests/unit/model/rollback-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/model/rollback-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/store');
+QUnit.test('ember-data/tests/unit/store/adapter-interop-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/store/adapter-interop-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit');
-test('ember-data/tests/unit/promise-proxies-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/promise-proxies-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/store');
+QUnit.test('ember-data/tests/unit/store/create-record-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/store/create-record-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit');
-test('ember-data/tests/unit/record-array-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/record-array-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/store');
+QUnit.test('ember-data/tests/unit/store/has_record_for_id_test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/store/has_record_for_id_test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/record-arrays');
-test('ember-data/tests/unit/record-arrays/filtered-record-array-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/record-arrays/filtered-record-array-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/store');
+QUnit.test('ember-data/tests/unit/store/lookup-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/store/lookup-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit');
-test('ember-data/tests/unit/states-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/states-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/store');
+QUnit.test('ember-data/tests/unit/store/model-for-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/store/model-for-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/store');
-test('ember-data/tests/unit/store/adapter-interop-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/store/adapter-interop-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/store');
+QUnit.test('ember-data/tests/unit/store/peek-record-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/store/peek-record-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/store');
-test('ember-data/tests/unit/store/create-record-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/store/create-record-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/store');
+QUnit.test('ember-data/tests/unit/store/push-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/store/push-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/store');
-test('ember-data/tests/unit/store/has_record_for_id_test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/store/has_record_for_id_test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/store');
+QUnit.test('ember-data/tests/unit/store/serializer-for-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/store/serializer-for-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/store');
-test('ember-data/tests/unit/store/lookup-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/store/lookup-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/store');
+QUnit.test('ember-data/tests/unit/store/unload-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/store/unload-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/store');
-test('ember-data/tests/unit/store/metadata-for-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/store/metadata-for-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/transform');
+QUnit.test('ember-data/tests/unit/transform/boolean-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/transform/boolean-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/store');
-test('ember-data/tests/unit/store/model-for-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/store/model-for-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/transform');
+QUnit.test('ember-data/tests/unit/transform/date-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/transform/date-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/store');
-test('ember-data/tests/unit/store/peek-by-id-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/store/peek-by-id-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/transform');
+QUnit.test('ember-data/tests/unit/transform/number-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/transform/number-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/store');
-test('ember-data/tests/unit/store/push-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/store/push-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/transform');
+QUnit.test('ember-data/tests/unit/transform/string-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/transform/string-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/store');
-test('ember-data/tests/unit/store/serializer-for-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/store/serializer-for-test.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/store');
-test('ember-data/tests/unit/store/unload-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/store/unload-test.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/transform');
-test('ember-data/tests/unit/transform/boolean-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/transform/boolean-test.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/transform');
-test('ember-data/tests/unit/transform/date-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/transform/date-test.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/transform');
-test('ember-data/tests/unit/transform/number-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/transform/number-test.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/transform');
-test('ember-data/tests/unit/transform/string-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/transform/string-test.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit');
-test('ember-data/tests/unit/utils-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/utils-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit');
+QUnit.test('ember-data/tests/unit/utils-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/utils-test.js should pass jshint.'); 
 });
 
 }//# sourceMappingURL=ember-data-tests.map

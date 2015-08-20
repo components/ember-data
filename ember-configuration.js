@@ -93,7 +93,6 @@
 
     registry.register('serializer:-default', DS.JSONSerializer);
     registry.register('serializer:-rest', DS.RESTSerializer);
-    registry.register('serializer:-rest-new', DS.RESTSerializer.extend({ isNewSerializerAPI: true }));
 
     registry.register('adapter:-rest', DS.RESTAdapter);
 
@@ -101,7 +100,6 @@
     registry.register('serializer:-json-api', DS.JSONAPISerializer);
 
     env.restSerializer = container.lookup('serializer:-rest');
-    env.restNewSerializer = container.lookup('serializer:-rest-new');
     env.store = container.lookup('service:store');
     env.serializer = env.store.serializerFor('-default');
     env.adapter = env.store.get('defaultAdapter');
