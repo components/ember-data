@@ -11387,6 +11387,8 @@
         @private
       */
       _normalizeArray: function (store, modelName, arrayHash, prop) {
+        var _this = this;
+
         var documentHash = {
           data: [],
           included: []
@@ -11396,10 +11398,10 @@
         var serializer = store.serializerFor(modelName);
 
         arrayHash.forEach(function (hash) {
-          var _serializer$normalize = serializer.normalize(modelClass, hash, prop);
+          var _normalizePolymorphicRecord = _this._normalizePolymorphicRecord(store, hash, prop, modelClass, serializer);
 
-          var data = _serializer$normalize.data;
-          var included = _serializer$normalize.included;
+          var data = _normalizePolymorphicRecord.data;
+          var included = _normalizePolymorphicRecord.included;
 
           documentHash.data.push(data);
           if (included) {
@@ -11412,7 +11414,21 @@
         return documentHash;
       },
 
-      /**
+      _normalizePolymorphicRecord: function (store, hash, prop, primaryModelClass, primarySerializer) {
+        var serializer = undefined,
+            modelClass = undefined;
+        // Support polymorphic records in async relationships
+        if (hash.type && store._hasModelFor(this.modelNameFromPayloadKey(hash.type))) {
+          serializer = store.serializerFor(hash.type);
+          modelClass = store.modelFor(hash.type);
+        } else {
+          serializer = primarySerializer;
+          modelClass = primaryModelClass;
+        }
+        return serializer.normalize(modelClass, hash, prop);
+      },
+
+      /*
         @method _normalizeResponse
         @param {DS.Store} store
         @param {DS.Model} primaryModelClass
@@ -11489,10 +11505,10 @@
             ```
            */
           if (isPrimary && Ember.typeOf(value) !== 'array') {
-            var _normalize = this.normalize(primaryModelClass, value, prop);
+            var _normalizePolymorphicRecord2 = this._normalizePolymorphicRecord(store, value, prop, primaryModelClass, this);
 
-            var _data = _normalize.data;
-            var _included = _normalize.included;
+            var _data = _normalizePolymorphicRecord2.data;
+            var _included = _normalizePolymorphicRecord2.included;
 
             documentHash.data = _data;
             if (_included) {
