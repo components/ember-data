@@ -19466,13 +19466,11 @@ define(
     }
 
     var run = Ember.run;
-    var Container = Ember.Container;
-    var Registry = Ember.Registry;
     var Store = DS.Store;
     var EmberObject = Ember.Object;
     var setupContainer = DS._setupContainer;
 
-    var container, registry;
+    var container, registry, application;
 
     /*
       These tests ensure that Ember Data works with Ember.js' container
@@ -19481,18 +19479,28 @@ define(
 
     module("integration/setup-container - Setting up a container", {
       setup: function () {
-        if (Registry) {
-          registry = new Registry();
-          container = registry.container();
+        run(function () {
+          application = Ember.Application.create();
+        });
+
+        container = application.__container__;
+        registry = application.__registry__;
+
+        var setupContainerArgument;
+        if (registry) {
+          setupContainerArgument = application;
         } else {
-          container = new Container();
-          registry = container;
+          // In Ember < 2.1.0 application.__registry__ is undefined so we
+          // pass in the registry to mimic the setup behavior.
+          registry = setupContainerArgument = application.registry;
         }
-        setupContainer(registry);
+        setupContainer(setupContainerArgument);
       },
 
       teardown: function () {
-        run(container, container.destroy);
+        run(function () {
+          application.destroy();
+        });
       }
     });
 
@@ -29849,1080 +29857,1080 @@ define("ember-data/tests/unit/utils-test", ["exports"], function(__exports__) {
 
 
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib');
-test('ember-data/lib/adapters.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/adapters.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib');
+QUnit.test('ember-data/lib/adapters.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/adapters.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/adapters');
-test('ember-data/lib/adapters/build-url-mixin.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/adapters/build-url-mixin.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/adapters');
+QUnit.test('ember-data/lib/adapters/build-url-mixin.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/adapters/build-url-mixin.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/adapters');
-test('ember-data/lib/adapters/errors.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/adapters/errors.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/adapters');
+QUnit.test('ember-data/lib/adapters/errors.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/adapters/errors.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/adapters');
-test('ember-data/lib/adapters/fixture-adapter.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/adapters/fixture-adapter.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/adapters');
+QUnit.test('ember-data/lib/adapters/fixture-adapter.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/adapters/fixture-adapter.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/adapters');
-test('ember-data/lib/adapters/json-api-adapter.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/adapters/json-api-adapter.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/adapters');
+QUnit.test('ember-data/lib/adapters/json-api-adapter.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/adapters/json-api-adapter.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/adapters');
-test('ember-data/lib/adapters/rest-adapter.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/adapters/rest-adapter.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/adapters');
+QUnit.test('ember-data/lib/adapters/rest-adapter.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/adapters/rest-adapter.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib');
-test('ember-data/lib/core.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/core.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib');
+QUnit.test('ember-data/lib/core.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/core.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib');
-test('ember-data/lib/ember-initializer.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/ember-initializer.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib');
+QUnit.test('ember-data/lib/ember-initializer.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/ember-initializer.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/ext');
-test('ember-data/lib/ext/date.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/ext/date.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/ext');
+QUnit.test('ember-data/lib/ext/date.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/ext/date.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/initializers');
-test('ember-data/lib/initializers/data-adapter.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/initializers/data-adapter.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/initializers');
+QUnit.test('ember-data/lib/initializers/data-adapter.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/initializers/data-adapter.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/initializers');
-test('ember-data/lib/initializers/store-injections.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/initializers/store-injections.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/initializers');
+QUnit.test('ember-data/lib/initializers/store-injections.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/initializers/store-injections.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/initializers');
-test('ember-data/lib/initializers/store.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/initializers/store.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/initializers');
+QUnit.test('ember-data/lib/initializers/store.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/initializers/store.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/initializers');
-test('ember-data/lib/initializers/transforms.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/initializers/transforms.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/initializers');
+QUnit.test('ember-data/lib/initializers/transforms.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/initializers/transforms.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/instance-initializers');
-test('ember-data/lib/instance-initializers/initialize-store-service.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/instance-initializers/initialize-store-service.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/instance-initializers');
+QUnit.test('ember-data/lib/instance-initializers/initialize-store-service.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/instance-initializers/initialize-store-service.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib');
-test('ember-data/lib/main.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/main.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib');
+QUnit.test('ember-data/lib/main.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/main.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib');
-test('ember-data/lib/serializers.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/serializers.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib');
+QUnit.test('ember-data/lib/serializers.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/serializers.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/serializers');
-test('ember-data/lib/serializers/embedded-records-mixin.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/serializers/embedded-records-mixin.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/serializers');
+QUnit.test('ember-data/lib/serializers/embedded-records-mixin.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/serializers/embedded-records-mixin.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/serializers');
-test('ember-data/lib/serializers/json-api-serializer.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/serializers/json-api-serializer.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/serializers');
+QUnit.test('ember-data/lib/serializers/json-api-serializer.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/serializers/json-api-serializer.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/serializers');
-test('ember-data/lib/serializers/json-serializer.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/serializers/json-serializer.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/serializers');
+QUnit.test('ember-data/lib/serializers/json-serializer.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/serializers/json-serializer.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/serializers');
-test('ember-data/lib/serializers/rest-serializer.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/serializers/rest-serializer.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/serializers');
+QUnit.test('ember-data/lib/serializers/rest-serializer.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/serializers/rest-serializer.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib');
-test('ember-data/lib/setup-container.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/setup-container.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib');
+QUnit.test('ember-data/lib/setup-container.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/setup-container.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/adapter.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/adapter.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/adapter.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/adapter.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/clone-null.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/clone-null.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/clone-null.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/clone-null.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/coerce-id.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/coerce-id.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/coerce-id.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/coerce-id.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/container-proxy.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/container-proxy.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/container-proxy.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/container-proxy.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/debug.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/debug.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/debug.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/debug.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/debug');
-test('ember-data/lib/system/debug/debug-adapter.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/debug/debug-adapter.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/debug');
+QUnit.test('ember-data/lib/system/debug/debug-adapter.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/debug/debug-adapter.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/debug');
-test('ember-data/lib/system/debug/debug-info.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/debug/debug-info.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/debug');
+QUnit.test('ember-data/lib/system/debug/debug-info.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/debug/debug-info.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/empty-object.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/empty-object.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/empty-object.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/empty-object.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/is-array-like.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/is-array-like.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/is-array-like.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/is-array-like.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/many-array.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/many-array.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/many-array.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/many-array.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/map.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/map.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/map.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/map.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/merge.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/merge.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/merge.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/merge.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/model.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/model.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/model.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/model.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/model');
-test('ember-data/lib/system/model/attributes.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/model/attributes.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/model');
+QUnit.test('ember-data/lib/system/model/attributes.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/model/attributes.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/model');
-test('ember-data/lib/system/model/errors.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/model/errors.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/model');
+QUnit.test('ember-data/lib/system/model/errors.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/model/errors.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/model/errors');
-test('ember-data/lib/system/model/errors/invalid.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/model/errors/invalid.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/model/errors');
+QUnit.test('ember-data/lib/system/model/errors/invalid.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/model/errors/invalid.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/model');
-test('ember-data/lib/system/model/internal-model.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/model/internal-model.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/model');
+QUnit.test('ember-data/lib/system/model/internal-model.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/model/internal-model.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/model');
-test('ember-data/lib/system/model/model.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/model/model.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/model');
+QUnit.test('ember-data/lib/system/model/model.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/model/model.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/model');
-test('ember-data/lib/system/model/states.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/model/states.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/model');
+QUnit.test('ember-data/lib/system/model/states.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/model/states.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/normalize-model-name.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/normalize-model-name.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/normalize-model-name.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/normalize-model-name.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/ordered-set.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/ordered-set.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/ordered-set.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/ordered-set.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/promise-proxies.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/promise-proxies.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/promise-proxies.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/promise-proxies.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/record-array-manager.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/record-array-manager.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/record-array-manager.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/record-array-manager.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/record-arrays.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/record-arrays.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/record-arrays.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/record-arrays.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/record-arrays');
-test('ember-data/lib/system/record-arrays/adapter-populated-record-array.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/record-arrays/adapter-populated-record-array.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/record-arrays');
+QUnit.test('ember-data/lib/system/record-arrays/adapter-populated-record-array.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/record-arrays/adapter-populated-record-array.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/record-arrays');
-test('ember-data/lib/system/record-arrays/filtered-record-array.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/record-arrays/filtered-record-array.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/record-arrays');
+QUnit.test('ember-data/lib/system/record-arrays/filtered-record-array.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/record-arrays/filtered-record-array.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/record-arrays');
-test('ember-data/lib/system/record-arrays/record-array.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/record-arrays/record-array.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/record-arrays');
+QUnit.test('ember-data/lib/system/record-arrays/record-array.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/record-arrays/record-array.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/relationship-meta.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/relationship-meta.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/relationship-meta.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/relationship-meta.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/relationships.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/relationships.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/relationships.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/relationships.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/relationships');
-test('ember-data/lib/system/relationships/belongs-to.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/relationships/belongs-to.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/relationships');
+QUnit.test('ember-data/lib/system/relationships/belongs-to.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/relationships/belongs-to.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/relationships');
-test('ember-data/lib/system/relationships/ext.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/relationships/ext.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/relationships');
+QUnit.test('ember-data/lib/system/relationships/ext.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/relationships/ext.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/relationships');
-test('ember-data/lib/system/relationships/has-many.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/relationships/has-many.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/relationships');
+QUnit.test('ember-data/lib/system/relationships/has-many.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/relationships/has-many.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/relationships/state');
-test('ember-data/lib/system/relationships/state/belongs-to.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/relationships/state/belongs-to.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/relationships/state');
+QUnit.test('ember-data/lib/system/relationships/state/belongs-to.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/relationships/state/belongs-to.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/relationships/state');
-test('ember-data/lib/system/relationships/state/create.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/relationships/state/create.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/relationships/state');
+QUnit.test('ember-data/lib/system/relationships/state/create.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/relationships/state/create.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/relationships/state');
-test('ember-data/lib/system/relationships/state/has-many.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/relationships/state/has-many.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/relationships/state');
+QUnit.test('ember-data/lib/system/relationships/state/has-many.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/relationships/state/has-many.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/relationships/state');
-test('ember-data/lib/system/relationships/state/relationship.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/relationships/state/relationship.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/relationships/state');
+QUnit.test('ember-data/lib/system/relationships/state/relationship.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/relationships/state/relationship.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/serializer.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/serializer.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/serializer.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/serializer.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/snapshot-record-array.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/snapshot-record-array.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/snapshot-record-array.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/snapshot-record-array.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/snapshot.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/snapshot.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/snapshot.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/snapshot.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system');
-test('ember-data/lib/system/store.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/store.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/store.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/store.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/store');
-test('ember-data/lib/system/store/common.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/store/common.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/store');
+QUnit.test('ember-data/lib/system/store/common.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/store/common.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/store');
-test('ember-data/lib/system/store/container-instance-cache.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/store/container-instance-cache.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/store');
+QUnit.test('ember-data/lib/system/store/container-instance-cache.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/store/container-instance-cache.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/store');
-test('ember-data/lib/system/store/finders.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/store/finders.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/store');
+QUnit.test('ember-data/lib/system/store/finders.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/store/finders.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/store');
-test('ember-data/lib/system/store/serializer-response.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/store/serializer-response.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/store');
+QUnit.test('ember-data/lib/system/store/serializer-response.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/store/serializer-response.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/system/store');
-test('ember-data/lib/system/store/serializers.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/system/store/serializers.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/system/store');
+QUnit.test('ember-data/lib/system/store/serializers.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/store/serializers.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib');
-test('ember-data/lib/transforms.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/transforms.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib');
+QUnit.test('ember-data/lib/transforms.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/transforms.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/transforms');
-test('ember-data/lib/transforms/base.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/transforms/base.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/transforms');
+QUnit.test('ember-data/lib/transforms/base.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/transforms/base.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/transforms');
-test('ember-data/lib/transforms/boolean.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/transforms/boolean.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/transforms');
+QUnit.test('ember-data/lib/transforms/boolean.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/transforms/boolean.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/transforms');
-test('ember-data/lib/transforms/date.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/transforms/date.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/transforms');
+QUnit.test('ember-data/lib/transforms/date.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/transforms/date.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/transforms');
-test('ember-data/lib/transforms/number.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/transforms/number.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/transforms');
+QUnit.test('ember-data/lib/transforms/number.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/transforms/number.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib/transforms');
-test('ember-data/lib/transforms/string.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/transforms/string.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib/transforms');
+QUnit.test('ember-data/lib/transforms/string.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/transforms/string.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/lib');
-test('ember-data/lib/utils.js should pass jshint', function() { 
-  ok(true, 'ember-data/lib/utils.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/lib');
+QUnit.test('ember-data/lib/utils.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/utils.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/helpers');
-test('ember-data/tests/helpers/custom-adapter.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/helpers/custom-adapter.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/helpers');
+QUnit.test('ember-data/tests/helpers/custom-adapter.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/helpers/custom-adapter.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/adapter');
-test('ember-data/tests/integration/adapter/build-url-mixin-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/adapter/build-url-mixin-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/adapter');
+QUnit.test('ember-data/tests/integration/adapter/build-url-mixin-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/adapter/build-url-mixin-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/adapter');
-test('ember-data/tests/integration/adapter/find-all-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/adapter/find-all-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/adapter');
+QUnit.test('ember-data/tests/integration/adapter/find-all-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/adapter/find-all-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/adapter');
-test('ember-data/tests/integration/adapter/find-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/adapter/find-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/adapter');
+QUnit.test('ember-data/tests/integration/adapter/find-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/adapter/find-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/adapter');
-test('ember-data/tests/integration/adapter/json-api-adapter-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/adapter/json-api-adapter-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/adapter');
+QUnit.test('ember-data/tests/integration/adapter/json-api-adapter-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/adapter/json-api-adapter-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/adapter');
-test('ember-data/tests/integration/adapter/queries-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/adapter/queries-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/adapter');
+QUnit.test('ember-data/tests/integration/adapter/queries-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/adapter/queries-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/adapter');
-test('ember-data/tests/integration/adapter/record-persistence-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/adapter/record-persistence-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/adapter');
+QUnit.test('ember-data/tests/integration/adapter/record-persistence-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/adapter/record-persistence-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/adapter');
-test('ember-data/tests/integration/adapter/rest-adapter-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/adapter/rest-adapter-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/adapter');
+QUnit.test('ember-data/tests/integration/adapter/rest-adapter-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/adapter/rest-adapter-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/adapter');
-test('ember-data/tests/integration/adapter/serialize-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/adapter/serialize-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/adapter');
+QUnit.test('ember-data/tests/integration/adapter/serialize-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/adapter/serialize-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/adapter');
-test('ember-data/tests/integration/adapter/store-adapter-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/adapter/store-adapter-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/adapter');
+QUnit.test('ember-data/tests/integration/adapter/store-adapter-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/adapter/store-adapter-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration');
-test('ember-data/tests/integration/application-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/application-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration');
+QUnit.test('ember-data/tests/integration/application-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/application-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/backwards-compat');
-test('ember-data/tests/integration/backwards-compat/non-dasherized-lookups.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/backwards-compat/non-dasherized-lookups.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/backwards-compat');
+QUnit.test('ember-data/tests/integration/backwards-compat/non-dasherized-lookups.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/backwards-compat/non-dasherized-lookups.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration');
-test('ember-data/tests/integration/client-id-generation-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/client-id-generation-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration');
+QUnit.test('ember-data/tests/integration/client-id-generation-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/client-id-generation-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration');
-test('ember-data/tests/integration/debug-adapter-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/debug-adapter-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration');
+QUnit.test('ember-data/tests/integration/debug-adapter-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/debug-adapter-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration');
-test('ember-data/tests/integration/filter-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/filter-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration');
+QUnit.test('ember-data/tests/integration/filter-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/filter-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration');
-test('ember-data/tests/integration/inverse-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/inverse-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration');
+QUnit.test('ember-data/tests/integration/inverse-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/inverse-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration');
-test('ember-data/tests/integration/lifecycle-hooks-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/lifecycle-hooks-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration');
+QUnit.test('ember-data/tests/integration/lifecycle-hooks-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/lifecycle-hooks-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration');
-test('ember-data/tests/integration/multiple_stores_test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/multiple_stores_test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration');
+QUnit.test('ember-data/tests/integration/multiple_stores_test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/multiple_stores_test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration');
-test('ember-data/tests/integration/peek-all-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/peek-all-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration');
+QUnit.test('ember-data/tests/integration/peek-all-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/peek-all-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration');
-test('ember-data/tests/integration/record-array-manager-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/record-array-manager-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration');
+QUnit.test('ember-data/tests/integration/record-array-manager-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/record-array-manager-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/records');
-test('ember-data/tests/integration/records/collection-save-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/records/collection-save-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/records');
+QUnit.test('ember-data/tests/integration/records/collection-save-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/records/collection-save-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/records');
-test('ember-data/tests/integration/records/delete-record-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/records/delete-record-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/records');
+QUnit.test('ember-data/tests/integration/records/delete-record-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/records/delete-record-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/records');
-test('ember-data/tests/integration/records/load-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/records/load-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/records');
+QUnit.test('ember-data/tests/integration/records/load-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/records/load-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/records');
-test('ember-data/tests/integration/records/property-changes-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/records/property-changes-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/records');
+QUnit.test('ember-data/tests/integration/records/property-changes-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/records/property-changes-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/records');
-test('ember-data/tests/integration/records/reload-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/records/reload-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/records');
+QUnit.test('ember-data/tests/integration/records/reload-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/records/reload-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/records');
-test('ember-data/tests/integration/records/save-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/records/save-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/records');
+QUnit.test('ember-data/tests/integration/records/save-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/records/save-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/records');
-test('ember-data/tests/integration/records/unload-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/records/unload-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/records');
+QUnit.test('ember-data/tests/integration/records/unload-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/records/unload-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/relationships');
-test('ember-data/tests/integration/relationships/belongs-to-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/relationships/belongs-to-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/relationships');
+QUnit.test('ember-data/tests/integration/relationships/belongs-to-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/relationships/belongs-to-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/relationships');
-test('ember-data/tests/integration/relationships/has-many-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/relationships/has-many-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/relationships');
+QUnit.test('ember-data/tests/integration/relationships/has-many-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/relationships/has-many-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/relationships');
-test('ember-data/tests/integration/relationships/inverse-relationships-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/relationships/inverse-relationships-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/relationships');
+QUnit.test('ember-data/tests/integration/relationships/inverse-relationships-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/relationships/inverse-relationships-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/relationships');
-test('ember-data/tests/integration/relationships/many-to-many-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/relationships/many-to-many-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/relationships');
+QUnit.test('ember-data/tests/integration/relationships/many-to-many-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/relationships/many-to-many-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/relationships');
-test('ember-data/tests/integration/relationships/one-to-many-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/relationships/one-to-many-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/relationships');
+QUnit.test('ember-data/tests/integration/relationships/one-to-many-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/relationships/one-to-many-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/relationships');
-test('ember-data/tests/integration/relationships/one-to-one-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/relationships/one-to-one-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/relationships');
+QUnit.test('ember-data/tests/integration/relationships/one-to-one-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/relationships/one-to-one-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/relationships');
-test('ember-data/tests/integration/relationships/polymorphic-mixins-belongs-to-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/relationships/polymorphic-mixins-belongs-to-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/relationships');
+QUnit.test('ember-data/tests/integration/relationships/polymorphic-mixins-belongs-to-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/relationships/polymorphic-mixins-belongs-to-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/relationships');
-test('ember-data/tests/integration/relationships/polymorphic-mixins-has-many-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/relationships/polymorphic-mixins-has-many-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/relationships');
+QUnit.test('ember-data/tests/integration/relationships/polymorphic-mixins-has-many-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/relationships/polymorphic-mixins-has-many-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/serializers');
-test('ember-data/tests/integration/serializers/embedded-records-mixin-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/serializers/embedded-records-mixin-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/serializers');
+QUnit.test('ember-data/tests/integration/serializers/embedded-records-mixin-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/serializers/embedded-records-mixin-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/serializers');
-test('ember-data/tests/integration/serializers/json-api-serializer-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/serializers/json-api-serializer-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/serializers');
+QUnit.test('ember-data/tests/integration/serializers/json-api-serializer-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/serializers/json-api-serializer-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/serializers');
-test('ember-data/tests/integration/serializers/json-serializer-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/serializers/json-serializer-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/serializers');
+QUnit.test('ember-data/tests/integration/serializers/json-serializer-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/serializers/json-serializer-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/serializers');
-test('ember-data/tests/integration/serializers/rest-serializer-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/serializers/rest-serializer-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/serializers');
+QUnit.test('ember-data/tests/integration/serializers/rest-serializer-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/serializers/rest-serializer-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration');
-test('ember-data/tests/integration/setup-container-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/setup-container-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration');
+QUnit.test('ember-data/tests/integration/setup-container-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/setup-container-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration');
-test('ember-data/tests/integration/snapshot-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/snapshot-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration');
+QUnit.test('ember-data/tests/integration/snapshot-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/snapshot-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration');
-test('ember-data/tests/integration/store-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/store-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration');
+QUnit.test('ember-data/tests/integration/store-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/store-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/store');
-test('ember-data/tests/integration/store/json-api-validation-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/store/json-api-validation-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/store');
+QUnit.test('ember-data/tests/integration/store/json-api-validation-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/store/json-api-validation-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/integration/store');
-test('ember-data/tests/integration/store/query-record-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/integration/store/query-record-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/integration/store');
+QUnit.test('ember-data/tests/integration/store/query-record-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/store/query-record-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit');
-test('ember-data/tests/unit/adapter-errors-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/adapter-errors-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit');
+QUnit.test('ember-data/tests/unit/adapter-errors-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/adapter-errors-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit');
-test('ember-data/tests/unit/adapter-populated-record-array-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/adapter-populated-record-array-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit');
+QUnit.test('ember-data/tests/unit/adapter-populated-record-array-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/adapter-populated-record-array-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/adapters/build-url-mixin');
-test('ember-data/tests/unit/adapters/build-url-mixin/path-for-type-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/adapters/build-url-mixin/path-for-type-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/adapters/build-url-mixin');
+QUnit.test('ember-data/tests/unit/adapters/build-url-mixin/path-for-type-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/adapters/build-url-mixin/path-for-type-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/adapters/json-api-adapter');
-test('ember-data/tests/unit/adapters/json-api-adapter/ajax-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/adapters/json-api-adapter/ajax-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/adapters/json-api-adapter');
+QUnit.test('ember-data/tests/unit/adapters/json-api-adapter/ajax-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/adapters/json-api-adapter/ajax-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/adapters/rest-adapter');
-test('ember-data/tests/unit/adapters/rest-adapter/ajax-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/adapters/rest-adapter/ajax-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/adapters/rest-adapter');
+QUnit.test('ember-data/tests/unit/adapters/rest-adapter/ajax-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/adapters/rest-adapter/ajax-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/adapters/rest-adapter');
-test('ember-data/tests/unit/adapters/rest-adapter/deprecated-adapter-methods.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/adapters/rest-adapter/deprecated-adapter-methods.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/adapters/rest-adapter');
+QUnit.test('ember-data/tests/unit/adapters/rest-adapter/deprecated-adapter-methods.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/adapters/rest-adapter/deprecated-adapter-methods.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/adapters/rest-adapter');
-test('ember-data/tests/unit/adapters/rest-adapter/group-records-for-find-many-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/adapters/rest-adapter/group-records-for-find-many-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/adapters/rest-adapter');
+QUnit.test('ember-data/tests/unit/adapters/rest-adapter/group-records-for-find-many-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/adapters/rest-adapter/group-records-for-find-many-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit');
-test('ember-data/tests/unit/debug-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/debug-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit');
+QUnit.test('ember-data/tests/unit/debug-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/debug-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit');
-test('ember-data/tests/unit/many-array-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/many-array-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit');
+QUnit.test('ember-data/tests/unit/many-array-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/many-array-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit');
-test('ember-data/tests/unit/model-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/model-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit');
+QUnit.test('ember-data/tests/unit/model-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/model-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/model');
-test('ember-data/tests/unit/model/errors-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/model/errors-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/model');
+QUnit.test('ember-data/tests/unit/model/errors-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/model/errors-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/model');
-test('ember-data/tests/unit/model/internal-model-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/model/internal-model-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/model');
+QUnit.test('ember-data/tests/unit/model/internal-model-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/model/internal-model-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/model');
-test('ember-data/tests/unit/model/lifecycle-callbacks-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/model/lifecycle-callbacks-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/model');
+QUnit.test('ember-data/tests/unit/model/lifecycle-callbacks-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/model/lifecycle-callbacks-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/model');
-test('ember-data/tests/unit/model/merge-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/model/merge-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/model');
+QUnit.test('ember-data/tests/unit/model/merge-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/model/merge-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/model');
-test('ember-data/tests/unit/model/relationships-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/model/relationships-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/model');
+QUnit.test('ember-data/tests/unit/model/relationships-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/model/relationships-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/model/relationships');
-test('ember-data/tests/unit/model/relationships/belongs-to-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/model/relationships/belongs-to-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/model/relationships');
+QUnit.test('ember-data/tests/unit/model/relationships/belongs-to-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/model/relationships/belongs-to-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/model/relationships');
-test('ember-data/tests/unit/model/relationships/has-many-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/model/relationships/has-many-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/model/relationships');
+QUnit.test('ember-data/tests/unit/model/relationships/has-many-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/model/relationships/has-many-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/model/relationships');
-test('ember-data/tests/unit/model/relationships/record-array-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/model/relationships/record-array-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/model/relationships');
+QUnit.test('ember-data/tests/unit/model/relationships/record-array-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/model/relationships/record-array-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/model');
-test('ember-data/tests/unit/model/rollback-attributes-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/model/rollback-attributes-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/model');
+QUnit.test('ember-data/tests/unit/model/rollback-attributes-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/model/rollback-attributes-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit');
-test('ember-data/tests/unit/promise-proxies-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/promise-proxies-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit');
+QUnit.test('ember-data/tests/unit/promise-proxies-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/promise-proxies-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit');
-test('ember-data/tests/unit/record-array-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/record-array-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit');
+QUnit.test('ember-data/tests/unit/record-array-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/record-array-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/record-arrays');
-test('ember-data/tests/unit/record-arrays/filtered-record-array-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/record-arrays/filtered-record-array-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/record-arrays');
+QUnit.test('ember-data/tests/unit/record-arrays/filtered-record-array-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/record-arrays/filtered-record-array-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit');
-test('ember-data/tests/unit/states-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/states-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit');
+QUnit.test('ember-data/tests/unit/states-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/states-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/store');
-test('ember-data/tests/unit/store/adapter-interop-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/store/adapter-interop-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/store');
+QUnit.test('ember-data/tests/unit/store/adapter-interop-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/store/adapter-interop-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/store');
-test('ember-data/tests/unit/store/create-record-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/store/create-record-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/store');
+QUnit.test('ember-data/tests/unit/store/create-record-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/store/create-record-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/store');
-test('ember-data/tests/unit/store/has_record_for_id_test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/store/has_record_for_id_test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/store');
+QUnit.test('ember-data/tests/unit/store/has_record_for_id_test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/store/has_record_for_id_test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/store');
-test('ember-data/tests/unit/store/lookup-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/store/lookup-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/store');
+QUnit.test('ember-data/tests/unit/store/lookup-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/store/lookup-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/store');
-test('ember-data/tests/unit/store/model-for-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/store/model-for-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/store');
+QUnit.test('ember-data/tests/unit/store/model-for-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/store/model-for-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/store');
-test('ember-data/tests/unit/store/peek-record-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/store/peek-record-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/store');
+QUnit.test('ember-data/tests/unit/store/peek-record-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/store/peek-record-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/store');
-test('ember-data/tests/unit/store/push-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/store/push-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/store');
+QUnit.test('ember-data/tests/unit/store/push-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/store/push-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/store');
-test('ember-data/tests/unit/store/serializer-for-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/store/serializer-for-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/store');
+QUnit.test('ember-data/tests/unit/store/serializer-for-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/store/serializer-for-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/store');
-test('ember-data/tests/unit/store/unload-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/store/unload-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/store');
+QUnit.test('ember-data/tests/unit/store/unload-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/store/unload-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/transform');
-test('ember-data/tests/unit/transform/boolean-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/transform/boolean-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/transform');
+QUnit.test('ember-data/tests/unit/transform/boolean-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/transform/boolean-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/transform');
-test('ember-data/tests/unit/transform/date-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/transform/date-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/transform');
+QUnit.test('ember-data/tests/unit/transform/date-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/transform/date-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/transform');
-test('ember-data/tests/unit/transform/number-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/transform/number-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/transform');
+QUnit.test('ember-data/tests/unit/transform/number-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/transform/number-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit/transform');
-test('ember-data/tests/unit/transform/string-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/transform/string-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit/transform');
+QUnit.test('ember-data/tests/unit/transform/string-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/transform/string-test.js should pass jshint.'); 
 });
 
 }
 if (!QUnit.urlParams.nojshint) {
-module('JSHint - ember-data/tests/unit');
-test('ember-data/tests/unit/utils-test.js should pass jshint', function() { 
-  ok(true, 'ember-data/tests/unit/utils-test.js should pass jshint.'); 
+QUnit.module('JSHint - ember-data/tests/unit');
+QUnit.test('ember-data/tests/unit/utils-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/utils-test.js should pass jshint.'); 
 });
 
 }//# sourceMappingURL=ember-data-tests.map
