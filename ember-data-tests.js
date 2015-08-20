@@ -22641,12 +22641,23 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     equal(Object.keys(mascot.changedAttributes()).length, 0, 'after rollback attributes there are no changes');
   });
 
+  function toObj(obj) {
+    // https://github.com/jquery/qunit/issues/851
+    var result = Object.create(null);
+    for (var key in obj) {
+      result[key] = obj[key];
+    }
+    return result;
+  }
+
   test("changedAttributes() works while the record is being saved", function () {
     expect(1);
     var cat;
     var adapter = DS.Adapter.extend({
       createRecord: function (store, model, snapshot) {
-        deepEqual(cat.changedAttributes(), { name: [undefined, 'Argon'], likes: [undefined, 'Cheese'] });
+        deepEqual(toObj(cat.changedAttributes()), {
+          name: [undefined, 'Argon'],
+          likes: [undefined, 'Cheese'] });
         return {};
       }
     });
@@ -22673,7 +22684,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     var cat;
     var adapter = DS.Adapter.extend({
       updateRecord: function (store, model, snapshot) {
-        deepEqual(cat.changedAttributes(), { name: ['Argon', 'Helia'], likes: ['Cheese', 'Mussels'] });
+        deepEqual(toObj(cat.changedAttributes()), { name: ['Argon', 'Helia'], likes: ['Cheese', 'Mussels'] });
         return { id: '1', type: 'mascot' };
       }
     });
@@ -30115,6 +30126,13 @@ if (!QUnit.urlParams.nojshint) {
 QUnit.module('JSHint - ember-data/lib/system/debug');
 QUnit.test('ember-data/lib/system/debug/debug-info.js should pass jshint', function(assert) { 
   assert.ok(true, 'ember-data/lib/system/debug/debug-info.js should pass jshint.'); 
+});
+
+}
+if (!QUnit.urlParams.nojshint) {
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/empty-object.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/empty-object.js should pass jshint.'); 
 });
 
 }
