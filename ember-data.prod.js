@@ -1,7 +1,7 @@
 (function() {
     "use strict";
     var ember$lib$main$$default = Ember;
-    var ember$data$lib$ext$ember$array$$default = Array.prorotype || ember$lib$main$$default.ArrayPolyfills;
+    var ember$data$lib$ext$ember$array$$default = Array.prototype || ember$lib$main$$default.ArrayPolyfills;
     var ember$data$lib$system$object$polyfills$$keysFunc = Object.keys || Ember.keys;
     var ember$data$lib$system$object$polyfills$$create = Object.create || Ember.create;
 
@@ -7509,7 +7509,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.13.10'
+      VERSION: '1.13.11'
     });
 
     if (Ember.libraries) {
