@@ -2602,7 +2602,13 @@
         }
 
         var content = this.rejectBy('attribute', attribute);
+        var length = ember$data$lib$system$model$errors$$get(content, 'length');
         ember$data$lib$system$model$errors$$set(this, 'content', content);
+        // Explicitly set length after setting a new content property as
+        // a work around for https://github.com/emberjs/ember.js/pull/12218
+        if (this.get('length') !== length) {
+          this.set('length', length);
+        }
         ember$data$lib$system$model$errors$$get(this, 'errorsByAttributeName')["delete"](attribute);
 
         this.notifyPropertyChange(attribute);
@@ -7427,7 +7433,7 @@
 
       Define your application's store like this:
 
-      ```app/stores/application.js
+      ```app/services/store.js
       import DS from 'ember-data';
 
       export default DS.Store.extend({
