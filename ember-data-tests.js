@@ -30107,13 +30107,6 @@ QUnit.test('ember-data/lib/adapters/errors.js should pass jshint', function(asse
 }
 if (!QUnit.urlParams.nojshint) {
 QUnit.module('JSHint - ember-data/lib/adapters');
-QUnit.test('ember-data/lib/adapters/fixture-adapter.js should pass jshint', function(assert) { 
-  assert.ok(true, 'ember-data/lib/adapters/fixture-adapter.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-QUnit.module('JSHint - ember-data/lib/adapters');
 QUnit.test('ember-data/lib/adapters/json-api-adapter.js should pass jshint', function(assert) { 
   assert.ok(true, 'ember-data/lib/adapters/json-api-adapter.js should pass jshint.'); 
 });
