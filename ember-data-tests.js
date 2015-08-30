@@ -7575,6 +7575,157 @@ define(
 
 
 define(
+  "ember-data/tests/integration/polymorphic-belongs-to-test",
+  ["exports"],
+  function(__exports__) {
+    "use strict";
+
+    function __es6_export__(name, value) {
+      __exports__[name] = value;
+    }
+
+    var _DS = DS;
+    var attr = _DS.attr;
+    var belongsTo = _DS.belongsTo;
+    var _Ember = Ember;
+    var run = _Ember.run;
+
+    var store = undefined;
+
+    var Book = DS.Model.extend({
+      title: attr(),
+      author: belongsTo('person', { polymorphic: true, async: false })
+    });
+
+    var Author = DS.Model.extend({
+      name: attr()
+    });
+
+    var AsyncBook = DS.Model.extend({
+      author: belongsTo('person', { polymorphic: true })
+    });
+
+    module('integration/polymorphic-belongs-to - Polymorphic BelongsTo', {
+      setup: function () {
+        var env = setupStore({
+          book: Book,
+          author: Author,
+          'async-book': AsyncBook,
+          person: DS.Model.extend()
+        });
+        store = env.store;
+      },
+
+      teardown: function () {
+        run(store, 'destroy');
+      }
+    });
+
+    test('using store.push with a null value for a payload in relationships sets the Models relationship to null - sync relationship', function () {
+      var payload = {
+        data: {
+          type: 'book',
+          id: 1,
+          title: 'Yes, Please',
+          relationships: {
+            author: {
+              data: {
+                type: 'author',
+                id: 1
+              }
+            }
+          }
+        },
+        included: [{
+          id: 1,
+          name: 'Amy Poehler',
+          type: 'author'
+        }]
+      };
+
+      var book = run(function () {
+        store.push(payload);
+        return store.peekRecord('book', 1);
+      });
+
+      equal(book.get('author.id'), 1);
+
+      var payloadThatResetsBelongToRelationship = {
+        data: {
+          type: 'book',
+          id: 1,
+          title: 'Yes, Please',
+          relationships: {
+            author: {
+              data: null
+            }
+          }
+        }
+      };
+
+      run(function () {
+        return store.push(payloadThatResetsBelongToRelationship);
+      });
+      equal(book.get('author'), null);
+    });
+
+    test('using store.push with a null value for a payload in relationships sets the Models relationship to null - async relationship', function () {
+      var payload = {
+        data: {
+          type: 'async-book',
+          id: 1,
+          title: 'Yes, Please',
+          relationships: {
+            author: {
+              data: {
+                type: 'author',
+                id: 1
+              }
+            }
+          }
+        },
+        included: [{
+          id: 1,
+          name: 'Amy Poehler',
+          type: 'author'
+        }]
+      };
+
+      var book = run(function () {
+        store.push(payload);
+        return store.peekRecord('async-book', 1);
+      });
+
+      var payloadThatResetsBelongToRelationship = {
+        data: {
+          type: 'async-book',
+          id: 1,
+          title: 'Yes, Please',
+          relationships: {
+            author: {
+              data: null
+            }
+          }
+        }
+      };
+
+      stop();
+      book.get('author').then(function (author) {
+        equal(author.get('id'), 1);
+        run(function () {
+          return store.push(payloadThatResetsBelongToRelationship);
+        });
+        return book.get('author');
+      }).then(function (author) {
+        start();
+        equal(author, null);
+      });
+    });
+  }
+);
+
+
+define(
   "ember-data/tests/integration/record-array-manager-test",
   ["exports"],
   function(__exports__) {
@@ -30574,6 +30725,13 @@ if (!QUnit.urlParams.nojshint) {
 QUnit.module('JSHint - ember-data/tests/integration');
 QUnit.test('ember-data/tests/integration/peek-all-test.js should pass jshint', function(assert) { 
   assert.ok(true, 'ember-data/tests/integration/peek-all-test.js should pass jshint.'); 
+});
+
+}
+if (!QUnit.urlParams.nojshint) {
+QUnit.module('JSHint - ember-data/tests/integration');
+QUnit.test('ember-data/tests/integration/polymorphic-belongs-to-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/polymorphic-belongs-to-test.js should pass jshint.'); 
 });
 
 }
