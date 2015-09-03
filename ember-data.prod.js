@@ -2391,10 +2391,7 @@
       @uses Ember.Evented
     */
     var ember$data$lib$system$model$model$$Model = Ember.Object.extend(Ember.Evented, {
-      _recordArrays: undefined,
-      _relationships: undefined,
       _internalModel: null,
-
       store: null,
 
       /**
@@ -6338,6 +6335,7 @@
       this._attributes = new ember$data$lib$system$empty$object$$default();
       this._inFlightAttributes = new ember$data$lib$system$empty$object$$default();
       this._relationships = new ember$data$lib$system$relationships$state$create$$default(this);
+      this._recordArrays = undefined;
       this.currentState = ember$data$lib$system$model$states$$default.empty;
       this.isReloading = false;
       this.isError = false;
