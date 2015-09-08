@@ -2604,7 +2604,6 @@
          @property id
         @type {String}
       */
-      id: null,
 
       /**
         @property currentState
@@ -3039,6 +3038,7 @@
       willMergeMixin: function (props) {
         var constructor = this.constructor;
         Ember.assert('`' + ember$data$lib$system$model$model$$intersection(Object.keys(props), ember$data$lib$system$model$model$$RESERVED_MODEL_PROPS)[0] + '` is a reserved property name on DS.Model objects. Please choose a different property name for ' + constructor.toString(), !ember$data$lib$system$model$model$$intersection(Object.keys(props), ember$data$lib$system$model$model$$RESERVED_MODEL_PROPS)[0]);
+        Ember.assert("You may not set `id` as an attribute on your model. Please remove any lines that look like: `id: DS.attr('<type>')` from " + constructor.toString(), Object.keys(props).indexOf('id') === -1);
       },
 
       attr: function () {
@@ -3102,6 +3102,21 @@
        @readonly
       */
       modelName: null
+    });
+
+    Object.defineProperty(ember$data$lib$system$model$model$$Model.prototype, 'id', {
+      configurable: true,
+      enumerable: false,
+      set: function (id) {
+        if (this._internalModel) {
+          this._internalModel.setId(id);
+        }
+      },
+      get: function () {
+        if (this._internalModel) {
+          return this._internalModel.id;
+        }
+      }
     });
 
     var ember$data$lib$system$model$model$$default = ember$data$lib$system$model$model$$Model;
@@ -6405,7 +6420,6 @@
         // lookupFactory should really return an object that creates
         // instances with the injections applied
         this.record = this.type._create({
-          id: this.id,
           store: this.store,
           container: this.container,
           _internalModel: this,
@@ -6841,9 +6855,9 @@
       },
 
       setId: function (id) {
+        var oldId = this.id;
+        Ember.assert('A record\'s id cannot be changed once it is in the loaded state', oldId === null || oldId === id || this.isNew());
         this.id = id;
-        //TODO figure out whether maybe we should proxy
-        ember$data$lib$system$model$internal$model$$set(this.record, 'id', id);
       },
 
       didError: function (error) {
@@ -10273,8 +10287,8 @@
     var ember$inflector$lib$lib$system$inflector$$capitalize = ember$lib$main$$default.String.capitalize;
 
     var ember$inflector$lib$lib$system$inflector$$BLANK_REGEX = /^\s*$/;
-    var ember$inflector$lib$lib$system$inflector$$LAST_WORD_DASHED_REGEX = /([\w/-]+[_/-\s])([a-z\d]+$)/;
-    var ember$inflector$lib$lib$system$inflector$$LAST_WORD_CAMELIZED_REGEX = /([\w/-\s]+)([A-Z][a-z\d]*$)/;
+    var ember$inflector$lib$lib$system$inflector$$LAST_WORD_DASHED_REGEX = /([\w/-]+[_/\s-])([a-z\d]+$)/;
+    var ember$inflector$lib$lib$system$inflector$$LAST_WORD_CAMELIZED_REGEX = /([\w/\s-]+)([A-Z][a-z\d]*$)/;
     var ember$inflector$lib$lib$system$inflector$$CAMELIZED_REGEX = /[A-Z][a-z\d]*$/;
 
     function ember$inflector$lib$lib$system$inflector$$loadUncountable(rules, uncountable) {
@@ -12045,7 +12059,6 @@
           }
         },
         set: function (key, value) {
-          Ember.assert("You may not set `id` as an attribute on your model. Please remove any lines that look like: `id: DS.attr('<type>')` from " + this.constructor.toString(), key !== 'id');
           var internalModel = this._internalModel;
           var oldValue = ember$data$lib$system$model$attributes$$getValue(internalModel, key);
 

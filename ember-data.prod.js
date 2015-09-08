@@ -2602,7 +2602,6 @@
          @property id
         @type {String}
       */
-      id: null,
 
       /**
         @property currentState
@@ -3036,7 +3035,7 @@
       // rely on the data property.
       willMergeMixin: function (props) {
         var constructor = this.constructor;
-              },
+                      },
 
       attr: function () {
               },
@@ -3096,6 +3095,21 @@
        @readonly
       */
       modelName: null
+    });
+
+    Object.defineProperty(ember$data$lib$system$model$model$$Model.prototype, 'id', {
+      configurable: true,
+      enumerable: false,
+      set: function (id) {
+        if (this._internalModel) {
+          this._internalModel.setId(id);
+        }
+      },
+      get: function () {
+        if (this._internalModel) {
+          return this._internalModel.id;
+        }
+      }
     });
 
     var ember$data$lib$system$model$model$$default = ember$data$lib$system$model$model$$Model;
@@ -6381,7 +6395,6 @@
                 // lookupFactory should really return an object that creates
         // instances with the injections applied
         this.record = this.type._create({
-          id: this.id,
           store: this.store,
           container: this.container,
           _internalModel: this,
@@ -6816,9 +6829,8 @@
       },
 
       setId: function (id) {
-        this.id = id;
-        //TODO figure out whether maybe we should proxy
-        ember$data$lib$system$model$internal$model$$set(this.record, 'id', id);
+        var oldId = this.id;
+                this.id = id;
       },
 
       didError: function (error) {
@@ -10177,8 +10189,8 @@
     var ember$inflector$lib$lib$system$inflector$$capitalize = ember$lib$main$$default.String.capitalize;
 
     var ember$inflector$lib$lib$system$inflector$$BLANK_REGEX = /^\s*$/;
-    var ember$inflector$lib$lib$system$inflector$$LAST_WORD_DASHED_REGEX = /([\w/-]+[_/-\s])([a-z\d]+$)/;
-    var ember$inflector$lib$lib$system$inflector$$LAST_WORD_CAMELIZED_REGEX = /([\w/-\s]+)([A-Z][a-z\d]*$)/;
+    var ember$inflector$lib$lib$system$inflector$$LAST_WORD_DASHED_REGEX = /([\w/-]+[_/\s-])([a-z\d]+$)/;
+    var ember$inflector$lib$lib$system$inflector$$LAST_WORD_CAMELIZED_REGEX = /([\w/\s-]+)([A-Z][a-z\d]*$)/;
     var ember$inflector$lib$lib$system$inflector$$CAMELIZED_REGEX = /[A-Z][a-z\d]*$/;
 
     function ember$inflector$lib$lib$system$inflector$$loadUncountable(rules, uncountable) {
@@ -11934,7 +11946,7 @@
           }
         },
         set: function (key, value) {
-                    var internalModel = this._internalModel;
+          var internalModel = this._internalModel;
           var oldValue = ember$data$lib$system$model$attributes$$getValue(internalModel, key);
 
           if (value !== oldValue) {
