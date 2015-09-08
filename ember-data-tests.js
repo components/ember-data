@@ -18273,6 +18273,36 @@ define(
       }
     });
 
+    test("serialize doesn't include ID when includeId is false", function () {
+      run(function () {
+        post = env.store.createRecord('post', { title: 'Rails is omakase' });
+      });
+      var json = {};
+
+      json = env.serializer.serialize(post._createSnapshot(), { includeId: false });
+
+      deepEqual(json, {
+        title: "Rails is omakase",
+        comments: []
+      });
+    });
+
+    test("serialize includes id when includeId is true", function () {
+      run(function () {
+        post = env.store.createRecord('post', { title: 'Rails is omakase' });
+        post.set('id', 'test');
+      });
+      var json = {};
+
+      json = env.serializer.serialize(post._createSnapshot(), { includeId: true });
+
+      deepEqual(json, {
+        id: 'test',
+        title: 'Rails is omakase',
+        comments: []
+      });
+    });
+
     test("serializeAttribute", function () {
       run(function () {
         post = env.store.createRecord('post', { title: "Rails is omakase" });
@@ -23467,6 +23497,28 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
     run(function () {
       return store.createRecord('person');
+    });
+  });
+
+  test('setting the id after model creation should correctly update the id', function () {
+    expect(2);
+    var Person = DS.Model.extend({
+      name: DS.attr('string')
+    });
+
+    var env = setupStore({
+      person: Person
+    });
+    var store = env.store;
+
+    run(function () {
+      var person = store.createRecord('person');
+
+      equal(person.get('id'), null, 'initial created model id should be null');
+
+      person.set('id', 'john');
+
+      equal(person.get('id'), 'john', 'new id should be correctly set.');
     });
   });
 });
@@ -29951,13 +30003,6 @@ if (!QUnit.urlParams.nojshint) {
 QUnit.module('JSHint - ember-data/lib/adapters');
 QUnit.test('ember-data/lib/adapters/errors.js should pass jshint', function(assert) { 
   assert.ok(true, 'ember-data/lib/adapters/errors.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-QUnit.module('JSHint - ember-data/lib/adapters');
-QUnit.test('ember-data/lib/adapters/fixture-adapter.js should pass jshint', function(assert) { 
-  assert.ok(true, 'ember-data/lib/adapters/fixture-adapter.js should pass jshint.'); 
 });
 
 }
