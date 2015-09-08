@@ -3106,9 +3106,7 @@
         }
       },
       get: function () {
-        if (this._internalModel) {
-          return this._internalModel.id;
-        }
+        return this._internalModel.id;
       }
     });
 
@@ -6829,7 +6827,6 @@
       },
 
       setId: function (id) {
-        var oldId = this.id;
                 this.id = id;
       },
 

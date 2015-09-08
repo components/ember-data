@@ -3113,9 +3113,7 @@
         }
       },
       get: function () {
-        if (this._internalModel) {
-          return this._internalModel.id;
-        }
+        return this._internalModel.id;
       }
     });
 
@@ -6855,8 +6853,7 @@
       },
 
       setId: function (id) {
-        var oldId = this.id;
-        Ember.assert('A record\'s id cannot be changed once it is in the loaded state', oldId === null || oldId === id || this.isNew());
+        Ember.assert('A record\'s id cannot be changed once it is in the loaded state', this.id === null || this.id === id || this.isNew());
         this.id = id;
       },
 
