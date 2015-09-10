@@ -8499,9 +8499,6 @@
         serializer (the application serializer if it exists).
          Alternatively, `pushPayload` will accept a model type which
         will determine which serializer will process the payload.
-        However, the serializer itself (processing this data via
-        `normalizePayload`) will not know which model it is
-        deserializing.
          ```app/serializers/application.js
         import DS from 'ember-data';
          export default DS.ActiveModelSerializer;
@@ -9520,28 +9517,6 @@
       */
       modelNameFromPayloadKey: function (key) {
         return ember$data$lib$system$normalize$model$name$$default(key);
-      },
-
-      /**
-        You can use this method to normalize all payloads, regardless of whether they
-        represent single records or an array.
-         For example, you might want to remove some extraneous data from the payload:
-         ```app/serializers/application.js
-        import DS from 'ember-data';
-         export default DS.JSONSerializer.extend({
-          normalizePayload: function(payload) {
-            delete payload.version;
-            delete payload.status;
-            return payload;
-          }
-        });
-        ```
-         @method normalizePayload
-        @param {Object} payload
-        @return {Object} the normalized payload
-      */
-      normalizePayload: function (payload) {
-        return payload;
       },
 
       /**
