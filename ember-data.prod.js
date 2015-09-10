@@ -626,7 +626,24 @@
     var ember$data$lib$system$map$$MapWithDefault = Ember.MapWithDefault;
 
     var ember$data$lib$system$map$$default = ember$data$lib$system$map$$Map;
-    var ember$data$lib$adapters$build$url$mixin$$get = Ember.get;
+    var ember$data$lib$system$empty$object$$default = ember$data$lib$system$empty$object$$EmptyObject;
+    // This exists because `Object.create(null)` is absurdly slow compared
+    // to `new EmptyObject()`. In either case, you want a null prototype
+    // when you're treating the object instances as arbitrary dictionaries
+    // and don't want your keys colliding with build-in methods on the
+    // default object prototype.
+    var ember$data$lib$system$empty$object$$proto = Object.create(null, {
+      // without this, we will always still end up with (new
+      // EmptyObject()).constructor === Object
+      constructor: {
+        value: undefined,
+        enumerable: false,
+        writable: true
+      }
+    });
+    function ember$data$lib$system$empty$object$$EmptyObject() {}
+
+    ember$data$lib$system$empty$object$$EmptyObject.prototype = ember$data$lib$system$empty$object$$proto;var ember$data$lib$adapters$build$url$mixin$$get = Ember.get;
 
     /**
 
@@ -1850,7 +1867,7 @@
     });
 
     function ember$data$lib$adapters$rest$adapter$$parseResponseHeaders(headerStr) {
-      var headers = ember$data$lib$system$object$polyfills$$create(null);
+      var headers = new ember$data$lib$system$empty$object$$default();
       if (!headerStr) {
         return headers;
       }
@@ -1898,8 +1915,8 @@
     var ember$inflector$lib$lib$system$inflector$$capitalize = ember$lib$main$$default.String.capitalize;
 
     var ember$inflector$lib$lib$system$inflector$$BLANK_REGEX = /^\s*$/;
-    var ember$inflector$lib$lib$system$inflector$$LAST_WORD_DASHED_REGEX = /([\w/-]+[_/-\s])([a-z\d]+$)/;
-    var ember$inflector$lib$lib$system$inflector$$LAST_WORD_CAMELIZED_REGEX = /([\w/-\s]+)([A-Z][a-z\d]*$)/;
+    var ember$inflector$lib$lib$system$inflector$$LAST_WORD_DASHED_REGEX = /([\w/-]+[_/\s-])([a-z\d]+$)/;
+    var ember$inflector$lib$lib$system$inflector$$LAST_WORD_CAMELIZED_REGEX = /([\w/\s-]+)([A-Z][a-z\d]*$)/;
     var ember$inflector$lib$lib$system$inflector$$CAMELIZED_REGEX = /[A-Z][a-z\d]*$/;
 
     function ember$inflector$lib$lib$system$inflector$$loadUncountable(rules, uncountable) {
@@ -5161,7 +5178,7 @@
         var currentData = ember$data$lib$system$model$model$$get(this._internalModel, '_attributes');
         var inFlightData = ember$data$lib$system$model$model$$get(this._internalModel, '_inFlightAttributes');
         var newData = ember$data$lib$system$model$model$$merge(ember$data$lib$system$model$model$$copy(inFlightData), currentData);
-        var diffData = ember$data$lib$system$object$polyfills$$create(null);
+        var diffData = new ember$data$lib$system$empty$object$$default();
 
         var newDataKeys = ember$data$lib$system$object$polyfills$$keysFunc(newData);
 
@@ -5917,9 +5934,10 @@
         var serializer = store.serializerFor(modelName);
 
         
+        var primaryHasTypeAttribute = ember$data$lib$serializers$rest$serializer$$get(modelClass, 'attributes').get('type');
         /*jshint loopfunc:true*/
         ember$data$lib$serializers$rest$serializer$$forEach.call(arrayHash, function (hash) {
-          var _normalizePolymorphicRecord = _this._normalizePolymorphicRecord(store, hash, prop, modelClass, serializer);
+          var _normalizePolymorphicRecord = _this._normalizePolymorphicRecord(store, hash, prop, modelClass, serializer, primaryHasTypeAttribute);
 
           var data = _normalizePolymorphicRecord.data;
           var included = _normalizePolymorphicRecord.included;
@@ -5935,11 +5953,11 @@
         return documentHash;
       },
 
-      _normalizePolymorphicRecord: function (store, hash, prop, primaryModelClass, primarySerializer) {
+      _normalizePolymorphicRecord: function (store, hash, prop, primaryModelClass, primarySerializer, primaryHasTypeAttribute) {
         var serializer = undefined,
             modelClass = undefined;
         // Support polymorphic records in async relationships
-        if (hash.type && store._hasModelFor(this.modelNameFromPayloadKey(hash.type))) {
+        if (!primaryHasTypeAttribute && hash.type && store._hasModelFor(this.modelNameFromPayloadKey(hash.type))) {
           serializer = store.serializerFor(hash.type);
           modelClass = store.modelFor(hash.type);
         } else {
@@ -7509,7 +7527,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.13.11'
+      VERSION: '1.13.12'
     });
 
     if (Ember.libraries) {
@@ -8036,7 +8054,7 @@
 
     var ember$data$lib$system$clone$null$$default = ember$data$lib$system$clone$null$$cloneNull;
     function ember$data$lib$system$clone$null$$cloneNull(source) {
-      var clone = ember$data$lib$system$object$polyfills$$create(null);
+      var clone = new ember$data$lib$system$empty$object$$default();
       for (var key in source) {
         clone[key] = source[key];
       }
@@ -8460,10 +8478,10 @@
     */
     function ember$data$lib$system$store$container$instance$cache$$ContainerInstanceCache(container) {
       this._container = container;
-      this._cache = ember$data$lib$system$object$polyfills$$create(null);
+      this._cache = new ember$data$lib$system$empty$object$$default();
     }
 
-    ember$data$lib$system$store$container$instance$cache$$ContainerInstanceCache.prototype = ember$data$lib$system$object$polyfills$$create(null);
+    ember$data$lib$system$store$container$instance$cache$$ContainerInstanceCache.prototype = new ember$data$lib$system$empty$object$$default();
 
     ember$lib$main$$default.merge(ember$data$lib$system$store$container$instance$cache$$ContainerInstanceCache.prototype, {
       get: function (type, preferredKey, fallbacks) {
@@ -8909,7 +8927,7 @@
         },
 
         exit: function (internalModel) {
-          internalModel._inFlightAttributes = ember$data$lib$system$object$polyfills$$create(null);
+          internalModel._inFlightAttributes = new ember$data$lib$system$empty$object$$default();
         }
       }
     };
@@ -10213,7 +10231,7 @@
 
     var ember$data$lib$system$relationships$state$create$$Relationships = function (record) {
       this.record = record;
-      this.initializedRelationships = ember$data$lib$system$object$polyfills$$create(null);
+      this.initializedRelationships = new ember$data$lib$system$empty$object$$default();
     };
 
     ember$data$lib$system$relationships$state$create$$Relationships.prototype.has = function (key) {
@@ -10243,11 +10261,11 @@
     */
 
     var ember$data$lib$system$snapshot$$get = Ember.get;function ember$data$lib$system$snapshot$$Snapshot(internalModel) {
-      this._attributes = ember$data$lib$system$object$polyfills$$create(null);
-      this._belongsToRelationships = ember$data$lib$system$object$polyfills$$create(null);
-      this._belongsToIds = ember$data$lib$system$object$polyfills$$create(null);
-      this._hasManyRelationships = ember$data$lib$system$object$polyfills$$create(null);
-      this._hasManyIds = ember$data$lib$system$object$polyfills$$create(null);
+      this._attributes = new ember$data$lib$system$empty$object$$default();
+      this._belongsToRelationships = new ember$data$lib$system$empty$object$$default();
+      this._belongsToIds = new ember$data$lib$system$empty$object$$default();
+      this._hasManyRelationships = new ember$data$lib$system$empty$object$$default();
+      this._hasManyIds = new ember$data$lib$system$empty$object$$default();
 
       var record = internalModel.getRecord();
       this.record = record;
@@ -10377,7 +10395,7 @@
         @return {Object} All changed attributes of the current snapshot
       */
       changedAttributes: function () {
-        var changedAttributes = ember$data$lib$system$object$polyfills$$create(null);
+        var changedAttributes = new ember$data$lib$system$empty$object$$default();
         var changedAttributeKeys = ember$data$lib$system$object$polyfills$$keysFunc(this._changedAttributes);
 
         for (var i = 0, _length = changedAttributeKeys.length; i < _length; i++) {
@@ -10630,8 +10648,8 @@
     var ember$data$lib$system$model$internal$model$$forEach = ember$data$lib$ext$ember$array$$default.forEach;
     var ember$data$lib$system$model$internal$model$$map = ember$data$lib$ext$ember$array$$default.map;
 
-    var ember$data$lib$system$model$internal$model$$_extractPivotNameCache = ember$data$lib$system$object$polyfills$$create(null);
-    var ember$data$lib$system$model$internal$model$$_splitOnDotCache = ember$data$lib$system$object$polyfills$$create(null);
+    var ember$data$lib$system$model$internal$model$$_extractPivotNameCache = new ember$data$lib$system$empty$object$$default();
+    var ember$data$lib$system$model$internal$model$$_splitOnDotCache = new ember$data$lib$system$empty$object$$default();
 
     function ember$data$lib$system$model$internal$model$$splitOnDot(name) {
       return ember$data$lib$system$model$internal$model$$_splitOnDotCache[name] || (ember$data$lib$system$model$internal$model$$_splitOnDotCache[name] = name.split('.'));
@@ -11630,7 +11648,7 @@
       */
       createRecord: function (modelName, inputProperties) {
                 var typeClass = this.modelFor(modelName);
-        var properties = ember$data$lib$system$store$$copy(inputProperties) || ember$data$lib$system$object$polyfills$$create(null);
+        var properties = ember$data$lib$system$store$$copy(inputProperties) || new ember$data$lib$system$empty$object$$default();
 
         // If the passed properties do not include a primary key,
         // give the adapter an opportunity to generate one. Typically,
@@ -12473,7 +12491,7 @@
             record.destroy(); // maybe within unloadRecord
           }
 
-          typeMap.metadata = ember$data$lib$system$object$polyfills$$create(null);
+          typeMap.metadata = new ember$data$lib$system$empty$object$$default();
         }
 
         function byType(entry) {
@@ -12783,9 +12801,9 @@
         }
 
         typeMap = {
-          idToRecord: ember$data$lib$system$object$polyfills$$create(null),
+          idToRecord: new ember$data$lib$system$empty$object$$default(),
           records: [],
-          metadata: ember$data$lib$system$object$polyfills$$create(null),
+          metadata: new ember$data$lib$system$empty$object$$default(),
           type: typeClass
         };
 
@@ -13896,8 +13914,10 @@
       }
 
       if (store) {
+        registry.unregister('service:store');
         registry.register('service:store', store, { instantiate: false });
       } else if (!registry.has('service:store')) {
+        registry.unregister('service:store');
         registry.register('service:store', application && application.Store || ember$data$lib$system$store$$default);
       }
     }
@@ -15867,7 +15887,7 @@
       },
 
       inverseMap: Ember.computed(function () {
-        return ember$data$lib$system$object$polyfills$$create(null);
+        return new ember$data$lib$system$empty$object$$default();
       }),
 
       /**
