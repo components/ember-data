@@ -18379,6 +18379,24 @@ define(
         equal(get(user, 'handles.lastObject.nickname'), '@wycats', 'handles.lastObject.nickname is correct');
       });
     });
+
+    test('Warns when normalizing an unknown type', function () {
+      var documentHash = {
+        data: {
+          type: 'UnknownType',
+          id: '1',
+          attributes: {
+            foo: 'bar'
+          }
+        }
+      };
+
+      warns(function () {
+        run(function () {
+          env.store.serializerFor('user').normalizeResponse(env.store, User, documentHash, '1', 'findRecord');
+        });
+      }, /Encountered a resource object with type "UnknownType", but no model was found for model name "unknown-type"/);
+    });
   }
 );
 

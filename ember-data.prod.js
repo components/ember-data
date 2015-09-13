@@ -10477,7 +10477,93 @@
 
     var ember$data$lib$serializers$json$api$serializer$$dasherize = Ember.String.dasherize;
 
-    var ember$data$lib$serializers$json$api$serializer$$default = ember$data$lib$serializers$json$serializer$$default.extend({
+    /**
+      Ember Data 2.0 Serializer:
+
+      In Ember Data a Serializer is used to serialize and deserialize
+      records when they are transferred in and out of an external source.
+      This process involves normalizing property names, transforming
+      attribute values and serializing relationships.
+
+      `JSONAPISerializer` supports the http://jsonapi.org/ spec and is the
+      serializer recommended by Ember Data.
+
+      This serializer normalizes a JSON API payload that looks like:
+
+      ```js
+
+        // models/player.js
+        import DS from "ember-data";
+
+        export default DS.Model.extend({
+          name: DS.attr(),
+          skill: DS.attr(),
+          gamesPlayed: DS.attr(),
+          club: DS.belongsTo('club')
+        });
+
+        // models/club.js
+        import DS from "ember-data";
+
+        export default DS.Model.extend({
+          name: DS.attr(),
+          location: DS.attr(),
+          players: DS.hasMany('player')
+        });
+      ```
+
+      ```js
+
+        {
+          "data": [
+            {
+              "attributes": {
+                "name": "Benfica",
+                "location": "Portugal"
+              },
+              "id": "1",
+              "relationships": {
+                "players": {
+                  "data": [
+                    {
+                      "id": "3",
+                      "type": "players"
+                    }
+                  ]
+                }
+              },
+              "type": "clubs"
+            }
+          ],
+          "included": [
+            {
+              "attributes": {
+                "name": "Eusebio Silva Ferreira",
+                "skill": "Rocket shot",
+                "games-played": 431
+              },
+              "id": "3",
+              "relationships": {
+                "club": {
+                  "data": {
+                    "id": "1",
+                    "type": "clubs"
+                  }
+                }
+              },
+              "type": "players"
+            }
+          ]
+        }
+      ```
+
+      to the format that the Ember Data store expects.
+
+      @class JSONAPISerializer
+      @namespace DS
+      @extends DS.JSONSerializer
+    */
+    var ember$data$lib$serializers$json$api$serializer$$JSONAPISerializer = ember$data$lib$serializers$json$serializer$$default.extend({
 
       /**
         @method _normalizeDocumentHelper
@@ -10520,6 +10606,11 @@
       */
       _normalizeResourceHelper: function (resourceHash) {
         var modelName = this.modelNameFromPayloadKey(resourceHash.type);
+
+        if (!this.store._hasModelFor(modelName)) {
+                    return null;
+        }
+
         var modelClass = this.store.modelFor(modelName);
         var serializer = this.store.serializerFor(modelName);
 
@@ -10830,6 +10921,9 @@
         }
       }
     });
+
+    
+    var ember$data$lib$serializers$json$api$serializer$$default = ember$data$lib$serializers$json$api$serializer$$JSONAPISerializer;
 
     var ember$data$lib$serializers$rest$serializer$$camelize = Ember.String.camelize;
 
