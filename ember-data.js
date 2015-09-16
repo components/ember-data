@@ -12785,12 +12785,12 @@
 
       _serializeEmbeddedBelongsTo: function (snapshot, json, relationship) {
         var embeddedSnapshot = snapshot.belongsTo(relationship.key);
-        var key = this.keyForAttribute(relationship.key, 'serialize');
+        var serializedKey = this.keyForAttribute(relationship.key, 'serialize');
         if (!embeddedSnapshot) {
-          json[key] = null;
+          json[serializedKey] = null;
         } else {
-          json[key] = embeddedSnapshot.record.serialize({ includeId: true });
-          this.removeEmbeddedForeignKey(snapshot, embeddedSnapshot, relationship, json[key]);
+          json[serializedKey] = embeddedSnapshot.record.serialize({ includeId: true });
+          this.removeEmbeddedForeignKey(snapshot, embeddedSnapshot, relationship, json[serializedKey]);
         }
       },
 
@@ -12872,30 +12872,29 @@
         }
         var includeIds = this.hasSerializeIdsOption(attr);
         var includeRecords = this.hasSerializeRecordsOption(attr);
-        var key;
         if (includeIds) {
-          key = this.keyForRelationship(attr, relationship.kind, 'serialize');
-          json[key] = snapshot.hasMany(attr, { ids: true });
+          var serializedKey = this.keyForRelationship(attr, relationship.kind, 'serialize');
+          json[serializedKey] = snapshot.hasMany(attr, { ids: true });
         } else if (includeRecords) {
           this._serializeEmbeddedHasMany(snapshot, json, relationship);
         }
       },
 
       _serializeEmbeddedHasMany: function (snapshot, json, relationship) {
-        var key = this.keyForAttribute(relationship.key, 'serialize');
+        var serializedKey = this.keyForAttribute(relationship.key, 'serialize');
 
-        Ember.warn('The embedded relationship \'' + key + '\' is undefined for \'' + snapshot.modelName + '\' with id \'' + snapshot.id + '\'. Please include it in your original payload.', Ember.typeOf(snapshot.hasMany(key)) !== 'undefined', { id: 'ds.serializer.embedded-relationship-undefined' });
+        Ember.warn('The embedded relationship \'' + serializedKey + '\' is undefined for \'' + snapshot.modelName + '\' with id \'' + snapshot.id + '\'. Please include it in your original payload.', Ember.typeOf(snapshot.hasMany(relationship.key)) !== 'undefined', { id: 'ds.serializer.embedded-relationship-undefined' });
 
-        json[key] = this._generateSerializedHasMany(snapshot, key, relationship);
+        json[serializedKey] = this._generateSerializedHasMany(snapshot, relationship);
       },
 
       /*
         Returns an array of embedded records serialized to JSON
       */
-      _generateSerializedHasMany: function (snapshot, key, relationship) {
+      _generateSerializedHasMany: function (snapshot, relationship) {
         var _this = this;
 
-        var hasMany = snapshot.hasMany(key);
+        var hasMany = snapshot.hasMany(relationship.key);
         return Ember.A(hasMany).map(function (embeddedSnapshot) {
           var embeddedJson = embeddedSnapshot.record.serialize({ includeId: true });
           _this.removeEmbeddedForeignKey(snapshot, embeddedSnapshot, relationship, embeddedJson);
