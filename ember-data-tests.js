@@ -28435,6 +28435,20 @@ define(
       equal(store.peekRecord('person', 1).get('name'), 'Tom');
     });
 
+    test("Calling adapterFor with a model class should assert", function () {
+      var Person = DS.Model.extend({
+        name: DS.attr('string')
+      });
+
+      store = createStore({
+        person: Person
+      });
+
+      expectAssertion(function () {
+        store.adapterFor(Person);
+      }, /Passing classes to store.adapterFor has been removed/);
+    });
+
     module("unit/store/adapter_interop - find preload deprecations", {
       setup: function () {
         var Person = DS.Model.extend({
@@ -29704,12 +29718,13 @@ define(
       __exports__[name] = value;
     }
 
-    var container, store, registry;
+    var container, store, registry, Person;
     var run = Ember.run;
 
     module("unit/store/serializer_for - DS.Store#serializerFor", {
       setup: function () {
-        var env = setupStore({ person: DS.Model.extend() });
+        Person = DS.Model.extend({});
+        var env = setupStore({ person: Person });
         store = env.store;
         container = store.container;
         registry = env.registry;
@@ -29741,6 +29756,12 @@ define(
 
     test("Calling serializerFor with a type that has not been registered and in an application that does not have an ApplicationSerializer looks up the default Ember Data serializer", function () {
       ok(store.serializerFor('person') instanceof DS.JSONSerializer, "serializer returned from serializerFor is an instance of DS.JSONSerializer");
+    });
+
+    test("Calling serializerFor with a model class should assert", function () {
+      expectAssertion(function () {
+        store.serializerFor(Person);
+      }, /Passing classes to store.serializerFor has been removed/);
     });
   }
 );

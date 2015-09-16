@@ -8693,15 +8693,9 @@
         @param {String} modelName
         @return DS.Adapter
       */
-      adapterFor: function (modelOrClass) {
-        var modelName;
+      adapterFor: function (modelName) {
 
-        if (typeof modelOrClass === 'string') {
-          modelName = modelOrClass;
-        } else {
-                    modelName = modelOrClass.modelName;
-        }
-
+        
         return this.lookupAdapter(modelName);
       },
 
@@ -8730,15 +8724,9 @@
         @param {String} modelName the record to serialize
         @return {DS.Serializer}
       */
-      serializerFor: function (modelOrClass) {
-        var modelName;
+      serializerFor: function (modelName) {
 
-        if (typeof modelOrClass === 'string') {
-          modelName = modelOrClass;
-        } else {
-                    modelName = modelOrClass.modelName;
-        }
-
+        
         var fallbacks = ['application', this.adapterFor(modelName).get('defaultSerializer'), '-default'];
 
         var serializer = this.lookupSerializer(modelName, fallbacks);

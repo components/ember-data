@@ -8784,15 +8784,9 @@
         @param {String} modelName
         @return DS.Adapter
       */
-      adapterFor: function (modelOrClass) {
-        var modelName;
+      adapterFor: function (modelName) {
 
-        if (typeof modelOrClass === 'string') {
-          modelName = modelOrClass;
-        } else {
-          Ember.deprecate("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), false, { id: 'ds.store.passing-classes-deprecated', until: '2.0.0' });
-          modelName = modelOrClass.modelName;
-        }
+        Ember.assert("Passing classes to store.adapterFor has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === 'string');
 
         return this.lookupAdapter(modelName);
       },
@@ -8822,15 +8816,9 @@
         @param {String} modelName the record to serialize
         @return {DS.Serializer}
       */
-      serializerFor: function (modelOrClass) {
-        var modelName;
+      serializerFor: function (modelName) {
 
-        if (typeof modelOrClass === 'string') {
-          modelName = modelOrClass;
-        } else {
-          Ember.deprecate("Passing classes to store methods has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), false, { id: 'ds.store.passing-classes-deprecated', until: '2.0.0' });
-          modelName = modelOrClass.modelName;
-        }
+        Ember.assert("Passing classes to store.serializerFor has been removed. Please pass a dasherized string instead of " + Ember.inspect(modelName), typeof modelName === 'string');
 
         var fallbacks = ['application', this.adapterFor(modelName).get('defaultSerializer'), '-default'];
 
