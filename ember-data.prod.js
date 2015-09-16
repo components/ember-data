@@ -9551,7 +9551,7 @@
             if (relationshipMeta.kind === 'belongsTo') {
               data = _this4.extractRelationship(relationshipMeta.type, relationshipHash);
             } else if (relationshipMeta.kind === 'hasMany') {
-              data = relationshipHash.map(function (item) {
+              data = Ember.isNone(relationshipHash) ? null : relationshipHash.map(function (item) {
                 return _this4.extractRelationship(relationshipMeta.type, item);
               });
             }
