@@ -12656,13 +12656,18 @@
             json[key] = embeddedSnapshot.id;
           }
         } else if (includeRecords) {
-          key = this.keyForAttribute(attr, 'serialize');
-          if (!embeddedSnapshot) {
-            json[key] = null;
-          } else {
-            json[key] = embeddedSnapshot.record.serialize({ includeId: true });
-            this.removeEmbeddedForeignKey(snapshot, embeddedSnapshot, relationship, json[key]);
-          }
+          this._serializeEmbeddedBelongsTo(snapshot, json, relationship);
+        }
+      },
+
+      _serializeEmbeddedBelongsTo: function (snapshot, json, relationship) {
+        var embeddedSnapshot = snapshot.belongsTo(relationship.key);
+        var key = this.keyForAttribute(relationship.key, 'serialize');
+        if (!embeddedSnapshot) {
+          json[key] = null;
+        } else {
+          json[key] = embeddedSnapshot.record.serialize({ includeId: true });
+          this.removeEmbeddedForeignKey(snapshot, embeddedSnapshot, relationship, json[key]);
         }
       },
 
@@ -12737,8 +12742,6 @@
         @param {Object} relationship
       */
       serializeHasMany: function (snapshot, json, relationship) {
-        var _this = this;
-
         var attr = relationship.key;
         if (this.noSerializeOptionSpecified(attr)) {
           this._super(snapshot, json, relationship);
@@ -12746,21 +12749,34 @@
         }
         var includeIds = this.hasSerializeIdsOption(attr);
         var includeRecords = this.hasSerializeRecordsOption(attr);
-        var key, hasMany;
+        var key;
         if (includeIds) {
           key = this.keyForRelationship(attr, relationship.kind, 'serialize');
           json[key] = snapshot.hasMany(attr, { ids: true });
         } else if (includeRecords) {
-          key = this.keyForAttribute(attr, 'serialize');
-          hasMany = snapshot.hasMany(attr);
-
-          
-          json[key] = Ember.A(hasMany).map(function (embeddedSnapshot) {
-            var embeddedJson = embeddedSnapshot.record.serialize({ includeId: true });
-            _this.removeEmbeddedForeignKey(snapshot, embeddedSnapshot, relationship, embeddedJson);
-            return embeddedJson;
-          });
+          this._serializeEmbeddedHasMany(snapshot, json, relationship);
         }
+      },
+
+      _serializeEmbeddedHasMany: function (snapshot, json, relationship) {
+        var key = this.keyForAttribute(relationship.key, 'serialize');
+
+        
+        json[key] = this._generateSerializedHasMany(snapshot, key, relationship);
+      },
+
+      /*
+        Returns an array of embedded records serialized to JSON
+      */
+      _generateSerializedHasMany: function (snapshot, key, relationship) {
+        var _this = this;
+
+        var hasMany = snapshot.hasMany(key);
+        return Ember.A(hasMany).map(function (embeddedSnapshot) {
+          var embeddedJson = embeddedSnapshot.record.serialize({ includeId: true });
+          _this.removeEmbeddedForeignKey(snapshot, embeddedSnapshot, relationship, embeddedJson);
+          return embeddedJson;
+        });
       },
 
       /**
