@@ -1889,6 +1889,28 @@
     Ember.merge(Ember.FEATURES, ember$data$lib$core$$EMBER_DATA_FEATURES);
 
     var ember$data$lib$core$$default = ember$data$lib$core$$DS;
+    var ember$data$lib$system$normalize$link$$default = ember$data$lib$system$normalize$link$$_normalizeLink;
+    /**
+      This method normalizes a link to an "links object". If the passed link is
+      already an object it's returned without any modifications.
+
+      See http://jsonapi.org/format/#document-links for more information.
+
+      @method _normalizeLink
+      @private
+      @param {String} link
+      @return {Object|null}
+      @for DS
+    */
+    function ember$data$lib$system$normalize$link$$_normalizeLink(link) {
+      switch (typeof link) {
+        case 'object':
+          return link;
+        case 'string':
+          return { href: link };
+      }
+      return null;
+    }
     var ember$data$lib$system$normalize$model$name$$default = ember$data$lib$system$normalize$model$name$$normalizeModelName;
     /**
       All modelNames are dasherized internally. Changing this function may
@@ -8877,8 +8899,11 @@
         var relationship;
 
         if (data.relationships[key].links && data.relationships[key].links.related) {
-          relationship = record._relationships.get(key);
-          relationship.updateLink(data.relationships[key].links.related);
+          var relatedLink = ember$data$lib$system$normalize$link$$default(data.relationships[key].links.related);
+          if (relatedLink && relatedLink.href) {
+            relationship = record._relationships.get(key);
+            relationship.updateLink(relatedLink.href);
+          }
         }
 
         if (data.relationships[key].meta) {
