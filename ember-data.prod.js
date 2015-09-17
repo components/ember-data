@@ -340,7 +340,10 @@
     */
 
     function ember$data$lib$adapters$errors$$InvalidError(errors) {
-            ember$data$lib$adapters$errors$$AdapterError.call(this, errors, 'The adapter rejected the commit because it was invalid');
+      if (!Ember.isArray(errors)) {
+                errors = ember$data$lib$adapters$errors$$errorsHashToArray(errors);
+      }
+      ember$data$lib$adapters$errors$$AdapterError.call(this, errors, 'The adapter rejected the commit because it was invalid');
     }
 
     ember$data$lib$adapters$errors$$InvalidError.prototype = Object.create(ember$data$lib$adapters$errors$$AdapterError.prototype);

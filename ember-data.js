@@ -340,7 +340,10 @@
     */
 
     function ember$data$lib$adapters$errors$$InvalidError(errors) {
-      Ember.assert('`InvalidError` expects json-api formatted errors array.', Ember.isArray(errors || []));
+      if (!Ember.isArray(errors)) {
+        Ember.deprecate('`InvalidError` expects json-api formatted errors.', false, { id: 'ds.errors.invalid-error-expects-json-api-format', until: '2.0.0' });
+        errors = ember$data$lib$adapters$errors$$errorsHashToArray(errors);
+      }
       ember$data$lib$adapters$errors$$AdapterError.call(this, errors, 'The adapter rejected the commit because it was invalid');
     }
 
