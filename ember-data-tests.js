@@ -4287,7 +4287,7 @@ define(
     var run = Ember.run;
     var Person, Dog, env, store, adapter;
 
-    module("integration/adapter/store_adapter - DS.Store and DS.Adapter integration test", {
+    module("integration/adapter/store-adapter - DS.Store and DS.Adapter integration test", {
       setup: function () {
         Person = DS.Model.extend({
           updatedAt: DS.attr('string'),
@@ -4731,7 +4731,13 @@ define(
         equal(type, Person, "the type is correct");
 
         if (snapshot.attr('name').indexOf('Bro') === -1) {
-          return Ember.RSVP.reject(new DS.InvalidError({ name: ['common... name requires a "bro"'] }));
+          return Ember.RSVP.reject(new DS.InvalidError([{
+            title: 'Invalid Attribute',
+            detail: 'common... name requires a "bro"',
+            source: {
+              pointer: '/data/attributes/name'
+            }
+          }]));
         } else {
           return Ember.RSVP.resolve();
         }
@@ -4770,7 +4776,13 @@ define(
     test("allows errors on arbitrary properties on create", function () {
       adapter.createRecord = function (store, type, snapshot) {
         if (snapshot.attr('name').indexOf('Bro') === -1) {
-          return Ember.RSVP.reject(new DS.InvalidError({ base: ['is a generally unsavoury character'] }));
+          return Ember.RSVP.reject(new DS.InvalidError([{
+            title: "Invalid Attribute",
+            detail: "is a generally unsavoury character",
+            source: {
+              pointer: "/data/attributes/base"
+            }
+          }]));
         } else {
           return Ember.RSVP.resolve();
         }
@@ -4816,7 +4828,13 @@ define(
         saveCount++;
 
         if (snapshot.attr('name').indexOf('Bro') === -1) {
-          return Ember.RSVP.reject(new DS.InvalidError({ name: ['common... name requires a "bro"'] }));
+          return Ember.RSVP.reject(new DS.InvalidError([{
+            title: 'Invalid Attribute',
+            detail: 'common... name requires a "bro"',
+            source: {
+              pointer: '/data/attributes/name'
+            }
+          }]));
         } else {
           return Ember.RSVP.resolve();
         }
@@ -4880,7 +4898,13 @@ define(
         equal(type, Person, "the type is correct");
 
         if (snapshot.attr('name').indexOf('Bro') === -1) {
-          return Ember.RSVP.reject(new DS.InvalidError({ name: ['common... name requires a "bro"'] }));
+          return Ember.RSVP.reject(new DS.InvalidError([{
+            title: 'Invalid Attribute',
+            detail: 'common... name requires a "bro"',
+            source: {
+              pointer: '/data/attributes/name'
+            }
+          }]));
         } else {
           return Ember.RSVP.resolve();
         }
@@ -4935,7 +4959,13 @@ define(
       };
       adapter.updateRecord = function (store, type, snapshot) {
         if (snapshot.attr('name').indexOf('Bro') === -1) {
-          return Ember.RSVP.reject(new DS.InvalidError({ base: ['is a generally unsavoury character'] }));
+          return Ember.RSVP.reject(new DS.InvalidError([{
+            title: "Invalid Attribute",
+            detail: "is a generally unsavoury character",
+            source: {
+              pointer: "/data/attributes/base"
+            }
+          }]));
         } else {
           return Ember.RSVP.resolve();
         }
@@ -4997,7 +5027,13 @@ define(
         equal(type, Person, "the type is correct");
         saveCount++;
         if (snapshot.attr('name').indexOf('Bro') === -1) {
-          return Ember.RSVP.reject(new DS.InvalidError({ name: ['common... name requires a "bro"'] }));
+          return Ember.RSVP.reject(new DS.InvalidError([{
+            title: 'Invalid Attribute',
+            detail: 'common... name requires a "bro"',
+            source: {
+              pointer: '/data/attributes/name'
+            }
+          }]));
         } else {
           return Ember.RSVP.resolve();
         }
@@ -18619,6 +18655,25 @@ define(
       });
     });
 
+    test("serializeHasMany omits unknown relationships on pushed record", function () {
+
+      run(function () {
+        post = env.store.push({
+          id: "1",
+          type: "post",
+          attributes: {
+            title: "Rails is omakase"
+          }
+        });
+      });
+
+      var json = {};
+
+      env.store.serializerFor("post").serializeHasMany(post._createSnapshot(), json, { key: "comments", options: {} });
+
+      ok(!json.hasOwnProperty("comments"), "Does not add the relationship key to json");
+    });
+
     test("serializeIntoHash", function () {
       run(function () {
         post = env.store.createRecord('post', { title: "Rails is omakase" });
@@ -21740,7 +21795,7 @@ define(
       __exports__[name] = value;
     }
 
-    module("unit/adapter/errors - DS.AdapterError");
+    module("unit/adapter-errors - DS.AdapterError");
 
     test("DS.AdapterError", function () {
       var error = new DS.AdapterError();
@@ -21803,18 +21858,12 @@ define(
       deepEqual(result, { name: ['error message'] });
     });
 
-    test("DS.InvalidError will normalize errors hash with deprecation", function () {
+    test("DS.InvalidError will normalize errors hash will assert", function () {
       var error;
 
-      expectDeprecation(function () {
+      expectAssertion(function () {
         error = new DS.InvalidError({ name: ['is invalid'] });
       }, /expects json-api formatted errors/);
-
-      deepEqual(error.errors, [{
-        title: 'Invalid Attribute',
-        detail: 'is invalid',
-        source: { pointer: '/data/attributes/name' }
-      }]);
     });
   }
 );
@@ -24203,7 +24252,13 @@ define(
         updateRecord: function (store, type, snapshot) {
           equal(callCount, 0, "becameInvalid callback was not called until recordWasInvalid is called");
 
-          return Ember.RSVP.reject(new DS.InvalidError({ bar: 'error' }));
+          return Ember.RSVP.reject(new DS.InvalidError([{
+            title: "Invalid Attribute",
+            detail: "error",
+            source: {
+              pointer: "/data/attributes/bar"
+            }
+          }]));
         }
       });
 

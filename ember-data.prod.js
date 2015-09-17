@@ -340,10 +340,7 @@
     */
 
     function ember$data$lib$adapters$errors$$InvalidError(errors) {
-      if (!Ember.isArray(errors)) {
-                errors = ember$data$lib$adapters$errors$$errorsHashToArray(errors);
-      }
-      ember$data$lib$adapters$errors$$AdapterError.call(this, errors, 'The adapter rejected the commit because it was invalid');
+            ember$data$lib$adapters$errors$$AdapterError.call(this, errors, 'The adapter rejected the commit because it was invalid');
     }
 
     ember$data$lib$adapters$errors$$InvalidError.prototype = Object.create(ember$data$lib$adapters$errors$$AdapterError.prototype);
@@ -10013,16 +10010,18 @@
         var key = relationship.key;
 
         if (this._shouldSerializeHasMany(snapshot, key, relationship)) {
-          var payloadKey;
+          var hasMany = snapshot.hasMany(key, { ids: true });
+          if (hasMany !== undefined) {
+            // if provided, use the mapping provided by `attrs` in
+            // the serializer
+            var payloadKey = this._getMappedKey(key);
+            if (payloadKey === key && this.keyForRelationship) {
+              payloadKey = this.keyForRelationship(key, "hasMany", "serialize");
+            }
 
-          // if provided, use the mapping provided by `attrs` in
-          // the serializer
-          payloadKey = this._getMappedKey(key);
-          if (payloadKey === key && this.keyForRelationship) {
-            payloadKey = this.keyForRelationship(key, "hasMany", "serialize");
+            json[payloadKey] = hasMany;
+            // TODO support for polymorphic manyToNone and manyToMany relationships
           }
-          json[payloadKey] = snapshot.hasMany(key, { ids: true });
-          // TODO support for polymorphic manyToNone and manyToMany relationships
         }
       },
 
