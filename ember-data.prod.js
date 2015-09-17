@@ -7527,7 +7527,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.13.12'
+      VERSION: '1.13.13'
     });
 
     if (Ember.libraries) {
@@ -9347,6 +9347,7 @@
       this.linkPromise = null;
       this.meta = null;
       this.hasData = false;
+      this.hasLoaded = false;
     }
 
     ember$data$lib$system$relationships$state$relationship$$Relationship.prototype = {
@@ -9542,6 +9543,7 @@
                         if (link !== this.link) {
           this.link = link;
           this.linkPromise = null;
+          this.setHasLoaded(false);
           this.record.notifyPropertyChange(this.key);
         }
       },
@@ -9560,17 +9562,38 @@
 
       updateRecordsFromAdapter: function (records) {
         //TODO(Igor) move this to a proper place
-        var self = this;
         //TODO Once we have adapter support, we need to handle updated and canonical changes
-        self.computeChanges(records);
-        self.setHasData(true);
+        this.computeChanges(records);
+        this.setHasData(true);
+        this.setHasLoaded(true);
       },
 
       notifyRecordRelationshipAdded: Ember.K,
       notifyRecordRelationshipRemoved: Ember.K,
 
+      /*
+        `hasData` for a relationship is a flag to indicate if we consider the
+        content of this relationship "known". Snapshots uses this to tell the
+        difference between unknown (`undefined`) or empty (`null`). The reason for
+        this is that we wouldn't want to serialize unknown relationships as `null`
+        as that might overwrite remote state.
+         All relationships for a newly created (`store.createRecord()`) are
+        considered known (`hasData === true`).
+       */
       setHasData: function (value) {
         this.hasData = value;
+      },
+
+      /*
+        `hasLoaded` is a flag to indicate if we have gotten data from the adapter or
+        not when the relationship has a link.
+         This is used to be able to tell when to fetch the link and when to return
+        the local data in scenarios where the local state is considered known
+        (`hasData === true`).
+         Updating the link will automatically set `hasLoaded` to `false`.
+       */
+      setHasLoaded: function (value) {
+        this.hasLoaded = value;
       }
     };
 
@@ -10030,14 +10053,19 @@
     };
 
     ember$data$lib$system$relationships$state$has$many$$ManyRelationship.prototype.getRecords = function () {
+      var _this2 = this;
+
       //TODO(Igor) sync server here, once our syncing is not stupid
       if (this.isAsync) {
-        var self = this;
         var promise;
         if (this.link) {
-          promise = this.findLink().then(function () {
-            return self.findRecords();
-          });
+          if (this.hasLoaded) {
+            promise = this.findRecords();
+          } else {
+            promise = this.findLink().then(function () {
+              return _this2.findRecords();
+            });
+          }
         } else {
           promise = this.findRecords();
         }
@@ -10088,6 +10116,7 @@
         this.removeRecord(this.inverseRecord);
       }
       this.setHasData(true);
+      this.setHasLoaded(true);
     };
 
     ember$data$lib$system$relationships$state$belongs$to$$BelongsToRelationship.prototype.setCanonicalRecord = function (newRecord) {
@@ -10097,6 +10126,7 @@
         this.removeCanonicalRecord(this.inverseRecord);
       }
       this.setHasData(true);
+      this.setHasLoaded(true);
     };
 
     ember$data$lib$system$relationships$state$belongs$to$$BelongsToRelationship.prototype._super$addCanonicalRecord = ember$data$lib$system$relationships$state$relationship$$default.prototype.addCanonicalRecord;
@@ -10185,14 +10215,19 @@
     };
 
     ember$data$lib$system$relationships$state$belongs$to$$BelongsToRelationship.prototype.getRecord = function () {
+      var _this = this;
+
       //TODO(Igor) flushCanonical here once our syncing is not stupid
       if (this.isAsync) {
         var promise;
         if (this.link) {
-          var self = this;
-          promise = this.findLink().then(function () {
-            return self.findRecord();
-          });
+          if (this.hasLoaded) {
+            promise = this.findRecord();
+          } else {
+            promise = this.findLink().then(function () {
+              return _this.findRecord();
+            });
+          }
         } else {
           promise = this.findRecord();
         }
