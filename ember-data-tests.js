@@ -4287,7 +4287,7 @@ define(
     var run = Ember.run;
     var Person, Dog, env, store, adapter;
 
-    module("integration/adapter/store_adapter - DS.Store and DS.Adapter integration test", {
+    module("integration/adapter/store-adapter - DS.Store and DS.Adapter integration test", {
       setup: function () {
         Person = DS.Model.extend({
           updatedAt: DS.attr('string'),
@@ -4731,7 +4731,13 @@ define(
         equal(type, Person, "the type is correct");
 
         if (snapshot.attr('name').indexOf('Bro') === -1) {
-          return Ember.RSVP.reject(new DS.InvalidError({ name: ['common... name requires a "bro"'] }));
+          return Ember.RSVP.reject(new DS.InvalidError([{
+            title: 'Invalid Attribute',
+            detail: 'common... name requires a "bro"',
+            source: {
+              pointer: '/data/attributes/name'
+            }
+          }]));
         } else {
           return Ember.RSVP.resolve();
         }
@@ -4770,7 +4776,13 @@ define(
     test("allows errors on arbitrary properties on create", function () {
       adapter.createRecord = function (store, type, snapshot) {
         if (snapshot.attr('name').indexOf('Bro') === -1) {
-          return Ember.RSVP.reject(new DS.InvalidError({ base: ['is a generally unsavoury character'] }));
+          return Ember.RSVP.reject(new DS.InvalidError([{
+            title: "Invalid Attribute",
+            detail: "is a generally unsavoury character",
+            source: {
+              pointer: "/data/attributes/base"
+            }
+          }]));
         } else {
           return Ember.RSVP.resolve();
         }
@@ -4816,7 +4828,13 @@ define(
         saveCount++;
 
         if (snapshot.attr('name').indexOf('Bro') === -1) {
-          return Ember.RSVP.reject(new DS.InvalidError({ name: ['common... name requires a "bro"'] }));
+          return Ember.RSVP.reject(new DS.InvalidError([{
+            title: 'Invalid Attribute',
+            detail: 'common... name requires a "bro"',
+            source: {
+              pointer: '/data/attributes/name'
+            }
+          }]));
         } else {
           return Ember.RSVP.resolve();
         }
@@ -4880,7 +4898,13 @@ define(
         equal(type, Person, "the type is correct");
 
         if (snapshot.attr('name').indexOf('Bro') === -1) {
-          return Ember.RSVP.reject(new DS.InvalidError({ name: ['common... name requires a "bro"'] }));
+          return Ember.RSVP.reject(new DS.InvalidError([{
+            title: 'Invalid Attribute',
+            detail: 'common... name requires a "bro"',
+            source: {
+              pointer: '/data/attributes/name'
+            }
+          }]));
         } else {
           return Ember.RSVP.resolve();
         }
@@ -4935,7 +4959,13 @@ define(
       };
       adapter.updateRecord = function (store, type, snapshot) {
         if (snapshot.attr('name').indexOf('Bro') === -1) {
-          return Ember.RSVP.reject(new DS.InvalidError({ base: ['is a generally unsavoury character'] }));
+          return Ember.RSVP.reject(new DS.InvalidError([{
+            title: "Invalid Attribute",
+            detail: "is a generally unsavoury character",
+            source: {
+              pointer: "/data/attributes/base"
+            }
+          }]));
         } else {
           return Ember.RSVP.resolve();
         }
@@ -4997,7 +5027,13 @@ define(
         equal(type, Person, "the type is correct");
         saveCount++;
         if (snapshot.attr('name').indexOf('Bro') === -1) {
-          return Ember.RSVP.reject(new DS.InvalidError({ name: ['common... name requires a "bro"'] }));
+          return Ember.RSVP.reject(new DS.InvalidError([{
+            title: 'Invalid Attribute',
+            detail: 'common... name requires a "bro"',
+            source: {
+              pointer: '/data/attributes/name'
+            }
+          }]));
         } else {
           return Ember.RSVP.resolve();
         }
@@ -21740,7 +21776,7 @@ define(
       __exports__[name] = value;
     }
 
-    module("unit/adapter/errors - DS.AdapterError");
+    module("unit/adapter-errors - DS.AdapterError");
 
     test("DS.AdapterError", function () {
       var error = new DS.AdapterError();
@@ -21803,18 +21839,12 @@ define(
       deepEqual(result, { name: ['error message'] });
     });
 
-    test("DS.InvalidError will normalize errors hash with deprecation", function () {
+    test("DS.InvalidError will normalize errors hash will assert", function () {
       var error;
 
-      expectDeprecation(function () {
+      expectAssertion(function () {
         error = new DS.InvalidError({ name: ['is invalid'] });
       }, /expects json-api formatted errors/);
-
-      deepEqual(error.errors, [{
-        title: 'Invalid Attribute',
-        detail: 'is invalid',
-        source: { pointer: '/data/attributes/name' }
-      }]);
     });
   }
 );
@@ -24203,7 +24233,13 @@ define(
         updateRecord: function (store, type, snapshot) {
           equal(callCount, 0, "becameInvalid callback was not called until recordWasInvalid is called");
 
-          return Ember.RSVP.reject(new DS.InvalidError({ bar: 'error' }));
+          return Ember.RSVP.reject(new DS.InvalidError([{
+            title: "Invalid Attribute",
+            detail: "error",
+            source: {
+              pointer: "/data/attributes/bar"
+            }
+          }]));
         }
       });
 
@@ -27215,18 +27251,21 @@ define(
     var get = Ember.get;
     var set = Ember.set;
     var resolve = Ember.RSVP.resolve;
-    var TestAdapter, store, person;
+    var TestAdapter, store, person, oldFilterEnabled;
     var run = Ember.run;
 
     module("unit/store/adapter-interop - DS.Store working with a DS.Adapter", {
       setup: function () {
         TestAdapter = DS.Adapter.extend();
+        oldFilterEnabled = Ember.ENV.ENABLE_DS_FILTER;
+        Ember.ENV.ENABLE_DS_FILTER = false;
       },
       teardown: function () {
         run(function () {
           if (store) {
             store.destroy();
           }
+          Ember.ENV.ENABLE_DS_FILTER = oldFilterEnabled;
         });
       }
     });
@@ -28435,6 +28474,24 @@ define(
       equal(store.peekRecord('person', 1).get('name'), 'Tom');
     });
 
+    test("store should assert of the user tries to call store.filter", function () {
+      expect(1);
+
+      var Person = DS.Model.extend({
+        name: DS.attr('string')
+      });
+
+      store = createStore({
+        person: Person
+      });
+
+      expectAssertion(function () {
+        run(function () {
+          store.filter('person', {});
+        });
+      }, /The filter API has been moved to a plugin/);
+    });
+
     test("Calling adapterFor with a model class should assert", function () {
       var Person = DS.Model.extend({
         name: DS.attr('string')
@@ -28447,33 +28504,6 @@ define(
       expectAssertion(function () {
         store.adapterFor(Person);
       }, /Passing classes to store.adapterFor has been removed/);
-    });
-
-    module("unit/store/adapter_interop - find preload deprecations", {
-      setup: function () {
-        var Person = DS.Model.extend({
-          name: DS.attr('string')
-        });
-
-        var TestAdapter = DS.Adapter.extend({
-          findRecord: function (store, type, id, snapshot) {
-            equal(snapshot.attr('name'), 'Tom');
-            return Ember.RSVP.resolve({ id: id });
-          }
-        });
-
-        store = createStore({
-          adapter: TestAdapter,
-          person: Person
-        });
-      },
-      teardown: function () {
-        run(function () {
-          if (store) {
-            store.destroy();
-          }
-        });
-      }
     });
   }
 );
