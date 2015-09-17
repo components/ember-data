@@ -30529,13 +30529,6 @@ QUnit.test('ember-data/lib/system/many-array.js should pass jshint', function(as
 }
 if (!QUnit.urlParams.nojshint) {
 QUnit.module('JSHint - ember-data/lib/system');
-QUnit.test('ember-data/lib/system/map.js should pass jshint', function(assert) { 
-  assert.ok(true, 'ember-data/lib/system/map.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-QUnit.module('JSHint - ember-data/lib/system');
 QUnit.test('ember-data/lib/system/merge.js should pass jshint', function(assert) { 
   assert.ok(true, 'ember-data/lib/system/merge.js should pass jshint.'); 
 });
