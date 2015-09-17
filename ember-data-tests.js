@@ -4287,7 +4287,7 @@ define(
     var run = Ember.run;
     var Person, Dog, env, store, adapter;
 
-    module("integration/adapter/store_adapter - DS.Store and DS.Adapter integration test", {
+    module("integration/adapter/store-adapter - DS.Store and DS.Adapter integration test", {
       setup: function () {
         Person = DS.Model.extend({
           updatedAt: DS.attr('string'),
@@ -4731,7 +4731,13 @@ define(
         equal(type, Person, "the type is correct");
 
         if (snapshot.attr('name').indexOf('Bro') === -1) {
-          return Ember.RSVP.reject(new DS.InvalidError({ name: ['common... name requires a "bro"'] }));
+          return Ember.RSVP.reject(new DS.InvalidError([{
+            title: 'Invalid Attribute',
+            detail: 'common... name requires a "bro"',
+            source: {
+              pointer: '/data/attributes/name'
+            }
+          }]));
         } else {
           return Ember.RSVP.resolve();
         }
@@ -4770,7 +4776,13 @@ define(
     test("allows errors on arbitrary properties on create", function () {
       adapter.createRecord = function (store, type, snapshot) {
         if (snapshot.attr('name').indexOf('Bro') === -1) {
-          return Ember.RSVP.reject(new DS.InvalidError({ base: ['is a generally unsavoury character'] }));
+          return Ember.RSVP.reject(new DS.InvalidError([{
+            title: "Invalid Attribute",
+            detail: "is a generally unsavoury character",
+            source: {
+              pointer: "/data/attributes/base"
+            }
+          }]));
         } else {
           return Ember.RSVP.resolve();
         }
@@ -4816,7 +4828,13 @@ define(
         saveCount++;
 
         if (snapshot.attr('name').indexOf('Bro') === -1) {
-          return Ember.RSVP.reject(new DS.InvalidError({ name: ['common... name requires a "bro"'] }));
+          return Ember.RSVP.reject(new DS.InvalidError([{
+            title: 'Invalid Attribute',
+            detail: 'common... name requires a "bro"',
+            source: {
+              pointer: '/data/attributes/name'
+            }
+          }]));
         } else {
           return Ember.RSVP.resolve();
         }
@@ -4880,7 +4898,13 @@ define(
         equal(type, Person, "the type is correct");
 
         if (snapshot.attr('name').indexOf('Bro') === -1) {
-          return Ember.RSVP.reject(new DS.InvalidError({ name: ['common... name requires a "bro"'] }));
+          return Ember.RSVP.reject(new DS.InvalidError([{
+            title: 'Invalid Attribute',
+            detail: 'common... name requires a "bro"',
+            source: {
+              pointer: '/data/attributes/name'
+            }
+          }]));
         } else {
           return Ember.RSVP.resolve();
         }
@@ -4935,7 +4959,13 @@ define(
       };
       adapter.updateRecord = function (store, type, snapshot) {
         if (snapshot.attr('name').indexOf('Bro') === -1) {
-          return Ember.RSVP.reject(new DS.InvalidError({ base: ['is a generally unsavoury character'] }));
+          return Ember.RSVP.reject(new DS.InvalidError([{
+            title: "Invalid Attribute",
+            detail: "is a generally unsavoury character",
+            source: {
+              pointer: "/data/attributes/base"
+            }
+          }]));
         } else {
           return Ember.RSVP.resolve();
         }
@@ -4997,7 +5027,13 @@ define(
         equal(type, Person, "the type is correct");
         saveCount++;
         if (snapshot.attr('name').indexOf('Bro') === -1) {
-          return Ember.RSVP.reject(new DS.InvalidError({ name: ['common... name requires a "bro"'] }));
+          return Ember.RSVP.reject(new DS.InvalidError([{
+            title: 'Invalid Attribute',
+            detail: 'common... name requires a "bro"',
+            source: {
+              pointer: '/data/attributes/name'
+            }
+          }]));
         } else {
           return Ember.RSVP.resolve();
         }
@@ -9993,6 +10029,128 @@ define(
         ok(user._internalModel._relationships.has('favouriteMessage'), "Newly created record with relationships in params passed in its constructor should have relationships");
       });
     });
+
+    test("Related link should be fetched when no local data is present", function () {
+      expect(3);
+
+      Book.reopen({
+        author: DS.belongsTo('author', { async: true })
+      });
+
+      env.adapter.findBelongsTo = function (store, snapshot, url, relationship) {
+        equal(url, 'author', 'url is correct');
+        ok(true, "The adapter's findBelongsTo method should be called");
+        return Ember.RSVP.resolve({ id: 1, name: 'This is author' });
+      };
+
+      run(function () {
+        var book = env.store.push({
+          data: {
+            type: 'book',
+            id: '1',
+            relationships: {
+              author: {
+                links: {
+                  related: 'author'
+                }
+              }
+            }
+          }
+        });
+        book.get('author').then(function (author) {
+          equal(author.get('name'), 'This is author', 'author name is correct');
+        });
+      });
+    });
+
+    test("Local data should take precedence over related link", function () {
+      expect(1);
+
+      Book.reopen({
+        author: DS.belongsTo('author', { async: true })
+      });
+
+      env.adapter.findBelongsTo = function (store, snapshot, url, relationship) {
+        ok(false, "The adapter's findBelongsTo method should not be called");
+      };
+
+      env.adapter.findRecord = function (store, type, id, snapshot) {
+        return Ember.RSVP.resolve({ id: 1, name: 'This is author' });
+      };
+
+      run(function () {
+        var book = env.store.push({
+          data: {
+            type: 'book',
+            id: '1',
+            relationships: {
+              author: {
+                links: {
+                  related: 'author'
+                },
+                data: { type: 'author', id: '1' }
+              }
+            }
+          }
+        });
+        book.get('author').then(function (author) {
+          equal(author.get('name'), 'This is author', 'author name is correct');
+        });
+      });
+    });
+
+    test("Updated related link should take precedence over local data", function () {
+      expect(3);
+
+      Book.reopen({
+        author: DS.belongsTo('author', { async: true })
+      });
+
+      env.adapter.findBelongsTo = function (store, snapshot, url, relationship) {
+        equal(url, 'author-updated-link', 'url is correct');
+        ok(true, "The adapter's findBelongsTo method should be called");
+        return Ember.RSVP.resolve({ id: 1, name: 'This is author' });
+      };
+
+      env.adapter.findRecord = function (store, type, id, snapshot) {
+        ok(false, "The adapter's findRecord method should not be called");
+      };
+
+      run(function () {
+        var book = env.store.push({
+          data: {
+            type: 'book',
+            id: '1',
+            relationships: {
+              author: {
+                links: {
+                  related: 'author'
+                },
+                data: { type: 'author', id: '1' }
+              }
+            }
+          }
+        });
+
+        env.store.push({
+          data: {
+            type: 'book',
+            id: '1',
+            relationships: {
+              author: {
+                links: {
+                  related: 'author-updated-link'
+                }
+              }
+            }
+          }
+        });
+
+        book.get('author').then(function (author) {
+          equal(author.get('name'), 'This is author', 'author name is correct');
+        });
+      });
+    });
   }
 );
 
@@ -12221,6 +12379,128 @@ define(
             var meta = chapters.get('meta');
             equal(meta, undefined, 'metadata should not be available');
           });
+        });
+      });
+    });
+
+    test("Related link should be fetched when no local data is present", function () {
+      expect(3);
+
+      Post.reopen({
+        comments: DS.hasMany('comment', { async: true })
+      });
+
+      env.adapter.findHasMany = function (store, snapshot, url, relationship) {
+        equal(url, 'comments', 'url is correct');
+        ok(true, "The adapter's findHasMany method should be called");
+        return Ember.RSVP.resolve([{ id: 1, body: 'This is comment' }]);
+      };
+
+      run(function () {
+        var post = env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                links: {
+                  related: 'comments'
+                }
+              }
+            }
+          }
+        });
+        post.get('comments').then(function (comments) {
+          equal(comments.get('firstObject.body'), 'This is comment', 'comment body is correct');
+        });
+      });
+    });
+
+    test("Local data should take precedence over related link", function () {
+      expect(1);
+
+      Post.reopen({
+        comments: DS.hasMany('comment', { async: true })
+      });
+
+      env.adapter.findHasMany = function (store, snapshot, url, relationship) {
+        ok(false, "The adapter's findHasMany method should not be called");
+      };
+
+      env.adapter.findRecord = function (store, type, id, snapshot) {
+        return Ember.RSVP.resolve({ id: 1, body: 'This is comment' });
+      };
+
+      run(function () {
+        var post = env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                links: {
+                  related: 'comments'
+                },
+                data: [{ type: 'comment', id: '1' }]
+              }
+            }
+          }
+        });
+        post.get('comments').then(function (comments) {
+          equal(comments.get('firstObject.body'), 'This is comment', 'comment body is correct');
+        });
+      });
+    });
+
+    test("Updated related link should take precedence over local data", function () {
+      expect(3);
+
+      Post.reopen({
+        comments: DS.hasMany('comment', { async: true })
+      });
+
+      env.adapter.findHasMany = function (store, snapshot, url, relationship) {
+        equal(url, 'comments-updated-link', 'url is correct');
+        ok(true, "The adapter's findHasMany method should be called");
+        return Ember.RSVP.resolve([{ id: 1, body: 'This is comment' }]);
+      };
+
+      env.adapter.findRecord = function (store, type, id, snapshot) {
+        ok(false, "The adapter's findRecord method should not be called");
+      };
+
+      run(function () {
+        var post = env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                links: {
+                  related: 'comments'
+                },
+                data: [{ type: 'comment', id: '1' }]
+              }
+            }
+          }
+        });
+
+        env.store.push({
+          data: {
+            type: 'post',
+            id: '1',
+            relationships: {
+              comments: {
+                links: {
+                  related: 'comments-updated-link'
+                }
+              }
+            }
+          }
+        });
+
+        post.get('comments').then(function (comments) {
+          equal(comments.get('firstObject.body'), 'This is comment', 'comment body is correct');
         });
       });
     });
@@ -18228,6 +18508,24 @@ define(
         equal(get(user, 'handles.lastObject.nickname'), '@wycats', 'handles.lastObject.nickname is correct');
       });
     });
+
+    test('Warns when normalizing an unknown type', function () {
+      var documentHash = {
+        data: {
+          type: 'UnknownType',
+          id: '1',
+          attributes: {
+            foo: 'bar'
+          }
+        }
+      };
+
+      warns(function () {
+        run(function () {
+          env.store.serializerFor('user').normalizeResponse(env.store, User, documentHash, '1', 'findRecord');
+        });
+      }, /Encountered a resource object with type "UnknownType", but no model was found for model name "unknown-type"/);
+    });
   }
 );
 
@@ -18413,6 +18711,25 @@ define(
       deepEqual(json, {
         COMMENTS: ["1"]
       });
+    });
+
+    test("serializeHasMany omits unknown relationships on pushed record", function () {
+
+      run(function () {
+        post = env.store.push({
+          id: "1",
+          type: "post",
+          attributes: {
+            title: "Rails is omakase"
+          }
+        });
+      });
+
+      var json = {};
+
+      env.store.serializerFor("post").serializeHasMany(post._createSnapshot(), json, { key: "comments", options: {} });
+
+      ok(!json.hasOwnProperty("comments"), "Does not add the relationship key to json");
     });
 
     test("serializeIntoHash", function () {
@@ -18917,6 +19234,20 @@ define(
       var jsonHash = {
         id: "1",
         title: "Rails is omakase"
+      };
+
+      var post = env.store.serializerFor("post").normalizeResponse(env.store, Post, jsonHash, '1', 'findRecord');
+
+      deepEqual(post.included, []);
+    });
+
+    test('normalizeResponse returns empty `included` payload when relationship is undefined', function () {
+      env.registry.register("serializer:post", DS.JSONSerializer.extend());
+
+      var jsonHash = {
+        id: "1",
+        title: "Rails is omakase",
+        comments: null
       };
 
       var post = env.store.serializerFor("post").normalizeResponse(env.store, Post, jsonHash, '1', 'findRecord');
@@ -21481,7 +21812,7 @@ define(
       __exports__[name] = value;
     }
 
-    module("unit/adapter/errors - DS.AdapterError");
+    module("unit/adapter-errors - DS.AdapterError");
 
     test("DS.AdapterError", function () {
       var error = new DS.AdapterError();
@@ -21544,18 +21875,12 @@ define(
       deepEqual(result, { name: ['error message'] });
     });
 
-    test("DS.InvalidError will normalize errors hash with deprecation", function () {
+    test("DS.InvalidError will normalize errors hash will assert", function () {
       var error;
 
-      expectDeprecation(function () {
+      expectAssertion(function () {
         error = new DS.InvalidError({ name: ['is invalid'] });
       }, /expects json-api formatted errors/);
-
-      deepEqual(error.errors, [{
-        title: 'Invalid Attribute',
-        detail: 'is invalid',
-        source: { pointer: '/data/attributes/name' }
-      }]);
     });
   }
 );
@@ -23944,7 +24269,13 @@ define(
         updateRecord: function (store, type, snapshot) {
           equal(callCount, 0, "becameInvalid callback was not called until recordWasInvalid is called");
 
-          return Ember.RSVP.reject(new DS.InvalidError({ bar: 'error' }));
+          return Ember.RSVP.reject(new DS.InvalidError([{
+            title: "Invalid Attribute",
+            detail: "error",
+            source: {
+              pointer: "/data/attributes/bar"
+            }
+          }]));
         }
       });
 
@@ -26956,18 +27287,21 @@ define(
     var get = Ember.get;
     var set = Ember.set;
     var resolve = Ember.RSVP.resolve;
-    var TestAdapter, store, person;
+    var TestAdapter, store, person, oldFilterEnabled;
     var run = Ember.run;
 
     module("unit/store/adapter-interop - DS.Store working with a DS.Adapter", {
       setup: function () {
         TestAdapter = DS.Adapter.extend();
+        oldFilterEnabled = Ember.ENV.ENABLE_DS_FILTER;
+        Ember.ENV.ENABLE_DS_FILTER = false;
       },
       teardown: function () {
         run(function () {
           if (store) {
             store.destroy();
           }
+          Ember.ENV.ENABLE_DS_FILTER = oldFilterEnabled;
         });
       }
     });
@@ -28176,6 +28510,38 @@ define(
       equal(store.peekRecord('person', 1).get('name'), 'Tom');
     });
 
+    test("store should assert of the user tries to call store.filter", function () {
+      expect(1);
+
+      var Person = DS.Model.extend({
+        name: DS.attr('string')
+      });
+
+      store = createStore({
+        person: Person
+      });
+
+      expectAssertion(function () {
+        run(function () {
+          store.filter('person', {});
+        });
+      }, /The filter API has been moved to a plugin/);
+    });
+
+    test("Calling adapterFor with a model class should assert", function () {
+      var Person = DS.Model.extend({
+        name: DS.attr('string')
+      });
+
+      store = createStore({
+        person: Person
+      });
+
+      expectAssertion(function () {
+        store.adapterFor(Person);
+      }, /Passing classes to store.adapterFor has been removed/);
+    });
+
     module("unit/store/adapter_interop - find preload deprecations", {
       setup: function () {
         var Person = DS.Model.extend({
@@ -29186,23 +29552,26 @@ define(
       }, /You tried to push data with a type 'unknown' but no model could be found with that name/);
     });
 
-    test('Calling push with a link containing an object throws an assertion error', function () {
+    test('Calling push with a link containing an object', function () {
       Person.reopen({
         phoneNumbers: hasMany('phone-number', { async: true })
       });
 
-      expectAssertion(function () {
-        run(function () {
-          store.push(store.normalize('person', {
-            id: '1',
-            links: {
-              phoneNumbers: {
-                href: '/api/people/1/phone-numbers'
-              }
+      run(function () {
+        store.push(store.normalize('person', {
+          id: '1',
+          firstName: 'Tan',
+          links: {
+            phoneNumbers: {
+              href: '/api/people/1/phone-numbers'
             }
-          }));
-        });
-      }, "You have pushed a record of type 'person' with 'phoneNumbers' as a link, but the value of that link is not a string.");
+          }
+        }));
+      });
+
+      var person = store.peekRecord('person', 1);
+
+      equal(person.get('firstName'), "Tan", "you can use links containing an object");
     });
 
     test('Calling push with a link containing the value null', function () {
@@ -29442,12 +29811,13 @@ define(
       __exports__[name] = value;
     }
 
-    var container, store, registry;
+    var container, store, registry, Person;
     var run = Ember.run;
 
     module("unit/store/serializer_for - DS.Store#serializerFor", {
       setup: function () {
-        var env = setupStore({ person: DS.Model.extend() });
+        Person = DS.Model.extend({});
+        var env = setupStore({ person: Person });
         store = env.store;
         container = store.container;
         registry = env.registry;
@@ -29479,6 +29849,12 @@ define(
 
     test("Calling serializerFor with a type that has not been registered and in an application that does not have an ApplicationSerializer looks up the default Ember Data serializer", function () {
       ok(store.serializerFor('person') instanceof DS.JSONSerializer, "serializer returned from serializerFor is an instance of DS.JSONSerializer");
+    });
+
+    test("Calling serializerFor with a model class should assert", function () {
+      expectAssertion(function () {
+        store.serializerFor(Person);
+      }, /Passing classes to store.serializerFor has been removed/);
     });
   }
 );
@@ -30255,6 +30631,13 @@ if (!QUnit.urlParams.nojshint) {
 QUnit.module('JSHint - ember-data/lib/system/model');
 QUnit.test('ember-data/lib/system/model/states.js should pass jshint', function(assert) { 
   assert.ok(true, 'ember-data/lib/system/model/states.js should pass jshint.'); 
+});
+
+}
+if (!QUnit.urlParams.nojshint) {
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/normalize-link.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/normalize-link.js should pass jshint.'); 
 });
 
 }
