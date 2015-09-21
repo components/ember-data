@@ -19227,7 +19227,7 @@ define(
       __exports__[name] = value;
     }
 
-    var HomePlanet, league, SuperVillain, EvilMinion, YellowMinion, DoomsdayDevice, Comment, env;
+    var HomePlanet, league, SuperVillain, EvilMinion, YellowMinion, DoomsdayDevice, Comment, Basket, env;
     var run = Ember.run;
 
     module("integration/serializer/rest - RESTSerializer", {
@@ -19258,13 +19258,18 @@ define(
           root: DS.attr('boolean'),
           children: DS.hasMany('comment', { inverse: null, async: false })
         });
+        Basket = DS.Model.extend({
+          type: DS.attr('string'),
+          size: DS.attr('number')
+        });
         env = setupStore({
           superVillain: SuperVillain,
           homePlanet: HomePlanet,
           evilMinion: EvilMinion,
           yellowMinion: YellowMinion,
           doomsdayDevice: DoomsdayDevice,
-          comment: Comment
+          comment: Comment,
+          basket: Basket
         });
         env.store.modelFor('super-villain');
         env.store.modelFor('home-planet');
@@ -19272,6 +19277,7 @@ define(
         env.store.modelFor('yellow-minion');
         env.store.modelFor('doomsday-device');
         env.store.modelFor('comment');
+        env.store.modelFor('basket');
       },
 
       teardown: function () {
@@ -19807,6 +19813,28 @@ define(
           "relationships": {}
         }]
       });
+    });
+
+    test("don't polymorphically deserialize base on the type key in payload when a type attribute exist", function () {
+      env.registry.register('serializer:application', DS.RESTSerializer.extend({
+        isNewSerializerAPI: true
+      }));
+
+      run(function () {
+        env.restSerializer.normalizeArrayResponse(env.store, Basket, {
+          basket: [env.store.createRecord('Basket', { type: 'bamboo', size: 10, id: '1' }), env.store.createRecord('Basket', { type: 'yellowMinion', size: 10, id: '65536' })]
+        });
+      });
+
+      var normalRecord = env.store.peekRecord('basket', '1');
+      ok(normalRecord, "payload with type that doesn't exist");
+      strictEqual(normalRecord.get('type'), 'bamboo');
+      strictEqual(normalRecord.get('size'), 10);
+
+      var clashingRecord = env.store.peekRecord('basket', '65536');
+      ok(clashingRecord, 'payload with type that matches another model name');
+      strictEqual(clashingRecord.get('type'), 'yellowMinion');
+      strictEqual(clashingRecord.get('size'), 10);
     });
   }
 );
