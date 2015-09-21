@@ -11001,6 +11001,7 @@
     var ember$data$lib$serializers$json$api$serializer$$default = ember$data$lib$serializers$json$api$serializer$$JSONAPISerializer;
 
     var ember$data$lib$serializers$rest$serializer$$camelize = Ember.String.camelize;
+    var ember$data$lib$serializers$rest$serializer$$get = Ember.get;
 
     /**
       Normally, applications will use the `RESTSerializer` by implementing
@@ -11130,8 +11131,10 @@
         var modelClass = store.modelFor(modelName);
         var serializer = store.serializerFor(modelName);
 
+        var primaryHasTypeAttribute = ember$data$lib$serializers$rest$serializer$$get(modelClass, 'attributes').get('type');
+        /*jshint loopfunc:true*/
         arrayHash.forEach(function (hash) {
-          var _normalizePolymorphicRecord = _this._normalizePolymorphicRecord(store, hash, prop, modelClass, serializer);
+          var _normalizePolymorphicRecord = _this._normalizePolymorphicRecord(store, hash, prop, modelClass, serializer, primaryHasTypeAttribute);
 
           var data = _normalizePolymorphicRecord.data;
           var included = _normalizePolymorphicRecord.included;
@@ -11147,11 +11150,11 @@
         return documentHash;
       },
 
-      _normalizePolymorphicRecord: function (store, hash, prop, primaryModelClass, primarySerializer) {
+      _normalizePolymorphicRecord: function (store, hash, prop, primaryModelClass, primarySerializer, primaryHasTypeAttribute) {
         var serializer = undefined,
             modelClass = undefined;
         // Support polymorphic records in async relationships
-        if (hash.type && store._hasModelFor(this.modelNameFromPayloadKey(hash.type))) {
+        if (!primaryHasTypeAttribute && hash.type && store._hasModelFor(this.modelNameFromPayloadKey(hash.type))) {
           serializer = store.serializerFor(hash.type);
           modelClass = store.modelFor(hash.type);
         } else {
