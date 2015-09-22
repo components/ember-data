@@ -11874,7 +11874,7 @@
         import Ember from 'ember';
         import Person from 'app/models/person';
          var attributes = Ember.get(Person, 'attributes')
-         attributes.forEach(function(name, meta) {
+         attributes.forEach(function(meta, name) {
           console.log(name, meta);
         });
          // prints:
