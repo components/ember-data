@@ -8445,40 +8445,115 @@
 
       /**
         Push some data for a given type into the store.
-         This method expects normalized data:
-         * The ID is a key named `id` (an ID is mandatory)
-        * The names of attributes are the ones you used in
-          your model's `DS.attr`s.
-        * Your relationships must be:
-          * represented as IDs or Arrays of IDs
-          * represented as model instances
-          * represented as URLs, under the `links` key
+         This method expects normalized [JSON API](http://jsonapi.org/) document. This means you have to follow [JSON API specification](http://jsonapi.org/format/) with few minor adjustments:
+        - record's `type` should always be in singular, dasherized form
+        - members (properties) should be camelCased
+         [Your primary data should be wrapped inside `data` property](http://jsonapi.org/format/#document-top-level):
+         ```js
+        store.push({
+          data: {
+            // primary data for single record of type `Person`
+            id: '1',
+            type: 'person',
+            attributes: {
+              firstName: 'Daniel',
+              lastName: 'Kmak'
+            }
+          }
+        });
+        ```
+         [Demo.](http://ember-twiddle.com/fb99f18cd3b4d3e2a4c7)
+         `data` property can also hold an array (of records):
+         ```js
+        store.push({
+          data: [
+            // an array of records
+            {
+              id: '1',
+              type: 'person',
+              attributes: {
+                firstName: 'Daniel',
+                lastName: 'Kmak'
+              }
+            },
+            {
+              id: '2',
+              type: 'person',
+              attributes: {
+                firstName: 'Tom',
+                lastName: 'Dale'
+              }
+            }
+          ]
+        });
+        ```
+         [Demo.](http://ember-twiddle.com/69cdbeaa3702159dc355)
+         There are some typical properties for `JSONAPI` payload:
+        * `id` - mandatory, unique record's key
+        * `type` - mandatory string which matches `model`'s dasherized name in singular form
+        * `attributes` - object which holds data for record attributes - `DS.attr`'s declared in model
+        * `relationships` - object which must contain any of the following properties under each relationships' respective key (example path is `relationships.achievements.data`):
+          - [`links`](http://jsonapi.org/format/#document-links)
+          - [`data`](http://jsonapi.org/format/#document-resource-object-linkage) - place for primary data
+          - [`meta`](http://jsonapi.org/format/#document-meta) - object which contains meta-information about relationship
          For this model:
          ```app/models/person.js
         import DS from 'ember-data';
          export default DS.Model.extend({
-          firstName: DS.attr(),
-          lastName: DS.attr(),
+          firstName: DS.attr('string'),
+          lastName: DS.attr('string'),
            children: DS.hasMany('person')
         });
         ```
          To represent the children as IDs:
          ```js
         {
-          id: 1,
-          firstName: "Tom",
-          lastName: "Dale",
-          children: [1, 2, 3]
+          data: {
+            id: '1',
+            type: 'person',
+            attributes: {
+              firstName: 'Tom',
+              lastName: 'Dale'
+            },
+            relationships: {
+              children: {
+                data: [
+                  {
+                    id: '2',
+                    type: 'person'
+                  },
+                  {
+                    id: '3',
+                    type: 'person'
+                  },
+                  {
+                    id: '4',
+                    type: 'person'
+                  }
+                ]
+              }
+            }
+          }
         }
         ```
+         [Demo.](http://ember-twiddle.com/343e1735e034091f5bde)
          To represent the children relationship as a URL:
          ```js
         {
-          id: 1,
-          firstName: "Tom",
-          lastName: "Dale",
-          links: {
-            children: "/people/1/children"
+          data: {
+            id: '1',
+            type: 'person',
+            attributes: {
+              firstName: 'Tom',
+              lastName: 'Dale'
+            },
+            relationships: {
+              children: {
+                links: {
+                  related: '/people/1/children'
+                }
+              }
+            }
           }
         }
         ```
@@ -8488,7 +8563,7 @@
         helper for converting a json payload into the form Ember Data
         expects.
          ```js
-        store.push('person', store.normalize('person', data));
+        store.push(store.normalize('person', data));
         ```
          This method can be used both to push in brand new
         records, as well as to update existing records.
@@ -11843,7 +11918,7 @@
         import Ember from 'ember';
         import Person from 'app/models/person';
          var attributes = Ember.get(Person, 'attributes')
-         attributes.forEach(function(name, meta) {
+         attributes.forEach(function(meta, name) {
           console.log(name, meta);
         });
          // prints:
@@ -12511,10 +12586,10 @@
 
       `DS.EmbeddedRecordsMixin` supports serializing embedded records.
 
-      To set up embedded records, include the mixin when extending a serializer
+      To set up embedded records, include the mixin when extending a serializer,
       then define and configure embedded (model) relationships.
 
-      Below is an example of a per-type serializer ('post' type).
+      Below is an example of a per-type serializer (`post` type).
 
       ```app/serializers/post.js
       import DS from 'ember-data';
@@ -12528,8 +12603,8 @@
       ```
       Note that this use of `{ embedded: 'always' }` is unrelated to
       the `{ embedded: 'always' }` that is defined as an option on `DS.attr` as part of
-      defining a model while working with the ActiveModelSerializer.  Nevertheless,
-      using `{ embedded: 'always' }` as an option to DS.attr is not a valid way to setup
+      defining a model while working with the `ActiveModelSerializer`.  Nevertheless,
+      using `{ embedded: 'always' }` as an option to `DS.attr` is not a valid way to setup
       embedded records.
 
       The `attrs` option for a resource `{ embedded: 'always' }` is shorthand for:
@@ -12546,13 +12621,13 @@
       A resource's `attrs` option may be set to use `ids`, `records` or false for the
       `serialize`  and `deserialize` settings.
 
-      The `attrs` property can be set on the ApplicationSerializer or a per-type
+      The `attrs` property can be set on the `ApplicationSerializer` or a per-type
       serializer.
 
       In the case where embedded JSON is expected while extracting a payload (reading)
       the setting is `deserialize: 'records'`, there is no need to use `ids` when
       extracting as that is the default behavior without this mixin if you are using
-      the vanilla EmbeddedRecordsMixin. Likewise, to embed JSON in the payload while
+      the vanilla `EmbeddedRecordsMixin`. Likewise, to embed JSON in the payload while
       serializing `serialize: 'records'` is the setting to use. There is an option of
       not embedding JSON in the serialized payload by using `serialize: 'ids'`. If you
       do not want the relationship sent at all, you can use `serialize: false`.
@@ -12569,13 +12644,13 @@
 
       Embedded records must have a model defined to be extracted and serialized. Note that
       when defining any relationships on your model such as `belongsTo` and `hasMany`, you
-      should not both specify `async:true` and also indicate through the serializer's
+      should not both specify `async: true` and also indicate through the serializer's
       `attrs` attribute that the related model should be embedded for deserialization.
-      If a model is declared embedded for deserialization (`embedded: 'always'`,
-      `deserialize: 'record'` or `deserialize: 'records'`), then do not use `async:true`.
+      If a model is declared embedded for deserialization (`embedded: 'always'` or `deserialize: 'records'`),
+      then do not use `async: true`.
 
       To successfully extract and serialize embedded records the model relationships
-      must be setup correcty See the
+      must be setup correcty. See the
       [defining relationships](/guides/models/defining-models/#toc_defining-relationships)
       section of the **Defining Models** guide page.
 
@@ -12725,7 +12800,7 @@
         import DS from 'ember-data;
          export default DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
           attrs: {
-            comments: {embedded: 'always'}
+            comments: { embedded: 'always' }
           }
         })
         ```
