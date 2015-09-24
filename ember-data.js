@@ -12618,10 +12618,10 @@
 
       `DS.EmbeddedRecordsMixin` supports serializing embedded records.
 
-      To set up embedded records, include the mixin when extending a serializer
+      To set up embedded records, include the mixin when extending a serializer,
       then define and configure embedded (model) relationships.
 
-      Below is an example of a per-type serializer ('post' type).
+      Below is an example of a per-type serializer (`post` type).
 
       ```app/serializers/post.js
       import DS from 'ember-data';
@@ -12635,8 +12635,8 @@
       ```
       Note that this use of `{ embedded: 'always' }` is unrelated to
       the `{ embedded: 'always' }` that is defined as an option on `DS.attr` as part of
-      defining a model while working with the ActiveModelSerializer.  Nevertheless,
-      using `{ embedded: 'always' }` as an option to DS.attr is not a valid way to setup
+      defining a model while working with the `ActiveModelSerializer`.  Nevertheless,
+      using `{ embedded: 'always' }` as an option to `DS.attr` is not a valid way to setup
       embedded records.
 
       The `attrs` option for a resource `{ embedded: 'always' }` is shorthand for:
@@ -12653,13 +12653,13 @@
       A resource's `attrs` option may be set to use `ids`, `records` or false for the
       `serialize`  and `deserialize` settings.
 
-      The `attrs` property can be set on the ApplicationSerializer or a per-type
+      The `attrs` property can be set on the `ApplicationSerializer` or a per-type
       serializer.
 
       In the case where embedded JSON is expected while extracting a payload (reading)
       the setting is `deserialize: 'records'`, there is no need to use `ids` when
       extracting as that is the default behavior without this mixin if you are using
-      the vanilla EmbeddedRecordsMixin. Likewise, to embed JSON in the payload while
+      the vanilla `EmbeddedRecordsMixin`. Likewise, to embed JSON in the payload while
       serializing `serialize: 'records'` is the setting to use. There is an option of
       not embedding JSON in the serialized payload by using `serialize: 'ids'`. If you
       do not want the relationship sent at all, you can use `serialize: false`.
@@ -12676,13 +12676,13 @@
 
       Embedded records must have a model defined to be extracted and serialized. Note that
       when defining any relationships on your model such as `belongsTo` and `hasMany`, you
-      should not both specify `async:true` and also indicate through the serializer's
+      should not both specify `async: true` and also indicate through the serializer's
       `attrs` attribute that the related model should be embedded for deserialization.
-      If a model is declared embedded for deserialization (`embedded: 'always'`,
-      `deserialize: 'record'` or `deserialize: 'records'`), then do not use `async:true`.
+      If a model is declared embedded for deserialization (`embedded: 'always'` or `deserialize: 'records'`),
+      then do not use `async: true`.
 
       To successfully extract and serialize embedded records the model relationships
-      must be setup correcty See the
+      must be setup correcty. See the
       [defining relationships](/guides/models/defining-models/#toc_defining-relationships)
       section of the **Defining Models** guide page.
 
@@ -12837,7 +12837,7 @@
         import DS from 'ember-data;
          export default DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
           attrs: {
-            comments: {embedded: 'always'}
+            comments: { embedded: 'always' }
           }
         })
         ```
