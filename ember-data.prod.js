@@ -1870,7 +1870,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.1.0-beta.4'
+      VERSION: '2.1.0-beta.5'
     });
 
     if (Ember.libraries) {
