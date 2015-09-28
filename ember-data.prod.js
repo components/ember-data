@@ -2656,6 +2656,7 @@
          @property id
         @type {String}
       */
+      id: null,
 
       /**
         @property currentState
@@ -3098,7 +3099,11 @@
               },
 
       hasMany: function () {
-              }
+              },
+
+      setId: Ember.observer('id', function () {
+        this._internalModel.setId(this.get('id'));
+      })
     });
 
     ember$data$lib$system$model$model$$Model.reopenClass({
@@ -3149,19 +3154,6 @@
        @readonly
       */
       modelName: null
-    });
-
-    Object.defineProperty(ember$data$lib$system$model$model$$Model.prototype, 'id', {
-      configurable: true,
-      enumerable: false,
-      set: function (id) {
-        if (this._internalModel) {
-          this._internalModel.setId(id);
-        }
-      },
-      get: function () {
-        return this._internalModel.id;
-      }
     });
 
     var ember$data$lib$system$model$model$$default = ember$data$lib$system$model$model$$Model;
@@ -6484,6 +6476,7 @@
           store: this.store,
           container: this.container,
           _internalModel: this,
+          id: this.id,
           currentState: ember$data$lib$system$model$internal$model$$get(this, 'currentState'),
           isError: this.isError,
           adapterError: this.error
@@ -6916,6 +6909,9 @@
 
       setId: function (id) {
                 this.id = id;
+        if (this.record.get('id') !== id) {
+          this.record.set('id', id);
+        }
       },
 
       didError: function (error) {
