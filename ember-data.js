@@ -2569,6 +2569,7 @@
          @property id
         @type {String}
       */
+      id: null,
 
       /**
         @property currentState
@@ -3016,7 +3017,11 @@
 
       hasMany: function () {
         Ember.assert("The `hasMany` method is not available on DS.Model, a DS.Snapshot was probably expected. Are you passing a DS.Model instead of a DS.Snapshot to your serializer?", false);
-      }
+      },
+
+      setId: Ember.observer('id', function () {
+        this._internalModel.setId(this.get('id'));
+      })
     });
 
     ember$data$lib$system$model$model$$Model.reopenClass({
@@ -3067,19 +3072,6 @@
        @readonly
       */
       modelName: null
-    });
-
-    Object.defineProperty(ember$data$lib$system$model$model$$Model.prototype, 'id', {
-      configurable: true,
-      enumerable: false,
-      set: function (id) {
-        if (this._internalModel) {
-          this._internalModel.setId(id);
-        }
-      },
-      get: function () {
-        return this._internalModel.id;
-      }
     });
 
     var ember$data$lib$system$model$model$$default = ember$data$lib$system$model$model$$Model;
@@ -6420,6 +6412,7 @@
           store: this.store,
           container: this.container,
           _internalModel: this,
+          id: this.id,
           currentState: ember$data$lib$system$model$internal$model$$get(this, 'currentState'),
           isError: this.isError,
           adapterError: this.error
@@ -6854,6 +6847,9 @@
       setId: function (id) {
         Ember.assert('A record\'s id cannot be changed once it is in the loaded state', this.id === null || this.id === id || this.isNew());
         this.id = id;
+        if (this.record.get('id') !== id) {
+          this.record.set('id', id);
+        }
       },
 
       didError: function (error) {
