@@ -7018,8 +7018,6 @@
       }
     };
 
-    var ember$data$lib$system$store$$badIdFormatAssertion = '`id` has to be non-empty string or number';
-
     var ember$data$lib$system$store$$Backburner = Ember._Backburner || Ember.Backburner || Ember.__loader.require('backburner')['default'] || Ember.__loader.require('backburner')['Backburner'];
     var ember$data$lib$system$store$$Map = Ember.Map;
 
@@ -7424,8 +7422,7 @@
         @return {Promise} promise
       */
       findRecord: function (modelName, id, options) {
-                
-        var internalModel = this._internalModelForId(modelName, id);
+                var internalModel = this._internalModelForId(modelName, id);
         options = options || {};
 
         if (!this.hasRecordForId(modelName, id)) {
