@@ -6367,6 +6367,7 @@
       this.isReloading = false;
       this.isError = false;
       this.error = null;
+      this.__ember_meta__ = null;
       this[Ember.GUID_KEY] = ember$data$lib$system$model$internal$model$$guid++ + 'internal-model';
       /*
         implicit relationships are relationship which have not been declared but the inverse side exists on
@@ -7045,6 +7046,8 @@
       }
     };
 
+    var ember$data$lib$system$store$$badIdFormatAssertion = '`id` has to be non-empty string or number';
+
     var ember$data$lib$system$store$$Backburner = Ember._Backburner || Ember.Backburner || Ember.__loader.require('backburner')['default'] || Ember.__loader.require('backburner')['Backburner'];
     var ember$data$lib$system$store$$Map = Ember.Map;
 
@@ -7458,6 +7461,8 @@
       */
       findRecord: function (modelName, id, options) {
         Ember.assert('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + Ember.inspect(modelName), typeof modelName === 'string');
+        Ember.assert(ember$data$lib$system$store$$badIdFormatAssertion, typeof id === 'string' && id.length > 0 || typeof id === 'number' && !isNaN(id));
+
         var internalModel = this._internalModelForId(modelName, id);
         options = options || {};
 
