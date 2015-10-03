@@ -11119,7 +11119,7 @@
         var modelClass = store.modelFor(modelName);
         var serializer = store.serializerFor(modelName);
 
-        var primaryHasTypeAttribute = ember$data$lib$serializers$rest$serializer$$get(modelClass, 'attributes').get('type');
+        var primaryHasTypeAttribute = ember$data$lib$serializers$rest$serializer$$get(modelClass, 'attributes').get('type') || ember$data$lib$serializers$rest$serializer$$get(modelClass, 'relationshipsByName').get('type');
         /*jshint loopfunc:true*/
         arrayHash.forEach(function (hash) {
           var _normalizePolymorphicRecord = _this._normalizePolymorphicRecord(store, hash, prop, modelClass, serializer, primaryHasTypeAttribute);
