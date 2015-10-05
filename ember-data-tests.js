@@ -19308,7 +19308,7 @@ define(
       __exports__[name] = value;
     }
 
-    var HomePlanet, league, SuperVillain, EvilMinion, YellowMinion, DoomsdayDevice, Comment, Basket, env;
+    var HomePlanet, league, SuperVillain, EvilMinion, YellowMinion, DoomsdayDevice, Comment, Basket, Container, env;
     var run = Ember.run;
 
     module("integration/serializer/rest - RESTSerializer", {
@@ -19343,6 +19343,10 @@ define(
           type: DS.attr('string'),
           size: DS.attr('number')
         });
+        Container = DS.Model.extend({
+          type: DS.belongsTo('basket', { async: true }),
+          volume: DS.attr('string')
+        });
         env = setupStore({
           superVillain: SuperVillain,
           homePlanet: HomePlanet,
@@ -19350,7 +19354,8 @@ define(
           yellowMinion: YellowMinion,
           doomsdayDevice: DoomsdayDevice,
           comment: Comment,
-          basket: Basket
+          basket: Basket,
+          container: Container
         });
         env.store.modelFor('super-villain');
         env.store.modelFor('home-planet');
@@ -19359,6 +19364,7 @@ define(
         env.store.modelFor('doomsday-device');
         env.store.modelFor('comment');
         env.store.modelFor('basket');
+        env.store.modelFor('container');
       },
 
       teardown: function () {
@@ -19916,6 +19922,29 @@ define(
       ok(clashingRecord, 'payload with type that matches another model name');
       strictEqual(clashingRecord.get('type'), 'yellowMinion');
       strictEqual(clashingRecord.get('size'), 10);
+    });
+
+    test("don't polymorphically deserialize based on the type key in payload when a relationship exists named type", function () {
+      env.registry.register('serializer:application', DS.RESTSerializer.extend({
+        isNewSerializerAPI: true
+      }));
+
+      env.adapter.findRecord = function () {
+        return {
+          containers: [{ id: 42, volume: '10 liters', type: 1 }],
+          baskets: [{ id: 1, size: 4 }]
+        };
+      };
+
+      run(function () {
+        env.store.findRecord('container', 42).then(function (container) {
+          strictEqual(container.get('volume'), '10 liters');
+          return container.get('type');
+        }).then(function (basket) {
+          ok(basket instanceof Basket);
+          equal(basket.get('size'), 4);
+        });
+      });
     });
   }
 );
