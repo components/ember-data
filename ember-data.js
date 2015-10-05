@@ -878,10 +878,6 @@
     });
 
     var ember$data$lib$system$adapter$$default = ember$data$lib$system$adapter$$Adapter;
-    var ember$data$lib$system$map$$Map = Ember.Map;
-    var ember$data$lib$system$map$$MapWithDefault = Ember.MapWithDefault;
-
-    var ember$data$lib$system$map$$default = ember$data$lib$system$map$$Map;
     var ember$data$lib$system$empty$object$$default = ember$data$lib$system$empty$object$$EmptyObject;
     // This exists because `Object.create(null)` is absurdly slow compared
     // to `new EmptyObject()`. In either case, you want a null prototype
@@ -1075,7 +1071,8 @@
       @extends DS.Adapter
       @uses DS.BuildURLMixin
     */
-    var ember$data$lib$adapters$rest$adapter$$get = Ember.get;var ember$data$lib$adapters$rest$adapter$$RESTAdapter = ember$data$lib$system$adapter$$default.extend(ember$data$lib$adapters$build$url$mixin$$default, {
+    var ember$data$lib$adapters$rest$adapter$$get = Ember.get;
+    var ember$data$lib$adapters$rest$adapter$$MapWithDefault = Ember.MapWithDefault;var ember$data$lib$adapters$rest$adapter$$RESTAdapter = ember$data$lib$system$adapter$$default.extend(ember$data$lib$adapters$build$url$mixin$$default, {
       defaultSerializer: '-rest',
 
       /**
@@ -1490,7 +1487,7 @@
                           loaded separately by `findMany`.
       */
       groupRecordsForFindMany: function (store, snapshots) {
-        var groups = ember$data$lib$system$map$$MapWithDefault.create({ defaultValue: function () {
+        var groups = ember$data$lib$adapters$rest$adapter$$MapWithDefault.create({ defaultValue: function () {
             return [];
           } });
         var adapter = this;
@@ -1871,7 +1868,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.1.0-beta.5'
+      VERSION: '2.2.0-beta.1'
     });
 
     if (Ember.libraries) {
@@ -2070,98 +2067,12 @@
 
     function ember$data$lib$system$store$common$$_objectIsAlive(object) {
       return !(ember$data$lib$system$store$common$$get(object, "isDestroyed") || ember$data$lib$system$store$common$$get(object, "isDestroying"));
-    }
-
-    /**
-    @module ember-data
-    */
-
-    /**
-      Holds validation errors for a given record organized by attribute names.
-
-      Every DS.Model has an `errors` property that is an instance of
-      `DS.Errors`. This can be used to display validation error
-      messages returned from the server when a `record.save()` rejects.
-      This works automatically with `DS.ActiveModelAdapter`, but you
-      can implement [ajaxError](/api/data/classes/DS.RESTAdapter.html#method_ajaxError)
-      in other adapters as well.
-
-      For Example, if you had an `User` model that looked like this:
-
-      ```app/models/user.js
-      import DS from 'ember-data';
-
-      export default DS.Model.extend({
-        username: attr('string'),
-        email: attr('string')
-      });
-      ```
-      And you attempted to save a record that did not validate on the backend.
-
-      ```javascript
-      var user = store.createRecord('user', {
-        username: 'tomster',
-        email: 'invalidEmail'
-      });
-      user.save();
-      ```
-
-      Your backend data store might return a response that looks like
-      this. This response will be used to populate the error object.
-
-      ```javascript
-      {
-        "errors": {
-          "username": ["This username is already taken!"],
-          "email": ["Doesn't look like a valid email."]
-        }
-      }
-      ```
-
-      Errors can be displayed to the user by accessing their property name
-      to get an array of all the error objects for that property. Each
-      error object is a JavaScript object with two keys:
-
-      - `message` A string containing the error message from the backend
-      - `attribute` The name of the property associated with this error message
-
-      ```handlebars
-      <label>Username: {{input value=username}} </label>
-      {{#each model.errors.username as |error|}}
-        <div class="error">
-          {{error.message}}
-        </div>
-      {{/each}}
-
-      <label>Email: {{input value=email}} </label>
-      {{#each model.errors.email as |error|}}
-        <div class="error">
-          {{error.message}}
-        </div>
-      {{/each}}
-      ```
-
-      You can also access the special `messages` property on the error
-      object to get an array of all the error strings.
-
-      ```handlebars
-      {{#each model.errors.messages as |message|}}
-        <div class="error">
-          {{message}}
-        </div>
-      {{/each}}
-      ```
-
-      @class Errors
-      @namespace DS
-      @extends Ember.Object
-      @uses Ember.Enumerable
-      @uses Ember.Evented
-     */
-    var ember$data$lib$system$model$errors$$get = Ember.get;
+    }var ember$data$lib$system$model$errors$$get = Ember.get;
     var ember$data$lib$system$model$errors$$set = Ember.set;
     var ember$data$lib$system$model$errors$$isEmpty = Ember.isEmpty;
     var ember$data$lib$system$model$errors$$makeArray = Ember.makeArray;
+
+    var ember$data$lib$system$model$errors$$MapWithDefault = Ember.MapWithDefault;
 
     var ember$data$lib$system$model$errors$$default = Ember.ArrayProxy.extend(Ember.Evented, {
       /**
@@ -2182,7 +2093,7 @@
         @private
       */
       errorsByAttributeName: Ember.computed(function () {
-        return ember$data$lib$system$map$$MapWithDefault.create({
+        return ember$data$lib$system$model$errors$$MapWithDefault.create({
           defaultValue: function () {
             return Ember.A();
           }
@@ -4007,19 +3918,19 @@
 
       return this;
     };
-    var ember$data$lib$system$record$array$manager$$get = Ember.get;
+    var ember$data$lib$system$record$array$manager$$MapWithDefault = Ember.MapWithDefault;var ember$data$lib$system$record$array$manager$$get = Ember.get;
 
     var ember$data$lib$system$record$array$manager$$default = Ember.Object.extend({
       init: function () {
         var _this = this;
 
-        this.filteredRecordArrays = ember$data$lib$system$map$$MapWithDefault.create({
+        this.filteredRecordArrays = ember$data$lib$system$record$array$manager$$MapWithDefault.create({
           defaultValue: function () {
             return [];
           }
         });
 
-        this.liveRecordArrays = ember$data$lib$system$map$$MapWithDefault.create({
+        this.liveRecordArrays = ember$data$lib$system$record$array$manager$$MapWithDefault.create({
           defaultValue: function (typeClass) {
             return _this.createRecordArray(typeClass);
           }
@@ -6456,6 +6367,7 @@
       this.isReloading = false;
       this.isError = false;
       this.error = null;
+      this.__ember_meta__ = null;
       this[Ember.GUID_KEY] = ember$data$lib$system$model$internal$model$$guid++ + 'internal-model';
       /*
         implicit relationships are relationship which have not been declared but the inverse side exists on
@@ -7134,7 +7046,10 @@
       }
     };
 
+    var ember$data$lib$system$store$$badIdFormatAssertion = '`id` has to be non-empty string or number';
+
     var ember$data$lib$system$store$$Backburner = Ember._Backburner || Ember.Backburner || Ember.__loader.require('backburner')['default'] || Ember.__loader.require('backburner')['Backburner'];
+    var ember$data$lib$system$store$$Map = Ember.Map;
 
     //Shim Backburner.join
     if (!ember$data$lib$system$store$$Backburner.prototype.join) {
@@ -7304,7 +7219,7 @@
         this._pendingSave = [];
         this._instanceCache = new ember$data$lib$system$store$container$instance$cache$$default(this.container);
         //Used to keep track of all the find requests that need to be coalesced
-        this._pendingFetch = ember$data$lib$system$map$$Map.create();
+        this._pendingFetch = ember$data$lib$system$store$$Map.create();
       },
 
       /**
@@ -7546,6 +7461,8 @@
       */
       findRecord: function (modelName, id, options) {
         Ember.assert('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + Ember.inspect(modelName), typeof modelName === 'string');
+        Ember.assert(ember$data$lib$system$store$$badIdFormatAssertion, typeof id === 'string' && id.length > 0 || typeof id === 'number' && !isNaN(id));
+
         var internalModel = this._internalModelForId(modelName, id);
         options = options || {};
 
@@ -7687,7 +7604,7 @@
         }
 
         this._pendingFetch.forEach(this._flushPendingFetchForType, this);
-        this._pendingFetch = ember$data$lib$system$map$$Map.create();
+        this._pendingFetch = ember$data$lib$system$store$$Map.create();
       },
 
       _flushPendingFetchForType: function (pendingFetchItems, typeClass) {
@@ -12010,6 +11927,7 @@
     */
 
     var ember$data$lib$system$model$attributes$$get = Ember.get;
+    var ember$data$lib$system$model$attributes$$Map = Ember.Map;
 
     /**
       @class Model
@@ -12049,7 +11967,7 @@
       attributes: Ember.computed(function () {
         var _this = this;
 
-        var map = ember$data$lib$system$map$$Map.create();
+        var map = ember$data$lib$system$model$attributes$$Map.create();
 
         this.eachComputedProperty(function (name, meta) {
           if (meta.isAttribute) {
@@ -12094,7 +12012,7 @@
         @readOnly
       */
       transformedAttributes: Ember.computed(function () {
-        var map = ember$data$lib$system$map$$Map.create();
+        var map = ember$data$lib$system$model$attributes$$Map.create();
 
         this.eachAttribute(function (key, meta) {
           if (meta.type) {
@@ -12887,13 +12805,18 @@
             json[key] = embeddedSnapshot.id;
           }
         } else if (includeRecords) {
-          key = this.keyForAttribute(attr, 'serialize');
-          if (!embeddedSnapshot) {
-            json[key] = null;
-          } else {
-            json[key] = embeddedSnapshot.record.serialize({ includeId: true });
-            this.removeEmbeddedForeignKey(snapshot, embeddedSnapshot, relationship, json[key]);
-          }
+          this._serializeEmbeddedBelongsTo(snapshot, json, relationship);
+        }
+      },
+
+      _serializeEmbeddedBelongsTo: function (snapshot, json, relationship) {
+        var embeddedSnapshot = snapshot.belongsTo(relationship.key);
+        var serializedKey = this.keyForAttribute(relationship.key, 'serialize');
+        if (!embeddedSnapshot) {
+          json[serializedKey] = null;
+        } else {
+          json[serializedKey] = embeddedSnapshot.record.serialize({ includeId: true });
+          this.removeEmbeddedForeignKey(snapshot, embeddedSnapshot, relationship, json[serializedKey]);
         }
       },
 
@@ -12968,8 +12891,6 @@
         @param {Object} relationship
       */
       serializeHasMany: function (snapshot, json, relationship) {
-        var _this = this;
-
         var attr = relationship.key;
         if (this.noSerializeOptionSpecified(attr)) {
           this._super(snapshot, json, relationship);
@@ -12977,22 +12898,34 @@
         }
         var includeIds = this.hasSerializeIdsOption(attr);
         var includeRecords = this.hasSerializeRecordsOption(attr);
-        var key, hasMany;
         if (includeIds) {
-          key = this.keyForRelationship(attr, relationship.kind, 'serialize');
-          json[key] = snapshot.hasMany(attr, { ids: true });
+          var serializedKey = this.keyForRelationship(attr, relationship.kind, 'serialize');
+          json[serializedKey] = snapshot.hasMany(attr, { ids: true });
         } else if (includeRecords) {
-          key = this.keyForAttribute(attr, 'serialize');
-          hasMany = snapshot.hasMany(attr);
-
-          Ember.warn('The embedded relationship \'' + key + '\' is undefined for \'' + snapshot.modelName + '\' with id \'' + snapshot.id + '\'. Please include it in your original payload.', Ember.typeOf(hasMany) !== 'undefined', { id: 'ds.serializer.embedded-relationship-undefined' });
-
-          json[key] = Ember.A(hasMany).map(function (embeddedSnapshot) {
-            var embeddedJson = embeddedSnapshot.record.serialize({ includeId: true });
-            _this.removeEmbeddedForeignKey(snapshot, embeddedSnapshot, relationship, embeddedJson);
-            return embeddedJson;
-          });
+          this._serializeEmbeddedHasMany(snapshot, json, relationship);
         }
+      },
+
+      _serializeEmbeddedHasMany: function (snapshot, json, relationship) {
+        var serializedKey = this.keyForAttribute(relationship.key, 'serialize');
+
+        Ember.warn('The embedded relationship \'' + serializedKey + '\' is undefined for \'' + snapshot.modelName + '\' with id \'' + snapshot.id + '\'. Please include it in your original payload.', Ember.typeOf(snapshot.hasMany(relationship.key)) !== 'undefined', { id: 'ds.serializer.embedded-relationship-undefined' });
+
+        json[serializedKey] = this._generateSerializedHasMany(snapshot, relationship);
+      },
+
+      /*
+        Returns an array of embedded records serialized to JSON
+      */
+      _generateSerializedHasMany: function (snapshot, relationship) {
+        var _this = this;
+
+        var hasMany = snapshot.hasMany(relationship.key);
+        return Ember.A(hasMany).map(function (embeddedSnapshot) {
+          var embeddedJson = embeddedSnapshot.record.serialize({ includeId: true });
+          _this.removeEmbeddedForeignKey(snapshot, embeddedSnapshot, relationship, embeddedJson);
+          return embeddedJson;
+        });
       },
 
       /**
@@ -13519,13 +13452,15 @@
     }
 
     var ember$data$lib$system$relationships$ext$$get = Ember.get;
+    var ember$data$lib$system$relationships$ext$$Map = Ember.Map;
+    var ember$data$lib$system$relationships$ext$$MapWithDefault = Ember.MapWithDefault;
 
     var ember$data$lib$system$relationships$ext$$relationshipsDescriptor = Ember.computed(function () {
       if (Ember.testing === true && ember$data$lib$system$relationships$ext$$relationshipsDescriptor._cacheable === true) {
         ember$data$lib$system$relationships$ext$$relationshipsDescriptor._cacheable = false;
       }
 
-      var map = new ember$data$lib$system$map$$MapWithDefault({
+      var map = new ember$data$lib$system$relationships$ext$$MapWithDefault({
         defaultValue: function () {
           return [];
         }
@@ -13584,7 +13519,7 @@
         ember$data$lib$system$relationships$ext$$relationshipsByNameDescriptor._cacheable = false;
       }
 
-      var map = ember$data$lib$system$map$$Map.create();
+      var map = ember$data$lib$system$relationships$ext$$Map.create();
 
       this.eachComputedProperty(function (name, meta) {
         if (meta.isRelationship) {
@@ -13986,7 +13921,7 @@
         @readOnly
       */
       fields: Ember.computed(function () {
-        var map = ember$data$lib$system$map$$Map.create();
+        var map = ember$data$lib$system$relationships$ext$$Map.create();
 
         this.eachComputedProperty(function (name, meta) {
           if (meta.isRelationship) {
