@@ -18508,6 +18508,24 @@ define(
         equal(get(user, 'handles.lastObject.nickname'), '@wycats', 'handles.lastObject.nickname is correct');
       });
     });
+
+    test('Warns when normalizing an unknown type', function () {
+      var documentHash = {
+        data: {
+          type: 'UnknownType',
+          id: '1',
+          attributes: {
+            foo: 'bar'
+          }
+        }
+      };
+
+      warns(function () {
+        run(function () {
+          env.store.serializerFor('user').normalizeResponse(env.store, User, documentHash, '1', 'findRecord');
+        });
+      }, /Encountered a resource object with type "UnknownType", but no model was found for model name "unknown-type"/);
+    });
   }
 );
 
@@ -18551,6 +18569,36 @@ define(
       teardown: function () {
         run(env.store, 'destroy');
       }
+    });
+
+    test("serialize doesn't include ID when includeId is false", function () {
+      run(function () {
+        post = env.store.createRecord('post', { title: 'Rails is omakase' });
+      });
+      var json = {};
+
+      json = env.serializer.serialize(post._createSnapshot(), { includeId: false });
+
+      deepEqual(json, {
+        title: "Rails is omakase",
+        comments: []
+      });
+    });
+
+    test("serialize includes id when includeId is true", function () {
+      run(function () {
+        post = env.store.createRecord('post', { title: 'Rails is omakase' });
+        post.set('id', 'test');
+      });
+      var json = {};
+
+      json = env.serializer.serialize(post._createSnapshot(), { includeId: true });
+
+      deepEqual(json, {
+        id: 'test',
+        title: 'Rails is omakase',
+        comments: []
+      });
     });
 
     test("serializeAttribute", function () {
@@ -18663,6 +18711,25 @@ define(
       deepEqual(json, {
         COMMENTS: ["1"]
       });
+    });
+
+    test("serializeHasMany omits unknown relationships on pushed record", function () {
+
+      run(function () {
+        post = env.store.push({
+          id: "1",
+          type: "post",
+          attributes: {
+            title: "Rails is omakase"
+          }
+        });
+      });
+
+      var json = {};
+
+      env.store.serializerFor("post").serializeHasMany(post._createSnapshot(), json, { key: "comments", options: {} });
+
+      ok(!json.hasOwnProperty("comments"), "Does not add the relationship key to json");
     });
 
     test("serializeIntoHash", function () {
@@ -19174,6 +19241,20 @@ define(
       deepEqual(post.included, []);
     });
 
+    test('normalizeResponse returns empty `included` payload when relationship is undefined', function () {
+      env.registry.register("serializer:post", DS.JSONSerializer.extend());
+
+      var jsonHash = {
+        id: "1",
+        title: "Rails is omakase",
+        comments: null
+      };
+
+      var post = env.store.serializerFor("post").normalizeResponse(env.store, Post, jsonHash, '1', 'findRecord');
+
+      deepEqual(post.included, []);
+    });
+
     test('normalizeResponse respects `included` items (single response)', function () {
       env.registry.register("serializer:post", DS.JSONSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
@@ -19227,7 +19308,7 @@ define(
       __exports__[name] = value;
     }
 
-    var HomePlanet, league, SuperVillain, EvilMinion, YellowMinion, DoomsdayDevice, Comment, Basket, env;
+    var HomePlanet, league, SuperVillain, EvilMinion, YellowMinion, DoomsdayDevice, Comment, Basket, Container, env;
     var run = Ember.run;
 
     module("integration/serializer/rest - RESTSerializer", {
@@ -19262,6 +19343,10 @@ define(
           type: DS.attr('string'),
           size: DS.attr('number')
         });
+        Container = DS.Model.extend({
+          type: DS.belongsTo('basket', { async: true }),
+          volume: DS.attr('string')
+        });
         env = setupStore({
           superVillain: SuperVillain,
           homePlanet: HomePlanet,
@@ -19269,7 +19354,8 @@ define(
           yellowMinion: YellowMinion,
           doomsdayDevice: DoomsdayDevice,
           comment: Comment,
-          basket: Basket
+          basket: Basket,
+          container: Container
         });
         env.store.modelFor('super-villain');
         env.store.modelFor('home-planet');
@@ -19278,6 +19364,7 @@ define(
         env.store.modelFor('doomsday-device');
         env.store.modelFor('comment');
         env.store.modelFor('basket');
+        env.store.modelFor('container');
       },
 
       teardown: function () {
@@ -19835,6 +19922,29 @@ define(
       ok(clashingRecord, 'payload with type that matches another model name');
       strictEqual(clashingRecord.get('type'), 'yellowMinion');
       strictEqual(clashingRecord.get('size'), 10);
+    });
+
+    test("don't polymorphically deserialize based on the type key in payload when a relationship exists named type", function () {
+      env.registry.register('serializer:application', DS.RESTSerializer.extend({
+        isNewSerializerAPI: true
+      }));
+
+      env.adapter.findRecord = function () {
+        return {
+          containers: [{ id: 42, volume: '10 liters', type: 1 }],
+          baskets: [{ id: 1, size: 4 }]
+        };
+      };
+
+      run(function () {
+        env.store.findRecord('container', 42).then(function (container) {
+          strictEqual(container.get('volume'), '10 liters');
+          return container.get('type');
+        }).then(function (basket) {
+          ok(basket instanceof Basket);
+          equal(basket.get('size'), 4);
+        });
+      });
     });
   }
 );
@@ -22943,12 +23053,23 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     equal(Object.keys(mascot.changedAttributes()).length, 0, 'after rollback attributes there are no changes');
   });
 
+  function toObj(obj) {
+    // https://github.com/jquery/qunit/issues/851
+    var result = Object.create(null);
+    for (var key in obj) {
+      result[key] = obj[key];
+    }
+    return result;
+  }
+
   test("changedAttributes() works while the record is being saved", function () {
     expect(1);
     var cat;
     var adapter = DS.Adapter.extend({
       createRecord: function (store, model, snapshot) {
-        deepEqual(cat.changedAttributes(), { name: [undefined, 'Argon'], likes: [undefined, 'Cheese'] });
+        deepEqual(toObj(cat.changedAttributes()), {
+          name: [undefined, 'Argon'],
+          likes: [undefined, 'Cheese'] });
         return {};
       }
     });
@@ -22975,7 +23096,7 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     var cat;
     var adapter = DS.Adapter.extend({
       updateRecord: function (store, model, snapshot) {
-        deepEqual(cat.changedAttributes(), { name: ['Argon', 'Helia'], likes: ['Cheese', 'Mussels'] });
+        deepEqual(toObj(cat.changedAttributes()), { name: ['Argon', 'Helia'], likes: ['Cheese', 'Mussels'] });
         return { id: '1', type: 'mascot' };
       }
     });
@@ -23758,6 +23879,74 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
 
     run(function () {
       return store.createRecord('person');
+    });
+  });
+
+  test('setting the id after model creation should correctly update the id', function () {
+    expect(2);
+    var Person = DS.Model.extend({
+      name: DS.attr('string')
+    });
+
+    var env = setupStore({
+      person: Person
+    });
+    var store = env.store;
+
+    run(function () {
+      var person = store.createRecord('person');
+
+      equal(person.get('id'), null, 'initial created model id should be null');
+
+      person.set('id', 'john');
+
+      equal(person.get('id'), 'john', 'new id should be correctly set.');
+    });
+  });
+
+  test('updating the id with store.updateId should correctly when the id property is watched', function () {
+    expect(2);
+    var Person = DS.Model.extend({
+      name: DS.attr('string'),
+      idComputed: Ember.computed('id', function () {})
+    });
+
+    var env = setupStore({
+      person: Person
+    });
+    var store = env.store;
+    run(function () {
+      var person = store.createRecord('person');
+      person.get('idComputed');
+
+      equal(person.get('id'), null, 'initial created model id should be null');
+
+      store.updateId(person._internalModel, { id: 'john' });
+
+      equal(person.get('id'), 'john', 'new id should be correctly set.');
+    });
+  });
+
+  test('accessing the model id without the get function should work when id is watched', function () {
+    expect(2);
+    var Person = DS.Model.extend({
+      name: DS.attr('string'),
+      idComputed: Ember.computed('id', function () {})
+    });
+
+    var env = setupStore({
+      person: Person
+    });
+    var store = env.store;
+    run(function () {
+      var person = store.createRecord('person');
+      person.get('idComputed');
+
+      equal(person.get('id'), null, 'initial created model id should be null');
+
+      store.updateId(person._internalModel, { id: 'john' });
+
+      equal(person.id, 'john', 'new id should be correctly set.');
     });
   });
 });
@@ -29466,23 +29655,26 @@ define(
       }, /You tried to push data with a type 'unknown' but no model could be found with that name/);
     });
 
-    test('Calling push with a link containing an object throws an assertion error', function () {
+    test('Calling push with a link containing an object', function () {
       Person.reopen({
         phoneNumbers: hasMany('phone-number', { async: true })
       });
 
-      expectAssertion(function () {
-        run(function () {
-          store.push(store.normalize('person', {
-            id: '1',
-            links: {
-              phoneNumbers: {
-                href: '/api/people/1/phone-numbers'
-              }
+      run(function () {
+        store.push(store.normalize('person', {
+          id: '1',
+          firstName: 'Tan',
+          links: {
+            phoneNumbers: {
+              href: '/api/people/1/phone-numbers'
             }
-          }));
-        });
-      }, "You have pushed a record of type 'person' with 'phoneNumbers' as a link, but the value of that link is not a string.");
+          }
+        }));
+      });
+
+      var person = store.peekRecord('person', 1);
+
+      equal(person.get('firstName'), "Tan", "you can use links containing an object");
     });
 
     test('Calling push with a link containing the value null', function () {
@@ -30295,13 +30487,6 @@ QUnit.test('ember-data/lib/adapters/errors.js should pass jshint', function(asse
 }
 if (!QUnit.urlParams.nojshint) {
 QUnit.module('JSHint - ember-data/lib/adapters');
-QUnit.test('ember-data/lib/adapters/fixture-adapter.js should pass jshint', function(assert) { 
-  assert.ok(true, 'ember-data/lib/adapters/fixture-adapter.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-QUnit.module('JSHint - ember-data/lib/adapters');
 QUnit.test('ember-data/lib/adapters/json-api-adapter.js should pass jshint', function(assert) { 
   assert.ok(true, 'ember-data/lib/adapters/json-api-adapter.js should pass jshint.'); 
 });
@@ -30470,6 +30655,13 @@ QUnit.test('ember-data/lib/system/debug/debug-info.js should pass jshint', funct
 }
 if (!QUnit.urlParams.nojshint) {
 QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/empty-object.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/empty-object.js should pass jshint.'); 
+});
+
+}
+if (!QUnit.urlParams.nojshint) {
+QUnit.module('JSHint - ember-data/lib/system');
 QUnit.test('ember-data/lib/system/is-array-like.js should pass jshint', function(assert) { 
   assert.ok(true, 'ember-data/lib/system/is-array-like.js should pass jshint.'); 
 });
@@ -30542,6 +30734,13 @@ if (!QUnit.urlParams.nojshint) {
 QUnit.module('JSHint - ember-data/lib/system/model');
 QUnit.test('ember-data/lib/system/model/states.js should pass jshint', function(assert) { 
   assert.ok(true, 'ember-data/lib/system/model/states.js should pass jshint.'); 
+});
+
+}
+if (!QUnit.urlParams.nojshint) {
+QUnit.module('JSHint - ember-data/lib/system');
+QUnit.test('ember-data/lib/system/normalize-link.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/lib/system/normalize-link.js should pass jshint.'); 
 });
 
 }
