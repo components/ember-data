@@ -26713,17 +26713,7 @@ define(
       }]);
       var adapter = DS.RESTAdapter.extend({
         ajax: function (url, type, hash) {
-          return new Ember.RSVP.Promise(function (resolve, reject) {
-            /* If InvalidError is passed back in the reject it will throw the
-               exception which will bubble up the call stack (crashing the test)
-               instead of hitting the failure route of the promise.
-               So wrapping the reject in an Ember.run.next makes it so save
-               completes without failure and the failure hits the failure route
-               of the promise instead of crashing the save. */
-            Ember.run.next(function () {
-              reject(error);
-            });
-          });
+          return Ember.RSVP.reject(error);
         }
       });
 
@@ -26789,17 +26779,7 @@ define(
 
       var adapter = DS.RESTAdapter.extend({
         ajax: function (url, type, hash) {
-          return new Ember.RSVP.Promise(function (resolve, reject) {
-            /* If InvalidError is passed back in the reject it will throw the
-               exception which will bubble up the call stack (crashing the test)
-               instead of hitting the failure route of the promise.
-               So wrapping the reject in an Ember.run.next makes it so save
-               completes without failure and the failure hits the failure route
-               of the promise instead of crashing the save. */
-            Ember.run.next(function () {
-              reject(error);
-            });
-          });
+          return Ember.RSVP.reject(error);
         }
       });
 
@@ -26858,17 +26838,7 @@ define(
 
       var adapter = DS.RESTAdapter.extend({
         ajax: function (url, type, hash) {
-          return new Ember.RSVP.Promise(function (resolve, reject) {
-            /* If InvalidError is passed back in the reject it will throw the
-               exception which will bubble up the call stack (crashing the test)
-               instead of hitting the failure route of the promise.
-               So wrapping the reject in an Ember.run.next makes it so save
-               completes without failure and the failure hits the failure route
-               of the promise instead of crashing the save. */
-            Ember.run.next(function () {
-              reject(error);
-            });
-          });
+          return Ember.RSVP.reject(error);
         }
       });
 
@@ -26933,11 +26903,7 @@ define(
 
       var adapter = DS.RESTAdapter.extend({
         ajax: function (url, type, hash) {
-          return new Ember.RSVP.Promise(function (resolve, reject) {
-            Ember.run.next(function () {
-              reject(error);
-            });
-          });
+          return Ember.RSVP.reject(error);
         }
       });
 
