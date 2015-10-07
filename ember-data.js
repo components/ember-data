@@ -6000,7 +6000,6 @@
       }
       return relationships[key];
     };
-    var ember$data$lib$system$snapshot$$default = ember$data$lib$system$snapshot$$Snapshot;
     var ember$data$lib$system$snapshot$$get = Ember.get;
 
     /**
