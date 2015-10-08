@@ -3467,7 +3467,7 @@
       var promise = adapter.query(store, typeClass, query, recordArray);
 
       var serializer = ember$data$lib$system$store$serializers$$serializerForAdapter(store, adapter, modelName);
-      var label = "DS: Handle Adapter#findQuery of " + typeClass;
+      var label = "DS: Handle Adapter#query of " + typeClass;
 
       promise = ember$data$lib$system$store$finders$$Promise.resolve(promise, label);
       promise = ember$data$lib$system$store$common$$_guard(promise, ember$data$lib$system$store$common$$_bind(ember$data$lib$system$store$common$$_objectIsAlive, store));
@@ -3482,7 +3482,7 @@
 
         recordArray.loadRecords(records);
         return recordArray;
-      }, null, "DS: Extract payload of findQuery " + typeClass);
+      }, null, "DS: Extract payload of query " + typeClass);
     }
 
     function ember$data$lib$system$store$finders$$_queryRecord(adapter, store, typeClass, query) {
@@ -7877,7 +7877,7 @@
         var adapter = this.adapterFor(modelName);
 
         Ember.assert("You tried to load a query but you have no adapter (for " + typeClass + ")", adapter);
-        Ember.assert("You tried to load a query but your adapter does not implement `query`", typeof adapter.query === 'function' || typeof adapter.findQuery === 'function');
+        Ember.assert("You tried to load a query but your adapter does not implement `query`", typeof adapter.query === 'function');
 
         return ember$data$lib$system$promise$proxies$$promiseArray(ember$data$lib$system$store$finders$$_query(adapter, this, typeClass, query, array));
       },

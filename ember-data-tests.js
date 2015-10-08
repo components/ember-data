@@ -3032,7 +3032,7 @@ define(
       }));
     });
 
-    test("findQuery - if `sortQueryParams` option is not provided, query params are sorted alphabetically", function () {
+    test("query - if `sortQueryParams` option is not provided, query params are sorted alphabetically", function () {
       adapter.ajax = function (url, verb, hash) {
         passedUrl = url;
         passedVerb = verb;
@@ -3048,7 +3048,7 @@ define(
       }));
     });
 
-    test("findQuery - passes buildURL the requestType", function () {
+    test("query - passes buildURL the requestType", function () {
       adapter.buildURL = function (type, id, snapshot, requestType) {
         return "/" + requestType + "/posts";
       };
@@ -3064,7 +3064,7 @@ define(
       }));
     });
 
-    test("findQuery - if `sortQueryParams` is falsey, query params are not sorted at all", function () {
+    test("query - if `sortQueryParams` is falsey, query params are not sorted at all", function () {
       adapter.ajax = function (url, verb, hash) {
         passedUrl = url;
         passedVerb = verb;
@@ -3082,7 +3082,7 @@ define(
       }));
     });
 
-    test("findQuery - if `sortQueryParams` is a custom function, query params passed through that function", function () {
+    test("query - if `sortQueryParams` is a custom function, query params passed through that function", function () {
       adapter.ajax = function (url, verb, hash) {
         passedUrl = url;
         passedVerb = verb;
@@ -3109,7 +3109,7 @@ define(
       }));
     });
 
-    test("findQuery - payload 'meta' is accessible on the record array", function () {
+    test("query - payload 'meta' is accessible on the record array", function () {
       ajaxResponse({
         meta: { offset: 5 },
         posts: [{ id: 1, name: "Rails is very expensive sushi" }]
@@ -3120,7 +3120,7 @@ define(
       }));
     });
 
-    test("findQuery - each record array can have it's own meta object", function () {
+    test("query - each record array can have it's own meta object", function () {
       ajaxResponse({
         meta: { offset: 5 },
         posts: [{ id: 1, name: "Rails is very expensive sushi" }]
@@ -3139,7 +3139,7 @@ define(
       }));
     });
 
-    test("findQuery - returning an array populates the array", function () {
+    test("query - returning an array populates the array", function () {
       ajaxResponse({
         posts: [{ id: 1, name: "Rails is omakase" }, { id: 2, name: "The Parley Letter" }]
       });
@@ -3161,7 +3161,7 @@ define(
       }));
     });
 
-    test("findQuery - returning sideloaded data loads the data", function () {
+    test("query - returning sideloaded data loads the data", function () {
       ajaxResponse({
         posts: [{ id: 1, name: "Rails is omakase" }, { id: 2, name: "The Parley Letter" }],
         comments: [{ id: 1, name: "FIRST" }]
@@ -3174,7 +3174,7 @@ define(
       }));
     });
 
-    test("findQuery - data is normalized through custom serializers", function () {
+    test("query - data is normalized through custom serializers", function () {
       env.registry.register('serializer:post', DS.RESTSerializer.extend({
         primaryKey: '_ID_',
         attrs: { name: '_NAME_' }
@@ -22645,54 +22645,6 @@ define(
 
 
 define(
-  "ember-data/tests/unit/adapters/rest-adapter/deprecated-adapter-methods",
-  ["exports"],
-  function(__exports__) {
-    "use strict";
-
-    function __es6_export__(name, value) {
-      __exports__[name] = value;
-    }
-
-    var store = {};
-    var type = 'post';
-    var id = 1;
-    var snapshot = {};
-
-    module("unit/adapters/rest-adapter/deprecated-adapter-methods - ");
-
-    test("`findRecord` delegates to deprecated find method if it is supplied", function () {
-      expect(2);
-
-      var adapter = DS.RESTAdapter.extend({
-        find: function () {
-          ok(true, 'overridden `find` method should be called');
-        }
-      }).create();
-
-      expectDeprecation(function () {
-        adapter.findRecord(store, type, id, snapshot);
-      }, /RestAdapter#find has been deprecated and renamed to `findRecord`./);
-    });
-
-    test("`query` delegates to deprecated findQuery method if it is supplied", function () {
-      expect(2);
-
-      var adapter = DS.RESTAdapter.extend({
-        findQuery: function () {
-          ok(true, 'overridden `findQuery` method should be called');
-        }
-      }).create();
-
-      expectDeprecation(function () {
-        adapter.query(store, type, id, snapshot);
-      }, /RestAdapter#findQuery has been deprecated and renamed to `query`./);
-    });
-  }
-);
-
-
-define(
   "ember-data/tests/unit/adapters/rest-adapter/group-records-for-find-many-test",
   ["exports"],
   function(__exports__) {
@@ -31463,13 +31415,6 @@ if (!QUnit.urlParams.nojshint) {
 QUnit.module('JSHint - ember-data/tests/unit/adapters/rest-adapter');
 QUnit.test('ember-data/tests/unit/adapters/rest-adapter/ajax-test.js should pass jshint', function(assert) { 
   assert.ok(true, 'ember-data/tests/unit/adapters/rest-adapter/ajax-test.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-QUnit.module('JSHint - ember-data/tests/unit/adapters/rest-adapter');
-QUnit.test('ember-data/tests/unit/adapters/rest-adapter/deprecated-adapter-methods.js should pass jshint', function(assert) { 
-  assert.ok(true, 'ember-data/tests/unit/adapters/rest-adapter/deprecated-adapter-methods.js should pass jshint.'); 
 });
 
 }
