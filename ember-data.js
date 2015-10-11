@@ -421,63 +421,7 @@
 
     var ember$data$lib$system$adapter$$get = Ember.get;
 
-    /**
-      An adapter is an object that receives requests from a store and
-      translates them into the appropriate action to take against your
-      persistence layer. The persistence layer is usually an HTTP API, but
-      may be anything, such as the browser's local storage. Typically the
-      adapter is not invoked directly instead its functionality is accessed
-      through the `store`.
-
-      ### Creating an Adapter
-
-      Create a new subclass of `DS.Adapter` in the `app/adapters` folder:
-
-      ```app/adapters/application.js
-      import DS from 'ember-data';
-
-      export default DS.Adapter.extend({
-        // ...your code here
-      });
-      ```
-
-      Model-specific adapters can be created by putting your adapter
-      class in an `app/adapters/` + `model-name` + `.js` file of the application.
-
-      ```app/adapters/post.js
-      import DS from 'ember-data';
-
-      export default DS.Adapter.extend({
-        // ...Post-specific adapter code goes here
-      });
-      ```
-
-      `DS.Adapter` is an abstract base class that you should override in your
-      application to customize it for your backend. The minimum set of methods
-      that you should implement is:
-
-        * `findRecord()`
-        * `createRecord()`
-        * `updateRecord()`
-        * `deleteRecord()`
-        * `findAll()`
-        * `query()`
-
-      To improve the network performance of your application, you can optimize
-      your adapter by overriding these lower-level methods:
-
-        * `findMany()`
-
-
-      For an example implementation, see `DS.RESTAdapter`, the
-      included REST adapter.
-
-      @class Adapter
-      @namespace DS
-      @extends Ember.Object
-    */
-
-    var ember$data$lib$system$adapter$$Adapter = Ember.Object.extend({
+    var ember$data$lib$system$adapter$$default = Ember.Object.extend({
 
       /**
         If you would like your adapter to use a custom serializer you can
@@ -877,7 +821,6 @@
       }
     });
 
-    var ember$data$lib$system$adapter$$default = ember$data$lib$system$adapter$$Adapter;
     var ember$data$lib$system$empty$object$$default = ember$data$lib$system$empty$object$$EmptyObject;
     // This exists because `Object.create(null)` is absurdly slow compared
     // to `new EmptyObject()`. In either case, you want a null prototype
@@ -1072,7 +1015,9 @@
       @uses DS.BuildURLMixin
     */
     var ember$data$lib$adapters$rest$adapter$$get = Ember.get;
-    var ember$data$lib$adapters$rest$adapter$$MapWithDefault = Ember.MapWithDefault;var ember$data$lib$adapters$rest$adapter$$RESTAdapter = ember$data$lib$system$adapter$$default.extend(ember$data$lib$adapters$build$url$mixin$$default, {
+    var ember$data$lib$adapters$rest$adapter$$MapWithDefault = Ember.MapWithDefault;
+
+    var ember$data$lib$adapters$rest$adapter$$default = ember$data$lib$system$adapter$$default.extend(ember$data$lib$adapters$build$url$mixin$$default, {
       defaultSerializer: '-rest',
 
       /**
@@ -1753,8 +1698,6 @@
         return string.endsWith(suffix);
       }
     }
-
-    var ember$data$lib$adapters$rest$adapter$$default = ember$data$lib$adapters$rest$adapter$$RESTAdapter;
 
     var ember$data$lib$adapters$json$api$adapter$$default = ember$data$lib$adapters$rest$adapter$$default.extend({
       defaultSerializer: '-json-api',
@@ -5998,6 +5941,7 @@
       }
       return relationships[key];
     };
+    var ember$data$lib$system$snapshot$$default = ember$data$lib$system$snapshot$$Snapshot;
     var ember$data$lib$system$snapshot$$get = Ember.get;
 
     /**
@@ -6305,8 +6249,6 @@
         return this.record.store.serializerFor(this.modelName).serialize(this, options);
       }
     };
-
-    var ember$data$lib$system$snapshot$$default = ember$data$lib$system$snapshot$$Snapshot;
     var ember$data$lib$system$model$internal$model$$default = ember$data$lib$system$model$internal$model$$InternalModel;
 
     var ember$data$lib$system$model$internal$model$$Promise = Ember.RSVP.Promise;
@@ -9072,73 +9014,7 @@
     var ember$data$lib$serializers$json$serializer$$isNone = Ember.isNone;
     var ember$data$lib$serializers$json$serializer$$merge = Ember.merge;
 
-    /**
-      Ember Data 2.0 Serializer:
-
-      In Ember Data a Serializer is used to serialize and deserialize
-      records when they are transferred in and out of an external source.
-      This process involves normalizing property names, transforming
-      attribute values and serializing relationships.
-
-      By default, Ember Data uses and recommends the `JSONAPISerializer`.
-
-      `JSONSerializer` is useful for simpler or legacy backends that may
-      not support the http://jsonapi.org/ spec.
-
-      For example, given the following `User` model and JSON payload:
-
-      ```app/models/user.js
-      import DS from 'ember-data';
-
-      export default DS.Model.extend({
-        friends: DS.hasMany('user'),
-        house: DS.belongsTo('location'),
-
-        name: DS.attr('string')
-      });
-      ```
-
-      ```js
-      {
-        id: 1,
-        name: 'Sebastian',
-        friends: [3, 4],
-        links: {
-          house: '/houses/lefkada'
-        }
-      }
-      ```
-
-      `JSONSerializer` will normalize the JSON payload to the JSON API format that the
-      Ember Data store expects.
-
-      You can customize how JSONSerializer processes its payload by passing options in
-      the `attrs` hash or by subclassing the `JSONSerializer` and overriding hooks:
-
-        - To customize how a single record is normalized, use the `normalize` hook.
-        - To customize how `JSONSerializer` normalizes the whole server response, use the
-          `normalizeResponse` hook.
-        - To customize how `JSONSerializer` normalizes a specific response from the server,
-          use one of the many specific `normalizeResponse` hooks.
-        - To customize how `JSONSerializer` normalizes your id, attributes or relationships,
-          use the `extractId`, `extractAttributes` and `extractRelationships` hooks.
-
-      The `JSONSerializer` normalization process follows these steps:
-
-        - `normalizeResponse` - entry method to the serializer.
-        - `normalizeCreateRecordResponse` - a `normalizeResponse` for a specific operation is called.
-        - `normalizeSingleResponse`|`normalizeArrayResponse` - for methods like `createRecord` we expect
-          a single record back, while for methods like `findAll` we expect multiple methods back.
-        - `normalize` - `normalizeArray` iterates and calls `normalize` for each of its records while `normalizeSingle`
-          calls it once. This is the method you most likely want to subclass.
-        - `extractId` | `extractAttributes` | `extractRelationships` - `normalize` delegates to these methods to
-          turn the record payload into the JSON API format.
-
-      @class JSONSerializer
-      @namespace DS
-      @extends DS.Serializer
-    */
-    var ember$data$lib$serializers$json$serializer$$JSONSerializer = ember$data$lib$system$serializer$$default.extend({
+    var ember$data$lib$serializers$json$serializer$$default = ember$data$lib$system$serializer$$default.extend({
 
       /**
         The `primaryKey` is used when serializing and deserializing
@@ -10320,8 +10196,6 @@
         return transform;
       }
     });
-
-    var ember$data$lib$serializers$json$serializer$$default = ember$data$lib$serializers$json$serializer$$JSONSerializer;
 
     var ember$inflector$lib$lib$system$inflector$$capitalize = ember$lib$main$$default.String.capitalize;
 
@@ -12616,97 +12490,7 @@
     var ember$data$lib$serializers$embedded$records$mixin$$set = Ember.set;
     var ember$data$lib$serializers$embedded$records$mixin$$camelize = Ember.String.camelize;
 
-    /**
-      ## Using Embedded Records
-
-      `DS.EmbeddedRecordsMixin` supports serializing embedded records.
-
-      To set up embedded records, include the mixin when extending a serializer,
-      then define and configure embedded (model) relationships.
-
-      Below is an example of a per-type serializer (`post` type).
-
-      ```app/serializers/post.js
-      import DS from 'ember-data';
-
-      export default DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          author: { embedded: 'always' },
-          comments: { serialize: 'ids' }
-        }
-      });
-      ```
-      Note that this use of `{ embedded: 'always' }` is unrelated to
-      the `{ embedded: 'always' }` that is defined as an option on `DS.attr` as part of
-      defining a model while working with the `ActiveModelSerializer`.  Nevertheless,
-      using `{ embedded: 'always' }` as an option to `DS.attr` is not a valid way to setup
-      embedded records.
-
-      The `attrs` option for a resource `{ embedded: 'always' }` is shorthand for:
-
-      ```js
-      {
-        serialize: 'records',
-        deserialize: 'records'
-      }
-      ```
-
-      ### Configuring Attrs
-
-      A resource's `attrs` option may be set to use `ids`, `records` or false for the
-      `serialize`  and `deserialize` settings.
-
-      The `attrs` property can be set on the `ApplicationSerializer` or a per-type
-      serializer.
-
-      In the case where embedded JSON is expected while extracting a payload (reading)
-      the setting is `deserialize: 'records'`, there is no need to use `ids` when
-      extracting as that is the default behavior without this mixin if you are using
-      the vanilla `EmbeddedRecordsMixin`. Likewise, to embed JSON in the payload while
-      serializing `serialize: 'records'` is the setting to use. There is an option of
-      not embedding JSON in the serialized payload by using `serialize: 'ids'`. If you
-      do not want the relationship sent at all, you can use `serialize: false`.
-
-
-      ### EmbeddedRecordsMixin defaults
-      If you do not overwrite `attrs` for a specific relationship, the `EmbeddedRecordsMixin`
-      will behave in the following way:
-
-      BelongsTo: `{ serialize: 'id', deserialize: 'id' }`
-      HasMany:   `{ serialize: false, deserialize: 'ids' }`
-
-      ### Model Relationships
-
-      Embedded records must have a model defined to be extracted and serialized. Note that
-      when defining any relationships on your model such as `belongsTo` and `hasMany`, you
-      should not both specify `async: true` and also indicate through the serializer's
-      `attrs` attribute that the related model should be embedded for deserialization.
-      If a model is declared embedded for deserialization (`embedded: 'always'` or `deserialize: 'records'`),
-      then do not use `async: true`.
-
-      To successfully extract and serialize embedded records the model relationships
-      must be setup correcty. See the
-      [defining relationships](/guides/models/defining-models/#toc_defining-relationships)
-      section of the **Defining Models** guide page.
-
-      Records without an `id` property are not considered embedded records, model
-      instances must have an `id` property to be used with Ember Data.
-
-      ### Example JSON payloads, Models and Serializers
-
-      **When customizing a serializer it is important to grok what the customizations
-      are. Please read the docs for the methods this mixin provides, in case you need
-      to modify it to fit your specific needs.**
-
-      For example review the docs for each method of this mixin:
-      * [normalize](/api/data/classes/DS.EmbeddedRecordsMixin.html#method_normalize)
-      * [serializeBelongsTo](/api/data/classes/DS.EmbeddedRecordsMixin.html#method_serializeBelongsTo)
-      * [serializeHasMany](/api/data/classes/DS.EmbeddedRecordsMixin.html#method_serializeHasMany)
-
-      @class EmbeddedRecordsMixin
-      @namespace DS
-    */
-    var ember$data$lib$serializers$embedded$records$mixin$$EmbeddedRecordsMixin = Ember.Mixin.create({
+    var ember$data$lib$serializers$embedded$records$mixin$$default = Ember.Mixin.create({
 
       /**
         Normalize the record and recursively normalize/extract all the embedded records
@@ -13095,7 +12879,7 @@
       }
     });
 
-    var ember$data$lib$serializers$embedded$records$mixin$$default = ember$data$lib$serializers$embedded$records$mixin$$EmbeddedRecordsMixin;
+    var ember$data$lib$system$relationships$belongs$to$$default = ember$data$lib$system$relationships$belongs$to$$belongsTo;
 
     /**
       `DS.belongsTo` is used to define One-To-One and One-To-Many
@@ -13237,8 +13021,6 @@
         this.notifyPropertyChange(key);
       }
     });
-
-    var ember$data$lib$system$relationships$belongs$to$$default = ember$data$lib$system$relationships$belongs$to$$belongsTo;
     var ember$data$lib$system$is$array$like$$default = ember$data$lib$system$is$array$like$$isArrayLike;
     /*
       We're using this to detect arrays and "array-like" objects.
@@ -13270,6 +13052,7 @@
       }
       return false;
     }
+    var ember$data$lib$system$relationships$has$many$$default = ember$data$lib$system$relationships$has$many$$hasMany;
 
     /**
       `DS.hasMany` is used to define One-To-Many and Many-To-Many
@@ -13428,8 +13211,6 @@
         this.notifyPropertyChange(key);
       }
     });
-
-    var ember$data$lib$system$relationships$has$many$$default = ember$data$lib$system$relationships$has$many$$hasMany;
 
     function ember$data$lib$system$relationship$meta$$typeForRelationshipMeta(meta) {
       var modelName;
