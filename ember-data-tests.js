@@ -5883,7 +5883,7 @@ define(
 
 
 define(
-  "ember-data/tests/integration/backwards-compat/non-dasherized-lookups",
+  "ember-data/tests/integration/backwards-compat/non-dasherized-lookups-test",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -5892,123 +5892,196 @@ define(
       __exports__[name] = value;
     }
 
-    var App, store;
+    var get = Ember.get;
+    var _Ember = Ember;
+    var run = _Ember.run;
+    var _DS = DS;
+    var JSONAPIAdapter = _DS.JSONAPIAdapter;
+    var JSONAPISerializer = _DS.JSONAPISerializer;
+    var Model = _DS.Model;
+    var attr = _DS.attr;
+    var belongsTo = _DS.belongsTo;
+    var hasMany = _DS.hasMany;
 
-    var run = Ember.run;
+    var store = undefined;
+
     module('integration/backwards-compat/non-dasherized-lookups - non dasherized lookups in application code finders', {
       setup: function () {
-        run(function () {
-          App = Ember.Application.create();
-          App.PostNote = DS.Model.extend({
-            name: DS.attr()
-          });
+        var PostNote = Model.extend({
+          name: attr('string')
         });
-        store = App.__container__.lookup('service:store');
+
+        var env = setupStore({ postNote: PostNote });
+
+        var ApplicationAdapter = JSONAPIAdapter.extend({
+          shouldBackgroundReloadRecord: function () {
+            return false;
+          }
+        });
+
+        env.registry.register('adapter:application', ApplicationAdapter);
+        env.registry.register('serializer:application', JSONAPISerializer);
+
+        store = env.store;
       },
+
       teardown: function () {
-        run(App, 'destroy');
-        App = null;
+        run(store, 'destroy');
       }
     });
 
-    test('can lookup models using camelCase strings', function () {
+    test('can lookup records using camelCase strings', function () {
       expect(1);
+
       run(function () {
-        store.pushPayload('postNote', {
-          postNote: {
-            id: 1,
-            name: 'Ember Data'
+        store.pushPayload('post-note', {
+          data: {
+            type: 'post-notes',
+            id: '1',
+            attributes: {
+              name: 'Ember Data'
+            }
           }
         });
       });
 
       run(function () {
-        store.find('postNote', 1).then(async(function (postNote) {
-          equal(postNote.get('id'), 1);
-        }));
+        store.findRecord('postNote', 1).then(function (postNote) {
+          equal(get(postNote, 'name'), 'Ember Data', 'record found');
+        });
       });
     });
 
-    test('can lookup models using underscored strings', function () {
+    test('can lookup records using under_scored strings', function () {
+      expect(1);
+
       run(function () {
-        store.pushPayload('post_note', {
-          postNote: {
-            id: 1,
-            name: 'Ember Data'
+        store.pushPayload('post-note', {
+          data: {
+            type: 'post-notes',
+            id: '1',
+            attributes: {
+              name: 'Ember Data'
+            }
           }
         });
+      });
 
-        run(function () {
-          store.find('post_note', 1).then(async(function (postNote) {
-            equal(postNote.get('id'), 1);
-          }));
+      run(function () {
+        store.findRecord('post_note', 1).then(function (postNote) {
+          equal(get(postNote, 'name'), 'Ember Data', 'record found');
         });
       });
     });
 
     module('integration/backwards-compat/non-dasherized-lookups - non dasherized lookups in application code relationship macros', {
       setup: function () {
-        run(function () {
-          App = Ember.Application.create();
-          App.PostNote = DS.Model.extend({
-            notePost: DS.belongsTo('notePost', { async: false }),
-            name: DS.attr()
-          });
-          App.NotePost = DS.Model.extend({
-            name: DS.attr()
-          });
-          App.LongModelName = DS.Model.extend({
-            postNotes: DS.hasMany('post_note', { async: false })
-          });
+        var PostNote = Model.extend({
+          notePost: belongsTo('note-post', { async: false }),
+
+          name: attr('string')
         });
-        store = App.__container__.lookup('service:store');
+
+        var NotePost = Model.extend({
+          name: attr('string')
+        });
+
+        var LongModelName = Model.extend({
+          postNotes: hasMany('post_note')
+        });
+
+        var env = setupStore({
+          longModelName: LongModelName,
+          notePost: NotePost,
+          postNote: PostNote
+        });
+
+        var ApplicationAdapter = JSONAPIAdapter.extend({
+          shouldBackgroundReloadRecord: function () {
+            return false;
+          }
+        });
+
+        env.registry.register('adapter:application', ApplicationAdapter);
+        env.registry.register('serializer:application', JSONAPISerializer);
+
+        store = env.store;
       },
 
       teardown: function () {
-        run(App, 'destroy');
-        App = null;
+        run(store, 'destroy');
       }
     });
 
-    test('looks up using camelCase string', function () {
+    test('looks up belongsTo using camelCase strings', function () {
       expect(1);
 
       run(function () {
-        store.push('postNote', {
-          id: 1,
-          notePost: 1
+        store.pushPayload('post-note', {
+          data: {
+            type: 'post-notes',
+            id: '1',
+            attributes: {
+              name: 'Ember Data'
+            },
+            relationships: {
+              'note-post': {
+                data: { type: 'note-post', id: '1' }
+              }
+            }
+          }
         });
-        store.push('notePost', {
-          id: 1,
-          name: 'Inverse'
+        store.pushPayload('notePost', {
+          data: {
+            type: 'note-posts',
+            id: '1',
+            attributes: {
+              name: 'Inverse'
+            }
+          }
         });
       });
 
       run(function () {
-        store.find('postNote', 1).then(function (postNote) {
-          equal(postNote.get('notePost'), store.peekRecord('notePost', 1));
+        store.findRecord('post-note', 1).then(function (postNote) {
+          equal(get(postNote, 'notePost.name'), 'Inverse', 'inverse record found');
         });
       });
     });
 
-    test('looks up using under_score string', function () {
+    test('looks up belongsTo using under_scored strings', function () {
       expect(1);
 
       run(function () {
-        store.push('long_model_name', {
-          id: 1,
-          name: 'Inverse',
-          postNotes: ['1']
+        store.pushPayload('long_model_name', {
+          data: {
+            type: 'long-model-names',
+            id: '1',
+            attributes: {},
+            relationships: {
+              'post-notes': {
+                data: [{ type: 'post-note', id: '1' }]
+              }
+            }
+          }
         });
-        store.push('postNote', {
-          id: 1,
-          name: 'Underscore'
+
+        store.pushPayload('post-note', {
+          data: {
+            type: 'post-notes',
+            id: '1',
+            attributes: {
+              name: 'Ember Data'
+            }
+          }
         });
       });
 
       run(function () {
-        store.find('long_model_name', 1).then(function (longModelName) {
-          deepEqual(longModelName.get('postNotes').toArray(), [store.peekRecord('postNote', 1)]);
+        store.findRecord('long_model_name', 1).then(function (longModelName) {
+          var postNotes = get(longModelName, 'postNotes').toArray();
+
+          deepEqual(postNotes, [store.peekRecord('postNote', 1)], 'inverse records found');
         });
       });
     });
@@ -31147,8 +31220,8 @@ QUnit.test('ember-data/tests/integration/application-test.js should pass jshint'
 }
 if (!QUnit.urlParams.nojshint) {
 QUnit.module('JSHint - ember-data/tests/integration/backwards-compat');
-QUnit.test('ember-data/tests/integration/backwards-compat/non-dasherized-lookups.js should pass jshint', function(assert) { 
-  assert.ok(true, 'ember-data/tests/integration/backwards-compat/non-dasherized-lookups.js should pass jshint.'); 
+QUnit.test('ember-data/tests/integration/backwards-compat/non-dasherized-lookups-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/backwards-compat/non-dasherized-lookups-test.js should pass jshint.'); 
 });
 
 }
