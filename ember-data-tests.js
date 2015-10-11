@@ -28915,7 +28915,7 @@ define(
 
 
 define(
-  "ember-data/tests/unit/store/has_record_for_id_test",
+  "ember-data/tests/unit/store/has-record-for-id-test",
   ["exports"],
   function(__exports__) {
     "use strict";
@@ -31553,8 +31553,8 @@ QUnit.test('ember-data/tests/unit/store/create-record-test.js should pass jshint
 }
 if (!QUnit.urlParams.nojshint) {
 QUnit.module('JSHint - ember-data/tests/unit/store');
-QUnit.test('ember-data/tests/unit/store/has_record_for_id_test.js should pass jshint', function(assert) { 
-  assert.ok(true, 'ember-data/tests/unit/store/has_record_for_id_test.js should pass jshint.'); 
+QUnit.test('ember-data/tests/unit/store/has-record-for-id-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/unit/store/has-record-for-id-test.js should pass jshint.'); 
 });
 
 }
