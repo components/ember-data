@@ -10806,7 +10806,13 @@
         @return {Object} the normalized resource hash
       */
       normalize: function (modelClass, resourceHash) {
-        this.normalizeUsingDeclaredMapping(modelClass, resourceHash);
+        if (resourceHash.attributes) {
+          this.normalizeUsingDeclaredMapping(modelClass, resourceHash.attributes);
+        }
+
+        if (resourceHash.relationships) {
+          this.normalizeUsingDeclaredMapping(modelClass, resourceHash.relationships);
+        }
 
         var data = {
           id: this.extractId(modelClass, resourceHash),

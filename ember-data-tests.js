@@ -18678,6 +18678,7 @@ define(
         User = DS.Model.extend({
           firstName: DS.attr('string'),
           lastName: DS.attr('string'),
+          title: DS.attr('string'),
           handles: DS.hasMany('handle', { async: true, polymorphic: true }),
           company: DS.belongsTo('company', { async: true })
         });
@@ -18784,6 +18785,71 @@ define(
           env.store.serializerFor('user').normalizeResponse(env.store, User, documentHash, '1', 'findRecord');
         });
       }, /Encountered a resource object with type "UnknownType", but no model was found for model name "unknown-type"/);
+    });
+
+    test('Serializer should respect the attrs hash when extracting attributes and relationships', function () {
+      env.registry.register("serializer:user", DS.JSONAPISerializer.extend({
+        attrs: {
+          title: "title_attribute_key",
+          company: { key: 'company_relationship_key' }
+        }
+      }));
+
+      var jsonHash = {
+        data: {
+          type: 'users',
+          id: '1',
+          attributes: {
+            'title_attribute_key': 'director'
+          },
+          relationships: {
+            'company_relationship_key': {
+              data: { type: 'companies', id: '2' }
+            }
+          }
+        },
+        included: [{
+          type: 'companies',
+          id: '2',
+          attributes: {
+            name: 'Tilde Inc.'
+          }
+        }]
+      };
+
+      var user = env.store.serializerFor("user").normalizeResponse(env.store, User, jsonHash, '1', 'findRecord');
+
+      equal(user.data.attributes.title, "director");
+      deepEqual(user.data.relationships.company.data, { id: "2", type: "company" });
+    });
+
+    test('Serializer should respect the attrs hash when serializing attributes and relationships', function () {
+      env.registry.register("serializer:user", DS.JSONAPISerializer.extend({
+        attrs: {
+          title: "title_attribute_key",
+          company: { key: 'company_relationship_key' }
+        }
+      }));
+      var company, user;
+
+      run(function () {
+        env.store.push({
+          data: {
+            type: 'company',
+            id: '1',
+            attributes: {
+              name: "Tilde Inc."
+            }
+          }
+        });
+        company = env.store.peekRecord('company', 1);
+        user = env.store.createRecord('user', { firstName: "Yehuda", title: "director", company: company });
+      });
+
+      var payload = env.store.serializerFor("user").serialize(user._createSnapshot());
+
+      equal(payload.data.relationships['company_relationship_key'].data.id, "1");
+      equal(payload.data.attributes['title_attribute_key'], "director");
     });
   }
 );
