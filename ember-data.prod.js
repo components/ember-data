@@ -7843,7 +7843,7 @@
           return ember$data$lib$system$promise$proxies$$promiseArray(ember$data$lib$system$store$finders$$_findAll(adapter, this, typeClass, sinceToken, options));
         }
         if (adapter.shouldBackgroundReloadAll(this, snapshotArray)) {
-          ember$data$lib$system$promise$proxies$$promiseArray(ember$data$lib$system$store$finders$$_findAll(adapter, this, typeClass, sinceToken, options));
+          ember$data$lib$system$store$finders$$_findAll(adapter, this, typeClass, sinceToken, options);
         }
         return ember$data$lib$system$promise$proxies$$promiseArray(ember$data$lib$system$store$$Promise.resolve(array));
       },
