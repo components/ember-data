@@ -12015,7 +12015,12 @@
       if (typeof options.defaultValue === "function") {
         return options.defaultValue.apply(null, arguments);
       } else {
-        return options.defaultValue;
+        var defaultValue = options.defaultValue;
+        Ember.deprecate("Non primitive defaultValues are deprecated because they are shared between all instances. If you would like to use a complex object as a default value please provide a function that returns the complex object.", typeof defaultValue !== 'object' || defaultValue === null, {
+          id: 'ds.defaultValue.complex-object',
+          until: '3.0.0'
+        });
+        return defaultValue;
       }
     }
 

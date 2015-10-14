@@ -23789,6 +23789,41 @@ define("ember-data/tests/unit/model-test", ["exports"], function(__exports__) {
     get(tag, 'createdAt');
   });
 
+  test("a complex object defaultValue is deprecated ", function () {
+    var Tag = DS.Model.extend({
+      tagInfo: DS.attr({ defaultValue: [] })
+    });
+    var tag;
+
+    var store = createStore({
+      tag: Tag
+    });
+
+    run(function () {
+      tag = store.createRecord('tag');
+    });
+    expectDeprecation(function () {
+      get(tag, 'tagInfo');
+    }, /Non primitive defaultValues are deprecated/);
+  });
+
+  test("a null defaultValue is not deprecated", function () {
+    var Tag = DS.Model.extend({
+      tagInfo: DS.attr({ defaultValue: null })
+    });
+    var tag;
+
+    var store = createStore({
+      tag: Tag
+    });
+
+    run(function () {
+      tag = store.createRecord('tag');
+    });
+    expectNoDeprecation();
+    equal(get(tag, 'tagInfo'), null);
+  });
+
   test("setting a property to undefined on a newly created record should not impact the current state", function () {
     var Tag = DS.Model.extend({
       name: DS.attr('string')

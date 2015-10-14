@@ -11895,7 +11895,8 @@
       if (typeof options.defaultValue === "function") {
         return options.defaultValue.apply(null, arguments);
       } else {
-        return options.defaultValue;
+        var defaultValue = options.defaultValue;
+                return defaultValue;
       }
     }
 
