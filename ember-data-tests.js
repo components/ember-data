@@ -20305,15 +20305,32 @@ define(
       }));
 
       run(function () {
-        env.restSerializer.normalizeArrayResponse(env.store, Basket, {
-          basket: [env.store.createRecord('Basket', { type: 'bamboo', size: 10, id: '1' }), env.store.createRecord('Basket', { type: 'yellowMinion', size: 10, id: '65536' })]
-        });
+        env.store.push(env.restSerializer.normalizeArrayResponse(env.store, Basket, {
+          basket: [{ type: 'bamboo', size: 10, id: '1' }, { type: 'yellowMinion', size: 10, id: '65536' }]
+        }));
       });
 
       var normalRecord = env.store.peekRecord('basket', '1');
       ok(normalRecord, "payload with type that doesn't exist");
       strictEqual(normalRecord.get('type'), 'bamboo');
       strictEqual(normalRecord.get('size'), 10);
+
+      var clashingRecord = env.store.peekRecord('basket', '65536');
+      ok(clashingRecord, 'payload with type that matches another model name');
+      strictEqual(clashingRecord.get('type'), 'yellowMinion');
+      strictEqual(clashingRecord.get('size'), 10);
+    });
+
+    test("don't polymorphically deserialize base on the type key in payload when a type attribute exist on a singular response", function () {
+      env.registry.register('serializer:application', DS.RESTSerializer.extend({
+        isNewSerializerAPI: true
+      }));
+
+      run(function () {
+        env.store.push(env.restSerializer.normalizeSingleResponse(env.store, Basket, {
+          basket: { type: 'yellowMinion', size: 10, id: '65536' }
+        }, '65536'));
+      });
 
       var clashingRecord = env.store.peekRecord('basket', '65536');
       ok(clashingRecord, 'payload with type that matches another model name');

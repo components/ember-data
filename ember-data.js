@@ -11126,10 +11126,9 @@
         var modelClass = store.modelFor(modelName);
         var serializer = store.serializerFor(modelName);
 
-        var primaryHasTypeAttribute = ember$data$lib$utils$$modelHasAttributeOrRelationshipNamedType(modelClass);
         /*jshint loopfunc:true*/
         arrayHash.forEach(function (hash) {
-          var _normalizePolymorphicRecord = _this._normalizePolymorphicRecord(store, hash, prop, modelClass, serializer, primaryHasTypeAttribute);
+          var _normalizePolymorphicRecord = _this._normalizePolymorphicRecord(store, hash, prop, modelClass, serializer);
 
           var data = _normalizePolymorphicRecord.data;
           var included = _normalizePolymorphicRecord.included;
@@ -11145,9 +11144,10 @@
         return documentHash;
       },
 
-      _normalizePolymorphicRecord: function (store, hash, prop, primaryModelClass, primarySerializer, primaryHasTypeAttribute) {
+      _normalizePolymorphicRecord: function (store, hash, prop, primaryModelClass, primarySerializer) {
         var serializer = undefined,
             modelClass = undefined;
+        var primaryHasTypeAttribute = ember$data$lib$utils$$modelHasAttributeOrRelationshipNamedType(primaryModelClass);
         // Support polymorphic records in async relationships
         if (!primaryHasTypeAttribute && hash.type && store._hasModelFor(this.modelNameFromPayloadKey(hash.type))) {
           serializer = store.serializerFor(hash.type);
