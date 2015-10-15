@@ -4599,8 +4599,8 @@
           ember$data$lib$system$model$states$$didSetProperty(internalModel, context);
         },
 
+        becameInvalid: Ember.K,
         becomeDirty: Ember.K,
-
         pushedData: Ember.K,
 
         willCommit: function (internalModel) {
@@ -4974,8 +4974,9 @@
             ember$data$lib$system$model$states$$didSetProperty(internalModel, context);
           },
 
-          deleteRecord: Ember.K,
+          becameInvalid: Ember.K,
           becomeDirty: Ember.K,
+          deleteRecord: Ember.K,
           willCommit: Ember.K,
 
           rolledBack: function (internalModel) {
@@ -6904,6 +6905,8 @@
             this.addErrorMessageToAttribute(attribute, errors[attribute]);
           }
         }
+
+        this.send('becameInvalid');
 
         this._saveWasRejected();
       },
