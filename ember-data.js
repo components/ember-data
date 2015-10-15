@@ -4620,10 +4620,6 @@
 
         invokeLifecycleCallbacks: function (internalModel) {
           internalModel.triggerLater('becameInvalid', internalModel);
-        },
-
-        exit: function (internalModel) {
-          internalModel._inFlightAttributes = new ember$data$lib$system$empty$object$$default();
         }
       }
     };
