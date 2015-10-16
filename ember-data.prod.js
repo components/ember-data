@@ -3416,7 +3416,7 @@
           records = store.push(payload);
         });
 
-        recordArray.loadRecords(records);
+                recordArray.loadRecords(records);
         return recordArray;
       }, null, "DS: Extract payload of query " + typeClass);
     }
