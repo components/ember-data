@@ -4639,8 +4639,8 @@
           ember$data$lib$system$model$states$$didSetProperty(internalModel, context);
         },
 
+        becameInvalid: Ember.K,
         becomeDirty: Ember.K,
-
         pushedData: Ember.K,
 
         willCommit: function (internalModel) {
@@ -4660,10 +4660,6 @@
 
         invokeLifecycleCallbacks: function (internalModel) {
           internalModel.triggerLater('becameInvalid', internalModel);
-        },
-
-        exit: function (internalModel) {
-          internalModel._inFlightAttributes = new ember$data$lib$system$empty$object$$default();
         }
       }
     };
@@ -5013,8 +5009,9 @@
             ember$data$lib$system$model$states$$didSetProperty(internalModel, context);
           },
 
-          deleteRecord: Ember.K,
+          becameInvalid: Ember.K,
           becomeDirty: Ember.K,
+          deleteRecord: Ember.K,
           willCommit: Ember.K,
 
           rolledBack: function (internalModel) {
@@ -5538,6 +5535,8 @@
       }
     });
 
+    var ember$data$lib$utils$$get = ember$lib$main$$default.get;
+
     /**
       Assert that `addedRecord` has a valid type so it can be added to the
       relationship of the `record`.
@@ -5578,6 +5577,16 @@
         typeClass = typeClass.superclass;
       }
       return typeClass.detect(addedRecord.type);
+    }
+
+    /**
+      Check if the passed model has a `type` attribute or a relationship named `type`.
+
+      @method modelHasAttributeOrRelationshipNamedType
+      @param modelClass
+     */
+    function ember$data$lib$utils$$modelHasAttributeOrRelationshipNamedType(modelClass) {
+      return ember$data$lib$utils$$get(modelClass, 'attributes').has('type') || ember$data$lib$utils$$get(modelClass, 'relationshipsByName').has('type');
     }
 
     var ember$data$lib$system$relationships$state$has$many$$default = ember$data$lib$system$relationships$state$has$many$$ManyRelationship;
@@ -6922,6 +6931,8 @@
             this.addErrorMessageToAttribute(attribute, errors[attribute]);
           }
         }
+
+        this.send('becameInvalid');
 
         this._saveWasRejected();
       },
@@ -9525,7 +9536,9 @@
           if (relationshipHash.id) {
             relationshipHash.id = ember$data$lib$system$coerce$id$$default(relationshipHash.id);
           }
-          if (relationshipHash.type) {
+
+          var modelClass = this.store.modelFor(relationshipModelName);
+          if (relationshipHash.type && !ember$data$lib$utils$$modelHasAttributeOrRelationshipNamedType(modelClass)) {
             relationshipHash.type = this.modelNameFromPayloadKey(relationshipHash.type);
           }
           return relationshipHash;
@@ -10808,11 +10821,17 @@
       /**
         @method normalize
         @param {DS.Model} modelClass
-        @param {Object} resourceHash
-        @return {String}
+        @param {Object} resourceHash the resource hash from the adapter
+        @return {Object} the normalized resource hash
       */
       normalize: function (modelClass, resourceHash) {
-        this.normalizeUsingDeclaredMapping(modelClass, resourceHash);
+        if (resourceHash.attributes) {
+          this.normalizeUsingDeclaredMapping(modelClass, resourceHash.attributes);
+        }
+
+        if (resourceHash.relationships) {
+          this.normalizeUsingDeclaredMapping(modelClass, resourceHash.relationships);
+        }
 
         var data = {
           id: this.extractId(modelClass, resourceHash),
@@ -10989,7 +11008,6 @@
     var ember$data$lib$serializers$json$api$serializer$$default = ember$data$lib$serializers$json$api$serializer$$JSONAPISerializer;
 
     var ember$data$lib$serializers$rest$serializer$$camelize = Ember.String.camelize;
-    var ember$data$lib$serializers$rest$serializer$$get = Ember.get;
 
     /**
       Normally, applications will use the `RESTSerializer` by implementing
@@ -11119,10 +11137,9 @@
         var modelClass = store.modelFor(modelName);
         var serializer = store.serializerFor(modelName);
 
-        var primaryHasTypeAttribute = ember$data$lib$serializers$rest$serializer$$get(modelClass, 'attributes').get('type') || ember$data$lib$serializers$rest$serializer$$get(modelClass, 'relationshipsByName').get('type');
         /*jshint loopfunc:true*/
         arrayHash.forEach(function (hash) {
-          var _normalizePolymorphicRecord = _this._normalizePolymorphicRecord(store, hash, prop, modelClass, serializer, primaryHasTypeAttribute);
+          var _normalizePolymorphicRecord = _this._normalizePolymorphicRecord(store, hash, prop, modelClass, serializer);
 
           var data = _normalizePolymorphicRecord.data;
           var included = _normalizePolymorphicRecord.included;
@@ -11138,9 +11155,10 @@
         return documentHash;
       },
 
-      _normalizePolymorphicRecord: function (store, hash, prop, primaryModelClass, primarySerializer, primaryHasTypeAttribute) {
+      _normalizePolymorphicRecord: function (store, hash, prop, primaryModelClass, primarySerializer) {
         var serializer = undefined,
             modelClass = undefined;
+        var primaryHasTypeAttribute = ember$data$lib$utils$$modelHasAttributeOrRelationshipNamedType(primaryModelClass);
         // Support polymorphic records in async relationships
         if (!primaryHasTypeAttribute && hash.type && store._hasModelFor(this.modelNameFromPayloadKey(hash.type))) {
           serializer = store.serializerFor(hash.type);

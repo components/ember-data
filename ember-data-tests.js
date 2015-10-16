@@ -8781,7 +8781,7 @@ define(
     });
 
     test("Repeated failed saves keeps the record in uncommited state", function () {
-      expect(2);
+      expect(4);
       var post;
 
       run(function () {
@@ -8794,10 +8794,65 @@ define(
 
       run(function () {
         post.save().then(null, function () {
+          ok(post.get('isError'));
           equal(post.get('currentState.stateName'), 'root.loaded.created.uncommitted');
 
           post.save().then(null, function () {
+            ok(post.get('isError'));
             equal(post.get('currentState.stateName'), 'root.loaded.created.uncommitted');
+          });
+        });
+      });
+    });
+
+    test("Repeated failed saves with invalid error marks the record as invalid", function () {
+      expect(2);
+      var post;
+
+      run(function () {
+        post = env.store.createRecord('post', { title: 'toto' });
+      });
+
+      env.adapter.createRecord = function (store, type, snapshot) {
+        var error = new DS.InvalidError([{
+          detail: 'is invalid',
+          source: { pointer: 'data/attributes/title' }
+        }]);
+
+        return Ember.RSVP.reject(error);
+      };
+
+      run(function () {
+        post.save().then(null, function () {
+          equal(post.get('isValid'), false);
+
+          post.save().then(null, function () {
+            equal(post.get('isValid'), false);
+          });
+        });
+      });
+    });
+
+    test("Repeated failed saves with invalid error without payload marks the record as invalid", function () {
+      expect(2);
+      var post;
+
+      run(function () {
+        post = env.store.createRecord('post', { title: 'toto' });
+      });
+
+      env.adapter.createRecord = function (store, type, snapshot) {
+        var error = new DS.InvalidError();
+
+        return Ember.RSVP.reject(error);
+      };
+
+      run(function () {
+        post.save().then(null, function () {
+          equal(post.get('isValid'), false);
+
+          post.save().then(null, function () {
+            equal(post.get('isValid'), false);
           });
         });
       });
@@ -18605,6 +18660,7 @@ define(
         User = DS.Model.extend({
           firstName: DS.attr('string'),
           lastName: DS.attr('string'),
+          title: DS.attr('string'),
           handles: DS.hasMany('handle', { async: true, polymorphic: true }),
           company: DS.belongsTo('company', { async: true })
         });
@@ -18711,6 +18767,71 @@ define(
           env.store.serializerFor('user').normalizeResponse(env.store, User, documentHash, '1', 'findRecord');
         });
       }, /Encountered a resource object with type "UnknownType", but no model was found for model name "unknown-type"/);
+    });
+
+    test('Serializer should respect the attrs hash when extracting attributes and relationships', function () {
+      env.registry.register("serializer:user", DS.JSONAPISerializer.extend({
+        attrs: {
+          title: "title_attribute_key",
+          company: { key: 'company_relationship_key' }
+        }
+      }));
+
+      var jsonHash = {
+        data: {
+          type: 'users',
+          id: '1',
+          attributes: {
+            'title_attribute_key': 'director'
+          },
+          relationships: {
+            'company_relationship_key': {
+              data: { type: 'companies', id: '2' }
+            }
+          }
+        },
+        included: [{
+          type: 'companies',
+          id: '2',
+          attributes: {
+            name: 'Tilde Inc.'
+          }
+        }]
+      };
+
+      var user = env.store.serializerFor("user").normalizeResponse(env.store, User, jsonHash, '1', 'findRecord');
+
+      equal(user.data.attributes.title, "director");
+      deepEqual(user.data.relationships.company.data, { id: "2", type: "company" });
+    });
+
+    test('Serializer should respect the attrs hash when serializing attributes and relationships', function () {
+      env.registry.register("serializer:user", DS.JSONAPISerializer.extend({
+        attrs: {
+          title: "title_attribute_key",
+          company: { key: 'company_relationship_key' }
+        }
+      }));
+      var company, user;
+
+      run(function () {
+        env.store.push({
+          data: {
+            type: 'company',
+            id: '1',
+            attributes: {
+              name: "Tilde Inc."
+            }
+          }
+        });
+        company = env.store.peekRecord('company', 1);
+        user = env.store.createRecord('user', { firstName: "Yehuda", title: "director", company: company });
+      });
+
+      var payload = env.store.serializerFor("user").serialize(user._createSnapshot());
+
+      equal(payload.data.relationships['company_relationship_key'].data.id, "1");
+      equal(payload.data.attributes['title_attribute_key'], "director");
     });
   }
 );
@@ -19042,6 +19163,78 @@ define(
 
       equal(payload.title_payload_key, "Rails is omakase");
       equal(payload.my_parent, '2');
+    });
+
+    test('Serializer respects if embedded model has an attribute named "type" - #3726', function () {
+      env.registry.register("serializer:parent", DS.JSONSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          child: { embedded: 'always' }
+        }
+      }));
+      env.registry.register("model:parent", DS.Model.extend({
+        child: DS.belongsTo('child')
+      }));
+      env.registry.register("model:child", DS.Model.extend({
+        type: DS.attr()
+      }));
+
+      var jsonHash = {
+        id: 1,
+        child: {
+          id: 1,
+          type: 'first_type'
+        }
+      };
+
+      var Parent = env.store.modelFor('parent');
+      var payload = env.store.serializerFor('parent').normalizeResponse(env.store, Parent, jsonHash, '1', 'findRecord');
+      deepEqual(payload.included, [{
+        id: '1',
+        type: 'child',
+        attributes: {
+          type: 'first_type'
+        },
+        relationships: {}
+      }]);
+    });
+
+    test('Serializer respects if embedded model has a relationship named "type" - #3726', function () {
+      env.registry.register("serializer:parent", DS.JSONSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          child: { embedded: 'always' }
+        }
+      }));
+      env.registry.register("model:parent", DS.Model.extend({
+        child: DS.belongsTo('child')
+      }));
+      env.registry.register("model:child", DS.Model.extend({
+        type: DS.belongsTo('le-type')
+      }));
+      env.registry.register("model:le-type", DS.Model.extend());
+
+      var jsonHash = {
+        id: 1,
+        child: {
+          id: 1,
+          type: "my_type_id"
+        }
+      };
+
+      var Parent = env.store.modelFor('parent');
+      var payload = env.store.serializerFor('parent').normalizeResponse(env.store, Parent, jsonHash, '1', 'findRecord');
+      deepEqual(payload.included, [{
+        id: '1',
+        type: 'child',
+        attributes: {},
+        relationships: {
+          type: {
+            data: {
+              id: 'my_type_id',
+              type: 'le-type'
+            }
+          }
+        }
+      }]);
     });
 
     test('Serializer respects `serialize: false` on the attrs hash', function () {
@@ -20094,15 +20287,32 @@ define(
       }));
 
       run(function () {
-        env.restSerializer.normalizeArrayResponse(env.store, Basket, {
-          basket: [env.store.createRecord('Basket', { type: 'bamboo', size: 10, id: '1' }), env.store.createRecord('Basket', { type: 'yellowMinion', size: 10, id: '65536' })]
-        });
+        env.store.push(env.restSerializer.normalizeArrayResponse(env.store, Basket, {
+          basket: [{ type: 'bamboo', size: 10, id: '1' }, { type: 'yellowMinion', size: 10, id: '65536' }]
+        }));
       });
 
       var normalRecord = env.store.peekRecord('basket', '1');
       ok(normalRecord, "payload with type that doesn't exist");
       strictEqual(normalRecord.get('type'), 'bamboo');
       strictEqual(normalRecord.get('size'), 10);
+
+      var clashingRecord = env.store.peekRecord('basket', '65536');
+      ok(clashingRecord, 'payload with type that matches another model name');
+      strictEqual(clashingRecord.get('type'), 'yellowMinion');
+      strictEqual(clashingRecord.get('size'), 10);
+    });
+
+    test("don't polymorphically deserialize base on the type key in payload when a type attribute exist on a singular response", function () {
+      env.registry.register('serializer:application', DS.RESTSerializer.extend({
+        isNewSerializerAPI: true
+      }));
+
+      run(function () {
+        env.store.push(env.restSerializer.normalizeSingleResponse(env.store, Basket, {
+          basket: { type: 'yellowMinion', size: 10, id: '65536' }
+        }, '65536'));
+      });
 
       var clashingRecord = env.store.peekRecord('basket', '65536');
       ok(clashingRecord, 'payload with type that matches another model name');
@@ -26748,6 +26958,49 @@ define(
       });
     });
 
+    test("invalid record's attributes can be rollbacked after multiple failed calls - #3677", function () {
+      var person;
+
+      var adapter = DS.RESTAdapter.extend({
+        ajax: function (url, type, hash) {
+          var error = new DS.InvalidError();
+          return Ember.RSVP.reject(error);
+        }
+      });
+
+      env = setupStore({ person: Person, adapter: adapter });
+
+      run(function () {
+        person = env.store.push({
+          data: {
+            type: 'person',
+            id: 1,
+            attributes: {
+              firstName: 'original name'
+            }
+          }
+        });
+
+        person.set('firstName', 'updated name');
+      });
+
+      run(function () {
+        equal(person.get('firstName'), 'updated name', "precondition: firstName is changed");
+
+        person.save().then(null, async(function () {
+          equal(person.get('hasDirtyAttributes'), true, "has dirty attributes");
+          equal(person.get('firstName'), 'updated name', "firstName is still changed");
+
+          return person.save();
+        })).then(null, async(function () {
+          person.rollbackAttributes();
+
+          equal(person.get('hasDirtyAttributes'), false, "has no dirty attributes");
+          equal(person.get('firstName'), 'original name', "after rollbackAttributes() firstName has the original value");
+        }));
+      });
+    });
+
     test("deleted record's attributes can be rollbacked", function () {
       var person, people;
 
@@ -30534,7 +30787,26 @@ define(
 
 // TODO enable import once this is possible
 // import { assertPolymorphicType } from "ember-data/utils";
+// import { modelHasAttributeOrRelationshipNamedType } from "ember-data/utils";
 
+// TODO enable once we can `import x from y;` in tests
+// test("modelHasAttributeOrRelationshipNamedType", function() {
+//   var ModelWithTypeAttribute = DS.Model.extend({
+//     type: DS.attr()
+//   });
+//   var ModelWithTypeBelongsTo = DS.Model.extend({
+//     type: DS.belongsTo()
+//   });
+//   var ModelWithTypeHasMany = DS.Model.extend({
+//     type: DS.hasMany()
+//   });
+//
+//   equal(modelHasAttributeOrRelationshipNamedType(DS.Model), false);
+//
+//   equal(modelHasAttributeOrRelationshipNamedType(ModelWithTypeAttribute), true);
+//   equal(modelHasAttributeOrRelationshipNamedType(ModelWithTypeBelongsTo), true);
+//   equal(modelHasAttributeOrRelationshipNamedType(ModelWithTypeHasMany), true);
+// });
 define("ember-data/tests/unit/utils-test", ["exports"], function(__exports__) {
   "use strict";
 
