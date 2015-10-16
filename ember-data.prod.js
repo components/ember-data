@@ -1571,11 +1571,8 @@
           var hash = adapter.ajaxOptions(url, type, options);
 
           hash.success = function (payload, textStatus, jqXHR) {
-            var response = undefined;
 
-            if (!(response instanceof ember$data$lib$adapters$errors$$AdapterError)) {
-              response = adapter.handleResponse(jqXHR.status, ember$data$lib$adapters$rest$adapter$$parseResponseHeaders(jqXHR.getAllResponseHeaders()), response || payload);
-            }
+            var response = adapter.handleResponse(jqXHR.status, ember$data$lib$adapters$rest$adapter$$parseResponseHeaders(jqXHR.getAllResponseHeaders()), payload);
 
             if (response instanceof ember$data$lib$adapters$errors$$AdapterError) {
               Ember.run(null, reject, response);
