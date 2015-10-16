@@ -3787,20 +3787,6 @@
       },
 
       /**
-        @method load
-        @private
-        @param {Array} data
-      */
-      load: function (data) {
-        var store = ember$data$lib$system$record$arrays$adapter$populated$record$array$$get(this, 'store');
-        var type = ember$data$lib$system$record$arrays$adapter$populated$record$array$$get(this, 'type');
-        var modelName = type.modelName;
-        var records = store.pushMany(modelName, data);
-
-        this.loadRecords(records);
-      },
-
-      /**
         @method loadRecords
         @param {Array} records
         @private
