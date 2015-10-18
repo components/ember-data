@@ -627,12 +627,12 @@
 
     var ember$data$lib$system$map$$default = ember$data$lib$system$map$$Map;
     var ember$data$lib$system$empty$object$$default = ember$data$lib$system$empty$object$$EmptyObject;
-    // This exists because `Object.create(null)` is absurdly slow compared
+    // This exists because `Ember.create(null)` is absurdly slow compared
     // to `new EmptyObject()`. In either case, you want a null prototype
     // when you're treating the object instances as arbitrary dictionaries
     // and don't want your keys colliding with build-in methods on the
     // default object prototype.
-    var ember$data$lib$system$empty$object$$proto = Object.create(null, {
+    var ember$data$lib$system$empty$object$$proto = Ember.create(null, {
       // without this, we will always still end up with (new
       // EmptyObject()).constructor === Object
       constructor: {
@@ -2514,6 +2514,60 @@
       return Ember.String.dasherize(modelName);
     }
 
+    var ember$data$lib$utils$$get = ember$lib$main$$default.get;
+
+    /**
+      Assert that `addedRecord` has a valid type so it can be added to the
+      relationship of the `record`.
+
+      The assert basically checks if the `addedRecord` can be added to the
+      relationship (specified via `relationshipMeta`) of the `record`.
+
+      This utility should only be used internally, as both record parameters must
+      be an InternalModel and the `relationshipMeta` needs to be the meta
+      information about the relationship, retrieved via
+      `record.relationshipFor(key)`.
+
+      @method assertPolymorphicType
+      @param {InternalModel} record
+      @param {RelationshipMeta} relationshipMeta retrieved via
+             `record.relationshipFor(key)`
+      @param {InternalModel} addedRecord record which
+             should be added/set for the relationship
+    */
+    var ember$data$lib$utils$$assertPolymorphicType = function (record, relationshipMeta, addedRecord) {
+      var addedType = addedRecord.type.modelName;
+      var recordType = record.type.modelName;
+      var key = relationshipMeta.key;
+      var typeClass = record.store.modelFor(relationshipMeta.type);
+
+      var assertionMessage = 'You cannot add a record of type \'' + addedType + '\' to the \'' + recordType + '.' + key + '\' relationship (only \'' + typeClass.modelName + '\' allowed)';
+
+      ember$lib$main$$default.assert(assertionMessage, ember$data$lib$utils$$checkPolymorphic(typeClass, addedRecord));
+    };
+
+    function ember$data$lib$utils$$checkPolymorphic(typeClass, addedRecord) {
+      if (typeClass.__isMixin) {
+        //TODO Need to do this in order to support mixins, should convert to public api
+        //once it exists in Ember
+        return typeClass.__mixin.detect(addedRecord.type.PrototypeMixin);
+      }
+      if (ember$lib$main$$default.MODEL_FACTORY_INJECTIONS) {
+        typeClass = typeClass.superclass;
+      }
+      return typeClass.detect(addedRecord.type);
+    }
+
+    /**
+      Check if the passed model has a `type` attribute or a relationship named `type`.
+
+      @method modelHasAttributeOrRelationshipNamedType
+      @param modelClass
+     */
+    function ember$data$lib$utils$$modelHasAttributeOrRelationshipNamedType(modelClass) {
+      return ember$data$lib$utils$$get(modelClass, 'attributes').has('type') || ember$data$lib$utils$$get(modelClass, 'relationshipsByName').has('type');
+    }
+
     var ember$data$lib$serializers$json$serializer$$get = Ember.get;
     var ember$data$lib$serializers$json$serializer$$isNone = Ember.isNone;
     var ember$data$lib$serializers$json$serializer$$map = ember$data$lib$ext$ember$array$$default.map;
@@ -3056,7 +3110,9 @@
           if (relationshipHash.id) {
             relationshipHash.id = ember$data$lib$system$coerce$id$$default(relationshipHash.id);
           }
-          if (relationshipHash.type) {
+
+          var modelClass = this.store.modelFor(relationshipModelName);
+          if (relationshipHash.type && !ember$data$lib$utils$$modelHasAttributeOrRelationshipNamedType(modelClass)) {
             relationshipHash.type = this.modelNameFromPayloadKey(relationshipHash.type);
           }
           return relationshipHash;
@@ -5934,10 +5990,9 @@
         var serializer = store.serializerFor(modelName);
 
         
-        var primaryHasTypeAttribute = ember$data$lib$serializers$rest$serializer$$get(modelClass, 'attributes').get('type');
         /*jshint loopfunc:true*/
         ember$data$lib$serializers$rest$serializer$$forEach.call(arrayHash, function (hash) {
-          var _normalizePolymorphicRecord = _this._normalizePolymorphicRecord(store, hash, prop, modelClass, serializer, primaryHasTypeAttribute);
+          var _normalizePolymorphicRecord = _this._normalizePolymorphicRecord(store, hash, prop, modelClass, serializer);
 
           var data = _normalizePolymorphicRecord.data;
           var included = _normalizePolymorphicRecord.included;
@@ -5953,9 +6008,10 @@
         return documentHash;
       },
 
-      _normalizePolymorphicRecord: function (store, hash, prop, primaryModelClass, primarySerializer, primaryHasTypeAttribute) {
+      _normalizePolymorphicRecord: function (store, hash, prop, primaryModelClass, primarySerializer) {
         var serializer = undefined,
             modelClass = undefined;
+        var primaryHasTypeAttribute = ember$data$lib$utils$$modelHasAttributeOrRelationshipNamedType(primaryModelClass);
         // Support polymorphic records in async relationships
         if (!primaryHasTypeAttribute && hash.type && store._hasModelFor(this.modelNameFromPayloadKey(hash.type))) {
           serializer = store.serializerFor(hash.type);
@@ -7527,7 +7583,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.13.13'
+      VERSION: '1.13.14'
     });
 
     if (Ember.libraries) {
@@ -8571,7 +8627,6 @@
     /**
       @module ember-data
     */
-
     var ember$data$lib$system$model$states$$get = Ember.get;
     /*
       This file encapsulates the various states that a record can transition
@@ -8903,8 +8958,8 @@
           ember$data$lib$system$model$states$$didSetProperty(internalModel, context);
         },
 
+        becameInvalid: Ember.K,
         becomeDirty: Ember.K,
-
         pushedData: Ember.K,
 
         willCommit: function (internalModel) {
@@ -8924,10 +8979,6 @@
 
         invokeLifecycleCallbacks: function (internalModel) {
           internalModel.triggerLater('becameInvalid', internalModel);
-        },
-
-        exit: function (internalModel) {
-          internalModel._inFlightAttributes = new ember$data$lib$system$empty$object$$default();
         }
       }
     };
@@ -9279,8 +9330,9 @@
             ember$data$lib$system$model$states$$didSetProperty(internalModel, context);
           },
 
-          deleteRecord: Ember.K,
+          becameInvalid: Ember.K,
           becomeDirty: Ember.K,
+          deleteRecord: Ember.K,
           willCommit: Ember.K,
 
           rolledBack: function (internalModel) {
@@ -9841,48 +9893,6 @@
                 this.removeObject(record);
       }
     });
-
-    /**
-      Assert that `addedRecord` has a valid type so it can be added to the
-      relationship of the `record`.
-
-      The assert basically checks if the `addedRecord` can be added to the
-      relationship (specified via `relationshipMeta`) of the `record`.
-
-      This utility should only be used internally, as both record parameters must
-      be an InternalModel and the `relationshipMeta` needs to be the meta
-      information about the relationship, retrieved via
-      `record.relationshipFor(key)`.
-
-      @method assertPolymorphicType
-      @param {InternalModel} record
-      @param {RelationshipMeta} relationshipMeta retrieved via
-             `record.relationshipFor(key)`
-      @param {InternalModel} addedRecord record which
-             should be added/set for the relationship
-    */
-    var ember$data$lib$utils$$assertPolymorphicType = function (record, relationshipMeta, addedRecord) {
-      var addedType = addedRecord.type.modelName;
-      var recordType = record.type.modelName;
-      var key = relationshipMeta.key;
-      var typeClass = record.store.modelFor(relationshipMeta.type);
-
-      var assertionMessage = 'You cannot add a record of type \'' + addedType + '\' to the \'' + recordType + '.' + key + '\' relationship (only \'' + typeClass.modelName + '\' allowed)';
-
-      ember$lib$main$$default.assert(assertionMessage, ember$data$lib$utils$$checkPolymorphic(typeClass, addedRecord));
-    };
-
-    function ember$data$lib$utils$$checkPolymorphic(typeClass, addedRecord) {
-      if (typeClass.__isMixin) {
-        //TODO Need to do this in order to support mixins, should convert to public api
-        //once it exists in Ember
-        return typeClass.__mixin.detect(addedRecord.type.PrototypeMixin);
-      }
-      if (ember$lib$main$$default.MODEL_FACTORY_INJECTIONS) {
-        typeClass = typeClass.superclass;
-      }
-      return typeClass.detect(addedRecord.type);
-    }
 
     var ember$data$lib$system$relationships$state$has$many$$map = ember$data$lib$ext$ember$array$$default.map;
 
@@ -11329,6 +11339,8 @@
             this.addErrorMessageToAttribute(attribute, errors[attribute]);
           }
         }
+
+        this.send('becameInvalid');
 
         this._saveWasRejected();
       },
@@ -12887,8 +12899,11 @@
 
       _modelForMixin: function (modelName) {
         var normalizedModelName = ember$data$lib$system$normalize$model$name$$default(modelName);
-        var registry = this.container._registry ? this.container._registry : this.container;
-        var mixin = registry.resolve('mixin:' + normalizedModelName);
+        // container.registry = 2.1
+        // container._registry = 1.11 - 2.0
+        // container = < 1.11
+        var registry = this.container.registry || this.container._registry || this.container;
+        var mixin = this.container.lookupFactory('mixin:' + normalizedModelName);
         if (mixin) {
           //Cache the class as a model
           registry.register('model:' + normalizedModelName, DS.Model.extend(mixin));
@@ -13733,7 +13748,13 @@
         @return {String}
       */
       normalize: function (modelClass, resourceHash) {
-        this.normalizeUsingDeclaredMapping(modelClass, resourceHash);
+        if (resourceHash.attributes) {
+          this.normalizeUsingDeclaredMapping(modelClass, resourceHash.attributes);
+        }
+
+        if (resourceHash.relationships) {
+          this.normalizeUsingDeclaredMapping(modelClass, resourceHash.relationships);
+        }
 
         var data = {
           id: this.extractId(modelClass, resourceHash),
