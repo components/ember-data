@@ -13203,9 +13203,15 @@
           return relationship.getRecords();
         },
         set: function (key, records) {
+          Ember.assert("You must pass an array of records to set a hasMany relationship", ember$data$lib$system$is$array$like$$default(records));
+          Ember.assert("All elements of a hasMany relationship must be instances of DS.Model, you passed " + Ember.inspect(records), (function () {
+            return Ember.A(records).every(function (record) {
+              return ember$data$lib$system$model$$default.detectInstance(record);
+            });
+          })());
+
           var relationship = this._internalModel._relationships.get(key);
           relationship.clear();
-          Ember.assert("You must pass an array of records to set a hasMany relationship", ember$data$lib$system$is$array$like$$default(records));
           relationship.addRecords(Ember.A(records).mapBy('_internalModel'));
           return relationship.getRecords();
         }

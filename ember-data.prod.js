@@ -13069,9 +13069,10 @@
           return relationship.getRecords();
         },
         set: function (key, records) {
+                    
           var relationship = this._internalModel._relationships.get(key);
           relationship.clear();
-                    relationship.addRecords(Ember.A(records).mapBy('_internalModel'));
+          relationship.addRecords(Ember.A(records).mapBy('_internalModel'));
           return relationship.getRecords();
         }
       }).meta(meta);
