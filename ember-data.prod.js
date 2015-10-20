@@ -8257,6 +8257,26 @@
       },
 
       /**
+        Returns a polymorphic relationship formatted as a JSON-API "relationship object".
+         http://jsonapi.org/format/#document-resource-object-relationships
+         `relationshipOptions` is a hash which contains more information about the
+        polymorphic relationship which should be extracted:
+          - `resourceHash` complete hash of the resource the relationship should be
+            extracted from
+          - `relationshipKey` key under which the value for the relationship is
+            extracted from the resourceHash
+          - `relationshipMeta` meta information about the relationship
+         @method extractPolymorphicRelationship
+        @param {Object} relationshipModelName
+        @param {Object} relationshipHash
+        @param {Object} relationshipOptions
+        @return {Object}
+      */
+      extractPolymorphicRelationship: function (relationshipModelName, relationshipHash, relationshipOptions) {
+        return this.extractRelationship(relationshipModelName, relationshipHash);
+      },
+
+      /**
         Returns the resource's relationships formatted as a JSON-API "relationships object".
          http://jsonapi.org/format/#document-resource-object-relationships
          @method extractRelationships
@@ -8276,7 +8296,15 @@
             var data = null;
             var relationshipHash = resourceHash[relationshipKey];
             if (relationshipMeta.kind === 'belongsTo') {
-              data = _this4.extractRelationship(relationshipMeta.type, relationshipHash);
+              if (relationshipMeta.options.polymorphic) {
+                // extracting a polymorphic belongsTo may need more information
+                // than the type and the hash (which might only be an id) for the
+                // relationship, hence we pass the key, resource and
+                // relationshipMeta too
+                data = _this4.extractPolymorphicRelationship(relationshipMeta.type, relationshipHash, { key: key, resourceHash: resourceHash, relationshipMeta: relationshipMeta });
+              } else {
+                data = _this4.extractRelationship(relationshipMeta.type, relationshipHash);
+              }
             } else if (relationshipMeta.kind === 'hasMany') {
               data = Ember.isNone(relationshipHash) ? null : relationshipHash.map(function (item) {
                 return _this4.extractRelationship(relationshipMeta.type, item);
@@ -9763,6 +9791,32 @@
     var ember$data$lib$serializers$rest$serializer$$RESTSerializer = ember$data$lib$serializers$json$serializer$$default.extend({
 
       /**
+       `keyForPolymorphicType` can be used to define a custom key when
+       serializing and deserializing a polymorphic type. By default, the
+       returned key is `${key}Type`.
+        Example
+         ```app/serializers/post.js
+        import DS from 'ember-data';
+         export default DS.RESTSerializer.extend({
+          keyForPolymorphicType: function(key, relationship) {
+            var relationshipKey = this.keyForRelationship(key);
+             return 'type-' + relationshipKey;
+          }
+        });
+        ```
+        @method keyForPolymorphicType
+       @param {String} key
+       @param {String} typeClass
+       @param {String} method
+       @return {String} normalized key
+      */
+      keyForPolymorphicType: function (key, typeClass, method) {
+        var relationshipKey = this.keyForRelationship(key);
+
+        return relationshipKey + "Type";
+      },
+
+      /**
         Normalizes a part of the JSON payload returned by
         the server. You should override this method, munge the hash
         and call super if you have generic normalization to do.
@@ -10316,7 +10370,7 @@
 
       /**
         You can use this method to customize how polymorphic objects are serialized.
-        By default the JSON Serializer creates the key by appending `Type` to
+        By default the REST Serializer creates the key by appending `Type` to
         the attribute and value from the model's camelcased model name.
          @method serializePolymorphicType
         @param {DS.Snapshot} snapshot
@@ -10326,12 +10380,72 @@
       serializePolymorphicType: function (snapshot, json, relationship) {
         var key = relationship.key;
         var belongsTo = snapshot.belongsTo(key);
+        var typeKey = this.keyForPolymorphicType(key, relationship.type, 'serialize');
+
+        // old way of getting the key for the polymorphic type
         key = this.keyForAttribute ? this.keyForAttribute(key, "serialize") : key;
-        if (Ember.isNone(belongsTo)) {
-          json[key + "Type"] = null;
-        } else {
-          json[key + "Type"] = Ember.String.camelize(belongsTo.modelName);
+        key = key + "Type";
+
+        // The old way of serializing the type of a polymorphic record used
+        // `keyForAttribute`, which is not correct. The next code checks if the old
+        // way is used and if it differs from the new way of using
+        // `keyForPolymorphicType`. If this is the case, a deprecation warning is
+        // logged and the old way is restored (so nothing breaks).
+        if (key !== typeKey && this.keyForPolymorphicType === ember$data$lib$serializers$rest$serializer$$RESTSerializer.prototype.keyForPolymorphicType) {
+          
+          typeKey = key;
         }
+
+        if (Ember.isNone(belongsTo)) {
+          json[typeKey] = null;
+        } else {
+          json[typeKey] = ember$data$lib$serializers$rest$serializer$$camelize(belongsTo.modelName);
+        }
+      },
+
+      /**
+        You can use this method to customize how a polymorphic relationship should
+        be extracted.
+         @method extractPolymorphicRelationship
+        @param {Object} relationshipType
+        @param {Object} relationshipHash
+        @param {Object} relationshipOptions
+        @return {Object}
+       */
+      extractPolymorphicRelationship: function (relationshipType, relationshipHash, relationshipOptions) {
+        var key = relationshipOptions.key;
+        var resourceHash = relationshipOptions.resourceHash;
+        var relationshipMeta = relationshipOptions.relationshipMeta;
+
+        // A polymorphic belongsTo relationship can be present in the payload
+        // either in the form where the `id` and the `type` are given:
+        //
+        //   {
+        //     message: { id: 1, type: 'post' }
+        //   }
+        //
+        // or by the `id` and a `<relationship>Type` attribute:
+        //
+        //   {
+        //     message: 1,
+        //     messageType: 'post'
+        //   }
+        //
+        // The next code checks if the latter case is present and returns the
+        // corresponding JSON-API representation. The former case is handled within
+        // the base class JSONSerializer.
+        var isPolymorphic = relationshipMeta.options.polymorphic;
+        var typeProperty = this.keyForPolymorphicType(key, relationshipType, 'deserialize');
+
+        if (isPolymorphic && resourceHash.hasOwnProperty(typeProperty) && typeof relationshipHash !== 'object') {
+          var type = this.modelNameFromPayloadKey(resourceHash[typeProperty]);
+          return {
+            id: relationshipHash,
+            type: type
+          };
+        }
+
+        return this._super.apply(this, arguments);
       }
     });
 
