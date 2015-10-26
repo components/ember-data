@@ -5826,6 +5826,7 @@
 
     var ember$data$lib$system$store$$Backburner = Ember._Backburner || Ember.Backburner || Ember.__loader.require('backburner')['default'] || Ember.__loader.require('backburner')['Backburner'];
     var ember$data$lib$system$store$$Map = Ember.Map;
+    var ember$data$lib$system$store$$isArray = Array.isArray || Ember.isArray;
 
     //Shim Backburner.join
     if (!ember$data$lib$system$store$$Backburner.prototype.join) {
@@ -7130,8 +7131,7 @@
         @param {Object} data
       */
       _load: function (data) {
-        var id = ember$data$lib$system$coerce$id$$default(data.id);
-        var internalModel = this._internalModelForId(data.type, id);
+        var internalModel = this._internalModelForId(data.type, data.id);
 
         internalModel.setupData(data);
 
@@ -7336,21 +7336,21 @@
           updated.
       */
       push: function (data) {
-        var _this3 = this;
-
-        if (data.included) {
-          data.included.forEach(function (recordData) {
-            return _this3._pushInternalModel(recordData);
-          });
+        var included = data.included;
+        var i, length;
+        if (included) {
+          for (i = 0, length = included.length; i < length; i++) {
+            this._pushInternalModel(included[i]);
+          }
         }
 
-        if (Ember.typeOf(data.data) === 'array') {
-          var internalModels = data.data.map(function (recordData) {
-            return _this3._pushInternalModel(recordData);
-          });
-          return internalModels.map(function (internalModel) {
-            return internalModel.getRecord();
-          });
+        if (ember$data$lib$system$store$$isArray(data.data)) {
+          length = data.data.length;
+          var internalModels = new Array(length);
+          for (i = 0; i < length; i++) {
+            internalModels[i] = this._pushInternalModel(data.data[i]).getRecord();
+          }
+          return internalModels;
         }
 
         var internalModel = this._pushInternalModel(data.data || data);
@@ -7363,7 +7363,7 @@
       },
 
       _pushInternalModel: function (data) {
-        var _this4 = this;
+        var _this3 = this;
 
         var modelName = data.type;
         Ember.assert("Expected an object as 'data' in a call to 'push' for " + modelName + ", but was " + Ember.typeOf(data), Ember.typeOf(data) === 'object');
@@ -7387,7 +7387,7 @@
         var internalModel = this._load(data);
 
         this._backburner.join(function () {
-          _this4._backburner.schedule('normalizeRelationships', _this4, '_setupRelationships', internalModel, type, data);
+          _this3._backburner.schedule('normalizeRelationships', _this3, '_setupRelationships', internalModel, type, data);
         });
 
         return internalModel;
@@ -7450,7 +7450,7 @@
         @param {Object} inputPayload
       */
       pushPayload: function (modelName, inputPayload) {
-        var _this5 = this;
+        var _this4 = this;
 
         var serializer;
         var payload;
@@ -7464,7 +7464,7 @@
           serializer = this.serializerFor(modelName);
         }
         this._adapterRun(function () {
-          return serializer.pushPayload(_this5, payload);
+          return serializer.pushPayload(_this4, payload);
         });
       },
 
@@ -7687,7 +7687,7 @@
         return;
       }
 
-      Ember.assert("A " + relationship.parentType + " record was pushed into the store with the value of " + key + " being " + Ember.inspect(id) + ", but " + key + " is a belongsTo relationship so the value must not be an array. You should probably check your data payload or serializer.", !Ember.isArray(id));
+      Ember.assert("A " + relationship.parentType + " record was pushed into the store with the value of " + key + " being " + Ember.inspect(id) + ", but " + key + " is a belongsTo relationship so the value must not be an array. You should probably check your data payload or serializer.", !ember$data$lib$system$store$$isArray(id));
 
       //TODO:Better asserts
       return store._internalModelForId(id.type, id.id);
@@ -7698,7 +7698,7 @@
         return;
       }
 
-      Ember.assert("A " + relationship.parentType + " record was pushed into the store with the value of " + key + " being '" + Ember.inspect(ids) + "', but " + key + " is a hasMany relationship so the value must be an array. You should probably check your data payload or serializer.", Ember.isArray(ids));
+      Ember.assert("A " + relationship.parentType + " record was pushed into the store with the value of " + key + " being '" + Ember.inspect(ids) + "', but " + key + " is a hasMany relationship so the value must be an array. You should probably check your data payload or serializer.", ember$data$lib$system$store$$isArray(ids));
       return ids.map(function (id) {
         return ember$data$lib$system$store$$deserializeRecordId(store, key, relationship, id);
       });
