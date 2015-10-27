@@ -8478,6 +8478,26 @@
       },
 
       /**
+        Returns a polymorphic relationship formatted as a JSON-API "relationship object".
+         http://jsonapi.org/format/#document-resource-object-relationships
+         `relationshipOptions` is a hash which contains more information about the
+        polymorphic relationship which should be extracted:
+          - `resourceHash` complete hash of the resource the relationship should be
+            extracted from
+          - `relationshipKey` key under which the value for the relationship is
+            extracted from the resourceHash
+          - `relationshipMeta` meta information about the relationship
+         @method extractPolymorphicRelationship
+        @param {Object} relationshipModelName
+        @param {Object} relationshipHash
+        @param {Object} relationshipOptions
+        @return {Object}
+      */
+      extractPolymorphicRelationship: function (relationshipModelName, relationshipHash, relationshipOptions) {
+        return this.extractRelationship(relationshipModelName, relationshipHash);
+      },
+
+      /**
         Returns the resource's relationships formatted as a JSON-API "relationships object".
          http://jsonapi.org/format/#document-resource-object-relationships
          @method extractRelationships
@@ -8497,7 +8517,15 @@
             var data = null;
             var relationshipHash = resourceHash[relationshipKey];
             if (relationshipMeta.kind === 'belongsTo') {
-              data = _this4.extractRelationship(relationshipMeta.type, relationshipHash);
+              if (relationshipMeta.options.polymorphic) {
+                // extracting a polymorphic belongsTo may need more information
+                // than the type and the hash (which might only be an id) for the
+                // relationship, hence we pass the key, resource and
+                // relationshipMeta too
+                data = _this4.extractPolymorphicRelationship(relationshipMeta.type, relationshipHash, { key: key, resourceHash: resourceHash, relationshipMeta: relationshipMeta });
+              } else {
+                data = _this4.extractRelationship(relationshipMeta.type, relationshipHash);
+              }
             } else if (relationshipMeta.kind === 'hasMany') {
               data = Ember.isNone(relationshipHash) ? null : relationshipHash.map(function (item) {
                 return _this4.extractRelationship(relationshipMeta.type, item);
@@ -9483,6 +9511,54 @@
       return ember$inflector$lib$lib$system$inflector$$default.inflector.singularize(word);
     }
 
+    var ember$inflector$lib$lib$system$inflections$$default = {
+      plurals: [[/$/, 's'], [/s$/i, 's'], [/^(ax|test)is$/i, '$1es'], [/(octop|vir)us$/i, '$1i'], [/(octop|vir)i$/i, '$1i'], [/(alias|status)$/i, '$1es'], [/(bu)s$/i, '$1ses'], [/(buffal|tomat)o$/i, '$1oes'], [/([ti])um$/i, '$1a'], [/([ti])a$/i, '$1a'], [/sis$/i, 'ses'], [/(?:([^f])fe|([lr])f)$/i, '$1$2ves'], [/(hive)$/i, '$1s'], [/([^aeiouy]|qu)y$/i, '$1ies'], [/(x|ch|ss|sh)$/i, '$1es'], [/(matr|vert|ind)(?:ix|ex)$/i, '$1ices'], [/^(m|l)ouse$/i, '$1ice'], [/^(m|l)ice$/i, '$1ice'], [/^(ox)$/i, '$1en'], [/^(oxen)$/i, '$1'], [/(quiz)$/i, '$1zes']],
+
+      singular: [[/s$/i, ''], [/(ss)$/i, '$1'], [/(n)ews$/i, '$1ews'], [/([ti])a$/i, '$1um'], [/((a)naly|(b)a|(d)iagno|(p)arenthe|(p)rogno|(s)ynop|(t)he)(sis|ses)$/i, '$1sis'], [/(^analy)(sis|ses)$/i, '$1sis'], [/([^f])ves$/i, '$1fe'], [/(hive)s$/i, '$1'], [/(tive)s$/i, '$1'], [/([lr])ves$/i, '$1f'], [/([^aeiouy]|qu)ies$/i, '$1y'], [/(s)eries$/i, '$1eries'], [/(m)ovies$/i, '$1ovie'], [/(x|ch|ss|sh)es$/i, '$1'], [/^(m|l)ice$/i, '$1ouse'], [/(bus)(es)?$/i, '$1'], [/(o)es$/i, '$1'], [/(shoe)s$/i, '$1'], [/(cris|test)(is|es)$/i, '$1is'], [/^(a)x[ie]s$/i, '$1xis'], [/(octop|vir)(us|i)$/i, '$1us'], [/(alias|status)(es)?$/i, '$1'], [/^(ox)en/i, '$1'], [/(vert|ind)ices$/i, '$1ex'], [/(matr)ices$/i, '$1ix'], [/(quiz)zes$/i, '$1'], [/(database)s$/i, '$1']],
+
+      irregularPairs: [['person', 'people'], ['man', 'men'], ['child', 'children'], ['sex', 'sexes'], ['move', 'moves'], ['cow', 'kine'], ['zombie', 'zombies']],
+
+      uncountable: ['equipment', 'information', 'rice', 'money', 'species', 'series', 'fish', 'sheep', 'jeans', 'police']
+    };
+
+    ember$inflector$lib$lib$system$inflector$$default.inflector = new ember$inflector$lib$lib$system$inflector$$default(ember$inflector$lib$lib$system$inflections$$default);
+
+    if (ember$lib$main$$default.EXTEND_PROTOTYPES === true || ember$lib$main$$default.EXTEND_PROTOTYPES.String) {
+      /**
+        See {{#crossLink "Ember.String/pluralize"}}{{/crossLink}}
+         @method pluralize
+        @for String
+      */
+      String.prototype.pluralize = function () {
+        return ember$inflector$lib$lib$system$string$$pluralize(this);
+      };
+
+      /**
+        See {{#crossLink "Ember.String/singularize"}}{{/crossLink}}
+         @method singularize
+        @for String
+      */
+      String.prototype.singularize = function () {
+        return ember$inflector$lib$lib$system$string$$singularize(this);
+      };
+    }
+
+    ember$inflector$lib$lib$system$inflector$$default.defaultRules = ember$inflector$lib$lib$system$inflections$$default;
+    ember$lib$main$$default.Inflector = ember$inflector$lib$lib$system$inflector$$default;
+
+    ember$lib$main$$default.String.pluralize = ember$inflector$lib$lib$system$string$$pluralize;
+    ember$lib$main$$default.String.singularize = ember$inflector$lib$lib$system$string$$singularize;
+    var ember$inflector$lib$main$$default = ember$inflector$lib$lib$system$inflector$$default;
+
+    if (typeof define !== 'undefined' && define.amd) {
+      define('ember-inflector', ['exports'], function (__exports__) {
+        __exports__['default'] = ember$inflector$lib$lib$system$inflector$$default;
+        return ember$inflector$lib$lib$system$inflector$$default;
+      });
+    } else if (typeof module !== 'undefined' && module['exports']) {
+      module['exports'] = ember$inflector$lib$lib$system$inflector$$default;
+    }
+
     var ember$data$lib$serializers$json$api$serializer$$dasherize = Ember.String.dasherize;
 
     /**
@@ -9995,6 +10071,32 @@
       @extends DS.JSONSerializer
     */
     var ember$data$lib$serializers$rest$serializer$$RESTSerializer = ember$data$lib$serializers$json$serializer$$default.extend({
+
+      /**
+       `keyForPolymorphicType` can be used to define a custom key when
+       serializing and deserializing a polymorphic type. By default, the
+       returned key is `${key}Type`.
+        Example
+         ```app/serializers/post.js
+        import DS from 'ember-data';
+         export default DS.RESTSerializer.extend({
+          keyForPolymorphicType: function(key, relationship) {
+            var relationshipKey = this.keyForRelationship(key);
+             return 'type-' + relationshipKey;
+          }
+        });
+        ```
+        @method keyForPolymorphicType
+       @param {String} key
+       @param {String} typeClass
+       @param {String} method
+       @return {String} normalized key
+      */
+      keyForPolymorphicType: function (key, typeClass, method) {
+        var relationshipKey = this.keyForRelationship(key);
+
+        return relationshipKey + "Type";
+      },
 
       /**
         Normalizes a part of the JSON payload returned by
@@ -10557,7 +10659,7 @@
 
       /**
         You can use this method to customize how polymorphic objects are serialized.
-        By default the JSON Serializer creates the key by appending `Type` to
+        By default the REST Serializer creates the key by appending `Type` to
         the attribute and value from the model's camelcased model name.
          @method serializePolymorphicType
         @param {DS.Snapshot} snapshot
@@ -10567,12 +10669,76 @@
       serializePolymorphicType: function (snapshot, json, relationship) {
         var key = relationship.key;
         var belongsTo = snapshot.belongsTo(key);
+        var typeKey = this.keyForPolymorphicType(key, relationship.type, 'serialize');
+
+        // old way of getting the key for the polymorphic type
         key = this.keyForAttribute ? this.keyForAttribute(key, "serialize") : key;
-        if (Ember.isNone(belongsTo)) {
-          json[key + "Type"] = null;
-        } else {
-          json[key + "Type"] = Ember.String.camelize(belongsTo.modelName);
+        key = key + "Type";
+
+        // The old way of serializing the type of a polymorphic record used
+        // `keyForAttribute`, which is not correct. The next code checks if the old
+        // way is used and if it differs from the new way of using
+        // `keyForPolymorphicType`. If this is the case, a deprecation warning is
+        // logged and the old way is restored (so nothing breaks).
+        if (key !== typeKey && this.keyForPolymorphicType === ember$data$lib$serializers$rest$serializer$$RESTSerializer.prototype.keyForPolymorphicType) {
+          Ember.deprecate("The key to serialize the type of a polymorphic record is created via keyForAttribute which has been deprecated. Use the keyForPolymorphicType hook instead.", false, {
+            id: 'ds.rest-serializer.deprecated-key-for-polymorphic-type',
+            until: '3.0.0'
+          });
+
+          typeKey = key;
         }
+
+        if (Ember.isNone(belongsTo)) {
+          json[typeKey] = null;
+        } else {
+          json[typeKey] = ember$data$lib$serializers$rest$serializer$$camelize(belongsTo.modelName);
+        }
+      },
+
+      /**
+        You can use this method to customize how a polymorphic relationship should
+        be extracted.
+         @method extractPolymorphicRelationship
+        @param {Object} relationshipType
+        @param {Object} relationshipHash
+        @param {Object} relationshipOptions
+        @return {Object}
+       */
+      extractPolymorphicRelationship: function (relationshipType, relationshipHash, relationshipOptions) {
+        var key = relationshipOptions.key;
+        var resourceHash = relationshipOptions.resourceHash;
+        var relationshipMeta = relationshipOptions.relationshipMeta;
+
+        // A polymorphic belongsTo relationship can be present in the payload
+        // either in the form where the `id` and the `type` are given:
+        //
+        //   {
+        //     message: { id: 1, type: 'post' }
+        //   }
+        //
+        // or by the `id` and a `<relationship>Type` attribute:
+        //
+        //   {
+        //     message: 1,
+        //     messageType: 'post'
+        //   }
+        //
+        // The next code checks if the latter case is present and returns the
+        // corresponding JSON-API representation. The former case is handled within
+        // the base class JSONSerializer.
+        var isPolymorphic = relationshipMeta.options.polymorphic;
+        var typeProperty = this.keyForPolymorphicType(key, relationshipType, 'deserialize');
+
+        if (isPolymorphic && resourceHash.hasOwnProperty(typeProperty) && typeof relationshipHash !== 'object') {
+          var type = this.modelNameFromPayloadKey(resourceHash[typeProperty]);
+          return {
+            id: relationshipHash,
+            type: type
+          };
+        }
+
+        return this._super.apply(this, arguments);
       }
     });
 
@@ -12426,54 +12592,7 @@
 
     var ember$data$lib$system$debug$debug$info$$default = ember$data$lib$system$model$$default;
     var ember$data$lib$system$debug$$default = ember$data$lib$system$debug$debug$adapter$$default;
-
-    var ember$inflector$lib$lib$system$inflections$$default = {
-      plurals: [[/$/, 's'], [/s$/i, 's'], [/^(ax|test)is$/i, '$1es'], [/(octop|vir)us$/i, '$1i'], [/(octop|vir)i$/i, '$1i'], [/(alias|status)$/i, '$1es'], [/(bu)s$/i, '$1ses'], [/(buffal|tomat)o$/i, '$1oes'], [/([ti])um$/i, '$1a'], [/([ti])a$/i, '$1a'], [/sis$/i, 'ses'], [/(?:([^f])fe|([lr])f)$/i, '$1$2ves'], [/(hive)$/i, '$1s'], [/([^aeiouy]|qu)y$/i, '$1ies'], [/(x|ch|ss|sh)$/i, '$1es'], [/(matr|vert|ind)(?:ix|ex)$/i, '$1ices'], [/^(m|l)ouse$/i, '$1ice'], [/^(m|l)ice$/i, '$1ice'], [/^(ox)$/i, '$1en'], [/^(oxen)$/i, '$1'], [/(quiz)$/i, '$1zes']],
-
-      singular: [[/s$/i, ''], [/(ss)$/i, '$1'], [/(n)ews$/i, '$1ews'], [/([ti])a$/i, '$1um'], [/((a)naly|(b)a|(d)iagno|(p)arenthe|(p)rogno|(s)ynop|(t)he)(sis|ses)$/i, '$1sis'], [/(^analy)(sis|ses)$/i, '$1sis'], [/([^f])ves$/i, '$1fe'], [/(hive)s$/i, '$1'], [/(tive)s$/i, '$1'], [/([lr])ves$/i, '$1f'], [/([^aeiouy]|qu)ies$/i, '$1y'], [/(s)eries$/i, '$1eries'], [/(m)ovies$/i, '$1ovie'], [/(x|ch|ss|sh)es$/i, '$1'], [/^(m|l)ice$/i, '$1ouse'], [/(bus)(es)?$/i, '$1'], [/(o)es$/i, '$1'], [/(shoe)s$/i, '$1'], [/(cris|test)(is|es)$/i, '$1is'], [/^(a)x[ie]s$/i, '$1xis'], [/(octop|vir)(us|i)$/i, '$1us'], [/(alias|status)(es)?$/i, '$1'], [/^(ox)en/i, '$1'], [/(vert|ind)ices$/i, '$1ex'], [/(matr)ices$/i, '$1ix'], [/(quiz)zes$/i, '$1'], [/(database)s$/i, '$1']],
-
-      irregularPairs: [['person', 'people'], ['man', 'men'], ['child', 'children'], ['sex', 'sexes'], ['move', 'moves'], ['cow', 'kine'], ['zombie', 'zombies']],
-
-      uncountable: ['equipment', 'information', 'rice', 'money', 'species', 'series', 'fish', 'sheep', 'jeans', 'police']
-    };
-
-    ember$inflector$lib$lib$system$inflector$$default.inflector = new ember$inflector$lib$lib$system$inflector$$default(ember$inflector$lib$lib$system$inflections$$default);
-
-    if (ember$lib$main$$default.EXTEND_PROTOTYPES === true || ember$lib$main$$default.EXTEND_PROTOTYPES.String) {
-      /**
-        See {{#crossLink "Ember.String/pluralize"}}{{/crossLink}}
-         @method pluralize
-        @for String
-      */
-      String.prototype.pluralize = function () {
-        return ember$inflector$lib$lib$system$string$$pluralize(this);
-      };
-
-      /**
-        See {{#crossLink "Ember.String/singularize"}}{{/crossLink}}
-         @method singularize
-        @for String
-      */
-      String.prototype.singularize = function () {
-        return ember$inflector$lib$lib$system$string$$singularize(this);
-      };
-    }
-
-    ember$inflector$lib$lib$system$inflector$$default.defaultRules = ember$inflector$lib$lib$system$inflections$$default;
-    ember$lib$main$$default.Inflector = ember$inflector$lib$lib$system$inflector$$default;
-
-    ember$lib$main$$default.String.pluralize = ember$inflector$lib$lib$system$string$$pluralize;
-    ember$lib$main$$default.String.singularize = ember$inflector$lib$lib$system$string$$singularize;
-    var ember$inflector$lib$main$$default = ember$inflector$lib$lib$system$inflector$$default;
-
-    if (typeof define !== 'undefined' && define.amd) {
-      define('ember-inflector', ['exports'], function (__exports__) {
-        __exports__['default'] = ember$inflector$lib$lib$system$inflector$$default;
-        return ember$inflector$lib$lib$system$inflector$$default;
-      });
-    } else if (typeof module !== 'undefined' && module['exports']) {
-      module['exports'] = ember$inflector$lib$lib$system$inflector$$default;
-    }var ember$data$lib$serializers$embedded$records$mixin$$get = Ember.get;
+    var ember$data$lib$serializers$embedded$records$mixin$$get = Ember.get;
     var ember$data$lib$serializers$embedded$records$mixin$$set = Ember.set;
     var ember$data$lib$serializers$embedded$records$mixin$$camelize = Ember.String.camelize;
 
