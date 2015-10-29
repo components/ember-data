@@ -7353,7 +7353,13 @@
           return internalModels;
         }
 
-        var internalModel = this._pushInternalModel(data.data || data);
+        if (data.data === null) {
+          return null;
+        }
+
+        Ember.assert("Expected an object in the 'data' property in a call to 'push' for " + data.type + ", but was " + Ember.typeOf(data.data), Ember.typeOf(data.data) === 'object');
+
+        var internalModel = this._pushInternalModel(data.data);
 
         return internalModel.getRecord();
       },
@@ -7366,7 +7372,6 @@
         var _this3 = this;
 
         var modelName = data.type;
-        Ember.assert("Expected an object as 'data' in a call to 'push' for " + modelName + ", but was " + Ember.typeOf(data), Ember.typeOf(data) === 'object');
         Ember.assert("You must include an 'id' for " + modelName + " in an object passed to 'push'", data.id != null && data.id !== '');
         Ember.assert("You tried to push data with a type '" + modelName + "' but no model could be found with that name.", this._hasModelFor(modelName));
 

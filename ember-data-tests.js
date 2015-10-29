@@ -19115,10 +19115,12 @@ define(
 
       run(function () {
         post = env.store.push({
-          id: "1",
-          type: "post",
-          attributes: {
-            title: "Rails is omakase"
+          data: {
+            id: "1",
+            type: "post",
+            attributes: {
+              title: "Rails is omakase"
+            }
           }
         });
       });
@@ -22208,6 +22210,16 @@ define(
 
       equal(personDeleteRecord.called.length, 1, 'expected person.deleteRecord to have been called');
       ok(person.get('isDeleted'), 'expect person to be isDeleted');
+    });
+
+    test("Store should accept a null value for `data`", function () {
+      expect(0);
+
+      run(function () {
+        store.push({
+          data: null
+        });
+      });
     });
   }
 );
