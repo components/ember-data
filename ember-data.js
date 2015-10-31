@@ -318,11 +318,11 @@
           return Ember.RSVP.reject(new DS.InvalidError([
             {
               detail: 'Must be unique',
-              source: { pointer: 'data/attributes/title' }
+              source: { pointer: '/data/attributes/title' }
             },
             {
               detail: 'Must not be blank',
-              source: { pointer: 'data/attributes/content'}
+              source: { pointer: '/data/attributes/content'}
             }
           ]));
         }
