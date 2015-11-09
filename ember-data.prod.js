@@ -632,7 +632,8 @@
     // when you're treating the object instances as arbitrary dictionaries
     // and don't want your keys colliding with build-in methods on the
     // default object prototype.
-    var ember$data$lib$system$empty$object$$proto = Ember.create(null, {
+    var ember$data$lib$system$empty$object$$create = Object.create || Ember.create;
+    var ember$data$lib$system$empty$object$$proto = ember$data$lib$system$empty$object$$create(null, {
       // without this, we will always still end up with (new
       // EmptyObject()).constructor === Object
       constructor: {
@@ -7583,7 +7584,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '1.13.14'
+      VERSION: '1.13.15'
     });
 
     if (Ember.libraries) {
@@ -15024,6 +15025,10 @@
             json[key] = null;
           } else {
             json[key] = embeddedSnapshot.id;
+
+            if (relationship.options.polymorphic) {
+              this.serializePolymorphicType(snapshot, json, relationship);
+            }
           }
         } else if (includeRecords) {
           key = this.keyForAttribute(attr, 'serialize');
@@ -15032,6 +15037,10 @@
           } else {
             json[key] = embeddedSnapshot.record.serialize({ includeId: true });
             this.removeEmbeddedForeignKey(snapshot, embeddedSnapshot, relationship, json[key]);
+
+            if (relationship.options.polymorphic) {
+              this.serializePolymorphicType(snapshot, json, relationship);
+            }
           }
         }
       },
