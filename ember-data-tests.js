@@ -17874,6 +17874,54 @@ define(
       });
     });
 
+    test("serialize with embedded object (polymorphic belongsTo relationship)", function () {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          secretLab: { embedded: 'always' }
+        }
+      }));
+
+      SuperVillain.reopen({
+        secretLab: DS.belongsTo('secret-lab', { polymorphic: true })
+      });
+
+      var json, tom;
+      run(function () {
+        tom = env.store.createRecord('super-villain', {
+          id: "1",
+          firstName: "Tom",
+          lastName: "Dale",
+          secretLab: env.store.createRecord('bat-cave', {
+            id: "101",
+            minionCapacity: 5000,
+            vicinity: "California, USA",
+            infiltrated: true
+          }),
+          homePlanet: env.store.createRecord('home-planet', {
+            id: "123",
+            name: "Villain League"
+          })
+        });
+      });
+
+      run(function () {
+        json = tom.serialize();
+      });
+
+      deepEqual(json, {
+        firstName: get(tom, "firstName"),
+        lastName: get(tom, "lastName"),
+        homePlanet: get(tom, "homePlanet").get("id"),
+        secretLabType: 'batCave',
+        secretLab: {
+          id: get(tom, "secretLab").get("id"),
+          minionCapacity: get(tom, "secretLab").get("minionCapacity"),
+          vicinity: get(tom, "secretLab").get("vicinity"),
+          infiltrated: true
+        }
+      });
+    });
+
     test("serialize with embedded object (belongsTo relationship) works with different primaryKeys", function () {
       env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         primaryKey: '_id',
@@ -17944,6 +17992,102 @@ define(
           minionCapacity: get(tom, "secretLab").get("minionCapacity"),
           vicinity: get(tom, "secretLab").get("vicinity")
         }
+      });
+    });
+
+    test("serialize with embedded object (polymorphic belongsTo relationship) supports serialize:ids", function () {
+      SuperVillain.reopen({
+        secretLab: DS.belongsTo('secret-lab', { polymorphic: true })
+      });
+
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          secretLab: { serialize: 'ids' }
+        }
+      }));
+
+      var tom, json;
+      run(function () {
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
+          secretLab: env.store.createRecord('bat-cave', { minionCapacity: 5000, vicinity: "California, USA", id: "101" }),
+          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
+        });
+      });
+
+      run(function () {
+        json = tom.serialize();
+      });
+
+      deepEqual(json, {
+        firstName: get(tom, "firstName"),
+        lastName: get(tom, "lastName"),
+        homePlanet: get(tom, "homePlanet").get("id"),
+        secretLab: get(tom, "secretLab").get("id"),
+        secretLabType: 'batCave'
+      });
+    });
+
+    test("serialize with embedded object (belongsTo relationship) supports serialize:id", function () {
+      SuperVillain.reopen({
+        secretLab: DS.belongsTo('secret-lab', { polymorphic: true })
+      });
+
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          secretLab: { serialize: 'id' }
+        }
+      }));
+
+      var tom, json;
+      run(function () {
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
+          secretLab: env.store.createRecord('bat-cave', { minionCapacity: 5000, vicinity: "California, USA", id: "101" }),
+          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
+        });
+      });
+
+      run(function () {
+        json = tom.serialize();
+      });
+
+      deepEqual(json, {
+        firstName: get(tom, "firstName"),
+        lastName: get(tom, "lastName"),
+        homePlanet: get(tom, "homePlanet").get("id"),
+        secretLab: get(tom, "secretLab").get("id"),
+        secretLabType: 'batCave'
+      });
+    });
+
+    test("serialize with embedded object (belongsTo relationship) supports serialize:id in conjunction with deserialize:records", function () {
+      SuperVillain.reopen({
+        secretLab: DS.belongsTo('secret-lab', { polymorphic: true })
+      });
+
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          secretLab: { serialize: 'id', deserialize: 'records' }
+        }
+      }));
+
+      var tom, json;
+      run(function () {
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
+          secretLab: env.store.createRecord('bat-cave', { minionCapacity: 5000, vicinity: "California, USA", id: "101" }),
+          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
+        });
+      });
+
+      run(function () {
+        json = tom.serialize();
+      });
+
+      deepEqual(json, {
+        firstName: get(tom, "firstName"),
+        lastName: get(tom, "lastName"),
+        homePlanet: get(tom, "homePlanet").get("id"),
+        secretLab: get(tom, "secretLab").get("id"),
+        secretLabType: 'batCave'
       });
     });
 
@@ -18671,7 +18815,7 @@ define(
     var get = Ember.get;
     var run = Ember.run;
 
-    var User, Handle, GithubHandle, TwitterHandle, Company;
+    var User, Handle, GithubHandle, TwitterHandle, Company, Project;
 
     module('integration/serializers/json-api-serializer - JSONAPISerializer', {
       setup: function () {
@@ -18700,6 +18844,10 @@ define(
           employees: DS.hasMany('user', { async: true })
         });
 
+        Project = DS.Model.extend({
+          'company-name': DS.attr('string')
+        });
+
         env = setupStore({
           adapter: DS.JSONAPIAdapter,
 
@@ -18707,7 +18855,8 @@ define(
           handle: Handle,
           'github-handle': GithubHandle,
           'twitter-handle': TwitterHandle,
-          company: Company
+          company: Company,
+          project: Project
         });
 
         store = env.store;
@@ -18790,6 +18939,7 @@ define(
     test('Serializer should respect the attrs hash when extracting attributes and relationships', function () {
       env.registry.register("serializer:user", DS.JSONAPISerializer.extend({
         attrs: {
+          firstName: 'firstname_attribute_key',
           title: "title_attribute_key",
           company: { key: 'company_relationship_key' }
         }
@@ -18800,6 +18950,7 @@ define(
           type: 'users',
           id: '1',
           attributes: {
+            'firstname_attribute_key': 'Yehuda',
             'title_attribute_key': 'director'
           },
           relationships: {
@@ -18819,6 +18970,7 @@ define(
 
       var user = env.store.serializerFor("user").normalizeResponse(env.store, User, jsonHash, '1', 'findRecord');
 
+      equal(user.data.attributes.firstName, 'Yehuda');
       equal(user.data.attributes.title, "director");
       deepEqual(user.data.relationships.company.data, { id: "2", type: "company" });
     });
@@ -18826,6 +18978,7 @@ define(
     test('Serializer should respect the attrs hash when serializing attributes and relationships', function () {
       env.registry.register("serializer:user", DS.JSONAPISerializer.extend({
         attrs: {
+          firstName: 'firstname_attribute_key',
           title: "title_attribute_key",
           company: { key: 'company_relationship_key' }
         }
@@ -18849,7 +19002,47 @@ define(
       var payload = env.store.serializerFor("user").serialize(user._createSnapshot());
 
       equal(payload.data.relationships['company_relationship_key'].data.id, "1");
+      equal(payload.data.attributes['firstname_attribute_key'], 'Yehuda');
       equal(payload.data.attributes['title_attribute_key'], "director");
+    });
+
+    test('Serializer should respect the attrs hash when extracting attributes with not camelized keys', function () {
+      env.registry.register('serializer:project', DS.JSONAPISerializer.extend({
+        attrs: {
+          'company-name': 'company_name'
+        }
+      }));
+
+      var jsonHash = {
+        data: {
+          type: 'projects',
+          id: '1',
+          attributes: {
+            'company_name': 'Tilde Inc.'
+          }
+        }
+      };
+
+      var project = env.store.serializerFor('project').normalizeResponse(env.store, User, jsonHash, '1', 'findRecord');
+
+      equal(project.data.attributes['company-name'], 'Tilde Inc.');
+    });
+
+    test('Serializer should respect the attrs hash when serializing attributes with not camelized keys', function () {
+      env.registry.register('serializer:project', DS.JSONAPISerializer.extend({
+        attrs: {
+          'company-name': 'company_name'
+        }
+      }));
+      var project;
+
+      run(function () {
+        project = env.store.createRecord('project', { 'company-name': 'Tilde Inc.' });
+      });
+
+      var payload = env.store.serializerFor('project').serialize(project._createSnapshot());
+
+      equal(payload.data.attributes['company_name'], 'Tilde Inc.');
     });
   }
 );
@@ -19149,6 +19342,30 @@ define(
 
       equal(post.data.attributes.title, "Rails is omakase");
       deepEqual(post.data.relationships.comments.data, [{ id: "1", type: "comment" }, { id: "2", type: "comment" }]);
+    });
+
+    test('Serializer should map `attrs` attributes directly when keyForAttribute also has a transform', function () {
+      Post = DS.Model.extend({
+        authorName: DS.attr('string')
+      });
+      env = setupStore({
+        post: Post
+      });
+      env.registry.register("serializer:post", DS.JSONSerializer.extend({
+        keyForAttribute: Ember.String.underscore,
+        attrs: {
+          authorName: 'author_name_key'
+        }
+      }));
+
+      var jsonHash = {
+        id: "1",
+        author_name_key: "DHH"
+      };
+
+      var post = env.store.serializerFor("post").normalizeResponse(env.store, Post, jsonHash, '1', 'findRecord');
+
+      equal(post.data.attributes.authorName, "DHH");
     });
 
     test('Serializer should respect the attrs hash when serializing records', function () {
@@ -20111,6 +20328,28 @@ define(
       });
 
       equal(array.data[0].relationships.superVillain.data.id, 1);
+    });
+
+    test('normalize should allow for different levels of normalization - attributes', function () {
+      env.registry.register('serializer:application', DS.RESTSerializer.extend({
+        attrs: {
+          name: 'full_name'
+        },
+        keyForAttribute: function (attr) {
+          return Ember.String.decamelize(attr);
+        }
+      }));
+
+      var jsonHash = {
+        evilMinions: [{ id: "1", full_name: "Tom Dale" }]
+      };
+      var array;
+
+      run(function () {
+        array = env.restSerializer.normalizeResponse(env.store, EvilMinion, jsonHash, null, 'findAll');
+      });
+
+      equal(array.data[0].attributes.name, 'Tom Dale');
     });
 
     test("serializeIntoHash", function () {
@@ -22495,9 +22734,28 @@ define(
       source: { pointer: '/data/attributes/age' }
     }];
 
+    var errorsPrimaryHash = {
+      base: ['is invalid', 'error message']
+    };
+
+    var errorsPrimaryArray = [{
+      title: 'Invalid Document',
+      detail: 'is invalid',
+      source: { pointer: '/data' }
+    }, {
+      title: 'Invalid Document',
+      detail: 'error message',
+      source: { pointer: '/data' }
+    }];
+
     test("errorsHashToArray", function () {
       var result = DS.errorsHashToArray(errorsHash);
       deepEqual(result, errorsArray);
+    });
+
+    test("errorsHashToArray for primary data object", function () {
+      var result = DS.errorsHashToArray(errorsPrimaryHash);
+      deepEqual(result, errorsPrimaryArray);
     });
 
     test("errorsArrayToHash", function () {
@@ -22511,6 +22769,11 @@ define(
         source: { pointer: 'data/attributes/name' }
       }]);
       deepEqual(result, { name: ['error message'] });
+    });
+
+    test("errorsArrayToHash for primary data object", function () {
+      var result = DS.errorsArrayToHash(errorsPrimaryArray);
+      deepEqual(result, errorsPrimaryHash);
     });
 
     test("DS.InvalidError will normalize errors hash will assert", function () {
@@ -24659,16 +24922,17 @@ define(
 
     module("unit/model/internal-model - Internal Model");
 
-    var mockModelFactory = {
-      _create: function () {
-        return { trigger: function () {} };
-      },
+    function MockModelFactory() {}
 
-      eachRelationship: function () {}
+    MockModelFactory._create = function () {
+      return { trigger: function () {} };
     };
+
+    MockModelFactory.eachRelationship = function () {};
+
     test("Materializing a model twice errors out", function () {
       expect(1);
-      var internalModel = new DS.InternalModel(mockModelFactory, null, null, null);
+      var internalModel = new DS.InternalModel(MockModelFactory, null, {}, null);
 
       internalModel.materializeRecord();
       expectAssertion(function () {
@@ -29681,7 +29945,7 @@ define(
           "blog.post": DS.Model.extend()
         });
         store = env.store;
-        container = store.container;
+        container = env.container;
         registry = env.registry;
       },
 
@@ -29830,6 +30094,50 @@ define(
           store.destroy();
         });
       }
+    });
+
+    test('Changed attributes are reset when matching data is pushed', function (assert) {
+      var person;
+
+      run(function () {
+        person = store.push({
+          data: {
+            type: 'person',
+            id: 1,
+            attributes: {
+              firstName: 'original first name'
+            }
+          }
+        });
+      });
+
+      assert.equal(person.get('firstName'), 'original first name');
+      assert.equal(person.get('currentState.stateName'), 'root.loaded.saved');
+
+      run(function () {
+        person.set('firstName', 'updated first name');
+      });
+
+      assert.equal(person.get('firstName'), 'updated first name');
+      assert.equal(person.get('lastName'), undefined);
+      assert.equal(person.get('currentState.stateName'), 'root.loaded.updated.uncommitted');
+      deepEqual(person.changedAttributes().firstName, ['original first name', 'updated first name']);
+
+      run(function () {
+        store.push({
+          data: {
+            type: 'person',
+            id: 1,
+            attributes: {
+              firstName: 'updated first name'
+            }
+          }
+        });
+      });
+
+      assert.equal(person.get('firstName'), 'updated first name');
+      assert.equal(person.get('currentState.stateName'), 'root.loaded.saved');
+      assert.ok(!person.changedAttributes().firstName);
     });
 
     test("Calling push with a normalized hash returns a record", function () {
@@ -30519,7 +30827,7 @@ define(
         Person = DS.Model.extend({});
         var env = setupStore({ person: Person });
         store = env.store;
-        container = store.container;
+        container = env.container;
         registry = env.registry;
       },
 
