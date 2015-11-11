@@ -2292,6 +2292,90 @@
         return record;
       }, null, "DS: Extract payload of queryRecord " + typeClass);
     }
+
+    var ember$data$lib$utils$$get = ember$lib$main$$default.get;
+
+    /**
+      Assert that `addedRecord` has a valid type so it can be added to the
+      relationship of the `record`.
+
+      The assert basically checks if the `addedRecord` can be added to the
+      relationship (specified via `relationshipMeta`) of the `record`.
+
+      This utility should only be used internally, as both record parameters must
+      be an InternalModel and the `relationshipMeta` needs to be the meta
+      information about the relationship, retrieved via
+      `record.relationshipFor(key)`.
+
+      @method assertPolymorphicType
+      @param {InternalModel} record
+      @param {RelationshipMeta} relationshipMeta retrieved via
+             `record.relationshipFor(key)`
+      @param {InternalModel} addedRecord record which
+             should be added/set for the relationship
+    */
+    var ember$data$lib$utils$$assertPolymorphicType = function (record, relationshipMeta, addedRecord) {
+      var addedType = addedRecord.type.modelName;
+      var recordType = record.type.modelName;
+      var key = relationshipMeta.key;
+      var typeClass = record.store.modelFor(relationshipMeta.type);
+
+      var assertionMessage = 'You cannot add a record of type \'' + addedType + '\' to the \'' + recordType + '.' + key + '\' relationship (only \'' + typeClass.modelName + '\' allowed)';
+
+      ember$lib$main$$default.assert(assertionMessage, ember$data$lib$utils$$checkPolymorphic(typeClass, addedRecord));
+    };
+
+    function ember$data$lib$utils$$checkPolymorphic(typeClass, addedRecord) {
+      if (typeClass.__isMixin) {
+        //TODO Need to do this in order to support mixins, should convert to public api
+        //once it exists in Ember
+        return typeClass.__mixin.detect(addedRecord.type.PrototypeMixin);
+      }
+      if (ember$lib$main$$default.MODEL_FACTORY_INJECTIONS) {
+        typeClass = typeClass.superclass;
+      }
+      return typeClass.detect(addedRecord.type);
+    }
+
+    /**
+      Check if the passed model has a `type` attribute or a relationship named `type`.
+
+      @method modelHasAttributeOrRelationshipNamedType
+      @param modelClass
+     */
+    function ember$data$lib$utils$$modelHasAttributeOrRelationshipNamedType(modelClass) {
+      return ember$data$lib$utils$$get(modelClass, 'attributes').has('type') || ember$data$lib$utils$$get(modelClass, 'relationshipsByName').has('type');
+    }
+
+    /*
+      ember-container-inject-owner is a new feature in Ember 2.3 that finally provides a public
+      API for looking items up.  This function serves as a super simple polyfill to avoid
+      triggering deprecations.
+    */
+    function ember$data$lib$utils$$getOwner(context) {
+      var owner;
+
+      if (ember$lib$main$$default.getOwner) {
+        owner = ember$lib$main$$default.getOwner(context);
+      }
+
+      if (!owner && context.container) {
+        owner = context.container;
+      }
+
+      if (owner && owner.lookupFactory && !owner._lookupFactory) {
+        // `owner` is a container, we are just making this work
+        owner._lookupFactory = owner.lookupFactory;
+        owner.register = function () {
+          var registry = owner.registry || owner._registry || owner;
+
+          return registry.register.apply(registry, arguments);
+        };
+      }
+
+      return owner;
+    }
+
     var ember$data$lib$system$coerce$id$$default = ember$data$lib$system$coerce$id$$coerceId;
     // Used by the store to normalize IDs entering the store.  Despite the fact
     // that developers may provide IDs as numbers (e.g., `store.find(Person, 1)`),
@@ -3013,8 +3097,8 @@
      * @class ContainerInstanceCache
      *
     */
-    function ember$data$lib$system$store$container$instance$cache$$ContainerInstanceCache(container) {
-      this._container = container;
+    function ember$data$lib$system$store$container$instance$cache$$ContainerInstanceCache(owner) {
+      this._owner = owner;
       this._cache = new ember$data$lib$system$empty$object$$default();
     }
 
@@ -3049,7 +3133,7 @@
       instanceFor: function (key) {
         var cache = this._cache;
         if (!cache[key]) {
-          var instance = this._container.lookup(key);
+          var instance = this._owner.lookup(key);
           if (instance) {
             cache[key] = instance;
           }
@@ -3068,7 +3152,7 @@
             cacheEntry.destroy();
           }
         }
-        this._container = null;
+        this._owner = null;
       },
 
       constructor: ember$data$lib$system$store$container$instance$cache$$ContainerInstanceCache,
@@ -4323,60 +4407,6 @@
       }
     });
 
-    var ember$data$lib$utils$$get = ember$lib$main$$default.get;
-
-    /**
-      Assert that `addedRecord` has a valid type so it can be added to the
-      relationship of the `record`.
-
-      The assert basically checks if the `addedRecord` can be added to the
-      relationship (specified via `relationshipMeta`) of the `record`.
-
-      This utility should only be used internally, as both record parameters must
-      be an InternalModel and the `relationshipMeta` needs to be the meta
-      information about the relationship, retrieved via
-      `record.relationshipFor(key)`.
-
-      @method assertPolymorphicType
-      @param {InternalModel} record
-      @param {RelationshipMeta} relationshipMeta retrieved via
-             `record.relationshipFor(key)`
-      @param {InternalModel} addedRecord record which
-             should be added/set for the relationship
-    */
-    var ember$data$lib$utils$$assertPolymorphicType = function (record, relationshipMeta, addedRecord) {
-      var addedType = addedRecord.type.modelName;
-      var recordType = record.type.modelName;
-      var key = relationshipMeta.key;
-      var typeClass = record.store.modelFor(relationshipMeta.type);
-
-      var assertionMessage = 'You cannot add a record of type \'' + addedType + '\' to the \'' + recordType + '.' + key + '\' relationship (only \'' + typeClass.modelName + '\' allowed)';
-
-      ember$lib$main$$default.assert(assertionMessage, ember$data$lib$utils$$checkPolymorphic(typeClass, addedRecord));
-    };
-
-    function ember$data$lib$utils$$checkPolymorphic(typeClass, addedRecord) {
-      if (typeClass.__isMixin) {
-        //TODO Need to do this in order to support mixins, should convert to public api
-        //once it exists in Ember
-        return typeClass.__mixin.detect(addedRecord.type.PrototypeMixin);
-      }
-      if (ember$lib$main$$default.MODEL_FACTORY_INJECTIONS) {
-        typeClass = typeClass.superclass;
-      }
-      return typeClass.detect(addedRecord.type);
-    }
-
-    /**
-      Check if the passed model has a `type` attribute or a relationship named `type`.
-
-      @method modelHasAttributeOrRelationshipNamedType
-      @param modelClass
-     */
-    function ember$data$lib$utils$$modelHasAttributeOrRelationshipNamedType(modelClass) {
-      return ember$data$lib$utils$$get(modelClass, 'attributes').has('type') || ember$data$lib$utils$$get(modelClass, 'relationshipsByName').has('type');
-    }
-
     var ember$data$lib$system$relationships$state$has$many$$default = ember$data$lib$system$relationships$state$has$many$$ManyRelationship;
     function ember$data$lib$system$relationships$state$has$many$$ManyRelationship(store, record, inverseKey, relationshipMeta) {
       this._super$constructor(store, record, inverseKey, relationshipMeta);
@@ -5123,11 +5153,10 @@
 
       @class InternalModel
     */
-    function ember$data$lib$system$model$internal$model$$InternalModel(type, id, store, container, data) {
+    function ember$data$lib$system$model$internal$model$$InternalModel(type, id, store, _, data) {
       this.type = type;
       this.id = id;
       this.store = store;
-      this.container = container;
       this._data = data || new ember$data$lib$system$empty$object$$default();
       this.modelName = type.modelName;
       this.dataHasInitialized = false;
@@ -5181,17 +5210,27 @@
       constructor: ember$data$lib$system$model$internal$model$$InternalModel,
       materializeRecord: function () {
         Ember.assert("Materialized " + this.modelName + " record with id:" + this.id + "more than once", this.record === null || this.record === undefined);
+
         // lookupFactory should really return an object that creates
         // instances with the injections applied
-        this.record = this.type._create({
+        var createOptions = {
           store: this.store,
-          container: this.container,
           _internalModel: this,
           id: this.id,
           currentState: ember$data$lib$system$model$internal$model$$get(this, 'currentState'),
           isError: this.isError,
           adapterError: this.error
-        });
+        };
+
+        if (Ember.setOwner) {
+          // ensure that `Ember.getOwner(this)` works inside a model instance
+          Ember.setOwner(createOptions, ember$data$lib$utils$$getOwner(this.store));
+        } else {
+          createOptions.container = this.store.container;
+        }
+
+        this.record = this.type._create(createOptions);
+
         this._triggerDeferredTriggers();
       },
 
@@ -5994,7 +6033,7 @@
           store: this
         });
         this._pendingSave = [];
-        this._instanceCache = new ember$data$lib$system$store$container$instance$cache$$default(this.container);
+        this._instanceCache = new ember$data$lib$system$store$container$instance$cache$$default(ember$data$lib$utils$$getOwner(this));
         //Used to keep track of all the find requests that need to be coalesced
         this._pendingFetch = ember$data$lib$system$store$$Map.create();
       },
@@ -7161,11 +7200,12 @@
         // container.registry = 2.1
         // container._registry = 1.11 - 2.0
         // container = < 1.11
-        var registry = this.container.registry || this.container._registry || this.container;
-        var mixin = this.container.lookupFactory('mixin:' + normalizedModelName);
+        var owner = ember$data$lib$utils$$getOwner(this);
+
+        var mixin = owner._lookupFactory('mixin:' + normalizedModelName);
         if (mixin) {
           //Cache the class as a model
-          registry.register('model:' + normalizedModelName, DS.Model.extend(mixin));
+          owner.register('model:' + normalizedModelName, DS.Model.extend(mixin));
         }
         var factory = this.modelFactoryFor(normalizedModelName);
         if (factory) {
@@ -7203,7 +7243,10 @@
       modelFactoryFor: function (modelName) {
         Ember.assert('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + Ember.inspect(modelName), typeof modelName === 'string');
         var normalizedKey = ember$data$lib$system$normalize$model$name$$default(modelName);
-        return this.container.lookupFactory('model:' + normalizedKey);
+
+        var owner = ember$data$lib$utils$$getOwner(this);
+
+        return owner._lookupFactory('model:' + normalizedKey);
       },
 
       /**
@@ -7365,7 +7408,7 @@
       },
 
       _hasModelFor: function (type) {
-        return this.container.lookupFactory("model:" + type);
+        return ember$data$lib$utils$$getOwner(this)._lookupFactory("model:" + type);
       },
 
       _pushInternalModel: function (data) {
@@ -7515,7 +7558,7 @@
 
         // lookupFactory should really return an object that creates
         // instances with the injections applied
-        var internalModel = new ember$data$lib$system$model$internal$model$$default(type, id, this, this.container, data);
+        var internalModel = new ember$data$lib$system$model$internal$model$$default(type, id, this, null, data);
 
         // if we're creating an item, this process will be done
         // later, once the object has been persisted.
@@ -9063,8 +9106,10 @@
        @return {DS.Transform} transform
       */
       transformFor: function (attributeType, skipAssertion) {
-        var transform = this.container.lookup('transform:' + attributeType);
+        var transform = ember$data$lib$utils$$getOwner(this).lookup('transform:' + attributeType);
+
         Ember.assert("Unable to find transform for '" + attributeType + "'", skipAssertion || !!transform);
+
         return transform;
       }
     });
@@ -11813,6 +11858,23 @@
       */
       modelName: null
     });
+
+    // if `Ember.setOwner` is defined, accessing `this.container` is
+    // deprecated (but functional). In "standard" Ember usage, this
+    // deprecation is actually created via an `.extend` of the factory
+    // inside the container itself, but that only happens on models
+    // with MODEL_FACTORY_INJECTIONS enabled :(
+    if (Ember.setOwner) {
+      Object.defineProperty(ember$data$lib$system$model$model$$Model.prototype, 'container', {
+        configurable: true,
+        enumerable: false,
+        get: function () {
+          Ember.deprecate('Using the injected `container` is deprecated. Please use the `getOwner` helper instead to access the owner of this object.', false, { id: 'ember-application.injected-container', until: '3.0.0' });
+
+          return this.store.container;
+        }
+      });
+    }
 
     var ember$data$lib$system$model$model$$default = ember$data$lib$system$model$model$$Model;
     var ember$data$lib$system$model$attributes$$default = ember$data$lib$system$model$attributes$$attr;
