@@ -261,6 +261,8 @@
     var ember$data$lib$adapters$errors$$EmberError = Ember.Error;
 
     var ember$data$lib$adapters$errors$$SOURCE_POINTER_REGEXP = /^\/?data\/(attributes|relationships)\/(.*)/;
+    var ember$data$lib$adapters$errors$$SOURCE_POINTER_PRIMARY_REGEXP = /^\/?data/;
+    var ember$data$lib$adapters$errors$$PRIMARY_ATTRIBUTE_KEY = 'base';
 
     /**
       @class AdapterError
@@ -318,11 +320,11 @@
           return Ember.RSVP.reject(new DS.InvalidError([
             {
               detail: 'Must be unique',
-              source: { pointer: 'data/attributes/title' }
+              source: { pointer: '/data/attributes/title' }
             },
             {
               detail: 'Must not be blank',
-              source: { pointer: 'data/attributes/content'}
+              source: { pointer: '/data/attributes/content'}
             }
           ]));
         }
@@ -380,11 +382,17 @@
         Object.keys(errors).forEach(function (key) {
           var messages = Ember.makeArray(errors[key]);
           for (var i = 0; i < messages.length; i++) {
+            var title = 'Invalid Attribute';
+            var pointer = '/data/attributes/' + key;
+            if (key === ember$data$lib$adapters$errors$$PRIMARY_ATTRIBUTE_KEY) {
+              title = 'Invalid Document';
+              pointer = '/data';
+            }
             out.push({
-              title: 'Invalid Attribute',
+              title: title,
               detail: messages[i],
               source: {
-                pointer: '/data/attributes/' + key
+                pointer: pointer
               }
             });
           }
@@ -409,6 +417,11 @@
 
             if (key) {
               key = key[2];
+            } else if (error.source.pointer.search(ember$data$lib$adapters$errors$$SOURCE_POINTER_PRIMARY_REGEXP) !== -1) {
+              key = ember$data$lib$adapters$errors$$PRIMARY_ATTRIBUTE_KEY;
+            }
+
+            if (key) {
               out[key] = out[key] || [];
               out[key].push(error.detail || error.title);
             }
@@ -1868,7 +1881,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.2.0-beta.3'
+      VERSION: '2.2.0-beta.4'
     });
 
     if (Ember.libraries) {
@@ -2344,6 +2357,90 @@
         return record;
       }, null, "DS: Extract payload of queryRecord " + typeClass);
     }
+
+    var ember$data$lib$utils$$get = ember$lib$main$$default.get;
+
+    /**
+      Assert that `addedRecord` has a valid type so it can be added to the
+      relationship of the `record`.
+
+      The assert basically checks if the `addedRecord` can be added to the
+      relationship (specified via `relationshipMeta`) of the `record`.
+
+      This utility should only be used internally, as both record parameters must
+      be an InternalModel and the `relationshipMeta` needs to be the meta
+      information about the relationship, retrieved via
+      `record.relationshipFor(key)`.
+
+      @method assertPolymorphicType
+      @param {InternalModel} record
+      @param {RelationshipMeta} relationshipMeta retrieved via
+             `record.relationshipFor(key)`
+      @param {InternalModel} addedRecord record which
+             should be added/set for the relationship
+    */
+    var ember$data$lib$utils$$assertPolymorphicType = function (record, relationshipMeta, addedRecord) {
+      var addedType = addedRecord.type.modelName;
+      var recordType = record.type.modelName;
+      var key = relationshipMeta.key;
+      var typeClass = record.store.modelFor(relationshipMeta.type);
+
+      var assertionMessage = 'You cannot add a record of type \'' + addedType + '\' to the \'' + recordType + '.' + key + '\' relationship (only \'' + typeClass.modelName + '\' allowed)';
+
+      ember$lib$main$$default.assert(assertionMessage, ember$data$lib$utils$$checkPolymorphic(typeClass, addedRecord));
+    };
+
+    function ember$data$lib$utils$$checkPolymorphic(typeClass, addedRecord) {
+      if (typeClass.__isMixin) {
+        //TODO Need to do this in order to support mixins, should convert to public api
+        //once it exists in Ember
+        return typeClass.__mixin.detect(addedRecord.type.PrototypeMixin);
+      }
+      if (ember$lib$main$$default.MODEL_FACTORY_INJECTIONS) {
+        typeClass = typeClass.superclass;
+      }
+      return typeClass.detect(addedRecord.type);
+    }
+
+    /**
+      Check if the passed model has a `type` attribute or a relationship named `type`.
+
+      @method modelHasAttributeOrRelationshipNamedType
+      @param modelClass
+     */
+    function ember$data$lib$utils$$modelHasAttributeOrRelationshipNamedType(modelClass) {
+      return ember$data$lib$utils$$get(modelClass, 'attributes').has('type') || ember$data$lib$utils$$get(modelClass, 'relationshipsByName').has('type');
+    }
+
+    /*
+      ember-container-inject-owner is a new feature in Ember 2.3 that finally provides a public
+      API for looking items up.  This function serves as a super simple polyfill to avoid
+      triggering deprecations.
+    */
+    function ember$data$lib$utils$$getOwner(context) {
+      var owner;
+
+      if (ember$lib$main$$default.getOwner) {
+        owner = ember$lib$main$$default.getOwner(context);
+      }
+
+      if (!owner && context.container) {
+        owner = context.container;
+      }
+
+      if (owner && owner.lookupFactory && !owner._lookupFactory) {
+        // `owner` is a container, we are just making this work
+        owner._lookupFactory = owner.lookupFactory;
+        owner.register = function () {
+          var registry = owner.registry || owner._registry || owner;
+
+          return registry.register.apply(registry, arguments);
+        };
+      }
+
+      return owner;
+    }
+
     var ember$data$lib$system$coerce$id$$default = ember$data$lib$system$coerce$id$$coerceId;
     // Used by the store to normalize IDs entering the store.  Despite the fact
     // that developers may provide IDs as numbers (e.g., `store.find(Person, 1)`),
@@ -3079,8 +3176,8 @@
      * @class ContainerInstanceCache
      *
     */
-    function ember$data$lib$system$store$container$instance$cache$$ContainerInstanceCache(container) {
-      this._container = container;
+    function ember$data$lib$system$store$container$instance$cache$$ContainerInstanceCache(owner) {
+      this._owner = owner;
       this._cache = new ember$data$lib$system$empty$object$$default();
     }
 
@@ -3115,7 +3212,7 @@
       instanceFor: function (key) {
         var cache = this._cache;
         if (!cache[key]) {
-          var instance = this._container.lookup(key);
+          var instance = this._owner.lookup(key);
           if (instance) {
             cache[key] = instance;
           }
@@ -3134,7 +3231,7 @@
             cacheEntry.destroy();
           }
         }
-        this._container = null;
+        this._owner = null;
       },
 
       constructor: ember$data$lib$system$store$container$instance$cache$$ContainerInstanceCache,
@@ -3405,15 +3502,18 @@
         loadingData: Ember.K,
 
         propertyWasReset: function (internalModel, name) {
-          var length = Object.keys(internalModel._attributes).length;
-          var stillDirty = length > 0;
-
-          if (!stillDirty) {
+          if (!internalModel.hasChangedAttributes()) {
             internalModel.send('rolledBack');
           }
         },
 
-        pushedData: Ember.K,
+        pushedData: function (internalModel) {
+          internalModel.updateChangedAttributes();
+
+          if (!internalModel.hasChangedAttributes()) {
+            internalModel.transitionTo('loaded.saved');
+          }
+        },
 
         becomeDirty: Ember.K,
 
@@ -3699,10 +3799,7 @@
         // in the `saved` state.
         saved: {
           setup: function (internalModel) {
-            var attrs = internalModel._attributes;
-            var isDirty = Object.keys(attrs).length > 0;
-
-            if (isDirty) {
+            if (internalModel.hasChangedAttributes()) {
               internalModel.adapterDidDirty();
             }
           },
@@ -4392,60 +4489,6 @@
         return record;
       }
     });
-
-    var ember$data$lib$utils$$get = ember$lib$main$$default.get;
-
-    /**
-      Assert that `addedRecord` has a valid type so it can be added to the
-      relationship of the `record`.
-
-      The assert basically checks if the `addedRecord` can be added to the
-      relationship (specified via `relationshipMeta`) of the `record`.
-
-      This utility should only be used internally, as both record parameters must
-      be an InternalModel and the `relationshipMeta` needs to be the meta
-      information about the relationship, retrieved via
-      `record.relationshipFor(key)`.
-
-      @method assertPolymorphicType
-      @param {InternalModel} record
-      @param {RelationshipMeta} relationshipMeta retrieved via
-             `record.relationshipFor(key)`
-      @param {InternalModel} addedRecord record which
-             should be added/set for the relationship
-    */
-    var ember$data$lib$utils$$assertPolymorphicType = function (record, relationshipMeta, addedRecord) {
-      var addedType = addedRecord.type.modelName;
-      var recordType = record.type.modelName;
-      var key = relationshipMeta.key;
-      var typeClass = record.store.modelFor(relationshipMeta.type);
-
-      var assertionMessage = 'You cannot add a record of type \'' + addedType + '\' to the \'' + recordType + '.' + key + '\' relationship (only \'' + typeClass.modelName + '\' allowed)';
-
-      ember$lib$main$$default.assert(assertionMessage, ember$data$lib$utils$$checkPolymorphic(typeClass, addedRecord));
-    };
-
-    function ember$data$lib$utils$$checkPolymorphic(typeClass, addedRecord) {
-      if (typeClass.__isMixin) {
-        //TODO Need to do this in order to support mixins, should convert to public api
-        //once it exists in Ember
-        return typeClass.__mixin.detect(addedRecord.type.PrototypeMixin);
-      }
-      if (ember$lib$main$$default.MODEL_FACTORY_INJECTIONS) {
-        typeClass = typeClass.superclass;
-      }
-      return typeClass.detect(addedRecord.type);
-    }
-
-    /**
-      Check if the passed model has a `type` attribute or a relationship named `type`.
-
-      @method modelHasAttributeOrRelationshipNamedType
-      @param modelClass
-     */
-    function ember$data$lib$utils$$modelHasAttributeOrRelationshipNamedType(modelClass) {
-      return ember$data$lib$utils$$get(modelClass, 'attributes').has('type') || ember$data$lib$utils$$get(modelClass, 'relationshipsByName').has('type');
-    }
 
     var ember$data$lib$system$relationships$state$has$many$$default = ember$data$lib$system$relationships$state$has$many$$ManyRelationship;
     function ember$data$lib$system$relationships$state$has$many$$ManyRelationship(store, record, inverseKey, relationshipMeta) {
@@ -5161,6 +5204,7 @@
     var ember$data$lib$system$model$internal$model$$Promise = Ember.RSVP.Promise;
     var ember$data$lib$system$model$internal$model$$get = Ember.get;
     var ember$data$lib$system$model$internal$model$$set = Ember.set;
+    var ember$data$lib$system$model$internal$model$$copy = Ember.copy;
 
     var ember$data$lib$system$model$internal$model$$_extractPivotNameCache = new ember$data$lib$system$empty$object$$default();
     var ember$data$lib$system$model$internal$model$$_splitOnDotCache = new ember$data$lib$system$empty$object$$default();
@@ -5195,11 +5239,10 @@
 
       @class InternalModel
     */
-    function ember$data$lib$system$model$internal$model$$InternalModel(type, id, store, container, data) {
+    function ember$data$lib$system$model$internal$model$$InternalModel(type, id, store, _, data) {
       this.type = type;
       this.id = id;
       this.store = store;
-      this.container = container;
       this._data = data || new ember$data$lib$system$empty$object$$default();
       this.modelName = type.modelName;
       this.dataHasInitialized = false;
@@ -5253,17 +5296,27 @@
       constructor: ember$data$lib$system$model$internal$model$$InternalModel,
       materializeRecord: function () {
         Ember.assert("Materialized " + this.modelName + " record with id:" + this.id + "more than once", this.record === null || this.record === undefined);
+
         // lookupFactory should really return an object that creates
         // instances with the injections applied
-        this.record = this.type._create({
+        var createOptions = {
           store: this.store,
-          container: this.container,
           _internalModel: this,
           id: this.id,
           currentState: ember$data$lib$system$model$internal$model$$get(this, 'currentState'),
           isError: this.isError,
           adapterError: this.error
-        });
+        };
+
+        if (Ember.setOwner) {
+          // ensure that `Ember.getOwner(this)` works inside a model instance
+          Ember.setOwner(createOptions, ember$data$lib$utils$$getOwner(this.store));
+        } else {
+          createOptions.container = this.store.container;
+        }
+
+        this.record = this.type._create(createOptions);
+
         this._triggerDeferredTriggers();
       },
 
@@ -5413,6 +5466,53 @@
       flushChangedAttributes: function () {
         this._inFlightAttributes = this._attributes;
         this._attributes = new ember$data$lib$system$empty$object$$default();
+      },
+
+      hasChangedAttributes: function () {
+        return Object.keys(this._attributes).length > 0;
+      },
+
+      /**
+        Checks if the attributes which are considered as changed are still
+        different to the state which is acknowledged by the server.
+         This method is needed when data for the internal model is pushed and the
+        pushed data might acknowledge dirty attributes as confirmed.
+       */
+      updateChangedAttributes: function () {
+        var changedAttributes = this.changedAttributes();
+        var changedAttributeNames = Object.keys(changedAttributes);
+
+        for (var i = 0, _length = changedAttributeNames.length; i < _length; i++) {
+          var attribute = changedAttributeNames[i];
+          var _changedAttributes$attribute = changedAttributes[attribute];
+          var oldData = _changedAttributes$attribute[0];
+          var newData = _changedAttributes$attribute[1];
+
+          if (oldData === newData) {
+            delete this._attributes[attribute];
+          }
+        }
+      },
+
+      /**
+        Returns an object, whose keys are changed properties, and value is an
+        [oldProp, newProp] array.
+      */
+      changedAttributes: function () {
+        var oldData = this._data;
+        var currentData = this._attributes;
+        var inFlightData = this._inFlightAttributes;
+        var newData = ember$data$lib$system$merge$$default(ember$data$lib$system$model$internal$model$$copy(inFlightData), currentData);
+        var diffData = new ember$data$lib$system$empty$object$$default();
+
+        var newDataKeys = Object.keys(newData);
+
+        for (var i = 0, _length2 = newDataKeys.length; i < _length2; i++) {
+          var key = newDataKeys[i];
+          diffData[key] = [oldData[key], newData[key]];
+        }
+
+        return diffData;
       },
 
       /**
@@ -6065,7 +6165,7 @@
           store: this
         });
         this._pendingSave = [];
-        this._instanceCache = new ember$data$lib$system$store$container$instance$cache$$default(this.container);
+        this._instanceCache = new ember$data$lib$system$store$container$instance$cache$$default(ember$data$lib$utils$$getOwner(this));
         //Used to keep track of all the find requests that need to be coalesced
         this._pendingFetch = ember$data$lib$system$store$$Map.create();
       },
@@ -7233,11 +7333,12 @@
         // container.registry = 2.1
         // container._registry = 1.11 - 2.0
         // container = < 1.11
-        var registry = this.container.registry || this.container._registry || this.container;
-        var mixin = this.container.lookupFactory('mixin:' + normalizedModelName);
+        var owner = ember$data$lib$utils$$getOwner(this);
+
+        var mixin = owner._lookupFactory('mixin:' + normalizedModelName);
         if (mixin) {
           //Cache the class as a model
-          registry.register('model:' + normalizedModelName, DS.Model.extend(mixin));
+          owner.register('model:' + normalizedModelName, DS.Model.extend(mixin));
         }
         var factory = this.modelFactoryFor(normalizedModelName);
         if (factory) {
@@ -7275,7 +7376,10 @@
       modelFactoryFor: function (modelName) {
         Ember.assert('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + Ember.inspect(modelName), typeof modelName === 'string');
         var normalizedKey = ember$data$lib$system$normalize$model$name$$default(modelName);
-        return this.container.lookupFactory('model:' + normalizedKey);
+
+        var owner = ember$data$lib$utils$$getOwner(this);
+
+        return owner._lookupFactory('model:' + normalizedKey);
       },
 
       /**
@@ -7431,7 +7535,7 @@
       },
 
       _hasModelFor: function (type) {
-        return this.container.lookupFactory("model:" + type);
+        return ember$data$lib$utils$$getOwner(this)._lookupFactory("model:" + type);
       },
 
       _pushInternalModel: function (data) {
@@ -7582,7 +7686,7 @@
 
         // lookupFactory should really return an object that creates
         // instances with the injections applied
-        var internalModel = new ember$data$lib$system$model$internal$model$$default(type, id, this, this.container, data);
+        var internalModel = new ember$data$lib$system$model$internal$model$$default(type, id, this, null, data);
 
         // if we're creating an item, this process will be done
         // later, once the object has been persisted.
@@ -8612,19 +8716,28 @@
         @method normalizeUsingDeclaredMapping
         @private
       */
-      normalizeUsingDeclaredMapping: function (typeClass, hash) {
+      normalizeUsingDeclaredMapping: function (modelClass, hash) {
         var attrs = ember$data$lib$serializers$json$serializer$$get(this, 'attrs');
-        var payloadKey, key;
+        var payloadKey, normalizedKey, key;
 
         if (attrs) {
           for (key in attrs) {
-            payloadKey = this._getMappedKey(key);
+            payloadKey = this._getMappedKey(key, modelClass);
+
             if (!hash.hasOwnProperty(payloadKey)) {
               continue;
             }
 
-            if (payloadKey !== key) {
-              hash[key] = hash[payloadKey];
+            if (ember$data$lib$serializers$json$serializer$$get(modelClass, 'attributes').has(key)) {
+              normalizedKey = this.keyForAttribute(key);
+            }
+
+            if (ember$data$lib$serializers$json$serializer$$get(modelClass, 'relationshipsByName').has(key)) {
+              normalizedKey = this.keyForRelationship(key);
+            }
+
+            if (payloadKey !== normalizedKey) {
+              hash[normalizedKey] = hash[payloadKey];
               delete hash[payloadKey];
             }
           }
@@ -8654,7 +8767,9 @@
         @param {String} key
         @return {String} key
       */
-      _getMappedKey: function (key) {
+      _getMappedKey: function (key, modelClass) {
+        Ember.assert('There is no attribute or relationship with the name `' + key + '` on `' + modelClass.modelName + '`. Check your serializers attrs hash.', ember$data$lib$serializers$json$serializer$$get(modelClass, 'attributes').has(key) || ember$data$lib$serializers$json$serializer$$get(modelClass, 'relationshipsByName').has(key));
+
         var attrs = ember$data$lib$serializers$json$serializer$$get(this, 'attrs');
         var mappedKey;
         if (attrs && attrs[key]) {
@@ -8919,7 +9034,7 @@
 
           // if provided, use the mapping provided by `attrs` in
           // the serializer
-          var payloadKey = this._getMappedKey(key);
+          var payloadKey = this._getMappedKey(key, snapshot.type);
 
           if (payloadKey === key && this.keyForAttribute) {
             payloadKey = this.keyForAttribute(key, 'serialize');
@@ -8957,7 +9072,7 @@
 
           // if provided, use the mapping provided by `attrs` in
           // the serializer
-          var payloadKey = this._getMappedKey(key);
+          var payloadKey = this._getMappedKey(key, snapshot.type);
           if (payloadKey === key && this.keyForRelationship) {
             payloadKey = this.keyForRelationship(key, "belongsTo", "serialize");
           }
@@ -9005,7 +9120,7 @@
           if (hasMany !== undefined) {
             // if provided, use the mapping provided by `attrs` in
             // the serializer
-            var payloadKey = this._getMappedKey(key);
+            var payloadKey = this._getMappedKey(key, snapshot.type);
             if (payloadKey === key && this.keyForRelationship) {
               payloadKey = this.keyForRelationship(key, "hasMany", "serialize");
             }
@@ -9192,8 +9307,10 @@
        @return {DS.Transform} transform
       */
       transformFor: function (attributeType, skipAssertion) {
-        var transform = this.container.lookup('transform:' + attributeType);
+        var transform = ember$data$lib$utils$$getOwner(this).lookup('transform:' + attributeType);
+
         Ember.assert("Unable to find transform for '" + attributeType + "'", skipAssertion || !!transform);
+
         return transform;
       }
     });
@@ -9938,7 +10055,8 @@
             value = transform.serialize(value);
           }
 
-          var payloadKey = this._getMappedKey(key);
+          var payloadKey = this._getMappedKey(key, snapshot.type);
+
           if (payloadKey === key) {
             payloadKey = this.keyForAttribute(key, 'serialize');
           }
@@ -9962,7 +10080,7 @@
 
             json.relationships = json.relationships || {};
 
-            var payloadKey = this._getMappedKey(key);
+            var payloadKey = this._getMappedKey(key, snapshot.type);
             if (payloadKey === key) {
               payloadKey = this.keyForRelationship(key, 'belongsTo', 'serialize');
             }
@@ -9997,7 +10115,7 @@
 
             json.relationships = json.relationships || {};
 
-            var payloadKey = this._getMappedKey(key);
+            var payloadKey = this._getMappedKey(key, snapshot.type);
             if (payloadKey === key && this.keyForRelationship) {
               payloadKey = this.keyForRelationship(key, 'hasMany', 'serialize');
             }
@@ -11197,8 +11315,6 @@
     */
 
     var ember$data$lib$system$model$model$$get = Ember.get;
-    var ember$data$lib$system$model$model$$merge = Ember.merge;
-    var ember$data$lib$system$model$model$$copy = Ember.copy;
 
     function ember$data$lib$system$model$model$$intersection(array1, array2) {
       var result = [];
@@ -11723,20 +11839,7 @@
           and value is an [oldProp, newProp] array.
       */
       changedAttributes: function () {
-        var oldData = ember$data$lib$system$model$model$$get(this._internalModel, '_data');
-        var currentData = ember$data$lib$system$model$model$$get(this._internalModel, '_attributes');
-        var inFlightData = ember$data$lib$system$model$model$$get(this._internalModel, '_inFlightAttributes');
-        var newData = ember$data$lib$system$model$model$$merge(ember$data$lib$system$model$model$$copy(inFlightData), currentData);
-        var diffData = new ember$data$lib$system$empty$object$$default();
-
-        var newDataKeys = Object.keys(newData);
-
-        for (var i = 0, _length = newDataKeys.length; i < _length; i++) {
-          var key = newDataKeys[i];
-          diffData[key] = [oldData[key], newData[key]];
-        }
-
-        return diffData;
+        return this._internalModel.changedAttributes();
       },
 
       //TODO discuss with tomhuda about events/hooks
@@ -11946,6 +12049,23 @@
       */
       modelName: null
     });
+
+    // if `Ember.setOwner` is defined, accessing `this.container` is
+    // deprecated (but functional). In "standard" Ember usage, this
+    // deprecation is actually created via an `.extend` of the factory
+    // inside the container itself, but that only happens on models
+    // with MODEL_FACTORY_INJECTIONS enabled :(
+    if (Ember.setOwner) {
+      Object.defineProperty(ember$data$lib$system$model$model$$Model.prototype, 'container', {
+        configurable: true,
+        enumerable: false,
+        get: function () {
+          Ember.deprecate('Using the injected `container` is deprecated. Please use the `getOwner` helper instead to access the owner of this object.', false, { id: 'ember-application.injected-container', until: '3.0.0' });
+
+          return this.store.container;
+        }
+      });
+    }
 
     var ember$data$lib$system$model$model$$default = ember$data$lib$system$model$model$$Model;
     var ember$data$lib$system$model$attributes$$default = ember$data$lib$system$model$attributes$$attr;
@@ -12784,6 +12904,10 @@
             json[key] = null;
           } else {
             json[key] = embeddedSnapshot.id;
+
+            if (relationship.options.polymorphic) {
+              this.serializePolymorphicType(snapshot, json, relationship);
+            }
           }
         } else if (includeRecords) {
           this._serializeEmbeddedBelongsTo(snapshot, json, relationship);
@@ -12798,6 +12922,10 @@
         } else {
           json[serializedKey] = embeddedSnapshot.record.serialize({ includeId: true });
           this.removeEmbeddedForeignKey(snapshot, embeddedSnapshot, relationship, json[serializedKey]);
+
+          if (relationship.options.polymorphic) {
+            this.serializePolymorphicType(snapshot, json, relationship);
+          }
         }
       },
 
