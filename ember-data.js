@@ -3420,15 +3420,18 @@
         loadingData: Ember.K,
 
         propertyWasReset: function (internalModel, name) {
-          var length = Object.keys(internalModel._attributes).length;
-          var stillDirty = length > 0;
-
-          if (!stillDirty) {
+          if (!internalModel.hasChangedAttributes()) {
             internalModel.send('rolledBack');
           }
         },
 
-        pushedData: Ember.K,
+        pushedData: function (internalModel) {
+          internalModel.updateChangedAttributes();
+
+          if (!internalModel.hasChangedAttributes()) {
+            internalModel.transitionTo('loaded.saved');
+          }
+        },
 
         becomeDirty: Ember.K,
 
@@ -3714,10 +3717,7 @@
         // in the `saved` state.
         saved: {
           setup: function (internalModel) {
-            var attrs = internalModel._attributes;
-            var isDirty = Object.keys(attrs).length > 0;
-
-            if (isDirty) {
+            if (internalModel.hasChangedAttributes()) {
               internalModel.adapterDidDirty();
             }
           },
@@ -5120,6 +5120,7 @@
     var ember$data$lib$system$model$internal$model$$Promise = Ember.RSVP.Promise;
     var ember$data$lib$system$model$internal$model$$get = Ember.get;
     var ember$data$lib$system$model$internal$model$$set = Ember.set;
+    var ember$data$lib$system$model$internal$model$$copy = Ember.copy;
 
     var ember$data$lib$system$model$internal$model$$_extractPivotNameCache = new ember$data$lib$system$empty$object$$default();
     var ember$data$lib$system$model$internal$model$$_splitOnDotCache = new ember$data$lib$system$empty$object$$default();
@@ -5381,6 +5382,53 @@
       flushChangedAttributes: function () {
         this._inFlightAttributes = this._attributes;
         this._attributes = new ember$data$lib$system$empty$object$$default();
+      },
+
+      hasChangedAttributes: function () {
+        return Object.keys(this._attributes).length > 0;
+      },
+
+      /**
+        Checks if the attributes which are considered as changed are still
+        different to the state which is acknowledged by the server.
+         This method is needed when data for the internal model is pushed and the
+        pushed data might acknowledge dirty attributes as confirmed.
+       */
+      updateChangedAttributes: function () {
+        var changedAttributes = this.changedAttributes();
+        var changedAttributeNames = Object.keys(changedAttributes);
+
+        for (var i = 0, _length = changedAttributeNames.length; i < _length; i++) {
+          var attribute = changedAttributeNames[i];
+          var _changedAttributes$attribute = changedAttributes[attribute];
+          var oldData = _changedAttributes$attribute[0];
+          var newData = _changedAttributes$attribute[1];
+
+          if (oldData === newData) {
+            delete this._attributes[attribute];
+          }
+        }
+      },
+
+      /**
+        Returns an object, whose keys are changed properties, and value is an
+        [oldProp, newProp] array.
+      */
+      changedAttributes: function () {
+        var oldData = this._data;
+        var currentData = this._attributes;
+        var inFlightData = this._inFlightAttributes;
+        var newData = ember$data$lib$system$merge$$default(ember$data$lib$system$model$internal$model$$copy(inFlightData), currentData);
+        var diffData = new ember$data$lib$system$empty$object$$default();
+
+        var newDataKeys = Object.keys(newData);
+
+        for (var i = 0, _length2 = newDataKeys.length; i < _length2; i++) {
+          var key = newDataKeys[i];
+          diffData[key] = [oldData[key], newData[key]];
+        }
+
+        return diffData;
       },
 
       /**
@@ -11112,8 +11160,6 @@
     */
 
     var ember$data$lib$system$model$model$$get = Ember.get;
-    var ember$data$lib$system$model$model$$merge = Ember.merge;
-    var ember$data$lib$system$model$model$$copy = Ember.copy;
 
     function ember$data$lib$system$model$model$$intersection(array1, array2) {
       var result = [];
@@ -11638,20 +11684,7 @@
           and value is an [oldProp, newProp] array.
       */
       changedAttributes: function () {
-        var oldData = ember$data$lib$system$model$model$$get(this._internalModel, '_data');
-        var currentData = ember$data$lib$system$model$model$$get(this._internalModel, '_attributes');
-        var inFlightData = ember$data$lib$system$model$model$$get(this._internalModel, '_inFlightAttributes');
-        var newData = ember$data$lib$system$model$model$$merge(ember$data$lib$system$model$model$$copy(inFlightData), currentData);
-        var diffData = new ember$data$lib$system$empty$object$$default();
-
-        var newDataKeys = Object.keys(newData);
-
-        for (var i = 0, _length = newDataKeys.length; i < _length; i++) {
-          var key = newDataKeys[i];
-          diffData[key] = [oldData[key], newData[key]];
-        }
-
-        return diffData;
+        return this._internalModel.changedAttributes();
       },
 
       //TODO discuss with tomhuda about events/hooks
