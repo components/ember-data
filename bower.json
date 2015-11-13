@@ -1,0 +1,14 @@
+{
+  "name": "ember-data",
+  "version": "2.3.0+canary+8095057157",
+  "main": "ember-data.js",
+  "dependencies": {
+    "ember": "^2.0.0"
+  },
+  "ignore": [
+    "**/*_configuration.js",
+    "ember-data-setup.js",
+    "docs",
+    "**/*.html"
+  ]
+}
