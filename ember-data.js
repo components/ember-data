@@ -1881,7 +1881,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.2.0-beta.4'
+      VERSION: '2.2.0'
     });
 
     if (Ember.libraries) {
@@ -8768,7 +8768,9 @@
         @return {String} key
       */
       _getMappedKey: function (key, modelClass) {
-        Ember.assert('There is no attribute or relationship with the name `' + key + '` on `' + modelClass.modelName + '`. Check your serializers attrs hash.', ember$data$lib$serializers$json$serializer$$get(modelClass, 'attributes').has(key) || ember$data$lib$serializers$json$serializer$$get(modelClass, 'relationshipsByName').has(key));
+        Ember.warn('There is no attribute or relationship with the name `' + key + '` on `' + modelClass.modelName + '`. Check your serializers attrs hash.', ember$data$lib$serializers$json$serializer$$get(modelClass, 'attributes').has(key) || ember$data$lib$serializers$json$serializer$$get(modelClass, 'relationshipsByName').has(key), {
+          id: 'ds.serializer.no-mapped-attrs-key'
+        });
 
         var attrs = ember$data$lib$serializers$json$serializer$$get(this, 'attrs');
         var mappedKey;
