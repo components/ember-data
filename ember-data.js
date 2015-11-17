@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.3.0+canary+eca786458e
+ * @version   2.3.0+canary+272202ac6e
  */
 
 var define, requireModule, require, requirejs;
@@ -3797,7 +3797,9 @@ define("ember-data/serializers/json-serializer", ["exports", "ember-data/system/
       @return {String} key
     */
     _getMappedKey: function (key, modelClass) {
-      Ember.assert('There is no attribute or relationship with the name `' + key + '` on `' + modelClass.modelName + '`. Check your serializers attrs hash.', get(modelClass, 'attributes').has(key) || get(modelClass, 'relationshipsByName').has(key));
+      Ember.warn('There is no attribute or relationship with the name `' + key + '` on `' + modelClass.modelName + '`. Check your serializers attrs hash.', get(modelClass, 'attributes').has(key) || get(modelClass, 'relationshipsByName').has(key), {
+        id: 'ds.serializer.no-mapped-attrs-key'
+      });
 
       var attrs = get(this, 'attrs');
       var mappedKey;
@@ -14928,7 +14930,7 @@ define('ember-data/utils', ['exports', 'ember'], function (exports, _ember) {
   exports.getOwner = getOwner;
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.3.0+canary+eca786458e";
+  exports.default = "2.3.0+canary+272202ac6e";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
