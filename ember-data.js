@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+3fc52c4aeb
+ * @version   2.4.0-canary+7f34167445
  */
 
 var define, requireModule, require, requirejs;
@@ -13944,7 +13944,7 @@ define("ember-data/system/store", ["exports", "ember-data/system/normalize-link"
        If no `App.ApplicationAdapter` is found, it will return
       the value of the `defaultAdapter`.
        @method adapterFor
-      @private
+      @public
       @param {String} modelName
       @return DS.Adapter
     */
@@ -13976,7 +13976,7 @@ define("ember-data/system/store", ["exports", "ember-data/system/normalize-link"
        If a serializer cannot be found on the adapter, it will fall back
       to an instance of `DS.JSONSerializer`.
        @method serializerFor
-      @private
+      @public
       @param {String} modelName the record to serialize
       @return {DS.Serializer}
     */
@@ -14930,7 +14930,7 @@ define('ember-data/utils', ['exports', 'ember'], function (exports, _ember) {
   exports.getOwner = getOwner;
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+3fc52c4aeb";
+  exports.default = "2.4.0-canary+7f34167445";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
