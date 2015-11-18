@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+7f34167445
+ * @version   2.4.0-canary+e1007db415
  */
 
 var define, requireModule, require, requirejs;
@@ -3771,21 +3771,6 @@ define("ember-data/serializers/json-serializer", ["exports", "ember-data/system/
           }
         }
       }
-    },
-
-    /**
-      @method normalizeId
-      @private
-    */
-    normalizeId: function (hash) {
-      var primaryKey = get(this, 'primaryKey');
-
-      if (primaryKey === 'id') {
-        return;
-      }
-
-      hash.id = hash[primaryKey];
-      delete hash[primaryKey];
     },
 
     /**
@@ -14930,7 +14915,7 @@ define('ember-data/utils', ['exports', 'ember'], function (exports, _ember) {
   exports.getOwner = getOwner;
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+7f34167445";
+  exports.default = "2.4.0-canary+e1007db415";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
