@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+439b89672d
+ * @version   2.4.0-canary+6ab1756c68
  */
 
 var define, requireModule, require, requirejs;
@@ -14285,6 +14285,14 @@ define("ember-data/system/store/finders", ["exports", "ember-data/system/store/c
 
   var Promise = Ember.RSVP.Promise;
 
+  function payloadIsNotBlank(adapterPayload) {
+    if (Ember.isArray(adapterPayload)) {
+      return true;
+    } else {
+      return Object.keys(adapterPayload || {}).length;
+    }
+  }
+
   function _find(adapter, store, typeClass, id, internalModel, options) {
     var snapshot = internalModel.createSnapshot(options);
     var promise = adapter.findRecord(store, typeClass, id, snapshot);
@@ -14295,7 +14303,7 @@ define("ember-data/system/store/finders", ["exports", "ember-data/system/store/c
     promise = (0, _emberDataSystemStoreCommon._guard)(promise, (0, _emberDataSystemStoreCommon._bind)(_emberDataSystemStoreCommon._objectIsAlive, store));
 
     return promise.then(function (adapterPayload) {
-      Ember.assert("You made a request for a " + typeClass.typeClassKey + " with id " + id + ", but the adapter's response did not have any data", adapterPayload);
+      Ember.assert("You made a `find` request for a " + typeClass.typeClassKey + " with id " + id + ", but the adapter's response did not have any data", payloadIsNotBlank(adapterPayload));
       return store._adapterRun(function () {
         var payload = (0, _emberDataSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, id, 'findRecord');
         //TODO Optimize
@@ -14326,6 +14334,7 @@ define("ember-data/system/store/finders", ["exports", "ember-data/system/store/c
     promise = (0, _emberDataSystemStoreCommon._guard)(promise, (0, _emberDataSystemStoreCommon._bind)(_emberDataSystemStoreCommon._objectIsAlive, store));
 
     return promise.then(function (adapterPayload) {
+      Ember.assert("You made a `findMany` request for a " + typeClass.typeClassKey + " with ids " + ids + ", but the adapter's response did not have any data", payloadIsNotBlank(adapterPayload));
       return store._adapterRun(function () {
         var payload = (0, _emberDataSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, null, 'findMany');
         //TODO Optimize, no need to materialize here
@@ -14349,6 +14358,7 @@ define("ember-data/system/store/finders", ["exports", "ember-data/system/store/c
     promise = (0, _emberDataSystemStoreCommon._guard)(promise, (0, _emberDataSystemStoreCommon._bind)(_emberDataSystemStoreCommon._objectIsAlive, internalModel));
 
     return promise.then(function (adapterPayload) {
+      Ember.assert("You made a `findHasMany` request for a " + internalModel.modelName + "'s `" + relationship.key + "` relationship, using link " + link + ", but the adapter's response did not have any data", payloadIsNotBlank(adapterPayload));
       return store._adapterRun(function () {
         var payload = (0, _emberDataSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, null, 'findHasMany');
         //TODO Use a non record creating push
@@ -14400,6 +14410,7 @@ define("ember-data/system/store/finders", ["exports", "ember-data/system/store/c
     promise = (0, _emberDataSystemStoreCommon._guard)(promise, (0, _emberDataSystemStoreCommon._bind)(_emberDataSystemStoreCommon._objectIsAlive, store));
 
     return promise.then(function (adapterPayload) {
+      Ember.assert("You made a `findAll` request for " + typeClass.typeClassKey + "records, but the adapter's response did not have any data", payloadIsNotBlank(adapterPayload));
       store._adapterRun(function () {
         var payload = (0, _emberDataSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, null, 'findAll');
         //TODO Optimize
@@ -14445,6 +14456,7 @@ define("ember-data/system/store/finders", ["exports", "ember-data/system/store/c
     promise = (0, _emberDataSystemStoreCommon._guard)(promise, (0, _emberDataSystemStoreCommon._bind)(_emberDataSystemStoreCommon._objectIsAlive, store));
 
     return promise.then(function (adapterPayload) {
+      Ember.assert("You made a `queryRecord` request for " + typeClass.typeClassKey + "records, with query `" + query + "`, but the adapter's response did not have any data", payloadIsNotBlank(adapterPayload));
       var record;
       store._adapterRun(function () {
         var payload = (0, _emberDataSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, null, 'queryRecord');
@@ -14914,7 +14926,7 @@ define('ember-data/utils', ['exports', 'ember'], function (exports, _ember) {
   exports.getOwner = getOwner;
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+439b89672d";
+  exports.default = "2.4.0-canary+6ab1756c68";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
