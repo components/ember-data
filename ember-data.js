@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+6ab1756c68
+ * @version   2.4.0-canary+15bb4b2dd1
  */
 
 var define, requireModule, require, requirejs;
@@ -1533,9 +1533,9 @@ define("ember-data/adapters/rest-adapter", ["exports", "ember-data/system/adapte
           var response = adapter.handleResponse(jqXHR.status, parseResponseHeaders(jqXHR.getAllResponseHeaders()), payload);
 
           if (response instanceof _emberDataAdaptersErrors.AdapterError) {
-            Ember.run(null, reject, response);
+            Ember.run.join(null, reject, response);
           } else {
-            Ember.run(null, resolve, response);
+            Ember.run.join(null, resolve, response);
           }
         };
 
@@ -1554,7 +1554,7 @@ define("ember-data/adapters/rest-adapter", ["exports", "ember-data/system/adapte
             }
           }
 
-          Ember.run(null, reject, error);
+          Ember.run.join(null, reject, error);
         };
 
         Ember.$.ajax(hash);
@@ -14927,7 +14927,7 @@ define('ember-data/utils', ['exports', 'ember'], function (exports, _ember) {
   exports.getOwner = getOwner;
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+6ab1756c68";
+  exports.default = "2.4.0-canary+15bb4b2dd1";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
