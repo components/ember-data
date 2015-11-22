@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+15bb4b2dd1
+ * @version   2.4.0-canary+0a1d7f3134
  */
 
 var define, requireModule, require, requirejs;
@@ -13113,7 +13113,7 @@ define("ember-data/system/store", ["exports", "ember-data/system/normalize-link"
       locally created records of the type, however, it will not make a
       request to the backend to retrieve additional records. If you
       would like to request all the records from the backend please use
-      [store.find](#method_find).
+      [store.findAll](#method_findAll).
        Also note that multiple calls to `peekAll` for a given type will always
       return the same `RecordArray`.
        Example
@@ -14927,7 +14927,7 @@ define('ember-data/utils', ['exports', 'ember'], function (exports, _ember) {
   exports.getOwner = getOwner;
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+15bb4b2dd1";
+  exports.default = "2.4.0-canary+0a1d7f3134";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
