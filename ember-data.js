@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+0a1d7f3134
+ * @version   2.4.0-canary+845d969755
  */
 
 var define, requireModule, require, requirejs;
@@ -2705,6 +2705,10 @@ define('ember-data/serializers/json-api-serializer', ['exports', 'ember-data/ser
       @private
     */
     _normalizeResourceHelper: function (resourceHash) {
+      Ember.assert(this.warnMessageForUndefinedType(), !Ember.isNone(resourceHash.type), {
+        id: 'ds.serializer.type-is-undefined'
+      });
+
       var modelName = this.modelNameFromPayloadKey(resourceHash.type);
 
       if (!this.store._hasModelFor(modelName)) {
@@ -3034,6 +3038,9 @@ define('ember-data/serializers/json-api-serializer', ['exports', 'ember-data/ser
 
   Ember.runInDebug(function () {
     JSONAPISerializer.reopen({
+      warnMessageForUndefinedType: function () {
+        return 'Encountered a resource object with an undefined type (resolved resource using ' + this.constructor.toString() + ')';
+      },
       warnMessageNoModelForType: function (modelName, originalType) {
         return 'Encountered a resource object with type "' + originalType + '", but no model was found for model name "' + modelName + '" (resolved model name using ' + this.constructor.toString() + '.modelNameFromPayloadKey("' + originalType + '"))';
       }
@@ -14927,7 +14934,7 @@ define('ember-data/utils', ['exports', 'ember'], function (exports, _ember) {
   exports.getOwner = getOwner;
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+0a1d7f3134";
+  exports.default = "2.4.0-canary+845d969755";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
