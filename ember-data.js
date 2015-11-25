@@ -1881,7 +1881,7 @@
     });
 
     var ember$data$lib$core$$DS = Ember.Namespace.create({
-      VERSION: '2.2.0'
+      VERSION: '2.2.1'
     });
 
     if (Ember.libraries) {
