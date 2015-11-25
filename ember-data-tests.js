@@ -1621,7 +1621,7 @@ define(
 
     test("When a query is made, the adapter should receive a record array it can populate with the results of the query.", function () {
       adapter.query = function (store, type, query, recordArray) {
-        equal(type, Person, "the find method is called with the correct type");
+        equal(type, Person, "the query method is called with the correct type");
 
         return Ember.RSVP.resolve([{ id: 1, name: "Peter Wagenet" }, { id: 2, name: "Brohuda Katz" }]);
       };
@@ -1633,6 +1633,24 @@ define(
         equal(queryResults.objectAt(0).get('name'), "Peter Wagenet", "the first record is 'Peter Wagenet'");
         equal(queryResults.objectAt(1).get('name'), "Brohuda Katz", "the second record is 'Brohuda Katz'");
       }));
+    });
+
+    test("The store asserts when query is made and the adapter responses with a single record.", function () {
+      env = setupStore({ person: Person, adapter: DS.RESTAdapter });
+      store = env.store;
+      adapter = env.adapter;
+
+      adapter.query = function (store, type, query, recordArray) {
+        equal(type, Person, "the query method is called with the correct type");
+
+        return Ember.RSVP.resolve({ people: { id: 1, name: "Peter Wagenet" } });
+      };
+
+      expectAssertion(function () {
+        Ember.run(function () {
+          store.query('person', { page: 1 });
+        });
+      }, /The response to store.query is expected to be an array but it was a single record/);
     });
   }
 );
@@ -7611,6 +7629,157 @@ define(
 
 
 define(
+  "ember-data/tests/integration/polymorphic-belongs-to-test",
+  ["exports"],
+  function(__exports__) {
+    "use strict";
+
+    function __es6_export__(name, value) {
+      __exports__[name] = value;
+    }
+
+    var _DS = DS;
+    var attr = _DS.attr;
+    var belongsTo = _DS.belongsTo;
+    var _Ember = Ember;
+    var run = _Ember.run;
+
+    var store = undefined;
+
+    var Book = DS.Model.extend({
+      title: attr(),
+      author: belongsTo('person', { polymorphic: true, async: false })
+    });
+
+    var Author = DS.Model.extend({
+      name: attr()
+    });
+
+    var AsyncBook = DS.Model.extend({
+      author: belongsTo('person', { polymorphic: true })
+    });
+
+    module('integration/polymorphic-belongs-to - Polymorphic BelongsTo', {
+      setup: function () {
+        var env = setupStore({
+          book: Book,
+          author: Author,
+          'async-book': AsyncBook,
+          person: DS.Model.extend()
+        });
+        store = env.store;
+      },
+
+      teardown: function () {
+        run(store, 'destroy');
+      }
+    });
+
+    test('using store.push with a null value for a payload in relationships sets the Models relationship to null - sync relationship', function () {
+      var payload = {
+        data: {
+          type: 'book',
+          id: 1,
+          title: 'Yes, Please',
+          relationships: {
+            author: {
+              data: {
+                type: 'author',
+                id: 1
+              }
+            }
+          }
+        },
+        included: [{
+          id: 1,
+          name: 'Amy Poehler',
+          type: 'author'
+        }]
+      };
+
+      var book = run(function () {
+        store.push(payload);
+        return store.peekRecord('book', 1);
+      });
+
+      equal(book.get('author.id'), 1);
+
+      var payloadThatResetsBelongToRelationship = {
+        data: {
+          type: 'book',
+          id: 1,
+          title: 'Yes, Please',
+          relationships: {
+            author: {
+              data: null
+            }
+          }
+        }
+      };
+
+      run(function () {
+        return store.push(payloadThatResetsBelongToRelationship);
+      });
+      equal(book.get('author'), null);
+    });
+
+    test('using store.push with a null value for a payload in relationships sets the Models relationship to null - async relationship', function () {
+      var payload = {
+        data: {
+          type: 'async-book',
+          id: 1,
+          title: 'Yes, Please',
+          relationships: {
+            author: {
+              data: {
+                type: 'author',
+                id: 1
+              }
+            }
+          }
+        },
+        included: [{
+          id: 1,
+          name: 'Amy Poehler',
+          type: 'author'
+        }]
+      };
+
+      var book = run(function () {
+        store.push(payload);
+        return store.peekRecord('async-book', 1);
+      });
+
+      var payloadThatResetsBelongToRelationship = {
+        data: {
+          type: 'async-book',
+          id: 1,
+          title: 'Yes, Please',
+          relationships: {
+            author: {
+              data: null
+            }
+          }
+        }
+      };
+
+      stop();
+      book.get('author').then(function (author) {
+        equal(author.get('id'), 1);
+        run(function () {
+          return store.push(payloadThatResetsBelongToRelationship);
+        });
+        return book.get('author');
+      }).then(function (author) {
+        start();
+        equal(author, null);
+      });
+    });
+  }
+);
+
+
+define(
   "ember-data/tests/integration/record-array-manager-test",
   ["exports"],
   function(__exports__) {
@@ -8630,7 +8799,7 @@ define(
     });
 
     test("Repeated failed saves keeps the record in uncommited state", function () {
-      expect(2);
+      expect(4);
       var post;
 
       run(function () {
@@ -8643,10 +8812,65 @@ define(
 
       run(function () {
         post.save().then(null, function () {
+          ok(post.get('isError'));
           equal(post.get('currentState.stateName'), 'root.loaded.created.uncommitted');
 
           post.save().then(null, function () {
+            ok(post.get('isError'));
             equal(post.get('currentState.stateName'), 'root.loaded.created.uncommitted');
+          });
+        });
+      });
+    });
+
+    test("Repeated failed saves with invalid error marks the record as invalid", function () {
+      expect(2);
+      var post;
+
+      run(function () {
+        post = env.store.createRecord('post', { title: 'toto' });
+      });
+
+      env.adapter.createRecord = function (store, type, snapshot) {
+        var error = new DS.InvalidError([{
+          detail: 'is invalid',
+          source: { pointer: 'data/attributes/title' }
+        }]);
+
+        return Ember.RSVP.reject(error);
+      };
+
+      run(function () {
+        post.save().then(null, function () {
+          equal(post.get('isValid'), false);
+
+          post.save().then(null, function () {
+            equal(post.get('isValid'), false);
+          });
+        });
+      });
+    });
+
+    test("Repeated failed saves with invalid error without payload marks the record as invalid", function () {
+      expect(2);
+      var post;
+
+      run(function () {
+        post = env.store.createRecord('post', { title: 'toto' });
+      });
+
+      env.adapter.createRecord = function (store, type, snapshot) {
+        var error = new DS.InvalidError();
+
+        return Ember.RSVP.reject(error);
+      };
+
+      run(function () {
+        post.save().then(null, function () {
+          equal(post.get('isValid'), false);
+
+          post.save().then(null, function () {
+            equal(post.get('isValid'), false);
           });
         });
       });
@@ -16048,9 +16272,9 @@ define(
 
         Message = Ember.Mixin.create({
           title: attr('string'),
-          user: belongsTo('user', { async: true })
+          user: belongsTo('user', { async: true }),
+          toString: stringify('Message')
         });
-        Message.toString = stringify('Message');
 
         NotMessage = DS.Model.extend({
           video: attr()
@@ -16293,9 +16517,9 @@ define(
 
         Message = Ember.Mixin.create({
           title: attr('string'),
-          user: belongsTo('user', { async: true })
+          user: belongsTo('user', { async: true }),
+          toString: stringify('Message')
         });
-        Message.toString = stringify('Message');
 
         Video = DS.Model.extend(Message, {
           video: attr()
@@ -17395,6 +17619,41 @@ define(
       });
     });
 
+    test("serialize with embedded objects and a custom keyForAttribute (hasMany relationship)", function () {
+      var tom, league;
+      run(function () {
+        league = env.store.createRecord('home-planet', { name: "Villain League", id: "123" });
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", homePlanet: league, id: '1' });
+      });
+
+      env.registry.register('serializer:home-planet', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        keyForAttribute: function (key) {
+          return key + '-custom';
+        },
+        attrs: {
+          villains: { embedded: 'always' }
+        }
+      }));
+
+      var serializer, json;
+      run(function () {
+        serializer = env.store.serializerFor("home-planet");
+
+        json = serializer.serialize(league._createSnapshot());
+      });
+
+      deepEqual(json, {
+        "name-custom": "Villain League",
+        "villains-custom": [{
+          id: get(tom, "id"),
+          firstName: "Tom",
+          lastName: "Dale",
+          homePlanet: get(league, "id"),
+          secretLab: null
+        }]
+      });
+    });
+
     test("serialize with embedded objects (unknown hasMany relationship)", function () {
       var league;
       run(function () {
@@ -17615,6 +17874,54 @@ define(
       });
     });
 
+    test("serialize with embedded object (polymorphic belongsTo relationship)", function () {
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          secretLab: { embedded: 'always' }
+        }
+      }));
+
+      SuperVillain.reopen({
+        secretLab: DS.belongsTo('secret-lab', { polymorphic: true })
+      });
+
+      var json, tom;
+      run(function () {
+        tom = env.store.createRecord('super-villain', {
+          id: "1",
+          firstName: "Tom",
+          lastName: "Dale",
+          secretLab: env.store.createRecord('bat-cave', {
+            id: "101",
+            minionCapacity: 5000,
+            vicinity: "California, USA",
+            infiltrated: true
+          }),
+          homePlanet: env.store.createRecord('home-planet', {
+            id: "123",
+            name: "Villain League"
+          })
+        });
+      });
+
+      run(function () {
+        json = tom.serialize();
+      });
+
+      deepEqual(json, {
+        firstName: get(tom, "firstName"),
+        lastName: get(tom, "lastName"),
+        homePlanet: get(tom, "homePlanet").get("id"),
+        secretLabType: 'batCave',
+        secretLab: {
+          id: get(tom, "secretLab").get("id"),
+          minionCapacity: get(tom, "secretLab").get("minionCapacity"),
+          vicinity: get(tom, "secretLab").get("vicinity"),
+          infiltrated: true
+        }
+      });
+    });
+
     test("serialize with embedded object (belongsTo relationship) works with different primaryKeys", function () {
       env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         primaryKey: '_id',
@@ -17685,6 +17992,102 @@ define(
           minionCapacity: get(tom, "secretLab").get("minionCapacity"),
           vicinity: get(tom, "secretLab").get("vicinity")
         }
+      });
+    });
+
+    test("serialize with embedded object (polymorphic belongsTo relationship) supports serialize:ids", function () {
+      SuperVillain.reopen({
+        secretLab: DS.belongsTo('secret-lab', { polymorphic: true })
+      });
+
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          secretLab: { serialize: 'ids' }
+        }
+      }));
+
+      var tom, json;
+      run(function () {
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
+          secretLab: env.store.createRecord('bat-cave', { minionCapacity: 5000, vicinity: "California, USA", id: "101" }),
+          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
+        });
+      });
+
+      run(function () {
+        json = tom.serialize();
+      });
+
+      deepEqual(json, {
+        firstName: get(tom, "firstName"),
+        lastName: get(tom, "lastName"),
+        homePlanet: get(tom, "homePlanet").get("id"),
+        secretLab: get(tom, "secretLab").get("id"),
+        secretLabType: 'batCave'
+      });
+    });
+
+    test("serialize with embedded object (belongsTo relationship) supports serialize:id", function () {
+      SuperVillain.reopen({
+        secretLab: DS.belongsTo('secret-lab', { polymorphic: true })
+      });
+
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          secretLab: { serialize: 'id' }
+        }
+      }));
+
+      var tom, json;
+      run(function () {
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
+          secretLab: env.store.createRecord('bat-cave', { minionCapacity: 5000, vicinity: "California, USA", id: "101" }),
+          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
+        });
+      });
+
+      run(function () {
+        json = tom.serialize();
+      });
+
+      deepEqual(json, {
+        firstName: get(tom, "firstName"),
+        lastName: get(tom, "lastName"),
+        homePlanet: get(tom, "homePlanet").get("id"),
+        secretLab: get(tom, "secretLab").get("id"),
+        secretLabType: 'batCave'
+      });
+    });
+
+    test("serialize with embedded object (belongsTo relationship) supports serialize:id in conjunction with deserialize:records", function () {
+      SuperVillain.reopen({
+        secretLab: DS.belongsTo('secret-lab', { polymorphic: true })
+      });
+
+      env.registry.register('serializer:super-villain', DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          secretLab: { serialize: 'id', deserialize: 'records' }
+        }
+      }));
+
+      var tom, json;
+      run(function () {
+        tom = env.store.createRecord('super-villain', { firstName: "Tom", lastName: "Dale", id: "1",
+          secretLab: env.store.createRecord('bat-cave', { minionCapacity: 5000, vicinity: "California, USA", id: "101" }),
+          homePlanet: env.store.createRecord('home-planet', { name: "Villain League", id: "123" })
+        });
+      });
+
+      run(function () {
+        json = tom.serialize();
+      });
+
+      deepEqual(json, {
+        firstName: get(tom, "firstName"),
+        lastName: get(tom, "lastName"),
+        homePlanet: get(tom, "homePlanet").get("id"),
+        secretLab: get(tom, "secretLab").get("id"),
+        secretLabType: 'batCave'
       });
     });
 
@@ -18412,13 +18815,14 @@ define(
     var get = Ember.get;
     var run = Ember.run;
 
-    var User, Handle, GithubHandle, TwitterHandle, Company;
+    var User, Handle, GithubHandle, TwitterHandle, Company, Project;
 
     module('integration/serializers/json-api-serializer - JSONAPISerializer', {
       setup: function () {
         User = DS.Model.extend({
           firstName: DS.attr('string'),
           lastName: DS.attr('string'),
+          title: DS.attr('string'),
           handles: DS.hasMany('handle', { async: true, polymorphic: true }),
           company: DS.belongsTo('company', { async: true })
         });
@@ -18440,6 +18844,10 @@ define(
           employees: DS.hasMany('user', { async: true })
         });
 
+        Project = DS.Model.extend({
+          'company-name': DS.attr('string')
+        });
+
         env = setupStore({
           adapter: DS.JSONAPIAdapter,
 
@@ -18447,7 +18855,8 @@ define(
           handle: Handle,
           'github-handle': GithubHandle,
           'twitter-handle': TwitterHandle,
-          company: Company
+          company: Company,
+          project: Project
         });
 
         store = env.store;
@@ -18525,6 +18934,115 @@ define(
           env.store.serializerFor('user').normalizeResponse(env.store, User, documentHash, '1', 'findRecord');
         });
       }, /Encountered a resource object with type "UnknownType", but no model was found for model name "unknown-type"/);
+    });
+
+    test('Serializer should respect the attrs hash when extracting attributes and relationships', function () {
+      env.registry.register("serializer:user", DS.JSONAPISerializer.extend({
+        attrs: {
+          firstName: 'firstname_attribute_key',
+          title: "title_attribute_key",
+          company: { key: 'company_relationship_key' }
+        }
+      }));
+
+      var jsonHash = {
+        data: {
+          type: 'users',
+          id: '1',
+          attributes: {
+            'firstname_attribute_key': 'Yehuda',
+            'title_attribute_key': 'director'
+          },
+          relationships: {
+            'company_relationship_key': {
+              data: { type: 'companies', id: '2' }
+            }
+          }
+        },
+        included: [{
+          type: 'companies',
+          id: '2',
+          attributes: {
+            name: 'Tilde Inc.'
+          }
+        }]
+      };
+
+      var user = env.store.serializerFor("user").normalizeResponse(env.store, User, jsonHash, '1', 'findRecord');
+
+      equal(user.data.attributes.firstName, 'Yehuda');
+      equal(user.data.attributes.title, "director");
+      deepEqual(user.data.relationships.company.data, { id: "2", type: "company" });
+    });
+
+    test('Serializer should respect the attrs hash when serializing attributes and relationships', function () {
+      env.registry.register("serializer:user", DS.JSONAPISerializer.extend({
+        attrs: {
+          firstName: 'firstname_attribute_key',
+          title: "title_attribute_key",
+          company: { key: 'company_relationship_key' }
+        }
+      }));
+      var company, user;
+
+      run(function () {
+        env.store.push({
+          data: {
+            type: 'company',
+            id: '1',
+            attributes: {
+              name: "Tilde Inc."
+            }
+          }
+        });
+        company = env.store.peekRecord('company', 1);
+        user = env.store.createRecord('user', { firstName: "Yehuda", title: "director", company: company });
+      });
+
+      var payload = env.store.serializerFor("user").serialize(user._createSnapshot());
+
+      equal(payload.data.relationships['company_relationship_key'].data.id, "1");
+      equal(payload.data.attributes['firstname_attribute_key'], 'Yehuda');
+      equal(payload.data.attributes['title_attribute_key'], "director");
+    });
+
+    test('Serializer should respect the attrs hash when extracting attributes with not camelized keys', function () {
+      env.registry.register('serializer:project', DS.JSONAPISerializer.extend({
+        attrs: {
+          'company-name': 'company_name'
+        }
+      }));
+
+      var jsonHash = {
+        data: {
+          type: 'projects',
+          id: '1',
+          attributes: {
+            'company_name': 'Tilde Inc.'
+          }
+        }
+      };
+
+      var project = env.store.serializerFor('project').normalizeResponse(env.store, User, jsonHash, '1', 'findRecord');
+
+      equal(project.data.attributes['company-name'], 'Tilde Inc.');
+    });
+
+    test('Serializer should respect the attrs hash when serializing attributes with not camelized keys', function () {
+      env.registry.register('serializer:project', DS.JSONAPISerializer.extend({
+        attrs: {
+          'company-name': 'company_name'
+        }
+      }));
+      var project;
+
+      run(function () {
+        project = env.store.createRecord('project', { 'company-name': 'Tilde Inc.' });
+      });
+
+      var payload = env.store.serializerFor('project').serialize(project._createSnapshot());
+
+      equal(payload.data.attributes['company_name'], 'Tilde Inc.');
     });
   }
 );
@@ -18826,6 +19344,30 @@ define(
       deepEqual(post.data.relationships.comments.data, [{ id: "1", type: "comment" }, { id: "2", type: "comment" }]);
     });
 
+    test('Serializer should map `attrs` attributes directly when keyForAttribute also has a transform', function () {
+      Post = DS.Model.extend({
+        authorName: DS.attr('string')
+      });
+      env = setupStore({
+        post: Post
+      });
+      env.registry.register("serializer:post", DS.JSONSerializer.extend({
+        keyForAttribute: Ember.String.underscore,
+        attrs: {
+          authorName: 'author_name_key'
+        }
+      }));
+
+      var jsonHash = {
+        id: "1",
+        author_name_key: "DHH"
+      };
+
+      var post = env.store.serializerFor("post").normalizeResponse(env.store, Post, jsonHash, '1', 'findRecord');
+
+      equal(post.data.attributes.authorName, "DHH");
+    });
+
     test('Serializer should respect the attrs hash when serializing records', function () {
       Post.reopen({
         parentPost: DS.belongsTo('post', { inverse: null, async: true })
@@ -18856,6 +19398,78 @@ define(
 
       equal(payload.title_payload_key, "Rails is omakase");
       equal(payload.my_parent, '2');
+    });
+
+    test('Serializer respects if embedded model has an attribute named "type" - #3726', function () {
+      env.registry.register("serializer:parent", DS.JSONSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          child: { embedded: 'always' }
+        }
+      }));
+      env.registry.register("model:parent", DS.Model.extend({
+        child: DS.belongsTo('child')
+      }));
+      env.registry.register("model:child", DS.Model.extend({
+        type: DS.attr()
+      }));
+
+      var jsonHash = {
+        id: 1,
+        child: {
+          id: 1,
+          type: 'first_type'
+        }
+      };
+
+      var Parent = env.store.modelFor('parent');
+      var payload = env.store.serializerFor('parent').normalizeResponse(env.store, Parent, jsonHash, '1', 'findRecord');
+      deepEqual(payload.included, [{
+        id: '1',
+        type: 'child',
+        attributes: {
+          type: 'first_type'
+        },
+        relationships: {}
+      }]);
+    });
+
+    test('Serializer respects if embedded model has a relationship named "type" - #3726', function () {
+      env.registry.register("serializer:parent", DS.JSONSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          child: { embedded: 'always' }
+        }
+      }));
+      env.registry.register("model:parent", DS.Model.extend({
+        child: DS.belongsTo('child')
+      }));
+      env.registry.register("model:child", DS.Model.extend({
+        type: DS.belongsTo('le-type')
+      }));
+      env.registry.register("model:le-type", DS.Model.extend());
+
+      var jsonHash = {
+        id: 1,
+        child: {
+          id: 1,
+          type: "my_type_id"
+        }
+      };
+
+      var Parent = env.store.modelFor('parent');
+      var payload = env.store.serializerFor('parent').normalizeResponse(env.store, Parent, jsonHash, '1', 'findRecord');
+      deepEqual(payload.included, [{
+        id: '1',
+        type: 'child',
+        attributes: {},
+        relationships: {
+          type: {
+            data: {
+              id: 'my_type_id',
+              type: 'le-type'
+            }
+          }
+        }
+      }]);
     });
 
     test('Serializer respects `serialize: false` on the attrs hash', function () {
@@ -19716,6 +20330,28 @@ define(
       equal(array.data[0].relationships.superVillain.data.id, 1);
     });
 
+    test('normalize should allow for different levels of normalization - attributes', function () {
+      env.registry.register('serializer:application', DS.RESTSerializer.extend({
+        attrs: {
+          name: 'full_name'
+        },
+        keyForAttribute: function (attr) {
+          return Ember.String.decamelize(attr);
+        }
+      }));
+
+      var jsonHash = {
+        evilMinions: [{ id: "1", full_name: "Tom Dale" }]
+      };
+      var array;
+
+      run(function () {
+        array = env.restSerializer.normalizeResponse(env.store, EvilMinion, jsonHash, null, 'findAll');
+      });
+
+      equal(array.data[0].attributes.name, 'Tom Dale');
+    });
+
     test("serializeIntoHash", function () {
       run(function () {
         league = env.store.createRecord('home-planet', { name: "Umber", id: "123" });
@@ -19762,6 +20398,81 @@ define(
       deepEqual(json, expected, 'returned JSON is correct');
     });
 
+    test('serializeBelongsTo logs deprecation when old behavior for getting polymorphic type key is used', function () {
+      var evilMinion, doomsdayDevice;
+      var json = {};
+      var expected = { evilMinion: '1', myCustomKeyType: 'evilMinion' };
+
+      env.restSerializer.keyForAttribute = function () {
+        return 'myCustomKey';
+      };
+
+      run(function () {
+        evilMinion = env.store.createRecord('evil-minion', { id: 1, name: 'Tomster' });
+        doomsdayDevice = env.store.createRecord('doomsday-device', { id: 2, name: 'Yehuda', evilMinion: evilMinion });
+      });
+
+      expectDeprecation(function () {
+        env.restSerializer.serializeBelongsTo(doomsdayDevice._createSnapshot(), json, { key: 'evilMinion', options: { polymorphic: true, async: true } });
+      }, "The key to serialize the type of a polymorphic record is created via keyForAttribute which has been deprecated. Use the keyForPolymorphicType hook instead.");
+
+      deepEqual(json, expected, 'returned JSON is correct');
+    });
+
+    test('keyForPolymorphicType can be used to overwrite how the type of a polymorphic record is serialized', function () {
+      var evilMinion, doomsdayDevice;
+      var json = {};
+      var expected = { evilMinion: '1', typeForEvilMinion: 'evilMinion' };
+
+      env.restSerializer.keyForPolymorphicType = function () {
+        return 'typeForEvilMinion';
+      };
+
+      run(function () {
+        evilMinion = env.store.createRecord('evil-minion', { id: 1, name: 'Tomster' });
+        doomsdayDevice = env.store.createRecord('doomsday-device', { id: 2, name: 'Yehuda', evilMinion: evilMinion });
+      });
+
+      env.restSerializer.serializeBelongsTo(doomsdayDevice._createSnapshot(), json, { key: 'evilMinion', options: { polymorphic: true, async: true } });
+
+      deepEqual(json, expected, 'returned JSON is correct');
+    });
+
+    test('keyForPolymorphicType can be used to overwrite how the type of a polymorphic record is looked up for normalization', function () {
+      var json = {
+        doomsdayDevice: {
+          id: '1',
+          evilMinion: '2',
+          typeForEvilMinion: 'evilMinion'
+        }
+      };
+
+      var expected = {
+        data: {
+          type: 'doomsday-device',
+          id: '1',
+          attributes: {},
+          relationships: {
+            evilMinion: {
+              data: {
+                type: 'evil-minion',
+                id: '2'
+              }
+            }
+          }
+        },
+        included: []
+      };
+
+      env.restSerializer.keyForPolymorphicType = function () {
+        return 'typeForEvilMinion';
+      };
+
+      var normalized = env.restSerializer.normalizeResponse(env.store, DoomsdayDevice, json, null, 'findRecord');
+
+      deepEqual(normalized, expected, 'normalized JSON is correct');
+    });
+
     test('serializeIntoHash uses payloadKeyFromModelName to normalize the payload root key', function () {
       run(function () {
         league = env.store.createRecord('home-planet', { name: "Umber", id: "123" });
@@ -19779,6 +20490,42 @@ define(
         'home-planet': {
           name: "Umber"
         }
+      });
+    });
+
+    test('normalizeResponse with async polymorphic belongsTo, using <relationshipName>Type', function () {
+      env.registry.register('serializer:application', DS.RESTSerializer.extend());
+      var store = env.store;
+      env.adapter.findRecord = function (store, type) {
+        if (type.modelName === 'doomsday-device') {
+          return {
+            doomsdayDevice: {
+              id: 1,
+              name: "DeathRay",
+              evilMinion: 1,
+              evilMinionType: 'yellowMinion'
+            }
+          };
+        }
+
+        equal(type.modelName, 'yellow-minion');
+
+        return {
+          yellowMinion: {
+            id: 1,
+            type: 'yellowMinion',
+            name: 'Alex',
+            eyes: 3
+          }
+        };
+      };
+
+      run(function () {
+        store.findRecord('doomsday-device', 1).then(function (deathRay) {
+          return deathRay.get('evilMinion');
+        }).then(function (evilMinion) {
+          equal(evilMinion.get('eyes'), 3);
+        });
       });
     });
 
@@ -19908,15 +20655,32 @@ define(
       }));
 
       run(function () {
-        env.restSerializer.normalizeArrayResponse(env.store, Basket, {
-          basket: [env.store.createRecord('Basket', { type: 'bamboo', size: 10, id: '1' }), env.store.createRecord('Basket', { type: 'yellowMinion', size: 10, id: '65536' })]
-        });
+        env.store.push(env.restSerializer.normalizeArrayResponse(env.store, Basket, {
+          basket: [{ type: 'bamboo', size: 10, id: '1' }, { type: 'yellowMinion', size: 10, id: '65536' }]
+        }));
       });
 
       var normalRecord = env.store.peekRecord('basket', '1');
       ok(normalRecord, "payload with type that doesn't exist");
       strictEqual(normalRecord.get('type'), 'bamboo');
       strictEqual(normalRecord.get('size'), 10);
+
+      var clashingRecord = env.store.peekRecord('basket', '65536');
+      ok(clashingRecord, 'payload with type that matches another model name');
+      strictEqual(clashingRecord.get('type'), 'yellowMinion');
+      strictEqual(clashingRecord.get('size'), 10);
+    });
+
+    test("don't polymorphically deserialize base on the type key in payload when a type attribute exist on a singular response", function () {
+      env.registry.register('serializer:application', DS.RESTSerializer.extend({
+        isNewSerializerAPI: true
+      }));
+
+      run(function () {
+        env.store.push(env.restSerializer.normalizeSingleResponse(env.store, Basket, {
+          basket: { type: 'yellowMinion', size: 10, id: '65536' }
+        }, '65536'));
+      });
 
       var clashingRecord = env.store.peekRecord('basket', '65536');
       ok(clashingRecord, 'payload with type that matches another model name');
@@ -21273,37 +22037,34 @@ define(
       };
     }
 
-    module("integration/store - findRecord { reload: true }", {
-      setup: function () {
-        initializeStore(DS.RESTAdapter.extend());
-      }
-    });
+    module("integration/store - findRecord");
 
-    test("Using store#findRecord on non existing record fetches it from the server", function () {
+    test("store#findRecord fetches record from server when cached record is not present", function () {
       expect(2);
+
+      initializeStore(DS.RESTAdapter.extend());
 
       env.registry.register('serializer:application', DS.RESTSerializer);
       ajaxResponse({
         cars: [{
           id: 20,
-          make: 'BMCW',
+          make: 'BMC',
           model: 'Mini'
         }]
       });
 
-      var car = store.hasRecordForId('car', 20);
-      ok(!car, 'Car with id=20 should not exist');
+      var cachedRecordIsPresent = store.hasRecordForId('car', 20);
+      ok(!cachedRecordIsPresent, 'Car with id=20 should not exist');
 
       run(function () {
-        store.findRecord('car', 20, { reload: true }).then(function (car) {
-          equal(car.get('make'), 'BMCW', 'Car with id=20 is now loaded');
+        store.findRecord('car', 20).then(function (car) {
+          equal(car.get('make'), 'BMC', 'Car with id=20 is now loaded');
         });
       });
     });
 
-    test("Using store#findRecord on existing record reloads it", function () {
+    test("store#findRecord returns cached record immediately and reloads record in the background", function () {
       expect(2);
-      var car;
 
       run(function () {
         store.push({
@@ -21316,22 +22077,81 @@ define(
             }
           }
         });
-        car = store.peekRecord('car', 1);
       });
 
       ajaxResponse({
         cars: [{
           id: 1,
-          make: 'BMCW',
-          model: 'Mini'
+          make: 'BMC',
+          model: 'Princess'
         }]
       });
 
-      equal(car.get('make'), 'BMC');
+      run(function () {
+        store.findRecord('car', 1).then(function (car) {
+          equal(car.get('model'), 'Mini', 'cached car record is returned');
+        });
+      });
+
+      run(function () {
+        var car = store.peekRecord('car', 1);
+        equal(car.get('model'), 'Princess', 'car record was reloaded');
+      });
+    });
+
+    test("store#findRecord { reload: true } ignores cached record and reloads record from server", function () {
+      expect(2);
+
+      var testAdapter = DS.RESTAdapter.extend({
+        shouldReloadRecord: function (store, type, id, snapshot) {
+          ok(false, 'shouldReloadRecord should not be called when { reload: true }');
+        }
+      });
+
+      initializeStore(testAdapter);
+
+      run(function () {
+        store.push({
+          data: {
+            type: 'car',
+            id: '1',
+            attributes: {
+              make: 'BMC',
+              model: 'Mini'
+            }
+          }
+        });
+      });
+
+      ajaxResponse({
+        cars: [{
+          id: 1,
+          make: 'BMC',
+          model: 'Princess'
+        }]
+      });
+
+      var cachedCar = store.peekRecord('car', 1);
+      equal(cachedCar.get('model'), 'Mini', 'cached car has expected model');
 
       run(function () {
         store.findRecord('car', 1, { reload: true }).then(function (car) {
-          equal(car.get('make'), 'BMCW');
+          equal(car.get('model'), 'Princess', 'cached record ignored, record reloaded via server');
+        });
+      });
+    });
+
+    test('store#findRecord call with `id` of type different than non-empty string or number should trigger an assertion', function (assert) {
+      var badValues = ['', undefined, null, NaN, false];
+      assert.expect(badValues.length);
+
+      initializeStore(DS.RESTAdapter.extend());
+
+      run(function () {
+        badValues.map(function (item) {
+          expectAssertion(function () {
+            store.findRecord('car', item);
+          }, '`id` has to be non-empty string or number');
         });
       });
     });
@@ -21914,9 +22734,28 @@ define(
       source: { pointer: '/data/attributes/age' }
     }];
 
+    var errorsPrimaryHash = {
+      base: ['is invalid', 'error message']
+    };
+
+    var errorsPrimaryArray = [{
+      title: 'Invalid Document',
+      detail: 'is invalid',
+      source: { pointer: '/data' }
+    }, {
+      title: 'Invalid Document',
+      detail: 'error message',
+      source: { pointer: '/data' }
+    }];
+
     test("errorsHashToArray", function () {
       var result = DS.errorsHashToArray(errorsHash);
       deepEqual(result, errorsArray);
+    });
+
+    test("errorsHashToArray for primary data object", function () {
+      var result = DS.errorsHashToArray(errorsPrimaryHash);
+      deepEqual(result, errorsPrimaryArray);
     });
 
     test("errorsArrayToHash", function () {
@@ -21930,6 +22769,11 @@ define(
         source: { pointer: 'data/attributes/name' }
       }]);
       deepEqual(result, { name: ['error message'] });
+    });
+
+    test("errorsArrayToHash for primary data object", function () {
+      var result = DS.errorsArrayToHash(errorsPrimaryArray);
+      deepEqual(result, errorsPrimaryHash);
     });
 
     test("DS.InvalidError will normalize errors hash will assert", function () {
@@ -24078,16 +24922,17 @@ define(
 
     module("unit/model/internal-model - Internal Model");
 
-    var mockModelFactory = {
-      _create: function () {
-        return { trigger: function () {} };
-      },
+    function MockModelFactory() {}
 
-      eachRelationship: function () {}
+    MockModelFactory._create = function () {
+      return { trigger: function () {} };
     };
+
+    MockModelFactory.eachRelationship = function () {};
+
     test("Materializing a model twice errors out", function () {
       expect(1);
-      var internalModel = new DS.InternalModel(mockModelFactory, null, null, null);
+      var internalModel = new DS.InternalModel(MockModelFactory, null, {}, null);
 
       internalModel.materializeRecord();
       expectAssertion(function () {
@@ -26506,6 +27351,49 @@ define(
       });
     });
 
+    test("invalid record's attributes can be rollbacked after multiple failed calls - #3677", function () {
+      var person;
+
+      var adapter = DS.RESTAdapter.extend({
+        ajax: function (url, type, hash) {
+          var error = new DS.InvalidError();
+          return Ember.RSVP.reject(error);
+        }
+      });
+
+      env = setupStore({ person: Person, adapter: adapter });
+
+      run(function () {
+        person = env.store.push({
+          data: {
+            type: 'person',
+            id: 1,
+            attributes: {
+              firstName: 'original name'
+            }
+          }
+        });
+
+        person.set('firstName', 'updated name');
+      });
+
+      run(function () {
+        equal(person.get('firstName'), 'updated name', "precondition: firstName is changed");
+
+        person.save().then(null, async(function () {
+          equal(person.get('hasDirtyAttributes'), true, "has dirty attributes");
+          equal(person.get('firstName'), 'updated name', "firstName is still changed");
+
+          return person.save();
+        })).then(null, async(function () {
+          person.rollbackAttributes();
+
+          equal(person.get('hasDirtyAttributes'), false, "has no dirty attributes");
+          equal(person.get('firstName'), 'original name', "after rollbackAttributes() firstName has the original value");
+        }));
+      });
+    });
+
     test("deleted record's attributes can be rollbacked", function () {
       var person, people;
 
@@ -28644,33 +29532,6 @@ define(
         store.adapterFor(Person);
       }, /Passing classes to store.adapterFor has been removed/);
     });
-
-    module("unit/store/adapter_interop - find preload deprecations", {
-      setup: function () {
-        var Person = DS.Model.extend({
-          name: DS.attr('string')
-        });
-
-        var TestAdapter = DS.Adapter.extend({
-          findRecord: function (store, type, id, snapshot) {
-            equal(snapshot.attr('name'), 'Tom');
-            return Ember.RSVP.resolve({ id: id });
-          }
-        });
-
-        store = createStore({
-          adapter: TestAdapter,
-          person: Person
-        });
-      },
-      teardown: function () {
-        run(function () {
-          if (store) {
-            store.destroy();
-          }
-        });
-      }
-    });
   }
 );
 
@@ -29084,7 +29945,7 @@ define(
           "blog.post": DS.Model.extend()
         });
         store = env.store;
-        container = store.container;
+        container = env.container;
         registry = env.registry;
       },
 
@@ -29233,6 +30094,50 @@ define(
           store.destroy();
         });
       }
+    });
+
+    test('Changed attributes are reset when matching data is pushed', function (assert) {
+      var person;
+
+      run(function () {
+        person = store.push({
+          data: {
+            type: 'person',
+            id: 1,
+            attributes: {
+              firstName: 'original first name'
+            }
+          }
+        });
+      });
+
+      assert.equal(person.get('firstName'), 'original first name');
+      assert.equal(person.get('currentState.stateName'), 'root.loaded.saved');
+
+      run(function () {
+        person.set('firstName', 'updated first name');
+      });
+
+      assert.equal(person.get('firstName'), 'updated first name');
+      assert.equal(person.get('lastName'), undefined);
+      assert.equal(person.get('currentState.stateName'), 'root.loaded.updated.uncommitted');
+      deepEqual(person.changedAttributes().firstName, ['original first name', 'updated first name']);
+
+      run(function () {
+        store.push({
+          data: {
+            type: 'person',
+            id: 1,
+            attributes: {
+              firstName: 'updated first name'
+            }
+          }
+        });
+      });
+
+      assert.equal(person.get('firstName'), 'updated first name');
+      assert.equal(person.get('currentState.stateName'), 'root.loaded.saved');
+      assert.ok(!person.changedAttributes().firstName);
     });
 
     test("Calling push with a normalized hash returns a record", function () {
@@ -29922,7 +30827,7 @@ define(
         Person = DS.Model.extend({});
         var env = setupStore({ person: Person });
         store = env.store;
-        container = store.container;
+        container = env.container;
         registry = env.registry;
       },
 
@@ -30319,7 +31224,26 @@ define(
 
 // TODO enable import once this is possible
 // import { assertPolymorphicType } from "ember-data/utils";
+// import { modelHasAttributeOrRelationshipNamedType } from "ember-data/utils";
 
+// TODO enable once we can `import x from y;` in tests
+// test("modelHasAttributeOrRelationshipNamedType", function() {
+//   var ModelWithTypeAttribute = DS.Model.extend({
+//     type: DS.attr()
+//   });
+//   var ModelWithTypeBelongsTo = DS.Model.extend({
+//     type: DS.belongsTo()
+//   });
+//   var ModelWithTypeHasMany = DS.Model.extend({
+//     type: DS.hasMany()
+//   });
+//
+//   equal(modelHasAttributeOrRelationshipNamedType(DS.Model), false);
+//
+//   equal(modelHasAttributeOrRelationshipNamedType(ModelWithTypeAttribute), true);
+//   equal(modelHasAttributeOrRelationshipNamedType(ModelWithTypeBelongsTo), true);
+//   equal(modelHasAttributeOrRelationshipNamedType(ModelWithTypeHasMany), true);
+// });
 define("ember-data/tests/unit/utils-test", ["exports"], function(__exports__) {
   "use strict";
 
@@ -30671,13 +31595,6 @@ if (!QUnit.urlParams.nojshint) {
 QUnit.module('JSHint - ember-data/lib/system');
 QUnit.test('ember-data/lib/system/many-array.js should pass jshint', function(assert) { 
   assert.ok(true, 'ember-data/lib/system/many-array.js should pass jshint.'); 
-});
-
-}
-if (!QUnit.urlParams.nojshint) {
-QUnit.module('JSHint - ember-data/lib/system');
-QUnit.test('ember-data/lib/system/map.js should pass jshint', function(assert) { 
-  assert.ok(true, 'ember-data/lib/system/map.js should pass jshint.'); 
 });
 
 }
@@ -31105,6 +32022,13 @@ if (!QUnit.urlParams.nojshint) {
 QUnit.module('JSHint - ember-data/tests/integration');
 QUnit.test('ember-data/tests/integration/peek-all-test.js should pass jshint', function(assert) { 
   assert.ok(true, 'ember-data/tests/integration/peek-all-test.js should pass jshint.'); 
+});
+
+}
+if (!QUnit.urlParams.nojshint) {
+QUnit.module('JSHint - ember-data/tests/integration');
+QUnit.test('ember-data/tests/integration/polymorphic-belongs-to-test.js should pass jshint', function(assert) { 
+  assert.ok(true, 'ember-data/tests/integration/polymorphic-belongs-to-test.js should pass jshint.'); 
 });
 
 }
