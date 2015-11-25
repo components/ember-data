@@ -7461,7 +7461,12 @@
           });
         }
 
-        var internalModel = this._pushInternalModel(data.data || data);
+        if (data.data === null) {
+          return null;
+        }
+
+        
+        var internalModel = this._pushInternalModel(data.data);
 
         return internalModel.getRecord();
       },
@@ -7474,7 +7479,7 @@
         var _this4 = this;
 
         var modelName = data.type;
-                        
+                
         var type = this.modelFor(modelName);
 
         // If Ember.ENV.DS_WARN_ON_UNKNOWN_KEYS is set to true and the payload
