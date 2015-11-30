@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+9a1609ad72
+ * @version   2.4.0-canary+b6242fc479
  */
 
 var define, requireModule, require, requirejs;
@@ -6613,8 +6613,23 @@ define('ember-data/system/model/errors', ['exports'], function (exports) {
       @param {Object} target
       @param {Function} becameInvalid
       @param {Function} becameValid
+      @deprecated
     */
     registerHandlers: function (target, becameInvalid, becameValid) {
+      Ember.deprecate('Record errors will no longer be evented.', false, {
+        id: 'ds.errors.registerHandlers',
+        until: '3.0.0'
+      });
+
+      this._registerHandlers(target, becameInvalid, becameValid);
+    },
+
+    /**
+      Register with target handler
+       @method _registerHandlers
+      @private
+    */
+    _registerHandlers: function (target, becameInvalid, becameValid) {
       this.on('becameInvalid', target, becameInvalid);
       this.on('becameValid', target, becameValid);
     },
@@ -6714,19 +6729,33 @@ define('ember-data/system/model/errors', ['exports'], function (exports) {
        @method add
       @param {String} attribute
       @param {(Array|String)} messages
+      @deprecated
     */
     add: function (attribute, messages) {
+      Ember.warn('Interacting with a record errors object will no longer change the record state.', false, {
+        id: 'ds.errors.add'
+      });
+
       var wasEmpty = get(this, 'isEmpty');
 
+      this._add(attribute, messages);
+
+      if (wasEmpty && !get(this, 'isEmpty')) {
+        this.trigger('becameInvalid');
+      }
+    },
+
+    /**
+      Adds error messages to a given attribute without sending event.
+       @method _add
+      @private
+    */
+    _add: function (attribute, messages) {
       messages = this._findOrCreateMessages(attribute, messages);
       this.addObjects(messages);
       get(this, 'errorsByAttributeName').get(attribute).addObjects(messages);
 
       this.notifyPropertyChange(attribute);
-
-      if (wasEmpty && !get(this, 'isEmpty')) {
-        this.trigger('becameInvalid');
-      }
     },
 
     /**
@@ -6771,8 +6800,30 @@ define('ember-data/system/model/errors', ['exports'], function (exports) {
       ```
        @method remove
       @param {String} attribute
+      @deprecated
     */
     remove: function (attribute) {
+      Ember.warn('Interacting with a record errors object will no longer change the record state.', false, {
+        id: 'ds.errors.remove'
+      });
+
+      if (get(this, 'isEmpty')) {
+        return;
+      }
+
+      this._remove(attribute);
+
+      if (get(this, 'isEmpty')) {
+        this.trigger('becameValid');
+      }
+    },
+
+    /**
+      Removes all error messages from the given attribute without sending event.
+       @method _remove
+      @private
+    */
+    _remove: function (attribute) {
       if (get(this, 'isEmpty')) {
         return;
       }
@@ -6782,10 +6833,6 @@ define('ember-data/system/model/errors', ['exports'], function (exports) {
       get(this, 'errorsByAttributeName').delete(attribute);
 
       this.notifyPropertyChange(attribute);
-
-      if (get(this, 'isEmpty')) {
-        this.trigger('becameValid');
-      }
     },
 
     /**
@@ -6804,8 +6851,28 @@ define('ember-data/system/model/errors', ['exports'], function (exports) {
       });
       ```
        @method clear
+      @deprecated
     */
     clear: function () {
+      Ember.warn('Interacting with a record errors object will no longer change the record state.', false, {
+        id: 'ds.errors.clear'
+      });
+
+      if (get(this, 'isEmpty')) {
+        return;
+      }
+
+      this._clear();
+      this.trigger('becameValid');
+    },
+
+    /**
+      Removes all error messages.
+      to the record.
+       @method _clear
+      @private
+    */
+    _clear: function () {
       if (get(this, 'isEmpty')) {
         return;
       }
@@ -6822,9 +6889,7 @@ define('ember-data/system/model/errors', ['exports'], function (exports) {
         this.notifyPropertyChange(attribute);
       }, this);
 
-      this._super();
-
-      this.trigger('becameValid');
+      Ember.ArrayProxy.prototype.clear.call(this);
     },
 
     /**
@@ -7613,17 +7678,24 @@ define("ember-data/system/model/internal-model", ["exports", "ember-data/system/
 
     addErrorMessageToAttribute: function (attribute, message) {
       var record = this.getRecord();
-      get(record, 'errors').add(attribute, message);
+      get(record, 'errors')._add(attribute, message);
     },
 
     removeErrorMessageFromAttribute: function (attribute) {
       var record = this.getRecord();
-      get(record, 'errors').remove(attribute);
+      get(record, 'errors')._remove(attribute);
     },
 
     clearErrorMessages: function () {
       var record = this.getRecord();
-      get(record, 'errors').clear();
+      get(record, 'errors')._clear();
+    },
+
+    hasErrors: function () {
+      var record = this.getRecord();
+      var errors = get(record, 'errors');
+
+      return !Ember.isEmpty(errors);
     },
 
     // FOR USE DURING COMMIT PROCESS
@@ -8043,12 +8115,11 @@ define("ember-data/system/model/model", ["exports", "ember-data/system/promise-p
     errors: Ember.computed(function () {
       var errors = _emberDataSystemModelErrors.default.create();
 
-      errors.registerHandlers(this._internalModel, function () {
+      errors._registerHandlers(this._internalModel, function () {
         this.send('becameInvalid');
       }, function () {
         this.send('becameValid');
       });
-
       return errors;
     }).readOnly(),
 
@@ -8829,6 +8900,10 @@ define('ember-data/system/model/states', ['exports'], function (exports) {
         internalModel.removeErrorMessageFromAttribute(context.name);
 
         didSetProperty(internalModel, context);
+
+        if (!internalModel.hasErrors()) {
+          this.becameValid(internalModel);
+        }
       },
 
       becameInvalid: Ember.K,
@@ -9197,6 +9272,10 @@ define('ember-data/system/model/states', ['exports'], function (exports) {
           internalModel.removeErrorMessageFromAttribute(context.name);
 
           didSetProperty(internalModel, context);
+
+          if (!internalModel.hasErrors()) {
+            this.becameValid(internalModel);
+          }
         },
 
         becameInvalid: Ember.K,
@@ -14933,7 +15012,7 @@ define('ember-data/utils', ['exports', 'ember'], function (exports, _ember) {
   exports.getOwner = getOwner;
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+9a1609ad72";
+  exports.default = "2.4.0-canary+b6242fc479";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
