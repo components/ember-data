@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+845d969755
+ * @version   2.4.0-canary+a24d5eddae
  */
 
 var define, requireModule, require, requirejs;
@@ -13029,7 +13029,7 @@ define("ember-data/system/store", ["exports", "ember-data/system/normalize-link"
        This method returns a promise, which is resolved with a `RecordObject`
       once the server returns.
        @method queryRecord
-      @param {String or subclass of DS.Model} type
+      @param {String} modelName
       @param {any} query an opaque query to be used by the adapter
       @return {Promise} promise
     */
@@ -14933,7 +14933,7 @@ define('ember-data/utils', ['exports', 'ember'], function (exports, _ember) {
   exports.getOwner = getOwner;
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+845d969755";
+  exports.default = "2.4.0-canary+a24d5eddae";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
