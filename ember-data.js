@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+a24d5eddae
+ * @version   2.4.0-canary+9a1609ad72
  */
 
 var define, requireModule, require, requirejs;
@@ -12514,7 +12514,7 @@ define("ember-data/system/store", ["exports", "ember-data/system/normalize-link"
       non-dirty records can be unloaded.
        Example
        ```javascript
-      store.find('post', 1).then(function(post) {
+      store.findRecord('post', 1).then(function(post) {
         store.unloadRecord(post);
       });
       ```
@@ -14934,7 +14934,7 @@ define('ember-data/utils', ['exports', 'ember'], function (exports, _ember) {
   exports.getOwner = getOwner;
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+a24d5eddae";
+  exports.default = "2.4.0-canary+9a1609ad72";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
