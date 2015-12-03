@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+856db0a529
+ * @version   2.4.0-canary+eaa36525c7
  */
 
 var define, requireModule, require, requirejs;
@@ -13473,7 +13473,7 @@ define("ember-data/system/store", ["exports", "ember-data/system/normalize-link"
       }
       if (data) {
         // normalize relationship IDs into records
-        this._backburner.schedule('normalizeRelationships', this, '_setupRelationships', internalModel, internalModel.type, data);
+        this._backburner.schedule('normalizeRelationships', this, '_setupRelationships', internalModel, data);
         this.updateId(internalModel, data);
       }
 
@@ -13833,22 +13833,15 @@ define("ember-data/system/store", ["exports", "ember-data/system/normalize-link"
       var internalModel = this._load(data);
 
       this._backburner.join(function () {
-        _this3._backburner.schedule('normalizeRelationships', _this3, '_setupRelationships', internalModel, type, data);
+        _this3._backburner.schedule('normalizeRelationships', _this3, '_setupRelationships', internalModel, data);
       });
 
       return internalModel;
     },
 
-    _setupRelationships: function (record, type, data) {
-      // If the payload contains relationships that are specified as
-      // IDs, normalizeRelationships will convert them into DS.Model instances
-      // (possibly unloaded) before we push the payload into the
-      // store.
-
-      data = normalizeRelationships(this, type, data);
-
-      // Now that the pushed record as well as any related records
-      // are in the store, create the data structures used to track
+    _setupRelationships: function (record, data) {
+      // This will convert relationships specified as IDs into DS.Model instances
+      // (possibly unloaded) and also create the data structures used to track
       // relationships.
       setupRelationships(this, record, data);
     },
@@ -14110,24 +14103,6 @@ define("ember-data/system/store", ["exports", "ember-data/system/normalize-link"
 
   });
 
-  function normalizeRelationships(store, type, data, record) {
-    data.relationships = data.relationships || {};
-    type.eachRelationship(function (key, relationship) {
-      var kind = relationship.kind;
-      var value;
-      if (data.relationships[key] && data.relationships[key].data) {
-        value = data.relationships[key].data;
-        if (kind === 'belongsTo') {
-          data.relationships[key].data = deserializeRecordId(store, key, relationship, value);
-        } else if (kind === 'hasMany') {
-          data.relationships[key].data = deserializeRecordIds(store, key, relationship, value);
-        }
-      }
-    });
-
-    return data;
-  }
-
   function deserializeRecordId(store, key, relationship, id) {
     if (isNone(id)) {
       return;
@@ -14197,13 +14172,13 @@ define("ember-data/system/store", ["exports", "ember-data/system/normalize-link"
   }
 
   function setupRelationships(store, record, data) {
-    var typeClass = record.type;
     if (!data.relationships) {
       return;
     }
 
-    typeClass.eachRelationship(function (key, descriptor) {
+    record.type.eachRelationship(function (key, descriptor) {
       var kind = descriptor.kind;
+
       if (!data.relationships[key]) {
         return;
       }
@@ -14222,6 +14197,12 @@ define("ember-data/system/store", ["exports", "ember-data/system/normalize-link"
         relationship = record._relationships.get(key);
         relationship.updateMeta(data.relationships[key].meta);
       }
+
+      // If the data contains a relationship that is specified as an ID (or IDs),
+      // normalizeRelationship will convert them into DS.Model instances
+      // (possibly unloaded) before we push the payload into the store.
+      normalizeRelationship(store, key, descriptor, data.relationships[key]);
+
       var value = data.relationships[key].data;
 
       if (value !== undefined) {
@@ -14234,6 +14215,18 @@ define("ember-data/system/store", ["exports", "ember-data/system/normalize-link"
         }
       }
     });
+  }
+
+  function normalizeRelationship(store, key, relationship, jsonPayload) {
+    var data = jsonPayload.data;
+    if (data) {
+      var kind = relationship.kind;
+      if (kind === 'belongsTo') {
+        jsonPayload.data = deserializeRecordId(store, key, relationship, data);
+      } else if (kind === 'hasMany') {
+        jsonPayload.data = deserializeRecordIds(store, key, relationship, data);
+      }
+    }
   }
 
   exports.Store = Store;
@@ -15013,7 +15006,7 @@ define('ember-data/utils', ['exports', 'ember'], function (exports, _ember) {
   exports.getOwner = getOwner;
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+856db0a529";
+  exports.default = "2.4.0-canary+eaa36525c7";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
