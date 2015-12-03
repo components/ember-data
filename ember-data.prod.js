@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+7bef33dc87
+ * @version   2.4.0-canary+856db0a529
  */
 
 var define, requireModule, require, requirejs;
@@ -14392,6 +14392,7 @@ define("ember-data/system/store/finders", ["exports", "ember-data/system/store/c
       Ember.assert("You made a `find` request for a " + typeClass.typeClassKey + " with id " + id + ", but the adapter's response did not have any data", payloadIsNotBlank(adapterPayload));
       return store._adapterRun(function () {
         var payload = (0, _emberDataSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, id, 'findRecord');
+        Ember.assert('Ember Data expected the primary data returned from a `findRecord` response to be an object but instead it found an array.', !Array.isArray(payload.data));
         //TODO Optimize
         var record = store.push(payload);
         return record._internalModel;
@@ -15012,7 +15013,7 @@ define('ember-data/utils', ['exports', 'ember'], function (exports, _ember) {
   exports.getOwner = getOwner;
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+7bef33dc87";
+  exports.default = "2.4.0-canary+856db0a529";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
