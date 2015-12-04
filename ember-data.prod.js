@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+9154cf95d2
+ * @version   2.4.0-canary+70ee086a95
  */
 
 var define, requireModule, require, requirejs;
@@ -4005,6 +4005,7 @@ define("ember-data/serializers/json-serializer", ["exports", "ember-data/system/
       the payload and just sends the raw serialized JSON object.
       If your server expects namespaced keys, you should consider using the RESTSerializer.
       Otherwise you can override this method to customize how the record is added to the hash.
+      The hash property should be modified by reference.
        For example, your server may expect underscored root objects.
        ```app/serializers/application.js
       import DS from 'ember-data';
@@ -4910,6 +4911,7 @@ define("ember-data/serializers/rest-serializer", ["exports", "ember-data/seriali
 
     /**
       You can use this method to customize the root keys serialized into the JSON.
+      The hash property should be modified by reference (possibly using something like _.extend)
       By default the REST Serializer sends the modelName of a model, which is a camelized
       version of the name.
        For example, your server may expect underscored root objects.
@@ -15008,7 +15010,7 @@ define('ember-data/utils', ['exports', 'ember'], function (exports, _ember) {
   exports.getOwner = getOwner;
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+9154cf95d2";
+  exports.default = "2.4.0-canary+70ee086a95";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
