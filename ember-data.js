@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+eaa36525c7
+ * @version   2.4.0-canary+a2290f9f18
  */
 
 var define, requireModule, require, requirejs;
@@ -6544,8 +6544,8 @@ define('ember-data/system/model/errors', ['exports'], function (exports) {
     user.save();
     ```
   
-    Your backend data store might return a response that looks like
-    this. This response will be used to populate the error object.
+    Your backend data store might return a response with status code 422 (Unprocessable Entity)
+    and that looks like this. This response will be used to populate the error object.
   
     ```javascript
     {
@@ -15007,7 +15007,7 @@ define('ember-data/utils', ['exports', 'ember'], function (exports, _ember) {
   exports.getOwner = getOwner;
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+eaa36525c7";
+  exports.default = "2.4.0-canary+a2290f9f18";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
