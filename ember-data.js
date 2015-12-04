@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+a2290f9f18
+ * @version   2.4.0-canary+9154cf95d2
  */
 
 var define, requireModule, require, requirejs;
@@ -1883,12 +1883,14 @@ define("ember-data", ["exports", "ember", "ember-data/core", "ember-data/ext/dat
     @main ember-data
   */
 
-  if (_ember.default.VERSION.match(/^1\.[0-7]\./)) {
-    throw new _ember.default.Error("Ember Data requires at least Ember 1.8.0, but you have " + _ember.default.VERSION + ". Please upgrade your version of Ember, then upgrade Ember Data");
+  if (_ember.default.VERSION.match(/^1\.([0-9]|1[0-2])\./)) {
+    throw new _ember.default.Error("Ember Data requires at least Ember 1.13.0, but you have " + _ember.default.VERSION + ". Please upgrade your version of Ember, then upgrade Ember Data.");
   }
 
-  if (_ember.default.VERSION.match(/^1\.12\.0/)) {
-    throw new _ember.default.Error("Ember Data does not work with Ember 1.12.0. Please upgrade to Ember 1.12.1 or higher.");
+  if (_ember.default.VERSION.match(/^1\.13\./)) {
+    _ember.default.warn("Use of Ember Data 2+ with Ember 1.13 is unsupported. Please upgrade your version of Ember to 2.0 or higher.", false, {
+      id: 'ds.version.ember-1-13'
+    });
   }
 
   _emberDataCore.default.Store = _emberDataSystemStore.Store;
@@ -15007,7 +15009,7 @@ define('ember-data/utils', ['exports', 'ember'], function (exports, _ember) {
   exports.getOwner = getOwner;
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+a2290f9f18";
+  exports.default = "2.4.0-canary+9154cf95d2";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
