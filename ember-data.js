@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+597068bee2
+ * @version   2.4.0-canary+f1485cbd4b
  */
 
 var define, requireModule, require, requirejs;
@@ -11419,6 +11419,17 @@ define("ember-data/system/relationships/state/has-many", ["exports", "ember-data
 
   ManyRelationship.prototype.reload = function () {
     var self = this;
+    var manyArrayLoadedState = this.manyArray.get('isLoaded');
+
+    if (this._loadingPromise) {
+      if (this._loadingPromise.get('isPending')) {
+        return this._loadingPromise;
+      }
+      if (this._loadingPromise.get('isRejected')) {
+        this.manyArray.set('isLoaded', manyArrayLoadedState);
+      }
+    }
+
     if (this.link) {
       return this.fetchLink();
     } else {
@@ -11471,6 +11482,7 @@ define("ember-data/system/relationships/state/has-many", ["exports", "ember-data
       }
       _this.store._backburner.join(function () {
         _this.updateRecordsFromAdapter(records);
+        _this.manyArray.set('isLoaded', true);
       });
       return _this.manyArray;
     });
@@ -11511,10 +11523,11 @@ define("ember-data/system/relationships/state/has-many", ["exports", "ember-data
       } else {
         promise = this.findRecords();
       }
-      return _emberDataSystemPromiseProxies.PromiseManyArray.create({
+      this._loadingPromise = _emberDataSystemPromiseProxies.PromiseManyArray.create({
         content: this.manyArray,
         promise: promise
       });
+      return this._loadingPromise;
     } else {
       Ember.assert("You looked up the '" + this.key + "' relationship on a '" + this.record.type.modelName + "' with id " + this.record.id + " but some of the associated records were not loaded. Either make sure they are all loaded together with the parent record, or specify that the relationship is async (`DS.hasMany({ async: true })`)", this.manyArray.isEvery('isEmpty', false));
 
@@ -15011,7 +15024,7 @@ define('ember-data/utils', ['exports', 'ember'], function (exports, _ember) {
   exports.getOwner = getOwner;
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+597068bee2";
+  exports.default = "2.4.0-canary+f1485cbd4b";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
