@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+b7ca048563
+ * @version   2.4.0-canary+c92b4f81ea
  */
 
 var define, requireModule, require, requirejs;
@@ -1463,9 +1463,10 @@ define('ember-data/adapters/rest-adapter', ['exports', 'ember', 'ember-data/syst
       @param  {Number} status
       @param  {Object} headers
       @param  {Object} payload
+      @param  {Object} requestData - the original request information
       @return {Object | DS.AdapterError} response
     */
-    handleResponse: function (status, headers, payload) {
+    handleResponse: function (status, headers, payload, requestData) {
       if (this.isSuccess(status, headers, payload)) {
         return payload;
       } else if (this.isInvalid(status, headers, payload)) {
@@ -1473,8 +1474,9 @@ define('ember-data/adapters/rest-adapter', ['exports', 'ember', 'ember-data/syst
       }
 
       var errors = this.normalizeErrorResponse(status, headers, payload);
+      var detailedMessage = this.generatedDetailedMessage(status, headers, payload, requestData);
 
-      return new _emberDataAdaptersErrors.AdapterError(errors);
+      return new _emberDataAdaptersErrors.AdapterError(errors, detailedMessage);
     },
 
     /**
@@ -1526,12 +1528,17 @@ define('ember-data/adapters/rest-adapter', ['exports', 'ember', 'ember-data/syst
     ajax: function (url, type, options) {
       var adapter = this;
 
+      var requestData = {
+        url: url,
+        method: type
+      };
+
       return new _ember.default.RSVP.Promise(function (resolve, reject) {
         var hash = adapter.ajaxOptions(url, type, options);
 
         hash.success = function (payload, textStatus, jqXHR) {
 
-          var response = adapter.handleResponse(jqXHR.status, parseResponseHeaders(jqXHR.getAllResponseHeaders()), payload);
+          var response = adapter.handleResponse(jqXHR.status, parseResponseHeaders(jqXHR.getAllResponseHeaders()), payload, requestData);
 
           if (response instanceof _emberDataAdaptersErrors.AdapterError) {
             _ember.default.run.join(null, reject, response);
@@ -1551,7 +1558,7 @@ define('ember-data/adapters/rest-adapter', ['exports', 'ember', 'ember-data/syst
             } else if (textStatus === 'abort') {
               error = new _emberDataAdaptersErrors.AbortError();
             } else {
-              error = adapter.handleResponse(jqXHR.status, parseResponseHeaders(jqXHR.getAllResponseHeaders()), adapter.parseErrorResponse(jqXHR.responseText) || errorThrown);
+              error = adapter.handleResponse(jqXHR.status, parseResponseHeaders(jqXHR.getAllResponseHeaders()), adapter.parseErrorResponse(jqXHR.responseText) || errorThrown, requestData);
             }
           }
 
@@ -1628,6 +1635,32 @@ define('ember-data/adapters/rest-adapter', ['exports', 'ember', 'ember-data/syst
           detail: '' + payload
         }];
       }
+    },
+
+    /**
+      Generates a detailed ("friendly") error message, with plenty
+      of information for debugging (good luck!)
+       @method generatedDetailedMessage
+      @private
+      @param  {Number} status
+      @param  {Object} headers
+      @param  {Object} payload
+      @return {Object} request information
+    */
+    generatedDetailedMessage: function (status, headers, payload, requestData) {
+      var shortenedPayload;
+      var payloadContentType = headers["Content-Type"] || "Empty Content-Type";
+
+      if (payloadContentType === "text/html" && payload.length > 250) {
+        shortenedPayload = "[Omitted Lengthy HTML]";
+      } else {
+        shortenedPayload = payload;
+      }
+
+      var requestDescription = requestData.method + ' ' + requestData.url;
+      var payloadDescription = 'Payload (' + payloadContentType + ')';
+
+      return ['Ember Data Request ' + requestDescription + ' returned a ' + status, payloadDescription, shortenedPayload].join('\n');
     }
   });
 
@@ -15036,7 +15069,7 @@ define('ember-data/utils', ['exports', 'ember', 'ember-data/debug'], function (e
   exports.getOwner = getOwner;
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+b7ca048563";
+  exports.default = "2.4.0-canary+c92b4f81ea";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
