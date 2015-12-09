@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.3.0-beta.1+9c55682ba7
+ * @version   2.3.0-beta.1+6adba32bff
  */
 
 var define, requireModule, require, requirejs;
@@ -14929,7 +14929,7 @@ define('ember-data/utils', ['exports', 'ember'], function (exports, _ember) {
   exports.getOwner = getOwner;
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.3.0-beta.1+9c55682ba7";
+  exports.default = "2.3.0-beta.1+6adba32bff";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -14996,7 +14996,8 @@ define('ember-inflector/lib/helpers/pluralize', ['exports', 'ember-inflector', '
    * @param {String|Property} word word to pluralize
   */
   exports.default = (0, _emberInflectorLibUtilsMakeHelper.default)(function (params) {
-    var count, word;
+    var count = undefined,
+        word = undefined;
 
     if (params.length === 1) {
       word = params[0];
@@ -15005,9 +15006,10 @@ define('ember-inflector/lib/helpers/pluralize', ['exports', 'ember-inflector', '
       count = params[0];
       word = params[1];
 
-      if ((count | 0) !== 1) {
+      if (parseFloat(count) !== 1) {
         word = (0, _emberInflector.pluralize)(word);
       }
+
       return count + " " + word;
     }
   });
