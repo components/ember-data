@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+c92b4f81ea
+ * @version   2.4.0-canary+b2d7a40adc
  */
 
 var define, requireModule, require, requirejs;
@@ -1909,6 +1909,15 @@ define('ember-data/ext/date', ['exports', 'ember'], function (exports, _ember) {
 /**
   @module ember-data
 */
+define('ember-data/features', ['exports', 'ember'], function (exports, _ember) {
+  exports.default = isEnabled;
+
+  function isEnabled() {
+    var _Ember$FEATURES;
+
+    return (_Ember$FEATURES = _ember.default.FEATURES).isEnabled.apply(_Ember$FEATURES, arguments);
+  }
+});
 define("ember-data", ["exports", "ember", "ember-data/debug", "ember-data/core", "ember-data/ext/date", "ember-data/system/normalize-model-name", "ember-data/system/model/internal-model", "ember-data/system/promise-proxies", "ember-data/system/store", "ember-data/system/model", "ember-data/system/snapshot", "ember-data/system/adapter", "ember-data/system/serializer", "ember-data/system/debug", "ember-data/adapters/errors", "ember-data/system/record-arrays", "ember-data/system/many-array", "ember-data/system/record-array-manager", "ember-data/adapters", "ember-data/adapters/build-url-mixin", "ember-data/serializers", "ember-inflector", "ember-data/serializers/embedded-records-mixin", "ember-data/transforms", "ember-data/system/relationships", "ember-data/ember-initializer", "ember-data/setup-container", "ember-data/system/container-proxy", "ember-data/system/relationships/state/relationship"], function (exports, _ember, _emberDataDebug, _emberDataCore, _emberDataExtDate, _emberDataSystemNormalizeModelName, _emberDataSystemModelInternalModel, _emberDataSystemPromiseProxies, _emberDataSystemStore, _emberDataSystemModel, _emberDataSystemSnapshot, _emberDataSystemAdapter, _emberDataSystemSerializer, _emberDataSystemDebug, _emberDataAdaptersErrors, _emberDataSystemRecordArrays, _emberDataSystemManyArray, _emberDataSystemRecordArrayManager, _emberDataAdapters, _emberDataAdaptersBuildUrlMixin, _emberDataSerializers, _emberInflector, _emberDataSerializersEmbeddedRecordsMixin, _emberDataTransforms, _emberDataSystemRelationships, _emberDataEmberInitializer, _emberDataSetupContainer, _emberDataSystemContainerProxy, _emberDataSystemRelationshipsStateRelationship) {
   /**
     Ember Data
@@ -14845,7 +14854,7 @@ define('ember-data/utils', ['exports', 'ember', 'ember-data/debug'], function (e
   exports.getOwner = getOwner;
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+c92b4f81ea";
+  exports.default = "2.4.0-canary+b2d7a40adc";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
