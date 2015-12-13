@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+209326f223
+ * @version   2.4.0-canary+5e5a8790ba
  */
 
 var define, requireModule, require, requirejs;
@@ -12672,8 +12672,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       }
 
       // Refetch the record if the adapter thinks the record is stale
-      var snapshot = internalModel.createSnapshot();
-      snapshot.adapterOptions = options && options.adapterOptions;
+      var snapshot = internalModel.createSnapshot(options);
       var typeClass = internalModel.type;
       var adapter = this.adapterFor(typeClass.modelName);
       if (adapter.shouldReloadRecord(this, snapshot)) {
@@ -15077,7 +15076,7 @@ define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-da
   exports.default = _emberDataPrivateCore.default;
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+209326f223";
+  exports.default = "2.4.0-canary+5e5a8790ba";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
