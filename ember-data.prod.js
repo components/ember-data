@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+01c350bf54
+ * @version   2.4.0-canary+de6f7be3a8
  */
 
 var define, requireModule, require, requirejs;
@@ -14986,6 +14986,38 @@ define('ember-data/-private/utils', ['exports', 'ember', 'ember-data/-private/de
   exports.modelHasAttributeOrRelationshipNamedType = modelHasAttributeOrRelationshipNamedType;
   exports.getOwner = getOwner;
 });
+define("ember-data/adapter", ["exports", "ember-data/-private/system/adapter"], function (exports, _emberDataPrivateSystemAdapter) {
+  Object.defineProperty(exports, "default", {
+    enumerable: true,
+    get: function get() {
+      return _emberDataPrivateSystemAdapter.default;
+    }
+  });
+});
+define("ember-data/adapters/json-api", ["exports", "ember-data/-private/adapters/json-api-adapter"], function (exports, _emberDataPrivateAdaptersJsonApiAdapter) {
+  Object.defineProperty(exports, "default", {
+    enumerable: true,
+    get: function get() {
+      return _emberDataPrivateAdaptersJsonApiAdapter.default;
+    }
+  });
+});
+define("ember-data/adapters/rest", ["exports", "ember-data/-private/adapters/rest-adapter"], function (exports, _emberDataPrivateAdaptersRestAdapter) {
+  Object.defineProperty(exports, "default", {
+    enumerable: true,
+    get: function get() {
+      return _emberDataPrivateAdaptersRestAdapter.default;
+    }
+  });
+});
+define("ember-data/attr", ["exports", "ember-data/-private/system/model/attributes"], function (exports, _emberDataPrivateSystemModelAttributes) {
+  Object.defineProperty(exports, "default", {
+    enumerable: true,
+    get: function get() {
+      return _emberDataPrivateSystemModelAttributes.default;
+    }
+  });
+});
 define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/core", "ember-data/-private/ext/date", "ember-data/-private/system/normalize-model-name", "ember-data/-private/system/model/internal-model", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/store", "ember-data/-private/system/model", "ember-data/-private/system/snapshot", "ember-data/-private/system/adapter", "ember-data/-private/system/serializer", "ember-data/-private/system/debug", "ember-data/-private/adapters/errors", "ember-data/-private/system/record-arrays", "ember-data/-private/system/many-array", "ember-data/-private/system/record-array-manager", "ember-data/-private/adapters", "ember-data/-private/adapters/build-url-mixin", "ember-data/-private/serializers", "ember-inflector", "ember-data/-private/serializers/embedded-records-mixin", "ember-data/-private/transforms", "ember-data/-private/system/relationships", "ember-data/-private/ember-initializer", "ember-data/-private/setup-container", "ember-data/-private/system/container-proxy", "ember-data/-private/system/relationships/state/relationship"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateCore, _emberDataPrivateExtDate, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStore, _emberDataPrivateSystemModel, _emberDataPrivateSystemSnapshot, _emberDataPrivateSystemAdapter, _emberDataPrivateSystemSerializer, _emberDataPrivateSystemDebug, _emberDataPrivateAdaptersErrors, _emberDataPrivateSystemRecordArrays, _emberDataPrivateSystemManyArray, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateAdapters, _emberDataPrivateAdaptersBuildUrlMixin, _emberDataPrivateSerializers, _emberInflector, _emberDataPrivateSerializersEmbeddedRecordsMixin, _emberDataPrivateTransforms, _emberDataPrivateSystemRelationships, _emberDataPrivateEmberInitializer, _emberDataPrivateSetupContainer, _emberDataPrivateSystemContainerProxy, _emberDataPrivateSystemRelationshipsStateRelationship) {
   /**
     Ember Data
@@ -15075,8 +15107,63 @@ define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-da
 
   exports.default = _emberDataPrivateCore.default;
 });
+define("ember-data/model", ["exports", "ember-data/-private/system/model"], function (exports, _emberDataPrivateSystemModel) {
+  Object.defineProperty(exports, "default", {
+    enumerable: true,
+    get: function get() {
+      return _emberDataPrivateSystemModel.default;
+    }
+  });
+});
+define('ember-data/relationships', ['exports', 'ember-data/-private/system/relationships'], function (exports, _emberDataPrivateSystemRelationships) {
+  function _interopExportWildcard(obj, defaults) { var newObj = defaults({}, obj); delete newObj['default']; return newObj; }
+
+  function _defaults(obj, defaults) { var keys = Object.getOwnPropertyNames(defaults); for (var i = 0; i < keys.length; i++) { var key = keys[i]; var value = Object.getOwnPropertyDescriptor(defaults, key); if (value && value.configurable && obj[key] === undefined) { Object.defineProperty(obj, key, value); } } return obj; }
+
+  _defaults(exports, _interopExportWildcard(_emberDataPrivateSystemRelationships, _defaults));
+});
+define("ember-data/serializers/json-api", ["exports", "ember-data/-private/serializers/json-api-serializer"], function (exports, _emberDataPrivateSerializersJsonApiSerializer) {
+  Object.defineProperty(exports, "default", {
+    enumerable: true,
+    get: function get() {
+      return _emberDataPrivateSerializersJsonApiSerializer.default;
+    }
+  });
+});
+define("ember-data/serializers/json", ["exports", "ember-data/-private/serializers/json-serializer"], function (exports, _emberDataPrivateSerializersJsonSerializer) {
+  Object.defineProperty(exports, "default", {
+    enumerable: true,
+    get: function get() {
+      return _emberDataPrivateSerializersJsonSerializer.default;
+    }
+  });
+});
+define("ember-data/serializers/rest", ["exports", "ember-data/-private/serializers/rest-serializer"], function (exports, _emberDataPrivateSerializersRestSerializer) {
+  Object.defineProperty(exports, "default", {
+    enumerable: true,
+    get: function get() {
+      return _emberDataPrivateSerializersRestSerializer.default;
+    }
+  });
+});
+define("ember-data/store", ["exports", "ember-data/-private/system/store"], function (exports, _emberDataPrivateSystemStore) {
+  Object.defineProperty(exports, "default", {
+    enumerable: true,
+    get: function get() {
+      return _emberDataPrivateSystemStore.default;
+    }
+  });
+});
+define("ember-data/transform", ["exports", "ember-data/-private/transforms/base"], function (exports, _emberDataPrivateTransformsBase) {
+  Object.defineProperty(exports, "default", {
+    enumerable: true,
+    get: function get() {
+      return _emberDataPrivateTransformsBase.default;
+    }
+  });
+});
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+01c350bf54";
+  exports.default = "2.4.0-canary+de6f7be3a8";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -15541,4 +15628,40 @@ define('ember', [], function() {
 
 
 require("ember-data");
+})();
+;(function() {
+  function processEmberDataShims() {
+    var shims = {
+      'ember-data':                          { default: DS },
+      'ember-data/model':                    { default: DS.Model },
+      'ember-data/serializers/rest':         { default: DS.RESTSerializer },
+      'ember-data/serializers/active-model': { default: DS.ActiveModelSerializer },
+      'ember-data/serializers/json':         { default: DS.JSONSerializer },
+      'ember-data/serializers/json-api':     { default: DS.JSONAPISerializer },
+      'ember-data/adapters/json-api':        { default: DS.JSONAPIAdapter },
+      'ember-data/adapters/rest':            { default: DS.RESTAdapter },
+      'ember-data/adapter':                  { default: DS.Adapter },
+      'ember-data/adapters/active-model':    { default: DS.ActiveModelAdapter },
+      'ember-data/store':                    { default: DS.Store },
+      'ember-data/transform':                { default: DS.Transform },
+      'ember-data/attr':                     { default: DS.attr },
+      'ember-data/relationships':            { hasMany: DS.hasMany, belongsTo: DS.belongsTo }
+    };
+
+    for (var moduleName in shims) {
+      generateModule(moduleName, shims[moduleName]);
+    }
+  }
+
+  function generateModule(name, values) {
+    define(name, [], function() {
+      'use strict';
+
+      return values;
+    });
+  }
+
+  if (typeof define !== 'undefined' && define && define.petal) {
+    processEmberDataShims();
+  }
 })();
