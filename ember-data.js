@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+9ab3695b7f
+ * @version   2.4.0-canary+58262301c9
  */
 
 var define, requireModule, require, requirejs;
@@ -6962,7 +6962,7 @@ define("ember-data/-private/system/model/errors/invalid", ["exports", "ember"], 
 
   InvalidError.prototype = Object.create(EmberError.prototype);
 });
-define("ember-data/-private/system/model/internal-model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/merge", "ember-data/-private/system/model/states", "ember-data/-private/system/relationships/state/create", "ember-data/-private/system/snapshot", "ember-data/-private/system/empty-object", "ember-data/-private/utils"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemMerge, _emberDataPrivateSystemModelStates, _emberDataPrivateSystemRelationshipsStateCreate, _emberDataPrivateSystemSnapshot, _emberDataPrivateSystemEmptyObject, _emberDataPrivateUtils) {
+define("ember-data/-private/system/model/internal-model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/merge", "ember-data/-private/system/model/states", "ember-data/-private/system/relationships/state/create", "ember-data/-private/system/snapshot", "ember-data/-private/system/empty-object", "ember-data/-private/utils", "ember-data/-private/system/references"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemMerge, _emberDataPrivateSystemModelStates, _emberDataPrivateSystemRelationshipsStateCreate, _emberDataPrivateSystemSnapshot, _emberDataPrivateSystemEmptyObject, _emberDataPrivateUtils, _emberDataPrivateSystemReferences) {
   var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; })();
 
   exports.default = InternalModel;
@@ -7020,6 +7020,8 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     this._relationships = new _emberDataPrivateSystemRelationshipsStateCreate.default(this);
     this._recordArrays = undefined;
     this.currentState = _emberDataPrivateSystemModelStates.default.empty;
+    this.recordReference = new _emberDataPrivateSystemReferences.RecordReference(store, this);
+    this.references = {};
     this.isReloading = false;
     this.isError = false;
     this.error = null;
@@ -7551,6 +7553,24 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       return value;
     },
 
+    referenceFor: function (type, name) {
+      var reference = this.references[name];
+
+      if (!reference) {
+        var relationship = this._relationships.get(name);
+
+        if (type === "belongsTo") {
+          reference = new _emberDataPrivateSystemReferences.BelongsToReference(this.store, this, relationship);
+        } else if (type === "hasMany") {
+          reference = new _emberDataPrivateSystemReferences.HasManyReference(this.store, this, relationship);
+        }
+
+        this.references[name] = reference;
+      }
+
+      return reference;
+    },
+
     /**
       @method updateRecordArrays
       @private
@@ -7770,7 +7790,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     }
   };
 });
-define("ember-data/-private/system/model/model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/model/errors"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemModelErrors) {
+define("ember-data/-private/system/model/model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/model/errors", "ember-data/-private/features"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemModelErrors, _emberDataPrivateFeatures) {
 
   /**
     @module ember-data
@@ -8522,6 +8542,109 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
         (0, _emberDataPrivateDebug.deprecate)('Using the injected `container` is deprecated. Please use the `getOwner` helper instead to access the owner of this object.', false, { id: 'ember-application.injected-container', until: '3.0.0' });
 
         return this.store.container;
+      }
+    });
+  }
+
+  if ((0, _emberDataPrivateFeatures.default)("ds-references")) {
+
+    Model.reopen({
+
+      /**
+        Get the reference for the specified belongsTo relationship.
+         Example
+         ```javascript
+        // models/blog.js
+        export default DS.Model.extend({
+          user: DS.belongsTo({ async: true })
+        });
+         store.push({
+          type: 'blog',
+          id: 1,
+          relationships: {
+            user: { type: 'user', id: 1 }
+          }
+        });
+        var userRef = blog.belongsTo('user');
+         // check if the user relationship is loaded
+        var isLoaded = userRef.value() !== null;
+         // get the record of the reference (null if not yet available)
+        var user = userRef.value();
+         // get the identifier of the reference
+        if (userRef.remoteType() === "id") {
+          var id = userRef.id();
+        } else if (userRef.remoteType() === "link") {
+          var link = userRef.link();
+        }
+         // load user (via store.find or store.findBelongsTo)
+        userRef.load().then(...)
+         // or trigger a reload
+        userRef.reload().then(...)
+         // provide data for reference
+        userRef.push({
+          type: 'user',
+          id: 1,
+          attributes: {
+            username: "@user"
+          }
+        }).then(function(user) {
+          userRef.value() === user;
+        });
+        ```
+         @method belongsTo
+        @param {String} name of the relationship
+        @return {BelongsToReference} reference for this relationship
+      */
+      belongsTo: function (name) {
+        return this._internalModel.referenceFor('belongsTo', name);
+      },
+
+      /**
+        Get the reference for the specified hasMany relationship.
+         Example
+         ```javascript
+        // models/blog.js
+        export default DS.Model.extend({
+          comments: DS.hasMany({ async: true })
+        });
+         store.push({
+          type: 'blog',
+          id: 1,
+          relationships: {
+            comments: {
+              data: [
+                { type: 'comment', id: 1 },
+                { type: 'comment', id: 2 }
+              ]
+            }
+          }
+        });
+        var commentsRef = blog.hasMany('comments');
+         // check if the comments are loaded already
+        var isLoaded = commentsRef.value() !== null;
+         // get the records of the reference (null if not yet available)
+        var comments = commentsRef.value();
+         // get the identifier of the reference
+        if (commentsRef.remoteType() === "ids") {
+          var ids = commentsRef.ids();
+        } else if (commentsRef.remoteType() === "link") {
+          var link = commentsRef.link();
+        }
+         // load comments (via store.findMany or store.findHasMany)
+        commentsRef.load().then(...)
+         // or trigger a reload
+        commentsRef.reload().then(...)
+         // provide data for reference
+        commentsRef.push([{ type: 'comment', id: 1 }, { type: 'comment', id: 2 }]).then(function(comments) {
+          commentsRef.value() === comments;
+        });
+        ```
+         @method hasMany
+        @param {String} name of the relationship
+        @return {HasManyReference} reference for this relationship
+      */
+      hasMany: function (name) {
+        return this._internalModel.referenceFor('hasMany', name);
       }
     });
   }
@@ -10148,6 +10271,250 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
 /**
   @module ember-data
 */
+define('ember-data/-private/system/references', ['exports', 'ember-data/-private/system/references/record', 'ember-data/-private/system/references/belongs-to', 'ember-data/-private/system/references/has-many'], function (exports, _emberDataPrivateSystemReferencesRecord, _emberDataPrivateSystemReferencesBelongsTo, _emberDataPrivateSystemReferencesHasMany) {
+  exports.RecordReference = _emberDataPrivateSystemReferencesRecord.default;
+  exports.BelongsToReference = _emberDataPrivateSystemReferencesBelongsTo.default;
+  exports.HasManyReference = _emberDataPrivateSystemReferencesHasMany.default;
+});
+define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-data/-private/system/model', 'ember', 'ember-data/-private/system/references/reference', 'ember-data/-private/utils'], function (exports, _emberDataPrivateSystemModel, _ember, _emberDataPrivateSystemReferencesReference, _emberDataPrivateUtils) {
+
+  var BelongsToReference = function (store, parentInternalModel, belongsToRelationship) {
+    this._super$constructor(store, parentInternalModel);
+    this.belongsToRelationship = belongsToRelationship;
+    this.type = belongsToRelationship.relationshipMeta.type;
+    this.parent = parentInternalModel.recordReference;
+
+    // TODO inverse
+  };
+
+  BelongsToReference.prototype = Object.create(_emberDataPrivateSystemReferencesReference.default.prototype);
+  BelongsToReference.prototype.constructor = BelongsToReference;
+  BelongsToReference.prototype._super$constructor = _emberDataPrivateSystemReferencesReference.default;
+
+  BelongsToReference.prototype.remoteType = function () {
+    if (this.belongsToRelationship.link) {
+      return "link";
+    }
+
+    return "id";
+  };
+
+  BelongsToReference.prototype.id = function () {
+    var inverseRecord = this.belongsToRelationship.inverseRecord;
+    return inverseRecord && inverseRecord.id;
+  };
+
+  BelongsToReference.prototype.link = function () {
+    return this.belongsToRelationship.link;
+  };
+
+  BelongsToReference.prototype.meta = function () {
+    return this.belongsToRelationship.meta;
+  };
+
+  BelongsToReference.prototype.push = function (objectOrPromise) {
+    var _this = this;
+
+    return _ember.default.RSVP.resolve(objectOrPromise).then(function (data) {
+      var record;
+
+      if (data instanceof _emberDataPrivateSystemModel.default) {
+        record = data;
+      } else {
+        record = _this.store.push(data);
+      }
+
+      (0, _emberDataPrivateUtils.assertPolymorphicType)(_this.internalModel, _this.belongsToRelationship.relationshipMeta, record._internalModel);
+
+      _this.belongsToRelationship.setCanonicalRecord(record._internalModel);
+
+      return record;
+    });
+  };
+
+  BelongsToReference.prototype.value = function () {
+    var inverseRecord = this.belongsToRelationship.inverseRecord;
+    return inverseRecord && inverseRecord.record;
+  };
+
+  BelongsToReference.prototype.load = function () {
+    var _this2 = this;
+
+    if (this.remoteType() === "id") {
+      return this.belongsToRelationship.getRecord();
+    }
+
+    if (this.remoteType() === "link") {
+      return this.belongsToRelationship.findLink().then(function (internalModel) {
+        return _this2.value();
+      });
+    }
+  };
+
+  BelongsToReference.prototype.reload = function () {
+    var _this3 = this;
+
+    return this.belongsToRelationship.reload().then(function (internalModel) {
+      return _this3.value();
+    });
+  };
+
+  exports.default = BelongsToReference;
+});
+define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'ember-data/-private/system/references/reference'], function (exports, _ember, _emberDataPrivateSystemReferencesReference) {
+
+  var get = _ember.default.get;
+
+  var HasManyReference = function (store, parentInternalModel, hasManyRelationship) {
+    this._super$constructor(store, parentInternalModel);
+    this.hasManyRelationship = hasManyRelationship;
+    this.type = hasManyRelationship.relationshipMeta.type;
+    this.parent = parentInternalModel.recordReference;
+
+    // TODO inverse
+  };
+
+  HasManyReference.prototype = Object.create(_emberDataPrivateSystemReferencesReference.default.prototype);
+  HasManyReference.prototype.constructor = HasManyReference;
+  HasManyReference.prototype._super$constructor = _emberDataPrivateSystemReferencesReference.default;
+
+  HasManyReference.prototype.remoteType = function () {
+    if (this.hasManyRelationship.link) {
+      return "link";
+    }
+
+    return "ids";
+  };
+
+  HasManyReference.prototype.link = function () {
+    return this.hasManyRelationship.link;
+  };
+
+  HasManyReference.prototype.ids = function () {
+    var members = this.hasManyRelationship.members;
+    var ids = members.toArray().map(function (internalModel) {
+      return internalModel.id;
+    });
+
+    return ids;
+  };
+
+  HasManyReference.prototype.meta = function () {
+    return this.hasManyRelationship.manyArray.meta;
+  };
+
+  HasManyReference.prototype.push = function (objectOrPromise) {
+    var _this = this;
+
+    return _ember.default.RSVP.resolve(objectOrPromise).then(function (payload) {
+      var array = payload;
+      if (typeof payload === "object" && payload.data) {
+        array = payload.data;
+      }
+
+      var internalModels = array.map(function (obj) {
+        var record = _this.store.push(obj);
+        return record._internalModel;
+      });
+
+      // TODO add assertion for polymorphic type
+
+      _this.hasManyRelationship.computeChanges(internalModels);
+
+      return _this.hasManyRelationship.manyArray;
+    });
+  };
+
+  HasManyReference.prototype._isLoaded = function () {
+    var hasData = get(this.hasManyRelationship, 'hasData');
+    if (!hasData) {
+      return false;
+    }
+
+    var members = this.hasManyRelationship.members.toArray();
+    var isEveryLoaded = members.every(function (internalModel) {
+      return internalModel.isLoaded() === true;
+    });
+
+    return isEveryLoaded;
+  };
+
+  HasManyReference.prototype.value = function () {
+    if (this._isLoaded()) {
+      return this.hasManyRelationship.manyArray;
+    }
+
+    return null;
+  };
+
+  HasManyReference.prototype.load = function () {
+    if (!this._isLoaded()) {
+      return this.hasManyRelationship.getRecords();
+    }
+
+    var manyArray = this.hasManyRelationship.manyArray;
+    return _ember.default.RSVP.resolve(manyArray);
+  };
+
+  HasManyReference.prototype.reload = function () {
+    return this.hasManyRelationship.reload();
+  };
+
+  exports.default = HasManyReference;
+});
+define('ember-data/-private/system/references/record', ['exports', 'ember', 'ember-data/-private/system/references/reference'], function (exports, _ember, _emberDataPrivateSystemReferencesReference) {
+
+  var RecordReference = function (store, internalModel) {
+    this._super$constructor(store, internalModel);
+    this.type = internalModel.modelName;
+    this.id = internalModel.id;
+    this.remoteType = 'identity';
+  };
+
+  RecordReference.prototype = Object.create(_emberDataPrivateSystemReferencesReference.default.prototype);
+  RecordReference.prototype.constructor = RecordReference;
+  RecordReference.prototype._super$constructor = _emberDataPrivateSystemReferencesReference.default;
+
+  RecordReference.prototype.push = function (objectOrPromise) {
+    var _this = this;
+
+    return _ember.default.RSVP.resolve(objectOrPromise).then(function (data) {
+      var record = _this.store.push(data);
+      return record;
+    });
+  };
+
+  RecordReference.prototype.value = function () {
+    return this.internalModel.record;
+  };
+
+  RecordReference.prototype.load = function () {
+    return this.store.findRecord(this.type, this.id);
+  };
+
+  RecordReference.prototype.reload = function () {
+    var record = this.value();
+    if (record) {
+      return record.reload();
+    }
+
+    return this.load();
+  };
+
+  exports.default = RecordReference;
+});
+define("ember-data/-private/system/references/reference", ["exports"], function (exports) {
+  var Reference = function (store, internalModel) {
+    this.store = store;
+    this.internalModel = internalModel;
+  };
+
+  Reference.prototype = {
+    constructor: Reference
+  };
+
+  exports.default = Reference;
+});
 define('ember-data/-private/system/relationship-meta', ['exports', 'ember-inflector', 'ember-data/-private/system/normalize-model-name'], function (exports, _emberInflector, _emberDataPrivateSystemNormalizeModelName) {
   exports.typeForRelationshipMeta = typeForRelationshipMeta;
   exports.relationshipFromMeta = relationshipFromMeta;
@@ -11241,6 +11608,21 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
       return toReturn;
     }
   };
+
+  BelongsToRelationship.prototype.reload = function () {
+    // TODO handle case when reload() is triggered multiple times
+
+    if (this.link) {
+      return this.fetchLink();
+    }
+
+    // reload record, if it is already loaded
+    if (this.inverseRecord && this.inverseRecord.record) {
+      return this.inverseRecord.record.reload();
+    }
+
+    return this.findRecord();
+  };
 });
 define("ember-data/-private/system/relationships/state/create", ["exports", "ember", "ember-data/-private/system/relationships/state/has-many", "ember-data/-private/system/relationships/state/belongs-to", "ember-data/-private/system/empty-object"], function (exports, _ember, _emberDataPrivateSystemRelationshipsStateHasMany, _emberDataPrivateSystemRelationshipsStateBelongsTo, _emberDataPrivateSystemEmptyObject) {
   exports.default = Relationships;
@@ -12233,7 +12615,7 @@ define("ember-data/-private/system/snapshot", ["exports", "ember", "ember-data/-
 /**
   @module ember-data
 */
-define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-private/system/model', 'ember-data/-private/debug', 'ember-data/-private/system/normalize-link', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/adapters/errors', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/store/common', 'ember-data/-private/system/store/serializer-response', 'ember-data/-private/system/store/serializers', 'ember-data/-private/system/store/finders', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/store/container-instance-cache', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/system/empty-object'], function (exports, _ember, _emberDataPrivateSystemModel, _emberDataPrivateDebug, _emberDataPrivateSystemNormalizeLink, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateAdaptersErrors, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStoreCommon, _emberDataPrivateSystemStoreSerializerResponse, _emberDataPrivateSystemStoreSerializers, _emberDataPrivateSystemStoreFinders, _emberDataPrivateUtils, _emberDataPrivateSystemCoerceId, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateSystemStoreContainerInstanceCache, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemEmptyObject) {
+define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-private/system/model', 'ember-data/-private/debug', 'ember-data/-private/system/normalize-link', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/adapters/errors', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/store/common', 'ember-data/-private/system/store/serializer-response', 'ember-data/-private/system/store/serializers', 'ember-data/-private/system/store/finders', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/store/container-instance-cache', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/system/empty-object', 'ember-data/-private/features'], function (exports, _ember, _emberDataPrivateSystemModel, _emberDataPrivateDebug, _emberDataPrivateSystemNormalizeLink, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateAdaptersErrors, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStoreCommon, _emberDataPrivateSystemStoreSerializerResponse, _emberDataPrivateSystemStoreSerializers, _emberDataPrivateSystemStoreFinders, _emberDataPrivateUtils, _emberDataPrivateSystemCoerceId, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateSystemStoreContainerInstanceCache, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemEmptyObject, _emberDataPrivateFeatures) {
   var badIdFormatAssertion = '`id` has to be non-empty string or number';
 
   exports.badIdFormatAssertion = badIdFormatAssertion;
@@ -14078,6 +14460,42 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
 
   });
 
+  if ((0, _emberDataPrivateFeatures.default)("ds-references")) {
+
+    Store.reopen({
+      /**
+        Get the reference for the specified record.
+         Example
+         ```javascript
+        var userRef = store.getReference('user', 1);
+         // check if the user is loaded
+        var isLoaded = userRef.value() !== null;
+         // get the record of the reference (null if not yet available)
+        var user = userRef.value();
+         // get the identifier of the reference
+        if (userRef.remoteType() === "id") {
+        var id = userRef.id();
+        }
+         // load user (via store.find)
+        userRef.load().then(...)
+         // or trigger a reload
+        userRef.reload().then(...)
+         // provide data for reference
+        userRef.push({ id: 1, username: "@user" }).then(function(user) {
+          userRef.value() === user;
+        });
+      ```
+       @method getReference
+      @param {String} type
+      @param {String|Integer} id
+      @return {RecordReference}
+      */
+      getReference: function (type, id) {
+        return this._internalModelForId(type, id).recordReference;
+      }
+    });
+  }
+
   function deserializeRecordId(store, key, relationship, id) {
     if (isNone(id)) {
       return;
@@ -15163,7 +15581,7 @@ define("ember-data/transform", ["exports", "ember-data/-private/transforms/base"
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+9ab3695b7f";
+  exports.default = "2.4.0-canary+58262301c9";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
