@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+c64ce94a5e
+ * @version   2.4.0-canary+ed6679f8d0
  */
 
 var define, requireModule, require, requirejs;
@@ -2367,14 +2367,18 @@ define('ember-data/-private/serializers/embedded-records-mixin', ['exports', 'em
       Returns an array of embedded records serialized to JSON
     */
     _generateSerializedHasMany: function (snapshot, relationship) {
-      var _this = this;
-
       var hasMany = snapshot.hasMany(relationship.key);
-      return _ember.default.A(hasMany).map(function (embeddedSnapshot) {
+      var manyArray = _ember.default.A(hasMany);
+      var ret = new Array(manyArray.length);
+
+      for (var i = 0, l = manyArray.length; i < l; i++) {
+        var embeddedSnapshot = manyArray[i];
         var embeddedJson = embeddedSnapshot.record.serialize({ includeId: true });
-        _this.removeEmbeddedForeignKey(snapshot, embeddedSnapshot, relationship, embeddedJson);
-        return embeddedJson;
-      });
+        this.removeEmbeddedForeignKey(snapshot, embeddedSnapshot, relationship, embeddedJson);
+        ret[i] = embeddedJson;
+      }
+
+      return ret;
     },
 
     /**
@@ -2450,15 +2454,15 @@ define('ember-data/-private/serializers/embedded-records-mixin', ['exports', 'em
      @private
     */
     _extractEmbeddedRecords: function (serializer, store, typeClass, partial) {
-      var _this2 = this;
+      var _this = this;
 
       typeClass.eachRelationship(function (key, relationship) {
         if (serializer.hasDeserializeRecordsOption(key)) {
           if (relationship.kind === "hasMany") {
-            _this2._extractEmbeddedHasMany(store, key, partial, relationship);
+            _this._extractEmbeddedHasMany(store, key, partial, relationship);
           }
           if (relationship.kind === "belongsTo") {
-            _this2._extractEmbeddedBelongsTo(store, key, partial, relationship);
+            _this._extractEmbeddedBelongsTo(store, key, partial, relationship);
           }
         }
       });
@@ -2470,15 +2474,18 @@ define('ember-data/-private/serializers/embedded-records-mixin', ['exports', 'em
      @private
     */
     _extractEmbeddedHasMany: function (store, key, hash, relationshipMeta) {
-      var _this3 = this;
-
       var relationshipHash = get(hash, 'data.relationships.' + key + '.data');
+
       if (!relationshipHash) {
         return;
       }
 
-      var hasMany = relationshipHash.map(function (item) {
-        var _normalizeEmbeddedRelationship = _this3._normalizeEmbeddedRelationship(store, relationshipMeta, item);
+      var hasMany = new Array(relationshipHash.length);
+
+      for (var i = 0, l = relationshipHash.length; i < l; i++) {
+        var item = relationshipHash[i];
+
+        var _normalizeEmbeddedRelationship = this._normalizeEmbeddedRelationship(store, relationshipMeta, item);
 
         var data = _normalizeEmbeddedRelationship.data;
         var included = _normalizeEmbeddedRelationship.included;
@@ -2491,8 +2498,8 @@ define('ember-data/-private/serializers/embedded-records-mixin', ['exports', 'em
           (_hash$included = hash.included).push.apply(_hash$included, _toConsumableArray(included));
         }
 
-        return { id: data.id, type: data.type };
-      });
+        hasMany[i] = { id: data.id, type: data.type };
+      }
 
       var relationship = { data: hasMany };
       set(hash, 'data.relationships.' + key, relationship);
@@ -2645,12 +2652,26 @@ define('ember-data/-private/serializers/json-api-serializer', ['exports', 'ember
 
       if (_ember.default.typeOf(documentHash.data) === 'object') {
         documentHash.data = this._normalizeResourceHelper(documentHash.data);
-      } else if (_ember.default.typeOf(documentHash.data) === 'array') {
-        documentHash.data = documentHash.data.map(this._normalizeResourceHelper, this);
+      } else if (Array.isArray(documentHash.data)) {
+        var ret = new Array(documentHash.data.length);
+
+        for (var i = 0, l = documentHash.data.length; i < l; i++) {
+          var data = documentHash.data[i];
+          ret[i] = this._normalizeResourceHelper(data);
+        }
+
+        documentHash.data = ret;
       }
 
-      if (_ember.default.typeOf(documentHash.included) === 'array') {
-        documentHash.included = documentHash.included.map(this._normalizeResourceHelper, this);
+      if (Array.isArray(documentHash.included)) {
+        var ret = new Array(documentHash.included.length);
+
+        for (var i = 0, l = documentHash.included.length; i < l; i++) {
+          var included = documentHash.included[i];
+          ret[i] = this._normalizeResourceHelper(included);
+        }
+
+        documentHash.included = ret;
       }
 
       return documentHash;
@@ -2758,8 +2779,15 @@ define('ember-data/-private/serializers/json-api-serializer', ['exports', 'ember
         relationshipHash.data = this._normalizeRelationshipDataHelper(relationshipHash.data);
       }
 
-      if (_ember.default.typeOf(relationshipHash.data) === 'array') {
-        relationshipHash.data = relationshipHash.data.map(this._normalizeRelationshipDataHelper, this);
+      if (Array.isArray(relationshipHash.data)) {
+        var ret = new Array(relationshipHash.data.length);
+
+        for (var i = 0, l = relationshipHash.data.length; i < l; i++) {
+          var data = relationshipHash.data[i];
+          ret[i] = this._normalizeRelationshipDataHelper(data);
+        }
+
+        relationshipHash.data = ret;
       }
 
       return relationshipHash;
@@ -2978,8 +3006,6 @@ define('ember-data/-private/serializers/json-api-serializer', ['exports', 'ember
      @param {Object} relationship
     */
     serializeHasMany: function (snapshot, json, relationship) {
-      var _this3 = this;
-
       var key = relationship.key;
 
       if (this._shouldSerializeHasMany(snapshot, key, relationship)) {
@@ -2993,12 +3019,15 @@ define('ember-data/-private/serializers/json-api-serializer', ['exports', 'ember
             payloadKey = this.keyForRelationship(key, 'hasMany', 'serialize');
           }
 
-          var data = hasMany.map(function (item) {
-            return {
-              type: _this3.payloadKeyFromModelName(item.modelName),
+          var data = new Array(hasMany.length);
+
+          for (var i = 0, l = hasMany.length; i < l; i++) {
+            var item = hasMany[i];
+            data[i] = {
+              type: this.payloadKeyFromModelName(item.modelName),
               id: item.id
             };
-          });
+          }
 
           json.relationships[payloadKey] = { data: data };
         }
@@ -3428,8 +3457,6 @@ define('ember-data/-private/serializers/json-serializer', ['exports', 'ember', '
       @private
     */
     _normalizeResponse: function (store, primaryModelClass, payload, id, requestType, isSingle) {
-      var _this2 = this;
-
       var documentHash = {
         data: null,
         included: []
@@ -3452,8 +3479,11 @@ define('ember-data/-private/serializers/json-serializer', ['exports', 'ember', '
           documentHash.included = included;
         }
       } else {
-        documentHash.data = payload.map(function (item) {
-          var _normalize2 = _this2.normalize(primaryModelClass, item);
+        var ret = new Array(payload.length);
+        for (var i = 0, l = payload.length; i < l; i++) {
+          var item = payload[i];
+
+          var _normalize2 = this.normalize(primaryModelClass, item);
 
           var data = _normalize2.data;
           var included = _normalize2.included;
@@ -3463,8 +3493,10 @@ define('ember-data/-private/serializers/json-serializer', ['exports', 'ember', '
 
             (_documentHash$included = documentHash.included).push.apply(_documentHash$included, _toConsumableArray(included));
           }
-          return data;
-        });
+          ret[i] = data;
+        }
+
+        documentHash.data = ret;
       }
 
       return documentHash;
@@ -3541,13 +3573,13 @@ define('ember-data/-private/serializers/json-serializer', ['exports', 'ember', '
       @return {Object}
     */
     extractAttributes: function (modelClass, resourceHash) {
-      var _this3 = this;
+      var _this2 = this;
 
       var attributeKey;
       var attributes = {};
 
       modelClass.eachAttribute(function (key) {
-        attributeKey = _this3.keyForAttribute(key, 'deserialize');
+        attributeKey = _this2.keyForAttribute(key, 'deserialize');
         if (resourceHash.hasOwnProperty(attributeKey)) {
           attributes[key] = resourceHash[attributeKey];
         }
@@ -3616,13 +3648,13 @@ define('ember-data/-private/serializers/json-serializer', ['exports', 'ember', '
       @return {Object}
     */
     extractRelationships: function (modelClass, resourceHash) {
-      var _this4 = this;
+      var _this3 = this;
 
       var relationships = {};
 
       modelClass.eachRelationship(function (key, relationshipMeta) {
         var relationship = null;
-        var relationshipKey = _this4.keyForRelationship(key, relationshipMeta.kind, 'deserialize');
+        var relationshipKey = _this3.keyForRelationship(key, relationshipMeta.kind, 'deserialize');
         if (resourceHash.hasOwnProperty(relationshipKey)) {
           var data = null;
           var relationshipHash = resourceHash[relationshipKey];
@@ -3632,19 +3664,23 @@ define('ember-data/-private/serializers/json-serializer', ['exports', 'ember', '
               // than the type and the hash (which might only be an id) for the
               // relationship, hence we pass the key, resource and
               // relationshipMeta too
-              data = _this4.extractPolymorphicRelationship(relationshipMeta.type, relationshipHash, { key: key, resourceHash: resourceHash, relationshipMeta: relationshipMeta });
+              data = _this3.extractPolymorphicRelationship(relationshipMeta.type, relationshipHash, { key: key, resourceHash: resourceHash, relationshipMeta: relationshipMeta });
             } else {
-              data = _this4.extractRelationship(relationshipMeta.type, relationshipHash);
+              data = _this3.extractRelationship(relationshipMeta.type, relationshipHash);
             }
           } else if (relationshipMeta.kind === 'hasMany') {
-            data = _ember.default.isNone(relationshipHash) ? null : relationshipHash.map(function (item) {
-              return _this4.extractRelationship(relationshipMeta.type, item);
-            });
+            if (!_ember.default.isNone(relationshipHash)) {
+              data = new Array(relationshipHash.length);
+              for (var i = 0, l = relationshipHash.length; i < l; i++) {
+                var item = relationshipHash[i];
+                data[i] = _this3.extractRelationship(relationshipMeta.type, item);
+              }
+            }
           }
           relationship = { data: data };
         }
 
-        var linkKey = _this4.keyForLink(key, relationshipMeta.kind);
+        var linkKey = _this3.keyForLink(key, relationshipMeta.kind);
         if (resourceHash.links && resourceHash.links.hasOwnProperty(linkKey)) {
           var related = resourceHash.links[linkKey];
           relationship = relationship || {};
@@ -3673,13 +3709,13 @@ define('ember-data/-private/serializers/json-serializer', ['exports', 'ember', '
       @private
     */
     normalizeAttributes: function (typeClass, hash) {
-      var _this5 = this;
+      var _this4 = this;
 
       var payloadKey;
 
       if (this.keyForAttribute) {
         typeClass.eachAttribute(function (key) {
-          payloadKey = _this5.keyForAttribute(key, 'deserialize');
+          payloadKey = _this4.keyForAttribute(key, 'deserialize');
           if (key === payloadKey) {
             return;
           }
@@ -3698,13 +3734,13 @@ define('ember-data/-private/serializers/json-serializer', ['exports', 'ember', '
       @private
     */
     normalizeRelationships: function (typeClass, hash) {
-      var _this6 = this;
+      var _this5 = this;
 
       var payloadKey;
 
       if (this.keyForRelationship) {
         typeClass.eachRelationship(function (key, relationship) {
-          payloadKey = _this6.keyForRelationship(key, relationship.kind, 'deserialize');
+          payloadKey = _this5.keyForRelationship(key, relationship.kind, 'deserialize');
           if (key === payloadKey) {
             return;
           }
@@ -3941,7 +3977,7 @@ define('ember-data/-private/serializers/json-serializer', ['exports', 'ember', '
       @return {Object} json
     */
     serialize: function (snapshot, options) {
-      var _this7 = this;
+      var _this6 = this;
 
       var json = {};
 
@@ -3954,14 +3990,14 @@ define('ember-data/-private/serializers/json-serializer', ['exports', 'ember', '
       }
 
       snapshot.eachAttribute(function (key, attribute) {
-        _this7.serializeAttribute(snapshot, json, key, attribute);
+        _this6.serializeAttribute(snapshot, json, key, attribute);
       });
 
       snapshot.eachRelationship(function (key, relationship) {
         if (relationship.kind === 'belongsTo') {
-          _this7.serializeBelongsTo(snapshot, json, relationship);
+          _this6.serializeBelongsTo(snapshot, json, relationship);
         } else if (relationship.kind === 'hasMany') {
-          _this7.serializeHasMany(snapshot, json, relationship);
+          _this6.serializeHasMany(snapshot, json, relationship);
         }
       });
 
@@ -4208,7 +4244,7 @@ define('ember-data/-private/serializers/json-serializer', ['exports', 'ember', '
       @return {Object} json The deserialized errors
     */
     extractErrors: function (store, typeClass, payload, id) {
-      var _this8 = this;
+      var _this7 = this;
 
       if (payload && typeof payload === 'object' && payload.errors) {
         payload = (0, _emberDataPrivateAdaptersErrors.errorsArrayToHash)(payload.errors);
@@ -4216,7 +4252,7 @@ define('ember-data/-private/serializers/json-serializer', ['exports', 'ember', '
         this.normalizeUsingDeclaredMapping(typeClass, payload);
 
         typeClass.eachAttribute(function (name) {
-          var key = _this8.keyForAttribute(name, 'deserialize');
+          var key = _this7.keyForAttribute(name, 'deserialize');
           if (key !== name && payload.hasOwnProperty(key)) {
             payload[name] = payload[key];
             delete payload[key];
@@ -4224,7 +4260,7 @@ define('ember-data/-private/serializers/json-serializer', ['exports', 'ember', '
         });
 
         typeClass.eachRelationship(function (name) {
-          var key = _this8.keyForRelationship(name, 'deserialize');
+          var key = _this7.keyForRelationship(name, 'deserialize');
           if (key !== name && payload.hasOwnProperty(key)) {
             payload[name] = payload[key];
             delete payload[key];
@@ -6738,13 +6774,23 @@ define('ember-data/-private/system/model/errors', ['exports', 'ember', 'ember-da
     */
     _findOrCreateMessages: function (attribute, messages) {
       var errors = this.errorsFor(attribute);
+      var messagesArray = makeArray(messages);
+      var _messages = new Array(messagesArray.length);
 
-      return makeArray(messages).map(function (message) {
-        return errors.findBy('message', message) || {
-          attribute: attribute,
-          message: message
-        };
-      });
+      for (var i = 0, l = messagesArray.length; i < l; i++) {
+        var message = messagesArray[i];
+        var err = errors.findBy('message', message);
+        if (err) {
+          _messages[i] = err;
+        } else {
+          _messages[i] = {
+            attribute: attribute,
+            message: message
+          };
+        }
+      }
+
+      return _messages;
     },
 
     /**
@@ -7538,11 +7584,13 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
 
     _preloadHasMany: function (key, preloadValue, type) {
       (0, _emberDataPrivateDebug.assert)("You need to pass in an array to set a hasMany property on a record", _ember.default.isArray(preloadValue));
-      var internalModel = this;
+      var recordsToSet = new Array(preloadValue.length);
 
-      var recordsToSet = preloadValue.map(function (recordToPush) {
-        return internalModel._convertStringOrNumberIntoInternalModel(recordToPush, type);
-      });
+      for (var i = 0, l = preloadValue.length; i < l; i++) {
+        var recordToPush = preloadValue[i];
+        recordsToSet[i] = this._convertStringOrNumberIntoInternalModel(recordToPush, type);
+      }
+
       //We use the pathway of setting the hasMany as if it came from the adapter
       //because the user told us that they know this relationships exists already
       this._relationships.get(key).updateRecordsFromAdapter(recordsToSet);
@@ -11215,16 +11263,20 @@ define("ember-data/-private/system/relationships/ext", ["exports", "ember", "emb
       @param {any} binding the value to which the callback's `this` should be bound
     */
     eachRelatedType: function (callback, binding) {
-      get(this, 'relatedTypes').forEach(function (type) {
+      var relationshipTypes = get(this, 'relatedTypes');
+
+      for (var i = 0; i < relationshipTypes.length; i++) {
+        var type = relationshipTypes[i];
         callback.call(binding, type);
-      });
+      }
     },
 
     determineRelationshipType: function (knownSide, store) {
       var knownKey = knownSide.key;
       var knownKind = knownSide.kind;
       var inverse = this.inverseFor(knownKey, store);
-      var key, otherKind;
+      var key = undefined,
+          otherKind = undefined;
 
       if (!inverse) {
         return knownKind === 'belongsTo' ? 'oneToNone' : 'manyToNone';
@@ -11843,10 +11895,15 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
   ManyRelationship.prototype.findRecords = function () {
     var _this2 = this;
 
+    var manyArray = this.manyArray.toArray();
+    var internalModels = new Array(manyArray.length);
+
+    for (var i = 0, l = manyArray.length; i < l; i++) {
+      internalModels[i] = manyArray[i]._internalModel;
+    }
+
     //TODO CLEANUP
-    return this.store.findMany(this.manyArray.toArray().map(function (rec) {
-      return rec._internalModel;
-    })).then(function () {
+    return this.store.findMany(internalModels).then(function () {
       if (!_this2.manyArray.get('isDestroyed')) {
         //Goes away after the manyArray refactor
         _this2.manyArray.set('isLoaded', true);
@@ -13137,11 +13194,13 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
     */
     findByIds: function (modelName, ids) {
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember.default.inspect(modelName), typeof modelName === 'string');
-      var store = this;
+      var promises = new Array(ids.length);
 
-      return (0, _emberDataPrivateSystemPromiseProxies.promiseArray)(_ember.default.RSVP.all(ids.map(function (id) {
-        return store.findRecord(modelName, id);
-      })).then(_ember.default.A, null, "DS: Store#findByIds of " + modelName + " complete"));
+      for (var i = 0, l = ids.length; i < l; i++) {
+        promises[i] = this.findRecord(modelName, ids[i]);
+      }
+
+      return (0, _emberDataPrivateSystemPromiseProxies.promiseArray)(_ember.default.RSVP.all(promises).then(_ember.default.A, null, "DS: Store#findByIds of " + modelName + " complete"));
     },
 
     /**
@@ -13167,10 +13226,17 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
     },
 
     scheduleFetchMany: function (records) {
-      var internalModels = records.map(function (record) {
-        return record._internalModel;
-      });
-      return Promise.all(internalModels.map(this.scheduleFetch, this));
+      var internalModels = new Array(records.length);
+      var fetches = new Array(records.length);
+      for (var i = 0, l = records.length; i < l; i++) {
+        internalModels[i] = records[i]._internalModel;
+      }
+
+      for (var i = 0, l = internalModels.length; i < l; i++) {
+        fetches[i] = this.scheduleFetch(internalModels[i]);
+      }
+
+      return _ember.default.RSVP.Promise.all(fetches);
     },
 
     scheduleFetch: function (internalModel, options) {
@@ -13391,11 +13457,13 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       @return {Promise} promise
     */
     findMany: function (internalModels) {
-      var _this = this;
+      var finds = new Array(internalModels.length);
 
-      return Promise.all(internalModels.map(function (internalModel) {
-        return _this._findByInternalModel(internalModel);
-      }));
+      for (var i = 0, l = internalModels.length; i < l; i++) {
+        finds[i] = this._findByInternalModel(internalModels[i]);
+      }
+
+      return Promise.all(finds);
     },
 
     /**
@@ -13622,15 +13690,18 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       if (arguments.length === 0) {
         var typeMaps = this.typeMaps;
         var keys = Object.keys(typeMaps);
+        var types = new Array(keys.length);
 
-        var types = keys.map(byType);
+        for (var i = 0, l = keys.length; i < l; i++) {
+          types[i] = typeMaps[keys[i]]['type'].modelName;
+        }
 
         types.forEach(this.unloadAll, this);
       } else {
         var typeClass = this.modelFor(modelName);
         var typeMap = this.typeMapFor(typeClass);
         var records = typeMap.records.slice();
-        var record;
+        var record = undefined;
 
         for (var i = 0; i < records.length; i++) {
           record = records[i];
@@ -13639,10 +13710,6 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
         }
 
         typeMap.metadata = new _emberDataPrivateSystemEmptyObject.default();
-      }
-
-      function byType(entry) {
-        return typeMaps[entry]['type'].modelName;
       }
     },
 
@@ -13817,7 +13884,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       @private
     */
     flushPendingSave: function () {
-      var _this2 = this;
+      var _this = this;
 
       var pending = this._pendingSave.slice();
       this._pendingSave = [];
@@ -13826,7 +13893,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
         var snapshot = pendingItem.snapshot;
         var resolver = pendingItem.resolver;
         var record = snapshot._internalModel;
-        var adapter = _this2.adapterFor(record.type.modelName);
+        var adapter = _this.adapterFor(record.type.modelName);
         var operation;
 
         if (get(record, 'currentState.stateName') === 'root.deleted.saved') {
@@ -13839,7 +13906,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
           operation = 'updateRecord';
         }
 
-        resolver.resolve(_commit(adapter, _this2, operation, snapshot));
+        resolver.resolve(_commit(adapter, _this, operation, snapshot));
       });
     },
 
@@ -14198,7 +14265,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
     },
 
     _pushInternalModel: function (data) {
-      var _this3 = this;
+      var _this2 = this;
 
       var modelName = data.type;
       (0, _emberDataPrivateDebug.assert)('You must include an \'id\' for ' + modelName + ' in an object passed to \'push\'', data.id != null && data.id !== '');
@@ -14221,7 +14288,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       var internalModel = this._load(data);
 
       this._backburner.join(function () {
-        _this3._backburner.schedule('normalizeRelationships', _this3, '_setupRelationships', internalModel, data);
+        _this2._backburner.schedule('normalizeRelationships', _this2, '_setupRelationships', internalModel, data);
       });
 
       return internalModel;
@@ -14277,7 +14344,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       @param {Object} inputPayload
     */
     pushPayload: function (modelName, inputPayload) {
-      var _this4 = this;
+      var _this3 = this;
 
       var serializer;
       var payload;
@@ -14291,7 +14358,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
         serializer = this.serializerFor(modelName);
       }
       this._adapterRun(function () {
-        return serializer.pushPayload(_this4, payload);
+        return serializer.pushPayload(_this3, payload);
       });
     },
 
@@ -14544,9 +14611,13 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
     }
 
     (0, _emberDataPrivateDebug.assert)('A ' + relationship.parentType + ' record was pushed into the store with the value of ' + key + ' being \'' + _ember.default.inspect(ids) + '\', but ' + key + ' is a hasMany relationship so the value must be an array. You should probably check your data payload or serializer.', isArray(ids));
-    return ids.map(function (id) {
-      return deserializeRecordId(store, key, relationship, id);
-    });
+    var _ids = new Array(ids.length);
+
+    for (var i = 0, l = ids.length; i < l; i++) {
+      _ids[i] = deserializeRecordId(store, key, relationship, ids[i]);
+    }
+
+    return _ids;
   }
 
   // Delegation to the adapter and promise management
@@ -14844,9 +14915,13 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
         var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, null, 'findMany');
         //TODO Optimize, no need to materialize here
         var records = store.push(payload);
-        return records.map(function (record) {
-          return record._internalModel;
-        });
+        var internalModels = new Array(records.length);
+
+        for (var i = 0, l = records.length; i < l; i++) {
+          internalModels[i] = records[i]._internalModel;
+        }
+
+        return internalModels;
       });
     }, null, "DS: Extract payload of " + typeClass);
   }
@@ -15612,7 +15687,7 @@ define("ember-data/transform", ["exports", "ember-data/-private/transforms/base"
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+c64ce94a5e";
+  exports.default = "2.4.0-canary+ed6679f8d0";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
