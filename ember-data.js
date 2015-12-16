@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+58262301c9
+ * @version   2.4.0-canary+e1c993ed86
  */
 
 var define, requireModule, require, requirejs;
@@ -804,9 +804,9 @@ define('ember-data/-private/adapters/json-api-adapter', ['exports', 'ember', 'em
 /**
   @module ember-data
 */
-define('ember-data/-private/adapters/rest-adapter', ['exports', 'ember', 'ember-data/-private/system/adapter', 'ember-data/-private/adapters/errors', 'ember-data/-private/system/empty-object', 'ember-data/-private/adapters/build-url-mixin'], function (exports, _ember, _emberDataPrivateSystemAdapter, _emberDataPrivateAdaptersErrors, _emberDataPrivateSystemEmptyObject, _emberDataPrivateAdaptersBuildUrlMixin) {
-  var get = _ember.default.get;
+define('ember-data/-private/adapters/rest-adapter', ['exports', 'ember', 'ember-data/-private/system/adapter', 'ember-data/-private/adapters/errors', 'ember-data/-private/system/empty-object', 'ember-data/-private/adapters/build-url-mixin', 'ember-data/-private/features'], function (exports, _ember, _emberDataPrivateSystemAdapter, _emberDataPrivateAdaptersErrors, _emberDataPrivateSystemEmptyObject, _emberDataPrivateAdaptersBuildUrlMixin, _emberDataPrivateFeatures) {
   var MapWithDefault = _ember.default.MapWithDefault;
+  var get = _ember.default.get;
 
   /**
     The REST adapter allows your store to communicate with an HTTP server by
@@ -1129,7 +1129,10 @@ define('ember-data/-private/adapters/rest-adapter', ['exports', 'ember', 'ember-
       @return {Promise} promise
     */
     findRecord: function (store, type, id, snapshot) {
-      return this.ajax(this.buildURL(type.modelName, id, snapshot, 'findRecord'), 'GET');
+      var url = this.buildURL(type.modelName, id, snapshot, 'findRecord');
+      var query = this.buildQuery(snapshot);
+
+      return this.ajax(url, 'GET', { data: query });
     },
 
     /**
@@ -1145,13 +1148,12 @@ define('ember-data/-private/adapters/rest-adapter', ['exports', 'ember', 'ember-
       @return {Promise} promise
     */
     findAll: function (store, type, sinceToken, snapshotRecordArray) {
-      var query, url;
+      var url = this.buildURL(type.modelName, null, null, 'findAll');
+      var query = this.buildQuery(snapshotRecordArray);
 
       if (sinceToken) {
-        query = { since: sinceToken };
+        query.since = sinceToken;
       }
-
-      url = this.buildURL(type.modelName, null, null, 'findAll');
 
       return this.ajax(url, 'GET', { data: query });
     },
@@ -1659,6 +1661,20 @@ define('ember-data/-private/adapters/rest-adapter', ['exports', 'ember', 'ember-
       var payloadDescription = 'Payload (' + payloadContentType + ')';
 
       return ['Ember Data Request ' + requestDescription + ' returned a ' + status, payloadDescription, shortenedPayload].join('\n');
+    },
+
+    buildQuery: function (snapshot) {
+      var include = snapshot.include;
+
+      var query = {};
+
+      if ((0, _emberDataPrivateFeatures.default)('ds-finder-include')) {
+        if (include) {
+          query.include = include;
+        }
+      }
+
+      return query;
     }
   });
 
@@ -7192,10 +7208,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       @private
     */
     createSnapshot: function (options) {
-      var adapterOptions = options && options.adapterOptions;
-      var snapshot = new _emberDataPrivateSystemSnapshot.default(this);
-      snapshot.adapterOptions = adapterOptions;
-      return snapshot;
+      return new _emberDataPrivateSystemSnapshot.default(this, options);
     },
 
     /**
@@ -10262,9 +10275,8 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
     },
 
     createSnapshot: function (options) {
-      var adapterOptions = options && options.adapterOptions;
       var meta = this.get('meta');
-      return new _emberDataPrivateSystemSnapshotRecordArray.default(this, meta, adapterOptions);
+      return new _emberDataPrivateSystemSnapshotRecordArray.default(this, meta, options);
     }
   });
 });
@@ -12229,11 +12241,8 @@ define('ember-data/-private/system/serializer', ['exports', 'ember'], function (
 /**
   @module ember-data
 */
-define('ember-data/-private/system/snapshot-record-array', ['exports'], function (exports) {
+define('ember-data/-private/system/snapshot-record-array', ['exports', 'ember-data/-private/features'], function (exports, _emberDataPrivateFeatures) {
   exports.default = SnapshotRecordArray;
-  /**
-    @module ember-data
-  */
 
   /**
     @class SnapshotRecordArray
@@ -12244,7 +12253,9 @@ define('ember-data/-private/system/snapshot-record-array', ['exports'], function
     @param {Object} meta
   */
 
-  function SnapshotRecordArray(recordArray, meta, adapterOptions) {
+  function SnapshotRecordArray(recordArray, meta) {
+    var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
+
     /**
       An array of snapshots
       @private
@@ -12282,7 +12293,11 @@ define('ember-data/-private/system/snapshot-record-array', ['exports'], function
       @property adapterOptions
       @type {Object}
     */
-    this.adapterOptions = adapterOptions;
+    this.adapterOptions = options.adapterOptions;
+
+    if ((0, _emberDataPrivateFeatures.default)('ds-finder-include')) {
+      this.include = options.include;
+    }
   }
 
   /**
@@ -12300,7 +12315,10 @@ define('ember-data/-private/system/snapshot-record-array', ['exports'], function
     return this._snapshots;
   };
 });
-define("ember-data/-private/system/snapshot", ["exports", "ember", "ember-data/-private/system/empty-object"], function (exports, _ember, _emberDataPrivateSystemEmptyObject) {
+/**
+  @module ember-data
+*/
+define('ember-data/-private/system/snapshot', ['exports', 'ember', 'ember-data/-private/system/empty-object', 'ember-data/-private/features'], function (exports, _ember, _emberDataPrivateSystemEmptyObject, _emberDataPrivateFeatures) {
   exports.default = Snapshot;
 
   var get = _ember.default.get;
@@ -12315,6 +12333,8 @@ define("ember-data/-private/system/snapshot", ["exports", "ember", "ember-data/-
 
   function Snapshot(internalModel) {
     var _this = this;
+
+    var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
     this._attributes = new _emberDataPrivateSystemEmptyObject.default();
     this._belongsToRelationships = new _emberDataPrivateSystemEmptyObject.default();
@@ -12332,6 +12352,17 @@ define("ember-data/-private/system/snapshot", ["exports", "ember", "ember-data/-
     this._internalModel = internalModel;
     this.type = internalModel.type;
     this.modelName = internalModel.type.modelName;
+
+    /**
+      A hash of adapter options
+      @property adapterOptions
+      @type {Object}
+    */
+    this.adapterOptions = options.adapterOptions;
+
+    if ((0, _emberDataPrivateFeatures.default)('ds-finder-include')) {
+      this.include = options.include;
+    }
 
     this._changedAttributes = record.changedAttributes();
   }
@@ -15581,7 +15612,7 @@ define("ember-data/transform", ["exports", "ember-data/-private/transforms/base"
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+58262301c9";
+  exports.default = "2.4.0-canary+e1c993ed86";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
