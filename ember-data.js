@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+ed6679f8d0
+ * @version   2.4.0-canary+55b2f7173c
  */
 
 var define, requireModule, require, requirejs;
@@ -2371,7 +2371,7 @@ define('ember-data/-private/serializers/embedded-records-mixin', ['exports', 'em
       var manyArray = _ember.default.A(hasMany);
       var ret = new Array(manyArray.length);
 
-      for (var i = 0, l = manyArray.length; i < l; i++) {
+      for (var i = 0; i < manyArray.length; i++) {
         var embeddedSnapshot = manyArray[i];
         var embeddedJson = embeddedSnapshot.record.serialize({ includeId: true });
         this.removeEmbeddedForeignKey(snapshot, embeddedSnapshot, relationship, embeddedJson);
@@ -15687,7 +15687,7 @@ define("ember-data/transform", ["exports", "ember-data/-private/transforms/base"
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+ed6679f8d0";
+  exports.default = "2.4.0-canary+55b2f7173c";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
