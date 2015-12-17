@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+e8495e5b98
+ * @version   2.4.0-canary+4b025cedaa
  */
 
 var define, requireModule, require, requirejs;
@@ -1730,7 +1730,6 @@ define('ember-data/-private/core', ['exports', 'ember', 'ember-data/version'], f
     @type String
     @static
   */
-  /*jshint -W079 */
   var DS = _ember.default.Namespace.create({
     VERSION: _emberDataVersion.default
   });
@@ -1738,10 +1737,6 @@ define('ember-data/-private/core', ['exports', 'ember', 'ember-data/version'], f
   if (_ember.default.libraries) {
     _ember.default.libraries.registerCoreLibrary('Ember Data', DS.VERSION);
   }
-
-  // var EMBER_DATA_FEATURES = EMBER_DATA_FEATURES_PLACEHOLDER; //jshint ignore: line
-
-  // Ember.merge(Ember.FEATURES, EMBER_DATA_FEATURES);
 
   exports.default = DS;
 });
@@ -7305,7 +7300,8 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       different to the state which is acknowledged by the server.
        This method is needed when data for the internal model is pushed and the
       pushed data might acknowledge dirty attributes as confirmed.
-       @private
+       @method updateChangedAttributes
+      @private
      */
     updateChangedAttributes: function () {
       var changedAttributes = this.changedAttributes();
@@ -7328,7 +7324,8 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     /**
       Returns an object, whose keys are changed properties, and value is an
       [oldProp, newProp] array.
-       @private
+       @method changedAttributes
+      @private
     */
     changedAttributes: function () {
       var oldData = this._data;
@@ -15696,7 +15693,7 @@ define("ember-data/transform", ["exports", "ember-data/-private/transforms/base"
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+e8495e5b98";
+  exports.default = "2.4.0-canary+4b025cedaa";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
