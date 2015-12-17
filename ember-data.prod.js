@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+b0f4e00a49
+ * @version   2.4.0-canary+e42d919728
  */
 
 var define, requireModule, require, requirejs;
@@ -7305,6 +7305,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       different to the state which is acknowledged by the server.
        This method is needed when data for the internal model is pushed and the
       pushed data might acknowledge dirty attributes as confirmed.
+       @private
      */
     updateChangedAttributes: function () {
       var changedAttributes = this.changedAttributes();
@@ -7327,6 +7328,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     /**
       Returns an object, whose keys are changed properties, and value is an
       [oldProp, newProp] array.
+       @private
     */
     changedAttributes: function () {
       var oldData = this._data;
@@ -15687,7 +15689,7 @@ define("ember-data/transform", ["exports", "ember-data/-private/transforms/base"
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+b0f4e00a49";
+  exports.default = "2.4.0-canary+e42d919728";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
