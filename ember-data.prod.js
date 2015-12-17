@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+e42d919728
+ * @version   2.4.0-canary+8a2af8fb59
  */
 
 var define, requireModule, require, requirejs;
@@ -10529,13 +10529,20 @@ define('ember-data/-private/system/references/record', ['exports', 'ember', 'emb
   var RecordReference = function (store, internalModel) {
     this._super$constructor(store, internalModel);
     this.type = internalModel.modelName;
-    this.id = internalModel.id;
-    this.remoteType = 'identity';
+    this._id = internalModel.id;
   };
 
   RecordReference.prototype = Object.create(_emberDataPrivateSystemReferencesReference.default.prototype);
   RecordReference.prototype.constructor = RecordReference;
   RecordReference.prototype._super$constructor = _emberDataPrivateSystemReferencesReference.default;
+
+  RecordReference.prototype.id = function () {
+    return this._id;
+  };
+
+  RecordReference.prototype.remoteType = function () {
+    return 'identity';
+  };
 
   RecordReference.prototype.push = function (objectOrPromise) {
     var _this = this;
@@ -10551,7 +10558,7 @@ define('ember-data/-private/system/references/record', ['exports', 'ember', 'emb
   };
 
   RecordReference.prototype.load = function () {
-    return this.store.findRecord(this.type, this.id);
+    return this.store.findRecord(this.type, this._id);
   };
 
   RecordReference.prototype.reload = function () {
@@ -15689,7 +15696,7 @@ define("ember-data/transform", ["exports", "ember-data/-private/transforms/base"
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+e42d919728";
+  exports.default = "2.4.0-canary+8a2af8fb59";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
