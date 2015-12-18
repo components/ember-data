@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+09ca81773c
+ * @version   2.4.0-canary+397d1402d8
  */
 
 var define, requireModule, require, requirejs;
@@ -1776,84 +1776,6 @@ define('ember-data/-private/debug', ['exports', 'ember'], function (exports, _em
   function debugSeal() {
     return _ember.default.debugSeal.apply(_ember.default, arguments);
   }
-});
-define('ember-data/-private/ember-initializer', ['exports', 'ember', 'ember-data/-private/setup-container', 'ember-data/-private/instance-initializers/initialize-store-service'], function (exports, _ember, _emberDataPrivateSetupContainer, _emberDataPrivateInstanceInitializersInitializeStoreService) {
-
-  var K = _ember.default.K;
-
-  /**
-    @module ember-data
-  */
-
-  /*
-  
-    This code initializes Ember-Data onto an Ember application.
-  
-    If an Ember.js developer defines a subclass of DS.Store on their application,
-    as `App.StoreService` (or via a module system that resolves to `service:store`)
-    this code will automatically instantiate it and make it available on the
-    router.
-  
-    Additionally, after an application's controllers have been injected, they will
-    each have the store made available to them.
-  
-    For example, imagine an Ember.js application with the following classes:
-  
-    App.StoreService = DS.Store.extend({
-      adapter: 'custom'
-    });
-  
-    App.PostsController = Ember.ArrayController.extend({
-      // ...
-    });
-  
-    When the application is initialized, `App.ApplicationStore` will automatically be
-    instantiated, and the instance of `App.PostsController` will have its `store`
-    property set to that instance.
-  
-    Note that this code will only be run if the `ember-application` package is
-    loaded. If Ember Data is being used in an environment other than a
-    typical application (e.g., node.js where only `ember-runtime` is available),
-    this code will be ignored.
-  */
-
-  _ember.default.onLoad('Ember.Application', function (Application) {
-
-    Application.initializer({
-      name: "ember-data",
-      initialize: _emberDataPrivateSetupContainer.default
-    });
-
-    Application.instanceInitializer({
-      name: "ember-data",
-      initialize: _emberDataPrivateInstanceInitializersInitializeStoreService.default
-    });
-
-    // Deprecated initializers to satisfy old code that depended on them
-    Application.initializer({
-      name: "store",
-      after: "ember-data",
-      initialize: K
-    });
-
-    Application.initializer({
-      name: "transforms",
-      before: "store",
-      initialize: K
-    });
-
-    Application.initializer({
-      name: "data-adapter",
-      before: "store",
-      initialize: K
-    });
-
-    Application.initializer({
-      name: "injectStore",
-      before: "store",
-      initialize: K
-    });
-  });
 });
 define('ember-data/-private/ext/date', ['exports', 'ember'], function (exports, _ember) {
 
@@ -15548,7 +15470,7 @@ define("ember-data/attr", ["exports", "ember-data/-private/system/model/attribut
     }
   });
 });
-define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/core", "ember-data/-private/ext/date", "ember-data/-private/system/normalize-model-name", "ember-data/-private/system/model/internal-model", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/store", "ember-data/-private/system/model", "ember-data/-private/system/snapshot", "ember-data/-private/system/adapter", "ember-data/-private/system/serializer", "ember-data/-private/system/debug", "ember-data/-private/adapters/errors", "ember-data/-private/system/record-arrays", "ember-data/-private/system/many-array", "ember-data/-private/system/record-array-manager", "ember-data/-private/adapters", "ember-data/-private/adapters/build-url-mixin", "ember-data/-private/serializers", "ember-inflector", "ember-data/-private/serializers/embedded-records-mixin", "ember-data/-private/transforms", "ember-data/-private/system/relationships", "ember-data/-private/ember-initializer", "ember-data/-private/setup-container", "ember-data/-private/system/container-proxy", "ember-data/-private/system/relationships/state/relationship"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateCore, _emberDataPrivateExtDate, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStore, _emberDataPrivateSystemModel, _emberDataPrivateSystemSnapshot, _emberDataPrivateSystemAdapter, _emberDataPrivateSystemSerializer, _emberDataPrivateSystemDebug, _emberDataPrivateAdaptersErrors, _emberDataPrivateSystemRecordArrays, _emberDataPrivateSystemManyArray, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateAdapters, _emberDataPrivateAdaptersBuildUrlMixin, _emberDataPrivateSerializers, _emberInflector, _emberDataPrivateSerializersEmbeddedRecordsMixin, _emberDataPrivateTransforms, _emberDataPrivateSystemRelationships, _emberDataPrivateEmberInitializer, _emberDataPrivateSetupContainer, _emberDataPrivateSystemContainerProxy, _emberDataPrivateSystemRelationshipsStateRelationship) {
+define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/core", "ember-data/-private/ext/date", "ember-data/-private/system/normalize-model-name", "ember-data/-private/system/model/internal-model", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/store", "ember-data/-private/system/model", "ember-data/-private/system/snapshot", "ember-data/-private/system/adapter", "ember-data/-private/system/serializer", "ember-data/-private/system/debug", "ember-data/-private/adapters/errors", "ember-data/-private/system/record-arrays", "ember-data/-private/system/many-array", "ember-data/-private/system/record-array-manager", "ember-data/-private/adapters", "ember-data/-private/adapters/build-url-mixin", "ember-data/-private/serializers", "ember-inflector", "ember-data/-private/serializers/embedded-records-mixin", "ember-data/-private/transforms", "ember-data/-private/system/relationships", "ember-data/-private/setup-container", "ember-data/-private/instance-initializers/initialize-store-service", "ember-data/-private/system/container-proxy", "ember-data/-private/system/relationships/state/relationship"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateCore, _emberDataPrivateExtDate, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStore, _emberDataPrivateSystemModel, _emberDataPrivateSystemSnapshot, _emberDataPrivateSystemAdapter, _emberDataPrivateSystemSerializer, _emberDataPrivateSystemDebug, _emberDataPrivateAdaptersErrors, _emberDataPrivateSystemRecordArrays, _emberDataPrivateSystemManyArray, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateAdapters, _emberDataPrivateAdaptersBuildUrlMixin, _emberDataPrivateSerializers, _emberInflector, _emberDataPrivateSerializersEmbeddedRecordsMixin, _emberDataPrivateTransforms, _emberDataPrivateSystemRelationships, _emberDataPrivateSetupContainer, _emberDataPrivateInstanceInitializersInitializeStoreService, _emberDataPrivateSystemContainerProxy, _emberDataPrivateSystemRelationshipsStateRelationship) {
   /**
     Ember Data
     @module ember-data
@@ -15625,6 +15547,7 @@ define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-da
   _emberDataPrivateCore.default.ContainerProxy = _emberDataPrivateSystemContainerProxy.default;
 
   _emberDataPrivateCore.default._setupContainer = _emberDataPrivateSetupContainer.default;
+  _emberDataPrivateCore.default._initializeStoreService = _emberDataPrivateInstanceInitializersInitializeStoreService.default;
 
   Object.defineProperty(_emberDataPrivateCore.default, 'normalizeModelName', {
     enumerable: true,
@@ -15693,7 +15616,7 @@ define("ember-data/transform", ["exports", "ember-data/-private/transforms/base"
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+09ca81773c";
+  exports.default = "2.4.0-canary+397d1402d8";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -16194,4 +16117,46 @@ require("ember-data");
   if (typeof define !== 'undefined' && define && define.petal) {
     processEmberDataShims();
   }
+})();
+;(function() {
+  /* globals Ember */
+  /* globals DS */
+  var K = Ember.K;
+  Ember.onLoad('Ember.Application', function(Application) {
+
+    Application.initializer({
+      name:       "ember-data",
+      initialize: DS._setupContainer
+    });
+
+    Application.instanceInitializer({
+      name:       "ember-data",
+      initialize: DS._initializeStoreService
+    });
+
+    // Deprecated initializers to satisfy old code that depended on them
+    Application.initializer({
+      name:       "store",
+      after:      "ember-data",
+      initialize: K
+    });
+
+    Application.initializer({
+      name:       "transforms",
+      before:     "store",
+      initialize: K
+    });
+
+    Application.initializer({
+      name:       "data-adapter",
+      before:     "store",
+      initialize: K
+    });
+
+    Application.initializer({
+      name:       "injectStore",
+      before:     "store",
+      initialize: K
+    });
+  });
 })();
