@@ -1,6 +1,6 @@
 {
   "name": "ember-data",
-  "version": "2.4.0-canary+397d1402d8",
+  "version": "2.4.0-canary+38db34bc28",
   "license": "MIT",
   "main": "ember-data.js",
   "dependencies": {
