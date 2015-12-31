@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+a0408cc1f1
+ * @version   2.4.0-canary+13320456c2
  */
 
 var define, requireModule, require, requirejs;
@@ -12052,6 +12052,10 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       ```
        This method will be called with the parent record and `/posts/1/comments`.
        The `findHasMany` method will make an Ajax (HTTP GET) request to the originally specified URL.
+       The format of your `links` value will influence the final request URL via the `urlPrefix` method:
+       * Links beginning with `//`, `http://`, `https://`, will be used as is, with no further manipulation.
+       * Links beginning with a single `/` will have the current adapter's `host` value prepended to it.
+       * Links with no beginning `/` will have a parentURL prepended to it, via the current adapter's `buildURL`.
        @method findHasMany
       @param {DS.Store} store
       @param {DS.Snapshot} snapshot
@@ -12083,6 +12087,10 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       ```
        This method will be called with the parent record and `/people/1/group`.
        The `findBelongsTo` method will make an Ajax (HTTP GET) request to the originally specified URL.
+       The format of your `links` value will influence the final request URL via the `urlPrefix` method:
+       * Links beginning with `//`, `http://`, `https://`, will be used as is, with no further manipulation.
+       * Links beginning with a single `/` will have the current adapter's `host` value prepended to it.
+       * Links with no beginning `/` will have a parentURL prepended to it, via the current adapter's `buildURL`.
        @method findBelongsTo
       @param {DS.Store} store
       @param {DS.Snapshot} snapshot
@@ -15528,7 +15536,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+a0408cc1f1";
+  exports.default = "2.4.0-canary+13320456c2";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
