@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+9615003ad5
+ * @version   2.4.0-canary+1c02f8fe77
  */
 
 var define, requireModule, require, requirejs;
@@ -5514,17 +5514,21 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
 
       // unregister filtered record array
       var recordArrays = this.filteredRecordArrays.get(typeClass);
-      var index = recordArrays.indexOf(array);
-      if (index !== -1) {
-        recordArrays.splice(index, 1);
+      var removedFromFiltered = remove(recordArrays, array);
+
+      // remove from adapter populated record array
+      var removedFromAdapterPopulated = remove(this._adapterPopulatedRecordArrays, array);
+
+      if (!removedFromFiltered && !removedFromAdapterPopulated) {
 
         // unregister live record array
-      } else if (this.liveRecordArrays.has(typeClass)) {
+        if (this.liveRecordArrays.has(typeClass)) {
           var liveRecordArrayForType = this.liveRecordArrayFor(typeClass);
           if (array === liveRecordArrayForType) {
             this.liveRecordArrays.delete(typeClass);
           }
         }
+      }
     },
 
     willDestroy: function () {
@@ -5551,6 +5555,17 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
     }
 
     return result;
+  }
+
+  function remove(array, item) {
+    var index = array.indexOf(item);
+
+    if (index !== -1) {
+      array.splice(index, 1);
+      return true;
+    }
+
+    return false;
   }
 });
 /**
@@ -15312,7 +15327,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+9615003ad5";
+  exports.default = "2.4.0-canary+1c02f8fe77";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
