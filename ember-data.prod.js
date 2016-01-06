@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+faafa436ca
+ * @version   2.4.0-canary+bb36510408
  */
 
 var define, requireModule, require, requirejs;
@@ -1449,7 +1449,7 @@ define("ember-data/-private/system/clone-null", ["exports", "ember-data/-private
 define('ember-data/-private/system/coerce-id', ['exports'], function (exports) {
   exports.default = coerceId;
   // Used by the store to normalize IDs entering the store.  Despite the fact
-  // that developers may provide IDs as numbers (e.g., `store.find(Person, 1)`),
+  // that developers may provide IDs as numbers (e.g., `store.findRecord('person', 1)`),
   // it is important that internally we use strings, since IDs may be serialized
   // and lose type information.  For example, Ember's router may put a record's
   // ID into the URL, and if we later try to deserialize that URL and find the
@@ -1997,7 +1997,7 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
       Saves all of the records in the `ManyArray`.
        Example
        ```javascript
-      store.find('inbox', 1).then(function(inbox) {
+      store.findRecord('inbox', 1).then(function(inbox) {
         inbox.get('messages').then(function(messages) {
           messages.forEach(function(message) {
             message.set('isRead', true);
@@ -3097,7 +3097,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       came back from the server, except the user obtained them out of band and is informing
       the store of their existence. The most common use case is for supporting client side
       nested URLs, such as `/posts/1/comments/2` so the user can do
-      `store.find('comment', 2, {post:1})` without having to fetch the post.
+      `store.findRecord('comment', 2, { preload: { post: 1 } })` without having to fetch the post.
        Preloaded data can be attributes and relationships passed in either as IDs or as actual
       models.
        @method _preloadData
@@ -3470,7 +3470,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
        ```javascript
       var record = store.createRecord('model');
       record.get('isLoaded'); // true
-       store.find('model', 1).then(function(model) {
+       store.findRecord('model', 1).then(function(model) {
         model.get('isLoaded'); // true
       });
       ```
@@ -3488,7 +3488,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
        ```javascript
       var record = store.createRecord('model');
       record.get('hasDirtyAttributes'); // true
-       store.find('model', 1).then(function(model) {
+       store.findRecord('model', 1).then(function(model) {
         model.get('hasDirtyAttributes'); // false
         model.set('foo', 'some value');
         model.get('hasDirtyAttributes'); // true
@@ -3639,7 +3639,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
        ```javascript
       var record = store.createRecord('model');
       record.get('id'); // null
-       store.find('model', 1).then(function(model) {
+       store.findRecord('model', 1).then(function(model) {
         model.get('id'); // '1'
       });
       ```
@@ -4173,7 +4173,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
         } else if (userRef.remoteType() === "link") {
           var link = userRef.link();
         }
-         // load user (via store.find or store.findBelongsTo)
+         // load user (via store.findRecord or store.findBelongsTo)
         userRef.load().then(...)
          // or trigger a reload
         userRef.reload().then(...)
@@ -9251,12 +9251,12 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
     /**
       This method returns if a certain record is already loaded
-      in the store. Use this function to know beforehand if a find()
+      in the store. Use this function to know beforehand if a findRecord()
       will result in a request or that it will be a cache hit.
         Example
        ```javascript
       store.recordIsLoaded('post', 1); // false
-      store.find('post', 1).then(function() {
+      store.findRecord('post', 1).then(function() {
         store.recordIsLoaded('post', 1); // true
       });
       ```
@@ -10294,7 +10294,7 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     var snapshot = internalModel.createSnapshot(options);
     var promise = adapter.findRecord(store, typeClass, id, snapshot);
     var serializer = (0, _emberDataPrivateSystemStoreSerializers.serializerForAdapter)(store, adapter, internalModel.type.modelName);
-    var label = "DS: Handle Adapter#find of " + typeClass + " with id: " + id;
+    var label = "DS: Handle Adapter#findRecord of " + typeClass + " with id: " + id;
 
     promise = Promise.resolve(promise, label);
     promise = (0, _emberDataPrivateSystemStoreCommon._guard)(promise, (0, _emberDataPrivateSystemStoreCommon._bind)(_emberDataPrivateSystemStoreCommon._objectIsAlive, store));
@@ -15323,7 +15323,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+faafa436ca";
+  exports.default = "2.4.0-canary+bb36510408";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
