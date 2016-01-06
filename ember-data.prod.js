@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+3e2ee64d43
+ * @version   2.4.0-canary+faafa436ca
  */
 
 var define, requireModule, require, requirejs;
@@ -5790,6 +5790,11 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
 
       var store = get(this, 'store');
       var modelName = get(this, 'type.modelName');
+      var query = get(this, 'query');
+
+      if (query) {
+        return store.query(modelName, query, this);
+      }
 
       return store.findAll(modelName, { reload: true });
     },
@@ -9015,9 +9020,9 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @param {any} query an opaque query to be used by the adapter
       @return {Promise} promise
     */
-    query: function (modelName, query) {
+    query: function (modelName, query, array) {
       var typeClass = this.modelFor(modelName);
-      var array = this.recordArrayManager.createAdapterPopulatedRecordArray(typeClass, query);
+      array = array || this.recordArrayManager.createAdapterPopulatedRecordArray(typeClass, query);
 
       var adapter = this.adapterFor(modelName);
 
@@ -15318,7 +15323,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+3e2ee64d43";
+  exports.default = "2.4.0-canary+faafa436ca";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
