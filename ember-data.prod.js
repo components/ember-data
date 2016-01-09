@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+65d1e765f9
+ * @version   2.4.0-canary+9255531a9c
  */
 
 var define, requireModule, require, requirejs;
@@ -2558,7 +2558,7 @@ define("ember-data/-private/system/model/errors/invalid", ["exports", "ember"], 
 
   InvalidError.prototype = Object.create(EmberError.prototype);
 });
-define("ember-data/-private/system/model/internal-model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/merge", "ember-data/-private/system/model/states", "ember-data/-private/system/relationships/state/create", "ember-data/-private/system/snapshot", "ember-data/-private/system/empty-object", "ember-data/-private/utils", "ember-data/-private/system/references"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemMerge, _emberDataPrivateSystemModelStates, _emberDataPrivateSystemRelationshipsStateCreate, _emberDataPrivateSystemSnapshot, _emberDataPrivateSystemEmptyObject, _emberDataPrivateUtils, _emberDataPrivateSystemReferences) {
+define("ember-data/-private/system/model/internal-model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/merge", "ember-data/-private/system/model/states", "ember-data/-private/system/relationships/state/create", "ember-data/-private/system/snapshot", "ember-data/-private/system/empty-object", "ember-data/-private/features", "ember-data/-private/utils", "ember-data/-private/system/references"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemMerge, _emberDataPrivateSystemModelStates, _emberDataPrivateSystemRelationshipsStateCreate, _emberDataPrivateSystemSnapshot, _emberDataPrivateSystemEmptyObject, _emberDataPrivateFeatures, _emberDataPrivateUtils, _emberDataPrivateSystemReferences) {
   var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; })();
 
   exports.default = InternalModel;
@@ -3150,24 +3150,6 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       return value;
     },
 
-    referenceFor: function (type, name) {
-      var reference = this.references[name];
-
-      if (!reference) {
-        var relationship = this._relationships.get(name);
-
-        if (type === "belongsTo") {
-          reference = new _emberDataPrivateSystemReferences.BelongsToReference(this.store, this, relationship);
-        } else if (type === "hasMany") {
-          reference = new _emberDataPrivateSystemReferences.HasManyReference(this.store, this, relationship);
-        }
-
-        this.references[name] = reference;
-      }
-
-      return reference;
-    },
-
     /**
       @method updateRecordArrays
       @private
@@ -3385,6 +3367,27 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       }
     }
   };
+
+  if ((0, _emberDataPrivateFeatures.default)('ds-references')) {
+
+    InternalModel.prototype.referenceFor = function (type, name) {
+      var reference = this.references[name];
+
+      if (!reference) {
+        var relationship = this._relationships.get(name);
+
+        if (type === "belongsTo") {
+          reference = new _emberDataPrivateSystemReferences.BelongsToReference(this.store, this, relationship);
+        } else if (type === "hasMany") {
+          reference = new _emberDataPrivateSystemReferences.HasManyReference(this.store, this, relationship);
+        }
+
+        this.references[name] = reference;
+      }
+
+      return reference;
+    };
+  }
 });
 define("ember-data/-private/system/model/model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/model/errors", "ember-data/-private/features"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemModelErrors, _emberDataPrivateFeatures) {
 
@@ -15323,7 +15326,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+65d1e765f9";
+  exports.default = "2.4.0-canary+9255531a9c";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
