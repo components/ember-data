@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+4db536579a
+ * @version   2.4.0-canary+65d1e765f9
  */
 
 var define, requireModule, require, requirejs;
@@ -1427,16 +1427,6 @@ define('ember-data/-private/serializers/embedded-records-mixin', ['exports', 'em
       return serializer.normalize(modelClass, relationshipHash, null);
     }
   });
-});
-define('ember-data/-private/setup-container', ['exports', 'ember-data/-private/initializers/store', 'ember-data/-private/initializers/transforms', 'ember-data/-private/initializers/store-injections', 'ember-data/-private/initializers/data-adapter'], function (exports, _emberDataPrivateInitializersStore, _emberDataPrivateInitializersTransforms, _emberDataPrivateInitializersStoreInjections, _emberDataPrivateInitializersDataAdapter) {
-  exports.default = setupContainer;
-
-  function setupContainer(application) {
-    (0, _emberDataPrivateInitializersDataAdapter.default)(application);
-    (0, _emberDataPrivateInitializersTransforms.default)(application);
-    (0, _emberDataPrivateInitializersStoreInjections.default)(application);
-    (0, _emberDataPrivateInitializersStore.default)(application);
-  }
 });
 define("ember-data/-private/system/clone-null", ["exports", "ember-data/-private/system/empty-object"], function (exports, _emberDataPrivateSystemEmptyObject) {
   exports.default = cloneNull;
@@ -12843,7 +12833,7 @@ define("ember-data/attr", ["exports", "ember", "ember-data/-private/system/model
     }).meta(meta);
   }
 });
-define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/core", "ember-data/-private/ext/date", "ember-data/-private/system/normalize-model-name", "ember-data/-private/system/model/internal-model", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/store", "ember-data/-private/system/model", "ember-data/model", "ember-data/-private/system/snapshot", "ember-data/adapter", "ember-data/-private/system/serializer", "ember-data/-private/system/debug", "ember-data/-private/adapters/errors", "ember-data/-private/system/record-arrays", "ember-data/-private/system/many-array", "ember-data/-private/system/record-array-manager", "ember-data/-private/adapters", "ember-data/-private/adapters/build-url-mixin", "ember-data/-private/serializers", "ember-inflector", "ember-data/-private/serializers/embedded-records-mixin", "ember-data/-private/transforms", "ember-data/relationships", "ember-data/-private/setup-container", "ember-data/-private/instance-initializers/initialize-store-service", "ember-data/-private/system/container-proxy", "ember-data/-private/system/relationships/state/relationship"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateCore, _emberDataPrivateExtDate, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStore, _emberDataPrivateSystemModel, _emberDataModel, _emberDataPrivateSystemSnapshot, _emberDataAdapter, _emberDataPrivateSystemSerializer, _emberDataPrivateSystemDebug, _emberDataPrivateAdaptersErrors, _emberDataPrivateSystemRecordArrays, _emberDataPrivateSystemManyArray, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateAdapters, _emberDataPrivateAdaptersBuildUrlMixin, _emberDataPrivateSerializers, _emberInflector, _emberDataPrivateSerializersEmbeddedRecordsMixin, _emberDataPrivateTransforms, _emberDataRelationships, _emberDataPrivateSetupContainer, _emberDataPrivateInstanceInitializersInitializeStoreService, _emberDataPrivateSystemContainerProxy, _emberDataPrivateSystemRelationshipsStateRelationship) {
+define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/core", "ember-data/-private/ext/date", "ember-data/-private/system/normalize-model-name", "ember-data/-private/system/model/internal-model", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/store", "ember-data/-private/system/model", "ember-data/model", "ember-data/-private/system/snapshot", "ember-data/adapter", "ember-data/-private/system/serializer", "ember-data/-private/system/debug", "ember-data/-private/adapters/errors", "ember-data/-private/system/record-arrays", "ember-data/-private/system/many-array", "ember-data/-private/system/record-array-manager", "ember-data/-private/adapters", "ember-data/-private/adapters/build-url-mixin", "ember-data/-private/serializers", "ember-inflector", "ember-data/-private/serializers/embedded-records-mixin", "ember-data/-private/transforms", "ember-data/relationships", "ember-data/setup-container", "ember-data/-private/instance-initializers/initialize-store-service", "ember-data/-private/system/container-proxy", "ember-data/-private/system/relationships/state/relationship"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateCore, _emberDataPrivateExtDate, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStore, _emberDataPrivateSystemModel, _emberDataModel, _emberDataPrivateSystemSnapshot, _emberDataAdapter, _emberDataPrivateSystemSerializer, _emberDataPrivateSystemDebug, _emberDataPrivateAdaptersErrors, _emberDataPrivateSystemRecordArrays, _emberDataPrivateSystemManyArray, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateAdapters, _emberDataPrivateAdaptersBuildUrlMixin, _emberDataPrivateSerializers, _emberInflector, _emberDataPrivateSerializersEmbeddedRecordsMixin, _emberDataPrivateTransforms, _emberDataRelationships, _emberDataSetupContainer, _emberDataPrivateInstanceInitializersInitializeStoreService, _emberDataPrivateSystemContainerProxy, _emberDataPrivateSystemRelationshipsStateRelationship) {
   /**
     Ember Data
     @module ember-data
@@ -12919,7 +12909,7 @@ define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-da
 
   _emberDataPrivateCore.default.ContainerProxy = _emberDataPrivateSystemContainerProxy.default;
 
-  _emberDataPrivateCore.default._setupContainer = _emberDataPrivateSetupContainer.default;
+  _emberDataPrivateCore.default._setupContainer = _emberDataSetupContainer.default;
   _emberDataPrivateCore.default._initializeStoreService = _emberDataPrivateInstanceInitializersInitializeStoreService.default;
 
   Object.defineProperty(_emberDataPrivateCore.default, 'normalizeModelName', {
@@ -15472,6 +15462,16 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
 /**
   @module ember-data
 */
+define('ember-data/setup-container', ['exports', 'ember-data/-private/initializers/store', 'ember-data/-private/initializers/transforms', 'ember-data/-private/initializers/store-injections', 'ember-data/-private/initializers/data-adapter'], function (exports, _emberDataPrivateInitializersStore, _emberDataPrivateInitializersTransforms, _emberDataPrivateInitializersStoreInjections, _emberDataPrivateInitializersDataAdapter) {
+  exports.default = setupContainer;
+
+  function setupContainer(application) {
+    (0, _emberDataPrivateInitializersDataAdapter.default)(application);
+    (0, _emberDataPrivateInitializersTransforms.default)(application);
+    (0, _emberDataPrivateInitializersStoreInjections.default)(application);
+    (0, _emberDataPrivateInitializersStore.default)(application);
+  }
+});
 define("ember-data/store", ["exports", "ember-data/-private/system/store"], function (exports, _emberDataPrivateSystemStore) {
   exports.default = _emberDataPrivateSystemStore.default;
 });
@@ -15547,7 +15547,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+4db536579a";
+  exports.default = "2.4.0-canary+65d1e765f9";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
