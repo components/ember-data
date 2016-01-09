@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-canary+9255531a9c
+ * @version   2.4.0-canary+e926b263e2
  */
 
 var define, requireModule, require, requirejs;
@@ -1452,7 +1452,7 @@ define('ember-data/-private/system/coerce-id', ['exports'], function (exports) {
 define('ember-data/-private/system/container-proxy', ['exports', 'ember-data/-private/debug'], function (exports, _emberDataPrivateDebug) {
   exports.default = ContainerProxy;
 
-  /**
+  /*
     This is used internally to enable deprecation of container paths and provide
     a decent message to the user indicating how to fix the issue.
   
@@ -1515,7 +1515,7 @@ define('ember-data/-private/system/debug/debug-adapter', ['exports', 'ember', 'e
   var underscore = _ember.default.String.underscore;
   var assert = _ember.default.assert;
 
-  /**
+  /*
     Extend `Ember.DataAdapter` with ED specific code.
   
     @class DebugAdapter
@@ -2586,7 +2586,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
   }
 
   var guid = 0;
-  /**
+  /*
     `InternalModel` is the Model class that we use internally inside Ember Data to represent models.
     Internal ED methods should only deal with `InternalModel` objects. It is a fast, plain Javascript class.
   
@@ -2599,6 +2599,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     We need to make sure that the properties from `InternalModel` are correctly exposed/proxied on `Model`
     if they are needed.
   
+    @private
     @class InternalModel
   */
 
@@ -2782,7 +2783,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       }
     },
 
-    /**
+    /*
       @method createSnapshot
       @private
     */
@@ -2790,7 +2791,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       return new _emberDataPrivateSystemSnapshot.default(this, options);
     },
 
-    /**
+    /*
       @method loadingData
       @private
       @param {Promise} promise
@@ -2799,7 +2800,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this.send('loadingData', promise);
     },
 
-    /**
+    /*
       @method loadedData
       @private
     */
@@ -2808,7 +2809,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this.didInitalizeData();
     },
 
-    /**
+    /*
       @method notFound
       @private
     */
@@ -2816,7 +2817,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this.send('notFound');
     },
 
-    /**
+    /*
       @method pushedData
       @private
     */
@@ -2833,7 +2834,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       return Object.keys(this._attributes).length > 0;
     },
 
-    /**
+    /*
       Checks if the attributes which are considered as changed are still
       different to the state which is acknowledged by the server.
        This method is needed when data for the internal model is pushed and the
@@ -2859,7 +2860,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       }
     },
 
-    /**
+    /*
       Returns an object, whose keys are changed properties, and value is an
       [oldProp, newProp] array.
        @method changedAttributes
@@ -2882,7 +2883,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       return diffData;
     },
 
-    /**
+    /*
       @method adapterWillCommit
       @private
     */
@@ -2890,7 +2891,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this.send('willCommit');
     },
 
-    /**
+    /*
       @method adapterDidDirty
       @private
     */
@@ -2899,7 +2900,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this.updateRecordArraysLater();
     },
 
-    /**
+    /*
       @method send
       @private
       @param {String} name
@@ -2969,7 +2970,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
 
       this.record._notifyProperties(dirtyKeys);
     },
-    /**
+    /*
       @method transitionTo
       @private
       @param {String} name
@@ -3061,7 +3062,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
 
       this._deferredTriggers.length = 0;
     },
-    /**
+    /*
       @method clearRelationships
       @private
     */
@@ -3081,7 +3082,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       });
     },
 
-    /**
+    /*
       When a find request is triggered on the store, the user can optionally pass in
       attributes and relationships to be preloaded. These are meant to behave as if they
       came back from the server, except the user obtained them out of band and is informing
@@ -3150,7 +3151,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       return value;
     },
 
-    /**
+    /*
       @method updateRecordArrays
       @private
     */
@@ -3189,7 +3190,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         });
       }
     },
-    /**
+    /*
       If the adapter did not return a hash in response to a commit,
       merge the changed attributes and relationships into the existing
       saved data.
@@ -3220,7 +3221,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this.record._notifyProperties(changedKeys);
     },
 
-    /**
+    /*
       @method updateRecordArraysLater
       @private
     */
@@ -3257,7 +3258,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
 
     // FOR USE DURING COMMIT PROCESS
 
-    /**
+    /*
       @method adapterDidInvalidate
       @private
     */
@@ -3275,7 +3276,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this._saveWasRejected();
     },
 
-    /**
+    /*
       @method adapterDidError
       @private
     */
@@ -3295,7 +3296,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this._inFlightAttributes = new _emberDataPrivateSystemEmptyObject.default();
     },
 
-    /**
+    /*
       Ember Data has 3 buckets for storing the value of an attribute on an internalModel.
        `_data` holds all of the attributes that have been acknowledged by
       a backend via the adapter. When rollbackAttributes is called on a model all
@@ -15326,7 +15327,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-canary+9255531a9c";
+  exports.default = "2.4.0-canary+e926b263e2";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
