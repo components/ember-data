@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2015 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   v2.3.0-beta.5
+ * @version   v2.3.0
  */
 
 var define, requireModule, require, requirejs;
@@ -1434,16 +1434,6 @@ define('ember-data/-private/serializers/embedded-records-mixin', ['exports', 'em
     }
   });
 });
-define('ember-data/-private/setup-container', ['exports', 'ember-data/-private/initializers/store', 'ember-data/-private/initializers/transforms', 'ember-data/-private/initializers/store-injections', 'ember-data/-private/initializers/data-adapter'], function (exports, _emberDataPrivateInitializersStore, _emberDataPrivateInitializersTransforms, _emberDataPrivateInitializersStoreInjections, _emberDataPrivateInitializersDataAdapter) {
-  exports.default = setupContainer;
-
-  function setupContainer(application) {
-    (0, _emberDataPrivateInitializersDataAdapter.default)(application);
-    (0, _emberDataPrivateInitializersTransforms.default)(application);
-    (0, _emberDataPrivateInitializersStoreInjections.default)(application);
-    (0, _emberDataPrivateInitializersStore.default)(application);
-  }
-});
 define("ember-data/-private/system/clone-null", ["exports", "ember-data/-private/system/empty-object"], function (exports, _emberDataPrivateSystemEmptyObject) {
   exports.default = cloneNull;
 
@@ -1458,7 +1448,7 @@ define("ember-data/-private/system/clone-null", ["exports", "ember-data/-private
 define('ember-data/-private/system/coerce-id', ['exports'], function (exports) {
   exports.default = coerceId;
   // Used by the store to normalize IDs entering the store.  Despite the fact
-  // that developers may provide IDs as numbers (e.g., `store.find(Person, 1)`),
+  // that developers may provide IDs as numbers (e.g., `store.findRecord('person', 1)`),
   // it is important that internally we use strings, since IDs may be serialized
   // and lose type information.  For example, Ember's router may put a record's
   // ID into the URL, and if we later try to deserialize that URL and find the
@@ -1471,7 +1461,7 @@ define('ember-data/-private/system/coerce-id', ['exports'], function (exports) {
 define('ember-data/-private/system/container-proxy', ['exports', 'ember-data/-private/debug'], function (exports, _emberDataPrivateDebug) {
   exports.default = ContainerProxy;
 
-  /**
+  /*
     This is used internally to enable deprecation of container paths and provide
     a decent message to the user indicating how to fix the issue.
   
@@ -1539,7 +1529,7 @@ define('ember-data/-private/system/debug/debug-adapter', ['exports', 'ember', 'e
   var underscore = _ember.default.String.underscore;
   var assert = _ember.default.assert;
 
-  /**
+  /*
     Extend `Ember.DataAdapter` with ED specific code.
   
     @class DebugAdapter
@@ -2010,7 +2000,7 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
       Saves all of the records in the `ManyArray`.
        Example
        ```javascript
-      store.find('inbox', 1).then(function(inbox) {
+      store.findRecord('inbox', 1).then(function(inbox) {
         inbox.get('messages').then(function(messages) {
           messages.forEach(function(message) {
             message.set('isRead', true);
@@ -2547,7 +2537,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
   }
 
   var guid = 0;
-  /**
+  /*
     `InternalModel` is the Model class that we use internally inside Ember Data to represent models.
     Internal ED methods should only deal with `InternalModel` objects. It is a fast, plain Javascript class.
   
@@ -2560,6 +2550,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     We need to make sure that the properties from `InternalModel` are correctly exposed/proxied on `Model`
     if they are needed.
   
+    @private
     @class InternalModel
   */
 
@@ -2742,7 +2733,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       }
     },
 
-    /**
+    /*
       @method createSnapshot
       @private
     */
@@ -2753,7 +2744,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       return snapshot;
     },
 
-    /**
+    /*
       @method loadingData
       @private
       @param {Promise} promise
@@ -2762,7 +2753,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this.send('loadingData', promise);
     },
 
-    /**
+    /*
       @method loadedData
       @private
     */
@@ -2771,7 +2762,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this.didInitalizeData();
     },
 
-    /**
+    /*
       @method notFound
       @private
     */
@@ -2779,7 +2770,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this.send('notFound');
     },
 
-    /**
+    /*
       @method pushedData
       @private
     */
@@ -2796,7 +2787,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       return Object.keys(this._attributes).length > 0;
     },
 
-    /**
+    /*
       Checks if the attributes which are considered as changed are still
       different to the state which is acknowledged by the server.
        This method is needed when data for the internal model is pushed and the
@@ -2821,7 +2812,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       }
     },
 
-    /**
+    /*
       Returns an object, whose keys are changed properties, and value is an
       [oldProp, newProp] array.
        @private
@@ -2843,7 +2834,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       return diffData;
     },
 
-    /**
+    /*
       @method adapterWillCommit
       @private
     */
@@ -2851,7 +2842,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this.send('willCommit');
     },
 
-    /**
+    /*
       @method adapterDidDirty
       @private
     */
@@ -2860,7 +2851,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this.updateRecordArraysLater();
     },
 
-    /**
+    /*
       @method send
       @private
       @param {String} name
@@ -2930,7 +2921,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
 
       this.record._notifyProperties(dirtyKeys);
     },
-    /**
+    /*
       @method transitionTo
       @private
       @param {String} name
@@ -3022,7 +3013,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
 
       this._deferredTriggers.length = 0;
     },
-    /**
+    /*
       @method clearRelationships
       @private
     */
@@ -3042,13 +3033,13 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       });
     },
 
-    /**
+    /*
       When a find request is triggered on the store, the user can optionally pass in
       attributes and relationships to be preloaded. These are meant to behave as if they
       came back from the server, except the user obtained them out of band and is informing
       the store of their existence. The most common use case is for supporting client side
       nested URLs, such as `/posts/1/comments/2` so the user can do
-      `store.find('comment', 2, {post:1})` without having to fetch the post.
+      `store.findRecord('comment', 2, { preload: { post: 1 } })` without having to fetch the post.
        Preloaded data can be attributes and relationships passed in either as IDs or as actual
       models.
        @method _preloadData
@@ -3110,7 +3101,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       return value;
     },
 
-    /**
+    /*
       @method updateRecordArrays
       @private
     */
@@ -3150,7 +3141,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         });
       }
     },
-    /**
+    /*
       If the adapter did not return a hash in response to a commit,
       merge the changed attributes and relationships into the existing
       saved data.
@@ -3181,7 +3172,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this.record._notifyProperties(changedKeys);
     },
 
-    /**
+    /*
       @method updateRecordArraysLater
       @private
     */
@@ -3211,7 +3202,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
 
     // FOR USE DURING COMMIT PROCESS
 
-    /**
+    /*
       @method adapterDidInvalidate
       @private
     */
@@ -3229,7 +3220,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this._saveWasRejected();
     },
 
-    /**
+    /*
       @method adapterDidError
       @private
     */
@@ -3249,7 +3240,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this._inFlightAttributes = new _emberDataPrivateSystemEmptyObject.default();
     },
 
-    /**
+    /*
       Ember Data has 3 buckets for storing the value of an attribute on an internalModel.
        `_data` holds all of the attributes that have been acknowledged by
       a backend via the adapter. When rollbackAttributes is called on a model all
@@ -3396,7 +3387,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
        ```javascript
       var record = store.createRecord('model');
       record.get('isLoaded'); // true
-       store.find('model', 1).then(function(model) {
+       store.findRecord('model', 1).then(function(model) {
         model.get('isLoaded'); // true
       });
       ```
@@ -3414,7 +3405,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
        ```javascript
       var record = store.createRecord('model');
       record.get('hasDirtyAttributes'); // true
-       store.find('model', 1).then(function(model) {
+       store.findRecord('model', 1).then(function(model) {
         model.get('hasDirtyAttributes'); // false
         model.set('foo', 'some value');
         model.get('hasDirtyAttributes'); // true
@@ -3565,7 +3556,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
        ```javascript
       var record = store.createRecord('model');
       record.get('id'); // null
-       store.find('model', 1).then(function(model) {
+       store.findRecord('model', 1).then(function(model) {
         model.get('id'); // '1'
       });
       ```
@@ -5330,17 +5321,21 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember-dat
 
       // unregister filtered record array
       var recordArrays = this.filteredRecordArrays.get(typeClass);
-      var index = recordArrays.indexOf(array);
-      if (index !== -1) {
-        recordArrays.splice(index, 1);
+      var removedFromFiltered = remove(recordArrays, array);
+
+      // remove from adapter populated record array
+      var removedFromAdapterPopulated = remove(this._adapterPopulatedRecordArrays, array);
+
+      if (!removedFromFiltered && !removedFromAdapterPopulated) {
 
         // unregister live record array
-      } else if (this.liveRecordArrays.has(typeClass)) {
+        if (this.liveRecordArrays.has(typeClass)) {
           var liveRecordArrayForType = this.liveRecordArrayFor(typeClass);
           if (array === liveRecordArrayForType) {
             this.liveRecordArrays.delete(typeClass);
           }
         }
+      }
     },
 
     willDestroy: function () {
@@ -5367,6 +5362,17 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember-dat
     }
 
     return result;
+  }
+
+  function remove(array, item) {
+    var index = array.indexOf(item);
+
+    if (index !== -1) {
+      array.splice(index, 1);
+      return true;
+    }
+
+    return false;
   }
 });
 /**
@@ -5600,6 +5606,11 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
 
       var store = get(this, 'store');
       var modelName = get(this, 'type.modelName');
+      var query = get(this, 'query');
+
+      if (query) {
+        return store._query(modelName, query, this);
+      }
 
       return store.findAll(modelName, { reload: true });
     },
@@ -8586,9 +8597,13 @@ define("ember-data/-private/system/store", ["exports", "ember", "ember-data/-pri
       @return {Promise} promise
     */
     query: function (modelName, query) {
+      return this._query(modelName, query);
+    },
+
+    _query: function (modelName, query, array) {
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember.default.inspect(modelName), typeof modelName === 'string');
       var typeClass = this.modelFor(modelName);
-      var array = this.recordArrayManager.createAdapterPopulatedRecordArray(typeClass, query);
+      array = array || this.recordArrayManager.createAdapterPopulatedRecordArray(typeClass, query);
 
       var adapter = this.adapterFor(modelName);
 
@@ -8835,12 +8850,12 @@ define("ember-data/-private/system/store", ["exports", "ember", "ember-data/-pri
 
     /**
       This method returns if a certain record is already loaded
-      in the store. Use this function to know beforehand if a find()
+      in the store. Use this function to know beforehand if a findRecord()
       will result in a request or that it will be a cache hit.
         Example
        ```javascript
       store.recordIsLoaded('post', 1); // false
-      store.find('post', 1).then(function() {
+      store.findRecord('post', 1).then(function() {
         store.recordIsLoaded('post', 1); // true
       });
       ```
@@ -9874,7 +9889,7 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     var snapshot = internalModel.createSnapshot(options);
     var promise = adapter.findRecord(store, typeClass, id, snapshot);
     var serializer = (0, _emberDataPrivateSystemStoreSerializers.serializerForAdapter)(store, adapter, internalModel.type.modelName);
-    var label = "DS: Handle Adapter#find of " + typeClass + " with id: " + id;
+    var label = "DS: Handle Adapter#findRecord of " + typeClass + " with id: " + id;
 
     promise = Promise.resolve(promise, label);
     promise = (0, _emberDataPrivateSystemStoreCommon._guard)(promise, (0, _emberDataPrivateSystemStoreCommon._bind)(_emberDataPrivateSystemStoreCommon._objectIsAlive, store));
@@ -12204,7 +12219,7 @@ define("ember-data/attr", ["exports", "ember", "ember-data/-private/system/model
     }).meta(meta);
   }
 });
-define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/core", "ember-data/-private/ext/date", "ember-data/-private/system/normalize-model-name", "ember-data/-private/system/model/internal-model", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/store", "ember-data/-private/system/model", "ember-data/model", "ember-data/-private/system/snapshot", "ember-data/adapter", "ember-data/-private/system/serializer", "ember-data/-private/system/debug", "ember-data/-private/adapters/errors", "ember-data/-private/system/record-arrays", "ember-data/-private/system/many-array", "ember-data/-private/system/record-array-manager", "ember-data/-private/adapters", "ember-data/-private/adapters/build-url-mixin", "ember-data/-private/serializers", "ember-inflector", "ember-data/-private/serializers/embedded-records-mixin", "ember-data/-private/transforms", "ember-data/relationships", "ember-data/-private/setup-container", "ember-data/-private/instance-initializers/initialize-store-service", "ember-data/-private/system/container-proxy", "ember-data/-private/system/relationships/state/relationship"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateCore, _emberDataPrivateExtDate, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStore, _emberDataPrivateSystemModel, _emberDataModel, _emberDataPrivateSystemSnapshot, _emberDataAdapter, _emberDataPrivateSystemSerializer, _emberDataPrivateSystemDebug, _emberDataPrivateAdaptersErrors, _emberDataPrivateSystemRecordArrays, _emberDataPrivateSystemManyArray, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateAdapters, _emberDataPrivateAdaptersBuildUrlMixin, _emberDataPrivateSerializers, _emberInflector, _emberDataPrivateSerializersEmbeddedRecordsMixin, _emberDataPrivateTransforms, _emberDataRelationships, _emberDataPrivateSetupContainer, _emberDataPrivateInstanceInitializersInitializeStoreService, _emberDataPrivateSystemContainerProxy, _emberDataPrivateSystemRelationshipsStateRelationship) {
+define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/core", "ember-data/-private/ext/date", "ember-data/-private/system/normalize-model-name", "ember-data/-private/system/model/internal-model", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/store", "ember-data/-private/system/model", "ember-data/model", "ember-data/-private/system/snapshot", "ember-data/adapter", "ember-data/-private/system/serializer", "ember-data/-private/system/debug", "ember-data/-private/adapters/errors", "ember-data/-private/system/record-arrays", "ember-data/-private/system/many-array", "ember-data/-private/system/record-array-manager", "ember-data/-private/adapters", "ember-data/-private/adapters/build-url-mixin", "ember-data/-private/serializers", "ember-inflector", "ember-data/-private/serializers/embedded-records-mixin", "ember-data/-private/transforms", "ember-data/relationships", "ember-data/setup-container", "ember-data/-private/instance-initializers/initialize-store-service", "ember-data/-private/system/container-proxy", "ember-data/-private/system/relationships/state/relationship"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateCore, _emberDataPrivateExtDate, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStore, _emberDataPrivateSystemModel, _emberDataModel, _emberDataPrivateSystemSnapshot, _emberDataAdapter, _emberDataPrivateSystemSerializer, _emberDataPrivateSystemDebug, _emberDataPrivateAdaptersErrors, _emberDataPrivateSystemRecordArrays, _emberDataPrivateSystemManyArray, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateAdapters, _emberDataPrivateAdaptersBuildUrlMixin, _emberDataPrivateSerializers, _emberInflector, _emberDataPrivateSerializersEmbeddedRecordsMixin, _emberDataPrivateTransforms, _emberDataRelationships, _emberDataSetupContainer, _emberDataPrivateInstanceInitializersInitializeStoreService, _emberDataPrivateSystemContainerProxy, _emberDataPrivateSystemRelationshipsStateRelationship) {
   /**
     Ember Data
     @module ember-data
@@ -12280,7 +12295,7 @@ define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-da
 
   _emberDataPrivateCore.default.ContainerProxy = _emberDataPrivateSystemContainerProxy.default;
 
-  _emberDataPrivateCore.default._setupContainer = _emberDataPrivateSetupContainer.default;
+  _emberDataPrivateCore.default._setupContainer = _emberDataSetupContainer.default;
   _emberDataPrivateCore.default._initializeStoreService = _emberDataPrivateInstanceInitializersInitializeStoreService.default;
 
   Object.defineProperty(_emberDataPrivateCore.default, 'normalizeModelName', {
@@ -14833,6 +14848,16 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
 /**
   @module ember-data
 */
+define('ember-data/setup-container', ['exports', 'ember-data/-private/initializers/store', 'ember-data/-private/initializers/transforms', 'ember-data/-private/initializers/store-injections', 'ember-data/-private/initializers/data-adapter'], function (exports, _emberDataPrivateInitializersStore, _emberDataPrivateInitializersTransforms, _emberDataPrivateInitializersStoreInjections, _emberDataPrivateInitializersDataAdapter) {
+  exports.default = setupContainer;
+
+  function setupContainer(application) {
+    (0, _emberDataPrivateInitializersDataAdapter.default)(application);
+    (0, _emberDataPrivateInitializersTransforms.default)(application);
+    (0, _emberDataPrivateInitializersStoreInjections.default)(application);
+    (0, _emberDataPrivateInitializersStore.default)(application);
+  }
+});
 define("ember-data/store", ["exports", "ember-data/-private/system/store"], function (exports, _emberDataPrivateSystemStore) {
   exports.default = _emberDataPrivateSystemStore.default;
 });
@@ -14908,7 +14933,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "v2.3.0-beta.5";
+  exports.default = "v2.3.0";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
