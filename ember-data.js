@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.5.0-canary+1e5831ba7a
+ * @version   2.5.0-canary+b050b0fd38
  */
 
 var define, requireModule, require, requirejs;
@@ -2040,26 +2040,6 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
 /**
   @module ember-data
 */
-define('ember-data/-private/system/merge', ['exports'], function (exports) {
-  exports.default = merge;
-
-  function merge(original, updates) {
-    if (!updates || typeof updates !== 'object') {
-      return original;
-    }
-
-    var props = Object.keys(updates);
-    var prop;
-    var length = props.length;
-
-    for (var i = 0; i < length; i++) {
-      prop = props[i];
-      original[prop] = updates[prop];
-    }
-
-    return original;
-  }
-});
 define("ember-data/-private/system/model", ["exports", "ember-data/-private/system/model/model", "ember-data/attr", "ember-data/-private/system/model/states", "ember-data/-private/system/model/errors"], function (exports, _emberDataPrivateSystemModelModel, _emberDataAttr, _emberDataPrivateSystemModelStates, _emberDataPrivateSystemModelErrors) {
   exports.RootState = _emberDataPrivateSystemModelStates.default;
   exports.attr = _emberDataAttr.default;
@@ -2580,7 +2560,7 @@ define("ember-data/-private/system/model/errors/invalid", ["exports", "ember"], 
 
   InvalidError.prototype = Object.create(EmberError.prototype);
 });
-define("ember-data/-private/system/model/internal-model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/merge", "ember-data/-private/system/model/states", "ember-data/-private/system/relationships/state/create", "ember-data/-private/system/snapshot", "ember-data/-private/system/empty-object", "ember-data/-private/features", "ember-data/-private/utils", "ember-data/-private/system/references"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemMerge, _emberDataPrivateSystemModelStates, _emberDataPrivateSystemRelationshipsStateCreate, _emberDataPrivateSystemSnapshot, _emberDataPrivateSystemEmptyObject, _emberDataPrivateFeatures, _emberDataPrivateUtils, _emberDataPrivateSystemReferences) {
+define("ember-data/-private/system/model/internal-model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/model/states", "ember-data/-private/system/relationships/state/create", "ember-data/-private/system/snapshot", "ember-data/-private/system/empty-object", "ember-data/-private/features", "ember-data/-private/utils", "ember-data/-private/system/references"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemModelStates, _emberDataPrivateSystemRelationshipsStateCreate, _emberDataPrivateSystemSnapshot, _emberDataPrivateSystemEmptyObject, _emberDataPrivateFeatures, _emberDataPrivateUtils, _emberDataPrivateSystemReferences) {
   var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; })();
 
   exports.default = InternalModel;
@@ -2589,6 +2569,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
   var get = _ember.default.get;
   var set = _ember.default.set;
   var copy = _ember.default.copy;
+  var merge = _ember.default.merge;
 
   var _extractPivotNameCache = new _emberDataPrivateSystemEmptyObject.default();
   var _splitOnDotCache = new _emberDataPrivateSystemEmptyObject.default();
@@ -2781,7 +2762,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
 
     setupData: function (data) {
       var changedKeys = this._changedKeys(data.attributes);
-      (0, _emberDataPrivateSystemMerge.default)(this._data, data.attributes);
+      merge(this._data, data.attributes);
       this.pushedData();
       if (this.record) {
         this.record._notifyProperties(changedKeys);
@@ -2893,7 +2874,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       var oldData = this._data;
       var currentData = this._attributes;
       var inFlightData = this._inFlightAttributes;
-      var newData = (0, _emberDataPrivateSystemMerge.default)(copy(inFlightData), currentData);
+      var newData = merge(copy(inFlightData), currentData);
       var diffData = new _emberDataPrivateSystemEmptyObject.default();
 
       var newDataKeys = Object.keys(newData);
@@ -3229,9 +3210,9 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this.didCleanError();
       var changedKeys = this._changedKeys(data);
 
-      (0, _emberDataPrivateSystemMerge.default)(this._data, this._inFlightAttributes);
+      merge(this._data, this._inFlightAttributes);
       if (data) {
-        (0, _emberDataPrivateSystemMerge.default)(this._data, data);
+        merge(this._data, data);
       }
 
       this._inFlightAttributes = new _emberDataPrivateSystemEmptyObject.default();
@@ -3361,8 +3342,8 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         var keys = Object.keys(updates);
         var length = keys.length;
 
-        original = (0, _emberDataPrivateSystemMerge.default)(new _emberDataPrivateSystemEmptyObject.default(), this._data);
-        original = (0, _emberDataPrivateSystemMerge.default)(original, this._inFlightAttributes);
+        original = merge(new _emberDataPrivateSystemEmptyObject.default(), this._data);
+        original = merge(original, this._inFlightAttributes);
 
         for (i = 0; i < length; i++) {
           key = keys[i];
@@ -10308,9 +10289,6 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
   exports.Store = Store;
   exports.default = Store;
 });
-/*globals Ember*/
-/*jshint eqnull:true*/
-
 /**
   @module ember-data
 */
@@ -15555,7 +15533,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.5.0-canary+1e5831ba7a";
+  exports.default = "2.5.0-canary+b050b0fd38";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
