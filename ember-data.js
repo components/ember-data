@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.5.0-canary+b050b0fd38
+ * @version   2.5.0-canary+a6b77164fa
  */
 
 var define, requireModule, require, requirejs;
@@ -5610,22 +5610,18 @@ define("ember-data/-private/system/record-arrays/adapter-populated-record-array"
     /**
       @method loadRecords
       @param {Array} records
+      @param {Object} payload normalized payload
       @private
     */
-    loadRecords: function (records) {
+    loadRecords: function (records, payload) {
       var _this = this;
-
-      var store = get(this, 'store');
-      var type = get(this, 'type');
-      var modelName = type.modelName;
-      var meta = store._metadataFor(modelName);
 
       //TODO Optimize
       var internalModels = _ember.default.A(records).mapBy('_internalModel');
       this.setProperties({
         content: _ember.default.A(internalModels),
         isLoaded: true,
-        meta: (0, _emberDataPrivateSystemCloneNull.default)(meta)
+        meta: (0, _emberDataPrivateSystemCloneNull.default)(payload.meta)
       });
 
       internalModels.forEach(function (record) {
@@ -9379,30 +9375,6 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       return this.hasRecordForId(modelName, id);
     },
 
-    /**
-      @method _metadataFor
-      @param {String} modelName
-      @return {object}
-      @private
-    */
-    _metadataFor: function (modelName) {
-      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember.default.inspect(modelName), typeof modelName === 'string');
-      var typeClass = this.modelFor(modelName);
-      return this.typeMapFor(typeClass).metadata;
-    },
-
-    /**
-      @method _setMetadataFor
-      @param {String} modelName
-      @param {Object} metadata metadata to set
-      @private
-    */
-    _setMetadataFor: function (modelName, metadata) {
-      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember.default.inspect(modelName), typeof modelName === 'string');
-      var typeClass = this.modelFor(modelName);
-      _ember.default.merge(this.typeMapFor(typeClass).metadata, metadata);
-    },
-
     // ............
     // . UPDATING .
     // ............
@@ -10572,15 +10544,15 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     promise = (0, _emberDataPrivateSystemStoreCommon._guard)(promise, (0, _emberDataPrivateSystemStoreCommon._bind)(_emberDataPrivateSystemStoreCommon._objectIsAlive, store));
 
     return promise.then(function (adapterPayload) {
-      var records;
+      var records, payload;
       store._adapterRun(function () {
-        var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, null, 'query');
+        payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, null, 'query');
         //TODO Optimize
         records = store.push(payload);
       });
 
       (0, _emberDataPrivateDebug.assert)('The response to store.query is expected to be an array but it was a single record. Please wrap your response in an array or use `store.queryRecord` to query for a single record.', _ember.default.isArray(records));
-      recordArray.loadRecords(records);
+      recordArray.loadRecords(records, payload);
       return recordArray;
     }, null, "DS: Extract payload of query " + typeClass);
   }
@@ -10690,10 +10662,6 @@ define('ember-data/-private/system/store/serializer-response', ['exports', 'embe
       validationErrors = validateDocumentStructure(normalizedResponse);
     });
     (0, _emberDataPrivateDebug.assert)('normalizeResponse must return a valid JSON API document:\n\t* ' + validationErrors.join('\n\t* '), _ember.default.isEmpty(validationErrors));
-    // TODO: Remove after metadata refactor
-    if (normalizedResponse.meta) {
-      store._setMetadataFor(modelClass.modelName, normalizedResponse.meta);
-    }
 
     return normalizedResponse;
   }
@@ -15533,7 +15501,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.5.0-canary+b050b0fd38";
+  exports.default = "2.5.0-canary+a6b77164fa";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
