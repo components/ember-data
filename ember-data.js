@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-beta.1+1af6c126ba
+ * @version   2.4.0-beta.1+9f90e4e934
  */
 
 var define, requireModule, require, requirejs;
@@ -1511,7 +1511,7 @@ define('ember-data/-private/system/container-proxy', ['exports', 'ember-data/-pr
     }
   };
 });
-define("ember-data/-private/system/debug", ["exports", "ember-data/-private/system/debug/debug-info", "ember-data/-private/system/debug/debug-adapter"], function (exports, _emberDataPrivateSystemDebugDebugInfo, _emberDataPrivateSystemDebugDebugAdapter) {
+define("ember-data/-private/system/debug", ["exports", "ember-data/-private/system/debug/debug-adapter"], function (exports, _emberDataPrivateSystemDebugDebugAdapter) {
   exports.default = _emberDataPrivateSystemDebugDebugAdapter.default;
 });
 /**
@@ -1650,9 +1650,8 @@ define('ember-data/-private/system/debug/debug-adapter', ['exports', 'ember', 'e
 /**
   @module ember-data
 */
-define('ember-data/-private/system/debug/debug-info', ['exports', 'ember-data/model'], function (exports, _emberDataModel) {
-
-  _emberDataModel.default.reopen({
+define('ember-data/-private/system/debug/debug-info', ['exports', 'ember'], function (exports, _ember) {
+  exports.default = _ember.default.Mixin.create({
 
     /**
       Provides info about the model for debugging purposes
@@ -1709,8 +1708,6 @@ define('ember-data/-private/system/debug/debug-info', ['exports', 'ember-data/mo
       };
     }
   });
-
-  exports.default = _emberDataModel.default;
 });
 define("ember-data/-private/system/empty-object", ["exports"], function (exports) {
   exports.default = EmptyObject;
@@ -2069,6 +2066,198 @@ define("ember-data/-private/system/model", ["exports", "ember-data/-private/syst
 /**
   @module ember-data
 */
+define("ember-data/-private/system/model/attr", ["exports", "ember", "ember-data/-private/debug"], function (exports, _ember, _emberDataPrivateDebug) {
+
+  var get = _ember.default.get;
+  var Map = _ember.default.Map;
+
+  /**
+    @module ember-data
+  */
+
+  /**
+    @class Model
+    @namespace DS
+  */
+
+  var AttrClassMethodsMixin = _ember.default.Mixin.create({
+    /**
+      A map whose keys are the attributes of the model (properties
+      described by DS.attr) and whose values are the meta object for the
+      property.
+       Example
+       ```app/models/person.js
+      import DS from 'ember-data';
+       export default DS.Model.extend({
+        firstName: attr('string'),
+        lastName: attr('string'),
+        birthday: attr('date')
+      });
+      ```
+       ```javascript
+      import Ember from 'ember';
+      import Person from 'app/models/person';
+       var attributes = Ember.get(Person, 'attributes')
+       attributes.forEach(function(meta, name) {
+        console.log(name, meta);
+      });
+       // prints:
+      // firstName {type: "string", isAttribute: true, options: Object, parentType: function, name: "firstName"}
+      // lastName {type: "string", isAttribute: true, options: Object, parentType: function, name: "lastName"}
+      // birthday {type: "date", isAttribute: true, options: Object, parentType: function, name: "birthday"}
+      ```
+       @property attributes
+      @static
+      @type {Ember.Map}
+      @readOnly
+    */
+    attributes: _ember.default.computed(function () {
+      var _this = this;
+
+      var map = Map.create();
+
+      this.eachComputedProperty(function (name, meta) {
+        if (meta.isAttribute) {
+          (0, _emberDataPrivateDebug.assert)("You may not set `id` as an attribute on your model. Please remove any lines that look like: `id: DS.attr('<type>')` from " + _this.toString(), name !== 'id');
+
+          meta.name = name;
+          map.set(name, meta);
+        }
+      });
+
+      return map;
+    }).readOnly(),
+
+    /**
+      A map whose keys are the attributes of the model (properties
+      described by DS.attr) and whose values are type of transformation
+      applied to each attribute. This map does not include any
+      attributes that do not have an transformation type.
+       Example
+       ```app/models/person.js
+      import DS from 'ember-data';
+       export default DS.Model.extend({
+        firstName: attr(),
+        lastName: attr('string'),
+        birthday: attr('date')
+      });
+      ```
+       ```javascript
+      import Ember from 'ember';
+      import Person from 'app/models/person';
+       var transformedAttributes = Ember.get(Person, 'transformedAttributes')
+       transformedAttributes.forEach(function(field, type) {
+        console.log(field, type);
+      });
+       // prints:
+      // lastName string
+      // birthday date
+      ```
+       @property transformedAttributes
+      @static
+      @type {Ember.Map}
+      @readOnly
+    */
+    transformedAttributes: _ember.default.computed(function () {
+      var map = Map.create();
+
+      this.eachAttribute(function (key, meta) {
+        if (meta.type) {
+          map.set(key, meta.type);
+        }
+      });
+
+      return map;
+    }).readOnly(),
+
+    /**
+      Iterates through the attributes of the model, calling the passed function on each
+      attribute.
+       The callback method you provide should have the following signature (all
+      parameters are optional):
+       ```javascript
+      function(name, meta);
+      ```
+       - `name` the name of the current property in the iteration
+      - `meta` the meta object for the attribute property in the iteration
+       Note that in addition to a callback, you can also pass an optional target
+      object that will be set as `this` on the context.
+       Example
+       ```javascript
+      import DS from 'ember-data';
+       var Person = DS.Model.extend({
+        firstName: attr('string'),
+        lastName: attr('string'),
+        birthday: attr('date')
+      });
+       Person.eachAttribute(function(name, meta) {
+        console.log(name, meta);
+      });
+       // prints:
+      // firstName {type: "string", isAttribute: true, options: Object, parentType: function, name: "firstName"}
+      // lastName {type: "string", isAttribute: true, options: Object, parentType: function, name: "lastName"}
+      // birthday {type: "date", isAttribute: true, options: Object, parentType: function, name: "birthday"}
+     ```
+       @method eachAttribute
+      @param {Function} callback The callback to execute
+      @param {Object} [binding] the value to which the callback's `this` should be bound
+      @static
+    */
+    eachAttribute: function (callback, binding) {
+      get(this, 'attributes').forEach(function (meta, name) {
+        callback.call(binding, name, meta);
+      });
+    },
+
+    /**
+      Iterates through the transformedAttributes of the model, calling
+      the passed function on each attribute. Note the callback will not be
+      called for any attributes that do not have an transformation type.
+       The callback method you provide should have the following signature (all
+      parameters are optional):
+       ```javascript
+      function(name, type);
+      ```
+       - `name` the name of the current property in the iteration
+      - `type` a string containing the name of the type of transformed
+        applied to the attribute
+       Note that in addition to a callback, you can also pass an optional target
+      object that will be set as `this` on the context.
+       Example
+       ```javascript
+      import DS from 'ember-data';
+       var Person = DS.Model.extend({
+        firstName: attr(),
+        lastName: attr('string'),
+        birthday: attr('date')
+      });
+       Person.eachTransformedAttribute(function(name, type) {
+        console.log(name, type);
+      });
+       // prints:
+      // lastName string
+      // birthday date
+     ```
+       @method eachTransformedAttribute
+      @param {Function} callback The callback to execute
+      @param {Object} [binding] the value to which the callback's `this` should be bound
+      @static
+    */
+    eachTransformedAttribute: function (callback, binding) {
+      get(this, 'transformedAttributes').forEach(function (type, name) {
+        callback.call(binding, name, type);
+      });
+    }
+  });
+
+  exports.AttrClassMethodsMixin = AttrClassMethodsMixin;
+  var AttrInstanceMethodsMixin = _ember.default.Mixin.create({
+    eachAttribute: function (callback, binding) {
+      this.constructor.eachAttribute(callback, binding);
+    }
+  });
+  exports.AttrInstanceMethodsMixin = AttrInstanceMethodsMixin;
+});
 define('ember-data/-private/system/model/errors', ['exports', 'ember', 'ember-data/-private/debug'], function (exports, _ember, _emberDataPrivateDebug) {
 
   var get = _ember.default.get;
@@ -3415,7 +3604,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     };
   }
 });
-define("ember-data/-private/system/model/model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/model/errors", "ember-data/-private/features"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemModelErrors, _emberDataPrivateFeatures) {
+define("ember-data/-private/system/model/model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/model/errors", "ember-data/-private/features", "ember-data/-private/system/debug/debug-info", "ember-data/-private/system/relationships/belongs-to", "ember-data/-private/system/relationships/has-many", "ember-data/-private/system/relationships/ext", "ember-data/-private/system/model/attr"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemModelErrors, _emberDataPrivateFeatures, _emberDataPrivateSystemDebugDebugInfo, _emberDataPrivateSystemRelationshipsBelongsTo, _emberDataPrivateSystemRelationshipsHasMany, _emberDataPrivateSystemRelationshipsExt, _emberDataPrivateSystemModelAttr) {
 
   /**
     @module ember-data
@@ -4274,7 +4463,10 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
     });
   }
 
-  exports.default = Model;
+  Model.reopenClass(_emberDataPrivateSystemRelationshipsExt.RelationshipsClassMethodsMixin);
+  Model.reopenClass(_emberDataPrivateSystemModelAttr.AttrClassMethodsMixin);
+
+  exports.default = Model.extend(_emberDataPrivateSystemDebugDebugInfo.default, _emberDataPrivateSystemRelationshipsBelongsTo.BelongsToMixin, _emberDataPrivateSystemRelationshipsExt.DidDefinePropertyMixin, _emberDataPrivateSystemRelationshipsExt.RelationshipsInstanceMethodsMixin, _emberDataPrivateSystemRelationshipsHasMany.HasManyMixin, _emberDataPrivateSystemModelAttr.AttrInstanceMethodsMixin);
 });
 define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-data/-private/debug'], function (exports, _ember, _emberDataPrivateDebug) {
 
@@ -5629,22 +5821,18 @@ define("ember-data/-private/system/record-arrays/adapter-populated-record-array"
     /**
       @method loadRecords
       @param {Array} records
+      @param {Object} payload normalized payload
       @private
     */
-    loadRecords: function (records) {
+    loadRecords: function (records, payload) {
       var _this = this;
-
-      var store = get(this, 'store');
-      var type = get(this, 'type');
-      var modelName = type.modelName;
-      var meta = store._metadataFor(modelName);
 
       //TODO Optimize
       var internalModels = _ember.default.A(records).mapBy('_internalModel');
       this.setProperties({
         content: _ember.default.A(internalModels),
         isLoaded: true,
-        meta: (0, _emberDataPrivateSystemCloneNull.default)(meta)
+        meta: (0, _emberDataPrivateSystemCloneNull.default)(payload.meta)
       });
 
       internalModels.forEach(function (record) {
@@ -6191,7 +6379,7 @@ define('ember-data/-private/system/relationship-meta', ['exports', 'ember-inflec
     };
   }
 });
-define('ember-data/-private/system/relationships/belongs-to', ['exports', 'ember', 'ember-data/-private/debug', 'ember-data/model', 'ember-data/-private/system/normalize-model-name'], function (exports, _ember, _emberDataPrivateDebug, _emberDataModel, _emberDataPrivateSystemNormalizeModelName) {
+define("ember-data/-private/system/relationships/belongs-to", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/normalize-model-name"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemNormalizeModelName) {
   exports.default = belongsTo;
 
   /**
@@ -6296,13 +6484,13 @@ define('ember-data/-private/system/relationships/belongs-to', ['exports', 'ember
     return _ember.default.computed({
       get: function (key) {
         if (opts.hasOwnProperty('serialize')) {
-          (0, _emberDataPrivateDebug.warn)('You provided a serialize option on the "' + key + '" property in the "' + this._internalModel.modelName + '" class, this belongs in the serializer. See DS.Serializer and it\'s implementations http://emberjs.com/api/data/classes/DS.Serializer.html', false, {
+          (0, _emberDataPrivateDebug.warn)("You provided a serialize option on the \"" + key + "\" property in the \"" + this._internalModel.modelName + "\" class, this belongs in the serializer. See DS.Serializer and it's implementations http://emberjs.com/api/data/classes/DS.Serializer.html", false, {
             id: 'ds.model.serialize-option-in-belongs-to'
           });
         }
 
         if (opts.hasOwnProperty('embedded')) {
-          (0, _emberDataPrivateDebug.warn)('You provided an embedded option on the "' + key + '" property in the "' + this._internalModel.modelName + '" class, this belongs in the serializer. See DS.EmbeddedRecordsMixin http://emberjs.com/api/data/classes/DS.EmbeddedRecordsMixin.html', false, {
+          (0, _emberDataPrivateDebug.warn)("You provided an embedded option on the \"" + key + "\" property in the \"" + this._internalModel.modelName + "\" class, this belongs in the serializer. See DS.EmbeddedRecordsMixin http://emberjs.com/api/data/classes/DS.EmbeddedRecordsMixin.html", false, {
             id: 'ds.model.embedded-option-in-belongs-to'
           });
         }
@@ -6330,13 +6518,14 @@ define('ember-data/-private/system/relationships/belongs-to', ['exports', 'ember
     These observers observe all `belongsTo` relationships on the record. See
     `relationships/ext` to see how these observers get their dependencies.
   */
-  _emberDataModel.default.reopen({
+  var BelongsToMixin = _ember.default.Mixin.create({
     notifyBelongsToChanged: function (key) {
       this.notifyPropertyChange(key);
     }
   });
+  exports.BelongsToMixin = BelongsToMixin;
 });
-define("ember-data/-private/system/relationships/ext", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/relationship-meta", "ember-data/model", "ember-data/-private/system/empty-object"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemRelationshipMeta, _emberDataModel, _emberDataPrivateSystemEmptyObject) {
+define("ember-data/-private/system/relationships/ext", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/relationship-meta", "ember-data/-private/system/empty-object"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemRelationshipMeta, _emberDataPrivateSystemEmptyObject) {
 
   var get = _ember.default.get;
   var Map = _ember.default.Map;
@@ -6433,7 +6622,7 @@ define("ember-data/-private/system/relationships/ext", ["exports", "ember", "emb
     @class Model
     @namespace DS
   */
-  _emberDataModel.default.reopen({
+  var DidDefinePropertyMixin = _ember.default.Mixin.create({
 
     /**
       This Ember.js hook allows an object to be notified when a property
@@ -6470,6 +6659,7 @@ define("ember-data/-private/system/relationships/ext", ["exports", "ember", "emb
     }
   });
 
+  exports.DidDefinePropertyMixin = DidDefinePropertyMixin;
   /*
     These DS.Model extensions add class methods that provide relationship
     introspection abilities about relationships.
@@ -6487,7 +6677,7 @@ define("ember-data/-private/system/relationships/ext", ["exports", "ember", "emb
     extensively.
   */
 
-  _emberDataModel.default.reopenClass({
+  var RelationshipsClassMethodsMixin = _ember.default.Mixin.create({
 
     /**
       For a given relationship name, returns the model type of the relationship.
@@ -6878,7 +7068,8 @@ define("ember-data/-private/system/relationships/ext", ["exports", "ember", "emb
 
   });
 
-  _emberDataModel.default.reopen({
+  exports.RelationshipsClassMethodsMixin = RelationshipsClassMethodsMixin;
+  var RelationshipsInstanceMethodsMixin = _ember.default.Mixin.create({
     /**
       Given a callback, iterates over each of the relationships in the model,
       invoking the callback with the name of each relationship and its relationship
@@ -6931,6 +7122,7 @@ define("ember-data/-private/system/relationships/ext", ["exports", "ember", "emb
     }
 
   });
+  exports.RelationshipsInstanceMethodsMixin = RelationshipsInstanceMethodsMixin;
 });
 define("ember-data/-private/system/relationships/has-many", ["exports", "ember", "ember-data/-private/debug", "ember-data/model", "ember-data/-private/system/normalize-model-name", "ember-data/-private/system/is-array-like"], function (exports, _ember, _emberDataPrivateDebug, _emberDataModel, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateSystemIsArrayLike) {
   exports.default = hasMany;
@@ -7089,7 +7281,7 @@ define("ember-data/-private/system/relationships/has-many", ["exports", "ember",
     }).meta(meta);
   }
 
-  _emberDataModel.default.reopen({
+  var HasManyMixin = _ember.default.Mixin.create({
     notifyHasManyAdded: function (key) {
       //We need to notifyPropertyChange in the adding case because we need to make sure
       //we fetch the newly added record in case it is unloaded
@@ -7099,6 +7291,7 @@ define("ember-data/-private/system/relationships/has-many", ["exports", "ember",
       this.notifyPropertyChange(key);
     }
   });
+  exports.HasManyMixin = HasManyMixin;
 });
 /**
   @module ember-data
@@ -9398,30 +9591,6 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       return this.hasRecordForId(modelName, id);
     },
 
-    /**
-      @method _metadataFor
-      @param {String} modelName
-      @return {object}
-      @private
-    */
-    _metadataFor: function (modelName) {
-      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember.default.inspect(modelName), typeof modelName === 'string');
-      var typeClass = this.modelFor(modelName);
-      return this.typeMapFor(typeClass).metadata;
-    },
-
-    /**
-      @method _setMetadataFor
-      @param {String} modelName
-      @param {Object} metadata metadata to set
-      @private
-    */
-    _setMetadataFor: function (modelName, metadata) {
-      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember.default.inspect(modelName), typeof modelName === 'string');
-      var typeClass = this.modelFor(modelName);
-      _ember.default.merge(this.typeMapFor(typeClass).metadata, metadata);
-    },
-
     // ............
     // . UPDATING .
     // ............
@@ -10308,9 +10477,6 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
   exports.Store = Store;
   exports.default = Store;
 });
-/*globals Ember*/
-/*jshint eqnull:true*/
-
 /**
   @module ember-data
 */
@@ -10594,15 +10760,15 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     promise = (0, _emberDataPrivateSystemStoreCommon._guard)(promise, (0, _emberDataPrivateSystemStoreCommon._bind)(_emberDataPrivateSystemStoreCommon._objectIsAlive, store));
 
     return promise.then(function (adapterPayload) {
-      var records;
+      var records, payload;
       store._adapterRun(function () {
-        var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, null, 'query');
+        payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, null, 'query');
         //TODO Optimize
         records = store.push(payload);
       });
 
       (0, _emberDataPrivateDebug.assert)('The response to store.query is expected to be an array but it was a single record. Please wrap your response in an array or use `store.queryRecord` to query for a single record.', _ember.default.isArray(records));
-      recordArray.loadRecords(records);
+      recordArray.loadRecords(records, payload);
       return recordArray;
     }, null, "DS: Extract payload of query " + typeClass);
   }
@@ -10712,10 +10878,6 @@ define('ember-data/-private/system/store/serializer-response', ['exports', 'embe
       validationErrors = validateDocumentStructure(normalizedResponse);
     });
     (0, _emberDataPrivateDebug.assert)('normalizeResponse must return a valid JSON API document:\n\t* ' + validationErrors.join('\n\t* '), _ember.default.isEmpty(validationErrors));
-    // TODO: Remove after metadata refactor
-    if (normalizedResponse.meta) {
-      store._setMetadataFor(modelClass.modelName, normalizedResponse.meta);
-    }
 
     return normalizedResponse;
   }
@@ -10792,7 +10954,7 @@ define("ember-data/-private/transforms/boolean", ["exports", "ember-data/transfo
     }
   });
 });
-define("ember-data/-private/transforms/date", ["exports", "ember", "ember-data/transform"], function (exports, _ember, _emberDataTransform) {
+define("ember-data/-private/transforms/date", ["exports", "ember", "ember-data/-private/ext/date", "ember-data/transform"], function (exports, _ember, _emberDataPrivateExtDate, _emberDataTransform) {
   exports.default = _emberDataTransform.default.extend({
     deserialize: function (serialized) {
       var type = typeof serialized;
@@ -12528,195 +12690,12 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
 /**
   @module ember-data
 */
-define("ember-data/attr", ["exports", "ember", "ember-data/-private/system/model/model", "ember-data/-private/debug"], function (exports, _ember, _emberDataPrivateSystemModelModel, _emberDataPrivateDebug) {
+define("ember-data/attr", ["exports", "ember", "ember-data/-private/debug"], function (exports, _ember, _emberDataPrivateDebug) {
   exports.default = attr;
 
   /**
     @module ember-data
   */
-
-  var get = _ember.default.get;
-  var Map = _ember.default.Map;
-
-  /**
-    @class Model
-    @namespace DS
-  */
-  _emberDataPrivateSystemModelModel.default.reopenClass({
-    /**
-      A map whose keys are the attributes of the model (properties
-      described by DS.attr) and whose values are the meta object for the
-      property.
-       Example
-       ```app/models/person.js
-      import DS from 'ember-data';
-       export default DS.Model.extend({
-        firstName: attr('string'),
-        lastName: attr('string'),
-        birthday: attr('date')
-      });
-      ```
-       ```javascript
-      import Ember from 'ember';
-      import Person from 'app/models/person';
-       var attributes = Ember.get(Person, 'attributes')
-       attributes.forEach(function(meta, name) {
-        console.log(name, meta);
-      });
-       // prints:
-      // firstName {type: "string", isAttribute: true, options: Object, parentType: function, name: "firstName"}
-      // lastName {type: "string", isAttribute: true, options: Object, parentType: function, name: "lastName"}
-      // birthday {type: "date", isAttribute: true, options: Object, parentType: function, name: "birthday"}
-      ```
-       @property attributes
-      @static
-      @type {Ember.Map}
-      @readOnly
-    */
-    attributes: _ember.default.computed(function () {
-      var _this = this;
-
-      var map = Map.create();
-
-      this.eachComputedProperty(function (name, meta) {
-        if (meta.isAttribute) {
-          (0, _emberDataPrivateDebug.assert)("You may not set `id` as an attribute on your model. Please remove any lines that look like: `id: DS.attr('<type>')` from " + _this.toString(), name !== 'id');
-
-          meta.name = name;
-          map.set(name, meta);
-        }
-      });
-
-      return map;
-    }).readOnly(),
-
-    /**
-      A map whose keys are the attributes of the model (properties
-      described by DS.attr) and whose values are type of transformation
-      applied to each attribute. This map does not include any
-      attributes that do not have an transformation type.
-       Example
-       ```app/models/person.js
-      import DS from 'ember-data';
-       export default DS.Model.extend({
-        firstName: attr(),
-        lastName: attr('string'),
-        birthday: attr('date')
-      });
-      ```
-       ```javascript
-      import Ember from 'ember';
-      import Person from 'app/models/person';
-       var transformedAttributes = Ember.get(Person, 'transformedAttributes')
-       transformedAttributes.forEach(function(field, type) {
-        console.log(field, type);
-      });
-       // prints:
-      // lastName string
-      // birthday date
-      ```
-       @property transformedAttributes
-      @static
-      @type {Ember.Map}
-      @readOnly
-    */
-    transformedAttributes: _ember.default.computed(function () {
-      var map = Map.create();
-
-      this.eachAttribute(function (key, meta) {
-        if (meta.type) {
-          map.set(key, meta.type);
-        }
-      });
-
-      return map;
-    }).readOnly(),
-
-    /**
-      Iterates through the attributes of the model, calling the passed function on each
-      attribute.
-       The callback method you provide should have the following signature (all
-      parameters are optional):
-       ```javascript
-      function(name, meta);
-      ```
-       - `name` the name of the current property in the iteration
-      - `meta` the meta object for the attribute property in the iteration
-       Note that in addition to a callback, you can also pass an optional target
-      object that will be set as `this` on the context.
-       Example
-       ```javascript
-      import DS from 'ember-data';
-       var Person = DS.Model.extend({
-        firstName: attr('string'),
-        lastName: attr('string'),
-        birthday: attr('date')
-      });
-       Person.eachAttribute(function(name, meta) {
-        console.log(name, meta);
-      });
-       // prints:
-      // firstName {type: "string", isAttribute: true, options: Object, parentType: function, name: "firstName"}
-      // lastName {type: "string", isAttribute: true, options: Object, parentType: function, name: "lastName"}
-      // birthday {type: "date", isAttribute: true, options: Object, parentType: function, name: "birthday"}
-     ```
-       @method eachAttribute
-      @param {Function} callback The callback to execute
-      @param {Object} [binding] the value to which the callback's `this` should be bound
-      @static
-    */
-    eachAttribute: function (callback, binding) {
-      get(this, 'attributes').forEach(function (meta, name) {
-        callback.call(binding, name, meta);
-      });
-    },
-
-    /**
-      Iterates through the transformedAttributes of the model, calling
-      the passed function on each attribute. Note the callback will not be
-      called for any attributes that do not have an transformation type.
-       The callback method you provide should have the following signature (all
-      parameters are optional):
-       ```javascript
-      function(name, type);
-      ```
-       - `name` the name of the current property in the iteration
-      - `type` a string containing the name of the type of transformed
-        applied to the attribute
-       Note that in addition to a callback, you can also pass an optional target
-      object that will be set as `this` on the context.
-       Example
-       ```javascript
-      import DS from 'ember-data';
-       var Person = DS.Model.extend({
-        firstName: attr(),
-        lastName: attr('string'),
-        birthday: attr('date')
-      });
-       Person.eachTransformedAttribute(function(name, type) {
-        console.log(name, type);
-      });
-       // prints:
-      // lastName string
-      // birthday date
-     ```
-       @method eachTransformedAttribute
-      @param {Function} callback The callback to execute
-      @param {Object} [binding] the value to which the callback's `this` should be bound
-      @static
-    */
-    eachTransformedAttribute: function (callback, binding) {
-      get(this, 'transformedAttributes').forEach(function (type, name) {
-        callback.call(binding, name, type);
-      });
-    }
-  });
-
-  _emberDataPrivateSystemModelModel.default.reopen({
-    eachAttribute: function (callback, binding) {
-      this.constructor.eachAttribute(callback, binding);
-    }
-  });
 
   function getDefaultValue(record, options, key) {
     if (typeof options.defaultValue === "function") {
@@ -12841,7 +12820,7 @@ define("ember-data/attr", ["exports", "ember", "ember-data/-private/system/model
     }).meta(meta);
   }
 });
-define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/core", "ember-data/-private/ext/date", "ember-data/-private/system/normalize-model-name", "ember-data/-private/system/model/internal-model", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/store", "ember-data/-private/system/model", "ember-data/model", "ember-data/-private/system/snapshot", "ember-data/adapter", "ember-data/-private/system/serializer", "ember-data/-private/system/debug", "ember-data/-private/adapters/errors", "ember-data/-private/system/record-arrays", "ember-data/-private/system/many-array", "ember-data/-private/system/record-array-manager", "ember-data/-private/adapters", "ember-data/-private/adapters/build-url-mixin", "ember-data/-private/serializers", "ember-inflector", "ember-data/-private/serializers/embedded-records-mixin", "ember-data/-private/transforms", "ember-data/relationships", "ember-data/setup-container", "ember-data/-private/instance-initializers/initialize-store-service", "ember-data/-private/system/container-proxy", "ember-data/-private/system/relationships/state/relationship"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateCore, _emberDataPrivateExtDate, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStore, _emberDataPrivateSystemModel, _emberDataModel, _emberDataPrivateSystemSnapshot, _emberDataAdapter, _emberDataPrivateSystemSerializer, _emberDataPrivateSystemDebug, _emberDataPrivateAdaptersErrors, _emberDataPrivateSystemRecordArrays, _emberDataPrivateSystemManyArray, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateAdapters, _emberDataPrivateAdaptersBuildUrlMixin, _emberDataPrivateSerializers, _emberInflector, _emberDataPrivateSerializersEmbeddedRecordsMixin, _emberDataPrivateTransforms, _emberDataRelationships, _emberDataSetupContainer, _emberDataPrivateInstanceInitializersInitializeStoreService, _emberDataPrivateSystemContainerProxy, _emberDataPrivateSystemRelationshipsStateRelationship) {
+define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/core", "ember-data/-private/system/normalize-model-name", "ember-data/-private/system/model/internal-model", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/store", "ember-data/-private/system/model", "ember-data/model", "ember-data/-private/system/snapshot", "ember-data/adapter", "ember-data/-private/system/serializer", "ember-data/-private/system/debug", "ember-data/-private/adapters/errors", "ember-data/-private/system/record-arrays", "ember-data/-private/system/many-array", "ember-data/-private/system/record-array-manager", "ember-data/-private/adapters", "ember-data/-private/adapters/build-url-mixin", "ember-data/-private/serializers", "ember-inflector", "ember-data/-private/serializers/embedded-records-mixin", "ember-data/-private/transforms", "ember-data/relationships", "ember-data/setup-container", "ember-data/-private/instance-initializers/initialize-store-service", "ember-data/-private/system/container-proxy", "ember-data/-private/system/relationships/state/relationship"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateCore, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStore, _emberDataPrivateSystemModel, _emberDataModel, _emberDataPrivateSystemSnapshot, _emberDataAdapter, _emberDataPrivateSystemSerializer, _emberDataPrivateSystemDebug, _emberDataPrivateAdaptersErrors, _emberDataPrivateSystemRecordArrays, _emberDataPrivateSystemManyArray, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateAdapters, _emberDataPrivateAdaptersBuildUrlMixin, _emberDataPrivateSerializers, _emberInflector, _emberDataPrivateSerializersEmbeddedRecordsMixin, _emberDataPrivateTransforms, _emberDataRelationships, _emberDataSetupContainer, _emberDataPrivateInstanceInitializersInitializeStoreService, _emberDataPrivateSystemContainerProxy, _emberDataPrivateSystemRelationshipsStateRelationship) {
   /**
     Ember Data
     @module ember-data
@@ -12934,7 +12913,7 @@ define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-da
 define("ember-data/model", ["exports", "ember-data/-private/system/model"], function (exports, _emberDataPrivateSystemModel) {
   exports.default = _emberDataPrivateSystemModel.default;
 });
-define("ember-data/relationships", ["exports", "ember-data/-private/system/relationships/belongs-to", "ember-data/-private/system/relationships/has-many", "ember-data/-private/system/relationships/ext"], function (exports, _emberDataPrivateSystemRelationshipsBelongsTo, _emberDataPrivateSystemRelationshipsHasMany, _emberDataPrivateSystemRelationshipsExt) {
+define("ember-data/relationships", ["exports", "ember-data/-private/system/relationships/belongs-to", "ember-data/-private/system/relationships/has-many"], function (exports, _emberDataPrivateSystemRelationshipsBelongsTo, _emberDataPrivateSystemRelationshipsHasMany) {
   exports.belongsTo = _emberDataPrivateSystemRelationshipsBelongsTo.default;
   exports.hasMany = _emberDataPrivateSystemRelationshipsHasMany.default;
 });
@@ -15555,7 +15534,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-beta.1+1af6c126ba";
+  exports.default = "2.4.0-beta.1+9f90e4e934";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
