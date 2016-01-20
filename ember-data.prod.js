@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.5.0-canary+73e4f3f8b1
+ * @version   2.5.0-canary+306ce45e4d
  */
 
 var define, requireModule, require, requirejs;
@@ -9365,7 +9365,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       filter function will be invoked again to determine whether it should
       still be in the array.
        Optionally you can pass a query, which is the equivalent of calling
-      [find](#method_find) with that same query, to fetch additional records
+      [query](#method_query) with that same query, to fetch additional records
       from the server. The results returned by the server could then appear
       in the filter if they match the filter function.
        The query itself is not used to filter records, it's only sent to your
@@ -15293,7 +15293,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.5.0-canary+73e4f3f8b1";
+  exports.default = "2.5.0-canary+306ce45e4d";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
