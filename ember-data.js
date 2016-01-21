@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-beta.1+dd33b3281f
+ * @version   2.4.0-beta.1+86f89cbed2
  */
 
 var define, requireModule, require, requirejs;
@@ -436,8 +436,12 @@ define('ember-data/-private/adapters/build-url-mixin', ['exports', 'ember'], fun
       @return {String} urlPrefix
     */
     urlPrefix: function (path, parentURL) {
-      var host = get(this, 'host') || '';
+      var host = get(this, 'host');
       var namespace = get(this, 'namespace');
+
+      if (!host || host === '/') {
+        host = '';
+      }
 
       if (path) {
         // Protocol relative url
@@ -15535,7 +15539,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-beta.1+dd33b3281f";
+  exports.default = "2.4.0-beta.1+86f89cbed2";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
