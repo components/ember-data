@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.5.0-canary+c540db136a
+ * @version   2.5.0-canary+6c7c934567
  */
 
 var define, requireModule, require, requirejs;
@@ -12530,8 +12530,17 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
           _ember.default.run.join(null, reject, error);
         };
 
-        _ember.default.$.ajax(hash);
+        adapter._ajaxRequest(hash);
       }, 'DS: RESTAdapter#ajax ' + type + ' to ' + url);
+    },
+
+    /**
+      @method _ajaxRequest
+      @private
+      @param {Object} options jQuery ajax options to be used for the ajax request
+    */
+    _ajaxRequest: function (options) {
+      _ember.default.$.ajax(options);
     },
 
     /**
@@ -15521,7 +15530,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.5.0-canary+c540db136a";
+  exports.default = "2.5.0-canary+6c7c934567";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
