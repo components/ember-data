@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.5.0-canary+8b0e53c731
+ * @version   2.5.0-canary+2322aacc3f
  */
 
 var define, requireModule, require, requirejs;
@@ -10103,9 +10103,15 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember.default.inspect(modelName), typeof modelName === 'string');
         serializer = this.serializerFor(modelName);
       }
-      this._adapterRun(function () {
-        return serializer.pushPayload(_this3, payload);
-      });
+      if ((0, _emberDataPrivateFeatures.default)('ds-pushpayload-return')) {
+        return this._adapterRun(function () {
+          return serializer.pushPayload(_this3, payload);
+        });
+      } else {
+        this._adapterRun(function () {
+          return serializer.pushPayload(_this3, payload);
+        });
+      }
     },
 
     /**
@@ -12950,7 +12956,7 @@ define("ember-data/relationships", ["exports", "ember-data/-private/system/relat
 /**
   @module ember-data
 */
-define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-private/debug', 'ember-data/serializers/json', 'ember-data/-private/system/normalize-model-name', 'ember-inflector'], function (exports, _ember, _emberDataPrivateDebug, _emberDataSerializersJson, _emberDataPrivateSystemNormalizeModelName, _emberInflector) {
+define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-private/debug', 'ember-data/serializers/json', 'ember-data/-private/system/normalize-model-name', 'ember-inflector', 'ember-data/-private/features'], function (exports, _ember, _emberDataPrivateDebug, _emberDataSerializersJson, _emberDataPrivateSystemNormalizeModelName, _emberInflector, _emberDataPrivateFeatures) {
 
   var dasherize = _ember.default.String.dasherize;
 
@@ -13126,7 +13132,11 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
     */
     pushPayload: function (store, payload) {
       var normalizedPayload = this._normalizeDocumentHelper(payload);
-      store.push(normalizedPayload);
+      if ((0, _emberDataPrivateFeatures.default)('ds-pushpayload-return')) {
+        return store.push(normalizedPayload);
+      } else {
+        store.push(normalizedPayload);
+      }
     },
 
     /**
@@ -14759,7 +14769,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
     }
   });
 });
-define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/debug", "ember-data/serializers/json", "ember-data/-private/system/normalize-model-name", "ember-inflector", "ember-data/-private/system/coerce-id", "ember-data/-private/utils"], function (exports, _ember, _emberDataPrivateDebug, _emberDataSerializersJson, _emberDataPrivateSystemNormalizeModelName, _emberInflector, _emberDataPrivateSystemCoerceId, _emberDataPrivateUtils) {
+define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/debug", "ember-data/serializers/json", "ember-data/-private/system/normalize-model-name", "ember-inflector", "ember-data/-private/system/coerce-id", "ember-data/-private/utils", "ember-data/-private/features"], function (exports, _ember, _emberDataPrivateDebug, _emberDataSerializersJson, _emberDataPrivateSystemNormalizeModelName, _emberInflector, _emberDataPrivateSystemCoerceId, _emberDataPrivateUtils, _emberDataPrivateFeatures) {
   function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } }
 
   var camelize = _ember.default.String.camelize;
@@ -15155,7 +15165,11 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
         });
       }
 
-      store.push(documentHash);
+      if ((0, _emberDataPrivateFeatures.default)('ds-pushpayload-return')) {
+        return store.push(documentHash);
+      } else {
+        store.push(documentHash);
+      }
     },
 
     /**
@@ -15578,7 +15592,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.5.0-canary+8b0e53c731";
+  exports.default = "2.5.0-canary+2322aacc3f";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
