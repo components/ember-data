@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.5.0-canary+cb89e3ef4c
+ * @version   2.5.0-canary+eb83d5c184
  */
 
 var define, requireModule, require, requirejs;
@@ -9310,6 +9310,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     },
 
     _query: function (modelName, query, array) {
+      (0, _emberDataPrivateDebug.assert)("You need to pass a type to the store's query method", modelName);
+      (0, _emberDataPrivateDebug.assert)("You need to pass a query hash to the store's query method", query);
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember.default.inspect(modelName), typeof modelName === 'string');
       var typeClass = this.modelFor(modelName);
       array = array || this.recordArrayManager.createAdapterPopulatedRecordArray(typeClass, query);
@@ -15530,7 +15532,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.5.0-canary+cb89e3ef4c";
+  exports.default = "2.5.0-canary+eb83d5c184";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
