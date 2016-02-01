@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.5.0-canary+6284d57e4e
+ * @version   2.5.0-canary+8f6160c0aa
  */
 
 var define, requireModule, require, requirejs;
@@ -1139,7 +1139,7 @@ define('ember-data/-private/serializers/embedded-records-mixin', ['exports', 'em
 
     _serializeEmbeddedBelongsTo: function (snapshot, json, relationship) {
       var embeddedSnapshot = snapshot.belongsTo(relationship.key);
-      var serializedKey = this.keyForRelationship(relationship.key, 'serialize');
+      var serializedKey = this.keyForRelationship(relationship.key, relationship.kind, 'serialize');
       if (!embeddedSnapshot) {
         json[serializedKey] = null;
       } else {
@@ -1239,7 +1239,7 @@ define('ember-data/-private/serializers/embedded-records-mixin', ['exports', 'em
     },
 
     _serializeEmbeddedHasMany: function (snapshot, json, relationship) {
-      var serializedKey = this.keyForRelationship(relationship.key, 'serialize');
+      var serializedKey = this.keyForRelationship(relationship.key, relationship.kind, 'serialize');
 
       (0, _emberDataPrivateDebug.warn)('The embedded relationship \'' + serializedKey + '\' is undefined for \'' + snapshot.modelName + '\' with id \'' + snapshot.id + '\'. Please include it in your original payload.', _ember.default.typeOf(snapshot.hasMany(relationship.key)) !== 'undefined', { id: 'ds.serializer.embedded-relationship-undefined' });
 
@@ -6179,7 +6179,7 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
 
   exports.default = BelongsToReference;
 });
-define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'ember-data/-private/system/references/reference'], function (exports, _ember, _emberDataPrivateSystemReferencesReference) {
+define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'ember-data/-private/system/references/reference', 'ember-data/-private/utils', 'ember-data/-private/debug'], function (exports, _ember, _emberDataPrivateSystemReferencesReference, _emberDataPrivateUtils, _emberDataPrivateDebug) {
 
   var get = _ember.default.get;
 
@@ -6232,10 +6232,14 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
 
       var internalModels = array.map(function (obj) {
         var record = _this.store.push(obj);
+
+        (0, _emberDataPrivateDebug.runInDebug)(function () {
+          var relationshipMeta = _this.hasManyRelationship.relationshipMeta;
+          (0, _emberDataPrivateUtils.assertPolymorphicType)(_this.internalModel, relationshipMeta, record._internalModel);
+        });
+
         return record._internalModel;
       });
-
-      // TODO add assertion for polymorphic type
 
       _this.hasManyRelationship.computeChanges(internalModels);
 
@@ -15593,7 +15597,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.5.0-canary+6284d57e4e";
+  exports.default = "2.5.0-canary+8f6160c0aa";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
