@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0-beta.1+86f89cbed2
+ * @version   2.4.0-beta.1+f1191f0b46
  */
 
 var define, requireModule, require, requirejs;
@@ -517,6 +517,7 @@ define('ember-data/-private/adapters/errors', ['exports', 'ember', 'ember-data/-
   function AdapterError(errors) {
     var message = arguments.length <= 1 || arguments[1] === undefined ? 'Adapter operation failed' : arguments[1];
 
+    this.isAdapterError = true;
     EmberError.call(this, message);
 
     this.errors = errors || [{
@@ -1137,7 +1138,7 @@ define('ember-data/-private/serializers/embedded-records-mixin', ['exports', 'em
 
     _serializeEmbeddedBelongsTo: function (snapshot, json, relationship) {
       var embeddedSnapshot = snapshot.belongsTo(relationship.key);
-      var serializedKey = this.keyForRelationship(relationship.key, 'serialize');
+      var serializedKey = this.keyForRelationship(relationship.key, relationship.kind, 'serialize');
       if (!embeddedSnapshot) {
         json[serializedKey] = null;
       } else {
@@ -1237,7 +1238,7 @@ define('ember-data/-private/serializers/embedded-records-mixin', ['exports', 'em
     },
 
     _serializeEmbeddedHasMany: function (snapshot, json, relationship) {
-      var serializedKey = this.keyForRelationship(relationship.key, 'serialize');
+      var serializedKey = this.keyForRelationship(relationship.key, relationship.kind, 'serialize');
 
       json[serializedKey] = this._generateSerializedHasMany(snapshot, relationship);
     },
@@ -12302,7 +12303,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
 
           var response = adapter.handleResponse(jqXHR.status, parseResponseHeaders(jqXHR.getAllResponseHeaders()), payload, requestData);
 
-          if (response instanceof _emberDataPrivateAdaptersErrors.AdapterError) {
+          if (response && response.isAdapterError) {
             _ember.default.run.join(null, reject, response);
           } else {
             _ember.default.run.join(null, resolve, response);
@@ -12325,8 +12326,17 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
           _ember.default.run.join(null, reject, error);
         };
 
-        _ember.default.$.ajax(hash);
+        adapter._ajaxRequest(hash);
       }, 'DS: RESTAdapter#ajax ' + type + ' to ' + url);
+    },
+
+    /**
+      @method _ajaxRequest
+      @private
+      @param {Object} options jQuery ajax options to be used for the ajax request
+    */
+    _ajaxRequest: function (options) {
+      _ember.default.$.ajax(options);
     },
 
     /**
@@ -15261,7 +15271,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0-beta.1+86f89cbed2";
+  exports.default = "2.4.0-beta.1+f1191f0b46";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
