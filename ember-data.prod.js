@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.5.0-canary+6655db2584
+ * @version   2.5.0-canary+ccae3ce0e6
  */
 
 var define, requireModule, require, requirejs;
@@ -713,6 +713,7 @@ define('ember-data/-private/debug', ['exports', 'ember'], function (exports, _em
   exports.runInDebug = runInDebug;
   exports.warn = warn;
   exports.debugSeal = debugSeal;
+  exports.assertPolymorphicType = assertPolymorphicType;
 
   function assert() {
     return _ember.default.assert.apply(_ember.default, arguments);
@@ -740,6 +741,49 @@ define('ember-data/-private/debug', ['exports', 'ember'], function (exports, _em
 
   function debugSeal() {
     return _ember.default.debugSeal.apply(_ember.default, arguments);
+  }
+
+  function checkPolymorphic(typeClass, addedRecord) {
+    if (typeClass.__isMixin) {
+      //TODO Need to do this in order to support mixins, should convert to public api
+      //once it exists in Ember
+      return typeClass.__mixin.detect(addedRecord.type.PrototypeMixin);
+    }
+    if (_ember.default.MODEL_FACTORY_INJECTIONS) {
+      typeClass = typeClass.superclass;
+    }
+    return typeClass.detect(addedRecord.type);
+  }
+
+  /**
+    Assert that `addedRecord` has a valid type so it can be added to the
+    relationship of the `record`.
+  
+    The assert basically checks if the `addedRecord` can be added to the
+    relationship (specified via `relationshipMeta`) of the `record`.
+  
+    This utility should only be used internally, as both record parameters must
+    be an InternalModel and the `relationshipMeta` needs to be the meta
+    information about the relationship, retrieved via
+    `record.relationshipFor(key)`.
+  
+    @method assertPolymorphicType
+    @param {InternalModel} record
+    @param {RelationshipMeta} relationshipMeta retrieved via
+           `record.relationshipFor(key)`
+    @param {InternalModel} addedRecord record which
+           should be added/set for the relationship
+  */
+
+  function assertPolymorphicType(record, relationshipMeta, addedRecord) {
+    var addedType = addedRecord.type.modelName;
+    var recordType = record.type.modelName;
+    var key = relationshipMeta.key;
+    var typeClass = record.store.modelFor(relationshipMeta.type);
+
+    var assertionMessage = 'You cannot add a record of type \'' + addedType + '\' to the \'' + recordType + '.' + key + '\' relationship (only \'' + typeClass.modelName + '\' allowed)';
+
+    assert(assertionMessage, checkPolymorphic(typeClass, addedRecord));
   }
 });
 define('ember-data/-private/ext/date', ['exports', 'ember'], function (exports, _ember) {
@@ -6055,7 +6099,7 @@ define('ember-data/-private/system/references', ['exports', 'ember-data/-private
   exports.BelongsToReference = _emberDataPrivateSystemReferencesBelongsTo.default;
   exports.HasManyReference = _emberDataPrivateSystemReferencesHasMany.default;
 });
-define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-data/model', 'ember', 'ember-data/-private/system/references/reference', 'ember-data/-private/utils'], function (exports, _emberDataModel, _ember, _emberDataPrivateSystemReferencesReference, _emberDataPrivateUtils) {
+define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-data/model', 'ember', 'ember-data/-private/system/references/reference', 'ember-data/-private/debug'], function (exports, _emberDataModel, _ember, _emberDataPrivateSystemReferencesReference, _emberDataPrivateDebug) {
 
   var BelongsToReference = function (store, parentInternalModel, belongsToRelationship) {
     this._super$constructor(store, parentInternalModel);
@@ -6103,8 +6147,6 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
         record = _this.store.push(data);
       }
 
-      (0, _emberDataPrivateUtils.assertPolymorphicType)(_this.internalModel, _this.belongsToRelationship.relationshipMeta, record._internalModel);
-
       _this.belongsToRelationship.setCanonicalRecord(record._internalModel);
 
       return record;
@@ -6140,7 +6182,7 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
 
   exports.default = BelongsToReference;
 });
-define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'ember-data/-private/system/references/reference', 'ember-data/-private/utils', 'ember-data/-private/debug'], function (exports, _ember, _emberDataPrivateSystemReferencesReference, _emberDataPrivateUtils, _emberDataPrivateDebug) {
+define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'ember-data/-private/system/references/reference', 'ember-data/-private/debug'], function (exports, _ember, _emberDataPrivateSystemReferencesReference, _emberDataPrivateDebug) {
 
   var get = _ember.default.get;
 
@@ -7210,7 +7252,7 @@ define("ember-data/-private/system/relationships/has-many", ["exports", "ember",
 /**
   @module ember-data
 */
-define("ember-data/-private/system/relationships/state/belongs-to", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/utils", "ember-data/-private/system/relationships/state/relationship"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateUtils, _emberDataPrivateSystemRelationshipsStateRelationship) {
+define("ember-data/-private/system/relationships/state/belongs-to", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/relationships/state/relationship"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemRelationshipsStateRelationship) {
   exports.default = BelongsToRelationship;
 
   function BelongsToRelationship(store, record, inverseKey, relationshipMeta) {
@@ -7276,8 +7318,6 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
     if (this.members.has(newRecord)) {
       return;
     }
-
-    (0, _emberDataPrivateUtils.assertPolymorphicType)(this.record, this.relationshipMeta, newRecord);
 
     if (this.inverseRecord) {
       this.removeRecord(this.inverseRecord);
@@ -7417,7 +7457,7 @@ define("ember-data/-private/system/relationships/state/create", ["exports", "emb
     return relationships[key];
   };
 });
-define("ember-data/-private/system/relationships/state/has-many", ["exports", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/relationships/state/relationship", "ember-data/-private/system/ordered-set", "ember-data/-private/system/many-array", "ember-data/-private/utils"], function (exports, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemRelationshipsStateRelationship, _emberDataPrivateSystemOrderedSet, _emberDataPrivateSystemManyArray, _emberDataPrivateUtils) {
+define("ember-data/-private/system/relationships/state/has-many", ["exports", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/relationships/state/relationship", "ember-data/-private/system/ordered-set", "ember-data/-private/system/many-array"], function (exports, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemRelationshipsStateRelationship, _emberDataPrivateSystemOrderedSet, _emberDataPrivateSystemManyArray) {
   exports.default = ManyRelationship;
 
   function ManyRelationship(store, record, inverseKey, relationshipMeta) {
@@ -7507,7 +7547,6 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
   };
 
   ManyRelationship.prototype.notifyRecordRelationshipAdded = function (record, idx) {
-    (0, _emberDataPrivateUtils.assertPolymorphicType)(this.record, this.relationshipMeta, record);
 
     this.record.notifyHasManyAdded(this.key, record, idx);
   };
@@ -10914,49 +10953,9 @@ define("ember-data/-private/transforms/string", ["exports", "ember", "ember-data
     }
   });
 });
-define('ember-data/-private/utils', ['exports', 'ember', 'ember-data/-private/debug'], function (exports, _ember, _emberDataPrivateDebug) {
+define('ember-data/-private/utils', ['exports', 'ember'], function (exports, _ember) {
 
   var get = _ember.default.get;
-
-  /**
-    Assert that `addedRecord` has a valid type so it can be added to the
-    relationship of the `record`.
-  
-    The assert basically checks if the `addedRecord` can be added to the
-    relationship (specified via `relationshipMeta`) of the `record`.
-  
-    This utility should only be used internally, as both record parameters must
-    be an InternalModel and the `relationshipMeta` needs to be the meta
-    information about the relationship, retrieved via
-    `record.relationshipFor(key)`.
-  
-    @method assertPolymorphicType
-    @param {InternalModel} record
-    @param {RelationshipMeta} relationshipMeta retrieved via
-           `record.relationshipFor(key)`
-    @param {InternalModel} addedRecord record which
-           should be added/set for the relationship
-  */
-  var assertPolymorphicType = function (record, relationshipMeta, addedRecord) {
-    var addedType = addedRecord.type.modelName;
-    var recordType = record.type.modelName;
-    var key = relationshipMeta.key;
-    var typeClass = record.store.modelFor(relationshipMeta.type);
-
-    var assertionMessage = 'You cannot add a record of type \'' + addedType + '\' to the \'' + recordType + '.' + key + '\' relationship (only \'' + typeClass.modelName + '\' allowed)';
-  };
-
-  function checkPolymorphic(typeClass, addedRecord) {
-    if (typeClass.__isMixin) {
-      //TODO Need to do this in order to support mixins, should convert to public api
-      //once it exists in Ember
-      return typeClass.__mixin.detect(addedRecord.type.PrototypeMixin);
-    }
-    if (_ember.default.MODEL_FACTORY_INJECTIONS) {
-      typeClass = typeClass.superclass;
-    }
-    return typeClass.detect(addedRecord.type);
-  }
 
   /**
     Check if the passed model has a `type` attribute or a relationship named `type`.
@@ -10997,7 +10996,6 @@ define('ember-data/-private/utils', ['exports', 'ember', 'ember-data/-private/de
     return owner;
   }
 
-  exports.assertPolymorphicType = assertPolymorphicType;
   exports.modelHasAttributeOrRelationshipNamedType = modelHasAttributeOrRelationshipNamedType;
   exports.getOwner = getOwner;
 });
@@ -15367,7 +15365,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.5.0-canary+6655db2584";
+  exports.default = "2.5.0-canary+ccae3ce0e6";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
