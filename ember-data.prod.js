@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.5.0-canary+be03d51b4b
+ * @version   2.5.0-canary+07264f0646
  */
 
 var define, requireModule, require, requirejs;
@@ -1182,7 +1182,11 @@ define('ember-data/-private/serializers/embedded-records-mixin', ['exports', 'em
 
     _serializeEmbeddedBelongsTo: function (snapshot, json, relationship) {
       var embeddedSnapshot = snapshot.belongsTo(relationship.key);
-      var serializedKey = this.keyForRelationship(relationship.key, relationship.kind, 'serialize');
+      var serializedKey = this._getMappedKey(relationship.key, snapshot.type);
+      if (serializedKey === relationship.key && this.keyForRelationship) {
+        serializedKey = this.keyForRelationship(relationship.key, relationship.kind, "serialize");
+      }
+
       if (!embeddedSnapshot) {
         json[serializedKey] = null;
       } else {
@@ -1282,7 +1286,10 @@ define('ember-data/-private/serializers/embedded-records-mixin', ['exports', 'em
     },
 
     _serializeEmbeddedHasMany: function (snapshot, json, relationship) {
-      var serializedKey = this.keyForRelationship(relationship.key, relationship.kind, 'serialize');
+      var serializedKey = this._getMappedKey(relationship.key, snapshot.type);
+      if (serializedKey === relationship.key && this.keyForRelationship) {
+        serializedKey = this.keyForRelationship(relationship.key, relationship.kind, "serialize");
+      }
 
       json[serializedKey] = this._generateSerializedHasMany(snapshot, relationship);
     },
@@ -15392,7 +15399,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.5.0-canary+be03d51b4b";
+  exports.default = "2.5.0-canary+07264f0646";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
