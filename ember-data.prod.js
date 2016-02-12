@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.5.0-canary+4d220c9227
+ * @version   2.5.0-canary+11627a9cf6
  */
 
 var define, requireModule, require, requirejs;
@@ -10945,6 +10945,42 @@ define('ember-data/-private/utils', ['exports', 'ember'], function (exports, _em
   exports.modelHasAttributeOrRelationshipNamedType = modelHasAttributeOrRelationshipNamedType;
   exports.getOwner = getOwner;
 });
+define('ember-data/-private/utils/parse-response-headers', ['exports', 'ember-data/-private/system/empty-object'], function (exports, _emberDataPrivateSystemEmptyObject) {
+  exports.default = parseResponseHeaders;
+
+  function _toArray(arr) { return Array.isArray(arr) ? arr : Array.from(arr); }
+
+  var CLRF = '\u000d\u000a';
+
+  function parseResponseHeaders(headersString) {
+    var headers = new _emberDataPrivateSystemEmptyObject.default();
+
+    if (!headersString) {
+      return headers;
+    }
+
+    var headerPairs = headersString.split(CLRF);
+
+    headerPairs.forEach(function (header) {
+      var _header$split = header.split(':');
+
+      var _header$split2 = _toArray(_header$split);
+
+      var field = _header$split2[0];
+
+      var value = _header$split2.slice(1);
+
+      field = field.trim();
+      value = value.join(':').trim();
+
+      if (value) {
+        headers[field] = value;
+      }
+    });
+
+    return headers;
+  }
+});
 define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
   var get = _ember.default.get;
 
@@ -11537,7 +11573,7 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
 /**
   @module ember-data
 */
-define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'ember-data/-private/adapters/errors', 'ember-data/-private/system/empty-object', 'ember-data/-private/adapters/build-url-mixin', 'ember-data/-private/features'], function (exports, _ember, _emberDataAdapter, _emberDataPrivateAdaptersErrors, _emberDataPrivateSystemEmptyObject, _emberDataPrivateAdaptersBuildUrlMixin, _emberDataPrivateFeatures) {
+define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'ember-data/-private/adapters/errors', 'ember-data/-private/adapters/build-url-mixin', 'ember-data/-private/features', 'ember-data/-private/utils/parse-response-headers'], function (exports, _ember, _emberDataAdapter, _emberDataPrivateAdaptersErrors, _emberDataPrivateAdaptersBuildUrlMixin, _emberDataPrivateFeatures, _emberDataPrivateUtilsParseResponseHeaders) {
   var MapWithDefault = _ember.default.MapWithDefault;
   var get = _ember.default.get;
 
@@ -12281,7 +12317,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
 
         hash.success = function (payload, textStatus, jqXHR) {
 
-          var response = adapter.handleResponse(jqXHR.status, parseResponseHeaders(jqXHR.getAllResponseHeaders()), payload, requestData);
+          var response = adapter.handleResponse(jqXHR.status, (0, _emberDataPrivateUtilsParseResponseHeaders.default)(jqXHR.getAllResponseHeaders()), payload, requestData);
 
           if (response && response.isAdapterError) {
             _ember.default.run.join(null, reject, response);
@@ -12300,7 +12336,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
           } else if (textStatus === 'abort') {
             error = new _emberDataPrivateAdaptersErrors.AbortError();
           } else {
-            error = adapter.handleResponse(jqXHR.status, parseResponseHeaders(jqXHR.getAllResponseHeaders()), adapter.parseErrorResponse(jqXHR.responseText) || errorThrown, requestData);
+            error = adapter.handleResponse(jqXHR.status, (0, _emberDataPrivateUtilsParseResponseHeaders.default)(jqXHR.getAllResponseHeaders()), adapter.parseErrorResponse(jqXHR.responseText) || errorThrown, requestData);
           }
 
           _ember.default.run.join(null, reject, error);
@@ -12427,28 +12463,6 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       return query;
     }
   });
-
-  function parseResponseHeaders(headerStr) {
-    var headers = new _emberDataPrivateSystemEmptyObject.default();
-    if (!headerStr) {
-      return headers;
-    }
-
-    var headerPairs = headerStr.split('\u000d\u000a');
-    for (var i = 0; i < headerPairs.length; i++) {
-      var headerPair = headerPairs[i];
-      // Can't use split() here because it does the wrong thing
-      // if the header value has the string ": " in it.
-      var index = headerPair.indexOf('\u003a\u0020');
-      if (index > 0) {
-        var key = headerPair.substring(0, index);
-        var val = headerPair.substring(index + 2);
-        headers[key] = val;
-      }
-    }
-
-    return headers;
-  }
 
   //From http://stackoverflow.com/questions/280634/endswith-in-javascript
   function endsWith(string, suffix) {
@@ -15311,7 +15325,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.5.0-canary+4d220c9227";
+  exports.default = "2.5.0-canary+11627a9cf6";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
