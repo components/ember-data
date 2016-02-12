@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.5.0-canary+03ceeb51d8
+ * @version   2.5.0-canary+3db284890c
  */
 
 var define, requireModule, require, requirejs;
@@ -6738,11 +6738,10 @@ define("ember-data/-private/system/relationships/has-many", ["exports", "ember",
         return relationship.getRecords();
       },
       set: function (key, records) {
-        var Model = require('ember-data/model').default;
         (0, _emberDataPrivateDebug.assert)("You must pass an array of records to set a hasMany relationship", (0, _emberDataPrivateSystemIsArrayLike.default)(records));
         (0, _emberDataPrivateDebug.assert)("All elements of a hasMany relationship must be instances of DS.Model, you passed " + _ember.default.inspect(records), (function () {
           return _ember.default.A(records).every(function (record) {
-            return Model.detectInstance(record);
+            return record.hasOwnProperty('_internalModel') === true;
           });
         })());
 
@@ -15558,7 +15557,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.5.0-canary+03ceeb51d8";
+  exports.default = "2.5.0-canary+3db284890c";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
