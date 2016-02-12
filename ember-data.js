@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.5.0-canary+11627a9cf6
+ * @version   2.5.0-canary+03ceeb51d8
  */
 
 var define, requireModule, require, requirejs;
@@ -976,514 +976,6 @@ define("ember-data/-private/serializers", ["exports", "ember-data/serializers/js
 /**
   @module ember-data
 */
-define('ember-data/-private/serializers/embedded-records-mixin', ['exports', 'ember', 'ember-data/-private/debug'], function (exports, _ember, _emberDataPrivateDebug) {
-  function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } }
-
-  var get = _ember.default.get;
-  var set = _ember.default.set;
-  var camelize = _ember.default.String.camelize;
-
-  /**
-    ## Using Embedded Records
-  
-    `DS.EmbeddedRecordsMixin` supports serializing embedded records.
-  
-    To set up embedded records, include the mixin when extending a serializer,
-    then define and configure embedded (model) relationships.
-  
-    Below is an example of a per-type serializer (`post` type).
-  
-    ```app/serializers/post.js
-    import DS from 'ember-data';
-  
-    export default DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
-      attrs: {
-        author: { embedded: 'always' },
-        comments: { serialize: 'ids' }
-      }
-    });
-    ```
-    Note that this use of `{ embedded: 'always' }` is unrelated to
-    the `{ embedded: 'always' }` that is defined as an option on `DS.attr` as part of
-    defining a model while working with the `ActiveModelSerializer`.  Nevertheless,
-    using `{ embedded: 'always' }` as an option to `DS.attr` is not a valid way to setup
-    embedded records.
-  
-    The `attrs` option for a resource `{ embedded: 'always' }` is shorthand for:
-  
-    ```js
-    {
-      serialize: 'records',
-      deserialize: 'records'
-    }
-    ```
-  
-    ### Configuring Attrs
-  
-    A resource's `attrs` option may be set to use `ids`, `records` or false for the
-    `serialize`  and `deserialize` settings.
-  
-    The `attrs` property can be set on the `ApplicationSerializer` or a per-type
-    serializer.
-  
-    In the case where embedded JSON is expected while extracting a payload (reading)
-    the setting is `deserialize: 'records'`, there is no need to use `ids` when
-    extracting as that is the default behavior without this mixin if you are using
-    the vanilla `EmbeddedRecordsMixin`. Likewise, to embed JSON in the payload while
-    serializing `serialize: 'records'` is the setting to use. There is an option of
-    not embedding JSON in the serialized payload by using `serialize: 'ids'`. If you
-    do not want the relationship sent at all, you can use `serialize: false`.
-  
-  
-    ### EmbeddedRecordsMixin defaults
-    If you do not overwrite `attrs` for a specific relationship, the `EmbeddedRecordsMixin`
-    will behave in the following way:
-  
-    BelongsTo: `{ serialize: 'id', deserialize: 'id' }`
-    HasMany:   `{ serialize: false, deserialize: 'ids' }`
-  
-    ### Model Relationships
-  
-    Embedded records must have a model defined to be extracted and serialized. Note that
-    when defining any relationships on your model such as `belongsTo` and `hasMany`, you
-    should not both specify `async: true` and also indicate through the serializer's
-    `attrs` attribute that the related model should be embedded for deserialization.
-    If a model is declared embedded for deserialization (`embedded: 'always'` or `deserialize: 'records'`),
-    then do not use `async: true`.
-  
-    To successfully extract and serialize embedded records the model relationships
-    must be setup correcty. See the
-    [defining relationships](/guides/models/defining-models/#toc_defining-relationships)
-    section of the **Defining Models** guide page.
-  
-    Records without an `id` property are not considered embedded records, model
-    instances must have an `id` property to be used with Ember Data.
-  
-    ### Example JSON payloads, Models and Serializers
-  
-    **When customizing a serializer it is important to grok what the customizations
-    are. Please read the docs for the methods this mixin provides, in case you need
-    to modify it to fit your specific needs.**
-  
-    For example review the docs for each method of this mixin:
-    * [normalize](/api/data/classes/DS.EmbeddedRecordsMixin.html#method_normalize)
-    * [serializeBelongsTo](/api/data/classes/DS.EmbeddedRecordsMixin.html#method_serializeBelongsTo)
-    * [serializeHasMany](/api/data/classes/DS.EmbeddedRecordsMixin.html#method_serializeHasMany)
-  
-    @class EmbeddedRecordsMixin
-    @namespace DS
-  */
-  exports.default = _ember.default.Mixin.create({
-
-    /**
-      Normalize the record and recursively normalize/extract all the embedded records
-      while pushing them into the store as they are encountered
-       A payload with an attr configured for embedded records needs to be extracted:
-       ```js
-      {
-        "post": {
-          "id": "1"
-          "title": "Rails is omakase",
-          "comments": [{
-            "id": "1",
-            "body": "Rails is unagi"
-          }, {
-            "id": "2",
-            "body": "Omakase O_o"
-          }]
-        }
-      }
-      ```
-     @method normalize
-     @param {DS.Model} typeClass
-     @param {Object} hash to be normalized
-     @param {String} prop the hash has been referenced by
-     @return {Object} the normalized hash
-    **/
-    normalize: function (typeClass, hash, prop) {
-      var normalizedHash = this._super(typeClass, hash, prop);
-      return this._extractEmbeddedRecords(this, this.store, typeClass, normalizedHash);
-    },
-
-    keyForRelationship: function (key, typeClass, method) {
-      if (method === 'serialize' && this.hasSerializeRecordsOption(key) || method === 'deserialize' && this.hasDeserializeRecordsOption(key)) {
-        return this.keyForAttribute(key, method);
-      } else {
-        return this._super(key, typeClass, method) || key;
-      }
-    },
-
-    /**
-      Serialize `belongsTo` relationship when it is configured as an embedded object.
-       This example of an author model belongs to a post model:
-       ```js
-      Post = DS.Model.extend({
-        title:    DS.attr('string'),
-        body:     DS.attr('string'),
-        author:   DS.belongsTo('author')
-      });
-       Author = DS.Model.extend({
-        name:     DS.attr('string'),
-        post:     DS.belongsTo('post')
-      });
-      ```
-       Use a custom (type) serializer for the post model to configure embedded author
-       ```app/serializers/post.js
-      import DS from 'ember-data;
-       export default DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          author: { embedded: 'always' }
-        }
-      })
-      ```
-       A payload with an attribute configured for embedded records can serialize
-      the records together under the root attribute's payload:
-       ```js
-      {
-        "post": {
-          "id": "1"
-          "title": "Rails is omakase",
-          "author": {
-            "id": "2"
-            "name": "dhh"
-          }
-        }
-      }
-      ```
-       @method serializeBelongsTo
-      @param {DS.Snapshot} snapshot
-      @param {Object} json
-      @param {Object} relationship
-    */
-    serializeBelongsTo: function (snapshot, json, relationship) {
-      var attr = relationship.key;
-      if (this.noSerializeOptionSpecified(attr)) {
-        this._super(snapshot, json, relationship);
-        return;
-      }
-      var includeIds = this.hasSerializeIdsOption(attr);
-      var includeRecords = this.hasSerializeRecordsOption(attr);
-      var embeddedSnapshot = snapshot.belongsTo(attr);
-      var key;
-      if (includeIds) {
-        key = this.keyForRelationship(attr, relationship.kind, 'serialize');
-        if (!embeddedSnapshot) {
-          json[key] = null;
-        } else {
-          json[key] = embeddedSnapshot.id;
-
-          if (relationship.options.polymorphic) {
-            this.serializePolymorphicType(snapshot, json, relationship);
-          }
-        }
-      } else if (includeRecords) {
-        this._serializeEmbeddedBelongsTo(snapshot, json, relationship);
-      }
-    },
-
-    _serializeEmbeddedBelongsTo: function (snapshot, json, relationship) {
-      var embeddedSnapshot = snapshot.belongsTo(relationship.key);
-      var serializedKey = this._getMappedKey(relationship.key, snapshot.type);
-      if (serializedKey === relationship.key && this.keyForRelationship) {
-        serializedKey = this.keyForRelationship(relationship.key, relationship.kind, "serialize");
-      }
-
-      if (!embeddedSnapshot) {
-        json[serializedKey] = null;
-      } else {
-        json[serializedKey] = embeddedSnapshot.record.serialize({ includeId: true });
-        this.removeEmbeddedForeignKey(snapshot, embeddedSnapshot, relationship, json[serializedKey]);
-
-        if (relationship.options.polymorphic) {
-          this.serializePolymorphicType(snapshot, json, relationship);
-        }
-      }
-    },
-
-    /**
-      Serialize `hasMany` relationship when it is configured as embedded objects.
-       This example of a post model has many comments:
-       ```js
-      Post = DS.Model.extend({
-        title:    DS.attr('string'),
-        body:     DS.attr('string'),
-        comments: DS.hasMany('comment')
-      });
-       Comment = DS.Model.extend({
-        body:     DS.attr('string'),
-        post:     DS.belongsTo('post')
-      });
-      ```
-       Use a custom (type) serializer for the post model to configure embedded comments
-       ```app/serializers/post.js
-      import DS from 'ember-data;
-       export default DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          comments: { embedded: 'always' }
-        }
-      })
-      ```
-       A payload with an attribute configured for embedded records can serialize
-      the records together under the root attribute's payload:
-       ```js
-      {
-        "post": {
-          "id": "1"
-          "title": "Rails is omakase",
-          "body": "I want this for my ORM, I want that for my template language..."
-          "comments": [{
-            "id": "1",
-            "body": "Rails is unagi"
-          }, {
-            "id": "2",
-            "body": "Omakase O_o"
-          }]
-        }
-      }
-      ```
-       The attrs options object can use more specific instruction for extracting and
-      serializing. When serializing, an option to embed `ids` or `records` can be set.
-      When extracting the only option is `records`.
-       So `{ embedded: 'always' }` is shorthand for:
-      `{ serialize: 'records', deserialize: 'records' }`
-       To embed the `ids` for a related object (using a hasMany relationship):
-       ```app/serializers/post.js
-      import DS from 'ember-data;
-       export default DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
-        attrs: {
-          comments: { serialize: 'ids', deserialize: 'records' }
-        }
-      })
-      ```
-       ```js
-      {
-        "post": {
-          "id": "1"
-          "title": "Rails is omakase",
-          "body": "I want this for my ORM, I want that for my template language..."
-          "comments": ["1", "2"]
-        }
-      }
-      ```
-       @method serializeHasMany
-      @param {DS.Snapshot} snapshot
-      @param {Object} json
-      @param {Object} relationship
-    */
-    serializeHasMany: function (snapshot, json, relationship) {
-      var attr = relationship.key;
-      if (this.noSerializeOptionSpecified(attr)) {
-        this._super(snapshot, json, relationship);
-        return;
-      }
-      var includeIds = this.hasSerializeIdsOption(attr);
-      var includeRecords = this.hasSerializeRecordsOption(attr);
-      if (includeIds) {
-        var serializedKey = this.keyForRelationship(attr, relationship.kind, 'serialize');
-        json[serializedKey] = snapshot.hasMany(attr, { ids: true });
-      } else if (includeRecords) {
-        this._serializeEmbeddedHasMany(snapshot, json, relationship);
-      }
-    },
-
-    _serializeEmbeddedHasMany: function (snapshot, json, relationship) {
-      var serializedKey = this._getMappedKey(relationship.key, snapshot.type);
-      if (serializedKey === relationship.key && this.keyForRelationship) {
-        serializedKey = this.keyForRelationship(relationship.key, relationship.kind, "serialize");
-      }
-
-      (0, _emberDataPrivateDebug.warn)('The embedded relationship \'' + serializedKey + '\' is undefined for \'' + snapshot.modelName + '\' with id \'' + snapshot.id + '\'. Please include it in your original payload.', _ember.default.typeOf(snapshot.hasMany(relationship.key)) !== 'undefined', { id: 'ds.serializer.embedded-relationship-undefined' });
-
-      json[serializedKey] = this._generateSerializedHasMany(snapshot, relationship);
-    },
-
-    /*
-      Returns an array of embedded records serialized to JSON
-    */
-    _generateSerializedHasMany: function (snapshot, relationship) {
-      var hasMany = snapshot.hasMany(relationship.key);
-      var manyArray = _ember.default.A(hasMany);
-      var ret = new Array(manyArray.length);
-
-      for (var i = 0; i < manyArray.length; i++) {
-        var embeddedSnapshot = manyArray[i];
-        var embeddedJson = embeddedSnapshot.record.serialize({ includeId: true });
-        this.removeEmbeddedForeignKey(snapshot, embeddedSnapshot, relationship, embeddedJson);
-        ret[i] = embeddedJson;
-      }
-
-      return ret;
-    },
-
-    /**
-      When serializing an embedded record, modify the property (in the json payload)
-      that refers to the parent record (foreign key for relationship).
-       Serializing a `belongsTo` relationship removes the property that refers to the
-      parent record
-       Serializing a `hasMany` relationship does not remove the property that refers to
-      the parent record.
-       @method removeEmbeddedForeignKey
-      @param {DS.Snapshot} snapshot
-      @param {DS.Snapshot} embeddedSnapshot
-      @param {Object} relationship
-      @param {Object} json
-    */
-    removeEmbeddedForeignKey: function (snapshot, embeddedSnapshot, relationship, json) {
-      if (relationship.kind === 'hasMany') {
-        return;
-      } else if (relationship.kind === 'belongsTo') {
-        var parentRecord = snapshot.type.inverseFor(relationship.key, this.store);
-        if (parentRecord) {
-          var name = parentRecord.name;
-          var embeddedSerializer = this.store.serializerFor(embeddedSnapshot.modelName);
-          var parentKey = embeddedSerializer.keyForRelationship(name, parentRecord.kind, 'deserialize');
-          if (parentKey) {
-            delete json[parentKey];
-          }
-        }
-      }
-    },
-
-    // checks config for attrs option to embedded (always) - serialize and deserialize
-    hasEmbeddedAlwaysOption: function (attr) {
-      var option = this.attrsOption(attr);
-      return option && option.embedded === 'always';
-    },
-
-    // checks config for attrs option to serialize ids
-    hasSerializeRecordsOption: function (attr) {
-      var alwaysEmbed = this.hasEmbeddedAlwaysOption(attr);
-      var option = this.attrsOption(attr);
-      return alwaysEmbed || option && option.serialize === 'records';
-    },
-
-    // checks config for attrs option to serialize records
-    hasSerializeIdsOption: function (attr) {
-      var option = this.attrsOption(attr);
-      return option && (option.serialize === 'ids' || option.serialize === 'id');
-    },
-
-    // checks config for attrs option to serialize records
-    noSerializeOptionSpecified: function (attr) {
-      var option = this.attrsOption(attr);
-      return !(option && (option.serialize || option.embedded));
-    },
-
-    // checks config for attrs option to deserialize records
-    // a defined option object for a resource is treated the same as
-    // `deserialize: 'records'`
-    hasDeserializeRecordsOption: function (attr) {
-      var alwaysEmbed = this.hasEmbeddedAlwaysOption(attr);
-      var option = this.attrsOption(attr);
-      return alwaysEmbed || option && option.deserialize === 'records';
-    },
-
-    attrsOption: function (attr) {
-      var attrs = this.get('attrs');
-      return attrs && (attrs[camelize(attr)] || attrs[attr]);
-    },
-
-    /**
-     @method _extractEmbeddedRecords
-     @private
-    */
-    _extractEmbeddedRecords: function (serializer, store, typeClass, partial) {
-      var _this = this;
-
-      typeClass.eachRelationship(function (key, relationship) {
-        if (serializer.hasDeserializeRecordsOption(key)) {
-          if (relationship.kind === "hasMany") {
-            _this._extractEmbeddedHasMany(store, key, partial, relationship);
-          }
-          if (relationship.kind === "belongsTo") {
-            _this._extractEmbeddedBelongsTo(store, key, partial, relationship);
-          }
-        }
-      });
-      return partial;
-    },
-
-    /**
-     @method _extractEmbeddedHasMany
-     @private
-    */
-    _extractEmbeddedHasMany: function (store, key, hash, relationshipMeta) {
-      var relationshipHash = get(hash, 'data.relationships.' + key + '.data');
-
-      if (!relationshipHash) {
-        return;
-      }
-
-      var hasMany = new Array(relationshipHash.length);
-
-      for (var i = 0; i < relationshipHash.length; i++) {
-        var item = relationshipHash[i];
-
-        var _normalizeEmbeddedRelationship = this._normalizeEmbeddedRelationship(store, relationshipMeta, item);
-
-        var data = _normalizeEmbeddedRelationship.data;
-        var included = _normalizeEmbeddedRelationship.included;
-
-        hash.included = hash.included || [];
-        hash.included.push(data);
-        if (included) {
-          var _hash$included;
-
-          (_hash$included = hash.included).push.apply(_hash$included, _toConsumableArray(included));
-        }
-
-        hasMany[i] = { id: data.id, type: data.type };
-      }
-
-      var relationship = { data: hasMany };
-      set(hash, 'data.relationships.' + key, relationship);
-    },
-
-    /**
-     @method _extractEmbeddedBelongsTo
-     @private
-    */
-    _extractEmbeddedBelongsTo: function (store, key, hash, relationshipMeta) {
-      var relationshipHash = get(hash, 'data.relationships.' + key + '.data');
-      if (!relationshipHash) {
-        return;
-      }
-
-      var _normalizeEmbeddedRelationship2 = this._normalizeEmbeddedRelationship(store, relationshipMeta, relationshipHash);
-
-      var data = _normalizeEmbeddedRelationship2.data;
-      var included = _normalizeEmbeddedRelationship2.included;
-
-      hash.included = hash.included || [];
-      hash.included.push(data);
-      if (included) {
-        var _hash$included2;
-
-        (_hash$included2 = hash.included).push.apply(_hash$included2, _toConsumableArray(included));
-      }
-
-      var belongsTo = { id: data.id, type: data.type };
-      var relationship = { data: belongsTo };
-
-      set(hash, 'data.relationships.' + key, relationship);
-    },
-
-    /**
-     @method _normalizeEmbeddedRelationship
-     @private
-    */
-    _normalizeEmbeddedRelationship: function (store, relationshipMeta, relationshipHash) {
-      var modelName = relationshipMeta.type;
-      if (relationshipMeta.options.polymorphic) {
-        modelName = relationshipHash.type;
-      }
-      var modelClass = store.modelFor(modelName);
-      var serializer = store.serializerFor(modelName);
-
-      return serializer.normalize(modelClass, relationshipHash, null);
-    }
-  });
-});
 define("ember-data/-private/system/clone-null", ["exports", "ember-data/-private/system/empty-object"], function (exports, _emberDataPrivateSystemEmptyObject) {
   exports.default = cloneNull;
 
@@ -7976,86 +7468,6 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
     }
   };
 });
-define('ember-data/-private/system/serializer', ['exports', 'ember'], function (exports, _ember) {
-
-  /**
-    `DS.Serializer` is an abstract base class that you should override in your
-    application to customize it for your backend. The minimum set of methods
-    that you should implement is:
-  
-      * `normalizeResponse()`
-      * `serialize()`
-  
-    And you can optionally override the following methods:
-  
-      * `normalize()`
-  
-    For an example implementation, see
-    [DS.JSONSerializer](DS.JSONSerializer.html), the included JSON serializer.
-  
-    @class Serializer
-    @namespace DS
-    @extends Ember.Object
-  */
-
-  exports.default = _ember.default.Object.extend({
-
-    /**
-      The `store` property is the application's `store` that contains all records.
-      It's injected as a service.
-      It can be used to push records from a non flat data structure server
-      response.
-       @property store
-      @type {DS.Store}
-      @public
-    */
-
-    /**
-      The `normalizeResponse` method is used to normalize a payload from the
-      server to a JSON-API Document.
-       http://jsonapi.org/format/#document-structure
-       @method normalizeResponse
-      @param {DS.Store} store
-      @param {DS.Model} primaryModelClass
-      @param {Object} payload
-      @param {String|Number} id
-      @param {String} requestType
-      @return {Object} JSON-API Document
-    */
-    normalizeResponse: null,
-
-    /**
-      The `serialize` method is used when a record is saved in order to convert
-      the record into the form that your external data source expects.
-       `serialize` takes an optional `options` hash with a single option:
-       - `includeId`: If this is `true`, `serialize` should include the ID
-        in the serialized object it builds.
-       @method serialize
-      @param {DS.Model} record
-      @param {Object} [options]
-      @return {Object}
-    */
-    serialize: null,
-
-    /**
-      The `normalize` method is used to convert a payload received from your
-      external data source into the normalized form `store.push()` expects. You
-      should override this method, munge the hash and return the normalized
-      payload.
-       @method normalize
-      @param {DS.Model} typeClass
-      @param {Object} hash
-      @return {Object}
-    */
-    normalize: function (typeClass, hash) {
-      return hash;
-    }
-
-  });
-});
-/**
-  @module ember-data
-*/
 define('ember-data/-private/system/snapshot-record-array', ['exports', 'ember-data/-private/features'], function (exports, _emberDataPrivateFeatures) {
   exports.default = SnapshotRecordArray;
 
@@ -12822,7 +12234,7 @@ define("ember-data/attr", ["exports", "ember", "ember-data/-private/debug"], fun
   //  *
   //  */
 });
-define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/core", "ember-data/-private/system/normalize-model-name", "ember-data/-private/system/model/internal-model", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/store", "ember-data/-private/system/model", "ember-data/model", "ember-data/-private/system/snapshot", "ember-data/adapter", "ember-data/-private/system/serializer", "ember-data/-private/system/debug", "ember-data/-private/adapters/errors", "ember-data/-private/system/record-arrays", "ember-data/-private/system/many-array", "ember-data/-private/system/record-array-manager", "ember-data/-private/adapters", "ember-data/-private/adapters/build-url-mixin", "ember-data/-private/serializers", "ember-inflector", "ember-data/-private/serializers/embedded-records-mixin", "ember-data/-private/transforms", "ember-data/relationships", "ember-data/setup-container", "ember-data/-private/instance-initializers/initialize-store-service", "ember-data/-private/system/container-proxy", "ember-data/-private/system/relationships/state/relationship"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateCore, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStore, _emberDataPrivateSystemModel, _emberDataModel, _emberDataPrivateSystemSnapshot, _emberDataAdapter, _emberDataPrivateSystemSerializer, _emberDataPrivateSystemDebug, _emberDataPrivateAdaptersErrors, _emberDataPrivateSystemRecordArrays, _emberDataPrivateSystemManyArray, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateAdapters, _emberDataPrivateAdaptersBuildUrlMixin, _emberDataPrivateSerializers, _emberInflector, _emberDataPrivateSerializersEmbeddedRecordsMixin, _emberDataPrivateTransforms, _emberDataRelationships, _emberDataSetupContainer, _emberDataPrivateInstanceInitializersInitializeStoreService, _emberDataPrivateSystemContainerProxy, _emberDataPrivateSystemRelationshipsStateRelationship) {
+define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/core", "ember-data/-private/system/normalize-model-name", "ember-data/-private/system/model/internal-model", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/store", "ember-data/-private/system/model", "ember-data/model", "ember-data/-private/system/snapshot", "ember-data/adapter", "ember-data/serializer", "ember-data/-private/system/debug", "ember-data/-private/adapters/errors", "ember-data/-private/system/record-arrays", "ember-data/-private/system/many-array", "ember-data/-private/system/record-array-manager", "ember-data/-private/adapters", "ember-data/-private/adapters/build-url-mixin", "ember-data/-private/serializers", "ember-inflector", "ember-data/serializers/embedded-records-mixin", "ember-data/-private/transforms", "ember-data/relationships", "ember-data/setup-container", "ember-data/-private/instance-initializers/initialize-store-service", "ember-data/-private/system/container-proxy", "ember-data/-private/system/relationships/state/relationship"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateCore, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStore, _emberDataPrivateSystemModel, _emberDataModel, _emberDataPrivateSystemSnapshot, _emberDataAdapter, _emberDataSerializer, _emberDataPrivateSystemDebug, _emberDataPrivateAdaptersErrors, _emberDataPrivateSystemRecordArrays, _emberDataPrivateSystemManyArray, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateAdapters, _emberDataPrivateAdaptersBuildUrlMixin, _emberDataPrivateSerializers, _emberInflector, _emberDataSerializersEmbeddedRecordsMixin, _emberDataPrivateTransforms, _emberDataRelationships, _emberDataSetupContainer, _emberDataPrivateInstanceInitializersInitializeStoreService, _emberDataPrivateSystemContainerProxy, _emberDataPrivateSystemRelationshipsStateRelationship) {
   /**
     Ember Data
     @module ember-data
@@ -12863,7 +12275,7 @@ define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-da
   _emberDataPrivateCore.default.errorsHashToArray = _emberDataPrivateAdaptersErrors.errorsHashToArray;
   _emberDataPrivateCore.default.errorsArrayToHash = _emberDataPrivateAdaptersErrors.errorsArrayToHash;
 
-  _emberDataPrivateCore.default.Serializer = _emberDataPrivateSystemSerializer.default;
+  _emberDataPrivateCore.default.Serializer = _emberDataSerializer.default;
 
   _emberDataPrivateCore.default.DebugAdapter = _emberDataPrivateSystemDebug.default;
 
@@ -12889,7 +12301,7 @@ define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-da
   _emberDataPrivateCore.default.NumberTransform = _emberDataPrivateTransforms.NumberTransform;
   _emberDataPrivateCore.default.BooleanTransform = _emberDataPrivateTransforms.BooleanTransform;
 
-  _emberDataPrivateCore.default.EmbeddedRecordsMixin = _emberDataPrivateSerializersEmbeddedRecordsMixin.default;
+  _emberDataPrivateCore.default.EmbeddedRecordsMixin = _emberDataSerializersEmbeddedRecordsMixin.default;
 
   _emberDataPrivateCore.default.belongsTo = _emberDataRelationships.belongsTo;
   _emberDataPrivateCore.default.hasMany = _emberDataRelationships.hasMany;
@@ -12922,6 +12334,594 @@ define("ember-data/relationships", ["exports", "ember-data/-private/system/relat
 /**
   @module ember-data
 */
+define('ember-data/serializer', ['exports', 'ember'], function (exports, _ember) {
+
+  /**
+    `DS.Serializer` is an abstract base class that you should override in your
+    application to customize it for your backend. The minimum set of methods
+    that you should implement is:
+  
+      * `normalizeResponse()`
+      * `serialize()`
+  
+    And you can optionally override the following methods:
+  
+      * `normalize()`
+  
+    For an example implementation, see
+    [DS.JSONSerializer](DS.JSONSerializer.html), the included JSON serializer.
+  
+    @class Serializer
+    @namespace DS
+    @extends Ember.Object
+  */
+
+  exports.default = _ember.default.Object.extend({
+
+    /**
+      The `store` property is the application's `store` that contains all records.
+      It's injected as a service.
+      It can be used to push records from a non flat data structure server
+      response.
+       @property store
+      @type {DS.Store}
+      @public
+    */
+
+    /**
+      The `normalizeResponse` method is used to normalize a payload from the
+      server to a JSON-API Document.
+       http://jsonapi.org/format/#document-structure
+       @method normalizeResponse
+      @param {DS.Store} store
+      @param {DS.Model} primaryModelClass
+      @param {Object} payload
+      @param {String|Number} id
+      @param {String} requestType
+      @return {Object} JSON-API Document
+    */
+    normalizeResponse: null,
+
+    /**
+      The `serialize` method is used when a record is saved in order to convert
+      the record into the form that your external data source expects.
+       `serialize` takes an optional `options` hash with a single option:
+       - `includeId`: If this is `true`, `serialize` should include the ID
+        in the serialized object it builds.
+       @method serialize
+      @param {DS.Model} record
+      @param {Object} [options]
+      @return {Object}
+    */
+    serialize: null,
+
+    /**
+      The `normalize` method is used to convert a payload received from your
+      external data source into the normalized form `store.push()` expects. You
+      should override this method, munge the hash and return the normalized
+      payload.
+       @method normalize
+      @param {DS.Model} typeClass
+      @param {Object} hash
+      @return {Object}
+    */
+    normalize: function (typeClass, hash) {
+      return hash;
+    }
+
+  });
+});
+/**
+  @module ember-data
+*/
+define('ember-data/serializers/embedded-records-mixin', ['exports', 'ember', 'ember-data/-private/debug'], function (exports, _ember, _emberDataPrivateDebug) {
+  function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } }
+
+  var get = _ember.default.get;
+  var set = _ember.default.set;
+  var camelize = _ember.default.String.camelize;
+
+  /**
+    ## Using Embedded Records
+  
+    `DS.EmbeddedRecordsMixin` supports serializing embedded records.
+  
+    To set up embedded records, include the mixin when extending a serializer,
+    then define and configure embedded (model) relationships.
+  
+    Below is an example of a per-type serializer (`post` type).
+  
+    ```app/serializers/post.js
+    import DS from 'ember-data';
+  
+    export default DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+      attrs: {
+        author: { embedded: 'always' },
+        comments: { serialize: 'ids' }
+      }
+    });
+    ```
+    Note that this use of `{ embedded: 'always' }` is unrelated to
+    the `{ embedded: 'always' }` that is defined as an option on `DS.attr` as part of
+    defining a model while working with the `ActiveModelSerializer`.  Nevertheless,
+    using `{ embedded: 'always' }` as an option to `DS.attr` is not a valid way to setup
+    embedded records.
+  
+    The `attrs` option for a resource `{ embedded: 'always' }` is shorthand for:
+  
+    ```js
+    {
+      serialize: 'records',
+      deserialize: 'records'
+    }
+    ```
+  
+    ### Configuring Attrs
+  
+    A resource's `attrs` option may be set to use `ids`, `records` or false for the
+    `serialize`  and `deserialize` settings.
+  
+    The `attrs` property can be set on the `ApplicationSerializer` or a per-type
+    serializer.
+  
+    In the case where embedded JSON is expected while extracting a payload (reading)
+    the setting is `deserialize: 'records'`, there is no need to use `ids` when
+    extracting as that is the default behavior without this mixin if you are using
+    the vanilla `EmbeddedRecordsMixin`. Likewise, to embed JSON in the payload while
+    serializing `serialize: 'records'` is the setting to use. There is an option of
+    not embedding JSON in the serialized payload by using `serialize: 'ids'`. If you
+    do not want the relationship sent at all, you can use `serialize: false`.
+  
+  
+    ### EmbeddedRecordsMixin defaults
+    If you do not overwrite `attrs` for a specific relationship, the `EmbeddedRecordsMixin`
+    will behave in the following way:
+  
+    BelongsTo: `{ serialize: 'id', deserialize: 'id' }`
+    HasMany:   `{ serialize: false, deserialize: 'ids' }`
+  
+    ### Model Relationships
+  
+    Embedded records must have a model defined to be extracted and serialized. Note that
+    when defining any relationships on your model such as `belongsTo` and `hasMany`, you
+    should not both specify `async: true` and also indicate through the serializer's
+    `attrs` attribute that the related model should be embedded for deserialization.
+    If a model is declared embedded for deserialization (`embedded: 'always'` or `deserialize: 'records'`),
+    then do not use `async: true`.
+  
+    To successfully extract and serialize embedded records the model relationships
+    must be setup correcty. See the
+    [defining relationships](/guides/models/defining-models/#toc_defining-relationships)
+    section of the **Defining Models** guide page.
+  
+    Records without an `id` property are not considered embedded records, model
+    instances must have an `id` property to be used with Ember Data.
+  
+    ### Example JSON payloads, Models and Serializers
+  
+    **When customizing a serializer it is important to grok what the customizations
+    are. Please read the docs for the methods this mixin provides, in case you need
+    to modify it to fit your specific needs.**
+  
+    For example review the docs for each method of this mixin:
+    * [normalize](/api/data/classes/DS.EmbeddedRecordsMixin.html#method_normalize)
+    * [serializeBelongsTo](/api/data/classes/DS.EmbeddedRecordsMixin.html#method_serializeBelongsTo)
+    * [serializeHasMany](/api/data/classes/DS.EmbeddedRecordsMixin.html#method_serializeHasMany)
+  
+    @class EmbeddedRecordsMixin
+    @namespace DS
+  */
+  exports.default = _ember.default.Mixin.create({
+
+    /**
+      Normalize the record and recursively normalize/extract all the embedded records
+      while pushing them into the store as they are encountered
+       A payload with an attr configured for embedded records needs to be extracted:
+       ```js
+      {
+        "post": {
+          "id": "1"
+          "title": "Rails is omakase",
+          "comments": [{
+            "id": "1",
+            "body": "Rails is unagi"
+          }, {
+            "id": "2",
+            "body": "Omakase O_o"
+          }]
+        }
+      }
+      ```
+     @method normalize
+     @param {DS.Model} typeClass
+     @param {Object} hash to be normalized
+     @param {String} prop the hash has been referenced by
+     @return {Object} the normalized hash
+    **/
+    normalize: function (typeClass, hash, prop) {
+      var normalizedHash = this._super(typeClass, hash, prop);
+      return this._extractEmbeddedRecords(this, this.store, typeClass, normalizedHash);
+    },
+
+    keyForRelationship: function (key, typeClass, method) {
+      if (method === 'serialize' && this.hasSerializeRecordsOption(key) || method === 'deserialize' && this.hasDeserializeRecordsOption(key)) {
+        return this.keyForAttribute(key, method);
+      } else {
+        return this._super(key, typeClass, method) || key;
+      }
+    },
+
+    /**
+      Serialize `belongsTo` relationship when it is configured as an embedded object.
+       This example of an author model belongs to a post model:
+       ```js
+      Post = DS.Model.extend({
+        title:    DS.attr('string'),
+        body:     DS.attr('string'),
+        author:   DS.belongsTo('author')
+      });
+       Author = DS.Model.extend({
+        name:     DS.attr('string'),
+        post:     DS.belongsTo('post')
+      });
+      ```
+       Use a custom (type) serializer for the post model to configure embedded author
+       ```app/serializers/post.js
+      import DS from 'ember-data;
+       export default DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          author: { embedded: 'always' }
+        }
+      })
+      ```
+       A payload with an attribute configured for embedded records can serialize
+      the records together under the root attribute's payload:
+       ```js
+      {
+        "post": {
+          "id": "1"
+          "title": "Rails is omakase",
+          "author": {
+            "id": "2"
+            "name": "dhh"
+          }
+        }
+      }
+      ```
+       @method serializeBelongsTo
+      @param {DS.Snapshot} snapshot
+      @param {Object} json
+      @param {Object} relationship
+    */
+    serializeBelongsTo: function (snapshot, json, relationship) {
+      var attr = relationship.key;
+      if (this.noSerializeOptionSpecified(attr)) {
+        this._super(snapshot, json, relationship);
+        return;
+      }
+      var includeIds = this.hasSerializeIdsOption(attr);
+      var includeRecords = this.hasSerializeRecordsOption(attr);
+      var embeddedSnapshot = snapshot.belongsTo(attr);
+      var key;
+      if (includeIds) {
+        key = this.keyForRelationship(attr, relationship.kind, 'serialize');
+        if (!embeddedSnapshot) {
+          json[key] = null;
+        } else {
+          json[key] = embeddedSnapshot.id;
+
+          if (relationship.options.polymorphic) {
+            this.serializePolymorphicType(snapshot, json, relationship);
+          }
+        }
+      } else if (includeRecords) {
+        this._serializeEmbeddedBelongsTo(snapshot, json, relationship);
+      }
+    },
+
+    _serializeEmbeddedBelongsTo: function (snapshot, json, relationship) {
+      var embeddedSnapshot = snapshot.belongsTo(relationship.key);
+      var serializedKey = this._getMappedKey(relationship.key, snapshot.type);
+      if (serializedKey === relationship.key && this.keyForRelationship) {
+        serializedKey = this.keyForRelationship(relationship.key, relationship.kind, "serialize");
+      }
+
+      if (!embeddedSnapshot) {
+        json[serializedKey] = null;
+      } else {
+        json[serializedKey] = embeddedSnapshot.record.serialize({ includeId: true });
+        this.removeEmbeddedForeignKey(snapshot, embeddedSnapshot, relationship, json[serializedKey]);
+
+        if (relationship.options.polymorphic) {
+          this.serializePolymorphicType(snapshot, json, relationship);
+        }
+      }
+    },
+
+    /**
+      Serialize `hasMany` relationship when it is configured as embedded objects.
+       This example of a post model has many comments:
+       ```js
+      Post = DS.Model.extend({
+        title:    DS.attr('string'),
+        body:     DS.attr('string'),
+        comments: DS.hasMany('comment')
+      });
+       Comment = DS.Model.extend({
+        body:     DS.attr('string'),
+        post:     DS.belongsTo('post')
+      });
+      ```
+       Use a custom (type) serializer for the post model to configure embedded comments
+       ```app/serializers/post.js
+      import DS from 'ember-data;
+       export default DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          comments: { embedded: 'always' }
+        }
+      })
+      ```
+       A payload with an attribute configured for embedded records can serialize
+      the records together under the root attribute's payload:
+       ```js
+      {
+        "post": {
+          "id": "1"
+          "title": "Rails is omakase",
+          "body": "I want this for my ORM, I want that for my template language..."
+          "comments": [{
+            "id": "1",
+            "body": "Rails is unagi"
+          }, {
+            "id": "2",
+            "body": "Omakase O_o"
+          }]
+        }
+      }
+      ```
+       The attrs options object can use more specific instruction for extracting and
+      serializing. When serializing, an option to embed `ids` or `records` can be set.
+      When extracting the only option is `records`.
+       So `{ embedded: 'always' }` is shorthand for:
+      `{ serialize: 'records', deserialize: 'records' }`
+       To embed the `ids` for a related object (using a hasMany relationship):
+       ```app/serializers/post.js
+      import DS from 'ember-data;
+       export default DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          comments: { serialize: 'ids', deserialize: 'records' }
+        }
+      })
+      ```
+       ```js
+      {
+        "post": {
+          "id": "1"
+          "title": "Rails is omakase",
+          "body": "I want this for my ORM, I want that for my template language..."
+          "comments": ["1", "2"]
+        }
+      }
+      ```
+       @method serializeHasMany
+      @param {DS.Snapshot} snapshot
+      @param {Object} json
+      @param {Object} relationship
+    */
+    serializeHasMany: function (snapshot, json, relationship) {
+      var attr = relationship.key;
+      if (this.noSerializeOptionSpecified(attr)) {
+        this._super(snapshot, json, relationship);
+        return;
+      }
+      var includeIds = this.hasSerializeIdsOption(attr);
+      var includeRecords = this.hasSerializeRecordsOption(attr);
+      if (includeIds) {
+        var serializedKey = this.keyForRelationship(attr, relationship.kind, 'serialize');
+        json[serializedKey] = snapshot.hasMany(attr, { ids: true });
+      } else if (includeRecords) {
+        this._serializeEmbeddedHasMany(snapshot, json, relationship);
+      }
+    },
+
+    _serializeEmbeddedHasMany: function (snapshot, json, relationship) {
+      var serializedKey = this._getMappedKey(relationship.key, snapshot.type);
+      if (serializedKey === relationship.key && this.keyForRelationship) {
+        serializedKey = this.keyForRelationship(relationship.key, relationship.kind, "serialize");
+      }
+
+      (0, _emberDataPrivateDebug.warn)('The embedded relationship \'' + serializedKey + '\' is undefined for \'' + snapshot.modelName + '\' with id \'' + snapshot.id + '\'. Please include it in your original payload.', _ember.default.typeOf(snapshot.hasMany(relationship.key)) !== 'undefined', { id: 'ds.serializer.embedded-relationship-undefined' });
+
+      json[serializedKey] = this._generateSerializedHasMany(snapshot, relationship);
+    },
+
+    /*
+      Returns an array of embedded records serialized to JSON
+    */
+    _generateSerializedHasMany: function (snapshot, relationship) {
+      var hasMany = snapshot.hasMany(relationship.key);
+      var manyArray = _ember.default.A(hasMany);
+      var ret = new Array(manyArray.length);
+
+      for (var i = 0; i < manyArray.length; i++) {
+        var embeddedSnapshot = manyArray[i];
+        var embeddedJson = embeddedSnapshot.record.serialize({ includeId: true });
+        this.removeEmbeddedForeignKey(snapshot, embeddedSnapshot, relationship, embeddedJson);
+        ret[i] = embeddedJson;
+      }
+
+      return ret;
+    },
+
+    /**
+      When serializing an embedded record, modify the property (in the json payload)
+      that refers to the parent record (foreign key for relationship).
+       Serializing a `belongsTo` relationship removes the property that refers to the
+      parent record
+       Serializing a `hasMany` relationship does not remove the property that refers to
+      the parent record.
+       @method removeEmbeddedForeignKey
+      @param {DS.Snapshot} snapshot
+      @param {DS.Snapshot} embeddedSnapshot
+      @param {Object} relationship
+      @param {Object} json
+    */
+    removeEmbeddedForeignKey: function (snapshot, embeddedSnapshot, relationship, json) {
+      if (relationship.kind === 'hasMany') {
+        return;
+      } else if (relationship.kind === 'belongsTo') {
+        var parentRecord = snapshot.type.inverseFor(relationship.key, this.store);
+        if (parentRecord) {
+          var name = parentRecord.name;
+          var embeddedSerializer = this.store.serializerFor(embeddedSnapshot.modelName);
+          var parentKey = embeddedSerializer.keyForRelationship(name, parentRecord.kind, 'deserialize');
+          if (parentKey) {
+            delete json[parentKey];
+          }
+        }
+      }
+    },
+
+    // checks config for attrs option to embedded (always) - serialize and deserialize
+    hasEmbeddedAlwaysOption: function (attr) {
+      var option = this.attrsOption(attr);
+      return option && option.embedded === 'always';
+    },
+
+    // checks config for attrs option to serialize ids
+    hasSerializeRecordsOption: function (attr) {
+      var alwaysEmbed = this.hasEmbeddedAlwaysOption(attr);
+      var option = this.attrsOption(attr);
+      return alwaysEmbed || option && option.serialize === 'records';
+    },
+
+    // checks config for attrs option to serialize records
+    hasSerializeIdsOption: function (attr) {
+      var option = this.attrsOption(attr);
+      return option && (option.serialize === 'ids' || option.serialize === 'id');
+    },
+
+    // checks config for attrs option to serialize records
+    noSerializeOptionSpecified: function (attr) {
+      var option = this.attrsOption(attr);
+      return !(option && (option.serialize || option.embedded));
+    },
+
+    // checks config for attrs option to deserialize records
+    // a defined option object for a resource is treated the same as
+    // `deserialize: 'records'`
+    hasDeserializeRecordsOption: function (attr) {
+      var alwaysEmbed = this.hasEmbeddedAlwaysOption(attr);
+      var option = this.attrsOption(attr);
+      return alwaysEmbed || option && option.deserialize === 'records';
+    },
+
+    attrsOption: function (attr) {
+      var attrs = this.get('attrs');
+      return attrs && (attrs[camelize(attr)] || attrs[attr]);
+    },
+
+    /**
+     @method _extractEmbeddedRecords
+     @private
+    */
+    _extractEmbeddedRecords: function (serializer, store, typeClass, partial) {
+      var _this = this;
+
+      typeClass.eachRelationship(function (key, relationship) {
+        if (serializer.hasDeserializeRecordsOption(key)) {
+          if (relationship.kind === "hasMany") {
+            _this._extractEmbeddedHasMany(store, key, partial, relationship);
+          }
+          if (relationship.kind === "belongsTo") {
+            _this._extractEmbeddedBelongsTo(store, key, partial, relationship);
+          }
+        }
+      });
+      return partial;
+    },
+
+    /**
+     @method _extractEmbeddedHasMany
+     @private
+    */
+    _extractEmbeddedHasMany: function (store, key, hash, relationshipMeta) {
+      var relationshipHash = get(hash, 'data.relationships.' + key + '.data');
+
+      if (!relationshipHash) {
+        return;
+      }
+
+      var hasMany = new Array(relationshipHash.length);
+
+      for (var i = 0; i < relationshipHash.length; i++) {
+        var item = relationshipHash[i];
+
+        var _normalizeEmbeddedRelationship = this._normalizeEmbeddedRelationship(store, relationshipMeta, item);
+
+        var data = _normalizeEmbeddedRelationship.data;
+        var included = _normalizeEmbeddedRelationship.included;
+
+        hash.included = hash.included || [];
+        hash.included.push(data);
+        if (included) {
+          var _hash$included;
+
+          (_hash$included = hash.included).push.apply(_hash$included, _toConsumableArray(included));
+        }
+
+        hasMany[i] = { id: data.id, type: data.type };
+      }
+
+      var relationship = { data: hasMany };
+      set(hash, 'data.relationships.' + key, relationship);
+    },
+
+    /**
+     @method _extractEmbeddedBelongsTo
+     @private
+    */
+    _extractEmbeddedBelongsTo: function (store, key, hash, relationshipMeta) {
+      var relationshipHash = get(hash, 'data.relationships.' + key + '.data');
+      if (!relationshipHash) {
+        return;
+      }
+
+      var _normalizeEmbeddedRelationship2 = this._normalizeEmbeddedRelationship(store, relationshipMeta, relationshipHash);
+
+      var data = _normalizeEmbeddedRelationship2.data;
+      var included = _normalizeEmbeddedRelationship2.included;
+
+      hash.included = hash.included || [];
+      hash.included.push(data);
+      if (included) {
+        var _hash$included2;
+
+        (_hash$included2 = hash.included).push.apply(_hash$included2, _toConsumableArray(included));
+      }
+
+      var belongsTo = { id: data.id, type: data.type };
+      var relationship = { data: belongsTo };
+
+      set(hash, 'data.relationships.' + key, relationship);
+    },
+
+    /**
+     @method _normalizeEmbeddedRelationship
+     @private
+    */
+    _normalizeEmbeddedRelationship: function (store, relationshipMeta, relationshipHash) {
+      var modelName = relationshipMeta.type;
+      if (relationshipMeta.options.polymorphic) {
+        modelName = relationshipHash.type;
+      }
+      var modelClass = store.modelFor(modelName);
+      var serializer = store.serializerFor(modelName);
+
+      return serializer.normalize(modelClass, relationshipHash, null);
+    }
+  });
+});
 define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-private/debug', 'ember-data/serializers/json', 'ember-data/-private/system/normalize-model-name', 'ember-inflector', 'ember-data/-private/features'], function (exports, _ember, _emberDataPrivateDebug, _emberDataSerializersJson, _emberDataPrivateSystemNormalizeModelName, _emberInflector, _emberDataPrivateFeatures) {
 
   var dasherize = _ember.default.String.dasherize;
@@ -13427,7 +13427,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
 /**
   @module ember-data
 */
-define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/debug', 'ember-data/-private/system/serializer', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/utils', 'ember-data/-private/adapters/errors', 'ember-data/-private/features'], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemSerializer, _emberDataPrivateSystemCoerceId, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateUtils, _emberDataPrivateAdaptersErrors, _emberDataPrivateFeatures) {
+define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/debug', 'ember-data/serializer', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/utils', 'ember-data/-private/adapters/errors', 'ember-data/-private/features'], function (exports, _ember, _emberDataPrivateDebug, _emberDataSerializer, _emberDataPrivateSystemCoerceId, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateUtils, _emberDataPrivateAdaptersErrors, _emberDataPrivateFeatures) {
   function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } }
 
   var get = _ember.default.get;
@@ -13500,7 +13500,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
     @namespace DS
     @extends DS.Serializer
   */
-  exports.default = _emberDataPrivateSystemSerializer.default.extend({
+  exports.default = _emberDataSerializer.default.extend({
 
     /**
       The `primaryKey` is used when serializing and deserializing
@@ -15558,7 +15558,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.5.0-canary+11627a9cf6";
+  exports.default = "2.5.0-canary+03ceeb51d8";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -16029,10 +16029,12 @@ require("ember-data");
     var shims = {
       'ember-data':                          { default: DS },
       'ember-data/model':                    { default: DS.Model },
+      'ember-data/mixins/embedded-records':  { default: DS.EmbeddedRecordsMixin },
       'ember-data/serializers/rest':         { default: DS.RESTSerializer },
       'ember-data/serializers/active-model': { default: DS.ActiveModelSerializer },
       'ember-data/serializers/json':         { default: DS.JSONSerializer },
       'ember-data/serializers/json-api':     { default: DS.JSONAPISerializer },
+      'ember-data/serializer':               { default: DS.Serializer },
       'ember-data/adapters/json-api':        { default: DS.JSONAPIAdapter },
       'ember-data/adapters/rest':            { default: DS.RESTAdapter },
       'ember-data/adapter':                  { default: DS.Adapter },
