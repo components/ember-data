@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.5.0-canary+6043efcd97
+ * @version   2.5.0-canary+f4d3b9ef34
  */
 
 var define, requireModule, require, requirejs;
@@ -8930,6 +8930,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @param {Object} query optional query
       @param {Function} filter
       @return {DS.PromiseArray}
+      @deprecated
     */
     filter: function (modelName, query, filter) {
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember.default.inspect(modelName), typeof modelName === 'string');
@@ -15557,7 +15558,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.5.0-canary+6043efcd97";
+  exports.default = "2.5.0-canary+f4d3b9ef34";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
