@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.5.0-canary+f4d3b9ef34
+ * @version   2.5.0-canary+dc5197e5da
  */
 
 var define, requireModule, require, requirejs;
@@ -7071,7 +7071,8 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
   };
 
   ManyRelationship.prototype.reload = function () {
-    var self = this;
+    var _this = this;
+
     var manyArrayLoadedState = this.manyArray.get('isLoaded');
 
     if (this._loadingPromise) {
@@ -7084,13 +7085,13 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
     }
 
     if (this.link) {
-      return this.fetchLink();
+      this._loadingPromise = (0, _emberDataPrivateSystemPromiseProxies.promiseManyArray)(this.fetchLink(), 'Reload with link');
+      return this._loadingPromise;
     } else {
-      return this.store.scheduleFetchMany(this.manyArray.toArray()).then(function () {
-        //Goes away after the manyArray refactor
-        self.manyArray.set('isLoaded', true);
-        return self.manyArray;
-      });
+      this._loadingPromise = (0, _emberDataPrivateSystemPromiseProxies.promiseManyArray)(this.store.scheduleFetchMany(this.manyArray.toArray()).then(function () {
+        return _this.manyArray;
+      }), 'Reload with ids');
+      return this._loadingPromise;
     }
   };
 
@@ -7127,22 +7128,22 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
   };
 
   ManyRelationship.prototype.fetchLink = function () {
-    var _this = this;
+    var _this2 = this;
 
     return this.store.findHasMany(this.record, this.link, this.relationshipMeta).then(function (records) {
       if (records.hasOwnProperty('meta')) {
-        _this.updateMeta(records.meta);
+        _this2.updateMeta(records.meta);
       }
-      _this.store._backburner.join(function () {
-        _this.updateRecordsFromAdapter(records);
-        _this.manyArray.set('isLoaded', true);
+      _this2.store._backburner.join(function () {
+        _this2.updateRecordsFromAdapter(records);
+        _this2.manyArray.set('isLoaded', true);
       });
-      return _this.manyArray;
+      return _this2.manyArray;
     });
   };
 
   ManyRelationship.prototype.findRecords = function () {
-    var _this2 = this;
+    var _this3 = this;
 
     var manyArray = this.manyArray.toArray();
     var internalModels = new Array(manyArray.length);
@@ -7153,11 +7154,11 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
 
     //TODO CLEANUP
     return this.store.findMany(internalModels).then(function () {
-      if (!_this2.manyArray.get('isDestroyed')) {
+      if (!_this3.manyArray.get('isDestroyed')) {
         //Goes away after the manyArray refactor
-        _this2.manyArray.set('isLoaded', true);
+        _this3.manyArray.set('isLoaded', true);
       }
-      return _this2.manyArray;
+      return _this3.manyArray;
     });
   };
   ManyRelationship.prototype.notifyHasManyChanged = function () {
@@ -7165,7 +7166,7 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
   };
 
   ManyRelationship.prototype.getRecords = function () {
-    var _this3 = this;
+    var _this4 = this;
 
     //TODO(Igor) sync server here, once our syncing is not stupid
     if (this.isAsync) {
@@ -7175,7 +7176,7 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
           promise = this.findRecords();
         } else {
           promise = this.findLink().then(function () {
-            return _this3.findRecords();
+            return _this4.findRecords();
           });
         }
       } else {
@@ -15558,7 +15559,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.5.0-canary+f4d3b9ef34";
+  exports.default = "2.5.0-canary+dc5197e5da";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
