@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.5.0-canary+29c36ed160
+ * @version   2.5.0-canary+e7b2a2514c
  */
 
 var define, requireModule, require, requirejs;
@@ -7877,49 +7877,9 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
   var badIdFormatAssertion = '`id` has to be non-empty string or number';
 
   exports.badIdFormatAssertion = badIdFormatAssertion;
-  var Backburner = _ember.default._Backburner || _ember.default.Backburner || _ember.default.__loader.require('backburner')['default'] || _ember.default.__loader.require('backburner')['Backburner'];
+  var Backburner = _ember.default._Backburner;
   var Map = _ember.default.Map;
   var isArray = Array.isArray || _ember.default.isArray;
-
-  //Shim Backburner.join
-  if (!Backburner.prototype.join) {
-    var isString = function (suspect) {
-      return typeof suspect === 'string';
-    };
-
-    Backburner.prototype.join = function () /*target, method, args */{
-      var method, target;
-
-      if (this.currentInstance) {
-        var length = arguments.length;
-        if (length === 1) {
-          method = arguments[0];
-          target = null;
-        } else {
-          target = arguments[0];
-          method = arguments[1];
-        }
-
-        if (isString(method)) {
-          method = target[method];
-        }
-
-        if (length === 1) {
-          return method();
-        } else if (length === 2) {
-          return method.call(target);
-        } else {
-          var args = new Array(length - 2);
-          for (var i = 0; i < args.length; i++) {
-            args[i] = arguments[i + 2];
-          }
-          return method.apply(target, args);
-        }
-      } else {
-        return this.run.apply(this, arguments);
-      }
-    };
-  }
 
   //Get the materialized model from the internalModel/promise that returns
   //an internal model and return it in a promiseObject. Useful for returning
@@ -15556,7 +15516,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.5.0-canary+29c36ed160";
+  exports.default = "2.5.0-canary+e7b2a2514c";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
