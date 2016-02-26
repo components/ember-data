@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.5.0-canary+7b84a71943
+ * @version   2.5.0-canary+3f6d3a8552
  */
 
 var define, requireModule, require, requirejs;
@@ -12372,7 +12372,7 @@ define('ember-data/serializer', ['exports', 'ember'], function (exports, _ember)
 /**
   @module ember-data
 */
-define('ember-data/serializers/embedded-records-mixin', ['exports', 'ember', 'ember-data/-private/debug'], function (exports, _ember, _emberDataPrivateDebug) {
+define('ember-data/serializers/embedded-records-mixin', ['exports', 'ember', 'ember-data/-private/debug', 'ember-data/-private/features'], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateFeatures) {
   function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } }
 
   var get = _ember.default.get;
@@ -12597,7 +12597,7 @@ define('ember-data/serializers/embedded-records-mixin', ['exports', 'ember', 'em
     },
 
     /**
-      Serialize `hasMany` relationship when it is configured as embedded objects.
+      Serializes `hasMany` relationships when it is configured as embedded objects.
        This example of a post model has many comments:
        ```js
       Post = DS.Model.extend({
@@ -12638,7 +12638,7 @@ define('ember-data/serializers/embedded-records-mixin', ['exports', 'ember', 'em
       }
       ```
        The attrs options object can use more specific instruction for extracting and
-      serializing. When serializing, an option to embed `ids` or `records` can be set.
+      serializing. When serializing, an option to embed `ids`, `ids-and-types` or `records` can be set.
       When extracting the only option is `records`.
        So `{ embedded: 'always' }` is shorthand for:
       `{ serialize: 'records', deserialize: 'records' }`
@@ -12661,6 +12661,47 @@ define('ember-data/serializers/embedded-records-mixin', ['exports', 'ember', 'em
         }
       }
       ```
+       To embed the relationship as a collection of objects with `id` and `type` keys, set
+      `ids-and-types` for the related object.
+       This is particularly useful for polymorphic relationships where records don't share
+      the same table and the `id` is not enough information.
+       By example having a user that has many pets:
+       ```js
+      User = DS.Model.extend({
+        name:    DS.attr('string'),
+        pets: DS.hasMany('pet', { polymorphic: true })
+      });
+       Pet = DS.Model.extend({
+        name: DS.attr('string'),
+      });
+       Cat = Pet.extend({
+        // ...
+      });
+       Parrot = Pet.extend({
+        // ...
+      });
+      ```
+       ```app/serializers/user.js
+      import DS from 'ember-data;
+       export default DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
+        attrs: {
+          pets: { serialize: 'ids-and-types', deserialize: 'records' }
+        }
+      });
+      ```
+       ```js
+      {
+        "user": {
+          "id": "1"
+          "name": "Bertin Osborne",
+          "pets": [
+            { "id": "1", "type": "Cat" },
+            { "id": "1", "type": "Parrot"}
+          ]
+        }
+      }
+      ```
+       Note that the `ids-and-types` strategy is still behind the `ds-serialize-ids-and-types` feature flag.
        @method serializeHasMany
       @param {DS.Snapshot} snapshot
       @param {Object} json
@@ -12672,14 +12713,39 @@ define('ember-data/serializers/embedded-records-mixin', ['exports', 'ember', 'em
         this._super(snapshot, json, relationship);
         return;
       }
-      var includeIds = this.hasSerializeIdsOption(attr);
-      var includeRecords = this.hasSerializeRecordsOption(attr);
-      if (includeIds) {
+
+      if (this.hasSerializeIdsOption(attr)) {
         var serializedKey = this.keyForRelationship(attr, relationship.kind, 'serialize');
         json[serializedKey] = snapshot.hasMany(attr, { ids: true });
-      } else if (includeRecords) {
+      } else if (this.hasSerializeRecordsOption(attr)) {
         this._serializeEmbeddedHasMany(snapshot, json, relationship);
+      } else {
+        if ((0, _emberDataPrivateFeatures.default)("ds-serialize-ids-and-types")) {
+          if (this.hasSerializeIdsAndTypesOption(attr)) {
+            this._serializeHasManyAsIdsAndTypes(snapshot, json, relationship);
+          }
+        }
       }
+    },
+
+    /**
+      Serializes a hasMany relationship as an array of objects containing only `id` and `type`
+      keys.
+      This has its use case on polymorphic hasMany relationships where the server is not storing
+      all records in the same table using STI, and therefore the `id` is not enough information
+       TODO: Make the default in Ember-data 3.0??
+    */
+    _serializeHasManyAsIdsAndTypes: function (snapshot, json, relationship) {
+      var serializedKey = this.keyForAttribute(relationship.key, 'serialize');
+      var hasMany = snapshot.hasMany(relationship.key);
+
+      json[serializedKey] = _ember.default.A(hasMany).map(function (recordSnapshot) {
+        //
+        // I'm sure I'm being utterly naive here. Propably id is a configurate property and
+        // type too, and the modelName has to be normalized somehow.
+        //
+        return { id: recordSnapshot.id, type: recordSnapshot.modelName };
+      });
     },
 
     _serializeEmbeddedHasMany: function (snapshot, json, relationship) {
@@ -12757,6 +12823,12 @@ define('ember-data/serializers/embedded-records-mixin', ['exports', 'ember', 'em
     hasSerializeIdsOption: function (attr) {
       var option = this.attrsOption(attr);
       return option && (option.serialize === 'ids' || option.serialize === 'id');
+    },
+
+    // checks config for attrs option to serialize records as objects containing id and types
+    hasSerializeIdsAndTypesOption: function (attr) {
+      var option = this.attrsOption(attr);
+      return option && (option.serialize === 'ids-and-types' || option.serialize === 'id-and-type');
     },
 
     // checks config for attrs option to serialize records
@@ -15516,7 +15588,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.5.0-canary+7b84a71943";
+  exports.default = "2.5.0-canary+3f6d3a8552";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
