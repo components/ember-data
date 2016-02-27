@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.5.0-canary+a77a406b72
+ * @version   2.5.0-canary+9a8733b7b0
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -9402,12 +9402,11 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       (0, _emberDataPrivateDebug.assert)('You must include an \'id\' for ' + modelName + ' in an object passed to \'push\'', data.id != null && data.id !== '');
       (0, _emberDataPrivateDebug.assert)('You tried to push data with a type \'' + modelName + '\' but no model could be found with that name.', this._hasModelFor(modelName));
 
-      var type = this.modelFor(modelName);
-
       // If Ember.ENV.DS_WARN_ON_UNKNOWN_KEYS is set to true and the payload
       // contains unknown keys, log a warning.
 
       if (_ember.default.ENV.DS_WARN_ON_UNKNOWN_KEYS) {
+        var type = this.modelFor(modelName);
         (0, _emberDataPrivateDebug.warn)("The payload for '" + type.modelName + "' contains these unknown keys: " + _ember.default.inspect(Object.keys(data).forEach(function (key) {
           return !(key === 'id' || key === 'links' || get(type, 'fields').has(key) || key.match(/Type$/));
         })) + ". Make sure they've been defined in your model.", Object.keys(data).filter(function (key) {
@@ -15608,7 +15607,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.5.0-canary+a77a406b72";
+  exports.default = "2.5.0-canary+9a8733b7b0";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
