@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.5.0-canary+9a8733b7b0
+ * @version   2.5.0-canary+80a3c4c664
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -12222,12 +12222,6 @@ define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-da
     throw new _ember.default.Error("Ember Data requires at least Ember 1.13.0, but you have " + _ember.default.VERSION + ". Please upgrade your version of Ember, then upgrade Ember Data.");
   }
 
-  if (_ember.default.VERSION.match(/^1\.13\./)) {
-    (0, _emberDataPrivateDebug.warn)("Use of Ember Data 2+ with Ember 1.13 is unsupported. Please upgrade your version of Ember to 2.0 or higher.", false, {
-      id: 'ds.version.ember-1-13'
-    });
-  }
-
   _emberDataPrivateCore.default.Store = _emberDataPrivateSystemStore.Store;
   _emberDataPrivateCore.default.PromiseArray = _emberDataPrivateSystemPromiseProxies.PromiseArray;
   _emberDataPrivateCore.default.PromiseObject = _emberDataPrivateSystemPromiseProxies.PromiseObject;
@@ -15607,7 +15601,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.5.0-canary+9a8733b7b0";
+  exports.default = "2.5.0-canary+80a3c4c664";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
