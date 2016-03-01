@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.5.0-canary+656d46ab7a
+ * @version   2.5.0-canary+eb8614312a
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -11801,7 +11801,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @param  {Number} status
       @param  {Object} headers
       @param  {Object} payload
-      @return {Object} errors payload
+      @return {Array} errors payload
     */
     normalizeErrorResponse: function (status, headers, payload) {
       if (payload && typeof payload === 'object' && payload.errors) {
@@ -11823,7 +11823,8 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @param  {Number} status
       @param  {Object} headers
       @param  {Object} payload
-      @return {Object} request information
+      @param  {Object} requestData
+      @return {String} detailed error message
     */
     generatedDetailedMessage: function (status, headers, payload, requestData) {
       var shortenedPayload;
@@ -15373,7 +15374,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.5.0-canary+656d46ab7a";
+  exports.default = "2.5.0-canary+eb8614312a";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
