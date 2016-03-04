@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.6.0-canary+0534783d28
+ * @version   2.6.0-canary+bc747b8c18
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -1404,7 +1404,11 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
 
       //a hack for not removing new records
       //TODO remove once we have proper diffing
-      var newRecords = this.currentState.filter(function (internalModel) {
+      var newRecords = this.currentState.filter(
+      // only add new records which are not yet in the canonical state of this
+      // relationship (a new record can be in the canonical state if it has
+      // been 'acknowleged' to be in the relationship via a store.push)
+      function (internalModel) {
         return internalModel.isNew() && toSet.indexOf(internalModel) === -1;
       });
       toSet = toSet.concat(newRecords);
@@ -15374,7 +15378,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.6.0-canary+0534783d28";
+  exports.default = "2.6.0-canary+bc747b8c18";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
