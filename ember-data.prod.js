@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.6.0-canary+b329be6d41
+ * @version   2.6.0-canary+bc446a1075
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -5558,12 +5558,12 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
 /**
   @module ember-data
 */
-define('ember-data/-private/system/references', ['exports', 'ember-data/-private/system/references/record', 'ember-data/-private/system/references/belongs-to', 'ember-data/-private/system/references/has-many'], function (exports, _emberDataPrivateSystemReferencesRecord, _emberDataPrivateSystemReferencesBelongsTo, _emberDataPrivateSystemReferencesHasMany) {
-  exports.RecordReference = _emberDataPrivateSystemReferencesRecord.default;
-  exports.BelongsToReference = _emberDataPrivateSystemReferencesBelongsTo.default;
-  exports.HasManyReference = _emberDataPrivateSystemReferencesHasMany.default;
+define('ember-data/-private/system/references', ['exports', '-private/system/references/record', '-private/system/references/belongs-to', '-private/system/references/has-many'], function (exports, _privateSystemReferencesRecord, _privateSystemReferencesBelongsTo, _privateSystemReferencesHasMany) {
+  exports.RecordReference = _privateSystemReferencesRecord.default;
+  exports.BelongsToReference = _privateSystemReferencesBelongsTo.default;
+  exports.HasManyReference = _privateSystemReferencesHasMany.default;
 });
-define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-data/model', 'ember', 'ember-data/-private/system/references/reference', 'ember-data/-private/debug'], function (exports, _emberDataModel, _ember, _emberDataPrivateSystemReferencesReference, _emberDataPrivateDebug) {
+define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-data/model', 'ember', '-private/system/references/reference', 'ember-data/-private/debug'], function (exports, _emberDataModel, _ember, _privateSystemReferencesReference, _emberDataPrivateDebug) {
 
   var BelongsToReference = function (store, parentInternalModel, belongsToRelationship) {
     this._super$constructor(store, parentInternalModel);
@@ -5574,9 +5574,9 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
     // TODO inverse
   };
 
-  BelongsToReference.prototype = Object.create(_emberDataPrivateSystemReferencesReference.default.prototype);
+  BelongsToReference.prototype = Object.create(_privateSystemReferencesReference.default.prototype);
   BelongsToReference.prototype.constructor = BelongsToReference;
-  BelongsToReference.prototype._super$constructor = _emberDataPrivateSystemReferencesReference.default;
+  BelongsToReference.prototype._super$constructor = _privateSystemReferencesReference.default;
 
   BelongsToReference.prototype.remoteType = function () {
     if (this.belongsToRelationship.link) {
@@ -5646,7 +5646,7 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
 
   exports.default = BelongsToReference;
 });
-define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'ember-data/-private/system/references/reference', 'ember-data/-private/debug'], function (exports, _ember, _emberDataPrivateSystemReferencesReference, _emberDataPrivateDebug) {
+define('ember-data/-private/system/references/has-many', ['exports', 'ember', '-private/system/references/reference', 'ember-data/-private/debug'], function (exports, _ember, _privateSystemReferencesReference, _emberDataPrivateDebug) {
 
   var get = _ember.default.get;
 
@@ -5659,9 +5659,9 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
     // TODO inverse
   };
 
-  HasManyReference.prototype = Object.create(_emberDataPrivateSystemReferencesReference.default.prototype);
+  HasManyReference.prototype = Object.create(_privateSystemReferencesReference.default.prototype);
   HasManyReference.prototype.constructor = HasManyReference;
-  HasManyReference.prototype._super$constructor = _emberDataPrivateSystemReferencesReference.default;
+  HasManyReference.prototype._super$constructor = _privateSystemReferencesReference.default;
 
   HasManyReference.prototype.remoteType = function () {
     if (this.hasManyRelationship.link) {
@@ -5746,7 +5746,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
 
   exports.default = HasManyReference;
 });
-define('ember-data/-private/system/references/record', ['exports', 'ember', 'ember-data/-private/system/references/reference'], function (exports, _ember, _emberDataPrivateSystemReferencesReference) {
+define('ember-data/-private/system/references/record', ['exports', 'ember', '-private/system/references/reference'], function (exports, _ember, _privateSystemReferencesReference) {
 
   var RecordReference = function (store, internalModel) {
     this._super$constructor(store, internalModel);
@@ -5754,9 +5754,9 @@ define('ember-data/-private/system/references/record', ['exports', 'ember', 'emb
     this._id = internalModel.id;
   };
 
-  RecordReference.prototype = Object.create(_emberDataPrivateSystemReferencesReference.default.prototype);
+  RecordReference.prototype = Object.create(_privateSystemReferencesReference.default.prototype);
   RecordReference.prototype.constructor = RecordReference;
-  RecordReference.prototype._super$constructor = _emberDataPrivateSystemReferencesReference.default;
+  RecordReference.prototype._super$constructor = _privateSystemReferencesReference.default;
 
   RecordReference.prototype.id = function () {
     return this._id;
@@ -15378,32 +15378,32 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.6.0-canary+b329be6d41";
+  exports.default = "2.6.0-canary+bc446a1075";
 });
-define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
+define("ember-inflector", ["exports", "ember", "lib/system", "lib/ext/string"], function (exports, _ember, _libSystem, _libExtString) {
 
-  _emberInflectorLibSystem.Inflector.defaultRules = _emberInflectorLibSystem.defaultRules;
-  _ember.default.Inflector = _emberInflectorLibSystem.Inflector;
+  _libSystem.Inflector.defaultRules = _libSystem.defaultRules;
+  _ember.default.Inflector = _libSystem.Inflector;
 
-  _ember.default.String.pluralize = _emberInflectorLibSystem.pluralize;
-  _ember.default.String.singularize = _emberInflectorLibSystem.singularize;
+  _ember.default.String.pluralize = _libSystem.pluralize;
+  _ember.default.String.singularize = _libSystem.singularize;
 
-  exports.default = _emberInflectorLibSystem.Inflector;
-  exports.pluralize = _emberInflectorLibSystem.pluralize;
-  exports.singularize = _emberInflectorLibSystem.singularize;
-  exports.defaultRules = _emberInflectorLibSystem.defaultRules;
+  exports.default = _libSystem.Inflector;
+  exports.pluralize = _libSystem.pluralize;
+  exports.singularize = _libSystem.singularize;
+  exports.defaultRules = _libSystem.defaultRules;
 
   if (typeof define !== 'undefined' && define.amd) {
     define('ember-inflector', ['exports'], function (__exports__) {
-      __exports__['default'] = _emberInflectorLibSystem.Inflector;
-      return _emberInflectorLibSystem.Inflector;
+      __exports__['default'] = _libSystem.Inflector;
+      return _libSystem.Inflector;
     });
   } else if (typeof module !== 'undefined' && module['exports']) {
-    module['exports'] = _emberInflectorLibSystem.Inflector;
+    module['exports'] = _libSystem.Inflector;
   }
 });
 /* global define, module */
-define('ember-inflector/lib/ext/string', ['exports', 'ember', 'ember-inflector/lib/system/string'], function (exports, _ember, _emberInflectorLibSystemString) {
+define('ember-inflector/lib/ext/string', ['exports', 'ember', 'lib/system/string'], function (exports, _ember, _libSystemString) {
 
   if (_ember.default.EXTEND_PROTOTYPES === true || _ember.default.EXTEND_PROTOTYPES.String) {
     /**
@@ -15412,7 +15412,7 @@ define('ember-inflector/lib/ext/string', ['exports', 'ember', 'ember-inflector/l
       @for String
     */
     String.prototype.pluralize = function () {
-      return (0, _emberInflectorLibSystemString.pluralize)(this);
+      return (0, _libSystemString.pluralize)(this);
     };
 
     /**
@@ -15421,11 +15421,11 @@ define('ember-inflector/lib/ext/string', ['exports', 'ember', 'ember-inflector/l
       @for String
     */
     String.prototype.singularize = function () {
-      return (0, _emberInflectorLibSystemString.singularize)(this);
+      return (0, _libSystemString.singularize)(this);
     };
   }
 });
-define('ember-inflector/lib/helpers/pluralize', ['exports', 'ember-inflector', 'ember-inflector/lib/utils/make-helper'], function (exports, _emberInflector, _emberInflectorLibUtilsMakeHelper) {
+define('ember-inflector/lib/helpers/pluralize', ['exports', 'ember-inflector', 'lib/utils/make-helper'], function (exports, _emberInflector, _libUtilsMakeHelper) {
 
   /**
    *
@@ -15444,7 +15444,7 @@ define('ember-inflector/lib/helpers/pluralize', ['exports', 'ember-inflector', '
    * @param {Number|Property} [count] count of objects
    * @param {String|Property} word word to pluralize
   */
-  exports.default = (0, _emberInflectorLibUtilsMakeHelper.default)(function (params) {
+  exports.default = (0, _libUtilsMakeHelper.default)(function (params) {
     var count = undefined,
         word = undefined;
 
@@ -15463,7 +15463,7 @@ define('ember-inflector/lib/helpers/pluralize', ['exports', 'ember-inflector', '
     }
   });
 });
-define('ember-inflector/lib/helpers/singularize', ['exports', 'ember-inflector', 'ember-inflector/lib/utils/make-helper'], function (exports, _emberInflector, _emberInflectorLibUtilsMakeHelper) {
+define('ember-inflector/lib/helpers/singularize', ['exports', 'ember-inflector', 'lib/utils/make-helper'], function (exports, _emberInflector, _libUtilsMakeHelper) {
 
   /**
    *
@@ -15479,18 +15479,18 @@ define('ember-inflector/lib/helpers/singularize', ['exports', 'ember-inflector',
    * @method singularize
    * @param {String|Property} word word to singularize
   */
-  exports.default = (0, _emberInflectorLibUtilsMakeHelper.default)(function (params) {
+  exports.default = (0, _libUtilsMakeHelper.default)(function (params) {
     return (0, _emberInflector.singularize)(params[0]);
   });
 });
-define("ember-inflector/lib/system", ["exports", "ember-inflector/lib/system/inflector", "ember-inflector/lib/system/string", "ember-inflector/lib/system/inflections"], function (exports, _emberInflectorLibSystemInflector, _emberInflectorLibSystemString, _emberInflectorLibSystemInflections) {
+define("ember-inflector/lib/system", ["exports", "lib/system/inflector", "lib/system/string", "lib/system/inflections"], function (exports, _libSystemInflector, _libSystemString, _libSystemInflections) {
 
-  _emberInflectorLibSystemInflector.default.inflector = new _emberInflectorLibSystemInflector.default(_emberInflectorLibSystemInflections.default);
+  _libSystemInflector.default.inflector = new _libSystemInflector.default(_libSystemInflections.default);
 
-  exports.Inflector = _emberInflectorLibSystemInflector.default;
-  exports.singularize = _emberInflectorLibSystemString.singularize;
-  exports.pluralize = _emberInflectorLibSystemString.pluralize;
-  exports.defaultRules = _emberInflectorLibSystemInflections.default;
+  exports.Inflector = _libSystemInflector.default;
+  exports.singularize = _libSystemString.singularize;
+  exports.pluralize = _libSystemString.pluralize;
+  exports.defaultRules = _libSystemInflections.default;
 });
 define('ember-inflector/lib/system/inflections', ['exports'], function (exports) {
   exports.default = {
@@ -15808,14 +15808,14 @@ define('ember-inflector/lib/system/inflector', ['exports', 'ember'], function (e
 
   exports.default = Inflector;
 });
-define('ember-inflector/lib/system/string', ['exports', 'ember-inflector/lib/system/inflector'], function (exports, _emberInflectorLibSystemInflector) {
+define('ember-inflector/lib/system/string', ['exports', 'lib/system/inflector'], function (exports, _libSystemInflector) {
 
   function pluralize(word) {
-    return _emberInflectorLibSystemInflector.default.inflector.pluralize(word);
+    return _libSystemInflector.default.inflector.pluralize(word);
   }
 
   function singularize(word) {
-    return _emberInflectorLibSystemInflector.default.inflector.singularize(word);
+    return _libSystemInflector.default.inflector.singularize(word);
   }
 
   exports.pluralize = pluralize;
