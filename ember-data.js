@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.6.0-canary+21cad6104c
+ * @version   2.6.0-canary+e8283f7580
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -9406,17 +9406,30 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       (0, _emberDataPrivateDebug.assert)('You must include an \'id\' for ' + modelName + ' in an object passed to \'push\'', data.id != null && data.id !== '');
       (0, _emberDataPrivateDebug.assert)('You tried to push data with a type \'' + modelName + '\' but no model could be found with that name.', this._hasModelFor(modelName));
 
-      // If Ember.ENV.DS_WARN_ON_UNKNOWN_KEYS is set to true and the payload
-      // contains unknown keys, log a warning.
+      (0, _emberDataPrivateDebug.runInDebug)(function () {
+        // If Ember.ENV.DS_WARN_ON_UNKNOWN_KEYS is set to true and the payload
+        // contains unknown attributes or relationships, log a warning.
 
-      if (_ember.default.ENV.DS_WARN_ON_UNKNOWN_KEYS) {
-        var type = this.modelFor(modelName);
-        (0, _emberDataPrivateDebug.warn)("The payload for '" + type.modelName + "' contains these unknown keys: " + _ember.default.inspect(Object.keys(data).forEach(function (key) {
-          return !(key === 'id' || key === 'links' || get(type, 'fields').has(key) || key.match(/Type$/));
-        })) + ". Make sure they've been defined in your model.", Object.keys(data).filter(function (key) {
-          return !(key === 'id' || key === 'links' || get(type, 'fields').has(key) || key.match(/Type$/));
-        }).length === 0, { id: 'ds.store.unknown-keys-in-payload' });
-      }
+        if (_ember.default.ENV.DS_WARN_ON_UNKNOWN_KEYS) {
+          (function () {
+            var type = _this2.modelFor(modelName);
+
+            // Check unknown attributes
+            var unknownAttributes = Object.keys(data.attributes || {}).filter(function (key) {
+              return !get(type, 'fields').has(key);
+            });
+            var unknownAttributesMessage = 'The payload for \'' + type.modelName + '\' contains these unknown attributes: ' + unknownAttributes + '. Make sure they\'ve been defined in your model.';
+            (0, _emberDataPrivateDebug.warn)(unknownAttributesMessage, unknownAttributes.length === 0, { id: 'ds.store.unknown-keys-in-payload' });
+
+            // Check unknown relationships
+            var unknownRelationships = Object.keys(data.relationships || {}).filter(function (key) {
+              return !get(type, 'fields').has(key);
+            });
+            var unknownRelationshipsMessage = 'The payload for \'' + type.modelName + '\' contains these unknown relationships: ' + unknownRelationships + '. Make sure they\'ve been defined in your model.';
+            (0, _emberDataPrivateDebug.warn)(unknownRelationshipsMessage, unknownRelationships.length === 0, { id: 'ds.store.unknown-keys-in-payload' });
+          })();
+        }
+      });
 
       // Actually load the record into the store.
       var internalModel = this._load(data);
@@ -15608,7 +15621,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.6.0-canary+21cad6104c";
+  exports.default = "2.6.0-canary+e8283f7580";
 });
 define("ember-inflector", ["exports", "ember", "lib/system", "lib/ext/string"], function (exports, _ember, _libSystem, _libExtString) {
 

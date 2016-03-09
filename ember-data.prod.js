@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.6.0-canary+21cad6104c
+ * @version   2.6.0-canary+e8283f7580
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -9254,13 +9254,6 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
       var modelName = data.type;
 
-      // If Ember.ENV.DS_WARN_ON_UNKNOWN_KEYS is set to true and the payload
-      // contains unknown keys, log a warning.
-
-      if (_ember.default.ENV.DS_WARN_ON_UNKNOWN_KEYS) {
-        var type = this.modelFor(modelName);
-      }
-
       // Actually load the record into the store.
       var internalModel = this._load(data);
 
@@ -9692,6 +9685,13 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 /**
   @module ember-data
 */
+
+// If Ember.ENV.DS_WARN_ON_UNKNOWN_KEYS is set to true and the payload
+// contains unknown attributes or relationships, log a warning.
+
+// Check unknown attributes
+
+// Check unknown relationships
 define('ember-data/-private/system/store/common', ['exports', 'ember'], function (exports, _ember) {
   exports._bind = _bind;
   exports._guard = _guard;
@@ -15380,7 +15380,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.6.0-canary+21cad6104c";
+  exports.default = "2.6.0-canary+e8283f7580";
 });
 define("ember-inflector", ["exports", "ember", "lib/system", "lib/ext/string"], function (exports, _ember, _libSystem, _libExtString) {
 
