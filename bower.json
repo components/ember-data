@@ -1,6 +1,6 @@
 {
   "name": "ember-data",
-  "version": "2.5.0-beta.1+1327e0755b",
+  "version": "2.5.0-beta.1+806c426a14",
   "license": "MIT",
   "main": "ember-data.js",
   "dependencies": {

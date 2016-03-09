@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.5.0-beta.1+1327e0755b
+ * @version   2.5.0-beta.1+806c426a14
  */
 
 var define, requireModule, require, requirejs;
@@ -3024,6 +3024,24 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       }
     }
   };
+
+  InternalModel.prototype.referenceFor = function (type, name) {
+    var reference = this.references[name];
+
+    if (!reference) {
+      var relationship = this._relationships.get(name);
+
+      if (type === "belongsTo") {
+        reference = new _emberDataPrivateSystemReferences.BelongsToReference(this.store, this, relationship);
+      } else if (type === "hasMany") {
+        reference = new _emberDataPrivateSystemReferences.HasManyReference(this.store, this, relationship);
+      }
+
+      this.references[name] = reference;
+    }
+
+    return reference;
+  };
 });
 define("ember-data/-private/system/model/model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/model/errors", "ember-data/-private/features", "ember-data/-private/system/debug/debug-info", "ember-data/-private/system/relationships/belongs-to", "ember-data/-private/system/relationships/has-many", "ember-data/-private/system/relationships/ext", "ember-data/-private/system/model/attr"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemModelErrors, _emberDataPrivateFeatures, _emberDataPrivateSystemDebugDebugInfo, _emberDataPrivateSystemRelationshipsBelongsTo, _emberDataPrivateSystemRelationshipsHasMany, _emberDataPrivateSystemRelationshipsExt, _emberDataPrivateSystemModelAttr) {
 
@@ -3772,102 +3790,111 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
     });
   }
 
+  Model.reopen({
+
+    /**
+      Get the reference for the specified belongsTo relationship.
+       Example
+       ```javascript
+      // models/blog.js
+      export default DS.Model.extend({
+        user: DS.belongsTo({ async: true })
+      });
+       store.push({
+        type: 'blog',
+        id: 1,
+        relationships: {
+          user: { type: 'user', id: 1 }
+        }
+      });
+      var userRef = blog.belongsTo('user');
+       // check if the user relationship is loaded
+      var isLoaded = userRef.value() !== null;
+       // get the record of the reference (null if not yet available)
+      var user = userRef.value();
+       // get the identifier of the reference
+      if (userRef.remoteType() === "id") {
+        var id = userRef.id();
+      } else if (userRef.remoteType() === "link") {
+        var link = userRef.link();
+      }
+       // load user (via store.findRecord or store.findBelongsTo)
+      userRef.load().then(...)
+       // or trigger a reload
+      userRef.reload().then(...)
+       // provide data for reference
+      userRef.push({
+        type: 'user',
+        id: 1,
+        attributes: {
+          username: "@user"
+        }
+      }).then(function(user) {
+        userRef.value() === user;
+      });
+      ```
+       @method belongsTo
+      @param {String} name of the relationship
+      @return {BelongsToReference} reference for this relationship
+    */
+    belongsTo: function (name) {
+      return this._internalModel.referenceFor('belongsTo', name);
+    },
+
+    /**
+      Get the reference for the specified hasMany relationship.
+       Example
+       ```javascript
+      // models/blog.js
+      export default DS.Model.extend({
+        comments: DS.hasMany({ async: true })
+      });
+       store.push({
+        type: 'blog',
+        id: 1,
+        relationships: {
+          comments: {
+            data: [
+              { type: 'comment', id: 1 },
+              { type: 'comment', id: 2 }
+            ]
+          }
+        }
+      });
+      var commentsRef = blog.hasMany('comments');
+       // check if the comments are loaded already
+      var isLoaded = commentsRef.value() !== null;
+       // get the records of the reference (null if not yet available)
+      var comments = commentsRef.value();
+       // get the identifier of the reference
+      if (commentsRef.remoteType() === "ids") {
+        var ids = commentsRef.ids();
+      } else if (commentsRef.remoteType() === "link") {
+        var link = commentsRef.link();
+      }
+       // load comments (via store.findMany or store.findHasMany)
+      commentsRef.load().then(...)
+       // or trigger a reload
+      commentsRef.reload().then(...)
+       // provide data for reference
+      commentsRef.push([{ type: 'comment', id: 1 }, { type: 'comment', id: 2 }]).then(function(comments) {
+        commentsRef.value() === comments;
+      });
+      ```
+       @method hasMany
+      @param {String} name of the relationship
+      @return {HasManyReference} reference for this relationship
+    */
+    hasMany: function (name) {
+      return this._internalModel.referenceFor('hasMany', name);
+    }
+  });
+
   Model.reopenClass(_emberDataPrivateSystemRelationshipsExt.RelationshipsClassMethodsMixin);
   Model.reopenClass(_emberDataPrivateSystemModelAttr.AttrClassMethodsMixin);
 
   exports.default = Model.extend(_emberDataPrivateSystemDebugDebugInfo.default, _emberDataPrivateSystemRelationshipsBelongsTo.BelongsToMixin, _emberDataPrivateSystemRelationshipsExt.DidDefinePropertyMixin, _emberDataPrivateSystemRelationshipsExt.RelationshipsInstanceMethodsMixin, _emberDataPrivateSystemRelationshipsHasMany.HasManyMixin, _emberDataPrivateSystemModelAttr.AttrInstanceMethodsMixin);
 });
-
-/**
-  Get the reference for the specified belongsTo relationship.
-   Example
-   ```javascript
-  // models/blog.js
-  export default DS.Model.extend({
-    user: DS.belongsTo({ async: true })
-  });
-   store.push({
-    type: 'blog',
-    id: 1,
-    relationships: {
-      user: { type: 'user', id: 1 }
-    }
-  });
-  var userRef = blog.belongsTo('user');
-   // check if the user relationship is loaded
-  var isLoaded = userRef.value() !== null;
-   // get the record of the reference (null if not yet available)
-  var user = userRef.value();
-   // get the identifier of the reference
-  if (userRef.remoteType() === "id") {
-    var id = userRef.id();
-  } else if (userRef.remoteType() === "link") {
-    var link = userRef.link();
-  }
-   // load user (via store.findRecord or store.findBelongsTo)
-  userRef.load().then(...)
-   // or trigger a reload
-  userRef.reload().then(...)
-   // provide data for reference
-  userRef.push({
-    type: 'user',
-    id: 1,
-    attributes: {
-      username: "@user"
-    }
-  }).then(function(user) {
-    userRef.value() === user;
-  });
-  ```
-   @method belongsTo
-  @param {String} name of the relationship
-  @return {BelongsToReference} reference for this relationship
-*/
-
-/**
-  Get the reference for the specified hasMany relationship.
-   Example
-   ```javascript
-  // models/blog.js
-  export default DS.Model.extend({
-    comments: DS.hasMany({ async: true })
-  });
-   store.push({
-    type: 'blog',
-    id: 1,
-    relationships: {
-      comments: {
-        data: [
-          { type: 'comment', id: 1 },
-          { type: 'comment', id: 2 }
-        ]
-      }
-    }
-  });
-  var commentsRef = blog.hasMany('comments');
-   // check if the comments are loaded already
-  var isLoaded = commentsRef.value() !== null;
-   // get the records of the reference (null if not yet available)
-  var comments = commentsRef.value();
-   // get the identifier of the reference
-  if (commentsRef.remoteType() === "ids") {
-    var ids = commentsRef.ids();
-  } else if (commentsRef.remoteType() === "link") {
-    var link = commentsRef.link();
-  }
-   // load comments (via store.findMany or store.findHasMany)
-  commentsRef.load().then(...)
-   // or trigger a reload
-  commentsRef.reload().then(...)
-   // provide data for reference
-  commentsRef.push([{ type: 'comment', id: 1 }, { type: 'comment', id: 2 }]).then(function(comments) {
-    commentsRef.value() === comments;
-  });
-  ```
-   @method hasMany
-  @param {String} name of the relationship
-  @return {HasManyReference} reference for this relationship
-*/
 define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-data/-private/debug'], function (exports, _ember, _emberDataPrivateDebug) {
 
   var get = _ember.default.get;
@@ -7403,6 +7430,8 @@ define('ember-data/-private/system/snapshot-record-array', ['exports', 'ember-da
       @type {Object}
     */
     this.adapterOptions = options.adapterOptions;
+
+    this.include = options.include;
   }
 
   /**
@@ -7464,6 +7493,8 @@ define('ember-data/-private/system/snapshot', ['exports', 'ember', 'ember-data/-
       @type {Object}
     */
     this.adapterOptions = options.adapterOptions;
+
+    this.include = options.include;
 
     this._changedAttributes = record.changedAttributes();
   }
@@ -9455,6 +9486,39 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
   });
 
+  Store.reopen({
+    /**
+      Get the reference for the specified record.
+       Example
+       ```javascript
+      var userRef = store.getReference('user', 1);
+       // check if the user is loaded
+      var isLoaded = userRef.value() !== null;
+       // get the record of the reference (null if not yet available)
+      var user = userRef.value();
+       // get the identifier of the reference
+      if (userRef.remoteType() === "id") {
+      var id = userRef.id();
+      }
+       // load user (via store.find)
+      userRef.load().then(...)
+       // or trigger a reload
+      userRef.reload().then(...)
+       // provide data for reference
+      userRef.push({ id: 1, username: "@user" }).then(function(user) {
+        userRef.value() === user;
+      });
+    ```
+     @method getReference
+    @param {String} type
+    @param {String|Integer} id
+    @return {RecordReference}
+    */
+    getReference: function (type, id) {
+      return this._internalModelForId(type, id).recordReference;
+    }
+  });
+
   function deserializeRecordId(store, key, relationship, id) {
     if (isNone(id)) {
       return;
@@ -9585,34 +9649,6 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 });
 /**
   @module ember-data
-*/
-
-/**
-  Get the reference for the specified record.
-   Example
-   ```javascript
-  var userRef = store.getReference('user', 1);
-   // check if the user is loaded
-  var isLoaded = userRef.value() !== null;
-   // get the record of the reference (null if not yet available)
-  var user = userRef.value();
-   // get the identifier of the reference
-  if (userRef.remoteType() === "id") {
-  var id = userRef.id();
-  }
-   // load user (via store.find)
-  userRef.load().then(...)
-   // or trigger a reload
-  userRef.reload().then(...)
-   // provide data for reference
-  userRef.push({ id: 1, username: "@user" }).then(function(user) {
-    userRef.value() === user;
-  });
-```
- @method getReference
-@param {String} type
-@param {String|Integer} id
-@return {RecordReference}
 */
 define('ember-data/-private/system/store/common', ['exports', 'ember'], function (exports, _ember) {
   exports._bind = _bind;
@@ -11772,6 +11808,10 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
 
       var query = {};
 
+      if (include) {
+        query.include = include;
+      }
+
       return query;
     }
   });
@@ -13277,6 +13317,8 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
 
       var attributes = undefined;
 
+      attributes = get(typeClass, 'attributes');
+
       typeClass.eachTransformedAttribute(function (key, typeClass) {
         if (!data.hasOwnProperty(key)) {
           return;
@@ -13284,7 +13326,8 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
 
         var transform = _this.transformFor(typeClass);
 
-        data[key] = transform.deserialize(data[key]);
+        var transformMeta = attributes.get(key);
+        data[key] = transform.deserialize(data[key], transformMeta.options);
       });
 
       return data;
@@ -14122,7 +14165,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
         if (type) {
           var transform = this.transformFor(type);
 
-          value = transform.serialize(value);
+          value = transform.serialize(value, attribute.options);
         }
 
         // if provided, use the mapping provided by `attrs` in
@@ -15206,7 +15249,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.5.0-beta.1+1327e0755b";
+  exports.default = "2.5.0-beta.1+806c426a14";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
