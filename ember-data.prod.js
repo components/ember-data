@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.6.0-canary+e8283f7580
+ * @version   2.6.0-canary+11484c49d3
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -1327,7 +1327,7 @@ define('ember-data/-private/system/is-array-like', ['exports', 'ember'], functio
     return false;
   }
 });
-define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies) {
+define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/store/common"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStoreCommon) {
 
   var get = _ember.default.get;
   var set = _ember.default.set;
@@ -1414,7 +1414,10 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
       toSet = toSet.concat(newRecords);
       var oldLength = this.length;
       this.arrayContentWillChange(0, this.length, toSet.length);
-      this.set('length', toSet.length);
+      // It’s possible the parent side of the relationship may have been unloaded by this point
+      if ((0, _emberDataPrivateSystemStoreCommon._objectIsAlive)(this)) {
+        this.set('length', toSet.length);
+      }
       this.currentState = toSet;
       this.arrayContentDidChange(0, oldLength, this.length);
       //TODO Figure out to notify only on additions and maybe only if unloaded
@@ -15380,7 +15383,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.6.0-canary+e8283f7580";
+  exports.default = "2.6.0-canary+11484c49d3";
 });
 define("ember-inflector", ["exports", "ember", "lib/system", "lib/ext/string"], function (exports, _ember, _libSystem, _libExtString) {
 
