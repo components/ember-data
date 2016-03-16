@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.6.0-canary+95d05cf5d6
+ * @version   2.6.0-canary+3e32efe8d6
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -8767,7 +8767,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
        @method findAll
       @param {String} modelName
       @param {Object} options
-      @return {DS.AdapterPopulatedRecordArray}
+      @return {Promise} promise
     */
     findAll: function (modelName, options) {
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember.default.inspect(modelName), typeof modelName === 'string');
@@ -13699,7 +13699,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
         var data = message.data;
         var modelClass = store.modelFor(data.modelName);
         var serializer = store.serializerFor(data.modelName);
-        var json = serializer.normalizeSingleResponse(store, modelClass, data, data.id);
+        var normalized = serializer.normalizeSingleResponse(store, modelClass, data, data.id);
          store.push(normalized);
       });
       ```
@@ -15632,7 +15632,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.6.0-canary+95d05cf5d6";
+  exports.default = "2.6.0-canary+3e32efe8d6";
 });
 define("ember-inflector", ["exports", "ember", "lib/system", "lib/ext/string"], function (exports, _ember, _libSystem, _libExtString) {
 
