@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.6.0-canary+24dd96f6bb
+ * @version   2.6.0-canary+77d12021ad
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -10124,8 +10124,7 @@ define("ember-data/-private/transforms", ["exports", "ember-data/transform", "em
   exports.StringTransform = _emberDataPrivateTransformsString.default;
   exports.BooleanTransform = _emberDataPrivateTransformsBoolean.default;
 });
-define('ember-data/-private/transforms/boolean', ['exports', 'ember', 'ember-data/transform', 'ember-data/-private/features'], function (exports, _ember, _emberDataTransform, _emberDataPrivateFeatures) {
-  var isNone = _ember.default.isNone;
+define("ember-data/-private/transforms/boolean", ["exports", "ember-data/transform"], function (exports, _emberDataTransform) {
 
   /**
     The `DS.BooleanTransform` class is used to serialize and deserialize
@@ -10150,16 +10149,8 @@ define('ember-data/-private/transforms/boolean', ['exports', 'ember', 'ember-dat
     @namespace DS
    */
   exports.default = _emberDataTransform.default.extend({
-    deserialize: function (serialized, options) {
+    deserialize: function (serialized) {
       var type = typeof serialized;
-
-      if ((0, _emberDataPrivateFeatures.default)('ds-transform-pass-options')) {
-        if ((0, _emberDataPrivateFeatures.default)('ds-boolean-transform-allow-null')) {
-          if (isNone(serialized) && options.allowNull === true) {
-            return null;
-          }
-        }
-      }
 
       if (type === "boolean") {
         return serialized;
@@ -10172,15 +10163,7 @@ define('ember-data/-private/transforms/boolean', ['exports', 'ember', 'ember-dat
       }
     },
 
-    serialize: function (deserialized, options) {
-      if ((0, _emberDataPrivateFeatures.default)('ds-transform-pass-options')) {
-        if ((0, _emberDataPrivateFeatures.default)('ds-boolean-transform-allow-null')) {
-          if (isNone(deserialized) && options.allowNull === true) {
-            return null;
-          }
-        }
-      }
-
+    serialize: function (deserialized) {
       return Boolean(deserialized);
     }
   });
@@ -15409,7 +15392,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.6.0-canary+24dd96f6bb";
+  exports.default = "2.6.0-canary+77d12021ad";
 });
 define("ember-inflector", ["exports", "ember", "lib/system", "lib/ext/string"], function (exports, _ember, _libSystem, _libExtString) {
 
