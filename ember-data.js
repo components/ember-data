@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.4.0+7cebc18c6b
+ * @version   2.4.0+9b98f5b40e
  */
 
 var define, requireModule, require, requirejs;
@@ -1347,7 +1347,7 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
       //a hack for not removing new records
       //TODO remove once we have proper diffing
       var newRecords = this.currentState.filter(function (internalModel) {
-        return internalModel.isNew();
+        return internalModel.isNew() && toSet.indexOf(internalModel) === -1;
       });
       toSet = toSet.concat(newRecords);
       var oldLength = this.length;
@@ -15603,7 +15603,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.4.0+7cebc18c6b";
+  exports.default = "2.4.0+9b98f5b40e";
 });
 define("ember-inflector", ["exports", "ember", "lib/system", "lib/ext/string"], function (exports, _ember, _libSystem, _libExtString) {
 
