@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.6.0-canary+e88dfed1e2
+ * @version   2.6.0-canary+762139ec87
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -15023,8 +15023,8 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
       var primaryHasTypeAttribute = (0, _emberDataPrivateUtils.modelHasAttributeOrRelationshipNamedType)(primaryModelClass);
       // Support polymorphic records in async relationships
       if (!primaryHasTypeAttribute && hash.type && store._hasModelFor(this.modelNameFromPayloadKey(hash.type))) {
-        serializer = store.serializerFor(hash.type);
-        modelClass = store.modelFor(hash.type);
+        serializer = store.serializerFor(this.modelNameFromPayloadKey(hash.type));
+        modelClass = store.modelFor(this.modelNameFromPayloadKey(hash.type));
       } else {
         serializer = primarySerializer;
         modelClass = primaryModelClass;
@@ -15663,7 +15663,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.6.0-canary+e88dfed1e2";
+  exports.default = "2.6.0-canary+762139ec87";
 });
 define("ember-inflector", ["exports", "ember", "lib/system", "lib/ext/string"], function (exports, _ember, _libSystem, _libExtString) {
 
