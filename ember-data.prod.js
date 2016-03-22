@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.6.0-canary+fbde070ff1
+ * @version   2.6.0-canary+599ed23aee
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -2249,7 +2249,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
   var get = _ember.default.get;
   var set = _ember.default.set;
   var copy = _ember.default.copy;
-  var merge = _ember.default.merge;
+  var assign = _ember.default.assign || _ember.default.merge;
 
   var _extractPivotNameCache = new _emberDataPrivateSystemEmptyObject.default();
   var _splitOnDotCache = new _emberDataPrivateSystemEmptyObject.default();
@@ -2441,7 +2441,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
 
     setupData: function (data) {
       var changedKeys = this._changedKeys(data.attributes);
-      merge(this._data, data.attributes);
+      assign(this._data, data.attributes);
       this.pushedData();
       if (this.record) {
         this.record._notifyProperties(changedKeys);
@@ -2553,7 +2553,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       var oldData = this._data;
       var currentData = this._attributes;
       var inFlightData = this._inFlightAttributes;
-      var newData = merge(copy(inFlightData), currentData);
+      var newData = assign(copy(inFlightData), currentData);
       var diffData = new _emberDataPrivateSystemEmptyObject.default();
 
       var newDataKeys = Object.keys(newData);
@@ -2887,9 +2887,9 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this.didCleanError();
       var changedKeys = this._changedKeys(data);
 
-      merge(this._data, this._inFlightAttributes);
+      assign(this._data, this._inFlightAttributes);
       if (data) {
-        merge(this._data, data);
+        assign(this._data, data);
       }
 
       this._inFlightAttributes = new _emberDataPrivateSystemEmptyObject.default();
@@ -3019,8 +3019,8 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         var keys = Object.keys(updates);
         var length = keys.length;
 
-        original = merge(new _emberDataPrivateSystemEmptyObject.default(), this._data);
-        original = merge(original, this._inFlightAttributes);
+        original = assign(new _emberDataPrivateSystemEmptyObject.default(), this._data);
+        original = assign(original, this._inFlightAttributes);
 
         for (i = 0; i < length; i++) {
           key = keys[i];
@@ -9736,6 +9736,8 @@ define('ember-data/-private/system/store/common', ['exports', 'ember'], function
 define('ember-data/-private/system/store/container-instance-cache', ['exports', 'ember', 'ember-data/-private/system/empty-object'], function (exports, _ember, _emberDataPrivateSystemEmptyObject) {
   exports.default = ContainerInstanceCache;
 
+  var assign = _ember.default.assign || _ember.default.merge;
+
   /**
    * The `ContainerInstanceCache` serves as a lazy cache for looking up
    * instances of serializers and adapters. It has some additional logic for
@@ -9762,7 +9764,7 @@ define('ember-data/-private/system/store/container-instance-cache', ['exports', 
 
   ContainerInstanceCache.prototype = new _emberDataPrivateSystemEmptyObject.default();
 
-  _ember.default.merge(ContainerInstanceCache.prototype, {
+  assign(ContainerInstanceCache.prototype, {
     get: function (type, preferredKey, fallbacks) {
       var cache = this._cache;
       var preferredLookupKey = type + ':' + preferredKey;
@@ -13722,7 +13724,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
 
   var get = _ember.default.get;
   var isNone = _ember.default.isNone;
-  var merge = _ember.default.merge;
+  var assign = _ember.default.assign || _ember.default.merge;
 
   /**
     Ember Data 2.0 Serializer:
@@ -14700,7 +14702,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
       @param {Object} options
     */
     serializeIntoHash: function (hash, typeClass, snapshot, options) {
-      merge(hash, this.serialize(snapshot, options));
+      assign(hash, this.serialize(snapshot, options));
     },
 
     /**
@@ -15823,7 +15825,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.6.0-canary+fbde070ff1";
+  exports.default = "2.6.0-canary+599ed23aee";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
