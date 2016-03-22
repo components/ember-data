@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.6.0-canary+599ed23aee
+ * @version   2.6.0-canary+e84422248d
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -15028,8 +15028,7 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
 
   /**
     Normally, applications will use the `RESTSerializer` by implementing
-    the `normalize` method and individual normalizations under
-    `normalizeHash`.
+    the `normalize` method.
   
     This allows you to do whatever kind of munging you need, and is
     especially useful if your server is inconsistent and you need to
@@ -15042,7 +15041,7 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
     There are also a number of hooks that you might find useful to define
     across-the-board rules for your payload. These rules will be useful
     if your server is consistent, or if you're building an adapter for
-    an infrastructure service, like Parse, and want to encode service
+    an infrastructure service, like Firebase, and want to encode service
     conventions.
   
     For example, if all of your keys are underscored and all-caps, but
@@ -15126,25 +15125,25 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
       * With `App.Comment`, `"comments"` and `{ id: 1, body: "FIRST" }`
       * With `App.Comment`, `"comments"` and `{ id: 2, body: "Rails is unagi" }`
        You can use this method, for example, to normalize underscored keys to camelized
-      or other general-purpose normalizations.
-       If you want to do normalizations specific to some part of the payload, you
-      can specify those under `normalizeHash`.
+      or other general-purpose normalizations. You will only need to implement 
+      `normalize` and manipulate the payload as desired.
        For example, if the `IDs` under `"comments"` are provided as `_id` instead of
       `id`, you can specify how to normalize just the comments:
        ```app/serializers/post.js
       import DS from 'ember-data';
        export default DS.RESTSerializer.extend({
-        normalizeHash: {
-          comments: function(hash) {
+        normalize(model, hash, prop) {
+          if (prop === 'comments') {
             hash.id = hash._id;
-            delete hash._id;
-            return hash;
+            delete hash._id;   
           }
+           return this._super(...arguments);
         }
       });
       ```
-       The key under `normalizeHash` is just the original key that was in the original
-      payload.
+       On each call to the `normalize` method, the third parameter (`prop`) is always 
+      one of the keys that were in the original payload or in the result of another 
+      normalization as `normalizeResponse`.
        @method normalize
       @param {DS.Model} modelClass
       @param {Object} resourceHash
@@ -15155,7 +15154,7 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
       if (this.normalizeHash && this.normalizeHash[prop]) {
         this.normalizeHash[prop](resourceHash);
       }
-      return this._super(modelClass, resourceHash, prop);
+      return this._super(modelClass, resourceHash);
     },
 
     /**
@@ -15825,7 +15824,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.6.0-canary+599ed23aee";
+  exports.default = "2.6.0-canary+e84422248d";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
