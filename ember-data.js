@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.6.0-canary+59c70d5b42
+ * @version   2.6.0-canary+8109b4c1dc
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -13440,7 +13440,8 @@ define('ember-data/serializers/embedded-records-mixin', ['exports', 'ember', 'em
       var serializer = store.serializerFor(modelName);
 
       return serializer.normalize(modelClass, relationshipHash, null);
-    }
+    },
+    isEmbeddedRecordsMixin: true
   });
 });
 define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-private/debug', 'ember-data/serializers/json', 'ember-data/-private/system/normalize-model-name', 'ember-inflector', 'ember-data/-private/features'], function (exports, _ember, _emberDataPrivateDebug, _emberDataSerializersJson, _emberDataPrivateSystemNormalizeModelName, _emberInflector, _emberDataPrivateFeatures) {
@@ -13934,6 +13935,11 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
 
   (0, _emberDataPrivateDebug.runInDebug)(function () {
     JSONAPISerializer.reopen({
+      willMergeMixin: function (props) {
+        (0, _emberDataPrivateDebug.warn)('The JSONAPISerializer does not work with the EmbeddedRecordsMixin because the JSON API spec does not describe how to format embedded resources.', !props.isEmbeddedRecordsMixin, {
+          id: 'ds.serializer.embedded-records-mixin-not-supported'
+        });
+      },
       warnMessageForUndefinedType: function () {
         return 'Encountered a resource object with an undefined type (resolved resource using ' + this.constructor.toString() + ')';
       },
@@ -16078,7 +16084,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.6.0-canary+59c70d5b42";
+  exports.default = "2.6.0-canary+8109b4c1dc";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
