@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.6.0-canary+7ca33da3be
+ * @version   2.6.0-canary+688bad195e
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -1827,13 +1827,13 @@ define('ember-data/-private/system/model/errors', ['exports', 'ember', 'ember-da
   */
 
   /**
-    Holds validation errors for a given record organized by attribute names.
+    Holds validation errors for a given record, organized by attribute names.
   
-    Every DS.Model has an `errors` property that is an instance of
+    Every `DS.Model` has an `errors` property that is an instance of
     `DS.Errors`. This can be used to display validation error
     messages returned from the server when a `record.save()` rejects.
   
-    For Example, if you had an `User` model that looked like this:
+    For Example, if you had a `User` model that looked like this:
   
     ```app/models/user.js
     import DS from 'ember-data';
@@ -1843,7 +1843,7 @@ define('ember-data/-private/system/model/errors', ['exports', 'ember', 'ember-da
       email: attr('string')
     });
     ```
-    And you attempted to save a record that did not validate on the backend.
+    And you attempted to save a record that did not validate on the backend:
   
     ```javascript
     var user = store.createRecord('user', {
@@ -1853,28 +1853,13 @@ define('ember-data/-private/system/model/errors', ['exports', 'ember', 'ember-da
     user.save();
     ```
   
-    Your backend data store might return a response with status code 422 (Unprocessable Entity)
-    and that looks like this. This response will be used to populate the error object.
+    Your backend would be expected to return an error response that described
+    the problem, so that error messages can be generated on the app.
   
-    ```javascript
-    {
-      "errors": [
-        {
-          "detail": "This username is already taken!",
-          "source": {
-            "pointer": "data/attributes/username"
-          }
-        }, {
-          "detail": "Doesn't look like a valid email.",
-          "source": {
-            "pointer": "data/attributes/email"
-          }
-        }
-      ]
-    }
-    ```
-  
-    For additional information on the error object, see the [JSON API spec](http://jsonapi.org/format/#error-objects).
+    API responses will be translated into instances of `DS.Errors` differently,
+    depending on the specific combination of adapter and serializer used. You
+    may want to check the documentation or the source code of the libraries
+    that you are using, to know how they expect errors to be communicated.
   
     Errors can be displayed to the user by accessing their property name
     to get an array of all the error objects for that property. Each
@@ -1906,33 +1891,6 @@ define('ember-data/-private/system/model/errors', ['exports', 'ember', 'ember-da
     {{#each model.errors.messages as |message|}}
       <div class="error">
         {{message}}
-      </div>
-    {{/each}}
-    ```
-  
-    The JSON API spec also allows for object level errors to be placed
-    in an object with pointer `data`.
-  
-    ```javascript
-    {
-      "errors": [
-        {
-          "detail": "Some generic non property error message",
-          "source": {
-            "pointer": "data"
-          }
-        }
-      ]
-    }
-    ```
-  
-    You can access these errors by using the `base` property on the errors
-    object.
-  
-    ```handlebars
-    {{#each model.errors.base as |error|}}
-      <div class="error">
-        {{error.message}}
       </div>
     {{/each}}
     ```
@@ -11287,6 +11245,24 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
     This adapter is designed around the idea that the JSON exchanged with
     the server should be conventional.
   
+    ## Success and failure
+  
+    The REST adapter will consider a success any response with a status code
+    of the 2xx family ("Success"), as well as 304 ("Not Modified"). Any other
+    status code will be considered a failure.
+  
+    On success, the request promise will be resolved with the full response
+    payload.
+  
+    Failed responses with status code 422 ("Unprocessable Entity") will be
+    considered "invalid". The response will be discarded, except for the
+    `errors` key. The request promise will be rejected with a `DS.InvalidError`.
+    This error object will encapsulate the saved `errors` value.
+  
+    Any other status codes will be treated as an "adapter error". The request
+    promise will be rejected, similarly to the "invalid" case, but with
+    an instance of `DS.AdapterError` instead.
+  
     ## JSON Structure
   
     The REST adapter expects the JSON returned from your server to follow
@@ -11363,6 +11339,24 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       }
     }
     ```
+  
+    ### Errors
+  
+    If a response is considered a failure, the JSON payload is expected to include
+    a top-level key `errors`, detailing any specific issues. For example:
+  
+    ```js
+    {
+      "errors": {
+        "msg": "Something went wrong"
+      }
+    }
+    ```
+  
+    This adapter does not make any assumptions as to the format of the `errors`
+    object. It will simply be passed along as is, wrapped in an instance
+    of `DS.InvalidError` or `DS.AdapterError`. The serializer can interpret it
+    afterwards.
   
     ## Customization
   
@@ -15136,11 +15130,59 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
     },
 
     /**
-      `extractErrors` is used to extract model errors when a call is made
-      to `DS.Model#save` which fails with an `InvalidError`. By default
+      `extractErrors` is used to extract model errors when a call
+      to `DS.Model#save` fails with an `InvalidError`. By default
       Ember Data expects error information to be located on the `errors`
       property of the payload object.
-       Example
+       This serializer expects this `errors` object to be an Array similar
+      to the following, compliant with the JSON-API specification:
+       ```js
+      {
+        "errors": [
+          {
+            "detail": "This username is already taken!",
+            "source": {
+              "pointer": "data/attributes/username"
+            }
+          }, {
+            "detail": "Doesn't look like a valid email.",
+            "source": {
+              "pointer": "data/attributes/email"
+            }
+          }
+        ]
+      }
+      ```
+       The key `detail` provides a textual description of the problem.
+      Alternatively, the key `title` can be used for the same purpose.
+       The nested keys `source.pointer` detail which specific element
+      of the request data was invalid.
+       Note that JSON-API also allows for object-level errors to be placed
+      in an object with pointer `data`, signifying that the problem
+      cannot be traced to a specific attribute:
+       ```javascript
+      {
+        "errors": [
+          {
+            "detail": "Some generic non property error message",
+            "source": {
+              "pointer": "data"
+            }
+          }
+        ]
+      }
+      ```
+       When turn into a `DS.Errors` object, you can read these errors
+      through the property `base`:
+       ```handlebars
+      {{#each model.errors.base as |error|}}
+        <div class="error">
+          {{error.message}}
+        </div>
+      {{/each}}
+      ```
+       Example of alternative implementation, overriding the default
+      behavior to deal with a different format of errors:
        ```app/serializers/post.js
       import DS from 'ember-data';
        export default DS.JSONSerializer.extend({
@@ -16088,7 +16130,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.6.0-canary+7ca33da3be";
+  exports.default = "2.6.0-canary+688bad195e";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
