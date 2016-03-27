@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.6.0-canary+688bad195e
+ * @version   2.6.0-canary+8400b9ddbc
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -6704,8 +6704,8 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
   BelongsToRelationship.prototype.setCanonicalRecord = function (newRecord) {
     if (newRecord) {
       this.addCanonicalRecord(newRecord);
-    } else if (this.inverseRecord) {
-      this.removeCanonicalRecord(this.inverseRecord);
+    } else if (this.canonicalState) {
+      this.removeCanonicalRecord(this.canonicalState);
     }
     this.setHasData(true);
     this.setHasLoaded(true);
@@ -15867,7 +15867,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.6.0-canary+688bad195e";
+  exports.default = "2.6.0-canary+8400b9ddbc";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
