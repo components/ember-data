@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.6.0-canary+f063ac1380
+ * @version   2.6.0-canary+768ae7adf3
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -5062,7 +5062,7 @@ define("ember-data/-private/system/record-arrays", ["exports", "ember-data/-priv
 /**
   @module ember-data
 */
-define("ember-data/-private/system/record-arrays/adapter-populated-record-array", ["exports", "ember", "ember-data/-private/system/record-arrays/record-array", "ember-data/-private/system/clone-null"], function (exports, _ember, _emberDataPrivateSystemRecordArraysRecordArray, _emberDataPrivateSystemCloneNull) {
+define("ember-data/-private/system/record-arrays/adapter-populated-record-array", ["exports", "ember", "ember-data/-private/system/record-arrays/record-array", "ember-data/-private/system/clone-null", "ember-data/-private/features"], function (exports, _ember, _emberDataPrivateSystemRecordArraysRecordArray, _emberDataPrivateSystemCloneNull, _emberDataPrivateFeatures) {
 
   /**
     @module ember-data
@@ -5099,11 +5099,20 @@ define("ember-data/-private/system/record-arrays/adapter-populated-record-array"
 
       //TODO Optimize
       var internalModels = _ember.default.A(records).mapBy('_internalModel');
-      this.setProperties({
-        content: _ember.default.A(internalModels),
-        isLoaded: true,
-        meta: (0, _emberDataPrivateSystemCloneNull.default)(payload.meta)
-      });
+      if ((0, _emberDataPrivateFeatures.default)('ds-links-in-record-array')) {
+        this.setProperties({
+          content: _ember.default.A(internalModels),
+          isLoaded: true,
+          meta: (0, _emberDataPrivateSystemCloneNull.default)(payload.meta),
+          links: (0, _emberDataPrivateSystemCloneNull.default)(payload.links)
+        });
+      } else {
+        this.setProperties({
+          content: _ember.default.A(internalModels),
+          isLoaded: true,
+          meta: (0, _emberDataPrivateSystemCloneNull.default)(payload.meta)
+        });
+      }
 
       internalModels.forEach(function (record) {
         _this.manager.recordArraysForRecord(record).add(_this);
@@ -16201,7 +16210,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.6.0-canary+f063ac1380";
+  exports.default = "2.6.0-canary+768ae7adf3";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
