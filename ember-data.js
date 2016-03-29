@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.6.0-canary+fe3be9619c
+ * @version   2.6.0-canary+fd053c9bf5
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -2603,7 +2603,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     },
 
     _preloadHasMany: function (key, preloadValue, type) {
-      (0, _emberDataPrivateDebug.assert)("You need to pass in an array to set a hasMany property on a record", _ember.default.isArray(preloadValue));
+      (0, _emberDataPrivateDebug.assert)("You need to pass in an array to set a hasMany property on a record", Array.isArray(preloadValue));
       var recordsToSet = new Array(preloadValue.length);
 
       for (var i = 0; i < preloadValue.length; i++) {
@@ -7703,7 +7703,6 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
   exports.badIdFormatAssertion = badIdFormatAssertion;
   var Backburner = _ember.default._Backburner;
   var Map = _ember.default.Map;
-  var isArray = Array.isArray || _ember.default.isArray;
 
   //Get the materialized model from the internalModel/promise that returns
   //an internal model and return it in a promiseObject. Useful for returning
@@ -9188,7 +9187,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         }
       }
 
-      if (isArray(data.data)) {
+      if (Array.isArray(data.data)) {
         length = data.data.length;
         var internalModels = new Array(length);
         for (i = 0; i < length; i++) {
@@ -9559,7 +9558,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       return;
     }
 
-    (0, _emberDataPrivateDebug.assert)('A ' + relationship.parentType + ' record was pushed into the store with the value of ' + key + ' being ' + _ember.default.inspect(id) + ', but ' + key + ' is a belongsTo relationship so the value must not be an array. You should probably check your data payload or serializer.', !isArray(id));
+    (0, _emberDataPrivateDebug.assert)('A ' + relationship.parentType + ' record was pushed into the store with the value of ' + key + ' being ' + _ember.default.inspect(id) + ', but ' + key + ' is a belongsTo relationship so the value must not be an array. You should probably check your data payload or serializer.', !Array.isArray(id));
 
     //TODO:Better asserts
     return store._internalModelForId(id.type, id.id);
@@ -9570,7 +9569,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       return;
     }
 
-    (0, _emberDataPrivateDebug.assert)('A ' + relationship.parentType + ' record was pushed into the store with the value of ' + key + ' being \'' + _ember.default.inspect(ids) + '\', but ' + key + ' is a hasMany relationship so the value must be an array. You should probably check your data payload or serializer.', isArray(ids));
+    (0, _emberDataPrivateDebug.assert)('A ' + relationship.parentType + ' record was pushed into the store with the value of ' + key + ' being \'' + _ember.default.inspect(ids) + '\', but ' + key + ' is a hasMany relationship so the value must be an array. You should probably check your data payload or serializer.', Array.isArray(ids));
     var _ids = new Array(ids.length);
 
     for (var i = 0; i < ids.length; i++) {
@@ -9820,7 +9819,7 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
   var Promise = _ember.default.RSVP.Promise;
 
   function payloadIsNotBlank(adapterPayload) {
-    if (_ember.default.isArray(adapterPayload)) {
+    if (Array.isArray(adapterPayload)) {
       return true;
     } else {
       return Object.keys(adapterPayload || {}).length;
@@ -9979,7 +9978,7 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
         records = store.push(payload);
       });
 
-      (0, _emberDataPrivateDebug.assert)('The response to store.query is expected to be an array but it was a single record. Please wrap your response in an array or use `store.queryRecord` to query for a single record.', _ember.default.isArray(records));
+      (0, _emberDataPrivateDebug.assert)('The response to store.query is expected to be an array but it was a single record. Please wrap your response in an array or use `store.queryRecord` to query for a single record.', Array.isArray(records));
       recordArray.loadRecords(records, payload);
       return recordArray;
     }, null, "DS: Extract payload of query " + typeClass);
@@ -10035,7 +10034,7 @@ define('ember-data/-private/system/store/serializer-response', ['exports', 'embe
         }
       }
       if ('data' in doc) {
-        if (!(doc.data === null || _ember.default.isArray(doc.data) || typeof doc.data === 'object')) {
+        if (!(doc.data === null || Array.isArray(doc.data) || typeof doc.data === 'object')) {
           errors.push('data must be null, an object, or an array');
         }
       }
@@ -10045,7 +10044,7 @@ define('ember-data/-private/system/store/serializer-response', ['exports', 'embe
         }
       }
       if ('errors' in doc) {
-        if (!_ember.default.isArray(doc.errors)) {
+        if (!Array.isArray(doc.errors)) {
           errors.push('errors must be an array');
         }
       }
@@ -10915,7 +10914,7 @@ define('ember-data/adapters/errors', ['exports', 'ember', 'ember-data/-private/d
 
   function extend(ParentErrorClass, defaultMessage) {
     var ErrorClass = function (errors, message) {
-      (0, _emberDataPrivateDebug.assert)('`AdapterError` expects json-api formatted errors array.', _ember.default.isArray(errors || []));
+      (0, _emberDataPrivateDebug.assert)('`AdapterError` expects json-api formatted errors array.', Array.isArray(errors || []));
       ParentErrorClass.call(this, errors, message || defaultMessage);
     };
     ErrorClass.prototype = Object.create(ParentErrorClass.prototype);
@@ -16210,7 +16209,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.6.0-canary+fe3be9619c";
+  exports.default = "2.6.0-canary+fd053c9bf5";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 

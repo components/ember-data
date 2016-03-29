@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.6.0-canary+fe3be9619c
+ * @version   2.6.0-canary+fd053c9bf5
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -7619,7 +7619,6 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
   exports.badIdFormatAssertion = badIdFormatAssertion;
   var Backburner = _ember.default._Backburner;
   var Map = _ember.default.Map;
-  var isArray = Array.isArray || _ember.default.isArray;
 
   //Get the materialized model from the internalModel/promise that returns
   //an internal model and return it in a promiseObject. Useful for returning
@@ -9029,7 +9028,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         }
       }
 
-      if (isArray(data.data)) {
+      if (Array.isArray(data.data)) {
         length = data.data.length;
         var internalModels = new Array(length);
         for (i = 0; i < length; i++) {
@@ -9624,7 +9623,7 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
   var Promise = _ember.default.RSVP.Promise;
 
   function payloadIsNotBlank(adapterPayload) {
-    if (_ember.default.isArray(adapterPayload)) {
+    if (Array.isArray(adapterPayload)) {
       return true;
     } else {
       return Object.keys(adapterPayload || {}).length;
@@ -9833,7 +9832,7 @@ define('ember-data/-private/system/store/serializer-response', ['exports', 'embe
         }
       }
       if ('data' in doc) {
-        if (!(doc.data === null || _ember.default.isArray(doc.data) || typeof doc.data === 'object')) {
+        if (!(doc.data === null || Array.isArray(doc.data) || typeof doc.data === 'object')) {
           errors.push('data must be null, an object, or an array');
         }
       }
@@ -9843,7 +9842,7 @@ define('ember-data/-private/system/store/serializer-response', ['exports', 'embe
         }
       }
       if ('errors' in doc) {
-        if (!_ember.default.isArray(doc.errors)) {
+        if (!Array.isArray(doc.errors)) {
           errors.push('errors must be an array');
         }
       }
@@ -15947,7 +15946,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.6.0-canary+fe3be9619c";
+  exports.default = "2.6.0-canary+fd053c9bf5";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
