@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.6.0-canary+0cc8efdc14
+ * @version   2.6.0-canary+f063ac1380
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -514,189 +514,6 @@ define('ember-data/-private/adapters/build-url-mixin', ['exports', 'ember'], fun
       return _ember.default.String.pluralize(camelized);
     }
   });
-});
-define('ember-data/-private/adapters/errors', ['exports', 'ember', 'ember-data/-private/debug'], function (exports, _ember, _emberDataPrivateDebug) {
-  exports.AdapterError = AdapterError;
-  exports.InvalidError = InvalidError;
-  exports.TimeoutError = TimeoutError;
-  exports.AbortError = AbortError;
-  exports.errorsHashToArray = errorsHashToArray;
-  exports.errorsArrayToHash = errorsArrayToHash;
-
-  var EmberError = _ember.default.Error;
-
-  var SOURCE_POINTER_REGEXP = /^\/?data\/(attributes|relationships)\/(.*)/;
-  var SOURCE_POINTER_PRIMARY_REGEXP = /^\/?data/;
-  var PRIMARY_ATTRIBUTE_KEY = 'base';
-
-  /**
-    @class AdapterError
-    @namespace DS
-  */
-
-  function AdapterError(errors) {
-    var message = arguments.length <= 1 || arguments[1] === undefined ? 'Adapter operation failed' : arguments[1];
-
-    this.isAdapterError = true;
-    EmberError.call(this, message);
-
-    this.errors = errors || [{
-      title: 'Adapter Error',
-      detail: message
-    }];
-  }
-
-  AdapterError.prototype = Object.create(EmberError.prototype);
-
-  /**
-    A `DS.InvalidError` is used by an adapter to signal the external API
-    was unable to process a request because the content was not
-    semantically correct or meaningful per the API. Usually this means a
-    record failed some form of server side validation. When a promise
-    from an adapter is rejected with a `DS.InvalidError` the record will
-    transition to the `invalid` state and the errors will be set to the
-    `errors` property on the record.
-  
-    For Ember Data to correctly map errors to their corresponding
-    properties on the model, Ember Data expects each error to be
-    a valid json-api error object with a `source/pointer` that matches
-    the property name. For example if you had a Post model that
-    looked like this.
-  
-    ```app/models/post.js
-    import DS from 'ember-data';
-  
-    export default DS.Model.extend({
-      title: DS.attr('string'),
-      content: DS.attr('string')
-    });
-    ```
-  
-    To show an error from the server related to the `title` and
-    `content` properties your adapter could return a promise that
-    rejects with a `DS.InvalidError` object that looks like this:
-  
-    ```app/adapters/post.js
-    import Ember from 'ember';
-    import DS from 'ember-data';
-  
-    export default DS.RESTAdapter.extend({
-      updateRecord: function() {
-        // Fictional adapter that always rejects
-        return Ember.RSVP.reject(new DS.InvalidError([
-          {
-            detail: 'Must be unique',
-            source: { pointer: '/data/attributes/title' }
-          },
-          {
-            detail: 'Must not be blank',
-            source: { pointer: '/data/attributes/content'}
-          }
-        ]));
-      }
-    });
-    ```
-  
-    Your backend may use different property names for your records the
-    store will attempt extract and normalize the errors using the
-    serializer's `extractErrors` method before the errors get added to
-    the the model. As a result, it is safe for the `InvalidError` to
-    wrap the error payload unaltered.
-  
-    @class InvalidError
-    @namespace DS
-  */
-
-  function InvalidError(errors) {
-    (0, _emberDataPrivateDebug.assert)('`InvalidError` expects json-api formatted errors array.', _ember.default.isArray(errors || []));
-    AdapterError.call(this, errors, 'The adapter rejected the commit because it was invalid');
-  }
-
-  InvalidError.prototype = Object.create(AdapterError.prototype);
-
-  /**
-    @class TimeoutError
-    @namespace DS
-  */
-
-  function TimeoutError() {
-    AdapterError.call(this, null, 'The adapter operation timed out');
-  }
-
-  TimeoutError.prototype = Object.create(AdapterError.prototype);
-
-  /**
-    @class AbortError
-    @namespace DS
-  */
-
-  function AbortError() {
-    AdapterError.call(this, null, 'The adapter operation was aborted');
-  }
-
-  AbortError.prototype = Object.create(AdapterError.prototype);
-
-  /**
-    @method errorsHashToArray
-    @private
-  */
-
-  function errorsHashToArray(errors) {
-    var out = [];
-
-    if (_ember.default.isPresent(errors)) {
-      Object.keys(errors).forEach(function (key) {
-        var messages = _ember.default.makeArray(errors[key]);
-        for (var i = 0; i < messages.length; i++) {
-          var title = 'Invalid Attribute';
-          var pointer = '/data/attributes/' + key;
-          if (key === PRIMARY_ATTRIBUTE_KEY) {
-            title = 'Invalid Document';
-            pointer = '/data';
-          }
-          out.push({
-            title: title,
-            detail: messages[i],
-            source: {
-              pointer: pointer
-            }
-          });
-        }
-      });
-    }
-
-    return out;
-  }
-
-  /**
-    @method errorsArrayToHash
-    @private
-  */
-
-  function errorsArrayToHash(errors) {
-    var out = {};
-
-    if (_ember.default.isPresent(errors)) {
-      errors.forEach(function (error) {
-        if (error.source && error.source.pointer) {
-          var key = error.source.pointer.match(SOURCE_POINTER_REGEXP);
-
-          if (key) {
-            key = key[2];
-          } else if (error.source.pointer.search(SOURCE_POINTER_PRIMARY_REGEXP) !== -1) {
-            key = PRIMARY_ATTRIBUTE_KEY;
-          }
-
-          if (key) {
-            out[key] = out[key] || [];
-            out[key].push(error.detail || error.title);
-          }
-        }
-      });
-    }
-
-    return out;
-  }
 });
 define('ember-data/-private/core', ['exports', 'ember', 'ember-data/version'], function (exports, _ember, _emberDataVersion) {
 
@@ -7871,7 +7688,7 @@ define('ember-data/-private/system/snapshot', ['exports', 'ember', 'ember-data/-
 /**
   @module ember-data
 */
-define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/model', 'ember-data/-private/debug', 'ember-data/-private/system/normalize-link', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/adapters/errors', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/store/common', 'ember-data/-private/system/store/serializer-response', 'ember-data/-private/system/store/serializers', 'ember-data/-private/system/store/finders', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/store/container-instance-cache', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/system/empty-object', 'ember-data/-private/features'], function (exports, _ember, _emberDataModel, _emberDataPrivateDebug, _emberDataPrivateSystemNormalizeLink, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateAdaptersErrors, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStoreCommon, _emberDataPrivateSystemStoreSerializerResponse, _emberDataPrivateSystemStoreSerializers, _emberDataPrivateSystemStoreFinders, _emberDataPrivateUtils, _emberDataPrivateSystemCoerceId, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateSystemStoreContainerInstanceCache, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemEmptyObject, _emberDataPrivateFeatures) {
+define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/model', 'ember-data/-private/debug', 'ember-data/-private/system/normalize-link', 'ember-data/-private/system/normalize-model-name', 'ember-data/adapters/errors', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/store/common', 'ember-data/-private/system/store/serializer-response', 'ember-data/-private/system/store/serializers', 'ember-data/-private/system/store/finders', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/store/container-instance-cache', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/system/empty-object', 'ember-data/-private/features'], function (exports, _ember, _emberDataModel, _emberDataPrivateDebug, _emberDataPrivateSystemNormalizeLink, _emberDataPrivateSystemNormalizeModelName, _emberDataAdaptersErrors, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStoreCommon, _emberDataPrivateSystemStoreSerializerResponse, _emberDataPrivateSystemStoreSerializers, _emberDataPrivateSystemStoreFinders, _emberDataPrivateUtils, _emberDataPrivateSystemCoerceId, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateSystemStoreContainerInstanceCache, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemEmptyObject, _emberDataPrivateFeatures) {
   var badIdFormatAssertion = '`id` has to be non-empty string or number';
 
   exports.badIdFormatAssertion = badIdFormatAssertion;
@@ -9789,7 +9606,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
       return internalModel;
     }, function (error) {
-      if (error instanceof _emberDataPrivateAdaptersErrors.InvalidError) {
+      if (error instanceof _emberDataAdaptersErrors.InvalidError) {
         var errors = serializer.extractErrors(store, typeClass, error, snapshot.id);
         store.recordWasInvalid(internalModel, errors);
       } else {
@@ -11047,6 +10864,231 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
 /**
   @module ember-data
 */
+define('ember-data/adapters/errors', ['exports', 'ember', 'ember-data/-private/debug', 'ember-data/-private/features'], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateFeatures) {
+  exports.AdapterError = AdapterError;
+  exports.errorsHashToArray = errorsHashToArray;
+  exports.errorsArrayToHash = errorsArrayToHash;
+
+  var EmberError = _ember.default.Error;
+
+  var SOURCE_POINTER_REGEXP = /^\/?data\/(attributes|relationships)\/(.*)/;
+  var SOURCE_POINTER_PRIMARY_REGEXP = /^\/?data/;
+  var PRIMARY_ATTRIBUTE_KEY = 'base';
+
+  /**
+    @class AdapterError
+    @namespace DS
+  */
+
+  function AdapterError(errors) {
+    var message = arguments.length <= 1 || arguments[1] === undefined ? 'Adapter operation failed' : arguments[1];
+
+    this.isAdapterError = true;
+    EmberError.call(this, message);
+
+    this.errors = errors || [{
+      title: 'Adapter Error',
+      detail: message
+    }];
+  }
+
+  var extendedErrorsEnabled = (0, _emberDataPrivateFeatures.default)('ds-extended-errors');
+
+  function extendFn(ErrorClass) {
+    return function () {
+      var _ref = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+      var defaultMessage = _ref.message;
+
+      return extend(ErrorClass, defaultMessage);
+    };
+  }
+
+  function extend(ParentErrorClass, defaultMessage) {
+    var ErrorClass = function (errors, message) {
+      (0, _emberDataPrivateDebug.assert)('`AdapterError` expects json-api formatted errors array.', _ember.default.isArray(errors || []));
+      ParentErrorClass.call(this, errors, message || defaultMessage);
+    };
+    ErrorClass.prototype = Object.create(ParentErrorClass.prototype);
+
+    if (extendedErrorsEnabled) {
+      ErrorClass.extend = extendFn(ErrorClass);
+    }
+
+    return ErrorClass;
+  }
+
+  AdapterError.prototype = Object.create(EmberError.prototype);
+
+  if (extendedErrorsEnabled) {
+    AdapterError.extend = extendFn(AdapterError);
+  }
+
+  /**
+    A `DS.InvalidError` is used by an adapter to signal the external API
+    was unable to process a request because the content was not
+    semantically correct or meaningful per the API. Usually this means a
+    record failed some form of server side validation. When a promise
+    from an adapter is rejected with a `DS.InvalidError` the record will
+    transition to the `invalid` state and the errors will be set to the
+    `errors` property on the record.
+  
+    For Ember Data to correctly map errors to their corresponding
+    properties on the model, Ember Data expects each error to be
+    a valid json-api error object with a `source/pointer` that matches
+    the property name. For example if you had a Post model that
+    looked like this.
+  
+    ```app/models/post.js
+    import DS from 'ember-data';
+  
+    export default DS.Model.extend({
+      title: DS.attr('string'),
+      content: DS.attr('string')
+    });
+    ```
+  
+    To show an error from the server related to the `title` and
+    `content` properties your adapter could return a promise that
+    rejects with a `DS.InvalidError` object that looks like this:
+  
+    ```app/adapters/post.js
+    import Ember from 'ember';
+    import DS from 'ember-data';
+  
+    export default DS.RESTAdapter.extend({
+      updateRecord: function() {
+        // Fictional adapter that always rejects
+        return Ember.RSVP.reject(new DS.InvalidError([
+          {
+            detail: 'Must be unique',
+            source: { pointer: '/data/attributes/title' }
+          },
+          {
+            detail: 'Must not be blank',
+            source: { pointer: '/data/attributes/content'}
+          }
+        ]));
+      }
+    });
+    ```
+  
+    Your backend may use different property names for your records the
+    store will attempt extract and normalize the errors using the
+    serializer's `extractErrors` method before the errors get added to
+    the the model. As a result, it is safe for the `InvalidError` to
+    wrap the error payload unaltered.
+  
+    @class InvalidError
+    @namespace DS
+  */
+  var InvalidError = extend(AdapterError, 'The adapter rejected the commit because it was invalid');
+
+  exports.InvalidError = InvalidError;
+  /**
+    @class TimeoutError
+    @namespace DS
+  */
+  var TimeoutError = extend(AdapterError, 'The adapter operation timed out');
+
+  exports.TimeoutError = TimeoutError;
+  /**
+    @class AbortError
+    @namespace DS
+  */
+  var AbortError = extend(AdapterError, 'The adapter operation was aborted');
+
+  exports.AbortError = AbortError;
+  /**
+    @class UnauthorizedError
+    @namespace DS
+  */
+  var UnauthorizedError = extendedErrorsEnabled ? extend(AdapterError, 'The adapter operation is unauthorized') : null;
+
+  exports.UnauthorizedError = UnauthorizedError;
+  /**
+    @class ForbiddenError
+    @namespace DS
+  */
+  var ForbiddenError = extendedErrorsEnabled ? extend(AdapterError, 'The adapter operation is forbidden') : null;
+
+  exports.ForbiddenError = ForbiddenError;
+  /**
+    @class NotFoundError
+    @namespace DS
+  */
+  var NotFoundError = extendedErrorsEnabled ? extend(AdapterError, 'The adapter could not find the resource') : null;
+
+  exports.NotFoundError = NotFoundError;
+  /**
+    @class ConflictError
+    @namespace DS
+  */
+  var ConflictError = extendedErrorsEnabled ? extend(AdapterError, 'The adapter operation failed due to a conflict') : null;
+
+  exports.ConflictError = ConflictError;
+  /**
+    @method errorsHashToArray
+    @private
+  */
+
+  function errorsHashToArray(errors) {
+    var out = [];
+
+    if (_ember.default.isPresent(errors)) {
+      Object.keys(errors).forEach(function (key) {
+        var messages = _ember.default.makeArray(errors[key]);
+        for (var i = 0; i < messages.length; i++) {
+          var title = 'Invalid Attribute';
+          var pointer = '/data/attributes/' + key;
+          if (key === PRIMARY_ATTRIBUTE_KEY) {
+            title = 'Invalid Document';
+            pointer = '/data';
+          }
+          out.push({
+            title: title,
+            detail: messages[i],
+            source: {
+              pointer: pointer
+            }
+          });
+        }
+      });
+    }
+
+    return out;
+  }
+
+  /**
+    @method errorsArrayToHash
+    @private
+  */
+
+  function errorsArrayToHash(errors) {
+    var out = {};
+
+    if (_ember.default.isPresent(errors)) {
+      errors.forEach(function (error) {
+        if (error.source && error.source.pointer) {
+          var key = error.source.pointer.match(SOURCE_POINTER_REGEXP);
+
+          if (key) {
+            key = key[2];
+          } else if (error.source.pointer.search(SOURCE_POINTER_PRIMARY_REGEXP) !== -1) {
+            key = PRIMARY_ATTRIBUTE_KEY;
+          }
+
+          if (key) {
+            out[key] = out[key] || [];
+            out[key].push(error.detail || error.title);
+          }
+        }
+      });
+    }
+
+    return out;
+  }
+});
 define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters/rest', 'ember-data/-private/features'], function (exports, _ember, _emberDataAdaptersRest, _emberDataPrivateFeatures) {
 
   /**
@@ -11238,7 +11280,7 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
 /**
   @module ember-data
 */
-define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'ember-data/-private/adapters/errors', 'ember-data/-private/adapters/build-url-mixin', 'ember-data/-private/features', 'ember-data/-private/utils/parse-response-headers'], function (exports, _ember, _emberDataAdapter, _emberDataPrivateAdaptersErrors, _emberDataPrivateAdaptersBuildUrlMixin, _emberDataPrivateFeatures, _emberDataPrivateUtilsParseResponseHeaders) {
+define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'ember-data/adapters/errors', 'ember-data/-private/adapters/build-url-mixin', 'ember-data/-private/features', 'ember-data/-private/utils/parse-response-headers'], function (exports, _ember, _emberDataAdapter, _emberDataAdaptersErrors, _emberDataPrivateAdaptersBuildUrlMixin, _emberDataPrivateFeatures, _emberDataPrivateUtilsParseResponseHeaders) {
   var MapWithDefault = _ember.default.MapWithDefault;
   var get = _ember.default.get;
 
@@ -12042,13 +12084,26 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       if (this.isSuccess(status, headers, payload)) {
         return payload;
       } else if (this.isInvalid(status, headers, payload)) {
-        return new _emberDataPrivateAdaptersErrors.InvalidError(payload.errors);
+        return new _emberDataAdaptersErrors.InvalidError(payload.errors);
       }
 
       var errors = this.normalizeErrorResponse(status, headers, payload);
       var detailedMessage = this.generatedDetailedMessage(status, headers, payload, requestData);
 
-      return new _emberDataPrivateAdaptersErrors.AdapterError(errors, detailedMessage);
+      if ((0, _emberDataPrivateFeatures.default)('ds-extended-errors')) {
+        switch (status) {
+          case 401:
+            return new _emberDataAdaptersErrors.UnauthorizedError(errors, detailedMessage);
+          case 403:
+            return new _emberDataAdaptersErrors.ForbiddenError(errors, detailedMessage);
+          case 404:
+            return new _emberDataAdaptersErrors.NotFoundError(errors, detailedMessage);
+          case 409:
+            return new _emberDataAdaptersErrors.ConflictError(errors, detailedMessage);
+        }
+      }
+
+      return new _emberDataAdaptersErrors.AdapterError(errors, detailedMessage);
     },
 
     /**
@@ -12125,9 +12180,9 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
           if (errorThrown instanceof Error) {
             error = errorThrown;
           } else if (textStatus === 'timeout') {
-            error = new _emberDataPrivateAdaptersErrors.TimeoutError();
+            error = new _emberDataAdaptersErrors.TimeoutError();
           } else if (textStatus === 'abort') {
-            error = new _emberDataPrivateAdaptersErrors.AbortError();
+            error = new _emberDataAdaptersErrors.AbortError();
           } else {
             error = adapter.handleResponse(jqXHR.status, (0, _emberDataPrivateUtilsParseResponseHeaders.default)(jqXHR.getAllResponseHeaders()), adapter.parseErrorResponse(jqXHR.responseText) || errorThrown, requestData);
           }
@@ -12483,7 +12538,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
           hash.success = function (payload, textStatus, jqXHR) {
             var response = adapter.handleResponse(jqXHR.status, (0, _emberDataPrivateUtilsParseResponseHeaders.default)(jqXHR.getAllResponseHeaders()), payload, requestData);
 
-            if (response instanceof _emberDataPrivateAdaptersErrors.AdapterError) {
+            if (response instanceof _emberDataAdaptersErrors.AdapterError) {
               _ember.default.run.join(null, reject, response);
             } else {
               _ember.default.run.join(null, resolve, response);
@@ -12496,9 +12551,9 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
             if (errorThrown instanceof Error) {
               error = errorThrown;
             } else if (textStatus === 'timeout') {
-              error = new _emberDataPrivateAdaptersErrors.TimeoutError();
+              error = new _emberDataAdaptersErrors.TimeoutError();
             } else if (textStatus === 'abort') {
-              error = new _emberDataPrivateAdaptersErrors.AbortError();
+              error = new _emberDataAdaptersErrors.AbortError();
             } else {
               error = adapter.handleResponse(jqXHR.status, (0, _emberDataPrivateUtilsParseResponseHeaders.default)(jqXHR.getAllResponseHeaders()), adapter.parseErrorResponse(jqXHR.responseText) || errorThrown, requestData);
             }
@@ -12688,7 +12743,7 @@ define('ember-data/attr', ['exports', 'ember', 'ember-data/-private/debug'], fun
   //  *
   //  */
 });
-define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/core", "ember-data/-private/system/normalize-model-name", "ember-data/-private/system/model/internal-model", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/store", "ember-data/-private/system/model", "ember-data/model", "ember-data/-private/system/snapshot", "ember-data/adapter", "ember-data/serializer", "ember-data/-private/system/debug", "ember-data/-private/adapters/errors", "ember-data/-private/system/record-arrays", "ember-data/-private/system/many-array", "ember-data/-private/system/record-array-manager", "ember-data/-private/adapters", "ember-data/-private/adapters/build-url-mixin", "ember-data/-private/serializers", "ember-inflector", "ember-data/serializers/embedded-records-mixin", "ember-data/-private/transforms", "ember-data/relationships", "ember-data/setup-container", "ember-data/-private/instance-initializers/initialize-store-service", "ember-data/-private/system/container-proxy", "ember-data/-private/system/relationships/state/relationship"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateCore, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStore, _emberDataPrivateSystemModel, _emberDataModel, _emberDataPrivateSystemSnapshot, _emberDataAdapter, _emberDataSerializer, _emberDataPrivateSystemDebug, _emberDataPrivateAdaptersErrors, _emberDataPrivateSystemRecordArrays, _emberDataPrivateSystemManyArray, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateAdapters, _emberDataPrivateAdaptersBuildUrlMixin, _emberDataPrivateSerializers, _emberInflector, _emberDataSerializersEmbeddedRecordsMixin, _emberDataPrivateTransforms, _emberDataRelationships, _emberDataSetupContainer, _emberDataPrivateInstanceInitializersInitializeStoreService, _emberDataPrivateSystemContainerProxy, _emberDataPrivateSystemRelationshipsStateRelationship) {
+define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/features", "ember-data/-private/core", "ember-data/-private/system/normalize-model-name", "ember-data/-private/system/model/internal-model", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/store", "ember-data/-private/system/model", "ember-data/model", "ember-data/-private/system/snapshot", "ember-data/adapter", "ember-data/serializer", "ember-data/-private/system/debug", "ember-data/adapters/errors", "ember-data/-private/system/record-arrays", "ember-data/-private/system/many-array", "ember-data/-private/system/record-array-manager", "ember-data/-private/adapters", "ember-data/-private/adapters/build-url-mixin", "ember-data/-private/serializers", "ember-inflector", "ember-data/serializers/embedded-records-mixin", "ember-data/-private/transforms", "ember-data/relationships", "ember-data/setup-container", "ember-data/-private/instance-initializers/initialize-store-service", "ember-data/-private/system/container-proxy", "ember-data/-private/system/relationships/state/relationship"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateFeatures, _emberDataPrivateCore, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStore, _emberDataPrivateSystemModel, _emberDataModel, _emberDataPrivateSystemSnapshot, _emberDataAdapter, _emberDataSerializer, _emberDataPrivateSystemDebug, _emberDataAdaptersErrors, _emberDataPrivateSystemRecordArrays, _emberDataPrivateSystemManyArray, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateAdapters, _emberDataPrivateAdaptersBuildUrlMixin, _emberDataPrivateSerializers, _emberInflector, _emberDataSerializersEmbeddedRecordsMixin, _emberDataPrivateTransforms, _emberDataRelationships, _emberDataSetupContainer, _emberDataPrivateInstanceInitializersInitializeStoreService, _emberDataPrivateSystemContainerProxy, _emberDataPrivateSystemRelationshipsStateRelationship) {
   /**
     Ember Data
     @module ember-data
@@ -12715,13 +12770,20 @@ define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-da
 
   _emberDataPrivateCore.default.Adapter = _emberDataAdapter.default;
 
-  _emberDataPrivateCore.default.AdapterError = _emberDataPrivateAdaptersErrors.AdapterError;
-  _emberDataPrivateCore.default.InvalidError = _emberDataPrivateAdaptersErrors.InvalidError;
-  _emberDataPrivateCore.default.TimeoutError = _emberDataPrivateAdaptersErrors.TimeoutError;
-  _emberDataPrivateCore.default.AbortError = _emberDataPrivateAdaptersErrors.AbortError;
+  _emberDataPrivateCore.default.AdapterError = _emberDataAdaptersErrors.AdapterError;
+  _emberDataPrivateCore.default.InvalidError = _emberDataAdaptersErrors.InvalidError;
+  _emberDataPrivateCore.default.TimeoutError = _emberDataAdaptersErrors.TimeoutError;
+  _emberDataPrivateCore.default.AbortError = _emberDataAdaptersErrors.AbortError;
 
-  _emberDataPrivateCore.default.errorsHashToArray = _emberDataPrivateAdaptersErrors.errorsHashToArray;
-  _emberDataPrivateCore.default.errorsArrayToHash = _emberDataPrivateAdaptersErrors.errorsArrayToHash;
+  if ((0, _emberDataPrivateFeatures.default)('ds-extended-errors')) {
+    _emberDataPrivateCore.default.UnauthorizedError = _emberDataAdaptersErrors.UnauthorizedError;
+    _emberDataPrivateCore.default.ForbiddenError = _emberDataAdaptersErrors.ForbiddenError;
+    _emberDataPrivateCore.default.NotFoundError = _emberDataAdaptersErrors.NotFoundError;
+    _emberDataPrivateCore.default.ConflictError = _emberDataAdaptersErrors.ConflictError;
+  }
+
+  _emberDataPrivateCore.default.errorsHashToArray = _emberDataAdaptersErrors.errorsHashToArray;
+  _emberDataPrivateCore.default.errorsArrayToHash = _emberDataAdaptersErrors.errorsArrayToHash;
 
   _emberDataPrivateCore.default.Serializer = _emberDataSerializer.default;
 
@@ -13953,7 +14015,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
 /**
   @module ember-data
 */
-define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/debug', 'ember-data/serializer', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/utils', 'ember-data/-private/adapters/errors', 'ember-data/-private/features'], function (exports, _ember, _emberDataPrivateDebug, _emberDataSerializer, _emberDataPrivateSystemCoerceId, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateUtils, _emberDataPrivateAdaptersErrors, _emberDataPrivateFeatures) {
+define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/debug', 'ember-data/serializer', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/utils', 'ember-data/adapters/errors', 'ember-data/-private/features'], function (exports, _ember, _emberDataPrivateDebug, _emberDataSerializer, _emberDataPrivateSystemCoerceId, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateUtils, _emberDataAdaptersErrors, _emberDataPrivateFeatures) {
   function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } }
 
   var get = _ember.default.get;
@@ -15215,7 +15277,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
       var _this7 = this;
 
       if (payload && typeof payload === 'object' && payload.errors) {
-        payload = (0, _emberDataPrivateAdaptersErrors.errorsArrayToHash)(payload.errors);
+        payload = (0, _emberDataAdaptersErrors.errorsArrayToHash)(payload.errors);
 
         this.normalizeUsingDeclaredMapping(typeClass, payload);
 
@@ -16139,7 +16201,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.6.0-canary+0cc8efdc14";
+  exports.default = "2.6.0-canary+f063ac1380";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
