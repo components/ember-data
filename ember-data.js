@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.6.0-canary+83692ebe4e
+ * @version   2.6.0-canary+3bfeeb1614
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -11036,6 +11036,13 @@ define('ember-data/adapters/errors', ['exports', 'ember', 'ember-data/-private/d
 
   exports.ConflictError = ConflictError;
   /**
+    @class ServerError
+    @namespace DS
+  */
+  var ServerError = extendedErrorsEnabled ? extend(AdapterError, 'The adapter operation failed due to a server error') : null;
+
+  exports.ServerError = ServerError;
+  /**
     @method errorsHashToArray
     @private
   */
@@ -12108,6 +12115,10 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
             return new _emberDataAdaptersErrors.NotFoundError(errors, detailedMessage);
           case 409:
             return new _emberDataAdaptersErrors.ConflictError(errors, detailedMessage);
+          default:
+            if (status >= 500) {
+              return new _emberDataAdaptersErrors.ServerError(errors, detailedMessage);
+            }
         }
       }
 
@@ -12788,6 +12799,7 @@ define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-da
     _emberDataPrivateCore.default.ForbiddenError = _emberDataAdaptersErrors.ForbiddenError;
     _emberDataPrivateCore.default.NotFoundError = _emberDataAdaptersErrors.NotFoundError;
     _emberDataPrivateCore.default.ConflictError = _emberDataAdaptersErrors.ConflictError;
+    _emberDataPrivateCore.default.ServerError = _emberDataAdaptersErrors.ServerError;
   }
 
   _emberDataPrivateCore.default.errorsHashToArray = _emberDataAdaptersErrors.errorsHashToArray;
@@ -16209,7 +16221,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.6.0-canary+83692ebe4e";
+  exports.default = "2.6.0-canary+3bfeeb1614";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
