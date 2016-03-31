@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.6.0-canary+c8c0e87397
+ * @version   2.6.0-canary+7caec86877
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -11091,7 +11091,7 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
 /**
   @module ember-data
 */
-define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'ember-data/adapters/errors', 'ember-data/-private/adapters/build-url-mixin', 'ember-data/-private/features', 'ember-data/-private/utils/parse-response-headers'], function (exports, _ember, _emberDataAdapter, _emberDataAdaptersErrors, _emberDataPrivateAdaptersBuildUrlMixin, _emberDataPrivateFeatures, _emberDataPrivateUtilsParseResponseHeaders) {
+define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'ember-data/adapters/errors', 'ember-data/-private/adapters/build-url-mixin', 'ember-data/-private/features', 'ember-data/-private/debug', 'ember-data/-private/utils/parse-response-headers'], function (exports, _ember, _emberDataAdapter, _emberDataAdaptersErrors, _emberDataPrivateAdaptersBuildUrlMixin, _emberDataPrivateFeatures, _emberDataPrivateDebug, _emberDataPrivateUtilsParseResponseHeaders) {
   var MapWithDefault = _ember.default.MapWithDefault;
   var get = _ember.default.get;
 
@@ -11990,6 +11990,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
         };
 
         hash.error = function (jqXHR, textStatus, errorThrown) {
+
           var error = undefined;
 
           if (errorThrown instanceof Error) {
@@ -12361,6 +12362,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
           };
 
           hash.error = function (jqXHR, textStatus, errorThrown) {
+
             var error = undefined;
 
             if (errorThrown instanceof Error) {
@@ -15961,7 +15963,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.6.0-canary+c8c0e87397";
+  exports.default = "2.6.0-canary+7caec86877";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
