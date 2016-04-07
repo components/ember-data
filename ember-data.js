@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.6.0-canary+60f31896f5
+ * @version   2.6.0-canary+0a485da725
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -296,9 +296,9 @@ define('ember-data/-private/adapters/build-url-mixin', ['exports', 'ember'], fun
         case 'findMany':
           return this.urlForFindMany(id, modelName, snapshot);
         case 'findHasMany':
-          return this.urlForFindHasMany(id, modelName);
+          return this.urlForFindHasMany(id, modelName, snapshot);
         case 'findBelongsTo':
-          return this.urlForFindBelongsTo(id, modelName);
+          return this.urlForFindBelongsTo(id, modelName, snapshot);
         case 'createRecord':
           return this.urlForCreateRecord(modelName, snapshot);
         case 'updateRecord':
@@ -401,9 +401,10 @@ define('ember-data/-private/adapters/build-url-mixin', ['exports', 'ember'], fun
      * @method urlForFindHasMany
      * @param {String} id
      * @param {String} modelName
+     * @param {DS.Snapshot} snapshot
      * @return {String} url
      */
-    urlForFindHasMany: function (id, modelName) {
+    urlForFindHasMany: function (id, modelName, snapshot) {
       return this._buildURL(modelName, id);
     },
 
@@ -411,9 +412,10 @@ define('ember-data/-private/adapters/build-url-mixin', ['exports', 'ember'], fun
      * @method urlForFindBelongsTo
      * @param {String} id
      * @param {String} modelName
+     * @param {DS.Snapshot} snapshot
      * @return {String} url
      */
-    urlForFindBelongsTo: function (id, modelName) {
+    urlForFindBelongsTo: function (id, modelName, snapshot) {
       return this._buildURL(modelName, id);
     },
 
@@ -11853,7 +11855,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
         var id = snapshot.id;
         var type = snapshot.modelName;
 
-        url = this.urlPrefix(url, this.buildURL(type, id, null, 'findHasMany'));
+        url = this.urlPrefix(url, this.buildURL(type, id, snapshot, 'findHasMany'));
 
         return this.ajax(url, 'GET');
       }
@@ -11897,7 +11899,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
         var id = snapshot.id;
         var type = snapshot.modelName;
 
-        url = this.urlPrefix(url, this.buildURL(type, id, null, 'findBelongsTo'));
+        url = this.urlPrefix(url, this.buildURL(type, id, snapshot, 'findBelongsTo'));
         return this.ajax(url, 'GET');
       }
     },
@@ -12470,7 +12472,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
 
           case 'findHasMany':
           case 'findBelongsTo':
-            var url = this.buildURL(type.modelName, id, null, requestType);
+            var url = this.buildURL(type.modelName, id, snapshot, requestType);
             return this.urlPrefix(params.url, url);
         }
 
@@ -16241,7 +16243,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.6.0-canary+60f31896f5";
+  exports.default = "2.6.0-canary+0a485da725";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
