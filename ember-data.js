@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.6.0-canary+8959c4ed43
+ * @version   2.6.0-canary+60f31896f5
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -288,7 +288,7 @@ define('ember-data/-private/adapters/build-url-mixin', ['exports', 'ember'], fun
         case 'findRecord':
           return this.urlForFindRecord(id, modelName, snapshot);
         case 'findAll':
-          return this.urlForFindAll(modelName);
+          return this.urlForFindAll(modelName, snapshot);
         case 'query':
           return this.urlForQuery(query, modelName);
         case 'queryRecord':
@@ -359,9 +359,10 @@ define('ember-data/-private/adapters/build-url-mixin', ['exports', 'ember'], fun
     /**
      * @method urlForFindAll
      * @param {String} modelName
+     * @param {DS.SnapshotRecordArray} snapshot
      * @return {String} url
      */
-    urlForFindAll: function (modelName) {
+    urlForFindAll: function (modelName, snapshot) {
       return this._buildURL(modelName);
     },
 
@@ -11698,7 +11699,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
 
         return this._makeRequest(request);
       } else {
-        var url = this.buildURL(type.modelName, null, null, 'findAll');
+        var url = this.buildURL(type.modelName, null, snapshotRecordArray, 'findAll');
 
         if (sinceToken) {
           query.since = sinceToken;
@@ -12458,7 +12459,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
 
         switch (requestType) {
           case 'findAll':
-            return this.buildURL(type.modelName, null, null, requestType);
+            return this.buildURL(type.modelName, null, snapshots, requestType);
 
           case 'query':
           case 'queryRecord':
@@ -16240,7 +16241,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.6.0-canary+8959c4ed43";
+  exports.default = "2.6.0-canary+60f31896f5";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
