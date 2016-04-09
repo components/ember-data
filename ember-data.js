@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.6.0-canary+40d9949ff4
+ * @version   2.6.0-canary+1e818dc1f7
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -4151,10 +4151,14 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
     dirtyType: 'updated'
   });
 
-  createdState.uncommitted.deleteRecord = function (internalModel) {
+  function createdStateDeleteRecord(internalModel) {
     internalModel.transitionTo('deleted.saved');
     internalModel.send('invokeLifecycleCallbacks');
-  };
+  }
+
+  createdState.uncommitted.deleteRecord = createdStateDeleteRecord;
+
+  createdState.invalid.deleteRecord = createdStateDeleteRecord;
 
   createdState.uncommitted.rollback = function (internalModel) {
     DirtyState.uncommitted.rollback.apply(this, arguments);
@@ -16243,7 +16247,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.6.0-canary+40d9949ff4";
+  exports.default = "2.6.0-canary+1e818dc1f7";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
