@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.6.0-canary+4735b862de
+ * @version   2.6.0-canary+c628d741d0
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -5059,6 +5059,14 @@ define("ember-data/-private/system/record-arrays/adapter-populated-record-array"
       throw new Error("The result of a server query (on " + type + ") is immutable.");
     },
 
+    _update: function () {
+      var store = get(this, 'store');
+      var modelName = get(this, 'type.modelName');
+      var query = get(this, 'query');
+
+      return store._query(modelName, query, this);
+    },
+
     /**
       @method loadRecords
       @param {Array} records
@@ -5070,19 +5078,15 @@ define("ember-data/-private/system/record-arrays/adapter-populated-record-array"
 
       //TODO Optimize
       var internalModels = _ember.default.A(records).mapBy('_internalModel');
+      this.setProperties({
+        content: _ember.default.A(internalModels),
+        isLoaded: true,
+        isUpdating: false,
+        meta: (0, _emberDataPrivateSystemCloneNull.default)(payload.meta)
+      });
+
       if ((0, _emberDataPrivateFeatures.default)('ds-links-in-record-array')) {
-        this.setProperties({
-          content: _ember.default.A(internalModels),
-          isLoaded: true,
-          meta: (0, _emberDataPrivateSystemCloneNull.default)(payload.meta),
-          links: (0, _emberDataPrivateSystemCloneNull.default)(payload.links)
-        });
-      } else {
-        this.setProperties({
-          content: _ember.default.A(internalModels),
-          isLoaded: true,
-          meta: (0, _emberDataPrivateSystemCloneNull.default)(payload.meta)
-        });
+        this.set('links', (0, _emberDataPrivateSystemCloneNull.default)(payload.links));
       }
 
       internalModels.forEach(function (record) {
@@ -5246,8 +5250,10 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
        ```javascript
       var people = store.peekAll('person');
       people.get('isUpdating'); // false
-      people.update();
-      people.get('isUpdating'); // true
+       people.update().then(function() {
+        people.get('isUpdating'); // false
+      });
+       people.get('isUpdating'); // true
       ```
        @method update
     */
@@ -5256,13 +5262,17 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
         return;
       }
 
+      this.set('isUpdating', true);
+      return this._update();
+    },
+
+    /*
+      Update this RecordArray and return a promise which resolves once the update
+      is finished.
+     */
+    _update: function () {
       var store = get(this, 'store');
       var modelName = get(this, 'type.modelName');
-      var query = get(this, 'query');
-
-      if (query) {
-        return store._query(modelName, query, this);
-      }
 
       return store.findAll(modelName, { reload: true });
     },
@@ -8448,8 +8458,6 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       options = options || {};
       var adapter = this.adapterFor(typeClass.modelName);
       var sinceToken = this.typeMapFor(typeClass).metadata.since;
-
-      set(array, 'isUpdating', true);
 
       if (options.reload) {
         return (0, _emberDataPrivateSystemPromiseProxies.promiseArray)((0, _emberDataPrivateSystemStoreFinders._findAll)(adapter, this, typeClass, sinceToken, options));
@@ -15970,7 +15978,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.6.0-canary+4735b862de";
+  exports.default = "2.6.0-canary+c628d741d0";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
