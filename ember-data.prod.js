@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.6.0-canary+1ced8b5a21
+ * @version   2.6.0-canary+40d9949ff4
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -15322,7 +15322,7 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
       var serializer = store.serializerFor(modelName);
 
       /*jshint loopfunc:true*/
-      arrayHash.forEach(function (hash) {
+      _ember.default.makeArray(arrayHash).forEach(function (hash) {
         var _normalizePolymorphicRecord = _this._normalizePolymorphicRecord(store, hash, prop, modelClass, serializer);
 
         var data = _normalizePolymorphicRecord.data;
@@ -15966,7 +15966,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.6.0-canary+1ced8b5a21";
+  exports.default = "2.6.0-canary+40d9949ff4";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
