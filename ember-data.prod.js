@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.7.0-canary+6bdeb31cb9
+ * @version   2.7.0-canary+9cbad2b72c
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -3361,18 +3361,31 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
     /**
       Returns an object, whose keys are changed properties, and value is
       an [oldProp, newProp] array.
+       The array represents the diff of the canonical state with the local state
+      of the model. Note: if the model is created locally, the canonical state is
+      empty since the adapter hasn't acknowledged the attributes yet:
        Example
        ```app/models/mascot.js
       import DS from 'ember-data';
        export default DS.Model.extend({
-        name: attr('string')
+        name: attr('string'),
+        isAdmin: attr('boolean', {
+          defaultValue: false
+        })
       });
       ```
        ```javascript
       var mascot = store.createRecord('mascot');
-      mascot.changedAttributes(); // {}
-      mascot.set('name', 'Tomster');
-      mascot.changedAttributes(); // {name: [undefined, 'Tomster']}
+       mascot.changedAttributes(); // {}
+       mascot.set('name', 'Tomster');
+      mascot.changedAttributes(); // { name: [undefined, 'Tomster'] }
+       mascot.set('isAdmin', true);
+      mascot.changedAttributes(); // { isAdmin: [undefined, true], name: [undefined, 'Tomster'] }
+       mascot.save().then(function() {
+        mascot.changedAttributes(); // {}
+         mascot.set('isAdmin', false);
+        mascot.changedAttributes(); // { isAdmin: [true, false] }
+      });
       ```
        @method changedAttributes
       @return {Object} an object, whose keys are changed properties,
@@ -15950,7 +15963,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.7.0-canary+6bdeb31cb9";
+  exports.default = "2.7.0-canary+9cbad2b72c";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
