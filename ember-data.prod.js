@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.6.0-beta.1+15b0328dd0
+ * @version   2.6.0-beta.1+4c06527b10
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -63,16 +63,17 @@ var loader, define, requireModule, require, requirejs;
 
   var defaultDeps = ['require', 'exports', 'module'];
 
-  function Module(name, deps, callback) {
+  function Module(name, deps, callback, alias) {
     this.id        = uuid++;
     this.name      = name;
     this.deps      = !deps.length && callback.length ? defaultDeps : deps;
     this.module    = { exports: {} };
     this.callback  = callback;
     this.state     = undefined;
-    this._require  = undefined;
     this.finalized = false;
     this.hasExportsAsDep = false;
+    this.isAlias = alias;
+    this.reified = new Array(deps.length);
   }
 
   Module.prototype.makeDefaultExport = function() {
@@ -84,14 +85,14 @@ var loader, define, requireModule, require, requirejs;
     }
   };
 
-  Module.prototype.exports = function(reifiedDeps) {
+  Module.prototype.exports = function() {
     if (this.finalized) {
       return this.module.exports;
     } else {
       if (loader.wrapModules) {
         this.callback = loader.wrapModules(this.name, this.callback);
       }
-      var result = this.callback.apply(this, reifiedDeps);
+      var result = this.callback.apply(this, this.reified);
       if (!(this.hasExportsAsDep && result === undefined)) {
         this.module.exports = result;
       }
@@ -109,11 +110,10 @@ var loader, define, requireModule, require, requirejs;
 
   Module.prototype.reify = function() {
     var deps = this.deps;
-    var length = deps.length;
-    var reified = new Array(length);
     var dep;
+    var reified = this.reified;
 
-    for (var i = 0, l = length; i < l; i++) {
+    for (var i = 0; i < deps.length; i++) {
       dep = deps[i];
       if (dep === 'exports') {
         this.hasExportsAsDep = true;
@@ -126,22 +126,25 @@ var loader, define, requireModule, require, requirejs;
         reified[i] = findModule(resolve(dep, this.name), this.name).module.exports;
       }
     }
-
-    return reified;
   };
 
   Module.prototype.makeRequire = function() {
     var name = this.name;
-
-    return this._require || (this._require = function(dep) {
+    var r = function(dep) {
       return require(resolve(dep, name));
-    });
+    };
+    r['default'] = r;
+    r.has = function(dep) {
+      return has(resolve(dep, name));
+    }
+    return r;
   };
 
   Module.prototype.build = function() {
-    if (this.state === FAILED) { return; }
+    if (this.state === FAILED || this.state === LOADED) { return; }
     this.state = FAILED;
-    this.exports(this.reify());
+    this.reify()
+    this.exports();
     this.state = LOADED;
   };
 
@@ -155,7 +158,11 @@ var loader, define, requireModule, require, requirejs;
       deps     =  [];
     }
 
-    registry[name] = new Module(name, deps, callback);
+    if (callback instanceof Alias) {
+      registry[name] = new Module(callback.name, deps, callback, true);
+    } else {
+      registry[name] = new Module(name, deps, callback, false);
+    }
   };
 
   // we don't support all of AMD
@@ -182,9 +189,8 @@ var loader, define, requireModule, require, requirejs;
   function findModule(name, referrer) {
     var mod = registry[name] || registry[name + '/index'];
 
-    while (mod && mod.callback instanceof Alias) {
-      name = mod.callback.name;
-      mod = registry[name];
+    while (mod && mod.isAlias) {
+      mod = registry[mod.name];
     }
 
     if (!mod) { missingModule(name, referrer); }
@@ -216,7 +222,12 @@ var loader, define, requireModule, require, requirejs;
     return parentBase.join('/');
   }
 
+  function has(name) {
+    return !!(registry[name] || registry[name + '/index']);
+  }
+
   requirejs.entries = requirejs._eak_seen = registry;
+  requirejs.has = has;
   requirejs.unsee = function(moduleName) {
     findModule(moduleName, '(unsee)').unsee();
   };
@@ -225,6 +236,28 @@ var loader, define, requireModule, require, requirejs;
     requirejs.entries = requirejs._eak_seen = registry = {};
     seen = {};
   };
+
+  // prime
+  define('foo',      function() {});
+  define('foo/bar',  [], function() {});
+  define('foo/asdf', ['module', 'exports', 'require'], function(module, exports, require) {
+    if (require.has('foo/bar')) {
+      require('foo/bar');
+    }
+  });
+  define('foo/baz',  [], define.alias('foo'));
+  define('foo/quz',  define.alias('foo'));
+  define('foo/bar',  ['foo', './quz', './baz', './asdf', './bar', '../foo'], function() {});
+  define('foo/main', ['foo/bar'], function() {});
+
+  require('foo/main');
+  require.unsee('foo/bar');
+
+  requirejs.clear();
+
+  if (typeof module !== 'undefined') {
+    module.exports = { require: require, define: define };
+  }
 })(this);
 
 define("ember-data/-private/adapters", ["exports", "ember-data/adapters/json-api", "ember-data/adapters/rest"], function (exports, _emberDataAdaptersJsonApi, _emberDataAdaptersRest) {
@@ -3361,18 +3394,31 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
     /**
       Returns an object, whose keys are changed properties, and value is
       an [oldProp, newProp] array.
+       The array represents the diff of the canonical state with the local state
+      of the model. Note: if the model is created locally, the canonical state is
+      empty since the adapter hasn't acknowledged the attributes yet:
        Example
        ```app/models/mascot.js
       import DS from 'ember-data';
        export default DS.Model.extend({
-        name: attr('string')
+        name: attr('string'),
+        isAdmin: attr('boolean', {
+          defaultValue: false
+        })
       });
       ```
        ```javascript
       var mascot = store.createRecord('mascot');
-      mascot.changedAttributes(); // {}
-      mascot.set('name', 'Tomster');
-      mascot.changedAttributes(); // {name: [undefined, 'Tomster']}
+       mascot.changedAttributes(); // {}
+       mascot.set('name', 'Tomster');
+      mascot.changedAttributes(); // { name: [undefined, 'Tomster'] }
+       mascot.set('isAdmin', true);
+      mascot.changedAttributes(); // { isAdmin: [undefined, true], name: [undefined, 'Tomster'] }
+       mascot.save().then(function() {
+        mascot.changedAttributes(); // {}
+         mascot.set('isAdmin', false);
+        mascot.changedAttributes(); // { isAdmin: [true, false] }
+      });
       ```
        @method changedAttributes
       @return {Object} an object, whose keys are changed properties,
@@ -3606,7 +3652,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       export default DS.Model.extend({
         user: DS.belongsTo({ async: true })
       });
-       store.push({
+       var blog = store.push({
         type: 'blog',
         id: 1,
         relationships: {
@@ -3655,7 +3701,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       export default DS.Model.extend({
         comments: DS.hasMany({ async: true })
       });
-       store.push({
+       var blog = store.push({
         type: 'blog',
         id: 1,
         relationships: {
@@ -7944,12 +7990,10 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
     /**
       This method returns a record for a given type and id combination.
-       The `findRecord` method will always return a **promise** that will be
-      resolved with the record. If the record was already in the store,
-      the promise will be resolved immediately. Otherwise, the store
-      will ask the adapter's `find` method to find the necessary data.
        The `findRecord` method will always resolve its promise with the same
       object for a given type and `id`.
+       The `findRecord` method will always return a **promise** that will be
+      resolved with the record.
        Example
        ```app/routes/post.js
       import Ember from 'ember';
@@ -7959,17 +8003,73 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         }
       });
       ```
-       If you would like to force the record to reload, instead of
-      loading it from the cache when present you can set `reload: true`
-      in the options object for `findRecord`.
-       ```app/routes/post/edit.js
-      import Ember from 'ember';
-       export default Ember.Route.extend({
-        model: function(params) {
-          return this.store.findRecord('post', params.post_id, { reload: true });
+       If the record is not yet available, the store will ask the adapter's `find`
+      method to find the necessary data. If the record is already present in the
+      store, it depends on the reload behavior _when_ the returned promise
+      resolves.
+       The reload behavior is configured either via the passed `options` hash or
+      the result of the adapter's `shouldReloadRecord`.
+       If `{ reload: true }` is passed or `adapter.shouldReloadRecord` evaluates
+      to `true`, then the returned promise resolves once the adapter returns
+      data, regardless if the requested record is already in the store:
+       ```js
+      store.push({
+        data: {
+          id: 1,
+          type: 'post',
+          revision: 1
         }
       });
+       // adapter#findRecord resolves with
+      // [
+      //   {
+      //     id: 1,
+      //     type: 'post',
+      //     revision: 2
+      //   }
+      // ]
+      store.findRecord('post', 1, { reload: true }).then(function(post) {
+        post.get("revision"); // 2
+      });
       ```
+       If no reload is indicated via the abovementioned ways, then the promise
+      immediately resolves with the cached version in the store.
+       Optionally, if `adapter.shouldBackgroundReloadRecord` evaluates to `true`,
+      then a background reload is started, which updates the records' data, once
+      it is available:
+       ```js
+      // app/adapters/post.js
+      import ApplicationAdapter from "./application";
+       export default ApplicationAdapter.extend({
+        shouldReloadRecord(store, snapshot) {
+          return false;
+        },
+         shouldBackgroundReloadRecord(store, snapshot) {
+          return true;
+        }
+      });
+       // ...
+       store.push({
+        data: {
+          id: 1,
+          type: 'post',
+          revision: 1
+        }
+      });
+       var blogPost = store.findRecord('post', 1).then(function(post) {
+        post.get('revision'); // 1
+      });
+       // later, once adapter#findRecord resolved with
+      // [
+      //   {
+      //     id: 1,
+      //     type: 'post',
+      //     revision: 2
+      //   }
+      // ]
+       blogPost.get('revision'); // 2
+      ```
+       See [peekRecord](#method_peekRecord) to get the cached version of a record.
        @method findRecord
       @param {String} modelName
       @param {(String|Integer)} id
@@ -8409,11 +8509,10 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     },
 
     /**
-      `findAll` ask the adapter's `findAll` method to find the records
-      for the given type, and return a promise that will be resolved
-      once the server returns the values. The promise will resolve into
-      all records of this type present in the store, even if the server
-      only returns a subset of them.
+      `findAll` ask the adapter's `findAll` method to find the records for the
+      given type, and returns a promise which will resolve with all records of
+      this type present in the store, even if the adapter only returns a subset
+      of them.
        ```app/routes/authors.js
       import Ember from 'ember';
        export default Ember.Route.extend({
@@ -8422,6 +8521,70 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         }
       });
       ```
+       _When_ the returned promise resolves depends on the reload behavior,
+      configured via the passed `options` hash and the result of the adapter's
+      `shouldReloadAll` method.
+       If `{ reload: true }` is passed or `adapter.shouldReloadAll` evaluates to
+      `true`, then the returned promise resolves once the adapter returns data,
+      regardless if there are already records in the store:
+       ```js
+      store.push({
+        data: {
+          id: 'first',
+          type: 'author'
+        }
+      });
+       // adapter#findAll resolves with
+      // [
+      //   {
+      //     id: 'second',
+      //     type: 'author'
+      //   }
+      // ]
+      store.findAll('author', { reload: true }).then(function(authors) {
+        authors.getEach("id"); // ['first', 'second']
+      });
+      ```
+       If no reload is indicated via the abovementioned ways, then the promise
+      immediately resolves with all the records currently loaded in the store.
+      Optionally, if `adapter.shouldBackgroundReloadAll` evaluates to `true`,
+      then a background reload is started. Once this resolves, the array with
+      which the promise resolves, is updated automatically so it contains all the
+      records in the store:
+       ```js
+      // app/adapters/application.js
+      export default DS.Adapter.extend({
+        shouldReloadAll(store, snapshotsArray) {
+          return false;
+        },
+         shouldBackgroundReloadAll(store, snapshotsArray) {
+          return true;
+        }
+      });
+       // ...
+       store.push({
+        data: {
+          id: 'first',
+          type: 'author'
+        }
+      });
+       var allAuthors;
+      store.findAll('author').then(function(authors) {
+        authors.getEach('id'); // ['first']
+         allAuthors = authors;
+      });
+       // later, once adapter#findAll resolved with
+      // [
+      //   {
+      //     id: 'second',
+      //     type: 'author'
+      //   }
+      // ]
+       allAuthors.getEach('id'); // ['first', 'second']
+      ```
+       See [peekAll](#method_peekAll) to get an array of current records in the
+      store, without waiting until a reload is finished.
+       See [query](#method_query) to only get a subset of records from the server.
        @method findAll
       @param {String} modelName
       @param {Object} options
@@ -10578,9 +10741,29 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       This method is used by the store to determine if the store should
       reload a record from the adapter when a record is requested by
       `store.findRecord`.
-       If this method returns true, the store will re-fetch a record from
-      the adapter. If this method returns false, the store will resolve
+       If this method returns `true`, the store will re-fetch a record from
+      the adapter. If this method returns `false`, the store will resolve
       immediately using the cached record.
+       For example, if you are building an events ticketing system, in which users
+      can only reserve tickets for 20 minutes at a time, and want to ensure that
+      in each route you have data that is no more than 20 minutes old you could
+      write:
+       ```javascript
+      shouldReloadRecord: function(store, ticketSnapshot) {
+        var timeDiff = moment().diff(ticketSnapshot.attr('lastAccessedAt')).minutes();
+        if (timeDiff > 20) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+      ```
+       This method would ensure that whenever you do `store.findRecord('ticket',
+      id)` you will always get a ticket that is no more than 20 minutes old. In
+      case the cached version is more than 20 minutes old, `findRecord` will not
+      resolve until you fetched the latest version.
+       By default this hook returns `false`, as most UIs should not block user
+      interactions while waiting on data update.
        @method shouldReloadRecord
       @param {DS.Store} store
       @param {DS.Snapshot} snapshot
@@ -10594,9 +10777,33 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       This method is used by the store to determine if the store should
       reload all records from the adapter when records are requested by
       `store.findAll`.
-       If this method returns true, the store will re-fetch all records from
-      the adapter. If this method returns false, the store will resolve
-      immediately using the cached record.
+       If this method returns `true`, the store will re-fetch all records from
+      the adapter. If this method returns `false`, the store will resolve
+      immediately using the cached records.
+       For example, if you are building an events ticketing system, in which users
+      can only reserve tickets for 20 minutes at a time, and want to ensure that
+      in each route you have data that is no more than 20 minutes old you could
+      write:
+       ```javascript
+      shouldReloadAll: function(store, snapshotArray) {
+        var snapshots = snapshotArray.snapshots();
+         return snapshots.any(function(ticketSnapshot) {
+          var timeDiff = moment().diff(ticketSnapshot.attr('lastAccessedAt')).minutes();
+          if (timeDiff > 20) {
+            return true;
+          } else {
+            return false;
+          }
+        });
+      }
+      ```
+       This method would ensure that whenever you do `store.findAll('ticket')` you
+      will always get a list of tickets that are no more than 20 minutes old. In
+      case a cached version is more than 20 minutes old, `findAll` will not
+      resolve until you fetched the latest versions.
+       By default this methods returns `true` if the passed `snapshotRecordArray`
+      is empty (meaning that there are no records locally available yet),
+      otherwise it returns `false`.
        @method shouldReloadAll
       @param {DS.Store} store
       @param {DS.SnapshotRecordArray} snapshotRecordArray
@@ -10612,8 +10819,23 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       cached record.
        This method is *only* checked by the store when the store is
       returning a cached record.
-       If this method returns true the store will re-fetch a record from
+       If this method returns `true` the store will re-fetch a record from
       the adapter.
+       For example, if you do not want to fetch complex data over a mobile
+      connection, or if the network is down, you can implement
+      `shouldBackgroundReloadRecord` as follows:
+       ```javascript
+      shouldBackgroundReloadRecord: function(store, snapshot) {
+        var connection = window.navigator.connection;
+        if (connection === 'cellular' || connection === 'none') {
+          return false;
+        } else {
+          return true;
+        }
+      }
+      ```
+       By default this hook returns `true` so the data for the record is updated
+      in the background.
        @method shouldBackgroundReloadRecord
       @param {DS.Store} store
       @param {DS.Snapshot} snapshot
@@ -10629,8 +10851,23 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       with a cached record array.
        This method is *only* checked by the store when the store is
       returning a cached record array.
-       If this method returns true the store will re-fetch all records
+       If this method returns `true` the store will re-fetch all records
       from the adapter.
+       For example, if you do not want to fetch complex data over a mobile
+      connection, or if the network is down, you can implement
+      `shouldBackgroundReloadAll` as follows:
+       ```javascript
+      shouldBackgroundReloadAll: function(store, snapshotArray) {
+        var connection = window.navigator.connection;
+        if (connection === 'cellular' || connection === 'none') {
+          return false;
+        } else {
+          return true;
+        }
+      }
+      ```
+       By default this method returns `true`, indicating that a background reload
+      should always be triggered.
        @method shouldBackgroundReloadAll
       @param {DS.Store} store
       @param {DS.SnapshotRecordArray} snapshotRecordArray
@@ -12501,7 +12738,7 @@ define('ember-data/serializers/embedded-records-mixin', ['exports', 'ember', 'em
       ```
        Use a custom (type) serializer for the post model to configure embedded author
        ```app/serializers/post.js
-      import DS from 'ember-data;
+      import DS from 'ember-data';
        export default DS.RESTSerializer.extend(DS.EmbeddedRecordsMixin, {
         attrs: {
           author: { embedded: 'always' }
@@ -15556,7 +15793,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.6.0-beta.1+15b0328dd0";
+  exports.default = "2.6.0-beta.1+4c06527b10";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
