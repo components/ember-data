@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.7.0-canary+f699952f8f
+ * @version   2.7.0-canary+71abed36bb
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -12728,6 +12728,34 @@ define('ember-data/attr', ['exports', 'ember', 'ember-data/-private/debug'], fun
     });
     ```
   
+    The `options` hash is passed as second argument to a transforms'
+    `serialize` and `deserialize` method. This allows to configure a
+    transformation and adapt the corresponding value, based on the config:
+  
+    ```app/models/post.js
+    export default DS.Model.extend({
+      text: DS.attr('text', {
+        uppercase: true
+      })
+    });
+    ```
+  
+    ```app/transforms/text.js
+    export default DS.Transform.extend({
+      serialize: function(value, options) {
+        if (options.uppercase) {
+          return value.toUpperCase();
+        }
+  
+        return value;
+      },
+  
+      deserialize: function(value) {
+        return value;
+      }
+    })
+    ```
+  
     @namespace
     @method attr
     @for DS
@@ -12780,38 +12808,6 @@ define('ember-data/attr', ['exports', 'ember', 'ember-data/-private/debug'], fun
       }
     }).meta(meta);
   }
-
-  // TODO add to documentation of `attr` function above, once this feature is added
-  // /**
-  //  * The `options` hash is passed as second argument to a transforms'
-  //  * `serialize` and `deserialize` method. This allows to configure a
-  //  * transformation and adapt the corresponding value, based on the config:
-  //  *
-  //  * ```app/models/post.js
-  //  * export default DS.Model.extend({
-  //  *   text: DS.attr('text', {
-  //  *     uppercase: true
-  //  *   })
-  //  * });
-  //  * ```
-  //  *
-  //  * ```app/transforms/text.js
-  //  * export default DS.Transform.extend({
-  //  *   serialize: function(value, options) {
-  //  *     if (options.uppercase) {
-  //  *       return value.toUpperCase();
-  //  *     }
-  //  *
-  //  *     return value;
-  //  *   },
-  //  *
-  //  *   deserialize: function(value) {
-  //  *     return value;
-  //  *   }
-  //  * })
-  //  * ```
-  //  *
-  //  */
 });
 define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/features", "ember-data/-private/core", "ember-data/-private/system/normalize-model-name", "ember-data/-private/system/model/internal-model", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/store", "ember-data/-private/system/model", "ember-data/model", "ember-data/-private/system/snapshot", "ember-data/adapter", "ember-data/serializer", "ember-data/-private/system/debug", "ember-data/adapters/errors", "ember-data/-private/system/record-arrays", "ember-data/-private/system/many-array", "ember-data/-private/system/record-array-manager", "ember-data/-private/adapters", "ember-data/-private/adapters/build-url-mixin", "ember-data/-private/serializers", "ember-inflector", "ember-data/serializers/embedded-records-mixin", "ember-data/-private/transforms", "ember-data/relationships", "ember-data/setup-container", "ember-data/-private/instance-initializers/initialize-store-service", "ember-data/-private/system/container-proxy", "ember-data/-private/system/relationships/state/relationship"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateFeatures, _emberDataPrivateCore, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStore, _emberDataPrivateSystemModel, _emberDataModel, _emberDataPrivateSystemSnapshot, _emberDataAdapter, _emberDataSerializer, _emberDataPrivateSystemDebug, _emberDataAdaptersErrors, _emberDataPrivateSystemRecordArrays, _emberDataPrivateSystemManyArray, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateAdapters, _emberDataPrivateAdaptersBuildUrlMixin, _emberDataPrivateSerializers, _emberInflector, _emberDataSerializersEmbeddedRecordsMixin, _emberDataPrivateTransforms, _emberDataRelationships, _emberDataSetupContainer, _emberDataPrivateInstanceInitializersInitializeStoreService, _emberDataPrivateSystemContainerProxy, _emberDataPrivateSystemRelationshipsStateRelationship) {
   /**
@@ -12995,7 +12991,7 @@ define('ember-data/serializer', ['exports', 'ember'], function (exports, _ember)
 /**
   @module ember-data
 */
-define('ember-data/serializers/embedded-records-mixin', ['exports', 'ember', 'ember-data/-private/debug', 'ember-data/-private/features'], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateFeatures) {
+define('ember-data/serializers/embedded-records-mixin', ['exports', 'ember', 'ember-data/-private/debug'], function (exports, _ember, _emberDataPrivateDebug) {
   function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } }
 
   var get = _ember.default.get;
@@ -13324,7 +13320,6 @@ define('ember-data/serializers/embedded-records-mixin', ['exports', 'ember', 'em
         }
       }
       ```
-       Note that the `ids-and-types` strategy is still behind the `ds-serialize-ids-and-types` feature flag.
        @method serializeHasMany
       @param {DS.Snapshot} snapshot
       @param {Object} json
@@ -13342,14 +13337,12 @@ define('ember-data/serializers/embedded-records-mixin', ['exports', 'ember', 'em
         json[serializedKey] = snapshot.hasMany(attr, { ids: true });
       } else if (this.hasSerializeRecordsOption(attr)) {
         this._serializeEmbeddedHasMany(snapshot, json, relationship);
-      } else {
-        if (this.hasSerializeIdsAndTypesOption(attr)) {
-          this._serializeHasManyAsIdsAndTypes(snapshot, json, relationship);
-        }
+      } else if (this.hasSerializeIdsAndTypesOption(attr)) {
+        this._serializeHasManyAsIdsAndTypes(snapshot, json, relationship);
       }
     },
 
-    /**
+    /*
       Serializes a hasMany relationship as an array of objects containing only `id` and `type`
       keys.
       This has its use case on polymorphic hasMany relationships where the server is not storing
@@ -14084,7 +14077,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
 /**
   @module ember-data
 */
-define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/debug', 'ember-data/serializer', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/utils', 'ember-data/adapters/errors', 'ember-data/-private/features'], function (exports, _ember, _emberDataPrivateDebug, _emberDataSerializer, _emberDataPrivateSystemCoerceId, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateUtils, _emberDataAdaptersErrors, _emberDataPrivateFeatures) {
+define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/debug', 'ember-data/serializer', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/utils', 'ember-data/adapters/errors'], function (exports, _ember, _emberDataPrivateDebug, _emberDataSerializer, _emberDataPrivateSystemCoerceId, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateUtils, _emberDataAdaptersErrors) {
   function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } }
 
   var get = _ember.default.get;
@@ -14245,9 +14238,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
     applyTransforms: function (typeClass, data) {
       var _this = this;
 
-      var attributes = undefined;
-
-      attributes = get(typeClass, 'attributes');
+      var attributes = get(typeClass, 'attributes');
 
       typeClass.eachTransformedAttribute(function (key, typeClass) {
         if (!(key in data)) {
@@ -14255,7 +14246,6 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
         }
 
         var transform = _this.transformFor(typeClass);
-
         var transformMeta = attributes.get(key);
         data[key] = transform.deserialize(data[key], transformMeta.options);
       });
@@ -15101,7 +15091,6 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
         var value = snapshot.attr(key);
         if (type) {
           var transform = this.transformFor(type);
-
           value = transform.serialize(value, attribute.options);
         }
 
@@ -16236,12 +16225,13 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
       method must return the serialized value.
        Example
        ```javascript
-      serialize: function(deserialized) {
+      serialize: function(deserialized, options) {
         return Ember.isEmpty(deserialized) ? null : Number(deserialized);
       }
       ```
        @method serialize
       @param deserialized The deserialized value
+      @param options hash of options passed to `DS.attr`
       @return The serialized value
     */
     serialize: null,
@@ -16251,19 +16241,20 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
       return the deserialized value for the record attribute.
        Example
        ```javascript
-      deserialize: function(serialized) {
+      deserialize: function(serialized, options) {
         return empty(serialized) ? null : Number(serialized);
       }
       ```
        @method deserialize
       @param serialized The serialized value
+      @param options hash of options passed to `DS.attr`
       @return The deserialized value
     */
     deserialize: null
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.7.0-canary+f699952f8f";
+  exports.default = "2.7.0-canary+71abed36bb";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
