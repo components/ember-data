@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.6.0-beta.2
+ * @version   2.6.0-beta.3
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -8622,17 +8622,80 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     },
 
     /**
-      This method delegates a query to the adapter. This is the one place where
-      adapter-level semantics are exposed to the application.
-       Exposing queries this way seems preferable to creating an abstract query
-      language for all server-side queries, and then require all adapters to
-      implement them.
-       This method returns a promise, which is resolved with a `RecordObject`
-      once the server returns.
+      This method makes a request for one record, where the `id` is not known
+      beforehand (if the `id` is known, use `findRecord` instead).
+       This method can be used when it is certain that the server will return a
+      single object for the primary data.
+       Let's assume our API provides an endpoint for the currently logged in user
+      via:
+       ```
+      // GET /api/current_user
+      {
+        user: {
+          id: 1234,
+          username: 'admin'
+        }
+      }
+      ```
+       Since the specific `id` of the `user` is not known beforehand, we can use
+      `queryRecord` to get the user:
+       ```javascript
+      store.queryRecord('user', {}).then(function(user) {
+        let username = user.get('username');
+        console.log(`Currently logged in as ${username}`);
+      });
+      ```
+       The request is made through the adapters' `queryRecord`:
+       ```javascript
+      // app/adapters/user.js
+      import Adapter from "ember-data/adapter";
+       export default Adapter.extend({
+        queryRecord(modelName, query) {
+          return Ember.$.getJSON("/api/current_user");
+        }
+      });
+      ```
+       Note: the primary use case for `store.queryRecord` is when a single record
+      is queried and the `id` is not kown beforehand. In all other cases
+      `store.query` and using the first item of the array is likely the preferred
+      way:
+       ```
+      // GET /users?username=unique
+      {
+        data: [{
+          id: 1234,
+          type: 'user',
+          attributes: {
+            username: "unique"
+          }
+        }]
+      }
+      ```
+       ```javascript
+      store.query('user', { username: 'unique' }).then(function(users) {
+        return users.get('firstObject');
+      }).then(function(user) {
+        let id = user.get('id');
+      });
+      ```
+       This method returns a promise, which resolves with the found record.
+       If the adapter returns no data for the primary data of the payload, then
+      `queryRecord` resolves with `null`:
+       ```
+      // GET /users?username=unique
+      {
+        data: null
+      }
+      ```
+       ```javascript
+      store.queryRecord('user', { username: 'unique' }).then(function(user) {
+        console.log(user); // null
+      });
+      ```
        @method queryRecord
       @param {String} modelName
       @param {any} query an opaque query to be used by the adapter
-      @return {Promise} promise
+      @return {Promise} promise which resolves with the found record or `null`
     */
     queryRecord: function (modelName, query) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's queryRecord method", isPresent(modelName));
@@ -10150,10 +10213,14 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     promise = (0, _emberDataPrivateSystemStoreCommon._guard)(promise, (0, _emberDataPrivateSystemStoreCommon._bind)(_emberDataPrivateSystemStoreCommon._objectIsAlive, store));
 
     return promise.then(function (adapterPayload) {
-      (0, _emberDataPrivateDebug.assert)("You made a `queryRecord` request for a " + typeClass.modelName + ", but the adapter's response did not have any data", payloadIsNotBlank(adapterPayload));
       var record;
       store._adapterRun(function () {
         var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, null, 'queryRecord');
+
+        (0, _emberDataPrivateDebug.assert)("Expected the primary data returned by the serializer for a `queryRecord` response to be a single object or null but instead it was an array.", !Array.isArray(payload.data), {
+          id: 'ds.store.queryRecord-array-response'
+        });
+
         //TODO Optimize
         record = store.push(payload);
       });
@@ -13577,6 +13644,16 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
       return normalizedPayload;
     },
 
+    normalizeQueryRecordResponse: function () {
+      var normalized = this._super.apply(this, arguments);
+
+      (0, _emberDataPrivateDebug.assert)('Expected the primary data returned by the serializer for a `queryRecord` response to be a single object but instead it was an array.', !Array.isArray(normalized.data), {
+        id: 'ds.serializer.json-api.queryRecord-array-response'
+      });
+
+      return normalized;
+    },
+
     /**
       @method extractAttributes
       @param {DS.Model} modelClass
@@ -15503,6 +15580,16 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
           continue;
         }
 
+        (0, _emberDataPrivateDebug.runInDebug)(function () {
+          var isQueryRecordAnArray = requestType === 'queryRecord' && isPrimary && Array.isArray(value);
+          var message = "The adapter returned an array for the primary data of a `queryRecord` response. This is deprecated as `queryRecord` should return a single record.";
+
+          (0, _emberDataPrivateDebug.deprecate)(message, !isQueryRecordAnArray, {
+            id: 'ds.serializer.rest.queryRecord-array-response',
+            until: '3.0'
+          });
+        });
+
         /*
           Support primary data as an object instead of an array.
            Example
@@ -16063,7 +16150,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.6.0-beta.2";
+  exports.default = "2.6.0-beta.3";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
