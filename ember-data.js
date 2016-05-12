@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.7.0-canary+afeb5e052b
+ * @version   2.7.0-canary+b9e28d4b58
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -13048,16 +13048,23 @@ define('ember-data/attr', ['exports', 'ember', 'ember-data/-private/debug'], fun
       set: function (key, value) {
         var internalModel = this._internalModel;
         var oldValue = getValue(internalModel, key);
+        var originalValue;
 
         if (value !== oldValue) {
           // Add the new value to the changed attributes hash; it will get deleted by
           // the 'didSetProperty' handler if it is no different from the original value
           internalModel._attributes[key] = value;
 
+          if (key in internalModel._inFlightAttributes) {
+            originalValue = internalModel._inFlightAttributes[key];
+          } else {
+            originalValue = internalModel._data[key];
+          }
+
           this._internalModel.send('didSetProperty', {
             name: key,
             oldValue: oldValue,
-            originalValue: internalModel._data[key],
+            originalValue: originalValue,
             value: value
           });
         }
@@ -16535,7 +16542,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.7.0-canary+afeb5e052b";
+  exports.default = "2.7.0-canary+b9e28d4b58";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
