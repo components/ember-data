@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.7.0-canary+483648d2a7
+ * @version   2.7.0-canary+52ea222ab1
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -8100,6 +8100,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       method to find the necessary data. If the record is already present in the
       store, it depends on the reload behavior _when_ the returned promise
       resolves.
+       ### Reloading
        The reload behavior is configured either via the passed `options` hash or
       the result of the adapter's `shouldReloadRecord`.
        If `{ reload: true }` is passed or `adapter.shouldReloadRecord` evaluates
@@ -8127,6 +8128,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       ```
        If no reload is indicated via the abovementioned ways, then the promise
       immediately resolves with the cached version in the store.
+       ### Background Reloading
        Optionally, if `adapter.shouldBackgroundReloadRecord` evaluates to `true`,
       then a background reload is started, which updates the records' data, once
       it is available:
@@ -8162,6 +8164,17 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       // ]
        blogPost.get('revision'); // 2
       ```
+       If you would like to force or prevent background reloading, you can set a
+      boolean value for `backgroundReload` in the options object for
+      `findRecord`.
+       ```app/routes/post/edit.js
+      import Ember from 'ember';
+       export default Ember.Route.extend({
+        model: function(params) {
+          return this.store.findRecord('post', params.post_id, { backgroundReload: false });
+        }
+      });
+      ```
        See [peekRecord](#method_peekRecord) to get the cached version of a record.
        @method findRecord
       @param {String} modelName
@@ -8192,16 +8205,21 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         return this.scheduleFetch(internalModel, options);
       }
 
-      // Refetch the record if the adapter thinks the record is stale
       var snapshot = internalModel.createSnapshot(options);
       var typeClass = internalModel.type;
       var adapter = this.adapterFor(typeClass.modelName);
+
+      // Refetch the record if the adapter thinks the record is stale
       if (adapter.shouldReloadRecord(this, snapshot)) {
         return this.scheduleFetch(internalModel, options);
       }
 
-      // Trigger the background refetch if all the previous checks fail
-      if (adapter.shouldBackgroundReloadRecord(this, snapshot)) {
+      if (options.backgroundReload === false) {
+        return Promise.resolve(internalModel);
+      }
+
+      // Trigger the background refetch if backgroundReload option is passed
+      if (options.backgroundReload || adapter.shouldBackgroundReloadRecord(this, snapshot)) {
         this.scheduleFetch(internalModel, options);
       }
 
@@ -8739,7 +8757,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     },
 
     /**
-      `findAll` ask the adapter's `findAll` method to find the records for the
+      `findAll` asks the adapter's `findAll` method to find the records for the
       given type, and returns a promise which will resolve with all records of
       this type present in the store, even if the adapter only returns a subset
       of them.
@@ -8754,6 +8772,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
        _When_ the returned promise resolves depends on the reload behavior,
       configured via the passed `options` hash and the result of the adapter's
       `shouldReloadAll` method.
+       ### Reloading
        If `{ reload: true }` is passed or `adapter.shouldReloadAll` evaluates to
       `true`, then the returned promise resolves once the adapter returns data,
       regardless if there are already records in the store:
@@ -8777,7 +8796,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       ```
        If no reload is indicated via the abovementioned ways, then the promise
       immediately resolves with all the records currently loaded in the store.
-      Optionally, if `adapter.shouldBackgroundReloadAll` evaluates to `true`,
+       ### Background Reloading
+       Optionally, if `adapter.shouldBackgroundReloadAll` evaluates to `true`,
       then a background reload is started. Once this resolves, the array with
       which the promise resolves, is updated automatically so it contains all the
       records in the store:
@@ -8812,6 +8832,17 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       // ]
        allAuthors.getEach('id'); // ['first', 'second']
       ```
+       If you would like to force or prevent background reloading, you can set a
+      boolean value for `backgroundReload` in the options object for
+      `findAll`.
+       ```app/routes/post/edit.js
+      import Ember from 'ember';
+       export default Ember.Route.extend({
+        model: function() {
+          return this.store.findAll('post', { backgroundReload: false });
+        }
+      });
+      ```
        See [peekAll](#method_peekAll) to get an array of current records in the
       store, without waiting until a reload is finished.
        See [query](#method_query) to only get a subset of records from the server.
@@ -8842,16 +8873,25 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
       (0, _emberDataPrivateDebug.assert)("You tried to load all records but you have no adapter (for " + typeClass + ")", adapter);
       (0, _emberDataPrivateDebug.assert)("You tried to load all records but your adapter does not implement `findAll`", typeof adapter.findAll === 'function');
+
       if (options.reload) {
         return (0, _emberDataPrivateSystemPromiseProxies.promiseArray)((0, _emberDataPrivateSystemStoreFinders._findAll)(adapter, this, typeClass, sinceToken, options));
       }
+
       var snapshotArray = array.createSnapshot(options);
+
       if (adapter.shouldReloadAll(this, snapshotArray)) {
         return (0, _emberDataPrivateSystemPromiseProxies.promiseArray)((0, _emberDataPrivateSystemStoreFinders._findAll)(adapter, this, typeClass, sinceToken, options));
       }
-      if (adapter.shouldBackgroundReloadAll(this, snapshotArray)) {
+
+      if (options.backgroundReload === false) {
+        return (0, _emberDataPrivateSystemPromiseProxies.promiseArray)(Promise.resolve(array));
+      }
+
+      if (options.backgroundReload || adapter.shouldBackgroundReloadAll(this, snapshotArray)) {
         (0, _emberDataPrivateSystemStoreFinders._findAll)(adapter, this, typeClass, sinceToken, options);
       }
+
       return (0, _emberDataPrivateSystemPromiseProxies.promiseArray)(Promise.resolve(array));
     },
 
@@ -16542,7 +16582,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.7.0-canary+483648d2a7";
+  exports.default = "2.7.0-canary+52ea222ab1";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
