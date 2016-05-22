@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.7.0-canary+562de64f84
+ * @version   2.7.0-canary+2ba3fe0267
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -22,6 +22,30 @@ var loader, define, requireModule, require, requirejs;
     require: require,
     requirejs: requirejs
   };
+
+  requirejs = require = requireModule = function(name) {
+    stats.require++;
+    return findModule(name, '(require)').module.exports;
+  };
+
+  function resetStats() {
+    stats = {
+      define: 0,
+      require: 0,
+      reify: 0,
+      build: 0,
+      modules: 0,
+      exports: 0,
+      ensureBuild: 0,
+      resolve: 0,
+      resolveRelative: 0,
+      findModule: 0,
+    };
+    requirejs._stats = stats;
+  }
+
+  var stats;
+  resetStats();
 
   loader = {
     noConflict: function(aliases) {
@@ -64,6 +88,7 @@ var loader, define, requireModule, require, requirejs;
   var defaultDeps = ['require', 'exports', 'module'];
 
   function Module(name, deps, callback, alias) {
+    stats.modules ++;
     this.id        = uuid++;
     this.name      = name;
     this.deps      = !deps.length && callback.length ? defaultDeps : deps;
@@ -86,6 +111,7 @@ var loader, define, requireModule, require, requirejs;
   };
 
   Module.prototype.exports = function() {
+    stats.exports ++;
     if (this.finalized) {
       return this.module.exports;
     } else {
@@ -109,6 +135,7 @@ var loader, define, requireModule, require, requirejs;
   };
 
   Module.prototype.reify = function() {
+    stats.reify++;
     var deps = this.deps;
     var dep;
     var reified = this.reified;
@@ -141,7 +168,9 @@ var loader, define, requireModule, require, requirejs;
   };
 
   Module.prototype.build = function() {
+    stats.ensureBuild++;
     if (this.state === FAILED || this.state === LOADED) { return; }
+    stats.build++;
     this.state = FAILED;
     this.reify()
     this.exports();
@@ -149,6 +178,7 @@ var loader, define, requireModule, require, requirejs;
   };
 
   define = function(name, deps, callback) {
+    stats.define++;
     if (arguments.length < 2) {
       unsupportedModule(arguments.length);
     }
@@ -182,11 +212,8 @@ var loader, define, requireModule, require, requirejs;
     throw new Error('Could not find module `' + name + '` imported from `' + referrer + '`');
   }
 
-  requirejs = require = requireModule = function(name) {
-    return findModule(name, '(require)').module.exports;
-  };
-
   function findModule(name, referrer) {
+    stats.findModule++;
     var mod = registry[name] || registry[name + '/index'];
 
     while (mod && mod.isAlias) {
@@ -200,7 +227,9 @@ var loader, define, requireModule, require, requirejs;
   }
 
   function resolve(child, name) {
+    stats.resolve++;
     if (child.charAt(0) !== '.') { return child; }
+    stats.resolveRelative++;
 
     var parts = child.split('/');
     var nameParts = name.split('/');
@@ -233,6 +262,7 @@ var loader, define, requireModule, require, requirejs;
   };
 
   requirejs.clear = function() {
+    resetStats();
     requirejs.entries = requirejs._eak_seen = registry = {};
     seen = {};
   };
@@ -16584,7 +16614,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.7.0-canary+562de64f84";
+  exports.default = "2.7.0-canary+2ba3fe0267";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
