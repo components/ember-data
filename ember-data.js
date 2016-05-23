@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.7.0-canary+2ba3fe0267
+ * @version   2.7.0-canary+6d1076acf2
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -7370,8 +7370,11 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
     }
   };
 });
-define('ember-data/-private/system/snapshot-record-array', ['exports', 'ember-data/-private/features'], function (exports, _emberDataPrivateFeatures) {
+define('ember-data/-private/system/snapshot-record-array', ['exports'], function (exports) {
   exports.default = SnapshotRecordArray;
+  /**
+    @module ember-data
+  */
 
   /**
     @class SnapshotRecordArray
@@ -7442,10 +7445,7 @@ define('ember-data/-private/system/snapshot-record-array', ['exports', 'ember-da
     return this._snapshots;
   };
 });
-/**
-  @module ember-data
-*/
-define('ember-data/-private/system/snapshot', ['exports', 'ember', 'ember-data/-private/system/empty-object', 'ember-data/-private/features'], function (exports, _ember, _emberDataPrivateSystemEmptyObject, _emberDataPrivateFeatures) {
+define("ember-data/-private/system/snapshot", ["exports", "ember", "ember-data/-private/system/empty-object"], function (exports, _ember, _emberDataPrivateSystemEmptyObject) {
   exports.default = Snapshot;
 
   var get = _ember.default.get;
@@ -10774,8 +10774,8 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
     /**
       The `findRecord()` method is invoked when the store is asked for a record that
       has not previously been loaded. In response to `findRecord()` being called, you
-      should query your persistence layer for a record with the given ID. The `findRecord` 
-      method should return a promise that will resolve to a JavaScript object that will be 
+      should query your persistence layer for a record with the given ID. The `findRecord`
+      method should return a promise that will resolve to a JavaScript object that will be
       normalized by the serializer.
        Here is an example `findRecord` implementation:
        ```app/adapters/application.js
@@ -13146,7 +13146,7 @@ define('ember-data/attr', ['exports', 'ember', 'ember-data/-private/debug'], fun
     }).meta(meta);
   }
 });
-define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/features", "ember-data/-private/core", "ember-data/-private/system/normalize-model-name", "ember-data/-private/system/model/internal-model", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/store", "ember-data/-private/system/model", "ember-data/model", "ember-data/-private/system/snapshot", "ember-data/adapter", "ember-data/serializer", "ember-data/-private/system/debug", "ember-data/adapters/errors", "ember-data/-private/system/record-arrays", "ember-data/-private/system/many-array", "ember-data/-private/system/record-array-manager", "ember-data/-private/adapters", "ember-data/-private/adapters/build-url-mixin", "ember-data/-private/serializers", "ember-inflector", "ember-data/serializers/embedded-records-mixin", "ember-data/-private/transforms", "ember-data/relationships", "ember-data/setup-container", "ember-data/-private/instance-initializers/initialize-store-service", "ember-data/-private/system/container-proxy", "ember-data/-private/system/relationships/state/relationship"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateFeatures, _emberDataPrivateCore, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStore, _emberDataPrivateSystemModel, _emberDataModel, _emberDataPrivateSystemSnapshot, _emberDataAdapter, _emberDataSerializer, _emberDataPrivateSystemDebug, _emberDataAdaptersErrors, _emberDataPrivateSystemRecordArrays, _emberDataPrivateSystemManyArray, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateAdapters, _emberDataPrivateAdaptersBuildUrlMixin, _emberDataPrivateSerializers, _emberInflector, _emberDataSerializersEmbeddedRecordsMixin, _emberDataPrivateTransforms, _emberDataRelationships, _emberDataSetupContainer, _emberDataPrivateInstanceInitializersInitializeStoreService, _emberDataPrivateSystemContainerProxy, _emberDataPrivateSystemRelationshipsStateRelationship) {
+define("ember-data", ["exports", "ember", "ember-data/-private/features", "ember-data/-private/core", "ember-data/-private/system/normalize-model-name", "ember-data/-private/system/model/internal-model", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/store", "ember-data/-private/system/model", "ember-data/model", "ember-data/-private/system/snapshot", "ember-data/adapter", "ember-data/serializer", "ember-data/-private/system/debug", "ember-data/adapters/errors", "ember-data/-private/system/record-arrays", "ember-data/-private/system/many-array", "ember-data/-private/system/record-array-manager", "ember-data/-private/adapters", "ember-data/-private/adapters/build-url-mixin", "ember-data/-private/serializers", "ember-inflector", "ember-data/serializers/embedded-records-mixin", "ember-data/-private/transforms", "ember-data/relationships", "ember-data/setup-container", "ember-data/-private/instance-initializers/initialize-store-service", "ember-data/-private/system/container-proxy", "ember-data/-private/system/relationships/state/relationship"], function (exports, _ember, _emberDataPrivateFeatures, _emberDataPrivateCore, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStore, _emberDataPrivateSystemModel, _emberDataModel, _emberDataPrivateSystemSnapshot, _emberDataAdapter, _emberDataSerializer, _emberDataPrivateSystemDebug, _emberDataAdaptersErrors, _emberDataPrivateSystemRecordArrays, _emberDataPrivateSystemManyArray, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateAdapters, _emberDataPrivateAdaptersBuildUrlMixin, _emberDataPrivateSerializers, _emberInflector, _emberDataSerializersEmbeddedRecordsMixin, _emberDataPrivateTransforms, _emberDataRelationships, _emberDataSetupContainer, _emberDataPrivateInstanceInitializersInitializeStoreService, _emberDataPrivateSystemContainerProxy, _emberDataPrivateSystemRelationshipsStateRelationship) {
   /**
     Ember Data
     @module ember-data
@@ -15880,7 +15880,7 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
       * With `App.Comment`, `"comments"` and `{ id: 1, body: "FIRST" }`
       * With `App.Comment`, `"comments"` and `{ id: 2, body: "Rails is unagi" }`
        You can use this method, for example, to normalize underscored keys to camelized
-      or other general-purpose normalizations. You will only need to implement 
+      or other general-purpose normalizations. You will only need to implement
       `normalize` and manipulate the payload as desired.
        For example, if the `IDs` under `"comments"` are provided as `_id` instead of
       `id`, you can specify how to normalize just the comments:
@@ -15890,14 +15890,14 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
         normalize(model, hash, prop) {
           if (prop === 'comments') {
             hash.id = hash._id;
-            delete hash._id;   
+            delete hash._id;
           }
            return this._super(...arguments);
         }
       });
       ```
-       On each call to the `normalize` method, the third parameter (`prop`) is always 
-      one of the keys that were in the original payload or in the result of another 
+       On each call to the `normalize` method, the third parameter (`prop`) is always
+      one of the keys that were in the original payload or in the result of another
       normalization as `normalizeResponse`.
        @method normalize
       @param {DS.Model} modelClass
@@ -16614,7 +16614,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.7.0-canary+2ba3fe0267";
+  exports.default = "2.7.0-canary+6d1076acf2";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
