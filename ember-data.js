@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.7.0-canary+fec260a38c
+ * @version   2.7.0-canary+4fb5bb4727
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -14171,7 +14171,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
       if (resourceHash.attributes) {
         modelClass.eachAttribute(function (key) {
           var attributeKey = _this.keyForAttribute(key, 'deserialize');
-          if (resourceHash.attributes.hasOwnProperty(attributeKey)) {
+          if (resourceHash.attributes[attributeKey] !== undefined) {
             attributes[key] = resourceHash.attributes[attributeKey];
           }
         });
@@ -14219,7 +14219,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
       if (resourceHash.relationships) {
         modelClass.eachRelationship(function (key, relationshipMeta) {
           var relationshipKey = _this2.keyForRelationship(key, relationshipMeta.kind, 'deserialize');
-          if (resourceHash.relationships.hasOwnProperty(relationshipKey)) {
+          if (resourceHash.relationships[relationshipKey] !== undefined) {
 
             var relationshipHash = resourceHash.relationships[relationshipKey];
             relationships[key] = _this2.extractRelationship(relationshipHash);
@@ -15170,7 +15170,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
 
       modelClass.eachAttribute(function (key) {
         attributeKey = _this2.keyForAttribute(key, 'deserialize');
-        if (resourceHash.hasOwnProperty(attributeKey)) {
+        if (resourceHash[attributeKey] !== undefined) {
           attributes[key] = resourceHash[attributeKey];
         }
       });
@@ -15262,7 +15262,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
       modelClass.eachRelationship(function (key, relationshipMeta) {
         var relationship = null;
         var relationshipKey = _this3.keyForRelationship(key, relationshipMeta.kind, 'deserialize');
-        if (resourceHash.hasOwnProperty(relationshipKey)) {
+        if (resourceHash[relationshipKey] !== undefined) {
           var data = null;
           var relationshipHash = resourceHash[relationshipKey];
           if (relationshipMeta.kind === 'belongsTo') {
@@ -15288,7 +15288,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
         }
 
         var linkKey = _this3.keyForLink(key, relationshipMeta.kind);
-        if (resourceHash.links && resourceHash.links.hasOwnProperty(linkKey)) {
+        if (resourceHash.links && resourceHash.links[linkKey] !== undefined) {
           var related = resourceHash.links[linkKey];
           relationship = relationship || {};
           relationship.links = { related: related };
@@ -15327,7 +15327,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
           if (key === payloadKey) {
             return;
           }
-          if (!hash.hasOwnProperty(payloadKey)) {
+          if (hash[payloadKey] === undefined) {
             return;
           }
 
@@ -15352,7 +15352,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
           if (key === payloadKey) {
             return;
           }
-          if (!hash.hasOwnProperty(payloadKey)) {
+          if (hash[payloadKey] === undefined) {
             return;
           }
 
@@ -15374,7 +15374,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
         for (key in attrs) {
           normalizedKey = payloadKey = this._getMappedKey(key, modelClass);
 
-          if (!hash.hasOwnProperty(payloadKey)) {
+          if (hash[payloadKey] === undefined) {
             continue;
           }
 
@@ -15820,7 +15820,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
       @param {Object} payload
     */
     extractMeta: function (store, modelClass, payload) {
-      if (payload && payload.hasOwnProperty('meta')) {
+      if (payload && payload['meta'] !== undefined) {
         var meta = payload.meta;
         delete payload.meta;
         return meta;
@@ -15910,7 +15910,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
 
         typeClass.eachAttribute(function (name) {
           var key = _this7.keyForAttribute(name, 'deserialize');
-          if (key !== name && payload.hasOwnProperty(key)) {
+          if (key !== name && payload[key] !== undefined) {
             payload[name] = payload[key];
             delete payload[key];
           }
@@ -15918,7 +15918,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
 
         typeClass.eachRelationship(function (name) {
           var key = _this7.keyForRelationship(name, 'deserialize');
-          if (key !== name && payload.hasOwnProperty(key)) {
+          if (key !== name && payload[key] !== undefined) {
             payload[name] = payload[key];
             delete payload[key];
           }
@@ -16771,7 +16771,7 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
       var isPolymorphic = relationshipMeta.options.polymorphic;
       var typeProperty = this.keyForPolymorphicType(key, relationshipType, 'deserialize');
 
-      if (isPolymorphic && resourceHash.hasOwnProperty(typeProperty) && typeof relationshipHash !== 'object') {
+      if (isPolymorphic && resourceHash[typeProperty] !== undefined && typeof relationshipHash !== 'object') {
 
         if ((0, _emberDataPrivateFeatures.default)("ds-payload-type-hooks")) {
 
@@ -17011,7 +17011,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.7.0-canary+fec260a38c";
+  exports.default = "2.7.0-canary+4fb5bb4727";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
