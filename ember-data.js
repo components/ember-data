@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.7.0-canary+803b9ecd76
+ * @version   2.7.0-canary+fec260a38c
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -900,7 +900,7 @@ define('ember-data/-private/system/coerce-id', ['exports'], function (exports) {
   // corresponding record, we will not know if it is a string or a number.
 
   function coerceId(id) {
-    return id == null || id === '' ? null : id + '';
+    return id === null || id === undefined || id === '' ? null : id + '';
   }
 });
 define('ember-data/-private/system/container-proxy', ['exports', 'ember-data/-private/debug'], function (exports, _emberDataPrivateDebug) {
@@ -4543,7 +4543,6 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
   };
 
   function wireState(object, parent, name) {
-    /*jshint proto:true*/
     // TODO: Use Object.create and copy instead
     object = mixin(parent ? Object.create(parent) : {}, object);
     object.parentState = parent;
@@ -4640,7 +4639,7 @@ define('ember-data/-private/system/ordered-set', ['exports', 'ember'], function 
 
     presenceSet[guid] = true;
 
-    if (idx === undefined || idx == null) {
+    if (idx === undefined || idx === null) {
       list.push(obj);
     } else {
       list.splice(idx, 0, obj);
@@ -6415,14 +6414,14 @@ define("ember-data/-private/system/relationships/ext", ["exports", "ember", "emb
       var knownKey = knownSide.key;
       var knownKind = knownSide.kind;
       var inverse = this.inverseFor(knownKey, store);
-      var key = undefined,
-          otherKind = undefined;
+      // let key;
+      var otherKind = undefined;
 
       if (!inverse) {
         return knownKind === 'belongsTo' ? 'oneToNone' : 'manyToNone';
       }
 
-      key = inverse.name;
+      // key = inverse.name;
       otherKind = inverse.kind;
 
       if (otherKind === 'belongsTo') {
@@ -9541,7 +9540,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       var _this2 = this;
 
       var modelName = data.type;
-      (0, _emberDataPrivateDebug.assert)('You must include an \'id\' for ' + modelName + ' in an object passed to \'push\'', data.id != null && data.id !== '');
+      (0, _emberDataPrivateDebug.assert)('You must include an \'id\' for ' + modelName + ' in an object passed to \'push\'', data.id !== null && data.id !== undefined && data.id !== '');
       (0, _emberDataPrivateDebug.assert)('You tried to push data with a type \'' + modelName + '\' but no model could be found with that name.', this._hasModelFor(modelName));
 
       (0, _emberDataPrivateDebug.runInDebug)(function () {
@@ -12640,7 +12639,9 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
 
       try {
         json = _ember.default.$.parseJSON(responseText);
-      } catch (e) {}
+      } catch (e) {
+        // ignored
+      }
 
       return json;
     },
@@ -12831,8 +12832,10 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
 
           case 'findHasMany':
           case 'findBelongsTo':
-            var url = this.buildURL(type.modelName, id, snapshot, requestType);
-            return this.urlPrefix(params.url, url);
+            {
+              var url = this.buildURL(type.modelName, id, snapshot, requestType);
+              return this.urlPrefix(params.url, url);
+            }
         }
 
         return this.buildURL(type.modelName, id, snapshot, requestType, query);
@@ -16184,7 +16187,6 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
       var modelClass = store.modelFor(modelName);
       var serializer = store.serializerFor(modelName);
 
-      /*jshint loopfunc:true*/
       _ember.default.makeArray(arrayHash).forEach(function (hash) {
         var _normalizePolymorphicRecord = _this._normalizePolymorphicRecord(store, hash, prop, modelClass, serializer);
 
@@ -16349,7 +16351,6 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
         }
 
         if (isSingle) {
-          /*jshint loopfunc:true*/
           data.forEach(function (resource) {
 
             /*
@@ -16434,7 +16435,6 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
         var type = store.modelFor(modelName);
         var typeSerializer = store.serializerFor(type.modelName);
 
-        /*jshint loopfunc:true*/
         _ember.default.makeArray(payload[prop]).forEach(function (hash) {
           var _typeSerializer$normalize = typeSerializer.normalize(type, hash, prop);
 
@@ -17011,7 +17011,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.7.0-canary+803b9ecd76";
+  exports.default = "2.7.0-canary+fec260a38c";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -17515,6 +17515,8 @@ require("ember-data");
     processEmberDataShims();
   }
 })();
+/* eslint no-extra-semi: "off" */
+
 ;(function() {
   /* globals Ember */
   /* globals DS */
