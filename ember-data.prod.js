@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.7.0-canary+fe076470b7
+ * @version   2.7.0-canary+ac1a666090
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -5444,7 +5444,7 @@ define('ember-data/-private/system/references', ['exports', 'ember-data/-private
   exports.BelongsToReference = _emberDataPrivateSystemReferencesBelongsTo.default;
   exports.HasManyReference = _emberDataPrivateSystemReferencesHasMany.default;
 });
-define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-data/model', 'ember', 'ember-data/-private/system/references/reference', 'ember-data/-private/debug'], function (exports, _emberDataModel, _ember, _emberDataPrivateSystemReferencesReference, _emberDataPrivateDebug) {
+define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-data/model', 'ember', 'ember-data/-private/system/references/reference', 'ember-data/-private/features', 'ember-data/-private/debug'], function (exports, _emberDataModel, _ember, _emberDataPrivateSystemReferencesReference, _emberDataPrivateFeatures, _emberDataPrivateDebug) {
 
   var BelongsToReference = function (store, parentInternalModel, belongsToRelationship) {
     this._super$constructor(store, parentInternalModel);
@@ -5487,6 +5487,7 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
       var record;
 
       if (data instanceof _emberDataModel.default) {
+        if ((0, _emberDataPrivateFeatures.default)('ds-overhaul-references')) {}
         record = data;
       } else {
         record = _this.store.push(data);
@@ -5532,7 +5533,7 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
 
   exports.default = BelongsToReference;
 });
-define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'ember-data/-private/system/references/reference', 'ember-data/-private/debug'], function (exports, _ember, _emberDataPrivateSystemReferencesReference, _emberDataPrivateDebug) {
+define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'ember-data/-private/system/references/reference', 'ember-data/-private/debug', 'ember-data/-private/features'], function (exports, _ember, _emberDataPrivateSystemReferencesReference, _emberDataPrivateDebug, _emberDataPrivateFeatures) {
 
   var get = _ember.default.get;
 
@@ -5579,15 +5580,32 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
 
     return _ember.default.RSVP.resolve(objectOrPromise).then(function (payload) {
       var array = payload;
+
+      if ((0, _emberDataPrivateFeatures.default)("ds-overhaul-references")) {}
+
+      var useLegacyArrayPush = true;
       if (typeof payload === "object" && payload.data) {
         array = payload.data;
+        useLegacyArrayPush = array.length && array[0].data;
+
+        if ((0, _emberDataPrivateFeatures.default)('ds-overhaul-references')) {}
       }
 
-      var internalModels = array.map(function (obj) {
-        var record = _this.store.push(obj);
+      if (!(0, _emberDataPrivateFeatures.default)('ds-overhaul-references')) {
+        useLegacyArrayPush = true;
+      }
 
-        return record._internalModel;
-      });
+      var internalModels = undefined;
+      if (useLegacyArrayPush) {
+        internalModels = array.map(function (obj) {
+          var record = _this.store.push(obj);
+
+          return record._internalModel;
+        });
+      } else {
+        var records = _this.store.push(payload);
+        internalModels = _ember.default.A(records).mapBy('_internalModel');
+      }
 
       _this.hasManyRelationship.computeChanges(internalModels);
 
@@ -16703,7 +16721,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.7.0-canary+fe076470b7";
+  exports.default = "2.7.0-canary+ac1a666090";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
