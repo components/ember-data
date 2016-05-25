@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.7.0-canary+6a44cc36bc
+ * @version   2.7.0-canary+77dc7810b0
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -690,30 +690,14 @@ define('ember-data/-private/debug', ['exports', 'ember'], function (exports, _em
     assert(assertionMessage, checkPolymorphic(typeClass, addedRecord));
   }
 });
-define('ember-data/-private/ext/date', ['exports', 'ember'], function (exports, _ember) {
+define('ember-data/-private/ext/date', ['exports', 'ember', 'ember-data/-private/debug'], function (exports, _ember, _emberDataPrivateDebug) {
 
-  /**
-    Date.parse with progressive enhancement for ISO 8601 <https://github.com/csnover/js-iso8601>
-  
-    © 2011 Colin Snover <http://zetafleet.com>
-  
-    Released under MIT license.
-  
-    @class Date
-    @namespace Ember
-    @static
-  */
   _ember.default.Date = _ember.default.Date || {};
 
   var origParse = Date.parse;
   var numericKeys = [1, 4, 5, 6, 7, 10, 11];
 
-  /**
-    @method parse
-    @param {Date} date
-    @return {Number} timestamp
-  */
-  _ember.default.Date.parse = function (date) {
+  var parseDate = function (date) {
     var timestamp, struct;
     var minutesOffset = 0;
 
@@ -721,7 +705,7 @@ define('ember-data/-private/ext/date', ['exports', 'ember'], function (exports, 
     // before falling back to any implementation-specific date parsing, so that’s what we do, even if native
     // implementations could be faster
     //              1 YYYY                2 MM       3 DD           4 HH    5 mm       6 ss        7 msec        8 Z 9 ±    10 tzHH    11 tzmm
-    if (struct = /^(\d{4}|[+\-]\d{6})(?:-(\d{2})(?:-(\d{2}))?)?(?:T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{3}))?)?(?:(Z)|([+\-])(\d{2})(?::(\d{2}))?)?)?$/.exec(date)) {
+    if (struct = /^(\d{4}|[+\-]\d{6})(?:-(\d{2})(?:-(\d{2}))?)?(?:T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{3}))?)?(?:(Z)|([+\-])(\d{2})(?:(\d{2}))?)?)?$/.exec(date)) {
       // avoid NaN timestamps caused by “undefined” values being passed to Date.UTC
       for (var i = 0, k; k = numericKeys[i]; ++i) {
         struct[k] = +struct[k] || 0;
@@ -747,8 +731,16 @@ define('ember-data/-private/ext/date', ['exports', 'ember'], function (exports, 
     return timestamp;
   };
 
+  exports.parseDate = parseDate;
+  _ember.default.Date.parse = function (date) {
+
+    return parseDate(date);
+
+    // throw deprecation
+  };
+
   if (_ember.default.EXTEND_PROTOTYPES === true || _ember.default.EXTEND_PROTOTYPES.Date) {
-    Date.parse = _ember.default.Date.parse;
+    Date.parse = parseDate;
   }
 });
 /**
@@ -10264,13 +10256,13 @@ define('ember-data/-private/transforms/boolean', ['exports', 'ember', 'ember-dat
     }
   });
 });
-define("ember-data/-private/transforms/date", ["exports", "ember", "ember-data/-private/ext/date", "ember-data/transform"], function (exports, _ember, _emberDataPrivateExtDate, _emberDataTransform) {
+define("ember-data/-private/transforms/date", ["exports", "ember-data/-private/ext/date", "ember-data/transform"], function (exports, _emberDataPrivateExtDate, _emberDataTransform) {
   exports.default = _emberDataTransform.default.extend({
     deserialize: function (serialized) {
       var type = typeof serialized;
 
       if (type === "string") {
-        return new Date(_ember.default.Date.parse(serialized));
+        return new Date((0, _emberDataPrivateExtDate.parseDate)(serialized));
       } else if (type === "number") {
         return new Date(serialized);
       } else if (serialized === null || serialized === undefined) {
@@ -16684,7 +16676,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.7.0-canary+6a44cc36bc";
+  exports.default = "2.7.0-canary+77dc7810b0";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
