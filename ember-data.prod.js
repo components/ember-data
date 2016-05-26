@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.7.0-canary+3b5c5917d6
+ * @version   2.7.0-canary+e8233a743c
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -3398,6 +3398,22 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
         }
       });
       ```
+       If you pass an object on the `adapterOptions` property of the options
+      argument it will be passed to you adapter via the snapshot
+       ```js
+      record.destroyRecord({ adapterOptions: { subscribe: false } });
+      ```
+       ```app/adapters/post.js
+      import MyCustomAdapter from './custom-adapter';
+       export default MyCustomAdapter.extend({
+        deleteRecord: function(store, type, snapshot) {
+          if (snapshot.adapterOptions.subscribe) {
+            // ...
+          }
+          // ...
+        }
+      });
+      ```
        @method destroyRecord
       @param {Object} options
       @return {Promise} a promise that will be resolved when the adapter returns
@@ -3528,7 +3544,23 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
         // Error callback
       });
       ```
-      @method save
+      If you pass an object on the `adapterOptions` property of the options
+     argument it will be passed to you adapter via the snapshot
+       ```js
+      record.save({ adapterOptions: { subscribe: false } });
+      ```
+       ```app/adapters/post.js
+      import MyCustomAdapter from './custom-adapter';
+       export default MyCustomAdapter.extend({
+        updateRecord: function(store, type, snapshot) {
+          if (snapshot.adapterOptions.subscribe) {
+            // ...
+          }
+          // ...
+        }
+      });
+      ```
+       @method save
       @param {Object} options
       @return {Promise} a promise that will be resolved when the adapter returns
       successfully or rejected if the adapter returns with an error.
@@ -8140,6 +8172,29 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         }
       });
       ```
+      If you pass an object on the `adapterOptions` property of the options
+     argument it will be passed to you adapter via the snapshot
+       ```app/routes/post/edit.js
+      import Ember from 'ember';
+       export default Ember.Route.extend({
+        model: function(params) {
+          return this.store.findRecord('post', params.post_id, {
+            adapterOptions: { subscribe: false }
+          });
+        }
+      });
+      ```
+       ```app/adapters/post.js
+      import MyCustomAdapter from './custom-adapter';
+       export default MyCustomAdapter.extend({
+        findRecord: function(store, type, id, snapshot) {
+          if (snapshot.adapterOptions.subscribe) {
+            // ...
+          }
+          // ...
+        }
+      });
+      ```
        See [peekRecord](#method_peekRecord) to get the cached version of a record.
        @method findRecord
       @param {String} modelName
@@ -8766,7 +8821,30 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         }
       });
       ```
-       See [peekAll](#method_peekAll) to get an array of current records in the
+       If you pass an object on the `adapterOptions` property of the options
+      argument it will be passed to you adapter via the `snapshotRecordArray`
+       ```app/routes/posts.js
+      import Ember from 'ember';
+       export default Ember.Route.extend({
+        model: function(params) {
+          return this.store.findAll('post', {
+            adapterOptions: { subscribe: false }
+          });
+        }
+      });
+      ```
+       ```app/adapters/post.js
+      import MyCustomAdapter from './custom-adapter';
+       export default MyCustomAdapter.extend({
+        findAll: function(store, type, sinceToken, snapshotRecordArray) {
+          if (snapshotRecordArray.adapterOptions.subscribe) {
+            // ...
+          }
+          // ...
+        }
+      });
+      ```
+        See [peekAll](#method_peekAll) to get an array of current records in the
       store, without waiting until a reload is finished.
        See [query](#method_query) to only get a subset of records from the server.
        @method findAll
@@ -16725,7 +16803,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.7.0-canary+3b5c5917d6";
+  exports.default = "2.7.0-canary+e8233a743c";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
