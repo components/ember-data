@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.7.0-canary+e8233a743c
+ * @version   2.7.0-canary+79d2505bee
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -6317,9 +6317,9 @@ define("ember-data/-private/system/relationships/ext", ["exports", "ember", "emb
       import Blog from 'app/models/blog';
        var relationshipsByName = Ember.get(Blog, 'relationshipsByName');
       relationshipsByName.get('users');
-      //=> { key: 'users', kind: 'hasMany', type: App.User }
+      //=> { key: 'users', kind: 'hasMany', type: 'user', options: Object, isRelationship: true }
       relationshipsByName.get('owner');
-      //=> { key: 'owner', kind: 'belongsTo', type: App.User }
+      //=> { key: 'owner', kind: 'belongsTo', type: 'user', options: Object, isRelationship: true }
       ```
        @property relationshipsByName
       @static
@@ -6449,7 +6449,7 @@ define("ember-data/-private/system/relationships/ext", ["exports", "ember", "emb
      - **kind** <span class="type">String</span> "hasMany" or "belongsTo"
      - **options** <span class="type">Object</span> the original options hash passed when the relationship was declared
      - **parentType** <span class="type">DS.Model</span> the type of the Model that owns this relationship
-     - **type** <span class="type">DS.Model</span> the type of the related Model
+     - **type** <span class="type">String</span> the type name of the related Model
        Note that in addition to a callback, you can also pass an optional target
       object that will be set as `this` on the context.
        Example
@@ -16803,7 +16803,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.7.0-canary+e8233a743c";
+  exports.default = "2.7.0-canary+79d2505bee";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
