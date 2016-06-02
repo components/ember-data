@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.7.0-canary+da342e60d1
+ * @version   2.7.0-canary+e4758d30be
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -14336,8 +14336,12 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
     */
     serializeHasMany: function (snapshot, json, relationship) {
       var key = relationship.key;
+      var shouldSerializeHasMany = '_shouldSerializeHasMany';
+      if ((0, _emberDataPrivateFeatures.default)("ds-check-should-serialize-relationships")) {
+        shouldSerializeHasMany = 'shouldSerializeHasMany';
+      }
 
-      if (this._shouldSerializeHasMany(snapshot, key, relationship)) {
+      if (this[shouldSerializeHasMany](snapshot, key, relationship)) {
         var hasMany = snapshot.hasMany(key);
         if (hasMany !== undefined) {
 
@@ -15290,6 +15294,21 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
 
     /**
       Check if the given hasMany relationship should be serialized
+       @method shouldSerializeHasMany
+      @param {DS.Snapshot} snapshot
+      @param {String} key
+      @param {String} relationshipType
+      @return {boolean} true if the hasMany relationship should be serialized
+    */
+
+    shouldSerializeHasMany: function (snapshot, key, relationship) {
+      if (this._shouldSerializeHasMany !== JSONSerializer.prototype._shouldSerializeHasMany) {}
+
+      return this._shouldSerializeHasMany(snapshot, key, relationship);
+    },
+
+    /**
+      Check if the given hasMany relationship should be serialized
        @method _shouldSerializeHasMany
       @private
       @param {DS.Snapshot} snapshot
@@ -15587,8 +15606,12 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
     */
     serializeHasMany: function (snapshot, json, relationship) {
       var key = relationship.key;
+      var shouldSerializeHasMany = '_shouldSerializeHasMany';
+      if ((0, _emberDataPrivateFeatures.default)("ds-check-should-serialize-relationships")) {
+        shouldSerializeHasMany = 'shouldSerializeHasMany';
+      }
 
-      if (this._shouldSerializeHasMany(snapshot, key, relationship)) {
+      if (this[shouldSerializeHasMany](snapshot, key, relationship)) {
         var hasMany = snapshot.hasMany(key, { ids: true });
         if (hasMany !== undefined) {
           // if provided, use the mapping provided by `attrs` in
@@ -16803,7 +16826,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.7.0-canary+da342e60d1";
+  exports.default = "2.7.0-canary+e4758d30be";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
