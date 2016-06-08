@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.7.0-canary+7fc32884f6
+ * @version   2.7.0-canary+76f077cbaa
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -5232,9 +5232,7 @@ define("ember-data/-private/system/record-arrays/adapter-populated-record-array"
         meta: (0, _emberDataPrivateSystemCloneNull.default)(payload.meta)
       });
 
-      if ((0, _emberDataPrivateFeatures.default)('ds-links-in-record-array')) {
-        this.set('links', (0, _emberDataPrivateSystemCloneNull.default)(payload.links));
-      }
+      this.set('links', (0, _emberDataPrivateSystemCloneNull.default)(payload.links));
 
       internalModels.forEach(function (record) {
         _this.manager.recordArraysForRecord(record).add(_this);
@@ -5558,12 +5556,6 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
       var record;
 
       if (data instanceof _emberDataModel.default) {
-        if ((0, _emberDataPrivateFeatures.default)('ds-overhaul-references')) {
-          (0, _emberDataPrivateDebug.deprecate)("BelongsToReference#push(DS.Model) is deprecated. Update relationship via `model.set('relationshipName', value)` instead.", false, {
-            id: 'ds.references.belongs-to.push-record',
-            until: '3.0'
-          });
-        }
         record = data;
       } else {
         record = _this.store.push(data);
@@ -5659,29 +5651,13 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
     return _ember.default.RSVP.resolve(objectOrPromise).then(function (payload) {
       var array = payload;
 
-      if ((0, _emberDataPrivateFeatures.default)("ds-overhaul-references")) {
-        (0, _emberDataPrivateDebug.deprecate)("HasManyReference#push(array) is deprecated. Push a JSON-API document instead.", !Array.isArray(payload), {
-          id: 'ds.references.has-many.push-array',
-          until: '3.0'
-        });
-      }
-
       var useLegacyArrayPush = true;
       if (typeof payload === "object" && payload.data) {
         array = payload.data;
         useLegacyArrayPush = array.length && array[0].data;
-
-        if ((0, _emberDataPrivateFeatures.default)('ds-overhaul-references')) {
-          (0, _emberDataPrivateDebug.deprecate)("HasManyReference#push() expects a valid JSON-API document.", !useLegacyArrayPush, {
-            id: 'ds.references.has-many.push-invalid-json-api',
-            until: '3.0'
-          });
-        }
       }
 
-      if (!(0, _emberDataPrivateFeatures.default)('ds-overhaul-references')) {
-        useLegacyArrayPush = true;
-      }
+      useLegacyArrayPush = true;
 
       var internalModels = undefined;
       if (useLegacyArrayPush) {
@@ -9778,15 +9754,10 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember.default.inspect(modelName), typeof modelName === 'string');
         serializer = this.serializerFor(modelName);
       }
-      if ((0, _emberDataPrivateFeatures.default)('ds-pushpayload-return')) {
-        return this._adapterRun(function () {
-          return serializer.pushPayload(_this3, payload);
-        });
-      } else {
-        this._adapterRun(function () {
-          return serializer.pushPayload(_this3, payload);
-        });
-      }
+
+      this._adapterRun(function () {
+        return serializer.pushPayload(_this3, payload);
+      });
     },
 
     /**
@@ -10579,10 +10550,8 @@ define('ember-data/-private/transforms/boolean', ['exports', 'ember', 'ember-dat
     deserialize: function (serialized, options) {
       var type = typeof serialized;
 
-      if ((0, _emberDataPrivateFeatures.default)('ds-boolean-transform-allow-null')) {
-        if (isNone(serialized) && options.allowNull === true) {
-          return null;
-        }
+      if (isNone(serialized) && options.allowNull === true) {
+        return null;
       }
 
       if (type === "boolean") {
@@ -10597,10 +10566,8 @@ define('ember-data/-private/transforms/boolean', ['exports', 'ember', 'ember-dat
     },
 
     serialize: function (deserialized, options) {
-      if ((0, _emberDataPrivateFeatures.default)('ds-boolean-transform-allow-null')) {
-        if (isNone(deserialized) && options.allowNull === true) {
-          return null;
-        }
+      if (isNone(deserialized) && options.allowNull === true) {
+        return null;
       }
 
       return Boolean(deserialized);
@@ -11401,9 +11368,6 @@ define('ember-data/adapters/errors', ['exports', 'ember', 'ember-data/-private/d
   }
 
   var extendedErrorsEnabled = false;
-  if ((0, _emberDataPrivateFeatures.default)('ds-extended-errors')) {
-    extendedErrorsEnabled = true;
-  }
 
   function extendFn(ErrorClass) {
     return function () {
@@ -11691,12 +11655,7 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
       @return {Promise} promise
     */
     findMany: function (store, type, ids, snapshots) {
-      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
-        return this._super.apply(this, arguments);
-      } else {
-        var url = this.buildURL(type.modelName, ids, snapshots, 'findMany');
-        return this.ajax(url, 'GET', { data: { filter: { id: ids.join(',') } } });
-      }
+      return this._super.apply(this, arguments);
     },
 
     /**
@@ -11718,80 +11677,65 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
       @return {Promise} promise
     */
     updateRecord: function (store, type, snapshot) {
-      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
-        return this._super.apply(this, arguments);
-      } else {
+      return this._super.apply(this, arguments);
+    }
+  });
+
+  JSONAPIAdapter.reopen({
+
+    methodForRequest: function (params) {
+      if (params.requestType === 'updateRecord') {
+        return 'PATCH';
+      }
+
+      return this._super.apply(this, arguments);
+    },
+
+    dataForRequest: function (params) {
+      var requestType = params.requestType;
+      var ids = params.ids;
+
+      if (requestType === 'findMany') {
+        return {
+          filter: { id: ids.join(',') }
+        };
+      }
+
+      if (requestType === 'updateRecord') {
+        var store = params.store;
+        var type = params.type;
+        var snapshot = params.snapshot;
+
         var data = {};
         var serializer = store.serializerFor(type.modelName);
 
         serializer.serializeIntoHash(data, type, snapshot, { includeId: true });
 
-        var id = snapshot.id;
-        var url = this.buildURL(type.modelName, id, snapshot, 'updateRecord');
-
-        return this.ajax(url, 'PATCH', { data: data });
+        return data;
       }
+
+      return this._super.apply(this, arguments);
+    },
+
+    headersForRequest: function () {
+      var headers = this._super.apply(this, arguments) || {};
+
+      headers['Accept'] = 'application/vnd.api+json';
+
+      return headers;
+    },
+
+    _requestToJQueryAjaxHash: function () {
+      var hash = this._super.apply(this, arguments);
+
+      if (hash.contentType) {
+        hash.contentType = 'application/vnd.api+json';
+      }
+
+      return hash;
     }
+
   });
-
-  if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
-
-    JSONAPIAdapter.reopen({
-
-      methodForRequest: function (params) {
-        if (params.requestType === 'updateRecord') {
-          return 'PATCH';
-        }
-
-        return this._super.apply(this, arguments);
-      },
-
-      dataForRequest: function (params) {
-        var requestType = params.requestType;
-        var ids = params.ids;
-
-        if (requestType === 'findMany') {
-          return {
-            filter: { id: ids.join(',') }
-          };
-        }
-
-        if (requestType === 'updateRecord') {
-          var store = params.store;
-          var type = params.type;
-          var snapshot = params.snapshot;
-
-          var data = {};
-          var serializer = store.serializerFor(type.modelName);
-
-          serializer.serializeIntoHash(data, type, snapshot, { includeId: true });
-
-          return data;
-        }
-
-        return this._super.apply(this, arguments);
-      },
-
-      headersForRequest: function () {
-        var headers = this._super.apply(this, arguments) || {};
-
-        headers['Accept'] = 'application/vnd.api+json';
-
-        return headers;
-      },
-
-      _requestToJQueryAjaxHash: function () {
-        var hash = this._super.apply(this, arguments);
-
-        if (hash.contentType) {
-          hash.contentType = 'application/vnd.api+json';
-        }
-
-        return hash;
-      }
-
-    });
-  }
 
   exports.default = JSONAPIAdapter;
 });
@@ -12159,19 +12103,12 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     findRecord: function (store, type, id, snapshot) {
-      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
-        var request = this._requestFor({
-          store: store, type: type, id: id, snapshot: snapshot,
-          requestType: 'findRecord'
-        });
+      var request = this._requestFor({
+        store: store, type: type, id: id, snapshot: snapshot,
+        requestType: 'findRecord'
+      });
 
-        return this._makeRequest(request);
-      } else {
-        var url = this.buildURL(type.modelName, id, snapshot, 'findRecord');
-        var query = this.buildQuery(snapshot);
-
-        return this.ajax(url, 'GET', { data: query });
-      }
+      return this._makeRequest(request);
     },
 
     /**
@@ -12189,23 +12126,13 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
     findAll: function (store, type, sinceToken, snapshotRecordArray) {
       var query = this.buildQuery(snapshotRecordArray);
 
-      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
-        var request = this._requestFor({
-          store: store, type: type, sinceToken: sinceToken, query: query,
-          snapshots: snapshotRecordArray,
-          requestType: 'findAll'
-        });
+      var request = this._requestFor({
+        store: store, type: type, sinceToken: sinceToken, query: query,
+        snapshots: snapshotRecordArray,
+        requestType: 'findAll'
+      });
 
-        return this._makeRequest(request);
-      } else {
-        var url = this.buildURL(type.modelName, null, snapshotRecordArray, 'findAll');
-
-        if (sinceToken) {
-          query.since = sinceToken;
-        }
-
-        return this.ajax(url, 'GET', { data: query });
-      }
+      return this._makeRequest(request);
     },
 
     /**
@@ -12223,22 +12150,12 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     query: function (store, type, query) {
-      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
-        var request = this._requestFor({
-          store: store, type: type, query: query,
-          requestType: 'query'
-        });
+      var request = this._requestFor({
+        store: store, type: type, query: query,
+        requestType: 'query'
+      });
 
-        return this._makeRequest(request);
-      } else {
-        var url = this.buildURL(type.modelName, null, null, 'query', query);
-
-        if (this.sortQueryParams) {
-          query = this.sortQueryParams(query);
-        }
-
-        return this.ajax(url, 'GET', { data: query });
-      }
+      return this._makeRequest(request);
     },
 
     /**
@@ -12256,22 +12173,12 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     queryRecord: function (store, type, query) {
-      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
-        var request = this._requestFor({
-          store: store, type: type, query: query,
-          requestType: 'queryRecord'
-        });
+      var request = this._requestFor({
+        store: store, type: type, query: query,
+        requestType: 'queryRecord'
+      });
 
-        return this._makeRequest(request);
-      } else {
-        var url = this.buildURL(type.modelName, null, null, 'queryRecord', query);
-
-        if (this.sortQueryParams) {
-          query = this.sortQueryParams(query);
-        }
-
-        return this.ajax(url, 'GET', { data: query });
-      }
+      return this._makeRequest(request);
     },
 
     /**
@@ -12301,17 +12208,12 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     findMany: function (store, type, ids, snapshots) {
-      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
-        var request = this._requestFor({
-          store: store, type: type, ids: ids, snapshots: snapshots,
-          requestType: 'findMany'
-        });
+      var request = this._requestFor({
+        store: store, type: type, ids: ids, snapshots: snapshots,
+        requestType: 'findMany'
+      });
 
-        return this._makeRequest(request);
-      } else {
-        var url = this.buildURL(type.modelName, ids, snapshots, 'findMany');
-        return this.ajax(url, 'GET', { data: { ids: ids } });
-      }
+      return this._makeRequest(request);
     },
 
     /**
@@ -12341,21 +12243,12 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     findHasMany: function (store, snapshot, url, relationship) {
-      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
-        var request = this._requestFor({
-          store: store, snapshot: snapshot, url: url, relationship: relationship,
-          requestType: 'findHasMany'
-        });
+      var request = this._requestFor({
+        store: store, snapshot: snapshot, url: url, relationship: relationship,
+        requestType: 'findHasMany'
+      });
 
-        return this._makeRequest(request);
-      } else {
-        var id = snapshot.id;
-        var type = snapshot.modelName;
-
-        url = this.urlPrefix(url, this.buildURL(type, id, snapshot, 'findHasMany'));
-
-        return this.ajax(url, 'GET');
-      }
+      return this._makeRequest(request);
     },
 
     /**
@@ -12385,20 +12278,12 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     findBelongsTo: function (store, snapshot, url, relationship) {
-      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
-        var request = this._requestFor({
-          store: store, snapshot: snapshot, url: url, relationship: relationship,
-          requestType: 'findBelongsTo'
-        });
+      var request = this._requestFor({
+        store: store, snapshot: snapshot, url: url, relationship: relationship,
+        requestType: 'findBelongsTo'
+      });
 
-        return this._makeRequest(request);
-      } else {
-        var id = snapshot.id;
-        var type = snapshot.modelName;
-
-        url = this.urlPrefix(url, this.buildURL(type, id, snapshot, 'findBelongsTo'));
-        return this.ajax(url, 'GET');
-      }
+      return this._makeRequest(request);
     },
 
     /**
@@ -12415,22 +12300,12 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     createRecord: function (store, type, snapshot) {
-      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
-        var request = this._requestFor({
-          store: store, type: type, snapshot: snapshot,
-          requestType: 'createRecord'
-        });
+      var request = this._requestFor({
+        store: store, type: type, snapshot: snapshot,
+        requestType: 'createRecord'
+      });
 
-        return this._makeRequest(request);
-      } else {
-        var data = {};
-        var serializer = store.serializerFor(type.modelName);
-        var url = this.buildURL(type.modelName, null, snapshot, 'createRecord');
-
-        serializer.serializeIntoHash(data, type, snapshot, { includeId: true });
-
-        return this.ajax(url, "POST", { data: data });
-      }
+      return this._makeRequest(request);
     },
 
     /**
@@ -12447,24 +12322,12 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     updateRecord: function (store, type, snapshot) {
-      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
-        var request = this._requestFor({
-          store: store, type: type, snapshot: snapshot,
-          requestType: 'updateRecord'
-        });
+      var request = this._requestFor({
+        store: store, type: type, snapshot: snapshot,
+        requestType: 'updateRecord'
+      });
 
-        return this._makeRequest(request);
-      } else {
-        var data = {};
-        var serializer = store.serializerFor(type.modelName);
-
-        serializer.serializeIntoHash(data, type, snapshot);
-
-        var id = snapshot.id;
-        var url = this.buildURL(type.modelName, id, snapshot, 'updateRecord');
-
-        return this.ajax(url, "PUT", { data: data });
-      }
+      return this._makeRequest(request);
     },
 
     /**
@@ -12477,18 +12340,12 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     deleteRecord: function (store, type, snapshot) {
-      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
-        var request = this._requestFor({
-          store: store, type: type, snapshot: snapshot,
-          requestType: 'deleteRecord'
-        });
+      var request = this._requestFor({
+        store: store, type: type, snapshot: snapshot,
+        requestType: 'deleteRecord'
+      });
 
-        return this._makeRequest(request);
-      } else {
-        var id = snapshot.id;
-
-        return this.ajax(this.buildURL(type.modelName, id, snapshot, 'deleteRecord'), "DELETE");
-      }
+      return this._makeRequest(request);
     },
 
     _stripIDFromURL: function (store, snapshot) {
@@ -12611,23 +12468,6 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
 
       var errors = this.normalizeErrorResponse(status, headers, payload);
       var detailedMessage = this.generatedDetailedMessage(status, headers, payload, requestData);
-
-      if ((0, _emberDataPrivateFeatures.default)('ds-extended-errors')) {
-        switch (status) {
-          case 401:
-            return new _emberDataAdaptersErrors.UnauthorizedError(errors, detailedMessage);
-          case 403:
-            return new _emberDataAdaptersErrors.ForbiddenError(errors, detailedMessage);
-          case 404:
-            return new _emberDataAdaptersErrors.NotFoundError(errors, detailedMessage);
-          case 409:
-            return new _emberDataAdaptersErrors.ConflictError(errors, detailedMessage);
-          default:
-            if (status >= 500) {
-              return new _emberDataAdaptersErrors.ServerError(errors, detailedMessage);
-            }
-        }
-      }
 
       return new _emberDataAdaptersErrors.AdapterError(errors, detailedMessage);
     },
@@ -12849,267 +12689,264 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
     }
   });
 
-  if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
+  RESTAdapter.reopen({
 
-    RESTAdapter.reopen({
+    /**
+     * Get the data (body or query params) for a request.
+     *
+     * @public
+     * @method dataForRequest
+     * @param {Object} params
+     * @return {Object} data
+     */
+    dataForRequest: function (params) {
+      var store = params.store;
+      var type = params.type;
+      var snapshot = params.snapshot;
+      var requestType = params.requestType;
+      var query = params.query;
 
-      /**
-       * Get the data (body or query params) for a request.
-       *
-       * @public
-       * @method dataForRequest
-       * @param {Object} params
-       * @return {Object} data
-       */
-      dataForRequest: function (params) {
-        var store = params.store;
-        var type = params.type;
-        var snapshot = params.snapshot;
-        var requestType = params.requestType;
-        var query = params.query;
+      // type is not passed to findBelongsTo and findHasMany
+      type = type || snapshot && snapshot.type;
 
-        // type is not passed to findBelongsTo and findHasMany
-        type = type || snapshot && snapshot.type;
+      var serializer = store.serializerFor(type.modelName);
+      var data = {};
 
-        var serializer = store.serializerFor(type.modelName);
-        var data = {};
+      switch (requestType) {
+        case 'createRecord':
+          serializer.serializeIntoHash(data, type, snapshot, { includeId: true });
+          break;
 
-        switch (requestType) {
-          case 'createRecord':
-            serializer.serializeIntoHash(data, type, snapshot, { includeId: true });
-            break;
+        case 'updateRecord':
+          serializer.serializeIntoHash(data, type, snapshot);
+          break;
 
-          case 'updateRecord':
-            serializer.serializeIntoHash(data, type, snapshot);
-            break;
+        case 'findRecord':
+          data = this.buildQuery(snapshot);
+          break;
 
-          case 'findRecord':
-            data = this.buildQuery(snapshot);
-            break;
-
-          case 'findAll':
-            if (params.sinceToken) {
-              query = query || {};
-              query.since = params.sinceToken;
-            }
-            data = query;
-            break;
-
-          case 'query':
-          case 'queryRecord':
-            if (this.sortQueryParams) {
-              query = this.sortQueryParams(query);
-            }
-            data = query;
-            break;
-
-          case 'findMany':
-            data = { ids: params.ids };
-            break;
-
-          default:
-            data = undefined;
-            break;
-        }
-
-        return data;
-      },
-
-      /**
-       * Get the HTTP method for a request.
-       *
-       * @public
-       * @method methodForRequest
-       * @param {Object} params
-       * @return {String} HTTP method
-       */
-      methodForRequest: function (params) {
-        var requestType = params.requestType;
-
-        switch (requestType) {
-          case 'createRecord':
-            return 'POST';
-          case 'updateRecord':
-            return 'PUT';
-          case 'deleteRecord':
-            return 'DELETE';
-        }
-
-        return 'GET';
-      },
-
-      /**
-       * Get the URL for a request.
-       *
-       * @public
-       * @method urlForRequest
-       * @param {Object} params
-       * @return {String} URL
-       */
-      urlForRequest: function (params) {
-        var type = params.type;
-        var id = params.id;
-        var ids = params.ids;
-        var snapshot = params.snapshot;
-        var snapshots = params.snapshots;
-        var requestType = params.requestType;
-        var query = params.query;
-
-        // type and id are not passed from updateRecord and deleteRecord, hence they
-        // are defined if not set
-        type = type || snapshot && snapshot.type;
-        id = id || snapshot && snapshot.id;
-
-        switch (requestType) {
-          case 'findAll':
-            return this.buildURL(type.modelName, null, snapshots, requestType);
-
-          case 'query':
-          case 'queryRecord':
-            return this.buildURL(type.modelName, null, null, requestType, query);
-
-          case 'findMany':
-            return this.buildURL(type.modelName, ids, snapshots, requestType);
-
-          case 'findHasMany':
-          case 'findBelongsTo':
-            {
-              var url = this.buildURL(type.modelName, id, snapshot, requestType);
-              return this.urlPrefix(params.url, url);
-            }
-        }
-
-        return this.buildURL(type.modelName, id, snapshot, requestType, query);
-      },
-
-      /**
-       * Get the headers for a request.
-       *
-       * By default the value of the `headers` property of the adapter is
-       * returned.
-       *
-       * @public
-       * @method headersForRequest
-       * @param {Object} params
-       * @return {Object} headers
-       */
-      headersForRequest: function (params) {
-        return this.get('headers');
-      },
-
-      /**
-       * Get an object which contains all properties for a request which should
-       * be made.
-       *
-       * @private
-       * @method _requestFor
-       * @param {Object} params
-       * @return {Object} request object
-       */
-      _requestFor: function (params) {
-        var method = this.methodForRequest(params);
-        var url = this.urlForRequest(params);
-        var headers = this.headersForRequest(params);
-        var data = this.dataForRequest(params);
-
-        return { method: method, url: url, headers: headers, data: data };
-      },
-
-      /**
-       * Convert a request object into a hash which can be passed to `jQuery.ajax`.
-       *
-       * @private
-       * @method _requestToJQueryAjaxHash
-       * @param {Object} request
-       * @return {Object} jQuery ajax hash
-       */
-      _requestToJQueryAjaxHash: function (request) {
-        var hash = {};
-
-        hash.type = request.method;
-        hash.url = request.url;
-        hash.dataType = 'json';
-        hash.context = this;
-
-        if (request.data) {
-          if (request.type !== 'GET') {
-            hash.contentType = 'application/json; charset=utf-8';
-            hash.data = JSON.stringify(request.data);
-          } else {
-            hash.data = request.data;
+        case 'findAll':
+          if (params.sinceToken) {
+            query = query || {};
+            query.since = params.sinceToken;
           }
-        }
+          data = query;
+          break;
 
-        var headers = request.headers;
-        if (headers !== undefined) {
-          hash.beforeSend = function (xhr) {
-            Object.keys(headers).forEach(function (key) {
-              return xhr.setRequestHeader(key, headers[key]);
-            });
-          };
-        }
+        case 'query':
+        case 'queryRecord':
+          if (this.sortQueryParams) {
+            query = this.sortQueryParams(query);
+          }
+          data = query;
+          break;
 
-        return hash;
-      },
+        case 'findMany':
+          data = { ids: params.ids };
+          break;
 
-      /**
-       * Make a request using `jQuery.ajax`.
-       *
-       * @private
-       * @method _makeRequest
-       * @param {Object} request
-       * @return {Promise} promise
-       */
-      _makeRequest: function (request) {
-        var adapter = this;
-        var hash = this._requestToJQueryAjaxHash(request);
-
-        var method = request.method;
-        var url = request.url;
-
-        var requestData = { method: method, url: url };
-
-        return new _ember.default.RSVP.Promise(function (resolve, reject) {
-
-          hash.success = function (payload, textStatus, jqXHR) {
-            var response = adapter.handleResponse(jqXHR.status, (0, _emberDataPrivateUtilsParseResponseHeaders.default)(jqXHR.getAllResponseHeaders()), payload, requestData);
-
-            if (response instanceof _emberDataAdaptersErrors.AdapterError) {
-              _ember.default.run.join(null, reject, response);
-            } else {
-              _ember.default.run.join(null, resolve, response);
-            }
-          };
-
-          hash.error = function (jqXHR, textStatus, errorThrown) {
-            (0, _emberDataPrivateDebug.runInDebug)(function () {
-              var message = 'The server returned an empty string for ' + method + ' ' + url + ', which cannot be parsed into a valid JSON. Return either null or {}.';
-              var validJSONString = !(textStatus === "parsererror" && jqXHR.responseText === "");
-              (0, _emberDataPrivateDebug.warn)(message, validJSONString, {
-                id: 'ds.adapter.returned-empty-string-as-JSON'
-              });
-            });
-
-            var error = undefined;
-
-            if (errorThrown instanceof Error) {
-              error = errorThrown;
-            } else if (textStatus === 'timeout') {
-              error = new _emberDataAdaptersErrors.TimeoutError();
-            } else if (textStatus === 'abort') {
-              error = new _emberDataAdaptersErrors.AbortError();
-            } else {
-              error = adapter.handleResponse(jqXHR.status, (0, _emberDataPrivateUtilsParseResponseHeaders.default)(jqXHR.getAllResponseHeaders()), adapter.parseErrorResponse(jqXHR.responseText) || errorThrown, requestData);
-            }
-
-            _ember.default.run.join(null, reject, error);
-          };
-
-          adapter._ajaxRequest(hash);
-        }, 'DS: RESTAdapter#makeRequest: ' + method + ' ' + url);
+        default:
+          data = undefined;
+          break;
       }
-    });
-  }
+
+      return data;
+    },
+
+    /**
+     * Get the HTTP method for a request.
+     *
+     * @public
+     * @method methodForRequest
+     * @param {Object} params
+     * @return {String} HTTP method
+     */
+    methodForRequest: function (params) {
+      var requestType = params.requestType;
+
+      switch (requestType) {
+        case 'createRecord':
+          return 'POST';
+        case 'updateRecord':
+          return 'PUT';
+        case 'deleteRecord':
+          return 'DELETE';
+      }
+
+      return 'GET';
+    },
+
+    /**
+     * Get the URL for a request.
+     *
+     * @public
+     * @method urlForRequest
+     * @param {Object} params
+     * @return {String} URL
+     */
+    urlForRequest: function (params) {
+      var type = params.type;
+      var id = params.id;
+      var ids = params.ids;
+      var snapshot = params.snapshot;
+      var snapshots = params.snapshots;
+      var requestType = params.requestType;
+      var query = params.query;
+
+      // type and id are not passed from updateRecord and deleteRecord, hence they
+      // are defined if not set
+      type = type || snapshot && snapshot.type;
+      id = id || snapshot && snapshot.id;
+
+      switch (requestType) {
+        case 'findAll':
+          return this.buildURL(type.modelName, null, snapshots, requestType);
+
+        case 'query':
+        case 'queryRecord':
+          return this.buildURL(type.modelName, null, null, requestType, query);
+
+        case 'findMany':
+          return this.buildURL(type.modelName, ids, snapshots, requestType);
+
+        case 'findHasMany':
+        case 'findBelongsTo':
+          {
+            var url = this.buildURL(type.modelName, id, snapshot, requestType);
+            return this.urlPrefix(params.url, url);
+          }
+      }
+
+      return this.buildURL(type.modelName, id, snapshot, requestType, query);
+    },
+
+    /**
+     * Get the headers for a request.
+     *
+     * By default the value of the `headers` property of the adapter is
+     * returned.
+     *
+     * @public
+     * @method headersForRequest
+     * @param {Object} params
+     * @return {Object} headers
+     */
+    headersForRequest: function (params) {
+      return this.get('headers');
+    },
+
+    /**
+     * Get an object which contains all properties for a request which should
+     * be made.
+     *
+     * @private
+     * @method _requestFor
+     * @param {Object} params
+     * @return {Object} request object
+     */
+    _requestFor: function (params) {
+      var method = this.methodForRequest(params);
+      var url = this.urlForRequest(params);
+      var headers = this.headersForRequest(params);
+      var data = this.dataForRequest(params);
+
+      return { method: method, url: url, headers: headers, data: data };
+    },
+
+    /**
+     * Convert a request object into a hash which can be passed to `jQuery.ajax`.
+     *
+     * @private
+     * @method _requestToJQueryAjaxHash
+     * @param {Object} request
+     * @return {Object} jQuery ajax hash
+     */
+    _requestToJQueryAjaxHash: function (request) {
+      var hash = {};
+
+      hash.type = request.method;
+      hash.url = request.url;
+      hash.dataType = 'json';
+      hash.context = this;
+
+      if (request.data) {
+        if (request.type !== 'GET') {
+          hash.contentType = 'application/json; charset=utf-8';
+          hash.data = JSON.stringify(request.data);
+        } else {
+          hash.data = request.data;
+        }
+      }
+
+      var headers = request.headers;
+      if (headers !== undefined) {
+        hash.beforeSend = function (xhr) {
+          Object.keys(headers).forEach(function (key) {
+            return xhr.setRequestHeader(key, headers[key]);
+          });
+        };
+      }
+
+      return hash;
+    },
+
+    /**
+     * Make a request using `jQuery.ajax`.
+     *
+     * @private
+     * @method _makeRequest
+     * @param {Object} request
+     * @return {Promise} promise
+     */
+    _makeRequest: function (request) {
+      var adapter = this;
+      var hash = this._requestToJQueryAjaxHash(request);
+
+      var method = request.method;
+      var url = request.url;
+
+      var requestData = { method: method, url: url };
+
+      return new _ember.default.RSVP.Promise(function (resolve, reject) {
+
+        hash.success = function (payload, textStatus, jqXHR) {
+          var response = adapter.handleResponse(jqXHR.status, (0, _emberDataPrivateUtilsParseResponseHeaders.default)(jqXHR.getAllResponseHeaders()), payload, requestData);
+
+          if (response instanceof _emberDataAdaptersErrors.AdapterError) {
+            _ember.default.run.join(null, reject, response);
+          } else {
+            _ember.default.run.join(null, resolve, response);
+          }
+        };
+
+        hash.error = function (jqXHR, textStatus, errorThrown) {
+          (0, _emberDataPrivateDebug.runInDebug)(function () {
+            var message = 'The server returned an empty string for ' + method + ' ' + url + ', which cannot be parsed into a valid JSON. Return either null or {}.';
+            var validJSONString = !(textStatus === "parsererror" && jqXHR.responseText === "");
+            (0, _emberDataPrivateDebug.warn)(message, validJSONString, {
+              id: 'ds.adapter.returned-empty-string-as-JSON'
+            });
+          });
+
+          var error = undefined;
+
+          if (errorThrown instanceof Error) {
+            error = errorThrown;
+          } else if (textStatus === 'timeout') {
+            error = new _emberDataAdaptersErrors.TimeoutError();
+          } else if (textStatus === 'abort') {
+            error = new _emberDataAdaptersErrors.AbortError();
+          } else {
+            error = adapter.handleResponse(jqXHR.status, (0, _emberDataPrivateUtilsParseResponseHeaders.default)(jqXHR.getAllResponseHeaders()), adapter.parseErrorResponse(jqXHR.responseText) || errorThrown, requestData);
+          }
+
+          _ember.default.run.join(null, reject, error);
+        };
+
+        adapter._ajaxRequest(hash);
+      }, 'DS: RESTAdapter#makeRequest: ' + method + ' ' + url);
+    }
+  });
 
   //From http://stackoverflow.com/questions/280634/endswith-in-javascript
   function endsWith(string, suffix) {
@@ -13322,14 +13159,6 @@ define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-da
   _emberDataPrivateCore.default.InvalidError = _emberDataAdaptersErrors.InvalidError;
   _emberDataPrivateCore.default.TimeoutError = _emberDataAdaptersErrors.TimeoutError;
   _emberDataPrivateCore.default.AbortError = _emberDataAdaptersErrors.AbortError;
-
-  if ((0, _emberDataPrivateFeatures.default)('ds-extended-errors')) {
-    _emberDataPrivateCore.default.UnauthorizedError = _emberDataAdaptersErrors.UnauthorizedError;
-    _emberDataPrivateCore.default.ForbiddenError = _emberDataAdaptersErrors.ForbiddenError;
-    _emberDataPrivateCore.default.NotFoundError = _emberDataAdaptersErrors.NotFoundError;
-    _emberDataPrivateCore.default.ConflictError = _emberDataAdaptersErrors.ConflictError;
-    _emberDataPrivateCore.default.ServerError = _emberDataAdaptersErrors.ServerError;
-  }
 
   _emberDataPrivateCore.default.errorsHashToArray = _emberDataAdaptersErrors.errorsHashToArray;
   _emberDataPrivateCore.default.errorsArrayToHash = _emberDataAdaptersErrors.errorsArrayToHash;
@@ -14193,24 +14022,8 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
       @private
     */
     _normalizeRelationshipDataHelper: function (relationshipDataHash) {
-      if ((0, _emberDataPrivateFeatures.default)("ds-payload-type-hooks")) {
-        var modelName = this.modelNameFromPayloadType(relationshipDataHash.type);
-        var deprecatedModelNameLookup = this.modelNameFromPayloadKey(relationshipDataHash.type);
-
-        if (modelName !== deprecatedModelNameLookup && this._hasCustomModelNameFromPayloadKey()) {
-          (0, _emberDataPrivateDebug.deprecate)("You are using modelNameFromPayloadKey to normalize the type for a relationship. This has been deprecated in favor of modelNameFromPayloadType", false, {
-            id: 'ds.json-api-serializer.deprecated-model-name-for-relationship',
-            until: '3.0.0'
-          });
-
-          modelName = deprecatedModelNameLookup;
-        }
-
-        relationshipDataHash.type = modelName;
-      } else {
-        var type = this.modelNameFromPayloadKey(relationshipDataHash.type);
-        relationshipDataHash.type = type;
-      }
+      var type = this.modelNameFromPayloadKey(relationshipDataHash.type);
+      relationshipDataHash.type = type;
 
       return relationshipDataHash;
     },
@@ -14229,25 +14042,8 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
       var modelName = undefined,
           usedLookup = undefined;
 
-      if ((0, _emberDataPrivateFeatures.default)("ds-payload-type-hooks")) {
-        modelName = this.modelNameFromPayloadType(resourceHash.type);
-        var deprecatedModelNameLookup = this.modelNameFromPayloadKey(resourceHash.type);
-
-        usedLookup = 'modelNameFromPayloadType';
-
-        if (modelName !== deprecatedModelNameLookup && this._hasCustomModelNameFromPayloadKey()) {
-          (0, _emberDataPrivateDebug.deprecate)("You are using modelNameFromPayloadKey to normalize the type for a resource. This has been deprecated in favor of modelNameFromPayloadType", false, {
-            id: 'ds.json-api-serializer.deprecated-model-name-for-resource',
-            until: '3.0.0'
-          });
-
-          modelName = deprecatedModelNameLookup;
-          usedLookup = 'modelNameFromPayloadKey';
-        }
-      } else {
-        modelName = this.modelNameFromPayloadKey(resourceHash.type);
-        usedLookup = 'modelNameFromPayloadKey';
-      }
+      modelName = this.modelNameFromPayloadKey(resourceHash.type);
+      usedLookup = 'modelNameFromPayloadKey';
 
       if (!this.store._hasModelFor(modelName)) {
         (0, _emberDataPrivateDebug.warn)(this.warnMessageNoModelForType(modelName, resourceHash.type, usedLookup), false, {
@@ -14273,11 +14069,8 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
     */
     pushPayload: function (store, payload) {
       var normalizedPayload = this._normalizeDocumentHelper(payload);
-      if ((0, _emberDataPrivateFeatures.default)('ds-pushpayload-return')) {
-        return store.push(normalizedPayload);
-      } else {
-        store.push(normalizedPayload);
-      }
+
+      store.push(normalizedPayload);
     },
 
     /**
@@ -14387,23 +14180,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
       @private
     */
     _extractType: function (modelClass, resourceHash) {
-      if ((0, _emberDataPrivateFeatures.default)("ds-payload-type-hooks")) {
-        var modelName = this.modelNameFromPayloadType(resourceHash.type);
-        var deprecatedModelNameLookup = this.modelNameFromPayloadKey(resourceHash.type);
-
-        if (modelName !== deprecatedModelNameLookup && this._hasCustomModelNameFromPayloadKey()) {
-          (0, _emberDataPrivateDebug.deprecate)("You are using modelNameFromPayloadKey to normalize the type for a polymorphic relationship. This has been deprecated in favor of modelNameFromPayloadType", false, {
-            id: 'ds.json-api-serializer.deprecated-model-name-for-polymorphic-type',
-            until: '3.0.0'
-          });
-
-          modelName = deprecatedModelNameLookup;
-        }
-
-        return modelName;
-      } else {
-        return this.modelNameFromPayloadKey(resourceHash.type);
-      }
+      return this.modelNameFromPayloadKey(resourceHash.type);
     },
 
     /**
@@ -14514,21 +14291,8 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
       var data = this._super.apply(this, arguments);
 
       var payloadType = undefined;
-      if ((0, _emberDataPrivateFeatures.default)("ds-payload-type-hooks")) {
-        payloadType = this.payloadTypeFromModelName(snapshot.modelName);
-        var deprecatedPayloadTypeLookup = this.payloadKeyFromModelName(snapshot.modelName);
 
-        if (payloadType !== deprecatedPayloadTypeLookup && this._hasCustomPayloadKeyFromModelName()) {
-          (0, _emberDataPrivateDebug.deprecate)("You used payloadKeyFromModelName to customize how a type is serialized. Use payloadTypeFromModelName instead.", false, {
-            id: 'ds.json-api-serializer.deprecated-payload-type-for-model',
-            until: '3.0.0'
-          });
-
-          payloadType = deprecatedPayloadTypeLookup;
-        }
-      } else {
-        payloadType = this.payloadKeyFromModelName(snapshot.modelName);
-      }
+      payloadType = this.payloadKeyFromModelName(snapshot.modelName);
 
       data.type = payloadType;
       return { data: data };
@@ -14587,21 +14351,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
           if (belongsTo) {
             var payloadType = undefined;
 
-            if ((0, _emberDataPrivateFeatures.default)("ds-payload-type-hooks")) {
-              payloadType = this.payloadTypeFromModelName(belongsTo.modelName);
-              var deprecatedPayloadTypeLookup = this.payloadKeyFromModelName(belongsTo.modelName);
-
-              if (payloadType !== deprecatedPayloadTypeLookup && this._hasCustomPayloadKeyFromModelName()) {
-                (0, _emberDataPrivateDebug.deprecate)("You used payloadKeyFromModelName to serialize type for belongs-to relationship. Use payloadTypeFromModelName instead.", false, {
-                  id: 'ds.json-api-serializer.deprecated-payload-type-for-belongs-to',
-                  until: '3.0.0'
-                });
-
-                payloadType = deprecatedPayloadTypeLookup;
-              }
-            } else {
-              payloadType = this.payloadKeyFromModelName(belongsTo.modelName);
-            }
+            payloadType = this.payloadKeyFromModelName(belongsTo.modelName);
 
             data = {
               type: payloadType,
@@ -14623,9 +14373,6 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
     serializeHasMany: function (snapshot, json, relationship) {
       var key = relationship.key;
       var shouldSerializeHasMany = '_shouldSerializeHasMany';
-      if ((0, _emberDataPrivateFeatures.default)("ds-check-should-serialize-relationships")) {
-        shouldSerializeHasMany = 'shouldSerializeHasMany';
-      }
 
       if (this[shouldSerializeHasMany](snapshot, key, relationship)) {
         var hasMany = snapshot.hasMany(key);
@@ -14645,21 +14392,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
 
             var payloadType = undefined;
 
-            if ((0, _emberDataPrivateFeatures.default)("ds-payload-type-hooks")) {
-              payloadType = this.payloadTypeFromModelName(item.modelName);
-              var deprecatedPayloadTypeLookup = this.payloadKeyFromModelName(item.modelName);
-
-              if (payloadType !== deprecatedPayloadTypeLookup && this._hasCustomPayloadKeyFromModelName()) {
-                (0, _emberDataPrivateDebug.deprecate)("You used payloadKeyFromModelName to serialize type for belongs-to relationship. Use payloadTypeFromModelName instead.", false, {
-                  id: 'ds.json-api-serializer.deprecated-payload-type-for-has-many',
-                  until: '3.0.0'
-                });
-
-                payloadType = deprecatedPayloadTypeLookup;
-              }
-            } else {
-              payloadType = this.payloadKeyFromModelName(item.modelName);
-            }
+            payloadType = this.payloadKeyFromModelName(item.modelName);
 
             data[i] = {
               type: payloadType,
@@ -14672,100 +14405,6 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
       }
     }
   });
-
-  if ((0, _emberDataPrivateFeatures.default)("ds-payload-type-hooks")) {
-
-    JSONAPISerializer.reopen({
-
-      /**
-        `modelNameFromPayloadType` can be used to change the mapping for a DS model
-        name, taken from the value in the payload.
-         Say your API namespaces the type of a model and returns the following
-        payload for the `post` model:
-         ```javascript
-        // GET /api/posts/1
-        {
-          "data": {
-            "id": 1,
-            "type: "api::v1::post"
-          }
-        }
-        ```
-         By overwriting `modelNameFromPayloadType` you can specify that the
-        `posr` model should be used:
-         ```app/serializers/application.js
-        import JSONAPISerializer from "ember-data/serializers/json-api";
-         export default JSONAPISerializer.extend({
-          modelNameFromPayloadType(payloadType) {
-            return payloadType.replace('api::v1::', '');
-          }
-        });
-        ```
-         By default the modelName for a model is its singularized name in dasherized
-        form.  Usually, Ember Data can use the correct inflection to do this for
-        you. Most of the time, you won't need to override
-        `modelNameFromPayloadType` for this purpose.
-         Also take a look at
-        [payloadTypeFromModelName](#method_payloadTypeFromModelName) to customize
-        how the type of a record should be serialized.
-         @method modelNameFromPayloadType
-        @public
-        @param {String} payloadType type from payload
-        @return {String} modelName
-      */
-      modelNameFromPayloadType: function (type) {
-        return (0, _emberInflector.singularize)((0, _emberDataPrivateSystemNormalizeModelName.default)(type));
-      },
-
-      /**
-        `payloadTypeFromModelName` can be used to change the mapping for the type in
-        the payload, taken from the model name.
-         Say your API namespaces the type of a model and expects the following
-        payload when you update the `post` model:
-         ```javascript
-        // POST /api/posts/1
-        {
-          "data": {
-            "id": 1,
-            "type": "api::v1::post"
-          }
-        }
-        ```
-         By overwriting `payloadTypeFromModelName` you can specify that the
-        namespaces model name for the `post` should be used:
-         ```app/serializers/application.js
-        import JSONAPISerializer from "ember-data/serializers/json-api";
-         export default JSONAPISerializer.extend({
-          payloadTypeFromModelName(modelName) {
-            return "api::v1::" + modelName;
-          }
-        });
-        ```
-         By default the payload type is the pluralized model name. Usually, Ember
-        Data can use the correct inflection to do this for you. Most of the time,
-        you won't need to override `payloadTypeFromModelName` for this purpose.
-         Also take a look at
-        [modelNameFromPayloadType](#method_modelNameFromPayloadType) to customize
-        how the model name from should be mapped from the payload.
-         @method payloadTypeFromModelName
-        @public
-        @param {String} modelname modelName from the record
-        @return {String} payloadType
-      */
-      payloadTypeFromModelName: function (modelName) {
-        return (0, _emberInflector.pluralize)(modelName);
-      },
-
-      _hasCustomModelNameFromPayloadKey: function () {
-        return this.modelNameFromPayloadKey !== JSONAPISerializer.prototype.modelNameFromPayloadKey;
-      },
-
-      _hasCustomPayloadKeyFromModelName: function () {
-        return this.payloadKeyFromModelName !== JSONAPISerializer.prototype.payloadKeyFromModelName;
-      }
-
-    });
-  }
 
   (0, _emberDataPrivateDebug.runInDebug)(function () {
     JSONAPISerializer.reopen({
@@ -14787,6 +14426,79 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
 });
 /**
   @module ember-data
+*/
+
+/**
+  `modelNameFromPayloadType` can be used to change the mapping for a DS model
+  name, taken from the value in the payload.
+   Say your API namespaces the type of a model and returns the following
+  payload for the `post` model:
+   ```javascript
+  // GET /api/posts/1
+  {
+    "data": {
+      "id": 1,
+      "type: "api::v1::post"
+    }
+  }
+  ```
+   By overwriting `modelNameFromPayloadType` you can specify that the
+  `posr` model should be used:
+   ```app/serializers/application.js
+  import JSONAPISerializer from "ember-data/serializers/json-api";
+   export default JSONAPISerializer.extend({
+    modelNameFromPayloadType(payloadType) {
+      return payloadType.replace('api::v1::', '');
+    }
+  });
+  ```
+   By default the modelName for a model is its singularized name in dasherized
+  form.  Usually, Ember Data can use the correct inflection to do this for
+  you. Most of the time, you won't need to override
+  `modelNameFromPayloadType` for this purpose.
+   Also take a look at
+  [payloadTypeFromModelName](#method_payloadTypeFromModelName) to customize
+  how the type of a record should be serialized.
+   @method modelNameFromPayloadType
+  @public
+  @param {String} payloadType type from payload
+  @return {String} modelName
+*/
+
+/**
+  `payloadTypeFromModelName` can be used to change the mapping for the type in
+  the payload, taken from the model name.
+   Say your API namespaces the type of a model and expects the following
+  payload when you update the `post` model:
+   ```javascript
+  // POST /api/posts/1
+  {
+    "data": {
+      "id": 1,
+      "type": "api::v1::post"
+    }
+  }
+  ```
+   By overwriting `payloadTypeFromModelName` you can specify that the
+  namespaces model name for the `post` should be used:
+   ```app/serializers/application.js
+  import JSONAPISerializer from "ember-data/serializers/json-api";
+   export default JSONAPISerializer.extend({
+    payloadTypeFromModelName(modelName) {
+      return "api::v1::" + modelName;
+    }
+  });
+  ```
+   By default the payload type is the pluralized model name. Usually, Ember
+  Data can use the correct inflection to do this for you. Most of the time,
+  you won't need to override `payloadTypeFromModelName` for this purpose.
+   Also take a look at
+  [modelNameFromPayloadType](#method_modelNameFromPayloadType) to customize
+  how the model name from should be mapped from the payload.
+   @method payloadTypeFromModelName
+  @public
+  @param {String} modelname modelName from the record
+  @return {String} payloadType
 */
 define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/debug', 'ember-data/serializer', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/utils', 'ember-data/-private/features', 'ember-data/adapters/errors'], function (exports, _ember, _emberDataPrivateDebug, _emberDataSerializer, _emberDataPrivateSystemCoerceId, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateUtils, _emberDataPrivateFeatures, _emberDataAdaptersErrors) {
   function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } }
@@ -15355,24 +15067,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
 
         var modelClass = this.store.modelFor(relationshipModelName);
         if (relationshipHash.type && !(0, _emberDataPrivateUtils.modelHasAttributeOrRelationshipNamedType)(modelClass)) {
-
-          if ((0, _emberDataPrivateFeatures.default)("ds-payload-type-hooks")) {
-            var modelName = this.modelNameFromPayloadType(relationshipHash.type);
-            var deprecatedModelNameLookup = this.modelNameFromPayloadKey(relationshipHash.type);
-
-            if (modelName !== deprecatedModelNameLookup && this._hasCustomModelNameFromPayloadKey()) {
-              (0, _emberDataPrivateDebug.deprecate)("You used modelNameFromPayloadKey to customize how a type is normalized. Use modelNameFromPayloadType instead", false, {
-                id: 'ds.json-serializer.deprecated-type-for-polymorphic-relationship',
-                until: '3.0.0'
-              });
-
-              modelName = deprecatedModelNameLookup;
-            }
-
-            relationshipHash.type = modelName;
-          } else {
-            relationshipHash.type = this.modelNameFromPayloadKey(relationshipHash.type);
-          }
+          relationshipHash.type = this.modelNameFromPayloadKey(relationshipHash.type);
         }
         return relationshipHash;
       }
@@ -15926,9 +15621,6 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
     serializeHasMany: function (snapshot, json, relationship) {
       var key = relationship.key;
       var shouldSerializeHasMany = '_shouldSerializeHasMany';
-      if ((0, _emberDataPrivateFeatures.default)("ds-check-should-serialize-relationships")) {
-        shouldSerializeHasMany = 'shouldSerializeHasMany';
-      }
 
       if (this[shouldSerializeHasMany](snapshot, key, relationship)) {
         var hasMany = snapshot.hasMany(key, { ids: true });
@@ -16179,29 +15871,15 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
     }
   });
 
-  if ((0, _emberDataPrivateFeatures.default)("ds-payload-type-hooks")) {
-
-    JSONSerializer.reopen({
-
-      /**
-        @method modelNameFromPayloadType
-        @public
-        @param {String} type
-        @return {String} the model's modelName
-        */
-      modelNameFromPayloadType: function (type) {
-        return (0, _emberDataPrivateSystemNormalizeModelName.default)(type);
-      },
-
-      _hasCustomModelNameFromPayloadKey: function () {
-        return this.modelNameFromPayloadKey !== JSONSerializer.prototype.modelNameFromPayloadKey;
-      }
-
-    });
-  }
-
   exports.default = JSONSerializer;
 });
+
+/**
+  @method modelNameFromPayloadType
+  @public
+  @param {String} type
+  @return {String} the model's modelName
+  */
 define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/debug", "ember-data/serializers/json", "ember-data/-private/system/normalize-model-name", "ember-inflector", "ember-data/-private/system/coerce-id", "ember-data/-private/utils", "ember-data/-private/features"], function (exports, _ember, _emberDataPrivateDebug, _emberDataSerializersJson, _emberDataPrivateSystemNormalizeModelName, _emberInflector, _emberDataPrivateSystemCoerceId, _emberDataPrivateUtils, _emberDataPrivateFeatures) {
   function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i]; return arr2; } else { return Array.from(arr); } }
 
@@ -16390,21 +16068,8 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
       if (!primaryHasTypeAttribute && hash.type) {
         // Support polymorphic records in async relationships
         var modelName = undefined;
-        if ((0, _emberDataPrivateFeatures.default)("ds-payload-type-hooks")) {
-          modelName = this.modelNameFromPayloadType(hash.type);
-          var deprecatedModelNameLookup = this.modelNameFromPayloadKey(hash.type);
 
-          if (modelName !== deprecatedModelNameLookup && !this._hasCustomModelNameFromPayloadType() && this._hasCustomModelNameFromPayloadKey()) {
-            (0, _emberDataPrivateDebug.deprecate)("You are using modelNameFromPayloadKey to normalize the type for a polymorphic relationship. This is has been deprecated in favor of modelNameFromPayloadType", false, {
-              id: 'ds.rest-serializer.deprecated-model-name-for-polymorphic-type',
-              until: '3.0.0'
-            });
-
-            modelName = deprecatedModelNameLookup;
-          }
-        } else {
-          modelName = this.modelNameFromPayloadKey(hash.type);
-        }
+        modelName = this.modelNameFromPayloadKey(hash.type);
 
         if (store._hasModelFor(modelName)) {
           serializer = store.serializerFor(modelName);
@@ -16627,11 +16292,7 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
         });
       }
 
-      if ((0, _emberDataPrivateFeatures.default)('ds-pushpayload-return')) {
-        return store.push(documentHash);
-      } else {
-        store.push(documentHash);
-      }
+      store.push(documentHash);
     },
 
     /**
@@ -16906,11 +16567,7 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
       if (_ember.default.isNone(belongsTo)) {
         json[typeKey] = null;
       } else {
-        if ((0, _emberDataPrivateFeatures.default)("ds-payload-type-hooks")) {
-          json[typeKey] = this.payloadTypeFromModelName(belongsTo.modelName);
-        } else {
-          json[typeKey] = camelize(belongsTo.modelName);
-        }
+        json[typeKey] = camelize(belongsTo.modelName);
       }
     },
 
@@ -16950,143 +16607,16 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
 
       if (isPolymorphic && resourceHash[typeProperty] !== undefined && typeof relationshipHash !== 'object') {
 
-        if ((0, _emberDataPrivateFeatures.default)("ds-payload-type-hooks")) {
-
-          var payloadType = resourceHash[typeProperty];
-          var type = this.modelNameFromPayloadType(payloadType);
-          var deprecatedTypeLookup = this.modelNameFromPayloadKey(payloadType);
-
-          if (payloadType !== deprecatedTypeLookup && !this._hasCustomModelNameFromPayloadType() && this._hasCustomModelNameFromPayloadKey()) {
-            (0, _emberDataPrivateDebug.deprecate)("You are using modelNameFromPayloadKey to normalize the type for a polymorphic relationship. This has been deprecated in favor of modelNameFromPayloadType", false, {
-              id: 'ds.rest-serializer.deprecated-model-name-for-polymorphic-type',
-              until: '3.0.0'
-            });
-
-            type = deprecatedTypeLookup;
-          }
-
-          return {
-            id: relationshipHash,
-            type: type
-          };
-        } else {
-
-          var type = this.modelNameFromPayloadKey(resourceHash[typeProperty]);
-          return {
-            id: relationshipHash,
-            type: type
-          };
-        }
+        var type = this.modelNameFromPayloadKey(resourceHash[typeProperty]);
+        return {
+          id: relationshipHash,
+          type: type
+        };
       }
 
       return this._super.apply(this, arguments);
     }
   });
-
-  if ((0, _emberDataPrivateFeatures.default)("ds-payload-type-hooks")) {
-
-    RESTSerializer.reopen({
-
-      /**
-        `modelNameFromPayloadType` can be used to change the mapping for a DS model
-        name, taken from the value in the payload.
-         Say your API namespaces the type of a model and returns the following
-        payload for the `post` model, which has a polymorphic `user` relationship:
-         ```javascript
-        // GET /api/posts/1
-        {
-          "post": {
-            "id": 1,
-            "user": 1,
-            "userType: "api::v1::administrator"
-          }
-        }
-        ```
-         By overwriting `modelNameFromPayloadType` you can specify that the
-        `administrator` model should be used:
-         ```app/serializers/application.js
-        import RESTSerializer from "ember-data/serializers/rest";
-         export default RESTSerializer.extend({
-          modelNameFromPayloadType(payloadType) {
-            return payloadType.replace('api::v1::', '');
-          }
-        });
-        ```
-         By default the modelName for a model is its name in dasherized form.
-        Usually, Ember Data can use the correct inflection to do this for you. Most
-        of the time, you won't need to override `modelNameFromPayloadType` for this
-        purpose.
-         Also take a look at
-        [payloadTypeFromModelName](#method_payloadTypeFromModelName) to customize
-        how the type of a record should be serialized.
-         @method modelNameFromPayloadType
-        @public
-        @param {String} payloadType type from payload
-        @return {String} modelName
-      */
-      modelNameFromPayloadType: function (payloadType) {
-        return (0, _emberInflector.singularize)((0, _emberDataPrivateSystemNormalizeModelName.default)(payloadType));
-      },
-
-      /**
-        `payloadTypeFromModelName` can be used to change the mapping for the type in
-        the payload, taken from the model name.
-         Say your API namespaces the type of a model and expects the following
-        payload when you update the `post` model, which has a polymorphic `user`
-        relationship:
-         ```javascript
-        // POST /api/posts/1
-        {
-          "post": {
-            "id": 1,
-            "user": 1,
-            "userType": "api::v1::administrator"
-          }
-        }
-        ```
-         By overwriting `payloadTypeFromModelName` you can specify that the
-        namespaces model name for the `administrator` should be used:
-         ```app/serializers/application.js
-        import RESTSerializer from "ember-data/serializers/rest";
-         export default RESTSerializer.extend({
-          payloadTypeFromModelName(modelName) {
-            return "api::v1::" + modelName;
-          }
-        });
-        ```
-         By default the payload type is the camelized model name. Usually, Ember
-        Data can use the correct inflection to do this for you. Most of the time,
-        you won't need to override `payloadTypeFromModelName` for this purpose.
-         Also take a look at
-        [modelNameFromPayloadType](#method_modelNameFromPayloadType) to customize
-        how the model name from should be mapped from the payload.
-         @method payloadTypeFromModelName
-        @public
-        @param {String} modelname modelName from the record
-        @return {String} payloadType
-      */
-      payloadTypeFromModelName: function (modelName) {
-        return camelize(modelName);
-      },
-
-      _hasCustomModelNameFromPayloadKey: function () {
-        return this.modelNameFromPayloadKey !== RESTSerializer.prototype.modelNameFromPayloadKey;
-      },
-
-      _hasCustomModelNameFromPayloadType: function () {
-        return this.modelNameFromPayloadType !== RESTSerializer.prototype.modelNameFromPayloadType;
-      },
-
-      _hasCustomPayloadTypeFromModelName: function () {
-        return this.payloadTypeFromModelName !== RESTSerializer.prototype.payloadTypeFromModelName;
-      },
-
-      _hasCustomPayloadKeyFromModelName: function () {
-        return this.payloadKeyFromModelName !== RESTSerializer.prototype.payloadKeyFromModelName;
-      }
-
-    });
-  }
 
   (0, _emberDataPrivateDebug.runInDebug)(function () {
     RESTSerializer.reopen({
@@ -17100,6 +16630,82 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
 });
 /**
   @module ember-data
+*/
+
+/**
+  `modelNameFromPayloadType` can be used to change the mapping for a DS model
+  name, taken from the value in the payload.
+   Say your API namespaces the type of a model and returns the following
+  payload for the `post` model, which has a polymorphic `user` relationship:
+   ```javascript
+  // GET /api/posts/1
+  {
+    "post": {
+      "id": 1,
+      "user": 1,
+      "userType: "api::v1::administrator"
+    }
+  }
+  ```
+   By overwriting `modelNameFromPayloadType` you can specify that the
+  `administrator` model should be used:
+   ```app/serializers/application.js
+  import RESTSerializer from "ember-data/serializers/rest";
+   export default RESTSerializer.extend({
+    modelNameFromPayloadType(payloadType) {
+      return payloadType.replace('api::v1::', '');
+    }
+  });
+  ```
+   By default the modelName for a model is its name in dasherized form.
+  Usually, Ember Data can use the correct inflection to do this for you. Most
+  of the time, you won't need to override `modelNameFromPayloadType` for this
+  purpose.
+   Also take a look at
+  [payloadTypeFromModelName](#method_payloadTypeFromModelName) to customize
+  how the type of a record should be serialized.
+   @method modelNameFromPayloadType
+  @public
+  @param {String} payloadType type from payload
+  @return {String} modelName
+*/
+
+/**
+  `payloadTypeFromModelName` can be used to change the mapping for the type in
+  the payload, taken from the model name.
+   Say your API namespaces the type of a model and expects the following
+  payload when you update the `post` model, which has a polymorphic `user`
+  relationship:
+   ```javascript
+  // POST /api/posts/1
+  {
+    "post": {
+      "id": 1,
+      "user": 1,
+      "userType": "api::v1::administrator"
+    }
+  }
+  ```
+   By overwriting `payloadTypeFromModelName` you can specify that the
+  namespaces model name for the `administrator` should be used:
+   ```app/serializers/application.js
+  import RESTSerializer from "ember-data/serializers/rest";
+   export default RESTSerializer.extend({
+    payloadTypeFromModelName(modelName) {
+      return "api::v1::" + modelName;
+    }
+  });
+  ```
+   By default the payload type is the camelized model name. Usually, Ember
+  Data can use the correct inflection to do this for you. Most of the time,
+  you won't need to override `payloadTypeFromModelName` for this purpose.
+   Also take a look at
+  [modelNameFromPayloadType](#method_modelNameFromPayloadType) to customize
+  how the model name from should be mapped from the payload.
+   @method payloadTypeFromModelName
+  @public
+  @param {String} modelname modelName from the record
+  @return {String} payloadType
 */
 define('ember-data/setup-container', ['exports', 'ember-data/-private/initializers/store', 'ember-data/-private/initializers/transforms', 'ember-data/-private/initializers/store-injections', 'ember-data/-private/initializers/data-adapter'], function (exports, _emberDataPrivateInitializersStore, _emberDataPrivateInitializersTransforms, _emberDataPrivateInitializersStoreInjections, _emberDataPrivateInitializersDataAdapter) {
   exports.default = setupContainer;
@@ -17188,7 +16794,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.7.0-canary+7fc32884f6";
+  exports.default = "2.7.0-canary+76f077cbaa";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
