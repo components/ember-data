@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.8.0-canary+1345da1681
+ * @version   2.8.0-canary+66b8f70c51
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -25,7 +25,14 @@ var loader, define, requireModule, require, requirejs;
 
   requirejs = require = requireModule = function(name) {
     stats.require++;
-    return findModule(name, '(require)').module.exports;
+    var pending = [];
+    var mod = findModule(name, '(require)', pending);
+
+    for (var i = pending.length - 1; i >= 0; i--) {
+      pending[i].exports();
+    }
+
+    return mod.module.exports;
   };
 
   function resetStats() {
@@ -33,10 +40,9 @@ var loader, define, requireModule, require, requirejs;
       define: 0,
       require: 0,
       reify: 0,
-      build: 0,
+      findDeps: 0,
       modules: 0,
       exports: 0,
-      ensureBuild: 0,
       resolve: 0,
       resolveRelative: 0,
       findModule: 0,
@@ -75,8 +81,6 @@ var loader, define, requireModule, require, requirejs;
 
   var registry = {};
   var seen = {};
-  var FAILED = false;
-  var LOADED = true;
 
   var uuid = 0;
 
@@ -94,11 +98,11 @@ var loader, define, requireModule, require, requirejs;
     this.deps      = !deps.length && callback.length ? defaultDeps : deps;
     this.module    = { exports: {} };
     this.callback  = callback;
-    this.state     = undefined;
     this.finalized = false;
     this.hasExportsAsDep = false;
     this.isAlias = alias;
     this.reified = new Array(deps.length);
+    this._foundDeps = false;
   }
 
   Module.prototype.makeDefaultExport = function() {
@@ -111,46 +115,63 @@ var loader, define, requireModule, require, requirejs;
   };
 
   Module.prototype.exports = function() {
-    stats.exports ++;
-    if (this.finalized) {
-      return this.module.exports;
-    } else {
-      if (loader.wrapModules) {
-        this.callback = loader.wrapModules(this.name, this.callback);
-      }
-      var result = this.callback.apply(this, this.reified);
-      if (!(this.hasExportsAsDep && result === undefined)) {
-        this.module.exports = result;
-      }
-      this.makeDefaultExport();
-      this.finalized = true;
-      return this.module.exports;
+    if (this.finalized) { return this.module.exports; }
+    stats.exports++;
+
+    this.finalized = true;
+
+    if (loader.wrapModules) {
+      this.callback = loader.wrapModules(this.name, this.callback);
     }
+
+    this.reify();
+
+    var result = this.callback.apply(this, this.reified);
+
+    if (!(this.hasExportsAsDep && result === undefined)) {
+      this.module.exports = result;
+    }
+    this.makeDefaultExport();
+    return this.module.exports;
   };
 
   Module.prototype.unsee = function() {
     this.finalized = false;
-    this.state = undefined;
+    this._foundDeps = false;
     this.module = { exports: {}};
   };
 
   Module.prototype.reify = function() {
     stats.reify++;
-    var deps = this.deps;
-    var dep;
     var reified = this.reified;
+    for (var i = 0; i < reified.length; i++) {
+      var mod = reified[i];
+      reified[i] = mod.exports ? mod.exports : mod.module.exports();
+    }
+  };
+
+  Module.prototype.findDeps = function(pending) {
+    if (this._foundDeps) {
+      return;
+    }
+
+    stats.findDeps++;
+    this._foundDeps = true;
+
+    var deps = this.deps;
 
     for (var i = 0; i < deps.length; i++) {
-      dep = deps[i];
+      var dep = deps[i];
+      var entry = this.reified[i] = { exports: undefined, module: undefined };
       if (dep === 'exports') {
         this.hasExportsAsDep = true;
-        reified[i] = this.module.exports;
+        entry.exports = this.module.exports;
       } else if (dep === 'require') {
-        reified[i] = this.makeRequire();
+        entry.exports = this.makeRequire();
       } else if (dep === 'module') {
-        reified[i] = this.module;
+        entry.exports = this.module;
       } else {
-        reified[i] = findModule(resolve(dep, this.name), this.name).module.exports;
+        entry.module = findModule(resolve(dep, this.name), this.name, pending);
       }
     }
   };
@@ -165,16 +186,6 @@ var loader, define, requireModule, require, requirejs;
       return has(resolve(dep, name));
     }
     return r;
-  };
-
-  Module.prototype.build = function() {
-    stats.ensureBuild++;
-    if (this.state === FAILED || this.state === LOADED) { return; }
-    stats.build++;
-    this.state = FAILED;
-    this.reify()
-    this.exports();
-    this.state = LOADED;
   };
 
   define = function(name, deps, callback) {
@@ -212,7 +223,7 @@ var loader, define, requireModule, require, requirejs;
     throw new Error('Could not find module `' + name + '` imported from `' + referrer + '`');
   }
 
-  function findModule(name, referrer) {
+  function findModule(name, referrer, pending) {
     stats.findModule++;
     var mod = registry[name] || registry[name + '/index'];
 
@@ -222,7 +233,10 @@ var loader, define, requireModule, require, requirejs;
 
     if (!mod) { missingModule(name, referrer); }
 
-    mod.build();
+    if (pending) {
+      mod.findDeps(pending);
+      pending.push(mod);
+    }
     return mod;
   }
 
@@ -258,7 +272,7 @@ var loader, define, requireModule, require, requirejs;
   requirejs.entries = requirejs._eak_seen = registry;
   requirejs.has = has;
   requirejs.unsee = function(moduleName) {
-    findModule(moduleName, '(unsee)').unsee();
+    findModule(moduleName, '(unsee)', false).unsee();
   };
 
   requirejs.clear = function() {
@@ -13828,8 +13842,10 @@ define('ember-data/serializers/embedded-records-mixin', ['exports', 'ember', 'em
       } else if (this.hasSerializeRecordsOption(attr)) {
         this._serializeEmbeddedHasMany(snapshot, json, relationship);
       } else {
-        if (this.hasSerializeIdsAndTypesOption(attr)) {
-          this._serializeHasManyAsIdsAndTypes(snapshot, json, relationship);
+        if (true) {
+          if (this.hasSerializeIdsAndTypesOption(attr)) {
+            this._serializeHasManyAsIdsAndTypes(snapshot, json, relationship);
+          }
         }
       }
     },
@@ -17188,7 +17204,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.8.0-canary+1345da1681";
+  exports.default = "2.8.0-canary+66b8f70c51";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
