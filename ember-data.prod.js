@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.6.0
+ * @version   2.6.0+ac11df610b
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -25,7 +25,14 @@ var loader, define, requireModule, require, requirejs;
 
   requirejs = require = requireModule = function(name) {
     stats.require++;
-    return findModule(name, '(require)').module.exports;
+    var pending = [];
+    var mod = findModule(name, '(require)', pending);
+
+    for (var i = pending.length - 1; i >= 0; i--) {
+      pending[i].exports();
+    }
+
+    return mod.module.exports;
   };
 
   function resetStats() {
@@ -33,10 +40,9 @@ var loader, define, requireModule, require, requirejs;
       define: 0,
       require: 0,
       reify: 0,
-      build: 0,
+      findDeps: 0,
       modules: 0,
       exports: 0,
-      ensureBuild: 0,
       resolve: 0,
       resolveRelative: 0,
       findModule: 0,
@@ -75,8 +81,6 @@ var loader, define, requireModule, require, requirejs;
 
   var registry = {};
   var seen = {};
-  var FAILED = false;
-  var LOADED = true;
 
   var uuid = 0;
 
@@ -94,11 +98,11 @@ var loader, define, requireModule, require, requirejs;
     this.deps      = !deps.length && callback.length ? defaultDeps : deps;
     this.module    = { exports: {} };
     this.callback  = callback;
-    this.state     = undefined;
     this.finalized = false;
     this.hasExportsAsDep = false;
     this.isAlias = alias;
     this.reified = new Array(deps.length);
+    this._foundDeps = false;
   }
 
   Module.prototype.makeDefaultExport = function() {
@@ -111,46 +115,63 @@ var loader, define, requireModule, require, requirejs;
   };
 
   Module.prototype.exports = function() {
-    stats.exports ++;
-    if (this.finalized) {
-      return this.module.exports;
-    } else {
-      if (loader.wrapModules) {
-        this.callback = loader.wrapModules(this.name, this.callback);
-      }
-      var result = this.callback.apply(this, this.reified);
-      if (!(this.hasExportsAsDep && result === undefined)) {
-        this.module.exports = result;
-      }
-      this.makeDefaultExport();
-      this.finalized = true;
-      return this.module.exports;
+    if (this.finalized) { return this.module.exports; }
+    stats.exports++;
+
+    this.finalized = true;
+
+    if (loader.wrapModules) {
+      this.callback = loader.wrapModules(this.name, this.callback);
     }
+
+    this.reify();
+
+    var result = this.callback.apply(this, this.reified);
+
+    if (!(this.hasExportsAsDep && result === undefined)) {
+      this.module.exports = result;
+    }
+    this.makeDefaultExport();
+    return this.module.exports;
   };
 
   Module.prototype.unsee = function() {
     this.finalized = false;
-    this.state = undefined;
+    this._foundDeps = false;
     this.module = { exports: {}};
   };
 
   Module.prototype.reify = function() {
     stats.reify++;
-    var deps = this.deps;
-    var dep;
     var reified = this.reified;
+    for (var i = 0; i < reified.length; i++) {
+      var mod = reified[i];
+      reified[i] = mod.exports ? mod.exports : mod.module.exports();
+    }
+  };
+
+  Module.prototype.findDeps = function(pending) {
+    if (this._foundDeps) {
+      return;
+    }
+
+    stats.findDeps++;
+    this._foundDeps = true;
+
+    var deps = this.deps;
 
     for (var i = 0; i < deps.length; i++) {
-      dep = deps[i];
+      var dep = deps[i];
+      var entry = this.reified[i] = { exports: undefined, module: undefined };
       if (dep === 'exports') {
         this.hasExportsAsDep = true;
-        reified[i] = this.module.exports;
+        entry.exports = this.module.exports;
       } else if (dep === 'require') {
-        reified[i] = this.makeRequire();
+        entry.exports = this.makeRequire();
       } else if (dep === 'module') {
-        reified[i] = this.module;
+        entry.exports = this.module;
       } else {
-        reified[i] = findModule(resolve(dep, this.name), this.name).module.exports;
+        entry.module = findModule(resolve(dep, this.name), this.name, pending);
       }
     }
   };
@@ -165,16 +186,6 @@ var loader, define, requireModule, require, requirejs;
       return has(resolve(dep, name));
     }
     return r;
-  };
-
-  Module.prototype.build = function() {
-    stats.ensureBuild++;
-    if (this.state === FAILED || this.state === LOADED) { return; }
-    stats.build++;
-    this.state = FAILED;
-    this.reify()
-    this.exports();
-    this.state = LOADED;
   };
 
   define = function(name, deps, callback) {
@@ -212,7 +223,7 @@ var loader, define, requireModule, require, requirejs;
     throw new Error('Could not find module `' + name + '` imported from `' + referrer + '`');
   }
 
-  function findModule(name, referrer) {
+  function findModule(name, referrer, pending) {
     stats.findModule++;
     var mod = registry[name] || registry[name + '/index'];
 
@@ -222,7 +233,10 @@ var loader, define, requireModule, require, requirejs;
 
     if (!mod) { missingModule(name, referrer); }
 
-    mod.build();
+    if (pending) {
+      mod.findDeps(pending);
+      pending.push(mod);
+    }
     return mod;
   }
 
@@ -258,7 +272,7 @@ var loader, define, requireModule, require, requirejs;
   requirejs.entries = requirejs._eak_seen = registry;
   requirejs.has = has;
   requirejs.unsee = function(moduleName) {
-    findModule(moduleName, '(unsee)').unsee();
+    findModule(moduleName, '(unsee)', false).unsee();
   };
 
   requirejs.clear = function() {
@@ -2894,23 +2908,26 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     }
   };
 
-  InternalModel.prototype.referenceFor = function (type, name) {
-    var reference = this.references[name];
+  if (true) {
 
-    if (!reference) {
-      var relationship = this._relationships.get(name);
+    InternalModel.prototype.referenceFor = function (type, name) {
+      var reference = this.references[name];
 
-      if (type === "belongsTo") {
-        reference = new _emberDataPrivateSystemReferences.BelongsToReference(this.store, this, relationship);
-      } else if (type === "hasMany") {
-        reference = new _emberDataPrivateSystemReferences.HasManyReference(this.store, this, relationship);
+      if (!reference) {
+        var relationship = this._relationships.get(name);
+
+        if (type === "belongsTo") {
+          reference = new _emberDataPrivateSystemReferences.BelongsToReference(this.store, this, relationship);
+        } else if (type === "hasMany") {
+          reference = new _emberDataPrivateSystemReferences.HasManyReference(this.store, this, relationship);
+        }
+
+        this.references[name] = reference;
       }
 
-      this.references[name] = reference;
-    }
-
-    return reference;
-  };
+      return reference;
+    };
+  }
 });
 define("ember-data/-private/system/model/model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/model/errors", "ember-data/-private/features", "ember-data/-private/system/debug/debug-info", "ember-data/-private/system/relationships/belongs-to", "ember-data/-private/system/relationships/has-many", "ember-data/-private/system/relationships/ext", "ember-data/-private/system/model/attr"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemModelErrors, _emberDataPrivateFeatures, _emberDataPrivateSystemDebugDebugInfo, _emberDataPrivateSystemRelationshipsBelongsTo, _emberDataPrivateSystemRelationshipsHasMany, _emberDataPrivateSystemRelationshipsExt, _emberDataPrivateSystemModelAttr) {
 
@@ -3672,105 +3689,108 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
     });
   }
 
-  Model.reopen({
+  if (true) {
 
-    /**
-      Get the reference for the specified belongsTo relationship.
-       Example
-       ```javascript
-      // models/blog.js
-      export default DS.Model.extend({
-        user: DS.belongsTo({ async: true })
-      });
-       var blog = store.push({
-        type: 'blog',
-        id: 1,
-        relationships: {
-          user: { type: 'user', id: 1 }
-        }
-      });
-      var userRef = blog.belongsTo('user');
-       // check if the user relationship is loaded
-      var isLoaded = userRef.value() !== null;
-       // get the record of the reference (null if not yet available)
-      var user = userRef.value();
-       // get the identifier of the reference
-      if (userRef.remoteType() === "id") {
-        var id = userRef.id();
-      } else if (userRef.remoteType() === "link") {
-        var link = userRef.link();
-      }
-       // load user (via store.findRecord or store.findBelongsTo)
-      userRef.load().then(...)
-       // or trigger a reload
-      userRef.reload().then(...)
-       // provide data for reference
-      userRef.push({
-        type: 'user',
-        id: 1,
-        attributes: {
-          username: "@user"
-        }
-      }).then(function(user) {
-        userRef.value() === user;
-      });
-      ```
-       @method belongsTo
-      @param {String} name of the relationship
-      @return {BelongsToReference} reference for this relationship
-    */
-    belongsTo: function (name) {
-      return this._internalModel.referenceFor('belongsTo', name);
-    },
+    Model.reopen({
 
-    /**
-      Get the reference for the specified hasMany relationship.
-       Example
-       ```javascript
-      // models/blog.js
-      export default DS.Model.extend({
-        comments: DS.hasMany({ async: true })
-      });
-       var blog = store.push({
-        type: 'blog',
-        id: 1,
-        relationships: {
-          comments: {
-            data: [
-              { type: 'comment', id: 1 },
-              { type: 'comment', id: 2 }
-            ]
+      /**
+        Get the reference for the specified belongsTo relationship.
+         Example
+         ```javascript
+        // models/blog.js
+        export default DS.Model.extend({
+          user: DS.belongsTo({ async: true })
+        });
+         var blog = store.push({
+          type: 'blog',
+          id: 1,
+          relationships: {
+            user: { type: 'user', id: 1 }
           }
+        });
+        var userRef = blog.belongsTo('user');
+         // check if the user relationship is loaded
+        var isLoaded = userRef.value() !== null;
+         // get the record of the reference (null if not yet available)
+        var user = userRef.value();
+         // get the identifier of the reference
+        if (userRef.remoteType() === "id") {
+          var id = userRef.id();
+        } else if (userRef.remoteType() === "link") {
+          var link = userRef.link();
         }
-      });
-      var commentsRef = blog.hasMany('comments');
-       // check if the comments are loaded already
-      var isLoaded = commentsRef.value() !== null;
-       // get the records of the reference (null if not yet available)
-      var comments = commentsRef.value();
-       // get the identifier of the reference
-      if (commentsRef.remoteType() === "ids") {
-        var ids = commentsRef.ids();
-      } else if (commentsRef.remoteType() === "link") {
-        var link = commentsRef.link();
+         // load user (via store.findRecord or store.findBelongsTo)
+        userRef.load().then(...)
+         // or trigger a reload
+        userRef.reload().then(...)
+         // provide data for reference
+        userRef.push({
+          type: 'user',
+          id: 1,
+          attributes: {
+            username: "@user"
+          }
+        }).then(function(user) {
+          userRef.value() === user;
+        });
+        ```
+         @method belongsTo
+        @param {String} name of the relationship
+        @return {BelongsToReference} reference for this relationship
+      */
+      belongsTo: function (name) {
+        return this._internalModel.referenceFor('belongsTo', name);
+      },
+
+      /**
+        Get the reference for the specified hasMany relationship.
+         Example
+         ```javascript
+        // models/blog.js
+        export default DS.Model.extend({
+          comments: DS.hasMany({ async: true })
+        });
+         var blog = store.push({
+          type: 'blog',
+          id: 1,
+          relationships: {
+            comments: {
+              data: [
+                { type: 'comment', id: 1 },
+                { type: 'comment', id: 2 }
+              ]
+            }
+          }
+        });
+        var commentsRef = blog.hasMany('comments');
+         // check if the comments are loaded already
+        var isLoaded = commentsRef.value() !== null;
+         // get the records of the reference (null if not yet available)
+        var comments = commentsRef.value();
+         // get the identifier of the reference
+        if (commentsRef.remoteType() === "ids") {
+          var ids = commentsRef.ids();
+        } else if (commentsRef.remoteType() === "link") {
+          var link = commentsRef.link();
+        }
+         // load comments (via store.findMany or store.findHasMany)
+        commentsRef.load().then(...)
+         // or trigger a reload
+        commentsRef.reload().then(...)
+         // provide data for reference
+        commentsRef.push([{ type: 'comment', id: 1 }, { type: 'comment', id: 2 }]).then(function(comments) {
+          commentsRef.value() === comments;
+        });
+        ```
+         @method hasMany
+        @param {String} name of the relationship
+        @return {HasManyReference} reference for this relationship
+      */
+      hasMany: function (name) {
+        return this._internalModel.referenceFor('hasMany', name);
       }
-       // load comments (via store.findMany or store.findHasMany)
-      commentsRef.load().then(...)
-       // or trigger a reload
-      commentsRef.reload().then(...)
-       // provide data for reference
-      commentsRef.push([{ type: 'comment', id: 1 }, { type: 'comment', id: 2 }]).then(function(comments) {
-        commentsRef.value() === comments;
-      });
-      ```
-       @method hasMany
-      @param {String} name of the relationship
-      @return {HasManyReference} reference for this relationship
-    */
-    hasMany: function (name) {
-      return this._internalModel.referenceFor('hasMany', name);
-    }
-  });
+    });
+  }
 
   Model.reopenClass(_emberDataPrivateSystemRelationshipsExt.RelationshipsClassMethodsMixin);
   Model.reopenClass(_emberDataPrivateSystemModelAttr.AttrClassMethodsMixin);
@@ -5154,6 +5174,10 @@ define("ember-data/-private/system/record-arrays/adapter-populated-record-array"
         isUpdating: false,
         meta: (0, _emberDataPrivateSystemCloneNull.default)(payload.meta)
       });
+
+      if (false) {
+        this.set('links', (0, _emberDataPrivateSystemCloneNull.default)(payload.links));
+      }
 
       internalModels.forEach(function (record) {
         _this.manager.recordArraysForRecord(record).add(_this);
@@ -7345,7 +7369,9 @@ define('ember-data/-private/system/snapshot-record-array', ['exports', 'ember-da
     */
     this.adapterOptions = options.adapterOptions;
 
-    this.include = options.include;
+    if (true) {
+      this.include = options.include;
+    }
   }
 
   /**
@@ -7408,7 +7434,9 @@ define('ember-data/-private/system/snapshot', ['exports', 'ember', 'ember-data/-
     */
     this.adapterOptions = options.adapterOptions;
 
-    this.include = options.include;
+    if (true) {
+      this.include = options.include;
+    }
 
     this._changedAttributes = record.changedAttributes();
   }
@@ -9386,10 +9414,15 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
         serializer = this.serializerFor(modelName);
       }
-
-      this._adapterRun(function () {
-        return serializer.pushPayload(_this3, payload);
-      });
+      if (false) {
+        return this._adapterRun(function () {
+          return serializer.pushPayload(_this3, payload);
+        });
+      } else {
+        this._adapterRun(function () {
+          return serializer.pushPayload(_this3, payload);
+        });
+      }
     },
 
     /**
@@ -9573,38 +9606,41 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
   });
 
-  Store.reopen({
-    /**
-      Get the reference for the specified record.
-       Example
-       ```javascript
-      var userRef = store.getReference('user', 1);
-       // check if the user is loaded
-      var isLoaded = userRef.value() !== null;
-       // get the record of the reference (null if not yet available)
-      var user = userRef.value();
-       // get the identifier of the reference
-      if (userRef.remoteType() === "id") {
-      var id = userRef.id();
+  if (true) {
+
+    Store.reopen({
+      /**
+        Get the reference for the specified record.
+         Example
+         ```javascript
+        var userRef = store.getReference('user', 1);
+         // check if the user is loaded
+        var isLoaded = userRef.value() !== null;
+         // get the record of the reference (null if not yet available)
+        var user = userRef.value();
+         // get the identifier of the reference
+        if (userRef.remoteType() === "id") {
+        var id = userRef.id();
+        }
+         // load user (via store.find)
+        userRef.load().then(...)
+         // or trigger a reload
+        userRef.reload().then(...)
+         // provide data for reference
+        userRef.push({ id: 1, username: "@user" }).then(function(user) {
+          userRef.value() === user;
+        });
+      ```
+       @method getReference
+      @param {String} type
+      @param {String|Integer} id
+      @return {RecordReference}
+      */
+      getReference: function (type, id) {
+        return this._internalModelForId(type, id).recordReference;
       }
-       // load user (via store.find)
-      userRef.load().then(...)
-       // or trigger a reload
-      userRef.reload().then(...)
-       // provide data for reference
-      userRef.push({ id: 1, username: "@user" }).then(function(user) {
-        userRef.value() === user;
-      });
-    ```
-     @method getReference
-    @param {String} type
-    @param {String|Integer} id
-    @return {RecordReference}
-    */
-    getReference: function (type, id) {
-      return this._internalModelForId(type, id).recordReference;
-    }
-  });
+    });
+  }
 
   function deserializeRecordId(store, key, relationship, id) {
     if (isNone(id)) {
@@ -10195,6 +10231,14 @@ define('ember-data/-private/transforms/boolean', ['exports', 'ember', 'ember-dat
     deserialize: function (serialized, options) {
       var type = typeof serialized;
 
+      if (true) {
+        if (false) {
+          if (isNone(serialized) && options.allowNull === true) {
+            return null;
+          }
+        }
+      }
+
       if (type === "boolean") {
         return serialized;
       } else if (type === "string") {
@@ -10207,6 +10251,13 @@ define('ember-data/-private/transforms/boolean', ['exports', 'ember', 'ember-dat
     },
 
     serialize: function (deserialized, options) {
+      if (true) {
+        if (false) {
+          if (isNone(deserialized) && options.allowNull === true) {
+            return null;
+          }
+        }
+      }
 
       return Boolean(deserialized);
     }
@@ -11006,6 +11057,9 @@ define('ember-data/adapters/errors', ['exports', 'ember', 'ember-data/-private/d
   }
 
   var extendedErrorsEnabled = false;
+  if (false) {
+    extendedErrorsEnabled = true;
+  }
 
   function extendFn(ErrorClass) {
     return function () {
@@ -11292,8 +11346,12 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
       @return {Promise} promise
     */
     findMany: function (store, type, ids, snapshots) {
-      var url = this.buildURL(type.modelName, ids, snapshots, 'findMany');
-      return this.ajax(url, 'GET', { data: { filter: { id: ids.join(',') } } });
+      if (false) {
+        return this._super.apply(this, arguments);
+      } else {
+        var url = this.buildURL(type.modelName, ids, snapshots, 'findMany');
+        return this.ajax(url, 'GET', { data: { filter: { id: ids.join(',') } } });
+      }
     },
 
     /**
@@ -11315,17 +11373,80 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
       @return {Promise} promise
     */
     updateRecord: function (store, type, snapshot) {
-      var data = {};
-      var serializer = store.serializerFor(type.modelName);
+      if (false) {
+        return this._super.apply(this, arguments);
+      } else {
+        var data = {};
+        var serializer = store.serializerFor(type.modelName);
 
-      serializer.serializeIntoHash(data, type, snapshot, { includeId: true });
+        serializer.serializeIntoHash(data, type, snapshot, { includeId: true });
 
-      var id = snapshot.id;
-      var url = this.buildURL(type.modelName, id, snapshot, 'updateRecord');
+        var id = snapshot.id;
+        var url = this.buildURL(type.modelName, id, snapshot, 'updateRecord');
 
-      return this.ajax(url, 'PATCH', { data: data });
+        return this.ajax(url, 'PATCH', { data: data });
+      }
     }
   });
+
+  if (false) {
+
+    JSONAPIAdapter.reopen({
+
+      methodForRequest: function (params) {
+        if (params.requestType === 'updateRecord') {
+          return 'PATCH';
+        }
+
+        return this._super.apply(this, arguments);
+      },
+
+      dataForRequest: function (params) {
+        var requestType = params.requestType;
+        var ids = params.ids;
+
+        if (requestType === 'findMany') {
+          return {
+            filter: { id: ids.join(',') }
+          };
+        }
+
+        if (requestType === 'updateRecord') {
+          var store = params.store;
+          var type = params.type;
+          var snapshot = params.snapshot;
+
+          var data = {};
+          var serializer = store.serializerFor(type.modelName);
+
+          serializer.serializeIntoHash(data, type, snapshot, { includeId: true });
+
+          return data;
+        }
+
+        return this._super.apply(this, arguments);
+      },
+
+      headersForRequest: function () {
+        var headers = this._super.apply(this, arguments) || {};
+
+        headers['Accept'] = 'application/vnd.api+json';
+
+        return headers;
+      },
+
+      _requestToJQueryAjaxHash: function () {
+        var hash = this._super.apply(this, arguments);
+
+        if (hash.contentType) {
+          hash.contentType = 'application/vnd.api+json';
+        }
+
+        return hash;
+      }
+
+    });
+  }
 
   exports.default = JSONAPIAdapter;
 });
@@ -11693,10 +11814,19 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     findRecord: function (store, type, id, snapshot) {
-      var url = this.buildURL(type.modelName, id, snapshot, 'findRecord');
-      var query = this.buildQuery(snapshot);
+      if (false) {
+        var request = this._requestFor({
+          store: store, type: type, id: id, snapshot: snapshot,
+          requestType: 'findRecord'
+        });
 
-      return this.ajax(url, 'GET', { data: query });
+        return this._makeRequest(request);
+      } else {
+        var url = this.buildURL(type.modelName, id, snapshot, 'findRecord');
+        var query = this.buildQuery(snapshot);
+
+        return this.ajax(url, 'GET', { data: query });
+      }
     },
 
     /**
@@ -11714,13 +11844,23 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
     findAll: function (store, type, sinceToken, snapshotRecordArray) {
       var query = this.buildQuery(snapshotRecordArray);
 
-      var url = this.buildURL(type.modelName, null, snapshotRecordArray, 'findAll');
+      if (false) {
+        var request = this._requestFor({
+          store: store, type: type, sinceToken: sinceToken, query: query,
+          snapshots: snapshotRecordArray,
+          requestType: 'findAll'
+        });
 
-      if (sinceToken) {
-        query.since = sinceToken;
+        return this._makeRequest(request);
+      } else {
+        var url = this.buildURL(type.modelName, null, snapshotRecordArray, 'findAll');
+
+        if (sinceToken) {
+          query.since = sinceToken;
+        }
+
+        return this.ajax(url, 'GET', { data: query });
       }
-
-      return this.ajax(url, 'GET', { data: query });
     },
 
     /**
@@ -11738,13 +11878,22 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     query: function (store, type, query) {
-      var url = this.buildURL(type.modelName, null, null, 'query', query);
+      if (false) {
+        var request = this._requestFor({
+          store: store, type: type, query: query,
+          requestType: 'query'
+        });
 
-      if (this.sortQueryParams) {
-        query = this.sortQueryParams(query);
+        return this._makeRequest(request);
+      } else {
+        var url = this.buildURL(type.modelName, null, null, 'query', query);
+
+        if (this.sortQueryParams) {
+          query = this.sortQueryParams(query);
+        }
+
+        return this.ajax(url, 'GET', { data: query });
       }
-
-      return this.ajax(url, 'GET', { data: query });
     },
 
     /**
@@ -11762,13 +11911,22 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     queryRecord: function (store, type, query) {
-      var url = this.buildURL(type.modelName, null, null, 'queryRecord', query);
+      if (false) {
+        var request = this._requestFor({
+          store: store, type: type, query: query,
+          requestType: 'queryRecord'
+        });
 
-      if (this.sortQueryParams) {
-        query = this.sortQueryParams(query);
+        return this._makeRequest(request);
+      } else {
+        var url = this.buildURL(type.modelName, null, null, 'queryRecord', query);
+
+        if (this.sortQueryParams) {
+          query = this.sortQueryParams(query);
+        }
+
+        return this.ajax(url, 'GET', { data: query });
       }
-
-      return this.ajax(url, 'GET', { data: query });
     },
 
     /**
@@ -11798,8 +11956,17 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     findMany: function (store, type, ids, snapshots) {
-      var url = this.buildURL(type.modelName, ids, snapshots, 'findMany');
-      return this.ajax(url, 'GET', { data: { ids: ids } });
+      if (false) {
+        var request = this._requestFor({
+          store: store, type: type, ids: ids, snapshots: snapshots,
+          requestType: 'findMany'
+        });
+
+        return this._makeRequest(request);
+      } else {
+        var url = this.buildURL(type.modelName, ids, snapshots, 'findMany');
+        return this.ajax(url, 'GET', { data: { ids: ids } });
+      }
     },
 
     /**
@@ -11829,12 +11996,21 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     findHasMany: function (store, snapshot, url, relationship) {
-      var id = snapshot.id;
-      var type = snapshot.modelName;
+      if (false) {
+        var request = this._requestFor({
+          store: store, snapshot: snapshot, url: url, relationship: relationship,
+          requestType: 'findHasMany'
+        });
 
-      url = this.urlPrefix(url, this.buildURL(type, id, snapshot, 'findHasMany'));
+        return this._makeRequest(request);
+      } else {
+        var id = snapshot.id;
+        var type = snapshot.modelName;
 
-      return this.ajax(url, 'GET');
+        url = this.urlPrefix(url, this.buildURL(type, id, snapshot, 'findHasMany'));
+
+        return this.ajax(url, 'GET');
+      }
     },
 
     /**
@@ -11864,11 +12040,20 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     findBelongsTo: function (store, snapshot, url, relationship) {
-      var id = snapshot.id;
-      var type = snapshot.modelName;
+      if (false) {
+        var request = this._requestFor({
+          store: store, snapshot: snapshot, url: url, relationship: relationship,
+          requestType: 'findBelongsTo'
+        });
 
-      url = this.urlPrefix(url, this.buildURL(type, id, snapshot, 'findBelongsTo'));
-      return this.ajax(url, 'GET');
+        return this._makeRequest(request);
+      } else {
+        var id = snapshot.id;
+        var type = snapshot.modelName;
+
+        url = this.urlPrefix(url, this.buildURL(type, id, snapshot, 'findBelongsTo'));
+        return this.ajax(url, 'GET');
+      }
     },
 
     /**
@@ -11885,13 +12070,22 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     createRecord: function (store, type, snapshot) {
-      var data = {};
-      var serializer = store.serializerFor(type.modelName);
-      var url = this.buildURL(type.modelName, null, snapshot, 'createRecord');
+      if (false) {
+        var request = this._requestFor({
+          store: store, type: type, snapshot: snapshot,
+          requestType: 'createRecord'
+        });
 
-      serializer.serializeIntoHash(data, type, snapshot, { includeId: true });
+        return this._makeRequest(request);
+      } else {
+        var data = {};
+        var serializer = store.serializerFor(type.modelName);
+        var url = this.buildURL(type.modelName, null, snapshot, 'createRecord');
 
-      return this.ajax(url, "POST", { data: data });
+        serializer.serializeIntoHash(data, type, snapshot, { includeId: true });
+
+        return this.ajax(url, "POST", { data: data });
+      }
     },
 
     /**
@@ -11908,15 +12102,24 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     updateRecord: function (store, type, snapshot) {
-      var data = {};
-      var serializer = store.serializerFor(type.modelName);
+      if (false) {
+        var request = this._requestFor({
+          store: store, type: type, snapshot: snapshot,
+          requestType: 'updateRecord'
+        });
 
-      serializer.serializeIntoHash(data, type, snapshot);
+        return this._makeRequest(request);
+      } else {
+        var data = {};
+        var serializer = store.serializerFor(type.modelName);
 
-      var id = snapshot.id;
-      var url = this.buildURL(type.modelName, id, snapshot, 'updateRecord');
+        serializer.serializeIntoHash(data, type, snapshot);
 
-      return this.ajax(url, "PUT", { data: data });
+        var id = snapshot.id;
+        var url = this.buildURL(type.modelName, id, snapshot, 'updateRecord');
+
+        return this.ajax(url, "PUT", { data: data });
+      }
     },
 
     /**
@@ -11929,9 +12132,18 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     deleteRecord: function (store, type, snapshot) {
-      var id = snapshot.id;
+      if (false) {
+        var request = this._requestFor({
+          store: store, type: type, snapshot: snapshot,
+          requestType: 'deleteRecord'
+        });
 
-      return this.ajax(this.buildURL(type.modelName, id, snapshot, 'deleteRecord'), "DELETE");
+        return this._makeRequest(request);
+      } else {
+        var id = snapshot.id;
+
+        return this.ajax(this.buildURL(type.modelName, id, snapshot, 'deleteRecord'), "DELETE");
+      }
     },
 
     _stripIDFromURL: function (store, snapshot) {
@@ -12050,6 +12262,23 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
 
       var errors = this.normalizeErrorResponse(status, headers, payload);
       var detailedMessage = this.generatedDetailedMessage(status, headers, payload, requestData);
+
+      if (false) {
+        switch (status) {
+          case 401:
+            return new _emberDataAdaptersErrors.UnauthorizedError(errors, detailedMessage);
+          case 403:
+            return new _emberDataAdaptersErrors.ForbiddenError(errors, detailedMessage);
+          case 404:
+            return new _emberDataAdaptersErrors.NotFoundError(errors, detailedMessage);
+          case 409:
+            return new _emberDataAdaptersErrors.ConflictError(errors, detailedMessage);
+          default:
+            if (status >= 500) {
+              return new _emberDataAdaptersErrors.ServerError(errors, detailedMessage);
+            }
+        }
+      }
 
       return new _emberDataAdaptersErrors.AdapterError(errors, detailedMessage);
     },
@@ -12250,17 +12479,272 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
     buildQuery: function (snapshot) {
       var query = {};
 
-      if (snapshot) {
-        var include = snapshot.include;
+      if (true) {
+        if (snapshot) {
+          var include = snapshot.include;
 
-        if (include) {
-          query.include = include;
+          if (include) {
+            query.include = include;
+          }
         }
       }
 
       return query;
     }
   });
+
+  if (false) {
+
+    RESTAdapter.reopen({
+
+      /**
+       * Get the data (body or query params) for a request.
+       *
+       * @public
+       * @method dataForRequest
+       * @param {Object} params
+       * @return {Object} data
+       */
+      dataForRequest: function (params) {
+        var store = params.store;
+        var type = params.type;
+        var snapshot = params.snapshot;
+        var requestType = params.requestType;
+        var query = params.query;
+
+        // type is not passed to findBelongsTo and findHasMany
+        type = type || snapshot && snapshot.type;
+
+        var serializer = store.serializerFor(type.modelName);
+        var data = {};
+
+        switch (requestType) {
+          case 'createRecord':
+            serializer.serializeIntoHash(data, type, snapshot, { includeId: true });
+            break;
+
+          case 'updateRecord':
+            serializer.serializeIntoHash(data, type, snapshot);
+            break;
+
+          case 'findRecord':
+            data = this.buildQuery(snapshot);
+            break;
+
+          case 'findAll':
+            if (params.sinceToken) {
+              query = query || {};
+              query.since = params.sinceToken;
+            }
+            data = query;
+            break;
+
+          case 'query':
+          case 'queryRecord':
+            if (this.sortQueryParams) {
+              query = this.sortQueryParams(query);
+            }
+            data = query;
+            break;
+
+          case 'findMany':
+            data = { ids: params.ids };
+            break;
+
+          default:
+            data = undefined;
+            break;
+        }
+
+        return data;
+      },
+
+      /**
+       * Get the HTTP method for a request.
+       *
+       * @public
+       * @method methodForRequest
+       * @param {Object} params
+       * @return {String} HTTP method
+       */
+      methodForRequest: function (params) {
+        var requestType = params.requestType;
+
+        switch (requestType) {
+          case 'createRecord':
+            return 'POST';
+          case 'updateRecord':
+            return 'PUT';
+          case 'deleteRecord':
+            return 'DELETE';
+        }
+
+        return 'GET';
+      },
+
+      /**
+       * Get the URL for a request.
+       *
+       * @public
+       * @method urlForRequest
+       * @param {Object} params
+       * @return {String} URL
+       */
+      urlForRequest: function (params) {
+        var type = params.type;
+        var id = params.id;
+        var ids = params.ids;
+        var snapshot = params.snapshot;
+        var snapshots = params.snapshots;
+        var requestType = params.requestType;
+        var query = params.query;
+
+        // type and id are not passed from updateRecord and deleteRecord, hence they
+        // are defined if not set
+        type = type || snapshot && snapshot.type;
+        id = id || snapshot && snapshot.id;
+
+        switch (requestType) {
+          case 'findAll':
+            return this.buildURL(type.modelName, null, snapshots, requestType);
+
+          case 'query':
+          case 'queryRecord':
+            return this.buildURL(type.modelName, null, null, requestType, query);
+
+          case 'findMany':
+            return this.buildURL(type.modelName, ids, snapshots, requestType);
+
+          case 'findHasMany':
+          case 'findBelongsTo':
+            var url = this.buildURL(type.modelName, id, snapshot, requestType);
+            return this.urlPrefix(params.url, url);
+        }
+
+        return this.buildURL(type.modelName, id, snapshot, requestType, query);
+      },
+
+      /**
+       * Get the headers for a request.
+       *
+       * By default the value of the `headers` property of the adapter is
+       * returned.
+       *
+       * @public
+       * @method headersForRequest
+       * @param {Object} params
+       * @return {Object} headers
+       */
+      headersForRequest: function (params) {
+        return this.get('headers');
+      },
+
+      /**
+       * Get an object which contains all properties for a request which should
+       * be made.
+       *
+       * @private
+       * @method _requestFor
+       * @param {Object} params
+       * @return {Object} request object
+       */
+      _requestFor: function (params) {
+        var method = this.methodForRequest(params);
+        var url = this.urlForRequest(params);
+        var headers = this.headersForRequest(params);
+        var data = this.dataForRequest(params);
+
+        return { method: method, url: url, headers: headers, data: data };
+      },
+
+      /**
+       * Convert a request object into a hash which can be passed to `jQuery.ajax`.
+       *
+       * @private
+       * @method _requestToJQueryAjaxHash
+       * @param {Object} request
+       * @return {Object} jQuery ajax hash
+       */
+      _requestToJQueryAjaxHash: function (request) {
+        var hash = {};
+
+        hash.type = request.method;
+        hash.url = request.url;
+        hash.dataType = 'json';
+        hash.context = this;
+
+        if (request.data) {
+          if (request.type !== 'GET') {
+            hash.contentType = 'application/json; charset=utf-8';
+            hash.data = JSON.stringify(request.data);
+          } else {
+            hash.data = request.data;
+          }
+        }
+
+        var headers = request.headers;
+        if (headers !== undefined) {
+          hash.beforeSend = function (xhr) {
+            Object.keys(headers).forEach(function (key) {
+              return xhr.setRequestHeader(key, headers[key]);
+            });
+          };
+        }
+
+        return hash;
+      },
+
+      /**
+       * Make a request using `jQuery.ajax`.
+       *
+       * @private
+       * @method _makeRequest
+       * @param {Object} request
+       * @return {Promise} promise
+       */
+      _makeRequest: function (request) {
+        var adapter = this;
+        var hash = this._requestToJQueryAjaxHash(request);
+
+        var method = request.method;
+        var url = request.url;
+
+        var requestData = { method: method, url: url };
+
+        return new _ember.default.RSVP.Promise(function (resolve, reject) {
+
+          hash.success = function (payload, textStatus, jqXHR) {
+            var response = adapter.handleResponse(jqXHR.status, (0, _emberDataPrivateUtilsParseResponseHeaders.default)(jqXHR.getAllResponseHeaders()), payload, requestData);
+
+            if (response instanceof _emberDataAdaptersErrors.AdapterError) {
+              _ember.default.run.join(null, reject, response);
+            } else {
+              _ember.default.run.join(null, resolve, response);
+            }
+          };
+
+          hash.error = function (jqXHR, textStatus, errorThrown) {
+
+            var error = undefined;
+
+            if (errorThrown instanceof Error) {
+              error = errorThrown;
+            } else if (textStatus === 'timeout') {
+              error = new _emberDataAdaptersErrors.TimeoutError();
+            } else if (textStatus === 'abort') {
+              error = new _emberDataAdaptersErrors.AbortError();
+            } else {
+              error = adapter.handleResponse(jqXHR.status, (0, _emberDataPrivateUtilsParseResponseHeaders.default)(jqXHR.getAllResponseHeaders()), adapter.parseErrorResponse(jqXHR.responseText) || errorThrown, requestData);
+            }
+
+            _ember.default.run.join(null, reject, error);
+          };
+
+          adapter._ajaxRequest(hash);
+        }, 'DS: RESTAdapter#makeRequest: ' + method + ' ' + url);
+      }
+    });
+  }
 
   //From http://stackoverflow.com/questions/280634/endswith-in-javascript
   function endsWith(string, suffix) {
@@ -12276,78 +12760,6 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
 /**
   @module ember-data
 */
-
-/**
- * Get the data (body or query params) for a request.
- *
- * @public
- * @method dataForRequest
- * @param {Object} params
- * @return {Object} data
- */
-
-// type is not passed to findBelongsTo and findHasMany
-
-/**
- * Get the HTTP method for a request.
- *
- * @public
- * @method methodForRequest
- * @param {Object} params
- * @return {String} HTTP method
- */
-
-/**
- * Get the URL for a request.
- *
- * @public
- * @method urlForRequest
- * @param {Object} params
- * @return {String} URL
- */
-
-// type and id are not passed from updateRecord and deleteRecord, hence they
-// are defined if not set
-
-/**
- * Get the headers for a request.
- *
- * By default the value of the `headers` property of the adapter is
- * returned.
- *
- * @public
- * @method headersForRequest
- * @param {Object} params
- * @return {Object} headers
- */
-
-/**
- * Get an object which contains all properties for a request which should
- * be made.
- *
- * @private
- * @method _requestFor
- * @param {Object} params
- * @return {Object} request object
- */
-
-/**
- * Convert a request object into a hash which can be passed to `jQuery.ajax`.
- *
- * @private
- * @method _requestToJQueryAjaxHash
- * @param {Object} request
- * @return {Object} jQuery ajax hash
- */
-
-/**
- * Make a request using `jQuery.ajax`.
- *
- * @private
- * @method _makeRequest
- * @param {Object} request
- * @return {Promise} promise
- */
 define('ember-data/attr', ['exports', 'ember', 'ember-data/-private/debug'], function (exports, _ember, _emberDataPrivateDebug) {
   exports.default = attr;
 
@@ -12545,6 +12957,14 @@ define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-da
   _emberDataPrivateCore.default.InvalidError = _emberDataAdaptersErrors.InvalidError;
   _emberDataPrivateCore.default.TimeoutError = _emberDataAdaptersErrors.TimeoutError;
   _emberDataPrivateCore.default.AbortError = _emberDataAdaptersErrors.AbortError;
+
+  if (false) {
+    _emberDataPrivateCore.default.UnauthorizedError = _emberDataAdaptersErrors.UnauthorizedError;
+    _emberDataPrivateCore.default.ForbiddenError = _emberDataAdaptersErrors.ForbiddenError;
+    _emberDataPrivateCore.default.NotFoundError = _emberDataAdaptersErrors.NotFoundError;
+    _emberDataPrivateCore.default.ConflictError = _emberDataAdaptersErrors.ConflictError;
+    _emberDataPrivateCore.default.ServerError = _emberDataAdaptersErrors.ServerError;
+  }
 
   _emberDataPrivateCore.default.errorsHashToArray = _emberDataAdaptersErrors.errorsHashToArray;
   _emberDataPrivateCore.default.errorsArrayToHash = _emberDataAdaptersErrors.errorsArrayToHash;
@@ -13036,8 +13456,10 @@ define('ember-data/serializers/embedded-records-mixin', ['exports', 'ember', 'em
       } else if (this.hasSerializeRecordsOption(attr)) {
         this._serializeEmbeddedHasMany(snapshot, json, relationship);
       } else {
-        if (this.hasSerializeIdsAndTypesOption(attr)) {
-          this._serializeHasManyAsIdsAndTypes(snapshot, json, relationship);
+        if (true) {
+          if (this.hasSerializeIdsAndTypesOption(attr)) {
+            this._serializeHasManyAsIdsAndTypes(snapshot, json, relationship);
+          }
         }
       }
     },
@@ -13435,8 +13857,11 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
     */
     pushPayload: function (store, payload) {
       var normalizedPayload = this._normalizeDocumentHelper(payload);
-
-      store.push(normalizedPayload);
+      if (false) {
+        return store.push(normalizedPayload);
+      } else {
+        store.push(normalizedPayload);
+      }
     },
 
     /**
@@ -13669,7 +14094,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
         var value = snapshot.attr(key);
         if (type) {
           var transform = this.transformFor(type);
-          value = transform.serialize(value);
+          value = transform.serialize(value, attribute.options);
         }
 
         var payloadKey = this._getMappedKey(key, snapshot.type);
@@ -13918,8 +14343,9 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
       var _this = this;
 
       var attributes = undefined;
-
-      attributes = get(typeClass, 'attributes');
+      if (true) {
+        attributes = get(typeClass, 'attributes');
+      }
 
       typeClass.eachTransformedAttribute(function (key, typeClass) {
         if (!(key in data)) {
@@ -13927,9 +14353,12 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
         }
 
         var transform = _this.transformFor(typeClass);
-
-        var transformMeta = attributes.get(key);
-        data[key] = transform.deserialize(data[key], transformMeta.options);
+        if (true) {
+          var transformMeta = attributes.get(key);
+          data[key] = transform.deserialize(data[key], transformMeta.options);
+        } else {
+          data[key] = transform.deserialize(data[key]);
+        }
       });
 
       return data;
@@ -14769,8 +15198,11 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
         var value = snapshot.attr(key);
         if (type) {
           var transform = this.transformFor(type);
-
-          value = transform.serialize(value, attribute.options);
+          if (true) {
+            value = transform.serialize(value, attribute.options);
+          } else {
+            value = transform.serialize(value);
+          }
         }
 
         // if provided, use the mapping provided by `attrs` in
@@ -15491,7 +15923,11 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
         });
       }
 
-      store.push(documentHash);
+      if (false) {
+        return store.push(documentHash);
+      } else {
+        store.push(documentHash);
+      }
     },
 
     /**
@@ -15902,7 +16338,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.6.0";
+  exports.default = "2.6.0+ac11df610b";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
