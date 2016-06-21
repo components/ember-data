@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.8.0-canary+c3ce531a34
+ * @version   2.8.0-canary+f7134adc63
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -8699,7 +8699,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       });
       ```
        Note: the primary use case for `store.queryRecord` is when a single record
-      is queried and the `id` is not kown beforehand. In all other cases
+      is queried and the `id` is not known beforehand. In all other cases
       `store.query` and using the first item of the array is likely the preferred
       way:
        ```
@@ -16842,7 +16842,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.8.0-canary+c3ce531a34";
+  exports.default = "2.8.0-canary+f7134adc63";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
