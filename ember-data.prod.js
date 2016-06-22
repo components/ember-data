@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.8.0-canary+a3aeb0b081
+ * @version   2.8.0-canary+db58d9367e
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -46,11 +46,13 @@ var loader, define, requireModule, require, requirejs;
       resolve: 0,
       resolveRelative: 0,
       findModule: 0,
+      pendingQueueLength: 0
     };
     requirejs._stats = stats;
   }
 
   var stats;
+
   resetStats();
 
   loader = {
@@ -92,7 +94,7 @@ var loader, define, requireModule, require, requirejs;
   var defaultDeps = ['require', 'exports', 'module'];
 
   function Module(name, deps, callback, alias) {
-    stats.modules ++;
+    stats.modules++;
     this.id        = uuid++;
     this.name      = name;
     this.deps      = !deps.length && callback.length ? defaultDeps : deps;
@@ -103,6 +105,7 @@ var loader, define, requireModule, require, requirejs;
     this.isAlias = alias;
     this.reified = new Array(deps.length);
     this._foundDeps = false;
+    this.isPending = false;
   }
 
   Module.prototype.makeDefaultExport = function() {
@@ -119,6 +122,7 @@ var loader, define, requireModule, require, requirejs;
     stats.exports++;
 
     this.finalized = true;
+    this.isPending = false;
 
     if (loader.wrapModules) {
       this.callback = loader.wrapModules(this.name, this.callback);
@@ -138,6 +142,7 @@ var loader, define, requireModule, require, requirejs;
   Module.prototype.unsee = function() {
     this.finalized = false;
     this._foundDeps = false;
+    this.isPending = false;
     this.module = { exports: {}};
   };
 
@@ -157,6 +162,7 @@ var loader, define, requireModule, require, requirejs;
 
     stats.findDeps++;
     this._foundDeps = true;
+    this.isPending = true;
 
     var deps = this.deps;
 
@@ -233,9 +239,10 @@ var loader, define, requireModule, require, requirejs;
 
     if (!mod) { missingModule(name, referrer); }
 
-    if (pending) {
+    if (pending && !mod.finalized && !mod.isPending) {
       mod.findDeps(pending);
       pending.push(mod);
+      stats.pendingQueueLength++;
     }
     return mod;
   }
@@ -16842,7 +16849,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.8.0-canary+a3aeb0b081";
+  exports.default = "2.8.0-canary+db58d9367e";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -17307,6 +17314,7 @@ define('ember', [], function() {
 
 
 require("ember-data");
+require("ember-load-initializers")["default"](Ember.Application, "ember-data");
 ;(function() {
   var global = require('ember-data/-private/global').default;
   var DS = require('ember-data').default;
@@ -17354,49 +17362,4 @@ require("ember-data");
   if (typeof define !== 'undefined' && define && define.petal) {
     processEmberDataShims();
   }
-})();
-/* eslint no-extra-semi: "off" */
-
-;(function() {
-  /* globals Ember, require */
-  var K = Ember.K;
-  Ember.onLoad('Ember.Application', function(Application) {
-
-    var DS = require('ember-data').default;
-
-    Application.initializer({
-      name:       "ember-data",
-      initialize: DS._setupContainer
-    });
-
-    Application.instanceInitializer({
-      name:       "ember-data",
-      initialize: DS._initializeStoreService
-    });
-
-    // Deprecated initializers to satisfy old code that depended on them
-    Application.initializer({
-      name:       "store",
-      after:      "ember-data",
-      initialize: K
-    });
-
-    Application.initializer({
-      name:       "transforms",
-      before:     "store",
-      initialize: K
-    });
-
-    Application.initializer({
-      name:       "data-adapter",
-      before:     "store",
-      initialize: K
-    });
-
-    Application.initializer({
-      name:       "injectStore",
-      before:     "store",
-      initialize: K
-    });
-  });
 })();
