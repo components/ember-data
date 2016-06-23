@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.8.0-canary+32d5e5791a
+ * @version   2.8.0-canary+01a9fbe394
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -10704,9 +10704,8 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       import DS from 'ember-data';
        export default DS.Adapter.extend({
         findRecord: function(store, type, id, snapshot) {
-          var url = [type.modelName, id].join('/');
            return new Ember.RSVP.Promise(function(resolve, reject) {
-            Ember.$.getJSON(url).then(function(data) {
+            Ember.$.getJSON(`/${type.modelName}/${id}`).then(function(data) {
               Ember.run(null, resolve, data);
             }, function(jqXHR) {
               jqXHR.then = null; // tame jQuery's ill mannered promises
@@ -10732,10 +10731,9 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       import DS from 'ember-data';
        export default DS.Adapter.extend({
         findAll: function(store, type, sinceToken) {
-          var url = type;
           var query = { since: sinceToken };
           return new Ember.RSVP.Promise(function(resolve, reject) {
-            Ember.$.getJSON(url, query).then(function(data) {
+            Ember.$.getJSON(`/${type.modelName}`, query).then(function(data) {
               Ember.run(null, resolve, data);
             }, function(jqXHR) {
               jqXHR.then = null; // tame jQuery's ill mannered promises
@@ -10761,9 +10759,8 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       import DS from 'ember-data';
        export default DS.Adapter.extend({
         query: function(store, type, query) {
-          var url = type;
           return new Ember.RSVP.Promise(function(resolve, reject) {
-            Ember.$.getJSON(url, query).then(function(data) {
+            Ember.$.getJSON(`/${type.modelName}`, query).then(function(data) {
               Ember.run(null, resolve, data);
             }, function(jqXHR) {
               jqXHR.then = null; // tame jQuery's ill mannered promises
@@ -10795,9 +10792,8 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       import Ember from 'ember';
        export default DS.Adapter.extend(DS.BuildURLMixin, {
         queryRecord: function(store, type, query) {
-          var urlForQueryRecord = this.buildURL(type.modelName, null, null, 'queryRecord', query);
-           return new Ember.RSVP.Promise(function(resolve, reject) {
-            Ember.$.getJSON(urlForQueryRecord, query).then(function(data) {
+          return new Ember.RSVP.Promise(function(resolve, reject) {
+            Ember.$.getJSON(`/${type.modelName}`, query).then(function(data) {
               Ember.run(null, resolve, data);
             }, function(jqXHR) {
               jqXHR.then = null; // tame jQuery's ill mannered promises
@@ -10827,10 +10823,13 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
        The `generateIdForRecord()` method will be invoked with the requesting store as
       the first parameter and the newly created record as the second parameter:
        ```javascript
-      generateIdForRecord: function(store, inputProperties) {
-        var uuid = App.generateUUIDWithStatisticallyLowOddsOfCollision();
-        return uuid;
-      }
+      import DS from 'ember-data';
+      import { v4 } from 'uuid';
+       export default DS.Adapter.extend({
+        generateIdForRecord: function(store, inputProperties) {
+          return v4();
+        }
+      });
       ```
        @method generateIdForRecord
       @param {DS.Store} store
@@ -10849,7 +10848,7 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
        export default DS.Adapter.extend({
         createRecord: function(store, type, snapshot) {
           var data = this.serialize(snapshot, { includeId: true });
-          var url = type;
+          var url = `/${type.modelName}`;
            // ...
         }
       });
@@ -10873,11 +10872,10 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
        export default DS.Adapter.extend({
         createRecord: function(store, type, snapshot) {
           var data = this.serialize(snapshot, { includeId: true });
-          var url = type;
            return new Ember.RSVP.Promise(function(resolve, reject) {
             Ember.$.ajax({
               type: 'POST',
-              url: url,
+              url: `/${type.modelName}`,
               dataType: 'json',
               data: data
             }).then(function(data) {
@@ -10916,11 +10914,10 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
         updateRecord: function(store, type, snapshot) {
           var data = this.serialize(snapshot, { includeId: true });
           var id = snapshot.id;
-          var url = [type, id].join('/');
            return new Ember.RSVP.Promise(function(resolve, reject) {
             Ember.$.ajax({
               type: 'PUT',
-              url: url,
+              url: `/${type.modelName}/${id}`,
               dataType: 'json',
               data: data
             }).then(function(data) {
@@ -10952,11 +10949,10 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
         deleteRecord: function(store, type, snapshot) {
           var data = this.serialize(snapshot, { includeId: true });
           var id = snapshot.id;
-          var url = [type, id].join('/');
            return new Ember.RSVP.Promise(function(resolve, reject) {
             Ember.$.ajax({
               type: 'DELETE',
-              url: url,
+              url: `/${type.modelName}/${id}`,
               dataType: 'json',
               data: data
             }).then(function(data) {
@@ -10988,7 +10984,29 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
     coalesceFindRequests: true,
 
     /**
-      Find multiple records at once if coalesceFindRequests is true.
+      The store will call `findMany` instead of multiple `findRecord`
+      requests to find multiple records at once if coalesceFindRequests
+      is true.
+       ```app/adapters/application.js
+      import DS from 'ember-data';
+       export default DS.Adapter.extend({
+        findMany(store, type, ids, snapshots) {
+          return new Ember.RSVP.Promise(function(resolve, reject) {
+            Ember.$.ajax({
+              type: 'GET',
+              url: `/${type.modelName}/`,
+              dataType: 'json',
+              data: { filter: { id: ids.join(',') } }
+            }).then(function(data) {
+              Ember.run(null, resolve, data);
+            }, function(jqXHR) {
+              jqXHR.then = null; // tame jQuery's ill mannered promises
+              Ember.run(null, reject, jqXHR);
+            });
+          });
+        }
+      });
+      ```
        @method findMany
       @param {DS.Store} store
       @param {DS.Model} type   the DS.Model class of the records
@@ -16849,7 +16867,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.8.0-canary+32d5e5791a";
+  exports.default = "2.8.0-canary+01a9fbe394";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
