@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.8.0-canary+3a38988bcb
+ * @version   2.8.0-canary+380299cfe9
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -9398,7 +9398,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         this._backburner.schedule('normalizeRelationships', this, '_setupRelationships', internalModel, data);
         this.updateId(internalModel, data);
       }
-
+      (0, _emberDataPrivateDebug.assert)('Your ' + internalModel.type.modelName + ' record was saved but it does not have an id. Please make the server provides an id in the createRecord response or you are setting the on the client side before saving the record.', internalModel.id !== null);
       //We first make sure the primary data has been updated
       //TODO try to move notification to the user to the end of the runloop
       internalModel.adapterDidCommit(data);
@@ -17373,7 +17373,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.8.0-canary+3a38988bcb";
+  exports.default = "2.8.0-canary+380299cfe9";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
