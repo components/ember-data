@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.8.0-canary+01a9fbe394
+ * @version   2.8.0-canary+3a38988bcb
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -2144,7 +2144,7 @@ define('ember-data/-private/system/model/errors', ['exports', 'ember', 'ember-da
     }
   });
 });
-define("ember-data/-private/system/model/internal-model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/model/states", "ember-data/-private/system/relationships/state/create", "ember-data/-private/system/snapshot", "ember-data/-private/system/empty-object", "ember-data/-private/utils", "ember-data/-private/system/references"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemModelStates, _emberDataPrivateSystemRelationshipsStateCreate, _emberDataPrivateSystemSnapshot, _emberDataPrivateSystemEmptyObject, _emberDataPrivateUtils, _emberDataPrivateSystemReferences) {
+define("ember-data/-private/system/model/internal-model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/model/states", "ember-data/-private/system/relationships/state/create", "ember-data/-private/system/snapshot", "ember-data/-private/system/empty-object", "ember-data/-private/features", "ember-data/-private/utils", "ember-data/-private/system/references"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemModelStates, _emberDataPrivateSystemRelationshipsStateCreate, _emberDataPrivateSystemSnapshot, _emberDataPrivateSystemEmptyObject, _emberDataPrivateFeatures, _emberDataPrivateUtils, _emberDataPrivateSystemReferences) {
   var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; })();
 
   exports.default = InternalModel;
@@ -2558,6 +2558,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
 
       this.record._notifyProperties(dirtyKeys);
     },
+
     /*
       @method transitionTo
       @private
@@ -2976,8 +2977,24 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       return reference;
     }
   };
+
+  if ((0, _emberDataPrivateFeatures.default)('ds-reset-attribute')) {
+    /*
+       Returns the latest truth for an attribute - the canonical value, or the
+       in-flight value.
+        @method lastAcknowledgedValue
+       @private
+    */
+    InternalModel.prototype.lastAcknowledgedValue = function lastAcknowledgedValue(key) {
+      if (key in this._inFlightAttributes) {
+        return this._inFlightAttributes[key];
+      } else {
+        return this._data[key];
+      }
+    };
+  }
 });
-define("ember-data/-private/system/model/model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/model/errors", "ember-data/-private/system/debug/debug-info", "ember-data/-private/system/relationships/belongs-to", "ember-data/-private/system/relationships/has-many", "ember-data/-private/system/relationships/ext", "ember-data/-private/system/model/attr"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemModelErrors, _emberDataPrivateSystemDebugDebugInfo, _emberDataPrivateSystemRelationshipsBelongsTo, _emberDataPrivateSystemRelationshipsHasMany, _emberDataPrivateSystemRelationshipsExt, _emberDataPrivateSystemModelAttr) {
+define("ember-data/-private/system/model/model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/model/errors", "ember-data/-private/system/debug/debug-info", "ember-data/-private/system/relationships/belongs-to", "ember-data/-private/system/relationships/has-many", "ember-data/-private/system/relationships/ext", "ember-data/-private/system/model/attr", "ember-data/-private/features"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemModelErrors, _emberDataPrivateSystemDebugDebugInfo, _emberDataPrivateSystemRelationshipsBelongsTo, _emberDataPrivateSystemRelationshipsHasMany, _emberDataPrivateSystemRelationshipsExt, _emberDataPrivateSystemModelAttr, _emberDataPrivateFeatures) {
 
   /**
     @module ember-data
@@ -3865,6 +3882,28 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
         (0, _emberDataPrivateDebug.deprecate)('Using the injected `container` is deprecated. Please use the `getOwner` helper instead to access the owner of this object.', false, { id: 'ember-application.injected-container', until: '3.0.0' });
 
         return this.store.container;
+      }
+    });
+  }
+
+  if ((0, _emberDataPrivateFeatures.default)('ds-reset-attribute')) {
+    Model.reopen({
+      /**
+        Discards any unsaved changes to the given attribute.
+         Example
+         ```javascript
+        record.get('name'); // 'Untitled Document'
+        record.set('name', 'Doc 1');
+        record.get('name'); // 'Doc 1'
+        record.resetAttribute('name');
+        record.get('name'); // 'Untitled Document'
+        ```
+         @method resetAttribute
+      */
+      resetAttribute: function (attributeName) {
+        if (attributeName in this._internalModel._attributes) {
+          this.set(attributeName, this._internalModel.lastAcknowledgedValue(attributeName));
+        }
       }
     });
   }
@@ -17334,7 +17373,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.8.0-canary+01a9fbe394";
+  exports.default = "2.8.0-canary+3a38988bcb";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
