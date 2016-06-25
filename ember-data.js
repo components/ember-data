@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.8.0-canary+d1dcccfbb3
+ * @version   2.8.0-canary+c36ef21872
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -609,7 +609,7 @@ define('ember-data/-private/core', ['exports', 'ember', 'ember-data/version'], f
   */
 
   /**
-    All Ember Data methods and functions are defined inside of this namespace.
+    All Ember Data classes, methods and functions are defined inside of this namespace.
   
     @class DS
     @static
@@ -714,6 +714,18 @@ define('ember-data/-private/debug', ['exports', 'ember'], function (exports, _em
 });
 define('ember-data/-private/ext/date', ['exports', 'ember', 'ember-data/-private/debug'], function (exports, _ember, _emberDataPrivateDebug) {
 
+  /**
+     Date.parse with progressive enhancement for ISO 8601 <https://github.com/csnover/js-iso8601>
+  
+     © 2011 Colin Snover <http://zetafleet.com>
+  
+     Released under MIT license.
+  
+     @class Date
+     @namespace Ember
+     @static
+     @deprecated
+  */
   _ember.default.Date = _ember.default.Date || {};
 
   var origParse = Date.parse;
@@ -806,11 +818,11 @@ define('ember-data/-private/global', ['exports'], function (exports) {
 define("ember-data/-private/initializers/data-adapter", ["exports", "ember-data/-private/system/debug/debug-adapter"], function (exports, _emberDataPrivateSystemDebugDebugAdapter) {
   exports.default = initializeDebugAdapter;
 
-  /**
+  /*
     Configures a registry with injections on Ember applications
     for the Ember-Data store. Accepts an optional namespace argument.
   
-    @method initializeStoreInjections
+    @method initializeDebugAdapter
     @param {Ember.Registry} registry
   */
 
@@ -820,7 +832,7 @@ define("ember-data/-private/initializers/data-adapter", ["exports", "ember-data/
 });
 define('ember-data/-private/initializers/store-injections', ['exports'], function (exports) {
   exports.default = initializeStoreInjections;
-  /**
+  /*
     Configures a registry with injections on Ember applications
     for the Ember-Data store. Accepts an optional namespace argument.
   
@@ -850,7 +862,7 @@ define("ember-data/-private/initializers/store", ["exports", "ember-data/-privat
     }
   }
 
-  /**
+  /*
     Configures a registry for use with an Ember-Data
     store. Accepts an optional namespace argument.
   
@@ -880,7 +892,7 @@ define("ember-data/-private/initializers/store", ["exports", "ember-data/-privat
 define('ember-data/-private/initializers/transforms', ['exports', 'ember-data/-private/transforms'], function (exports, _emberDataPrivateTransforms) {
   exports.default = initializeTransforms;
 
-  /**
+  /*
     Configures a registry for use with Ember-Data
     transforms.
   
@@ -897,11 +909,11 @@ define('ember-data/-private/initializers/transforms', ['exports', 'ember-data/-p
 });
 define('ember-data/-private/instance-initializers/initialize-store-service', ['exports'], function (exports) {
   exports.default = initializeStoreService;
-  /**
+  /*
    Configures a registry for use with an Ember-Data
    store.
   
-   @method initializeStore
+   @method initializeStoreService
    @param {Ember.ApplicationInstance} applicationOrRegistry
    */
 
@@ -17373,7 +17385,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.8.0-canary+d1dcccfbb3";
+  exports.default = "2.8.0-canary+c36ef21872";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
