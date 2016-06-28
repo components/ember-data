@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.8.0-canary+afaddf56ae
+ * @version   2.8.0-canary+f4d7d5ba1d
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -4692,7 +4692,7 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
 */
 define('ember-data/-private/system/normalize-link', ['exports'], function (exports) {
   exports.default = _normalizeLink;
-  /**
+  /*
     This method normalizes a link to an "links object". If the passed link is
     already an object it's returned without any modifications.
   
@@ -17382,7 +17382,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.8.0-canary+afaddf56ae";
+  exports.default = "2.8.0-canary+f4d7d5ba1d";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
