@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.8.0-canary+f4d7d5ba1d
+ * @version   2.8.0-canary+e030fa69ee
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -5304,7 +5304,7 @@ define("ember-data/-private/system/record-arrays/adapter-populated-record-array"
         meta: (0, _emberDataPrivateSystemCloneNull.default)(payload.meta)
       });
 
-      if ((0, _emberDataPrivateFeatures.default)('ds-links-in-record-array')) {
+      if (true) {
         this.set('links', (0, _emberDataPrivateSystemCloneNull.default)(payload.links));
       }
 
@@ -10651,7 +10651,7 @@ define('ember-data/-private/transforms/boolean', ['exports', 'ember', 'ember-dat
     deserialize: function (serialized, options) {
       var type = typeof serialized;
 
-      if ((0, _emberDataPrivateFeatures.default)('ds-boolean-transform-allow-null')) {
+      if (true) {
         if (isNone(serialized) && options.allowNull === true) {
           return null;
         }
@@ -10669,7 +10669,7 @@ define('ember-data/-private/transforms/boolean', ['exports', 'ember', 'ember-dat
     },
 
     serialize: function (deserialized, options) {
-      if ((0, _emberDataPrivateFeatures.default)('ds-boolean-transform-allow-null')) {
+      if (true) {
         if (isNone(deserialized) && options.allowNull === true) {
           return null;
         }
@@ -11697,7 +11697,7 @@ define('ember-data/adapters/errors', ['exports', 'ember', 'ember-data/-private/d
     return out;
   }
 });
-define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters/rest', 'ember-data/-private/features'], function (exports, _ember, _emberDataAdaptersRest, _emberDataPrivateFeatures) {
+define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters/rest', 'ember-data/-private/features', 'ember-data/-private/debug'], function (exports, _ember, _emberDataAdaptersRest, _emberDataPrivateFeatures, _emberDataPrivateDebug) {
 
   /**
     @class JSONAPIAdapter
@@ -11781,7 +11781,7 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
       @return {Promise} promise
     */
     findMany: function (store, type, ids, snapshots) {
-      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
+      if (true && !this._hasCustomizedAjax()) {
         return this._super.apply(this, arguments);
       } else {
         var url = this.buildURL(type.modelName, ids, snapshots, 'findMany');
@@ -11808,7 +11808,7 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
       @return {Promise} promise
     */
     updateRecord: function (store, type, snapshot) {
-      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
+      if (true && !this._hasCustomizedAjax()) {
         return this._super.apply(this, arguments);
       } else {
         var data = {};
@@ -11821,10 +11821,30 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
 
         return this.ajax(url, 'PATCH', { data: data });
       }
+    },
+
+    _hasCustomizedAjax: function () {
+      if (this.ajax !== JSONAPIAdapter.prototype.ajax) {
+        (0, _emberDataPrivateDebug.deprecate)('JSONAPIAdapter#ajax has been deprecated please use. `methodForRequest`, `urlForRequest`, `headersForRequest` or `dataForRequest` instead.', false, {
+          id: 'ds.json-api-adapter.ajax',
+          until: '3.0.0'
+        });
+        return true;
+      }
+
+      if (this.ajaxOptions !== JSONAPIAdapter.prototype.ajaxOptions) {
+        (0, _emberDataPrivateDebug.deprecate)('JSONAPIAdapterr#ajaxOptions has been deprecated please use. `methodForRequest`, `urlForRequest`, `headersForRequest` or `dataForRequest` instead.', false, {
+          id: 'ds.json-api-adapter.ajax-options',
+          until: '3.0.0'
+        });
+        return true;
+      }
+
+      return false;
     }
   });
 
-  if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
+  if (true) {
 
     JSONAPIAdapter.reopen({
 
@@ -12249,7 +12269,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     findRecord: function (store, type, id, snapshot) {
-      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
+      if (true && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, type: type, id: id, snapshot: snapshot,
           requestType: 'findRecord'
@@ -12279,7 +12299,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
     findAll: function (store, type, sinceToken, snapshotRecordArray) {
       var query = this.buildQuery(snapshotRecordArray);
 
-      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
+      if (true && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, type: type, sinceToken: sinceToken, query: query,
           snapshots: snapshotRecordArray,
@@ -12313,7 +12333,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     query: function (store, type, query) {
-      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
+      if (true && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, type: type, query: query,
           requestType: 'query'
@@ -12346,7 +12366,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     queryRecord: function (store, type, query) {
-      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
+      if (true && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, type: type, query: query,
           requestType: 'queryRecord'
@@ -12391,7 +12411,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     findMany: function (store, type, ids, snapshots) {
-      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
+      if (true && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, type: type, ids: ids, snapshots: snapshots,
           requestType: 'findMany'
@@ -12431,7 +12451,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     findHasMany: function (store, snapshot, url, relationship) {
-      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
+      if (true && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, snapshot: snapshot, url: url, relationship: relationship,
           requestType: 'findHasMany'
@@ -12475,7 +12495,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     findBelongsTo: function (store, snapshot, url, relationship) {
-      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
+      if (true && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, snapshot: snapshot, url: url, relationship: relationship,
           requestType: 'findBelongsTo'
@@ -12505,7 +12525,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     createRecord: function (store, type, snapshot) {
-      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
+      if (true && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, type: type, snapshot: snapshot,
           requestType: 'createRecord'
@@ -12537,7 +12557,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     updateRecord: function (store, type, snapshot) {
-      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
+      if (true && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, type: type, snapshot: snapshot,
           requestType: 'updateRecord'
@@ -12567,7 +12587,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     deleteRecord: function (store, type, snapshot) {
-      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
+      if (true && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, type: type, snapshot: snapshot,
           requestType: 'deleteRecord'
@@ -12936,10 +12956,30 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       }
 
       return query;
+    },
+
+    _hasCustomizedAjax: function () {
+      if (this.ajax !== RESTAdapter.prototype.ajax) {
+        (0, _emberDataPrivateDebug.deprecate)('RESTAdapter#ajax has been deprecated please use. `methodForRequest`, `urlForRequest`, `headersForRequest` or `dataForRequest` instead.', false, {
+          id: 'ds.rest-adapter.ajax',
+          until: '3.0.0'
+        });
+        return true;
+      }
+
+      if (this.ajaxOptions !== RESTAdapter.prototype.ajaxOptions) {
+        (0, _emberDataPrivateDebug.deprecate)('RESTAdapter#ajaxOptions has been deprecated please use. `methodForRequest`, `urlForRequest`, `headersForRequest` or `dataForRequest` instead.', false, {
+          id: 'ds.rest-adapter.ajax-options',
+          until: '3.0.0'
+        });
+        return true;
+      }
+
+      return false;
     }
   });
 
-  if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
+  if (true) {
 
     RESTAdapter.reopen({
 
@@ -17382,7 +17422,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.8.0-canary+f4d7d5ba1d";
+  exports.default = "2.8.0-canary+e030fa69ee";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
