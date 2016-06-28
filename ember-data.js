@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.7.0-beta.1+9e431bc251
+ * @version   2.7.0-beta.1+86e79d0de5
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -46,11 +46,13 @@ var loader, define, requireModule, require, requirejs;
       resolve: 0,
       resolveRelative: 0,
       findModule: 0,
+      pendingQueueLength: 0
     };
     requirejs._stats = stats;
   }
 
   var stats;
+
   resetStats();
 
   loader = {
@@ -92,7 +94,7 @@ var loader, define, requireModule, require, requirejs;
   var defaultDeps = ['require', 'exports', 'module'];
 
   function Module(name, deps, callback, alias) {
-    stats.modules ++;
+    stats.modules++;
     this.id        = uuid++;
     this.name      = name;
     this.deps      = !deps.length && callback.length ? defaultDeps : deps;
@@ -103,6 +105,7 @@ var loader, define, requireModule, require, requirejs;
     this.isAlias = alias;
     this.reified = new Array(deps.length);
     this._foundDeps = false;
+    this.isPending = false;
   }
 
   Module.prototype.makeDefaultExport = function() {
@@ -119,6 +122,7 @@ var loader, define, requireModule, require, requirejs;
     stats.exports++;
 
     this.finalized = true;
+    this.isPending = false;
 
     if (loader.wrapModules) {
       this.callback = loader.wrapModules(this.name, this.callback);
@@ -138,6 +142,7 @@ var loader, define, requireModule, require, requirejs;
   Module.prototype.unsee = function() {
     this.finalized = false;
     this._foundDeps = false;
+    this.isPending = false;
     this.module = { exports: {}};
   };
 
@@ -157,6 +162,7 @@ var loader, define, requireModule, require, requirejs;
 
     stats.findDeps++;
     this._foundDeps = true;
+    this.isPending = true;
 
     var deps = this.deps;
 
@@ -233,9 +239,10 @@ var loader, define, requireModule, require, requirejs;
 
     if (!mod) { missingModule(name, referrer); }
 
-    if (pending) {
+    if (pending && !mod.finalized && !mod.isPending) {
       mod.findDeps(pending);
       pending.push(mod);
+      stats.pendingQueueLength++;
     }
     return mod;
   }
@@ -8858,7 +8865,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       });
       ```
        Note: the primary use case for `store.queryRecord` is when a single record
-      is queried and the `id` is not kown beforehand. In all other cases
+      is queried and the `id` is not known beforehand. In all other cases
       `store.query` and using the first item of the array is likely the preferred
       way:
        ```
@@ -11621,7 +11628,7 @@ define('ember-data/adapters/errors', ['exports', 'ember', 'ember-data/-private/d
     return out;
   }
 });
-define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters/rest', 'ember-data/-private/features'], function (exports, _ember, _emberDataAdaptersRest, _emberDataPrivateFeatures) {
+define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters/rest', 'ember-data/-private/features', 'ember-data/-private/debug'], function (exports, _ember, _emberDataAdaptersRest, _emberDataPrivateFeatures, _emberDataPrivateDebug) {
 
   /**
     @class JSONAPIAdapter
@@ -11705,7 +11712,7 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
       @return {Promise} promise
     */
     findMany: function (store, type, ids, snapshots) {
-      if (true) {
+      if (true && !this._hasCustomizedAjax()) {
         return this._super.apply(this, arguments);
       } else {
         var url = this.buildURL(type.modelName, ids, snapshots, 'findMany');
@@ -11732,7 +11739,7 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
       @return {Promise} promise
     */
     updateRecord: function (store, type, snapshot) {
-      if (true) {
+      if (true && !this._hasCustomizedAjax()) {
         return this._super.apply(this, arguments);
       } else {
         var data = {};
@@ -11745,6 +11752,26 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
 
         return this.ajax(url, 'PATCH', { data: data });
       }
+    },
+
+    _hasCustomizedAjax: function () {
+      if (this.ajax !== JSONAPIAdapter.prototype.ajax) {
+        (0, _emberDataPrivateDebug.deprecate)('JSONAPIAdapter#ajax has been deprecated please use. `methodForRequest`, `urlForRequest`, `headersForRequest` or `dataForRequest` instead.', false, {
+          id: 'ds.json-api-adapter.ajax',
+          until: '3.0.0'
+        });
+        return true;
+      }
+
+      if (this.ajaxOptions !== JSONAPIAdapter.prototype.ajaxOptions) {
+        (0, _emberDataPrivateDebug.deprecate)('JSONAPIAdapterr#ajaxOptions has been deprecated please use. `methodForRequest`, `urlForRequest`, `headersForRequest` or `dataForRequest` instead.', false, {
+          id: 'ds.json-api-adapter.ajax-options',
+          until: '3.0.0'
+        });
+        return true;
+      }
+
+      return false;
     }
   });
 
@@ -12173,7 +12200,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     findRecord: function (store, type, id, snapshot) {
-      if (true) {
+      if (true && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, type: type, id: id, snapshot: snapshot,
           requestType: 'findRecord'
@@ -12203,7 +12230,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
     findAll: function (store, type, sinceToken, snapshotRecordArray) {
       var query = this.buildQuery(snapshotRecordArray);
 
-      if (true) {
+      if (true && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, type: type, sinceToken: sinceToken, query: query,
           snapshots: snapshotRecordArray,
@@ -12237,7 +12264,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     query: function (store, type, query) {
-      if (true) {
+      if (true && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, type: type, query: query,
           requestType: 'query'
@@ -12270,7 +12297,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     queryRecord: function (store, type, query) {
-      if (true) {
+      if (true && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, type: type, query: query,
           requestType: 'queryRecord'
@@ -12315,7 +12342,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     findMany: function (store, type, ids, snapshots) {
-      if (true) {
+      if (true && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, type: type, ids: ids, snapshots: snapshots,
           requestType: 'findMany'
@@ -12355,7 +12382,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     findHasMany: function (store, snapshot, url, relationship) {
-      if (true) {
+      if (true && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, snapshot: snapshot, url: url, relationship: relationship,
           requestType: 'findHasMany'
@@ -12399,7 +12426,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     findBelongsTo: function (store, snapshot, url, relationship) {
-      if (true) {
+      if (true && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, snapshot: snapshot, url: url, relationship: relationship,
           requestType: 'findBelongsTo'
@@ -12429,7 +12456,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     createRecord: function (store, type, snapshot) {
-      if (true) {
+      if (true && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, type: type, snapshot: snapshot,
           requestType: 'createRecord'
@@ -12461,7 +12488,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     updateRecord: function (store, type, snapshot) {
-      if (true) {
+      if (true && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, type: type, snapshot: snapshot,
           requestType: 'updateRecord'
@@ -12491,7 +12518,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     deleteRecord: function (store, type, snapshot) {
-      if (true) {
+      if (true && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, type: type, snapshot: snapshot,
           requestType: 'deleteRecord'
@@ -12860,6 +12887,26 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       }
 
       return query;
+    },
+
+    _hasCustomizedAjax: function () {
+      if (this.ajax !== RESTAdapter.prototype.ajax) {
+        (0, _emberDataPrivateDebug.deprecate)('RESTAdapter#ajax has been deprecated please use. `methodForRequest`, `urlForRequest`, `headersForRequest` or `dataForRequest` instead.', false, {
+          id: 'ds.rest-adapter.ajax',
+          until: '3.0.0'
+        });
+        return true;
+      }
+
+      if (this.ajaxOptions !== RESTAdapter.prototype.ajaxOptions) {
+        (0, _emberDataPrivateDebug.deprecate)('RESTAdapter#ajaxOptions has been deprecated please use. `methodForRequest`, `urlForRequest`, `headersForRequest` or `dataForRequest` instead.', false, {
+          id: 'ds.rest-adapter.ajax-options',
+          until: '3.0.0'
+        });
+        return true;
+      }
+
+      return false;
     }
   });
 
@@ -17204,7 +17251,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.7.0-beta.1+9e431bc251";
+  exports.default = "2.7.0-beta.1+86e79d0de5";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
