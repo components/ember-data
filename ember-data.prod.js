@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.8.0-canary+efa4d3a3eb
+ * @version   2.8.0-canary+7e27ecdd7f
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -3072,7 +3072,8 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
         model.get('hasDirtyAttributes'); // true
       });
       ```
-       @property hasDirtyAttributes
+       @since 1.13.0
+      @property hasDirtyAttributes
       @type {Boolean}
       @readOnly
     */
@@ -3564,7 +3565,8 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       record.rollbackAttributes();
       record.get('name'); // 'Untitled Document'
       ```
-       @method rollbackAttributes
+       @since 1.13.0
+      @method rollbackAttributes
     */
     rollbackAttributes: function () {
       this._internalModel.rollbackAttributes();
@@ -8269,7 +8271,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       });
       ```
        See [peekRecord](#method_peekRecord) to get the cached version of a record.
-       @method findRecord
+       @since 1.13.0
+      @method findRecord
       @param {String} modelName
       @param {(String|Integer)} id
       @param {Object} options
@@ -8553,7 +8556,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       var post = store.peekRecord('post', 1);
        post.get('id'); // 1
       ```
-       @method peekRecord
+       @since 1.13.0
+      @method peekRecord
       @param {String} modelName
       @param {String|Integer} id
       @return {DS.Model|null} record
@@ -8705,7 +8709,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       ```
        This method returns a promise, which is resolved with a `RecordArray`
       once the server returns.
-       @method query
+       @since 1.13.0
+      @method query
       @param {String} modelName
       @param {any} query an opaque query to be used by the adapter
       @return {Promise} promise
@@ -8750,8 +8755,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
        The request is made through the adapters' `queryRecord`:
        ```javascript
       // app/adapters/user.js
-      import Adapter from "ember-data/adapter";
-       export default Adapter.extend({
+      import DS from "ember-data";
+       export default DS.Adapter.extend({
         queryRecord(modelName, query) {
           return Ember.$.getJSON("/api/current_user");
         }
@@ -8794,7 +8799,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         console.log(user); // null
       });
       ```
-       @method queryRecord
+       @since 1.13.0
+      @method queryRecord
       @param {String} modelName
       @param {any} query an opaque query to be used by the adapter
       @return {Promise} promise which resolves with the found record or `null`
@@ -8920,7 +8926,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         See [peekAll](#method_peekAll) to get an array of current records in the
       store, without waiting until a reload is finished.
        See [query](#method_query) to only get a subset of records from the server.
-       @method findAll
+       @since 1.13.0
+      @method findAll
       @param {String} modelName
       @param {Object} options
       @return {Promise} promise
@@ -8990,7 +8997,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
        ```javascript
       var localPosts = store.peekAll('post');
       ```
-       @method peekAll
+       @since 1.13.0
+      @method peekAll
       @param {String} modelName
       @return {DS.RecordArray}
     */
@@ -11111,7 +11119,8 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       resolve until you fetched the latest version.
        By default this hook returns `false`, as most UIs should not block user
       interactions while waiting on data update.
-       @method shouldReloadRecord
+       @since 1.13.0
+      @method shouldReloadRecord
       @param {DS.Store} store
       @param {DS.Snapshot} snapshot
       @return {Boolean}
@@ -11151,7 +11160,8 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
        By default this methods returns `true` if the passed `snapshotRecordArray`
       is empty (meaning that there are no records locally available yet),
       otherwise it returns `false`.
-       @method shouldReloadAll
+       @since 1.13.0
+      @method shouldReloadAll
       @param {DS.Store} store
       @param {DS.SnapshotRecordArray} snapshotRecordArray
       @return {Boolean}
@@ -11183,7 +11193,8 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       ```
        By default this hook returns `true` so the data for the record is updated
       in the background.
-       @method shouldBackgroundReloadRecord
+       @since 1.13.0
+      @method shouldBackgroundReloadRecord
       @param {DS.Store} store
       @param {DS.Snapshot} snapshot
       @return {Boolean}
@@ -11215,7 +11226,8 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       ```
        By default this method returns `true`, indicating that a background reload
       should always be triggered.
-       @method shouldBackgroundReloadAll
+       @since 1.13.0
+      @method shouldBackgroundReloadAll
       @param {DS.Store} store
       @param {DS.SnapshotRecordArray} snapshotRecordArray
       @return {Boolean}
@@ -11465,6 +11477,7 @@ define('ember-data/adapters/errors', ['exports', 'ember', 'ember-data/-private/d
 define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters/rest', 'ember-data/-private/features', 'ember-data/-private/debug'], function (exports, _ember, _emberDataAdaptersRest, _emberDataPrivateFeatures, _emberDataPrivateDebug) {
 
   /**
+    @since 1.13.0
     @class JSONAPIAdapter
     @constructor
     @namespace DS
@@ -12018,7 +12031,8 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
        The `findRecord` method makes an Ajax request to a URL computed by
       `buildURL`, and returns a promise for the resulting payload.
        This method performs an HTTP `GET` request with the id provided as part of the query string.
-       @method findRecord
+       @since 1.13.0
+      @method findRecord
       @param {DS.Store} store
       @param {DS.Model} type
       @param {String} id
@@ -12116,7 +12130,8 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       payload.
        The `query` argument is a simple JavaScript object that will be passed directly
       to the server as parameters.
-       @method queryRecord
+       @since 1.13.0
+      @method queryRecord
       @param {DS.Store} store
       @param {DS.Model} type
       @param {Object} query
@@ -12462,7 +12477,8 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       `DS.InvalidError` the store will attempt to normalize the error data
       returned from the server using the serializer's `extractErrors`
       method.
-       @method handleResponse
+       @since 1.13.0
+      @method handleResponse
       @param  {Number} status
       @param  {Object} headers
       @param  {Object} payload
@@ -12502,7 +12518,8 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
     /**
       Default `handleResponse` implementation uses this hook to decide if the
       response is a success.
-       @method isSuccess
+       @since 1.13.0
+      @method isSuccess
       @param  {Number} status
       @param  {Object} headers
       @param  {Object} payload
@@ -12515,7 +12532,8 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
     /**
       Default `handleResponse` implementation uses this hook to decide if the
       response is a an invalid error.
-       @method isInvalid
+       @since 1.13.0
+      @method isInvalid
       @param  {Number} status
       @param  {Object} headers
       @param  {Object} payload
@@ -12694,6 +12712,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       return ['Ember Data Request ' + requestDescription + ' returned a ' + status, payloadDescription, shortenedPayload].join('\n');
     },
 
+    // @since 2.5.0
     buildQuery: function (snapshot) {
       var query = {};
 
@@ -13299,7 +13318,8 @@ define('ember-data/serializer', ['exports', 'ember'], function (exports, _ember)
       The `normalizeResponse` method is used to normalize a payload from the
       server to a JSON-API Document.
        http://jsonapi.org/format/#document-structure
-       @method normalizeResponse
+       @since 1.13.0
+      @method normalizeResponse
       @param {DS.Store} store
       @param {DS.Model} primaryModelClass
       @param {Object} payload
@@ -14003,6 +14023,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
   
     to the format that the Ember Data store expects.
   
+    @since 1.13.0
     @class JSONAPISerializer
     @namespace DS
     @extends DS.JSONSerializer
@@ -14518,8 +14539,8 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
          By overwriting `modelNameFromPayloadType` you can specify that the
         `posr` model should be used:
          ```app/serializers/application.js
-        import JSONAPISerializer from "ember-data/serializers/json-api";
-         export default JSONAPISerializer.extend({
+        import DS from "ember-data";
+         export default DS.JSONAPISerializer.extend({
           modelNameFromPayloadType(payloadType) {
             return payloadType.replace('api::v1::', '');
           }
@@ -14558,7 +14579,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
          By overwriting `payloadTypeFromModelName` you can specify that the
         namespaces model name for the `post` should be used:
          ```app/serializers/application.js
-        import JSONAPISerializer from "ember-data/serializers/json-api";
+        import DS from "ember-data";
          export default JSONAPISerializer.extend({
           payloadTypeFromModelName(modelName) {
             return "api::v1::" + modelName;
@@ -14791,7 +14812,8 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
          store.push(normalized);
       });
       ```
-       @method normalizeResponse
+       @since 1.13.0
+      @method normalizeResponse
       @param {DS.Store} store
       @param {DS.Model} primaryModelClass
       @param {Object} payload
@@ -14825,6 +14847,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
     },
 
     /**
+      @since 1.13.0
       @method normalizeFindRecordResponse
       @param {DS.Store} store
       @param {DS.Model} primaryModelClass
@@ -14838,6 +14861,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
     },
 
     /**
+      @since 1.13.0
       @method normalizeQueryRecordResponse
       @param {DS.Store} store
       @param {DS.Model} primaryModelClass
@@ -14851,6 +14875,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
     },
 
     /**
+      @since 1.13.0
       @method normalizeFindAllResponse
       @param {DS.Store} store
       @param {DS.Model} primaryModelClass
@@ -14864,6 +14889,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
     },
 
     /**
+      @since 1.13.0
       @method normalizeFindBelongsToResponse
       @param {DS.Store} store
       @param {DS.Model} primaryModelClass
@@ -14877,6 +14903,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
     },
 
     /**
+      @since 1.13.0
       @method normalizeFindHasManyResponse
       @param {DS.Store} store
       @param {DS.Model} primaryModelClass
@@ -14890,6 +14917,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
     },
 
     /**
+      @since 1.13.0
       @method normalizeFindManyResponse
       @param {DS.Store} store
       @param {DS.Model} primaryModelClass
@@ -14903,6 +14931,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
     },
 
     /**
+      @since 1.13.0
       @method normalizeQueryResponse
       @param {DS.Store} store
       @param {DS.Model} primaryModelClass
@@ -14916,6 +14945,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
     },
 
     /**
+      @since 1.13.0
       @method normalizeCreateRecordResponse
       @param {DS.Store} store
       @param {DS.Model} primaryModelClass
@@ -14929,6 +14959,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
     },
 
     /**
+      @since 1.13.0
       @method normalizeDeleteRecordResponse
       @param {DS.Store} store
       @param {DS.Model} primaryModelClass
@@ -14942,6 +14973,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
     },
 
     /**
+      @since 1.13.0
       @method normalizeUpdateRecordResponse
       @param {DS.Store} store
       @param {DS.Model} primaryModelClass
@@ -14955,6 +14987,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
     },
 
     /**
+      @since 1.13.0
       @method normalizeSaveResponse
       @param {DS.Store} store
       @param {DS.Model} primaryModelClass
@@ -14968,6 +15001,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
     },
 
     /**
+      @since 1.13.0
       @method normalizeSingleResponse
       @param {DS.Store} store
       @param {DS.Model} primaryModelClass
@@ -14981,6 +15015,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
     },
 
     /**
+      @since 1.13.0
       @method normalizeArrayResponse
       @param {DS.Store} store
       @param {DS.Model} primaryModelClass
@@ -16765,8 +16800,8 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
          By overwriting `modelNameFromPayloadType` you can specify that the
         `administrator` model should be used:
          ```app/serializers/application.js
-        import RESTSerializer from "ember-data/serializers/rest";
-         export default RESTSerializer.extend({
+        import DS from "ember-data";
+         export default DS.RESTSerializer.extend({
           modelNameFromPayloadType(payloadType) {
             return payloadType.replace('api::v1::', '');
           }
@@ -16807,8 +16842,8 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
          By overwriting `payloadTypeFromModelName` you can specify that the
         namespaces model name for the `administrator` should be used:
          ```app/serializers/application.js
-        import RESTSerializer from "ember-data/serializers/rest";
-         export default RESTSerializer.extend({
+        import DS from "ember-data";
+         export default DS.RESTSerializer.extend({
           payloadTypeFromModelName(modelName) {
             return "api::v1::" + modelName;
           }
@@ -16940,7 +16975,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.8.0-canary+efa4d3a3eb";
+  exports.default = "2.8.0-canary+7e27ecdd7f";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
