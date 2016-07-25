@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.8.0-canary+02968c94cc
+ * @version   2.8.0-canary+be53942f84
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -8750,8 +8750,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
        The request is made through the adapters' `queryRecord`:
        ```javascript
       // app/adapters/user.js
-      import Adapter from "ember-data/adapter";
-       export default Adapter.extend({
+      import DS from "ember-data";
+       export default DS.Adapter.extend({
         queryRecord(modelName, query) {
           return Ember.$.getJSON("/api/current_user");
         }
@@ -14518,8 +14518,8 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
          By overwriting `modelNameFromPayloadType` you can specify that the
         `posr` model should be used:
          ```app/serializers/application.js
-        import JSONAPISerializer from "ember-data/serializers/json-api";
-         export default JSONAPISerializer.extend({
+        import DS from "ember-data";
+         export default DS.JSONAPISerializer.extend({
           modelNameFromPayloadType(payloadType) {
             return payloadType.replace('api::v1::', '');
           }
@@ -14558,7 +14558,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
          By overwriting `payloadTypeFromModelName` you can specify that the
         namespaces model name for the `post` should be used:
          ```app/serializers/application.js
-        import JSONAPISerializer from "ember-data/serializers/json-api";
+        import DS from "ember-data";
          export default JSONAPISerializer.extend({
           payloadTypeFromModelName(modelName) {
             return "api::v1::" + modelName;
@@ -16765,8 +16765,8 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
          By overwriting `modelNameFromPayloadType` you can specify that the
         `administrator` model should be used:
          ```app/serializers/application.js
-        import RESTSerializer from "ember-data/serializers/rest";
-         export default RESTSerializer.extend({
+        import DS from "ember-data";
+         export default DS.RESTSerializer.extend({
           modelNameFromPayloadType(payloadType) {
             return payloadType.replace('api::v1::', '');
           }
@@ -16807,8 +16807,8 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
          By overwriting `payloadTypeFromModelName` you can specify that the
         namespaces model name for the `administrator` should be used:
          ```app/serializers/application.js
-        import RESTSerializer from "ember-data/serializers/rest";
-         export default RESTSerializer.extend({
+        import DS from "ember-data";
+         export default DS.RESTSerializer.extend({
           payloadTypeFromModelName(modelName) {
             return "api::v1::" + modelName;
           }
@@ -16940,7 +16940,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.8.0-canary+02968c94cc";
+  exports.default = "2.8.0-canary+be53942f84";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -17335,7 +17335,7 @@ define('ember-inflector/lib/system/inflector', ['exports', 'ember'], function (e
         return word;
       }
 
-      for (rule in this.rules.irregular) {
+      for (rule in irregular) {
         if (lowercase.match(rule + "$")) {
           substitution = irregular[rule];
 
@@ -17344,7 +17344,7 @@ define('ember-inflector/lib/system/inflector', ['exports', 'ember'], function (e
             rule = capitalize(rule);
           }
 
-          return word.replace(rule, substitution);
+          return word.replace(new RegExp(rule, 'i'), substitution);
         }
       }
 
