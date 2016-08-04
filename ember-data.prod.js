@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.8.0-canary+98d7524a46
+ * @version   2.8.0-canary+61ab268d71
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -10766,10 +10766,9 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
         findRecord: function(store, type, id, snapshot) {
            return new Ember.RSVP.Promise(function(resolve, reject) {
             Ember.$.getJSON(`/${type.modelName}/${id}`).then(function(data) {
-              Ember.run(null, resolve, data);
+              resolve(data);
             }, function(jqXHR) {
-              jqXHR.then = null; // tame jQuery's ill mannered promises
-              Ember.run(null, reject, jqXHR);
+              reject(jqXHR);
             });
           });
         }
@@ -10794,10 +10793,9 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
           var query = { since: sinceToken };
           return new Ember.RSVP.Promise(function(resolve, reject) {
             Ember.$.getJSON(`/${type.modelName}`, query).then(function(data) {
-              Ember.run(null, resolve, data);
+              resolve(data);
             }, function(jqXHR) {
-              jqXHR.then = null; // tame jQuery's ill mannered promises
-              Ember.run(null, reject, jqXHR);
+              reject(jqXHR);
             });
           });
         }
@@ -10821,10 +10819,9 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
         query: function(store, type, query) {
           return new Ember.RSVP.Promise(function(resolve, reject) {
             Ember.$.getJSON(`/${type.modelName}`, query).then(function(data) {
-              Ember.run(null, resolve, data);
+              resolve(data);
             }, function(jqXHR) {
-              jqXHR.then = null; // tame jQuery's ill mannered promises
-              Ember.run(null, reject, jqXHR);
+              reject(jqXHR);
             });
           });
         }
@@ -10854,10 +10851,9 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
         queryRecord: function(store, type, query) {
           return new Ember.RSVP.Promise(function(resolve, reject) {
             Ember.$.getJSON(`/${type.modelName}`, query).then(function(data) {
-              Ember.run(null, resolve, data);
+              resolve(data);
             }, function(jqXHR) {
-              jqXHR.then = null; // tame jQuery's ill mannered promises
-              Ember.run(null, reject, jqXHR);
+              reject(jqXHR);
             });
           });
         }
@@ -16975,7 +16971,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.8.0-canary+98d7524a46";
+  exports.default = "2.8.0-canary+61ab268d71";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
