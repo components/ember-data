@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.8.0-canary+db49f96165
+ * @version   2.8.0-canary+9451e7ac3e
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -13921,13 +13921,16 @@ define('ember-data/serializers/embedded-records-mixin', ['exports', 'ember', 'em
       var includeIds = this.hasSerializeIdsOption(attr);
       var includeRecords = this.hasSerializeRecordsOption(attr);
       var embeddedSnapshot = snapshot.belongsTo(attr);
-      var key;
       if (includeIds) {
-        key = this.keyForRelationship(attr, relationship.kind, 'serialize');
+        var serializedKey = this._getMappedKey(relationship.key, snapshot.type);
+        if (serializedKey === relationship.key && this.keyForRelationship) {
+          serializedKey = this.keyForRelationship(relationship.key, relationship.kind, "serialize");
+        }
+
         if (!embeddedSnapshot) {
-          json[key] = null;
+          json[serializedKey] = null;
         } else {
-          json[key] = embeddedSnapshot.id;
+          json[serializedKey] = embeddedSnapshot.id;
 
           if (relationship.options.polymorphic) {
             this.serializePolymorphicType(snapshot, json, relationship);
@@ -14075,7 +14078,11 @@ define('ember-data/serializers/embedded-records-mixin', ['exports', 'ember', 'em
       }
 
       if (this.hasSerializeIdsOption(attr)) {
-        var serializedKey = this.keyForRelationship(attr, relationship.kind, 'serialize');
+        var serializedKey = this._getMappedKey(relationship.key, snapshot.type);
+        if (serializedKey === relationship.key && this.keyForRelationship) {
+          serializedKey = this.keyForRelationship(relationship.key, relationship.kind, "serialize");
+        }
+
         json[serializedKey] = snapshot.hasMany(attr, { ids: true });
       } else if (this.hasSerializeRecordsOption(attr)) {
         this._serializeEmbeddedHasMany(snapshot, json, relationship);
@@ -17455,7 +17462,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.8.0-canary+db49f96165";
+  exports.default = "2.8.0-canary+9451e7ac3e";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
