@@ -6,13 +6,15 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.8.0-canary+6fa788627a
+ * @version   2.8.0-beta.1+481045ae6e
  */
 
 var loader, define, requireModule, require, requirejs;
 
 (function(global) {
   'use strict';
+
+  var stats;
 
   // Save off the original values of these globals, so we can restore them if someone asks us to
   var oldGlobals = {
@@ -51,7 +53,6 @@ var loader, define, requireModule, require, requirejs;
     requirejs._stats = stats;
   }
 
-  var stats;
 
   resetStats();
 
@@ -143,7 +144,7 @@ var loader, define, requireModule, require, requirejs;
     this.finalized = false;
     this._foundDeps = false;
     this.isPending = false;
-    this.module = { exports: {}};
+    this.module = { exports: {} };
   };
 
   Module.prototype.reify = function() {
@@ -190,7 +191,7 @@ var loader, define, requireModule, require, requirejs;
     r['default'] = r;
     r.has = function(dep) {
       return has(resolve(dep, name));
-    }
+    };
     return r;
   };
 
@@ -11001,10 +11002,9 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
         findRecord: function(store, type, id, snapshot) {
            return new Ember.RSVP.Promise(function(resolve, reject) {
             Ember.$.getJSON(`/${type.modelName}/${id}`).then(function(data) {
-              Ember.run(null, resolve, data);
+              resolve(data);
             }, function(jqXHR) {
-              jqXHR.then = null; // tame jQuery's ill mannered promises
-              Ember.run(null, reject, jqXHR);
+              reject(jqXHR);
             });
           });
         }
@@ -11029,10 +11029,9 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
           var query = { since: sinceToken };
           return new Ember.RSVP.Promise(function(resolve, reject) {
             Ember.$.getJSON(`/${type.modelName}`, query).then(function(data) {
-              Ember.run(null, resolve, data);
+              resolve(data);
             }, function(jqXHR) {
-              jqXHR.then = null; // tame jQuery's ill mannered promises
-              Ember.run(null, reject, jqXHR);
+              reject(jqXHR);
             });
           });
         }
@@ -11056,10 +11055,9 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
         query: function(store, type, query) {
           return new Ember.RSVP.Promise(function(resolve, reject) {
             Ember.$.getJSON(`/${type.modelName}`, query).then(function(data) {
-              Ember.run(null, resolve, data);
+              resolve(data);
             }, function(jqXHR) {
-              jqXHR.then = null; // tame jQuery's ill mannered promises
-              Ember.run(null, reject, jqXHR);
+              reject(jqXHR);
             });
           });
         }
@@ -11089,10 +11087,9 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
         queryRecord: function(store, type, query) {
           return new Ember.RSVP.Promise(function(resolve, reject) {
             Ember.$.getJSON(`/${type.modelName}`, query).then(function(data) {
-              Ember.run(null, resolve, data);
+              resolve(data);
             }, function(jqXHR) {
-              jqXHR.then = null; // tame jQuery's ill mannered promises
-              Ember.run(null, reject, jqXHR);
+              reject(jqXHR);
             });
           });
         }
@@ -11925,6 +11922,8 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
 define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'ember-data/adapters/errors', 'ember-data/-private/adapters/build-url-mixin', 'ember-data/-private/features', 'ember-data/-private/debug', 'ember-data/-private/utils/parse-response-headers'], function (exports, _ember, _emberDataAdapter, _emberDataAdaptersErrors, _emberDataPrivateAdaptersBuildUrlMixin, _emberDataPrivateFeatures, _emberDataPrivateDebug, _emberDataPrivateUtilsParseResponseHeaders) {
   var MapWithDefault = _ember.default.MapWithDefault;
   var get = _ember.default.get;
+
+  var Promise = _ember.default.RSVP.Promise;
 
   /**
     The REST adapter allows your store to communicate with an HTTP server by
@@ -12815,42 +12814,29 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
         method: type
       };
 
-      return new _ember.default.RSVP.Promise(function (resolve, reject) {
+      return new Promise(function (resolve, reject) {
         var hash = adapter.ajaxOptions(url, type, options);
 
         hash.success = function (payload, textStatus, jqXHR) {
-
-          var response = adapter.handleResponse(jqXHR.status, (0, _emberDataPrivateUtilsParseResponseHeaders.default)(jqXHR.getAllResponseHeaders()), payload, requestData);
-
-          if (response && response.isAdapterError) {
-            _ember.default.run.join(null, reject, response);
-          } else {
+          try {
+            var response = ajaxSuccess(adapter, jqXHR, payload, requestData);
             _ember.default.run.join(null, resolve, response);
+          } catch (error) {
+            _ember.default.run.join(null, reject, error);
           }
         };
 
         hash.error = function (jqXHR, textStatus, errorThrown) {
-          (0, _emberDataPrivateDebug.runInDebug)(function () {
-            var message = 'The server returned an empty string for ' + type + ' ' + url + ', which cannot be parsed into a valid JSON. Return either null or {}.';
-            var validJSONString = !(textStatus === "parsererror" && jqXHR.responseText === "");
-            (0, _emberDataPrivateDebug.warn)(message, validJSONString, {
-              id: 'ds.adapter.returned-empty-string-as-JSON'
-            });
-          });
-
-          var error = undefined;
-
-          if (errorThrown instanceof Error) {
-            error = errorThrown;
-          } else if (textStatus === 'timeout') {
-            error = new _emberDataAdaptersErrors.TimeoutError();
-          } else if (textStatus === 'abort') {
-            error = new _emberDataAdaptersErrors.AbortError();
-          } else {
-            error = adapter.handleResponse(jqXHR.status, (0, _emberDataPrivateUtilsParseResponseHeaders.default)(jqXHR.getAllResponseHeaders()), adapter.parseErrorResponse(jqXHR.responseText) || errorThrown, requestData);
+          try {
+            var responseData = {
+              textStatus: textStatus,
+              errorThrown: errorThrown
+            };
+            var error = ajaxError(adapter, jqXHR, requestData, responseData);
+            _ember.default.run.join(null, reject, error);
+          } catch (error) {
+            _ember.default.run.join(null, reject, error);
           }
-
-          _ember.default.run.join(null, reject, error);
         };
 
         adapter._ajaxRequest(hash);
@@ -13222,43 +13208,65 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
         return new _ember.default.RSVP.Promise(function (resolve, reject) {
 
           hash.success = function (payload, textStatus, jqXHR) {
-            var response = adapter.handleResponse(jqXHR.status, (0, _emberDataPrivateUtilsParseResponseHeaders.default)(jqXHR.getAllResponseHeaders()), payload, requestData);
-
-            if (response instanceof _emberDataAdaptersErrors.AdapterError) {
-              _ember.default.run.join(null, reject, response);
-            } else {
+            try {
+              var response = ajaxSuccess(adapter, jqXHR, payload, requestData);
               _ember.default.run.join(null, resolve, response);
+            } catch (error) {
+              _ember.default.run.join(null, reject, error);
             }
           };
 
           hash.error = function (jqXHR, textStatus, errorThrown) {
-            (0, _emberDataPrivateDebug.runInDebug)(function () {
-              var message = 'The server returned an empty string for ' + method + ' ' + url + ', which cannot be parsed into a valid JSON. Return either null or {}.';
-              var validJSONString = !(textStatus === "parsererror" && jqXHR.responseText === "");
-              (0, _emberDataPrivateDebug.warn)(message, validJSONString, {
-                id: 'ds.adapter.returned-empty-string-as-JSON'
-              });
-            });
-
-            var error = undefined;
-
-            if (errorThrown instanceof Error) {
-              error = errorThrown;
-            } else if (textStatus === 'timeout') {
-              error = new _emberDataAdaptersErrors.TimeoutError();
-            } else if (textStatus === 'abort') {
-              error = new _emberDataAdaptersErrors.AbortError();
-            } else {
-              error = adapter.handleResponse(jqXHR.status, (0, _emberDataPrivateUtilsParseResponseHeaders.default)(jqXHR.getAllResponseHeaders()), adapter.parseErrorResponse(jqXHR.responseText) || errorThrown, requestData);
+            try {
+              var responseData = {
+                textStatus: textStatus,
+                errorThrown: errorThrown
+              };
+              var error = ajaxError(adapter, jqXHR, requestData, responseData);
+              _ember.default.run.join(null, reject, error);
+            } catch (error) {
+              _ember.default.run.join(null, reject, error);
             }
-
-            _ember.default.run.join(null, reject, error);
           };
 
           adapter._ajaxRequest(hash);
         }, 'DS: RESTAdapter#makeRequest: ' + method + ' ' + url);
       }
     });
+  }
+
+  function ajaxSuccess(adapter, jqXHR, payload, requestData) {
+    var response = adapter.handleResponse(jqXHR.status, (0, _emberDataPrivateUtilsParseResponseHeaders.default)(jqXHR.getAllResponseHeaders()), payload, requestData);
+
+    if (response && response.isAdapterError) {
+      return Promise.reject(response);
+    } else {
+      return response;
+    }
+  }
+
+  function ajaxError(adapter, jqXHR, requestData, responseData) {
+    (0, _emberDataPrivateDebug.runInDebug)(function () {
+      var message = 'The server returned an empty string for ' + requestData.method + ' ' + requestData.url + ', which cannot be parsed into a valid JSON. Return either null or {}.';
+      var validJSONString = !(responseData.textStatus === "parsererror" && jqXHR.responseText === "");
+      (0, _emberDataPrivateDebug.warn)(message, validJSONString, {
+        id: 'ds.adapter.returned-empty-string-as-JSON'
+      });
+    });
+
+    var error = undefined;
+
+    if (responseData.errorThrown instanceof Error) {
+      error = responseData.errorThrown;
+    } else if (responseData.textStatus === 'timeout') {
+      error = new _emberDataAdaptersErrors.TimeoutError();
+    } else if (responseData.textStatus === 'abort') {
+      error = new _emberDataAdaptersErrors.AbortError();
+    } else {
+      error = adapter.handleResponse(jqXHR.status, (0, _emberDataPrivateUtilsParseResponseHeaders.default)(jqXHR.getAllResponseHeaders()), adapter.parseErrorResponse(jqXHR.responseText) || responseData.errorThrown, requestData);
+    }
+
+    return error;
   }
 
   //From http://stackoverflow.com/questions/280634/endswith-in-javascript
@@ -13924,13 +13932,16 @@ define('ember-data/serializers/embedded-records-mixin', ['exports', 'ember', 'em
       var includeIds = this.hasSerializeIdsOption(attr);
       var includeRecords = this.hasSerializeRecordsOption(attr);
       var embeddedSnapshot = snapshot.belongsTo(attr);
-      var key;
       if (includeIds) {
-        key = this.keyForRelationship(attr, relationship.kind, 'serialize');
+        var serializedKey = this._getMappedKey(relationship.key, snapshot.type);
+        if (serializedKey === relationship.key && this.keyForRelationship) {
+          serializedKey = this.keyForRelationship(relationship.key, relationship.kind, "serialize");
+        }
+
         if (!embeddedSnapshot) {
-          json[key] = null;
+          json[serializedKey] = null;
         } else {
-          json[key] = embeddedSnapshot.id;
+          json[serializedKey] = embeddedSnapshot.id;
 
           if (relationship.options.polymorphic) {
             this.serializePolymorphicType(snapshot, json, relationship);
@@ -14078,7 +14089,11 @@ define('ember-data/serializers/embedded-records-mixin', ['exports', 'ember', 'em
       }
 
       if (this.hasSerializeIdsOption(attr)) {
-        var serializedKey = this.keyForRelationship(attr, relationship.kind, 'serialize');
+        var serializedKey = this._getMappedKey(relationship.key, snapshot.type);
+        if (serializedKey === relationship.key && this.keyForRelationship) {
+          serializedKey = this.keyForRelationship(relationship.key, relationship.kind, "serialize");
+        }
+
         json[serializedKey] = snapshot.hasMany(attr, { ids: true });
       } else if (this.hasSerializeRecordsOption(attr)) {
         this._serializeEmbeddedHasMany(snapshot, json, relationship);
@@ -17458,7 +17473,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.8.0-canary+6fa788627a";
+  exports.default = "2.8.0-beta.1+481045ae6e";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -17574,9 +17589,9 @@ define("ember-inflector/lib/system", ["exports", "ember-inflector/lib/system/inf
 });
 define('ember-inflector/lib/system/inflections', ['exports'], function (exports) {
   exports.default = {
-    plurals: [[/$/, 's'], [/s$/i, 's'], [/^(ax|test)is$/i, '$1es'], [/(octop|vir)us$/i, '$1i'], [/(octop|vir)i$/i, '$1i'], [/(alias|status)$/i, '$1es'], [/(bu)s$/i, '$1ses'], [/(buffal|tomat)o$/i, '$1oes'], [/([ti])um$/i, '$1a'], [/([ti])a$/i, '$1a'], [/sis$/i, 'ses'], [/(?:([^f])fe|([lr])f)$/i, '$1$2ves'], [/(hive)$/i, '$1s'], [/([^aeiouy]|qu)y$/i, '$1ies'], [/(x|ch|ss|sh)$/i, '$1es'], [/(matr|vert|ind)(?:ix|ex)$/i, '$1ices'], [/^(m|l)ouse$/i, '$1ice'], [/^(m|l)ice$/i, '$1ice'], [/^(ox)$/i, '$1en'], [/^(oxen)$/i, '$1'], [/(quiz)$/i, '$1zes']],
+    plurals: [[/$/, 's'], [/s$/i, 's'], [/^(ax|test)is$/i, '$1es'], [/(octop|vir)us$/i, '$1i'], [/(octop|vir)i$/i, '$1i'], [/(alias|status|bonus)$/i, '$1es'], [/(bu)s$/i, '$1ses'], [/(buffal|tomat)o$/i, '$1oes'], [/([ti])um$/i, '$1a'], [/([ti])a$/i, '$1a'], [/sis$/i, 'ses'], [/(?:([^f])fe|([lr])f)$/i, '$1$2ves'], [/(hive)$/i, '$1s'], [/([^aeiouy]|qu)y$/i, '$1ies'], [/(x|ch|ss|sh)$/i, '$1es'], [/(matr|vert|ind)(?:ix|ex)$/i, '$1ices'], [/^(m|l)ouse$/i, '$1ice'], [/^(m|l)ice$/i, '$1ice'], [/^(ox)$/i, '$1en'], [/^(oxen)$/i, '$1'], [/(quiz)$/i, '$1zes']],
 
-    singular: [[/s$/i, ''], [/(ss)$/i, '$1'], [/(n)ews$/i, '$1ews'], [/([ti])a$/i, '$1um'], [/((a)naly|(b)a|(d)iagno|(p)arenthe|(p)rogno|(s)ynop|(t)he)(sis|ses)$/i, '$1sis'], [/(^analy)(sis|ses)$/i, '$1sis'], [/([^f])ves$/i, '$1fe'], [/(hive)s$/i, '$1'], [/(tive)s$/i, '$1'], [/([lr])ves$/i, '$1f'], [/([^aeiouy]|qu)ies$/i, '$1y'], [/(s)eries$/i, '$1eries'], [/(m)ovies$/i, '$1ovie'], [/(x|ch|ss|sh)es$/i, '$1'], [/^(m|l)ice$/i, '$1ouse'], [/(bus)(es)?$/i, '$1'], [/(o)es$/i, '$1'], [/(shoe)s$/i, '$1'], [/(cris|test)(is|es)$/i, '$1is'], [/^(a)x[ie]s$/i, '$1xis'], [/(octop|vir)(us|i)$/i, '$1us'], [/(alias|status)(es)?$/i, '$1'], [/^(ox)en/i, '$1'], [/(vert|ind)ices$/i, '$1ex'], [/(matr)ices$/i, '$1ix'], [/(quiz)zes$/i, '$1'], [/(database)s$/i, '$1']],
+    singular: [[/s$/i, ''], [/(ss)$/i, '$1'], [/(n)ews$/i, '$1ews'], [/([ti])a$/i, '$1um'], [/((a)naly|(b)a|(d)iagno|(p)arenthe|(p)rogno|(s)ynop|(t)he)(sis|ses)$/i, '$1sis'], [/(^analy)(sis|ses)$/i, '$1sis'], [/([^f])ves$/i, '$1fe'], [/(hive)s$/i, '$1'], [/(tive)s$/i, '$1'], [/([lr])ves$/i, '$1f'], [/([^aeiouy]|qu)ies$/i, '$1y'], [/(s)eries$/i, '$1eries'], [/(m)ovies$/i, '$1ovie'], [/(x|ch|ss|sh)es$/i, '$1'], [/^(m|l)ice$/i, '$1ouse'], [/(bus)(es)?$/i, '$1'], [/(o)es$/i, '$1'], [/(shoe)s$/i, '$1'], [/(cris|test)(is|es)$/i, '$1is'], [/^(a)x[ie]s$/i, '$1xis'], [/(octop|vir)(us|i)$/i, '$1us'], [/(alias|status|bonus)(es)?$/i, '$1'], [/^(ox)en/i, '$1'], [/(vert|ind)ices$/i, '$1ex'], [/(matr)ices$/i, '$1ix'], [/(quiz)zes$/i, '$1'], [/(database)s$/i, '$1']],
 
     irregularPairs: [['person', 'people'], ['man', 'men'], ['child', 'children'], ['sex', 'sexes'], ['move', 'moves'], ['cow', 'kine'], ['zombie', 'zombies']],
 
