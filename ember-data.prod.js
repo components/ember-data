@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.8.0-canary+9451e7ac3e
+ * @version   2.8.0-canary+4033307d34
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -11679,6 +11679,8 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
   var MapWithDefault = _ember.default.MapWithDefault;
   var get = _ember.default.get;
 
+  var Promise = _ember.default.RSVP.Promise;
+
   /**
     The REST adapter allows your store to communicate with an HTTP server by
     transmitting JSON via XHR. Most Ember.js apps that consume a JSON API
@@ -12568,35 +12570,29 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
         method: type
       };
 
-      return new _ember.default.RSVP.Promise(function (resolve, reject) {
+      return new Promise(function (resolve, reject) {
         var hash = adapter.ajaxOptions(url, type, options);
 
         hash.success = function (payload, textStatus, jqXHR) {
-
-          var response = adapter.handleResponse(jqXHR.status, (0, _emberDataPrivateUtilsParseResponseHeaders.default)(jqXHR.getAllResponseHeaders()), payload, requestData);
-
-          if (response && response.isAdapterError) {
-            _ember.default.run.join(null, reject, response);
-          } else {
+          try {
+            var response = ajaxSuccess(adapter, jqXHR, payload, requestData);
             _ember.default.run.join(null, resolve, response);
+          } catch (error) {
+            _ember.default.run.join(null, reject, error);
           }
         };
 
         hash.error = function (jqXHR, textStatus, errorThrown) {
-
-          var error = undefined;
-
-          if (errorThrown instanceof Error) {
-            error = errorThrown;
-          } else if (textStatus === 'timeout') {
-            error = new _emberDataAdaptersErrors.TimeoutError();
-          } else if (textStatus === 'abort') {
-            error = new _emberDataAdaptersErrors.AbortError();
-          } else {
-            error = adapter.handleResponse(jqXHR.status, (0, _emberDataPrivateUtilsParseResponseHeaders.default)(jqXHR.getAllResponseHeaders()), adapter.parseErrorResponse(jqXHR.responseText) || errorThrown, requestData);
+          try {
+            var responseData = {
+              textStatus: textStatus,
+              errorThrown: errorThrown
+            };
+            var error = ajaxError(adapter, jqXHR, requestData, responseData);
+            _ember.default.run.join(null, reject, error);
+          } catch (error) {
+            _ember.default.run.join(null, reject, error);
           }
-
-          _ember.default.run.join(null, reject, error);
         };
 
         adapter._ajaxRequest(hash);
@@ -12960,36 +12956,58 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
         return new _ember.default.RSVP.Promise(function (resolve, reject) {
 
           hash.success = function (payload, textStatus, jqXHR) {
-            var response = adapter.handleResponse(jqXHR.status, (0, _emberDataPrivateUtilsParseResponseHeaders.default)(jqXHR.getAllResponseHeaders()), payload, requestData);
-
-            if (response instanceof _emberDataAdaptersErrors.AdapterError) {
-              _ember.default.run.join(null, reject, response);
-            } else {
+            try {
+              var response = ajaxSuccess(adapter, jqXHR, payload, requestData);
               _ember.default.run.join(null, resolve, response);
+            } catch (error) {
+              _ember.default.run.join(null, reject, error);
             }
           };
 
           hash.error = function (jqXHR, textStatus, errorThrown) {
-
-            var error = undefined;
-
-            if (errorThrown instanceof Error) {
-              error = errorThrown;
-            } else if (textStatus === 'timeout') {
-              error = new _emberDataAdaptersErrors.TimeoutError();
-            } else if (textStatus === 'abort') {
-              error = new _emberDataAdaptersErrors.AbortError();
-            } else {
-              error = adapter.handleResponse(jqXHR.status, (0, _emberDataPrivateUtilsParseResponseHeaders.default)(jqXHR.getAllResponseHeaders()), adapter.parseErrorResponse(jqXHR.responseText) || errorThrown, requestData);
+            try {
+              var responseData = {
+                textStatus: textStatus,
+                errorThrown: errorThrown
+              };
+              var error = ajaxError(adapter, jqXHR, requestData, responseData);
+              _ember.default.run.join(null, reject, error);
+            } catch (error) {
+              _ember.default.run.join(null, reject, error);
             }
-
-            _ember.default.run.join(null, reject, error);
           };
 
           adapter._ajaxRequest(hash);
         }, 'DS: RESTAdapter#makeRequest: ' + method + ' ' + url);
       }
     });
+  }
+
+  function ajaxSuccess(adapter, jqXHR, payload, requestData) {
+    var response = adapter.handleResponse(jqXHR.status, (0, _emberDataPrivateUtilsParseResponseHeaders.default)(jqXHR.getAllResponseHeaders()), payload, requestData);
+
+    if (response && response.isAdapterError) {
+      return Promise.reject(response);
+    } else {
+      return response;
+    }
+  }
+
+  function ajaxError(adapter, jqXHR, requestData, responseData) {
+
+    var error = undefined;
+
+    if (responseData.errorThrown instanceof Error) {
+      error = responseData.errorThrown;
+    } else if (responseData.textStatus === 'timeout') {
+      error = new _emberDataAdaptersErrors.TimeoutError();
+    } else if (responseData.textStatus === 'abort') {
+      error = new _emberDataAdaptersErrors.AbortError();
+    } else {
+      error = adapter.handleResponse(jqXHR.status, (0, _emberDataPrivateUtilsParseResponseHeaders.default)(jqXHR.getAllResponseHeaders()), adapter.parseErrorResponse(jqXHR.responseText) || responseData.errorThrown, requestData);
+    }
+
+    return error;
   }
 
   //From http://stackoverflow.com/questions/280634/endswith-in-javascript
@@ -16979,7 +16997,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.8.0-canary+9451e7ac3e";
+  exports.default = "2.8.0-canary+4033307d34";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
