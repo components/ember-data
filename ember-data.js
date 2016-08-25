@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.8.0-canary+b87a82d778
+ * @version   2.8.0-canary+79c81a589c
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -3880,6 +3880,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
      @property modelName
      @type String
      @readonly
+     @static
     */
     modelName: null
   });
@@ -9559,9 +9560,11 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     },
 
     /**
-      Returns a model class for a particular key. Used by
-      methods that take a type key (like `find`, `createRecord`,
-      etc.)
+      Returns the model class for the particular `modelName`.
+       The class of a model might be useful if you want to get a list of all the
+      relationship names of the model, see
+      [`relationshipNames`](http://emberjs.com/api/data/classes/DS.Model.html#property_relationshipNames)
+      for example.
        @method modelFor
       @param {String} modelName
       @return {DS.Model}
@@ -17474,7 +17477,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.8.0-canary+b87a82d778";
+  exports.default = "2.8.0-canary+79c81a589c";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
