@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.8.0-canary+79c81a589c
+ * @version   2.8.0-canary+5d9b2105d5
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -10012,7 +10012,7 @@ define('ember-data/-private/system/store/container-instance-cache', ['exports', 
 
   var assign = _ember.default.assign || _ember.default.merge;
 
-  /**
+  /*
    * The `ContainerInstanceCache` serves as a lazy cache for looking up
    * instances of serializers and adapters. It has some additional logic for
    * finding the 'fallback' adapter or serializer.
@@ -17001,7 +17001,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.8.0-canary+79c81a589c";
+  exports.default = "2.8.0-canary+5d9b2105d5";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
