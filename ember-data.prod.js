@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.8.0-canary+03d098d5cd
+ * @version   2.8.0-canary+318e9fef9e
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -16943,11 +16943,40 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   
     // Converts centigrade in the JSON to fahrenheit in the app
     export default DS.Transform.extend({
-      deserialize: function(serialized) {
+      deserialize: function(serialized, options) {
         return (serialized *  1.8) + 32;
       },
-      serialize: function(deserialized) {
+      serialize: function(deserialized, options) {
         return (deserialized - 32) / 1.8;
+      }
+    });
+    ```
+  
+    The options passed into the `DS.attr` function when the attribute is
+    declared on the model is also available in the transform.
+  
+    ```app/models/post.js
+    export default DS.Model.extend({
+      title: DS.attr('string'),
+      markdown: DS.attr('markdown', {
+        markdown: {
+          gfm: false,
+          sanitize: true
+        }
+      })
+    });
+    ```
+  
+    ```app/transforms/markdown.js
+    export default DS.Transform.extend({
+      serialize: function (deserialized, options) {
+        return deserialized.raw;
+      },
+  
+      deserialize: function (serialized, options) {
+        var markdownOptions = options.markdown || {};
+  
+        return marked(serialized, markdownOptions);
       }
     });
     ```
@@ -17001,7 +17030,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.8.0-canary+03d098d5cd";
+  exports.default = "2.8.0-canary+318e9fef9e";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
