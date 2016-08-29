@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.8.0-beta.1+481045ae6e
+ * @version   2.8.0-beta.2+ab75d9a5f7
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -5510,7 +5510,7 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
       var content = get(this, 'content');
       if (idx === undefined) {
         content.addObject(internalModel);
-      } else if (!content.contains(internalModel)) {
+      } else if (!content.includes(internalModel)) {
         content.insertAt(idx, internalModel);
       }
     },
@@ -6111,7 +6111,7 @@ define("ember-data/-private/system/relationships/ext", ["exports", "ember", "emb
 
         (0, _emberDataPrivateDebug.assert)("You specified a hasMany (" + meta.type + ") on " + meta.parentType + " but " + meta.type + " was not found.", modelName);
 
-        if (!types.contains(modelName)) {
+        if (!types.includes(modelName)) {
           (0, _emberDataPrivateDebug.assert)("Trying to sideload " + name + " on " + _this.toString() + " but the type doesn't exist.", !!modelName);
           types.push(modelName);
         }
@@ -8590,7 +8590,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         return function rejectMissingRecords(resolvedRecords) {
           resolvedRecords = _ember.default.A(resolvedRecords);
           var missingRecords = requestedRecords.reject(function (record) {
-            return resolvedRecords.contains(record);
+            return resolvedRecords.includes(record);
           });
           if (missingRecords.length) {
             (0, _emberDataPrivateDebug.warn)('Ember Data expected to find records with the following ids in the adapter response but they were missing: ' + _ember.default.inspect(_ember.default.A(missingRecords).mapBy('id')), false, {
@@ -17473,7 +17473,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.8.0-beta.1+481045ae6e";
+  exports.default = "2.8.0-beta.2+ab75d9a5f7";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
