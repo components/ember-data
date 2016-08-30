@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.8.0-canary+318e9fef9e
+ * @version   2.8.0-canary+40aaff70e8
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -955,65 +955,6 @@ define('ember-data/-private/system/coerce-id', ['exports'], function (exports) {
   function coerceId(id) {
     return id === null || id === undefined || id === '' ? null : id + '';
   }
-});
-define('ember-data/-private/system/container-proxy', ['exports', 'ember-data/-private/debug'], function (exports, _emberDataPrivateDebug) {
-  exports.default = ContainerProxy;
-
-  /*
-    This is used internally to enable deprecation of container paths and provide
-    a decent message to the user indicating how to fix the issue.
-  
-    @class ContainerProxy
-    @namespace DS
-    @private
-  */
-
-  function ContainerProxy(container) {
-    this.container = container;
-  }
-
-  ContainerProxy.prototype.aliasedFactory = function (path, preLookup) {
-    var _this = this;
-
-    return {
-      create: function () {
-        if (preLookup) {
-          preLookup();
-        }
-
-        return _this.container.lookup(path);
-      }
-    };
-  };
-
-  ContainerProxy.prototype.registerAlias = function (source, dest, preLookup) {
-    var factory = this.aliasedFactory(dest, preLookup);
-
-    return this.container.register(source, factory);
-  };
-
-  ContainerProxy.prototype.registerDeprecation = function (deprecated, valid) {
-    var preLookupCallback = function () {
-      (0, _emberDataPrivateDebug.deprecate)('You tried to look up \'' + deprecated + '\', but this has been deprecated in favor of \'' + valid + '\'.', false, {
-        id: 'ds.store.deprecated-lookup',
-        until: '2.0.0'
-      });
-    };
-
-    return this.registerAlias(deprecated, valid, preLookupCallback);
-  };
-
-  ContainerProxy.prototype.registerDeprecations = function (proxyPairs) {
-    var i, proxyPair, deprecated, valid;
-
-    for (i = proxyPairs.length; i > 0; i--) {
-      proxyPair = proxyPairs[i - 1];
-      deprecated = proxyPair['deprecated'];
-      valid = proxyPair['valid'];
-
-      this.registerDeprecation(deprecated, valid);
-    }
-  };
 });
 define("ember-data/-private/system/debug", ["exports", "ember-data/-private/system/debug/debug-adapter"], function (exports, _emberDataPrivateSystemDebugDebugAdapter) {
   exports.default = _emberDataPrivateSystemDebugDebugAdapter.default;
@@ -13452,7 +13393,7 @@ define('ember-data/attr', ['exports', 'ember', 'ember-data/-private/debug'], fun
     }).meta(meta);
   }
 });
-define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/features", "ember-data/-private/global", "ember-data/-private/core", "ember-data/-private/system/normalize-model-name", "ember-data/-private/system/model/internal-model", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/store", "ember-data/-private/system/model", "ember-data/model", "ember-data/-private/system/snapshot", "ember-data/adapter", "ember-data/serializer", "ember-data/-private/system/debug", "ember-data/adapters/errors", "ember-data/-private/system/record-arrays", "ember-data/-private/system/many-array", "ember-data/-private/system/record-array-manager", "ember-data/-private/adapters", "ember-data/-private/adapters/build-url-mixin", "ember-data/-private/serializers", "ember-inflector", "ember-data/serializers/embedded-records-mixin", "ember-data/-private/transforms", "ember-data/relationships", "ember-data/setup-container", "ember-data/-private/instance-initializers/initialize-store-service", "ember-data/-private/system/container-proxy", "ember-data/-private/system/relationships/state/relationship"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateFeatures, _emberDataPrivateGlobal, _emberDataPrivateCore, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStore, _emberDataPrivateSystemModel, _emberDataModel, _emberDataPrivateSystemSnapshot, _emberDataAdapter, _emberDataSerializer, _emberDataPrivateSystemDebug, _emberDataAdaptersErrors, _emberDataPrivateSystemRecordArrays, _emberDataPrivateSystemManyArray, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateAdapters, _emberDataPrivateAdaptersBuildUrlMixin, _emberDataPrivateSerializers, _emberInflector, _emberDataSerializersEmbeddedRecordsMixin, _emberDataPrivateTransforms, _emberDataRelationships, _emberDataSetupContainer, _emberDataPrivateInstanceInitializersInitializeStoreService, _emberDataPrivateSystemContainerProxy, _emberDataPrivateSystemRelationshipsStateRelationship) {
+define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/features", "ember-data/-private/global", "ember-data/-private/core", "ember-data/-private/system/normalize-model-name", "ember-data/-private/system/model/internal-model", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/store", "ember-data/-private/system/model", "ember-data/model", "ember-data/-private/system/snapshot", "ember-data/adapter", "ember-data/serializer", "ember-data/-private/system/debug", "ember-data/adapters/errors", "ember-data/-private/system/record-arrays", "ember-data/-private/system/many-array", "ember-data/-private/system/record-array-manager", "ember-data/-private/adapters", "ember-data/-private/adapters/build-url-mixin", "ember-data/-private/serializers", "ember-inflector", "ember-data/serializers/embedded-records-mixin", "ember-data/-private/transforms", "ember-data/relationships", "ember-data/setup-container", "ember-data/-private/instance-initializers/initialize-store-service", "ember-data/-private/system/relationships/state/relationship"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateFeatures, _emberDataPrivateGlobal, _emberDataPrivateCore, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStore, _emberDataPrivateSystemModel, _emberDataModel, _emberDataPrivateSystemSnapshot, _emberDataAdapter, _emberDataSerializer, _emberDataPrivateSystemDebug, _emberDataAdaptersErrors, _emberDataPrivateSystemRecordArrays, _emberDataPrivateSystemManyArray, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateAdapters, _emberDataPrivateAdaptersBuildUrlMixin, _emberDataPrivateSerializers, _emberInflector, _emberDataSerializersEmbeddedRecordsMixin, _emberDataPrivateTransforms, _emberDataRelationships, _emberDataSetupContainer, _emberDataPrivateInstanceInitializersInitializeStoreService, _emberDataPrivateSystemRelationshipsStateRelationship) {
 
   /**
     Ember Data
@@ -13528,8 +13469,6 @@ define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-da
   _emberDataPrivateCore.default.hasMany = _emberDataRelationships.hasMany;
 
   _emberDataPrivateCore.default.Relationship = _emberDataPrivateSystemRelationshipsStateRelationship.default;
-
-  _emberDataPrivateCore.default.ContainerProxy = _emberDataPrivateSystemContainerProxy.default;
 
   _emberDataPrivateCore.default._setupContainer = _emberDataSetupContainer.default;
   _emberDataPrivateCore.default._initializeStoreService = _emberDataPrivateInstanceInitializersInitializeStoreService.default;
@@ -17506,7 +17445,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.8.0-canary+318e9fef9e";
+  exports.default = "2.8.0-canary+40aaff70e8";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
