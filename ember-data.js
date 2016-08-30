@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.8.0-canary+cf3a8423b1
+ * @version   2.8.0-canary+f5161b0462
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -2914,10 +2914,20 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     },
 
     referenceFor: function (type, name) {
+      var _this3 = this;
+
       var reference = this.references[name];
 
       if (!reference) {
         var relationship = this._relationships.get(name);
+
+        (0, _emberDataPrivateDebug.runInDebug)(function () {
+          var modelName = _this3.modelName;
+          (0, _emberDataPrivateDebug.assert)("There is no " + type + " relationship named '" + name + "' on a model of type '" + modelName + "'", relationship);
+
+          var actualRelationshipKind = relationship.relationshipMeta.kind;
+          (0, _emberDataPrivateDebug.assert)("You tried to get the '" + name + "' relationship on a '" + modelName + "' via record." + type + "('" + name + "'), but the relationship is of type '" + actualRelationshipKind + "'. Use record." + actualRelationshipKind + "('" + name + "') instead.", actualRelationshipKind === type);
+        });
 
         if (type === "belongsTo") {
           reference = new _emberDataPrivateSystemReferences.BelongsToReference(this.store, this, relationship);
@@ -17463,7 +17473,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.8.0-canary+cf3a8423b1";
+  exports.default = "2.8.0-canary+f5161b0462";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
