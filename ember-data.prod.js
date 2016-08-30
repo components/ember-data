@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.8.0-canary+40aaff70e8
+ * @version   2.8.0-canary+cf3a8423b1
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -4629,13 +4629,17 @@ define('ember-data/-private/system/normalize-link', ['exports'], function (expor
 define('ember-data/-private/system/normalize-model-name', ['exports', 'ember'], function (exports, _ember) {
   exports.default = normalizeModelName;
 
+  // All modelNames are dasherized internally. Changing this function may
+  // require changes to other normalization hooks (such as typeForRoot).
+
   /**
-    All modelNames are dasherized internally. Changing this function may
-    require changes to other normalization hooks (such as typeForRoot).
+   This method normalizes a modelName into the format Ember Data uses
+   internally.
+  
     @method normalizeModelName
     @public
     @param {String} modelName
-    @return {String} if the adapter can generate one, an ID
+    @return {String} normalizedModelName
     @for DS
   */
 
@@ -10364,6 +10368,20 @@ define('ember-data/-private/transforms/boolean', ['exports', 'ember', 'ember-dat
       isAdmin: DS.attr('boolean'),
       name: DS.attr('string'),
       email: DS.attr('string')
+    });
+    ```
+  
+    By default the boolean transform only allows for values of `true` or
+    `false`. You can opt into allowing `null` values for
+    boolean attributes via `DS.attr('boolean', { allowNull: true })`
+  
+    ```app/models/user.js
+    import DS from 'ember-data';
+  
+    export default DS.Model.extend({
+      email: DS.attr('string'),
+      username: DS.attr('string'),
+      wantsWeeklyEmail: DS.attr('boolean', { allowNull: true })
     });
     ```
   
@@ -16974,7 +16992,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.8.0-canary+40aaff70e8";
+  exports.default = "2.8.0-canary+cf3a8423b1";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
