@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.8.0-canary+f5161b0462
+ * @version   2.8.0-canary+b258df44be
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -11070,7 +11070,7 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       write:
        ```javascript
       shouldReloadRecord: function(store, ticketSnapshot) {
-        var timeDiff = moment().diff(ticketSnapshot.attr('lastAccessedAt')).minutes();
+        var timeDiff = moment().diff(ticketSnapshot.attr('lastAccessedAt'), 'minutes');
         if (timeDiff > 20) {
           return true;
         } else {
@@ -11084,6 +11084,10 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       resolve until you fetched the latest version.
        By default this hook returns `false`, as most UIs should not block user
       interactions while waiting on data update.
+       Note that, with default settings, `shouldBackgroundReloadRecord` will always
+      re-fetch the records in the background even if `shouldReloadRecord` returns
+      `false`. You can override `shouldBackgroundReloadRecord` if this does not
+      suit your use case.
        @since 1.13.0
       @method shouldReloadRecord
       @param {DS.Store} store
@@ -11109,7 +11113,7 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       shouldReloadAll: function(store, snapshotArray) {
         var snapshots = snapshotArray.snapshots();
          return snapshots.any(function(ticketSnapshot) {
-          var timeDiff = moment().diff(ticketSnapshot.attr('lastAccessedAt')).minutes();
+          var timeDiff = moment().diff(ticketSnapshot.attr('lastAccessedAt'), 'minutes');
           if (timeDiff > 20) {
             return true;
           } else {
@@ -11125,6 +11129,10 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
        By default this methods returns `true` if the passed `snapshotRecordArray`
       is empty (meaning that there are no records locally available yet),
       otherwise it returns `false`.
+       Note that, with default settings, `shouldBackgroundReloadAll` will always
+      re-fetch all the records in the background even if `shouldReloadAll` returns
+      `false`. You can override `shouldBackgroundReloadAll` if this does not suit
+      your use case.
        @since 1.13.0
       @method shouldReloadAll
       @param {DS.Store} store
@@ -16992,7 +17000,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.8.0-canary+f5161b0462";
+  exports.default = "2.8.0-canary+b258df44be";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
