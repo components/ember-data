@@ -1,4 +1,4 @@
-VERSION=v1.13.0
+VERSION=v2.8.0
 
 default:
 	@curl -O http://builds.emberjs.com/tags/$(VERSION)/ember-data.js
