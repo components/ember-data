@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.10.0-canary+b7ae384161
+ * @version   2.10.0-canary+cf3ac13eb8
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -13263,6 +13263,111 @@ define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-da
 
   exports.default = _emberDataPrivateCore.default;
 });
+define('ember-data/initializers/data-adapter', ['exports', 'ember'], function (exports, _ember) {
+
+  /*
+    This initializer is here to keep backwards compatibility with code depending
+    on the `data-adapter` initializer (before Ember Data was an addon).
+  
+    Should be removed for Ember Data 3.x
+  */
+
+  exports.default = {
+    name: 'data-adapter',
+    before: 'store',
+    initialize: _ember.default.K
+  };
+});
+define('ember-data/initializers/ember-data', ['exports', 'ember-data/setup-container', 'ember-data/-private/core'], function (exports, _emberDataSetupContainer, _emberDataPrivateCore) {
+
+  /*
+  
+    This code initializes Ember-Data onto an Ember application.
+  
+    If an Ember.js developer defines a subclass of DS.Store on their application,
+    as `App.StoreService` (or via a module system that resolves to `service:store`)
+    this code will automatically instantiate it and make it available on the
+    router.
+  
+    Additionally, after an application's controllers have been injected, they will
+    each have the store made available to them.
+  
+    For example, imagine an Ember.js application with the following classes:
+  
+    App.StoreService = DS.Store.extend({
+      adapter: 'custom'
+    });
+  
+    App.PostsController = Ember.ArrayController.extend({
+      // ...
+    });
+  
+    When the application is initialized, `App.ApplicationStore` will automatically be
+    instantiated, and the instance of `App.PostsController` will have its `store`
+    property set to that instance.
+  
+    Note that this code will only be run if the `ember-application` package is
+    loaded. If Ember Data is being used in an environment other than a
+    typical application (e.g., node.js where only `ember-runtime` is available),
+    this code will be ignored.
+  */
+
+  exports.default = {
+    name: 'ember-data',
+    initialize: _emberDataSetupContainer.default
+  };
+});
+define('ember-data/initializers/injectStore', ['exports', 'ember'], function (exports, _ember) {
+
+  /*
+    This initializer is here to keep backwards compatibility with code depending
+    on the `injectStore` initializer (before Ember Data was an addon).
+  
+    Should be removed for Ember Data 3.x
+  */
+
+  exports.default = {
+    name: 'injectStore',
+    before: 'store',
+    initialize: _ember.default.K
+  };
+});
+define('ember-data/initializers/store', ['exports', 'ember'], function (exports, _ember) {
+
+  /*
+    This initializer is here to keep backwards compatibility with code depending
+    on the `store` initializer (before Ember Data was an addon).
+  
+    Should be removed for Ember Data 3.x
+  */
+
+  exports.default = {
+    name: 'store',
+    after: 'ember-data',
+    initialize: _ember.default.K
+  };
+});
+define('ember-data/initializers/transforms', ['exports', 'ember'], function (exports, _ember) {
+
+  /*
+    This initializer is here to keep backwards compatibility with code depending
+    on the `transforms` initializer (before Ember Data was an addon).
+  
+    Should be removed for Ember Data 3.x
+  */
+
+  exports.default = {
+    name: 'transforms',
+    before: 'store',
+    initialize: _ember.default.K
+  };
+});
+define("ember-data/instance-initializers/ember-data", ["exports", "ember-data/-private/instance-initializers/initialize-store-service"], function (exports, _emberDataPrivateInstanceInitializersInitializeStoreService) {
+  exports.default = {
+    name: "ember-data",
+    initialize: _emberDataPrivateInstanceInitializersInitializeStoreService.default
+  };
+});
 define("ember-data/model", ["exports", "ember-data/-private/system/model"], function (exports, _emberDataPrivateSystemModel) {
   exports.default = _emberDataPrivateSystemModel.default;
 });
@@ -17004,7 +17109,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.10.0-canary+b7ae384161";
+  exports.default = "2.10.0-canary+cf3ac13eb8";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -17459,6 +17564,39 @@ define('ember-inflector/lib/utils/make-helper', ['exports', 'ember'], function (
     }
     return _ember.default.Handlebars.makeBoundHelper(helperFunction);
   }
+});
+define('ember-load-initializers', ['exports', 'ember'], function (exports, _ember) {
+  exports.default = function (app, prefix) {
+    var regex = new RegExp('^' + prefix + '\/((?:instance-)?initializers)\/');
+    var getKeys = Object.keys || _ember.default.keys;
+
+    getKeys(requirejs._eak_seen).map(function (moduleName) {
+      return {
+        moduleName: moduleName,
+        matches: regex.exec(moduleName)
+      };
+    }).filter(function (dep) {
+      return dep.matches && dep.matches.length === 2;
+    }).forEach(function (dep) {
+      var moduleName = dep.moduleName;
+
+      var module = require(moduleName, null, null, true);
+      if (!module) {
+        throw new Error(moduleName + ' must export an initializer.');
+      }
+
+      var initializerType = _ember.default.String.camelize(dep.matches[1].substring(0, dep.matches[1].length - 1));
+      var initializer = module['default'];
+      if (!initializer.name) {
+        var initializerName = moduleName.match(/[^\/]+\/?$/)[0];
+        initializer.name = initializerName;
+      }
+
+      if (app[initializerType]) {
+        app[initializerType](initializer);
+      }
+    });
+  };
 });
 define('ember', [], function() {
   return {
