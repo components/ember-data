@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.10.0-canary+1f7e2a24a4
+ * @version   2.10.0-canary+b7ae384161
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -3325,13 +3325,6 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
     */
     rolledBack: _ember.default.K,
 
-    /**
-      @property data
-      @private
-      @type {Object}
-    */
-    data: _ember.default.computed.readOnly('_internalModel._data'),
-
     //TODO Do we want to deprecate these?
     /**
       @method send
@@ -3742,6 +3735,17 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
     setId: _ember.default.observer('id', function () {
       this._internalModel.setId(this.get('id'));
     })
+  });
+
+  /**
+   @property data
+   @private
+   @type {Object}
+   */
+  Object.defineProperty(Model.prototype, 'data', {
+    get: function () {
+      return this._internalModel._data;
+    }
   });
 
   Model.reopenClass({
@@ -17000,7 +17004,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.10.0-canary+1f7e2a24a4";
+  exports.default = "2.10.0-canary+b7ae384161";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
