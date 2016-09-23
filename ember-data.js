@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.10.0-canary+07a0037632
+ * @version   2.10.0-canary+16cf35db2a
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -12919,25 +12919,17 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
         var hash = adapter.ajaxOptions(url, type, options);
 
         hash.success = function (payload, textStatus, jqXHR) {
-          try {
-            var response = ajaxSuccess(adapter, jqXHR, payload, requestData);
-            _ember.default.run.join(null, resolve, response);
-          } catch (error) {
-            _ember.default.run.join(null, reject, error);
-          }
+          var response = ajaxSuccess(adapter, jqXHR, payload, requestData);
+          _ember.default.run.join(null, resolve, response);
         };
 
         hash.error = function (jqXHR, textStatus, errorThrown) {
-          try {
-            var responseData = {
-              textStatus: textStatus,
-              errorThrown: errorThrown
-            };
-            var error = ajaxError(adapter, jqXHR, requestData, responseData);
-            _ember.default.run.join(null, reject, error);
-          } catch (error) {
-            _ember.default.run.join(null, reject, error);
-          }
+          var responseData = {
+            textStatus: textStatus,
+            errorThrown: errorThrown
+          };
+          var error = ajaxError(adapter, jqXHR, requestData, responseData);
+          _ember.default.run.join(null, reject, error);
         };
 
         adapter._ajaxRequest(hash);
@@ -13309,25 +13301,17 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
         return new _ember.default.RSVP.Promise(function (resolve, reject) {
 
           hash.success = function (payload, textStatus, jqXHR) {
-            try {
-              var response = ajaxSuccess(adapter, jqXHR, payload, requestData);
-              _ember.default.run.join(null, resolve, response);
-            } catch (error) {
-              _ember.default.run.join(null, reject, error);
-            }
+            var response = ajaxSuccess(adapter, jqXHR, payload, requestData);
+            _ember.default.run.join(null, resolve, response);
           };
 
           hash.error = function (jqXHR, textStatus, errorThrown) {
-            try {
-              var responseData = {
-                textStatus: textStatus,
-                errorThrown: errorThrown
-              };
-              var error = ajaxError(adapter, jqXHR, requestData, responseData);
-              _ember.default.run.join(null, reject, error);
-            } catch (error) {
-              _ember.default.run.join(null, reject, error);
-            }
+            var responseData = {
+              textStatus: textStatus,
+              errorThrown: errorThrown
+            };
+            var error = ajaxError(adapter, jqXHR, requestData, responseData);
+            _ember.default.run.join(null, reject, error);
           };
 
           adapter._ajaxRequest(hash);
@@ -13337,7 +13321,12 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
   }
 
   function ajaxSuccess(adapter, jqXHR, payload, requestData) {
-    var response = adapter.handleResponse(jqXHR.status, (0, _emberDataPrivateUtilsParseResponseHeaders.default)(jqXHR.getAllResponseHeaders()), payload, requestData);
+    var response = undefined;
+    try {
+      response = adapter.handleResponse(jqXHR.status, (0, _emberDataPrivateUtilsParseResponseHeaders.default)(jqXHR.getAllResponseHeaders()), payload, requestData);
+    } catch (error) {
+      return Promise.reject(error);
+    }
 
     if (response && response.isAdapterError) {
       return Promise.reject(response);
@@ -13364,7 +13353,11 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
     } else if (responseData.textStatus === 'abort') {
       error = new _emberDataAdaptersErrors.AbortError();
     } else {
-      error = adapter.handleResponse(jqXHR.status, (0, _emberDataPrivateUtilsParseResponseHeaders.default)(jqXHR.getAllResponseHeaders()), adapter.parseErrorResponse(jqXHR.responseText) || responseData.errorThrown, requestData);
+      try {
+        error = adapter.handleResponse(jqXHR.status, (0, _emberDataPrivateUtilsParseResponseHeaders.default)(jqXHR.getAllResponseHeaders()), adapter.parseErrorResponse(jqXHR.responseText) || responseData.errorThrown, requestData);
+      } catch (e) {
+        error = e;
+      }
     }
 
     return error;
@@ -17601,7 +17594,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.10.0-canary+07a0037632";
+  exports.default = "2.10.0-canary+16cf35db2a";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
