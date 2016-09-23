@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.10.0-canary+75e8781968
+ * @version   2.10.0-canary+07a0037632
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -431,102 +431,218 @@ define('ember-data/-private/adapters/build-url-mixin', ['exports', 'ember'], fun
     },
 
     /**
-     * @method urlForFindRecord
-     * @param {String} id
-     * @param {String} modelName
-     * @param {DS.Snapshot} snapshot
-     * @return {String} url
-     */
+     Builds a URL for a `store.findRecord(type, id)` call.
+      Example:
+      ```app/adapters/user.js
+     import DS from 'ember-data';
+      export default DS.JSONAPIAdapter.extend({
+       urlForFindRecord(id, modelName, snapshot) {
+         let baseUrl = this.buildURL();
+         return `${baseUrl}/users/${snapshot.adapterOptions.user_id}/playlists/${id}`;
+       }
+     });
+     ```
+      @method urlForFindRecord
+     @param {String} id
+     @param {String} modelName
+     @param {DS.Snapshot} snapshot
+     @return {String} url
+      */
     urlForFindRecord: function (id, modelName, snapshot) {
       return this._buildURL(modelName, id);
     },
 
     /**
-     * @method urlForFindAll
-     * @param {String} modelName
-     * @param {DS.SnapshotRecordArray} snapshot
-     * @return {String} url
+     Builds a URL for a `store.findAll(type)` call.
+      Example:
+      ```app/adapters/comment.js
+     import DS from 'ember-data';
+      export default DS.JSONAPIAdapter.extend({
+       urlForFindAll(id, modelName, snapshot) {
+         return 'data/comments.json';
+       }
+     });
+     ```
+      @method urlForFindAll
+     @param {String} modelName
+     @param {DS.SnapshotRecordArray} snapshot
+     @return {String} url
      */
     urlForFindAll: function (modelName, snapshot) {
       return this._buildURL(modelName);
     },
 
     /**
-     * @method urlForQuery
-     * @param {Object} query
-     * @param {String} modelName
-     * @return {String} url
+     Builds a URL for a `store.query(type, query)` call.
+      Example:
+      ```app/adapters/application.js
+     import DS from 'ember-data';
+      export default DS.RESTAdapter.extend({
+       host: 'https://api.github.com',
+       urlForQuery (query, modelName) {
+         switch(modelName) {
+           case 'repo':
+             return `https://api.github.com/orgs/${query.orgId}/repos`;
+           default:
+             return this._super(...arguments);
+         }
+       }
+     });
+     ```
+      @method urlForQuery
+     @param {Object} query
+     @param {String} modelName
+     @return {String} url
      */
     urlForQuery: function (query, modelName) {
       return this._buildURL(modelName);
     },
 
     /**
-     * @method urlForQueryRecord
-     * @param {Object} query
-     * @param {String} modelName
-     * @return {String} url
+     Builds a URL for a `store.queryRecord(type, query)` call.
+      Example:
+      ```app/adapters/application.js
+     import DS from 'ember-data';
+      export default DS.RESTAdapter.extend({
+       urlForQueryRecord({ slug }, modelName) {
+         let baseUrl = this.buildURL();
+         return `${baseUrl}/${encodeURIComponent(slug)}`;
+       }
+     });
+     ```
+      @method urlForQueryRecord
+     @param {Object} query
+     @param {String} modelName
+     @return {String} url
      */
     urlForQueryRecord: function (query, modelName) {
       return this._buildURL(modelName);
     },
 
     /**
-     * @method urlForFindMany
-     * @param {Array} ids
-     * @param {String} modelName
-     * @param {Array} snapshots
-     * @return {String} url
+     Builds a URL for coalesceing multiple `store.findRecord(type, id)
+     records into 1 request when the adapter's `coalesceFindRequests`
+     property is true.
+      Example:
+      ```app/adapters/application.js
+     import DS from 'ember-data';
+      export default DS.RESTAdapter.extend({
+       urlForFindMany(ids, modelName) {
+         let baseUrl = this.buildURL();
+         return `${baseUrl}/coalesce`;
+       }
+     });
+     ```
+      @method urlForFindMany
+     @param {Array} ids
+     @param {String} modelName
+     @param {Array} snapshots
+     @return {String} url
      */
     urlForFindMany: function (ids, modelName, snapshots) {
       return this._buildURL(modelName);
     },
 
     /**
-     * @method urlForFindHasMany
-     * @param {String} id
-     * @param {String} modelName
-     * @param {DS.Snapshot} snapshot
-     * @return {String} url
+     Builds a URL for fetching a async hasMany relationship when a url
+     is not provided by the server.
+      Example:
+      ```app/adapters/application.js
+     import DS from 'ember-data';
+      export default DS.JSONAPIAdapter.extend({
+       urlForFindHasMany(id, modelName, snapshot) {
+         let baseUrl = this.buildURL(id, modelName);
+         return `${baseUrl}/relationships`;
+       }
+     });
+     ```
+      @method urlForFindHasMany
+     @param {String} id
+     @param {String} modelName
+     @param {DS.Snapshot} snapshot
+     @return {String} url
      */
     urlForFindHasMany: function (id, modelName, snapshot) {
       return this._buildURL(modelName, id);
     },
 
     /**
-     * @method urlForFindBelongsTo
-     * @param {String} id
-     * @param {String} modelName
-     * @param {DS.Snapshot} snapshot
-     * @return {String} url
+     Builds a URL for fetching a async belongsTo relationship when a url
+     is not provided by the server.
+      Example:
+      ```app/adapters/application.js
+     import DS from 'ember-data';
+      export default DS.JSONAPIAdapter.extend({
+       urlForFindBelongsTo(id, modelName, snapshot) {
+         let baseUrl = this.buildURL(id, modelName);
+         return `${baseUrl}/relationships`;
+       }
+     });
+     ```
+      @method urlForFindBelongsTo
+     @param {String} id
+     @param {String} modelName
+     @param {DS.Snapshot} snapshot
+     @return {String} url
      */
     urlForFindBelongsTo: function (id, modelName, snapshot) {
       return this._buildURL(modelName, id);
     },
 
     /**
-     * @method urlForCreateRecord
-     * @param {String} modelName
-     * @param {DS.Snapshot} snapshot
-     * @return {String} url
+     Builds a URL for a `record.save()` call when the record was created
+     locally using `store.createRecord()`.
+      Example:
+      ```app/adapters/application.js
+     import DS from 'ember-data';
+      export default DS.RESTAdapter.extend({
+       urlForCreateRecord(modelName, snapshot) {
+         return this._super(...arguments) + '/new';
+       }
+     });
+     ```
+      @method urlForCreateRecord
+     @param {String} modelName
+     @param {DS.Snapshot} snapshot
+     @return {String} url
      */
     urlForCreateRecord: function (modelName, snapshot) {
       return this._buildURL(modelName);
     },
 
     /**
-     * @method urlForUpdateRecord
-     * @param {String} id
-     * @param {String} modelName
-     * @param {DS.Snapshot} snapshot
-     * @return {String} url
+     Builds a URL for a `record.save()` call when the record has been update locally.
+      Example:
+      ```app/adapters/application.js
+     import DS from 'ember-data';
+      export default DS.RESTAdapter.extend({
+       urlForUpdateRecord(id, modelName, snapshot) {
+         return `/${id}/feed?access_token=${snapshot.adapterOptions.token}`;
+       }
+     });
+     ```
+      @method urlForUpdateRecord
+     @param {String} id
+     @param {String} modelName
+     @param {DS.Snapshot} snapshot
+     @return {String} url
      */
     urlForUpdateRecord: function (id, modelName, snapshot) {
       return this._buildURL(modelName, id);
     },
 
     /**
-     * @method urlForDeleteRecord
+     Builds a URL for a `record.save()` call when the record has been deleted locally.
+      Example:
+      ```app/adapters/application.js
+     import DS from 'ember-data';
+      export default DS.RESTAdapter.extend({
+       urlForDeleteRecord(id, modelName, snapshot) {
+         return this._super(...arguments) + '/destroy';
+       }
+     });
+     ```
+      * @method urlForDeleteRecord
      * @param {String} id
      * @param {String} modelName
      * @param {DS.Snapshot} snapshot
@@ -17485,7 +17601,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.10.0-canary+75e8781968";
+  exports.default = "2.10.0-canary+07a0037632";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
