@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.10.0-canary+cdbdcfd614
+ * @version   2.10.0-canary+a93e92e2fa
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -5649,6 +5649,7 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
       this._unregisterFromManager();
       this._dissociateFromOwnRecords();
       set(this, 'content', undefined);
+      set(this, 'length', 0);
       this._super.apply(this, arguments);
     },
 
@@ -9268,7 +9269,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
      store.unloadAll('post');
      ```
       @method unloadAll
-     @param {String=} modelName
+     @param {String} modelName
     */
     unloadAll: function (modelName) {
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember.default.inspect(modelName), !modelName || typeof modelName === 'string');
@@ -10800,7 +10801,7 @@ define("ember-data/-private/transforms/date", ["exports", "ember-data/-private/e
     },
 
     serialize: function (date) {
-      if (date instanceof Date) {
+      if (date instanceof Date && !isNaN(date)) {
         return date.toISOString();
       } else {
         return null;
@@ -17594,7 +17595,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.10.0-canary+cdbdcfd614";
+  exports.default = "2.10.0-canary+a93e92e2fa";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
