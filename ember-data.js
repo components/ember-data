@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.10.0-canary+6dce4e83ae
+ * @version   2.10.0-canary+234042672f
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -754,6 +754,7 @@ define('ember-data/-private/debug', ['exports', 'ember'], function (exports, _em
   exports.deprecate = deprecate;
   exports.info = info;
   exports.runInDebug = runInDebug;
+  exports.instrument = instrument;
   exports.warn = warn;
   exports.debugSeal = debugSeal;
   exports.assertPolymorphicType = assertPolymorphicType;
@@ -776,6 +777,10 @@ define('ember-data/-private/debug', ['exports', 'ember'], function (exports, _em
 
   function runInDebug() {
     return _ember.default.runInDebug.apply(_ember.default, arguments);
+  }
+
+  function instrument(method) {
+    return method();
   }
 
   function warn() {
@@ -2241,6 +2246,9 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       return get(this.currentState, key);
     };
   }
+
+  // this (and all heimdall instrumentation) will be stripped by a babel transform
+  //  https://github.com/heimdalljs/babel5-plugin-strip-heimdall
 
   /*
     `InternalModel` is the Model class that we use internally inside Ember Data to represent models.
@@ -7612,6 +7620,7 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
     }
   };
 });
+/* global heimdall */
 define('ember-data/-private/system/snapshot-record-array', ['exports'], function (exports) {
   exports.default = SnapshotRecordArray;
   /**
@@ -8961,7 +8970,9 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       (0, _emberDataPrivateDebug.assert)("You tried to load a query but you have no adapter (for " + typeClass + ")", adapter);
       (0, _emberDataPrivateDebug.assert)("You tried to load a query but your adapter does not implement `query`", typeof adapter.query === 'function');
 
-      return (0, _emberDataPrivateSystemPromiseProxies.promiseArray)((0, _emberDataPrivateSystemStoreFinders._query)(adapter, this, typeClass, query, array));
+      var pA = (0, _emberDataPrivateSystemPromiseProxies.promiseArray)((0, _emberDataPrivateSystemStoreFinders._query)(adapter, this, typeClass, query, array));
+
+      return pA;
     },
 
     /**
@@ -9177,9 +9188,12 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     findAll: function (modelName, options) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's findAll method", isPresent(modelName));
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember.default.inspect(modelName), typeof modelName === 'string');
+
       var typeClass = this.modelFor(modelName);
 
-      return this._fetchAll(typeClass, this.peekAll(modelName), options);
+      var fetch = this._fetchAll(typeClass, this.peekAll(modelName), options);
+
+      return fetch;
     },
 
     /**
@@ -9815,6 +9829,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         for (i = 0; i < length; i++) {
           internalModels[i] = this._pushInternalModel(data.data[i]).getRecord();
         }
+
         return internalModels;
       }
 
@@ -9826,7 +9841,9 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
       var internalModel = this._pushInternalModel(data.data);
 
-      return internalModel.getRecord();
+      var record = internalModel.getRecord();
+
+      return record;
     },
 
     _hasModelFor: function (type) {
@@ -10393,6 +10410,7 @@ define('ember-data/-private/system/store/container-instance-cache', ['exports', 
     }
   });
 });
+/* global heimdall */
 define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/store/common", "ember-data/-private/system/store/serializer-response", "ember-data/-private/system/store/serializers"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemStoreCommon, _emberDataPrivateSystemStoreSerializerResponse, _emberDataPrivateSystemStoreSerializers) {
   exports._find = _find;
   exports._findMany = _findMany;
@@ -10566,6 +10584,7 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
 
       (0, _emberDataPrivateDebug.assert)('The response to store.query is expected to be an array but it was a single record. Please wrap your response in an array or use `store.queryRecord` to query for a single record.', Array.isArray(records));
       recordArray.loadRecords(records, payload);
+
       return recordArray;
     }, null, "DS: Extract payload of query " + typeClass);
   }
@@ -12017,6 +12036,7 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
 
   exports.default = JSONAPIAdapter;
 });
+/* global heimdall */
 /**
   @module ember-data
 */
@@ -13374,6 +13394,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
 
   exports.default = RESTAdapter;
 });
+/* global heimdall */
 /**
   @module ember-data
 */
@@ -17594,7 +17615,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.10.0-canary+6dce4e83ae";
+  exports.default = "2.10.0-canary+234042672f";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
