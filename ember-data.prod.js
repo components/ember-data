@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.10.0-canary+a93e92e2fa
+ * @version   2.10.0-canary+6dce4e83ae
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -2218,7 +2218,6 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     };
   }
 
-  var guid = 0;
   /*
     `InternalModel` is the Model class that we use internally inside Ember Data to represent models.
     Internal ED methods should only deal with `InternalModel` objects. It is a fast, plain Javascript class.
@@ -2256,7 +2255,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     this.isError = false;
     this.error = null;
     this.__ember_meta__ = null;
-    this[_ember.default.GUID_KEY] = guid++ + 'internal-model';
+    this[_ember.default.GUID_KEY] = _ember.default.guidFor(this);
     /*
       implicit relationships are relationship which have not been declared but the inverse side exists on
       another record somewhere
@@ -17219,7 +17218,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.10.0-canary+a93e92e2fa";
+  exports.default = "2.10.0-canary+6dce4e83ae";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
