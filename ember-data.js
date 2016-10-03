@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.9.0-beta.1+c69a338ec8
+ * @version   2.9.0-beta.2+83ca7bef35
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -2126,7 +2126,6 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     };
   }
 
-  var guid = 0;
   /*
     `InternalModel` is the Model class that we use internally inside Ember Data to represent models.
     Internal ED methods should only deal with `InternalModel` objects. It is a fast, plain Javascript class.
@@ -2164,7 +2163,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     this.isError = false;
     this.error = null;
     this.__ember_meta__ = null;
-    this[_ember.default.GUID_KEY] = guid++ + 'internal-model';
+    this[_ember.default.GUID_KEY] = _ember.default.guidFor(this);
     /*
       implicit relationships are relationship which have not been declared but the inverse side exists on
       another record somewhere
@@ -5533,6 +5532,7 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
       this._unregisterFromManager();
       this._dissociateFromOwnRecords();
       set(this, 'content', undefined);
+      set(this, 'length', 0);
       this._super.apply(this, arguments);
     },
 
@@ -9152,7 +9152,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
      store.unloadAll('post');
      ```
       @method unloadAll
-     @param {String=} modelName
+     @param {String} modelName
     */
     unloadAll: function (modelName) {
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember.default.inspect(modelName), !modelName || typeof modelName === 'string');
@@ -10684,7 +10684,7 @@ define("ember-data/-private/transforms/date", ["exports", "ember-data/-private/e
     },
 
     serialize: function (date) {
-      if (date instanceof Date) {
+      if (date instanceof Date && !isNaN(date)) {
         return date.toISOString();
       } else {
         return null;
@@ -17478,7 +17478,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.9.0-beta.1+c69a338ec8";
+  exports.default = "2.9.0-beta.2+83ca7bef35";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
