@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.10.0-canary+5ab07dbd93
+ * @version   2.10.0-canary+2926c47453
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -9216,15 +9216,15 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       (0, _emberDataPrivateDebug.assert)("You tried to load all records but you have no adapter (for " + typeClass + ")", adapter);
       (0, _emberDataPrivateDebug.assert)("You tried to load all records but your adapter does not implement `findAll`", typeof adapter.findAll === 'function');
 
-      set(array, 'isUpdating', true);
-
       if (options.reload) {
+        set(array, 'isUpdating', true);
         return (0, _emberDataPrivateSystemPromiseProxies.promiseArray)((0, _emberDataPrivateSystemStoreFinders._findAll)(adapter, this, typeClass, sinceToken, options));
       }
 
       var snapshotArray = array.createSnapshot(options);
 
       if (adapter.shouldReloadAll(this, snapshotArray)) {
+        set(array, 'isUpdating', true);
         return (0, _emberDataPrivateSystemPromiseProxies.promiseArray)((0, _emberDataPrivateSystemStoreFinders._findAll)(adapter, this, typeClass, sinceToken, options));
       }
 
@@ -9233,6 +9233,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       }
 
       if (options.backgroundReload || adapter.shouldBackgroundReloadAll(this, snapshotArray)) {
+        set(array, 'isUpdating', true);
         (0, _emberDataPrivateSystemStoreFinders._findAll)(adapter, this, typeClass, sinceToken, options);
       }
 
@@ -17620,7 +17621,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.10.0-canary+5ab07dbd93";
+  exports.default = "2.10.0-canary+2926c47453";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
