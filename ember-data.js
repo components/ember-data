@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.10.0-canary+2c47399a90
+ * @version   2.10.0-canary+5ab07dbd93
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -5534,6 +5534,11 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
       @type DS.Store
     */
     store: null,
+
+    replace: function () {
+      var type = get(this, 'type').toString();
+      throw new Error("The result of a server query (for all " + type + " types) is immutable. To modify contents, use toArray()");
+    },
 
     /**
       Retrieves an object from the content by index.
@@ -17615,7 +17620,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.10.0-canary+2c47399a90";
+  exports.default = "2.10.0-canary+5ab07dbd93";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
