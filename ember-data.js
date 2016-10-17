@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.10.0-canary+f3ab4886c5
+ * @version   2.10.0-canary+2d2e6cea48
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -15082,7 +15082,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
         }
         ```
          By overwriting `modelNameFromPayloadType` you can specify that the
-        `posr` model should be used:
+        `post` model should be used:
          ```app/serializers/application.js
         import DS from "ember-data";
          export default DS.JSONAPISerializer.extend({
@@ -17621,7 +17621,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.10.0-canary+f3ab4886c5";
+  exports.default = "2.10.0-canary+2d2e6cea48";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
