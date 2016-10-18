@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+5c99faabc3
+ * @version   2.11.0-canary+88e909cdef
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -2260,6 +2260,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     this.recordReference = new _emberDataPrivateSystemReferences.RecordReference(store, this);
     this.references = {};
     this.isReloading = false;
+    this._isDestroyed = false;
     this.isError = false;
     this.error = null;
     this.__ember_meta__ = null;
@@ -2417,7 +2418,12 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       }
     },
 
+    get isDestroyed() {
+      return this._isDestroyed;
+    },
+
     destroy: function () {
+      this._isDestroyed = true;
       if (this.record) {
         return this.record.destroy();
       }
@@ -3966,8 +3972,8 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
   exports.default = Model.extend(_emberDataPrivateSystemDebugDebugInfo.default, _emberDataPrivateSystemRelationshipsBelongsTo.BelongsToMixin, _emberDataPrivateSystemRelationshipsExt.DidDefinePropertyMixin, _emberDataPrivateSystemRelationshipsExt.RelationshipsInstanceMethodsMixin, _emberDataPrivateSystemRelationshipsHasMany.HasManyMixin, _emberDataPrivateSystemModelAttr.AttrInstanceMethodsMixin);
 });
 define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-data/-private/debug'], function (exports, _ember, _emberDataPrivateDebug) {
-
   var get = _ember.default.get;
+
   /*
     This file encapsulates the various states that a record can transition
     through during its lifecycle.
@@ -4204,7 +4210,7 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
 
       //TODO(Igor) reloading now triggers a
       //loadingData event, though it seems fine?
-      loadingData: _ember.default.K,
+      loadingData: function () {},
 
       propertyWasReset: function (internalModel, name) {
         if (!internalModel.hasChangedAttributes()) {
@@ -4220,7 +4226,7 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
         }
       },
 
-      becomeDirty: _ember.default.K,
+      becomeDirty: function () {},
 
       willCommit: function (internalModel) {
         internalModel.transitionTo('inFlight');
@@ -4253,19 +4259,17 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
 
       // EVENTS
       didSetProperty: didSetProperty,
-      becomeDirty: _ember.default.K,
-      pushedData: _ember.default.K,
+      becomeDirty: function () {},
+      pushedData: function () {},
 
       unloadRecord: assertAgainstUnloadRecord,
 
       // TODO: More robust semantics around save-while-in-flight
-      willCommit: _ember.default.K,
+      willCommit: function () {},
 
       didCommit: function (internalModel) {
-        var dirtyType = get(this, 'dirtyType');
-
         internalModel.transitionTo('saved');
-        internalModel.send('invokeLifecycleCallbacks', dirtyType);
+        internalModel.send('invokeLifecycleCallbacks', this.dirtyType);
       },
 
       becameInvalid: function (internalModel) {
@@ -4300,9 +4304,9 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
         }
       },
 
-      becameInvalid: _ember.default.K,
-      becomeDirty: _ember.default.K,
-      pushedData: _ember.default.K,
+      becameInvalid: function () {},
+      becomeDirty: function () {},
+      pushedData: function () {},
 
       willCommit: function (internalModel) {
         internalModel.clearErrorMessages();
@@ -4331,7 +4335,7 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
 
   function deepClone(object) {
     var clone = {};
-    var value;
+    var value = undefined;
 
     for (var prop in object) {
       value = object[prop];
@@ -4367,6 +4371,7 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
   createdState.invalid.rolledBack = function (internalModel) {
     internalModel.transitionTo('deleted.saved');
   };
+
   createdState.uncommitted.rolledBack = function (internalModel) {
     internalModel.transitionTo('deleted.saved');
   };
@@ -4421,7 +4426,7 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
     // doesn't change your state. For example, if you're in the
     // in-flight state, rolling back the record doesn't move
     // you out of the in-flight state.
-    rolledBack: _ember.default.K,
+    rolledBack: function () {},
     unloadRecord: function (internalModel) {
       // clear relationships before moving to deleted state
       // otherwise it fails
@@ -4429,7 +4434,7 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
       internalModel.transitionTo('deleted.saved');
     },
 
-    propertyWasReset: _ember.default.K,
+    propertyWasReset: function () {},
 
     // SUBSTATES
 
@@ -4502,7 +4507,7 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
 
       //TODO(Igor) Reloading now triggers a loadingData event,
       //but it should be ok?
-      loadingData: _ember.default.K,
+      loadingData: function () {},
 
       // SUBSTATES
 
@@ -4518,7 +4523,7 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
         // EVENTS
         didSetProperty: didSetProperty,
 
-        pushedData: _ember.default.K,
+        pushedData: function () {},
 
         becomeDirty: function (internalModel) {
           internalModel.transitionTo('updated.uncommitted');
@@ -4549,8 +4554,7 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
 
         // loaded.saved.notFound would be triggered by a failed
         // `reload()` on an unchanged record
-        notFound: _ember.default.K
-
+        notFound: function () {}
       },
 
       // A record is in this state after it has been locally
@@ -4597,9 +4601,9 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
           internalModel.triggerLater('ready');
         },
 
-        pushedData: _ember.default.K,
-        becomeDirty: _ember.default.K,
-        deleteRecord: _ember.default.K,
+        pushedData: function () {},
+        becomeDirty: function () {},
+        deleteRecord: function () {},
 
         rolledBack: function (internalModel) {
           internalModel.transitionTo('loaded.saved');
@@ -4620,7 +4624,7 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
         unloadRecord: assertAgainstUnloadRecord,
 
         // TODO: More robust semantics around save-while-in-flight
-        willCommit: _ember.default.K,
+        willCommit: function () {},
         didCommit: function (internalModel) {
           internalModel.transitionTo('saved');
 
@@ -4656,9 +4660,8 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
           internalModel.triggerLater('didCommit', internalModel);
         },
 
-        willCommit: _ember.default.K,
-
-        didCommit: _ember.default.K
+        willCommit: function () {},
+        didCommit: function () {}
       },
 
       invalid: {
@@ -4674,10 +4677,10 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
           }
         },
 
-        becameInvalid: _ember.default.K,
-        becomeDirty: _ember.default.K,
-        deleteRecord: _ember.default.K,
-        willCommit: _ember.default.K,
+        becameInvalid: function () {},
+        becomeDirty: function () {},
+        deleteRecord: function () {},
+        willCommit: function () {},
 
         rolledBack: function (internalModel) {
           internalModel.clearErrorMessages();
@@ -4714,16 +4717,14 @@ define('ember-data/-private/system/model/states', ['exports', 'ember', 'ember-da
         continue;
       }
       if (typeof object[prop] === 'object') {
-        object[prop] = wireState(object[prop], object, name + "." + prop);
+        object[prop] = wireState(object[prop], object, name + '.' + prop);
       }
     }
 
     return object;
   }
 
-  RootState = wireState(RootState, null, "root");
-
-  exports.default = RootState;
+  exports.default = wireState(RootState, null, 'root');
 });
 /**
   @module ember-data
@@ -4955,9 +4956,8 @@ define('ember-data/-private/system/promise-proxies', ['exports', 'ember', 'ember
   exports.promiseManyArray = promiseManyArray;
 });
 define("ember-data/-private/system/record-array-manager", ["exports", "ember", "ember-data/-private/system/record-arrays", "ember-data/-private/system/ordered-set"], function (exports, _ember, _emberDataPrivateSystemRecordArrays, _emberDataPrivateSystemOrderedSet) {
-  var MapWithDefault = _ember.default.MapWithDefault;
-
   var get = _ember.default.get;
+  var MapWithDefault = _ember.default.MapWithDefault;
 
   /**
     @class RecordArrayManager
@@ -5009,7 +5009,8 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
       var _this2 = this;
 
       this.changedRecords.forEach(function (internalModel) {
-        if (get(internalModel, 'record.isDestroyed') || get(internalModel, 'record.isDestroying') || get(internalModel, 'currentState.stateName') === 'root.deleted.saved') {
+
+        if (internalModel.isDestroyed || internalModel.currentState.stateName === 'root.deleted.saved') {
           _this2._recordWasDeleted(internalModel);
         } else {
           _this2._recordWasChanged(internalModel);
@@ -5038,7 +5039,7 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
 
       var typeClass = record.type;
       var recordArrays = this.filteredRecordArrays.get(typeClass);
-      var filter;
+      var filter = undefined;
       recordArrays.forEach(function (array) {
         filter = get(array, 'filterFunction');
         _this3.updateFilterRecordArray(array, filter, typeClass, record);
@@ -5051,7 +5052,7 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
 
       var typeClass = record.type;
       var recordArrays = this.filteredRecordArrays.get(typeClass);
-      var filter;
+      var filter = undefined;
 
       recordArrays.forEach(function (array) {
         filter = get(array, 'filterFunction');
@@ -5093,7 +5094,7 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
     populateLiveRecordArray: function (array, modelName) {
       var typeMap = this.store.typeMapFor(modelName);
       var records = typeMap.records;
-      var record;
+      var record = undefined;
 
       for (var i = 0; i < records.length; i++) {
         record = records[i];
@@ -5117,7 +5118,7 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
     updateFilter: function (array, modelName, filter) {
       var typeMap = this.store.typeMapFor(modelName);
       var records = typeMap.records;
-      var record;
+      var record = undefined;
 
       for (var i = 0; i < records.length; i++) {
         record = records[i];
@@ -5146,15 +5147,13 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
       @return {DS.RecordArray}
     */
     createRecordArray: function (typeClass) {
-      var array = _emberDataPrivateSystemRecordArrays.RecordArray.create({
+      return _emberDataPrivateSystemRecordArrays.RecordArray.create({
         type: typeClass,
         content: _ember.default.A(),
         store: this.store,
         isLoaded: true,
         manager: this
       });
-
-      return array;
     },
 
     /**
@@ -5225,6 +5224,7 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
       @param {DS.RecordArray} array
     */
     unregisterRecordArray: function (array) {
+
       var typeClass = array.type;
 
       // unregister filtered record array
@@ -5263,7 +5263,7 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
 
   function flatten(list) {
     var length = list.length;
-    var result = _ember.default.A();
+    var result = [];
 
     for (var i = 0; i < length; i++) {
       result = result.concat(list[i]);
@@ -5294,7 +5294,7 @@ define("ember-data/-private/system/record-arrays", ["exports", "ember-data/-priv
 /**
   @module ember-data
 */
-define("ember-data/-private/system/record-arrays/adapter-populated-record-array", ["exports", "ember", "ember-data/-private/system/record-arrays/record-array", "ember-data/-private/system/clone-null", "ember-data/-private/features"], function (exports, _ember, _emberDataPrivateSystemRecordArraysRecordArray, _emberDataPrivateSystemCloneNull, _emberDataPrivateFeatures) {
+define("ember-data/-private/system/record-arrays/adapter-populated-record-array", ["exports", "ember", "ember-data/-private/system/record-arrays/record-array", "ember-data/-private/system/clone-null"], function (exports, _ember, _emberDataPrivateSystemRecordArraysRecordArray, _emberDataPrivateSystemCloneNull) {
 
   /**
     @module ember-data
@@ -5346,9 +5346,7 @@ define("ember-data/-private/system/record-arrays/adapter-populated-record-array"
         meta: (0, _emberDataPrivateSystemCloneNull.default)(payload.meta)
       });
 
-      if (true) {
-        this.set('links', (0, _emberDataPrivateSystemCloneNull.default)(payload.links));
-      }
+      this.set('links', (0, _emberDataPrivateSystemCloneNull.default)(payload.links));
 
       internalModels.forEach(function (record) {
         _this.manager.recordArraysForRecord(record).add(_this);
@@ -17320,7 +17318,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+5c99faabc3";
+  exports.default = "2.11.0-canary+88e909cdef";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
