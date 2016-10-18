@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+0cd85e7787
+ * @version   2.11.0-canary+fd59ce93cd
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -642,11 +642,11 @@ define('ember-data/-private/adapters/build-url-mixin', ['exports', 'ember'], fun
        }
      });
      ```
-      * @method urlForDeleteRecord
-     * @param {String} id
-     * @param {String} modelName
-     * @param {DS.Snapshot} snapshot
-     * @return {String} url
+      @method urlForDeleteRecord
+     @param {String} id
+     @param {String} modelName
+     @param {DS.Snapshot} snapshot
+     @return {String} url
      */
     urlForDeleteRecord: function (id, modelName, snapshot) {
       return this._buildURL(modelName, id);
@@ -5338,7 +5338,7 @@ define("ember-data/-private/system/record-arrays", ["exports", "ember-data/-priv
 /**
   @module ember-data
 */
-define("ember-data/-private/system/record-arrays/adapter-populated-record-array", ["exports", "ember", "ember-data/-private/system/record-arrays/record-array", "ember-data/-private/system/clone-null", "ember-data/-private/features"], function (exports, _ember, _emberDataPrivateSystemRecordArraysRecordArray, _emberDataPrivateSystemCloneNull, _emberDataPrivateFeatures) {
+define("ember-data/-private/system/record-arrays/adapter-populated-record-array", ["exports", "ember", "ember-data/-private/system/record-arrays/record-array", "ember-data/-private/system/clone-null"], function (exports, _ember, _emberDataPrivateSystemRecordArraysRecordArray, _emberDataPrivateSystemCloneNull) {
 
   /**
     @module ember-data
@@ -5390,9 +5390,7 @@ define("ember-data/-private/system/record-arrays/adapter-populated-record-array"
         meta: (0, _emberDataPrivateSystemCloneNull.default)(payload.meta)
       });
 
-      if (true) {
-        this.set('links', (0, _emberDataPrivateSystemCloneNull.default)(payload.links));
-      }
+      this.set('links', (0, _emberDataPrivateSystemCloneNull.default)(payload.links));
 
       internalModels.forEach(function (record) {
         _this.manager.recordArraysForRecord(record).add(_this);
@@ -14301,7 +14299,7 @@ define('ember-data/serializers/embedded-records-mixin', ['exports', 'ember', 'em
       }
     },
 
-    /**
+    /*
       Serializes a hasMany relationship as an array of objects containing only `id` and `type`
       keys.
       This has its use case on polymorphic hasMany relationships where the server is not storing
@@ -17699,7 +17697,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+0cd85e7787";
+  exports.default = "2.11.0-canary+fd59ce93cd";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
