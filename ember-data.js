@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.10.0-canary+2d2e6cea48
+ * @version   2.10.0-canary+9593e17d54
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -8044,15 +8044,16 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     return (0, _emberDataPrivateSystemPromiseProxies.promiseObject)(toReturn, label);
   }
 
-  var get = _ember.default.get;
-  var set = _ember.default.set;
   var once = _ember.default.run.once;
-  var isNone = _ember.default.isNone;
-  var isPresent = _ember.default.isPresent;
   var Promise = _ember.default.RSVP.Promise;
-  var copy = _ember.default.copy;
   var Store;
 
+  var copy = _ember.default.copy;
+  var get = _ember.default.get;
+  var GUID_KEY = _ember.default.GUID_KEY;
+  var isNone = _ember.default.isNone;
+  var isPresent = _ember.default.isPresent;
+  var set = _ember.default.set;
   var Service = _ember.default.Service;
 
   // Implementors Note:
@@ -9515,6 +9516,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         // normalize relationship IDs into records
         this._backburner.schedule('normalizeRelationships', this, '_setupRelationships', internalModel, data);
         this.updateId(internalModel, data);
+      } else {
+        (0, _emberDataPrivateDebug.assert)('Your ' + internalModel.type.modelName + ' record was saved to the server, but the response does not have an id and no id has been set client side. Records must have ids. Please update the server response to provide an id in the response or generate the id on the client side either before saving the record or while normalizing the response.', internalModel.id);
       }
 
       //We first make sure the primary data has been updated
@@ -9561,7 +9564,18 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       var oldId = internalModel.id;
       var id = (0, _emberDataPrivateSystemCoerceId.default)(data.id);
 
-      (0, _emberDataPrivateDebug.assert)("An adapter cannot assign a new id to a record that already has an id. " + internalModel + " had id: " + oldId + " and you tried to update it with " + id + ". This likely happened because your server returned data in response to a find or update that had a different id than the one you sent.", oldId === null || id === oldId);
+      // ID absolutely can't be missing if the oldID is empty (missing Id in response for a new record)
+      (0, _emberDataPrivateDebug.assert)('\'' + internalModel.type.modelName + ':' + internalModel[GUID_KEY] + '\' was saved to the server, but the response does not have an id and your record does not either.', !(id === null && oldId === null));
+
+      // ID absolutely can't be different than oldID if oldID is not null
+      (0, _emberDataPrivateDebug.assert)('\'' + internalModel.type.modelName + ':' + oldId + '\' was saved to the server, but the response returned the new id \'' + id + '\'. The store cannot assign a new id to a record that already has an id.', !(oldId !== null && id !== oldId));
+
+      // ID can be null if oldID is not null (altered ID in response for a record)
+      // however, this is more than likely a developer error.
+      if (oldId !== null && id === null) {
+        (0, _emberDataPrivateDebug.warn)('Your ' + internalModel.type.modelName + ' record was saved to the server, but the response does not have an id.', !(oldId !== null && id === null));
+        return;
+      }
 
       this.typeMapFor(internalModel.type).idToRecord[id] = internalModel;
 
@@ -17621,7 +17635,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.10.0-canary+2d2e6cea48";
+  exports.default = "2.10.0-canary+9593e17d54";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
