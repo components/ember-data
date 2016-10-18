@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.9.0-beta.4+740038e412
+ * @version   2.9.0+f94ee1bacc
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -11778,7 +11778,7 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
       @return {Promise} promise
     */
     findMany: function (store, type, ids, snapshots) {
-      if (true && !this._hasCustomizedAjax()) {
+      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax') && !this._hasCustomizedAjax()) {
         return this._super.apply(this, arguments);
       } else {
         var url = this.buildURL(type.modelName, ids, snapshots, 'findMany');
@@ -11805,7 +11805,7 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
       @return {Promise} promise
     */
     updateRecord: function (store, type, snapshot) {
-      if (true && !this._hasCustomizedAjax()) {
+      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax') && !this._hasCustomizedAjax()) {
         return this._super.apply(this, arguments);
       } else {
         var data = {};
@@ -11841,7 +11841,7 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
     }
   });
 
-  if (true) {
+  if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
 
     JSONAPIAdapter.reopen({
 
@@ -12269,7 +12269,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     findRecord: function (store, type, id, snapshot) {
-      if (true && !this._hasCustomizedAjax()) {
+      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax') && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, type: type, id: id, snapshot: snapshot,
           requestType: 'findRecord'
@@ -12299,7 +12299,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
     findAll: function (store, type, sinceToken, snapshotRecordArray) {
       var query = this.buildQuery(snapshotRecordArray);
 
-      if (true && !this._hasCustomizedAjax()) {
+      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax') && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, type: type, sinceToken: sinceToken, query: query,
           snapshots: snapshotRecordArray,
@@ -12333,7 +12333,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     query: function (store, type, query) {
-      if (true && !this._hasCustomizedAjax()) {
+      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax') && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, type: type, query: query,
           requestType: 'query'
@@ -12367,7 +12367,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     queryRecord: function (store, type, query) {
-      if (true && !this._hasCustomizedAjax()) {
+      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax') && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, type: type, query: query,
           requestType: 'queryRecord'
@@ -12412,7 +12412,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     findMany: function (store, type, ids, snapshots) {
-      if (true && !this._hasCustomizedAjax()) {
+      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax') && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, type: type, ids: ids, snapshots: snapshots,
           requestType: 'findMany'
@@ -12452,7 +12452,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     findHasMany: function (store, snapshot, url, relationship) {
-      if (true && !this._hasCustomizedAjax()) {
+      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax') && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, snapshot: snapshot, url: url, relationship: relationship,
           requestType: 'findHasMany'
@@ -12496,7 +12496,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     findBelongsTo: function (store, snapshot, url, relationship) {
-      if (true && !this._hasCustomizedAjax()) {
+      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax') && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, snapshot: snapshot, url: url, relationship: relationship,
           requestType: 'findBelongsTo'
@@ -12526,7 +12526,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     createRecord: function (store, type, snapshot) {
-      if (true && !this._hasCustomizedAjax()) {
+      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax') && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, type: type, snapshot: snapshot,
           requestType: 'createRecord'
@@ -12558,7 +12558,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     updateRecord: function (store, type, snapshot) {
-      if (true && !this._hasCustomizedAjax()) {
+      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax') && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, type: type, snapshot: snapshot,
           requestType: 'updateRecord'
@@ -12588,7 +12588,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {Promise} promise
     */
     deleteRecord: function (store, type, snapshot) {
-      if (true && !this._hasCustomizedAjax()) {
+      if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax') && !this._hasCustomizedAjax()) {
         var request = this._requestFor({
           store: store, type: type, snapshot: snapshot,
           requestType: 'deleteRecord'
@@ -12963,7 +12963,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
     }
   });
 
-  if (true) {
+  if ((0, _emberDataPrivateFeatures.default)('ds-improved-ajax')) {
 
     RESTAdapter.reopen({
 
@@ -17479,7 +17479,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.9.0-beta.4+740038e412";
+  exports.default = "2.9.0+f94ee1bacc";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
