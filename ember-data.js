@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+a136f67eae
+ * @version   2.11.0-canary+8e6a753bad
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -4861,9 +4861,12 @@ define('ember-data/-private/system/ordered-set', ['exports', 'ember'], function 
   };
 });
 define('ember-data/-private/system/promise-proxies', ['exports', 'ember', 'ember-data/-private/debug'], function (exports, _ember, _emberDataPrivateDebug) {
-
-  var Promise = _ember.default.RSVP.Promise;
+  exports.promiseObject = promiseObject;
+  exports.promiseArray = promiseArray;
+  exports.proxyToContent = proxyToContent;
+  exports.promiseManyArray = promiseManyArray;
   var get = _ember.default.get;
+  var Promise = _ember.default.RSVP.Promise;
 
   /**
     A `PromiseArray` is an object that acts like both an `Ember.Array`
@@ -4896,6 +4899,7 @@ define('ember-data/-private/system/promise-proxies', ['exports', 'ember', 'ember
   */
   var PromiseArray = _ember.default.ArrayProxy.extend(_ember.default.PromiseProxyMixin);
 
+  exports.PromiseArray = PromiseArray;
   /**
     A `PromiseObject` is an object that acts like both an `Ember.Object`
     and a promise. When the promise is resolved, then the resulting value
@@ -4927,17 +4931,19 @@ define('ember-data/-private/system/promise-proxies', ['exports', 'ember', 'ember
   */
   var PromiseObject = _ember.default.ObjectProxy.extend(_ember.default.PromiseProxyMixin);
 
-  var promiseObject = function (promise, label) {
+  exports.PromiseObject = PromiseObject;
+
+  function promiseObject(promise, label) {
     return PromiseObject.create({
       promise: Promise.resolve(promise, label)
     });
-  };
+  }
 
-  var promiseArray = function (promise, label) {
+  function promiseArray(promise, label) {
     return PromiseArray.create({
       promise: Promise.resolve(promise, label)
     });
-  };
+  }
 
   /**
     A PromiseManyArray is a PromiseArray that also proxies certain method calls
@@ -4959,8 +4965,9 @@ define('ember-data/-private/system/promise-proxies', ['exports', 'ember', 'ember
 
   function proxyToContent(method) {
     return function () {
-      var content = get(this, 'content');
-      return content[method].apply(content, arguments);
+      var _get;
+
+      return (_get = get(this, 'content'))[method].apply(_get, arguments);
     };
   }
 
@@ -4986,18 +4993,13 @@ define('ember-data/-private/system/promise-proxies', ['exports', 'ember', 'ember
     has: proxyToContent('has')
   });
 
-  var promiseManyArray = function (promise, label) {
+  exports.PromiseManyArray = PromiseManyArray;
+
+  function promiseManyArray(promise, label) {
     return PromiseManyArray.create({
       promise: Promise.resolve(promise, label)
     });
-  };
-
-  exports.PromiseArray = PromiseArray;
-  exports.PromiseObject = PromiseObject;
-  exports.PromiseManyArray = PromiseManyArray;
-  exports.promiseArray = promiseArray;
-  exports.promiseObject = promiseObject;
-  exports.promiseManyArray = promiseManyArray;
+  }
 });
 define("ember-data/-private/system/record-array-manager", ["exports", "ember", "ember-data/-private/system/record-arrays", "ember-data/-private/system/ordered-set"], function (exports, _ember, _emberDataPrivateSystemRecordArrays, _emberDataPrivateSystemOrderedSet) {
   var get = _ember.default.get;
@@ -5108,6 +5110,7 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
         this._addRecordToRecordArray(liveRecordArray, record);
       }
     },
+
     /**
       Update an individual filter.
        @method updateFilterRecordArray
@@ -5357,7 +5360,11 @@ define("ember-data/-private/system/record-arrays/adapter-populated-record-array"
     @extends DS.RecordArray
   */
   exports.default = _emberDataPrivateSystemRecordArraysRecordArray.default.extend({
-    query: null,
+    init: function () {
+      this._super.apply(this, arguments);
+      this.query = this.query || null;
+      this.links = null;
+    },
 
     replace: function () {
       var type = get(this, 'type').toString();
@@ -5382,7 +5389,9 @@ define("ember-data/-private/system/record-arrays/adapter-populated-record-array"
       var _this = this;
 
       //TODO Optimize
-      var internalModels = _ember.default.A(records).mapBy('_internalModel');
+      var internalModels = records.map(function (record) {
+        return get(record, '_internalModel');
+      });
       this.setProperties({
         content: _ember.default.A(internalModels),
         isLoaded: true,
@@ -5420,6 +5429,12 @@ define('ember-data/-private/system/record-arrays/filtered-record-array', ['expor
     @extends DS.RecordArray
   */
   exports.default = _emberDataPrivateSystemRecordArraysRecordArray.default.extend({
+    init: function () {
+      this._super.apply(this, arguments);
+
+      this.set('filterFunction', this.get('filterFunction') || null);
+      this.isLoaded = true;
+    },
     /**
       The filterFunction is a function used to test records from the store to
       determine if they should be part of the record array.
@@ -5441,12 +5456,10 @@ define('ember-data/-private/system/record-arrays/filtered-record-array', ['expor
       @param {DS.Model} record
       @return {Boolean} `true` if the record should be in the array
     */
-    filterFunction: null,
-    isLoaded: true,
 
     replace: function () {
       var type = get(this, 'type').toString();
-      throw new Error("The result of a client-side filter (on " + type + ") is immutable.");
+      throw new Error('The result of a client-side filter (on ' + type + ') is immutable.');
     },
 
     /**
@@ -5454,8 +5467,10 @@ define('ember-data/-private/system/record-arrays/filtered-record-array', ['expor
       @private
     */
     _updateFilter: function () {
-      var manager = get(this, 'manager');
-      manager.updateFilter(this, get(this, 'type'), get(this, 'filterFunction'));
+      if (get(this, 'isDestroying') || get(this, 'isDestroyed')) {
+        return;
+      }
+      get(this, 'manager').updateFilter(this, get(this, 'type'), get(this, 'filterFunction'));
     },
 
     updateFilter: _ember.default.observer('filterFunction', function () {
@@ -5464,9 +5479,9 @@ define('ember-data/-private/system/record-arrays/filtered-record-array', ['expor
   });
 });
 define("ember-data/-private/system/record-arrays/record-array", ["exports", "ember", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/snapshot-record-array"], function (exports, _ember, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemSnapshotRecordArray) {
-
   var get = _ember.default.get;
   var set = _ember.default.set;
+  var Promise = _ember.default.RSVP.Promise;
 
   /**
     A record array is an array that contains records of a certain type. The record
@@ -5482,25 +5497,28 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
   */
 
   exports.default = _ember.default.ArrayProxy.extend(_ember.default.Evented, {
-    /**
-      The model type contained by this record array.
-       @property type
-      @type DS.Model
-    */
-    type: null,
+    init: function () {
+      this._super.apply(this, arguments);
 
-    /**
-      The array of client ids backing the record array. When a
-      record is requested from the record array, the record
-      for the client id at the same index is materialized, if
-      necessary, by the store.
-       @property content
-      @private
-      @type Ember.Array
-    */
-    content: null,
+      /**
+        The model type contained by this record array.
+         @property type
+        @type DS.Model
+        */
+      this.type = this.type || null;
 
-    /**
+      /**
+        The array of client ids backing the record array. When a
+        record is requested from the record array, the record
+        for the client id at the same index is materialized, if
+        necessary, by the store.
+         @property content
+        @private
+        @type Ember.Array
+        */
+      this.set('content', this.content || null);
+
+      /**
       The flag to signal a `RecordArray` is finished loading data.
        Example
        ```javascript
@@ -5509,29 +5527,31 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
       ```
        @property isLoaded
       @type Boolean
-    */
-    isLoaded: false,
-    /**
+      */
+      this.isLoaded = this.isLoaded || false;
+      /**
       The flag to signal a `RecordArray` is currently loading data.
-       Example
-       ```javascript
+      Example
+      ```javascript
       var people = store.peekAll('person');
       people.get('isUpdating'); // false
       people.update();
       people.get('isUpdating'); // true
       ```
-       @property isUpdating
+      @property isUpdating
       @type Boolean
-    */
-    isUpdating: false,
+      */
+      this.isUpdating = false;
 
-    /**
+      /**
       The store that created this record array.
-       @property store
+      @property store
       @private
       @type DS.Store
-    */
-    store: null,
+      */
+      this.store = this.store || null;
+      this._updatingPromise = null;
+    },
 
     replace: function () {
       var type = get(this, 'type').toString();
@@ -5546,8 +5566,7 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
       @return {DS.Model} record
     */
     objectAtContent: function (index) {
-      var content = get(this, 'content');
-      var internalModel = content.objectAt(index);
+      var internalModel = get(this, 'content').objectAt(index);
       return internalModel && internalModel.getRecord();
     },
 
@@ -5566,12 +5585,25 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
        @method update
     */
     update: function () {
+      var _this = this;
+
       if (get(this, 'isUpdating')) {
-        return;
+        return this._updatingPromise;
       }
 
       this.set('isUpdating', true);
-      return this._update();
+
+      var updatingPromise = this._update().finally(function () {
+        _this._updatingPromise = null;
+        if (_this.get('isDestroying') || _this.get('isDestroyed')) {
+          return;
+        }
+        _this.set('isUpdating', false);
+      });
+
+      this._updatingPromise = updatingPromise;
+
+      return updatingPromise;
     },
 
     /*
@@ -5590,15 +5622,9 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
        @method addInternalModel
       @private
       @param {InternalModel} internalModel
-      @param {number} an optional index to insert at
     */
-    addInternalModel: function (internalModel, idx) {
-      var content = get(this, 'content');
-      if (idx === undefined) {
-        content.addObject(internalModel);
-      } else if (!content.includes(internalModel)) {
-        content.insertAt(idx, internalModel);
-      }
+    addInternalModel: function (internalModel) {
+      get(this, 'content').addObject(internalModel);
     },
 
     /**
@@ -5625,23 +5651,24 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
       @return {DS.PromiseArray} promise
     */
     save: function () {
-      var recordArray = this;
-      var promiseLabel = "DS: RecordArray#save " + get(this, 'type');
-      var promise = _ember.default.RSVP.all(this.invoke("save"), promiseLabel).then(function (array) {
-        return recordArray;
-      }, null, "DS: RecordArray#save return RecordArray");
+      var _this2 = this;
+
+      var promiseLabel = 'DS: RecordArray#save ' + get(this, 'type');
+      var promise = Promise.all(this.invoke('save'), promiseLabel).then(function () {
+        return _this2;
+      }, null, 'DS: RecordArray#save return RecordArray');
 
       return _emberDataPrivateSystemPromiseProxies.PromiseArray.create({ promise: promise });
     },
 
     _dissociateFromOwnRecords: function () {
-      var _this = this;
+      var _this3 = this;
 
-      this.get('content').forEach(function (record) {
-        var recordArrays = record._recordArrays;
+      this.get('content').forEach(function (internalModel) {
+        var recordArrays = internalModel._recordArrays;
 
         if (recordArrays) {
-          recordArrays.delete(_this);
+          recordArrays.delete(_this3);
         }
       });
     },
@@ -5651,21 +5678,41 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
       @private
     */
     _unregisterFromManager: function () {
-      var manager = get(this, 'manager');
-      manager.unregisterRecordArray(this);
+      get(this, 'manager').unregisterRecordArray(this);
     },
 
     willDestroy: function () {
       this._unregisterFromManager();
       this._dissociateFromOwnRecords();
-      set(this, 'content', undefined);
+      // TODO: we should not do work during destroy:
+      //   * when objects are destroyed, they should simply be left to do
+      //   * if logic errors do to this, that logic needs to be more careful during
+      //    teardown (ember provides isDestroying/isDestroyed) for this reason
+      //   * the exception being: if an dominator has a reference to this object,
+      //     and must be informed to release e.g. e.g. removing itself from th
+      //     recordArrayMananger
+      set(this, 'content', null);
       set(this, 'length', 0);
       this._super.apply(this, arguments);
     },
 
-    createSnapshot: function (options) {
-      var meta = this.get('meta');
-      return new _emberDataPrivateSystemSnapshotRecordArray.default(this, meta, options);
+    /**
+    r   @method _createSnapshot
+      @private
+    */
+    _createSnapshot: function (options) {
+      // this is private for users, but public for ember-data internals
+      return new _emberDataPrivateSystemSnapshotRecordArray.default(this, this.get('meta'), options);
+    },
+
+    /**
+    r   @method _takeSnapshot
+      @private
+    */
+    _takeSnapshot: function () {
+      return get(this, 'content').map(function (internalModel) {
+        return internalModel.createSnapshot();
+      });
     }
   });
 });
@@ -7690,11 +7737,11 @@ define('ember-data/-private/system/snapshot-record-array', ['exports'], function
     @return {Array} Array of snapshots
   */
   SnapshotRecordArray.prototype.snapshots = function () {
-    if (this._snapshots) {
+    if (this._snapshots !== null) {
       return this._snapshots;
     }
-    var recordArray = this._recordArray;
-    this._snapshots = recordArray.invoke('createSnapshot');
+
+    this._snapshots = this._recordArray._takeSnapshot();
 
     return this._snapshots;
   };
@@ -9284,7 +9331,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         return (0, _emberDataPrivateSystemPromiseProxies.promiseArray)((0, _emberDataPrivateSystemStoreFinders._findAll)(adapter, this, typeClass, sinceToken, options));
       }
 
-      var snapshotArray = array.createSnapshot(options);
+      var snapshotArray = array._createSnapshot(options);
 
       if (adapter.shouldReloadAll(this, snapshotArray)) {
         set(array, 'isUpdating', true);
@@ -10625,7 +10672,7 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
   function _findAll(adapter, store, typeClass, sinceToken, options) {
     var modelName = typeClass.modelName;
     var recordArray = store.peekAll(modelName);
-    var snapshotArray = recordArray.createSnapshot(options);
+    var snapshotArray = recordArray._createSnapshot(options);
     var promise = adapter.findAll(store, typeClass, sinceToken, snapshotArray);
     var serializer = (0, _emberDataPrivateSystemStoreSerializers.serializerForAdapter)(store, adapter, modelName);
     var label = "DS: Handle Adapter#findAll of " + typeClass;
@@ -17697,7 +17744,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+a136f67eae";
+  exports.default = "2.11.0-canary+8e6a753bad";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
