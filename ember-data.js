@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+8e6a753bad
+ * @version   2.11.0-canary+f52f9f4e03
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -10858,7 +10858,7 @@ define("ember-data/-private/transforms", ["exports", "ember-data/transform", "em
   exports.StringTransform = _emberDataPrivateTransformsString.default;
   exports.BooleanTransform = _emberDataPrivateTransformsBoolean.default;
 });
-define('ember-data/-private/transforms/boolean', ['exports', 'ember', 'ember-data/transform', 'ember-data/-private/features'], function (exports, _ember, _emberDataTransform, _emberDataPrivateFeatures) {
+define("ember-data/-private/transforms/boolean", ["exports", "ember", "ember-data/transform"], function (exports, _ember, _emberDataTransform) {
   var isNone = _ember.default.isNone;
 
   /**
@@ -10901,10 +10901,8 @@ define('ember-data/-private/transforms/boolean', ['exports', 'ember', 'ember-dat
     deserialize: function (serialized, options) {
       var type = typeof serialized;
 
-      if (true) {
-        if (isNone(serialized) && options.allowNull === true) {
-          return null;
-        }
+      if (isNone(serialized) && options.allowNull === true) {
+        return null;
       }
 
       if (type === "boolean") {
@@ -10919,10 +10917,8 @@ define('ember-data/-private/transforms/boolean', ['exports', 'ember', 'ember-dat
     },
 
     serialize: function (deserialized, options) {
-      if (true) {
-        if (isNone(deserialized) && options.allowNull === true) {
-          return null;
-        }
+      if (isNone(deserialized) && options.allowNull === true) {
+        return null;
       }
 
       return Boolean(deserialized);
@@ -17744,7 +17740,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+8e6a753bad";
+  exports.default = "2.11.0-canary+f52f9f4e03";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
