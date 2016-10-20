@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+115cc62658
+ * @version   2.11.0-canary+f5a02cd126
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -10573,6 +10573,11 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
       return store._adapterRun(function () {
         var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, id, 'findRecord');
         (0, _emberDataPrivateDebug.assert)('Ember Data expected the primary data returned from a `findRecord` response to be an object but instead it found an array.', !Array.isArray(payload.data));
+
+        (0, _emberDataPrivateDebug.warn)("You requested a record of type '" + typeClass.modelName + "' with id '" + id + "' but the adapter returned a payload with primary data having an id of '" + payload.data.id + "'. Looks like you want to use store.queryRecord instead http://emberjs.com/api/data/classes/DS.Store.html#method_queryRecord", payload.data.id === id, {
+          id: 'ds.store.findRecord.id-mismatch'
+        });
+
         //TODO Optimize
         var record = store.push(payload);
         return record._internalModel;
@@ -17740,7 +17745,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+115cc62658";
+  exports.default = "2.11.0-canary+f5a02cd126";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
