@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+dbf7db44d8
+ * @version   2.11.0-canary+1b923adafc
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -13924,10 +13924,19 @@ define('ember-data/serializer', ['exports', 'ember'], function (exports, _ember)
   exports.default = _ember.default.Object.extend({
 
     /**
-      The `store` property is the application's `store` that contains all records.
-      It's injected as a service.
-      It can be used to push records from a non flat data structure server
-      response.
+      The `store` property is the application's `store` that contains
+      all records.  It can be used to look up serializer for other model
+      type that may be nested inside the payload response.
+       Example:
+       ```js
+      Serializer.extend({
+        extractRelationship: function(relationshipModelName, relationshipHash) {
+          var modelClass = this.store.modelFor(relationshipModelName);
+          var relationshipSerializer = this.store.serializerFor(relationshipModelName);
+          return relationshipSerializer.normalize(modelClass, relationshipHash);
+        }
+      });
+      ```
        @property store
       @type {DS.Store}
       @public
@@ -13937,6 +13946,23 @@ define('ember-data/serializer', ['exports', 'ember'], function (exports, _ember)
       The `normalizeResponse` method is used to normalize a payload from the
       server to a JSON-API Document.
        http://jsonapi.org/format/#document-structure
+       Example:
+       ```js
+      Serializer.extend({
+        normalizeResponse(store, primaryModelClass, payload, id, requestType) {
+          if (requestType === 'findRecord') {
+            return this.normalize(primaryModelClass, payload);
+          } else {
+            return payload.reduce(function(documentHash, item) {
+              let { data, included } = this.normalize(primaryModelClass, item);
+              documentHash.included.push(...included);
+              documentHash.data.push(data);
+              return documentHash;
+            }, { data: [], included: [] })
+          }
+        }
+      });
+      ```
        @since 1.13.0
       @method normalizeResponse
       @param {DS.Store} store
@@ -13954,8 +13980,29 @@ define('ember-data/serializer', ['exports', 'ember'], function (exports, _ember)
        `serialize` takes an optional `options` hash with a single option:
        - `includeId`: If this is `true`, `serialize` should include the ID
         in the serialized object it builds.
+       Example:
+       ```js
+      Serializer.extend({
+        serialize(snapshot, options) {
+          var json = {
+            id: snapshot.id
+          };
+           snapshot.eachAttribute((key, attribute) => {
+            json[key] = snapshot.attr(key);
+          });
+           snapshot.eachRelationship((key, relationship) => {
+            if (relationship.kind === 'belongsTo') {
+              json[key] = snapshot.belongsTo(key, { id: true });
+            } else if (relationship.kind === 'hasMany') {
+              json[key] = snapshot.hasMany(key, { ids: true });
+            }
+          });
+           return json;
+        },
+      });
+      ```
        @method serialize
-      @param {DS.Model} record
+      @param {DS.Snapshot} record
       @param {Object} [options]
       @return {Object}
     */
@@ -13966,6 +14013,19 @@ define('ember-data/serializer', ['exports', 'ember'], function (exports, _ember)
       external data source into the normalized form `store.push()` expects. You
       should override this method, munge the hash and return the normalized
       payload.
+       Example:
+       ```js
+      Serializer.extend({
+        normalize(modelClass, resourceHash) {
+          var data = {
+            id:            resourceHash.id,
+            type:          modelClass.modelName,
+            attributes:    resourceHash
+          };
+          return { data: data };
+        }
+      })
+      ```
        @method normalize
       @param {DS.Model} typeClass
       @param {Object} hash
@@ -17630,7 +17690,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+dbf7db44d8";
+  exports.default = "2.11.0-canary+1b923adafc";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
