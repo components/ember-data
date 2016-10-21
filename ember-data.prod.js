@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+06df840147
+ * @version   2.11.0-canary+208f8aab0f
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -8336,7 +8336,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         store: this
       });
       this._pendingSave = [];
-      this._instanceCache = new _emberDataPrivateSystemStoreContainerInstanceCache.default((0, _emberDataPrivateUtils.getOwner)(this));
+      this._instanceCache = new _emberDataPrivateSystemStoreContainerInstanceCache.default((0, _emberDataPrivateUtils.getOwner)(this), this);
+
       //Used to keep track of all the find requests that need to be coalesced
       this._pendingFetch = Map.create();
     },
@@ -8385,9 +8386,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     defaultAdapter: _ember.default.computed('adapter', function () {
       var adapter = get(this, 'adapter');
 
-      adapter = this.retrieveManagedInstance('adapter', adapter);
-
-      return adapter;
+      return this.adapterFor(adapter);
     }),
 
     // .....................
@@ -10255,7 +10254,9 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     */
     adapterFor: function (modelName) {
 
-      return this.lookupAdapter(modelName);
+      var normalizedModelName = (0, _emberDataPrivateSystemNormalizeModelName.default)(modelName);
+
+      return this._instanceCache.get('adapter', normalizedModelName);
     },
 
     _adapterRun: function (fn) {
@@ -10285,53 +10286,26 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     */
     serializerFor: function (modelName) {
 
-      var fallbacks = ['application', this.adapterFor(modelName).get('defaultSerializer'), '-default'];
-
-      var serializer = this.lookupSerializer(modelName, fallbacks);
-      return serializer;
-    },
-
-    /**
-      Retrieve a particular instance from the
-      container cache. If not found, creates it and
-      placing it in the cache.
-       Enabled a store to manage local instances of
-      adapters and serializers.
-       @method retrieveManagedInstance
-      @private
-      @param {String} modelName the object modelName
-      @param {String} name the object name
-      @param {Array} fallbacks the fallback objects to lookup if the lookup for modelName or 'application' fails
-      @return {Ember.Object}
-    */
-    retrieveManagedInstance: function (type, modelName, fallbacks) {
       var normalizedModelName = (0, _emberDataPrivateSystemNormalizeModelName.default)(modelName);
 
-      var instance = this._instanceCache.get(type, normalizedModelName, fallbacks);
-      set(instance, 'store', this);
-      return instance;
+      return this._instanceCache.get('serializer', normalizedModelName);
     },
 
     lookupAdapter: function (name) {
-      return this.retrieveManagedInstance('adapter', name, this.get('_adapterFallbacks'));
+      return this.adapterFor(name);
     },
 
-    _adapterFallbacks: _ember.default.computed('adapter', function () {
-      var adapter = this.get('adapter');
-      return ['application', adapter, '-json-api'];
-    }),
-
-    lookupSerializer: function (name, fallbacks) {
-      return this.retrieveManagedInstance('serializer', name, fallbacks);
+    lookupSerializer: function (name) {
+      return this.serializerFor(name);
     },
 
     willDestroy: function () {
       this._super.apply(this, arguments);
       this.recordArrayManager.destroy();
+      this._instanceCache.destroy();
 
       this.unloadAll();
     }
-
   });
 
   function deserializeRecordId(store, key, relationship, id) {
@@ -10502,9 +10476,11 @@ define('ember-data/-private/system/store/common', ['exports', 'ember'], function
   }
 });
 define('ember-data/-private/system/store/container-instance-cache', ['exports', 'ember', 'ember-data/-private/system/empty-object'], function (exports, _ember, _emberDataPrivateSystemEmptyObject) {
-  exports.default = ContainerInstanceCache;
+  var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-  var assign = _ember.default.assign || _ember.default.merge;
+  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+  var set = _ember.default.set;
 
   /*
    * The `ContainerInstanceCache` serves as a lazy cache for looking up
@@ -10515,80 +10491,117 @@ define('ember-data/-private/system/store/container-instance-cache', ['exports', 
    * when the preferred lookup fails. For example, say you try to look up `adapter:post`,
    * but there is no entry (app/adapters/post.js in EmberCLI) for `adapter:post` in the registry.
    *
-   * The `fallbacks` array passed will then be used; the first entry in the fallbacks array
-   * that exists in the container will then be cached for `adapter:post`. So, the next time you
-   * look up `adapter:post`, you'll get the `adapter:application` instance (or whatever the fallback
-   * was if `adapter:application` doesn't exist).
+   * When an adapter or serializer is unfound, getFallbacks will be invoked with the current namespace
+   * ('adapter' or 'serializer') and the 'preferredKey' (usually a modelName).  The method should return
+   * an array of keys to check against.
+   *
+   * The first entry in the fallbacks array that exists in the container will then be cached for
+   * `adapter:post`. So, the next time you look up `adapter:post`, you'll get the `adapter:application`
+   * instance (or whatever the fallback was if `adapter:application` doesn't exist).
    *
    * @private
    * @class ContainerInstanceCache
    *
   */
 
-  function ContainerInstanceCache(owner) {
-    this._owner = owner;
-    this._cache = new _emberDataPrivateSystemEmptyObject.default();
-  }
-
-  ContainerInstanceCache.prototype = new _emberDataPrivateSystemEmptyObject.default();
-
-  assign(ContainerInstanceCache.prototype, {
-    get: function (type, preferredKey, fallbacks) {
-      var cache = this._cache;
-      var preferredLookupKey = type + ':' + preferredKey;
-
-      if (!(preferredLookupKey in cache)) {
-        var instance = this.instanceFor(preferredLookupKey) || this._findInstance(type, fallbacks);
-        if (instance) {
-          cache[preferredLookupKey] = instance;
-        }
-      }
-      return cache[preferredLookupKey];
-    },
-
-    _findInstance: function (type, fallbacks) {
-      for (var i = 0, _length = fallbacks.length; i < _length; i++) {
-        var fallback = fallbacks[i];
-        var lookupKey = type + ':' + fallback;
-        var instance = this.instanceFor(lookupKey);
-
-        if (instance) {
-          return instance;
-        }
-      }
-    },
-
-    instanceFor: function (key) {
-      var cache = this._cache;
-      if (!cache[key]) {
-        var instance = this._owner.lookup(key);
-        if (instance) {
-          cache[key] = instance;
-        }
-      }
-      return cache[key];
-    },
-
-    destroy: function () {
-      var cache = this._cache;
-      var cacheEntries = Object.keys(cache);
-
-      for (var i = 0, _length2 = cacheEntries.length; i < _length2; i++) {
-        var cacheKey = cacheEntries[i];
-        var cacheEntry = cache[cacheKey];
-        if (cacheEntry) {
-          cacheEntry.destroy();
-        }
-      }
-      this._owner = null;
-    },
-
-    constructor: ContainerInstanceCache,
-
-    toString: function () {
-      return 'ContainerInstanceCache';
+  var ContainerInstanceCache = (function () {
+    function ContainerInstanceCache(owner, store) {
+      this._owner = owner;
+      this._store = store;
+      this._namespaces = {
+        adapter: new _emberDataPrivateSystemEmptyObject.default(),
+        serializer: new _emberDataPrivateSystemEmptyObject.default()
+      };
     }
-  });
+
+    _createClass(ContainerInstanceCache, [{
+      key: 'get',
+      value: function get(namespace, preferredKey) {
+        var cache = this._namespaces[namespace];
+
+        if (cache[preferredKey]) {
+          return cache[preferredKey];
+        }
+
+        var preferredLookupKey = namespace + ':' + preferredKey;
+
+        var instance = this._instanceFor(preferredLookupKey) || this._findInstance(namespace, this._fallbacksFor(namespace, preferredKey));
+        if (instance) {
+          cache[preferredKey] = instance;
+          set(instance, 'store', this._store);
+        }
+
+        return cache[preferredKey];
+      }
+    }, {
+      key: '_fallbacksFor',
+      value: function _fallbacksFor(namespace, preferredKey) {
+        if (namespace === 'adapter') {
+          return ['application', this._store.get('adapter'), '-json-api'];
+        }
+
+        // serializer
+        return ['application', this.get('adapter', preferredKey).get('defaultSerializer'), '-default'];
+      }
+    }, {
+      key: '_findInstance',
+      value: function _findInstance(namespace, fallbacks) {
+        var cache = this._namespaces[namespace];
+
+        for (var i = 0, _length = fallbacks.length; i < _length; i++) {
+          var fallback = fallbacks[i];
+
+          if (cache[fallback]) {
+            return cache[fallback];
+          }
+
+          var lookupKey = namespace + ':' + fallback;
+          var instance = this._instanceFor(lookupKey);
+
+          if (instance) {
+            cache[fallback] = instance;
+            return instance;
+          }
+        }
+      }
+    }, {
+      key: '_instanceFor',
+      value: function _instanceFor(key) {
+        return this._owner.lookup(key);
+      }
+    }, {
+      key: 'destroyCache',
+      value: function destroyCache(cache) {
+        var cacheEntries = Object.keys(cache);
+
+        for (var i = 0, _length2 = cacheEntries.length; i < _length2; i++) {
+          var cacheKey = cacheEntries[i];
+          var cacheEntry = cache[cacheKey];
+          if (cacheEntry) {
+            cacheEntry.destroy();
+          }
+        }
+      }
+    }, {
+      key: 'destroy',
+      value: function destroy() {
+        this.destroyCache(this._namespaces.adapter);
+        this.destroyCache(this._namespaces.serializer);
+        this._namespaces = null;
+        this._store = null;
+        this._owner = null;
+      }
+    }, {
+      key: 'toString',
+      value: function toString() {
+        return 'ContainerInstanceCache';
+      }
+    }]);
+
+    return ContainerInstanceCache;
+  })();
+
+  exports.default = ContainerInstanceCache;
 });
 /* global heimdall */
 define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/store/common", "ember-data/-private/system/store/serializer-response", "ember-data/-private/system/store/serializers"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemStoreCommon, _emberDataPrivateSystemStoreSerializerResponse, _emberDataPrivateSystemStoreSerializers) {
@@ -17690,7 +17703,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+06df840147";
+  exports.default = "2.11.0-canary+208f8aab0f";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
