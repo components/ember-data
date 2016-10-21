@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+4463dd47ba
+ * @version   2.11.0-canary+dbf7db44d8
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -5575,17 +5575,13 @@ define("ember-data/-private/system/record-arrays/adapter-populated-record-array"
 
     /**
       @method loadRecords
-      @param {Array} records
+      @param {Array} internalModels
       @param {Object} payload normalized payload
       @private
     */
-    loadRecords: function (records, payload) {
+    loadRecords: function (internalModels, payload) {
       var _this = this;
 
-      //TODO Optimize
-      var internalModels = records.map(function (record) {
-        return get(record, '_internalModel');
-      });
       this.setProperties({
         content: _ember.default.A(internalModels),
         isLoaded: true,
@@ -5976,8 +5972,8 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
   BelongsToReference.prototype.value = function () {
     var inverseRecord = this.belongsToRelationship.inverseRecord;
 
-    if (inverseRecord && inverseRecord.record) {
-      return inverseRecord.record;
+    if (inverseRecord && inverseRecord.isLoaded()) {
+      return inverseRecord.getRecord();
     }
 
     return null;
@@ -9228,7 +9224,15 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       var typeClass = this.modelFor(modelName);
       var adapter = this.adapterFor(modelName);
 
-      return (0, _emberDataPrivateSystemPromiseProxies.promiseObject)((0, _emberDataPrivateSystemStoreFinders._queryRecord)(adapter, this, typeClass, query));
+      return (0, _emberDataPrivateSystemPromiseProxies.promiseObject)((0, _emberDataPrivateSystemStoreFinders._queryRecord)(adapter, this, typeClass, query).then(function (internalModel) {
+        // the promise returned by store.queryRecord is expected to resolve with
+        // an instance of DS.Model
+        if (internalModel) {
+          return internalModel.getRecord();
+        }
+
+        return null;
+      }));
     },
 
     /**
@@ -10002,6 +10006,34 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         updated.
     */
     push: function (data) {
+      var pushed = this._push(data);
+
+      if (Array.isArray(pushed)) {
+        var records = pushed.map(function (internalModel) {
+          return internalModel.getRecord();
+        });
+
+        return records;
+      }
+
+      if (pushed === null) {
+        return null;
+      }
+
+      var record = pushed.getRecord();
+
+      return record;
+    },
+
+    /*
+      Push some data into the store, without creating materialized records.
+       @method _push
+      @private
+      @param {Object} data
+      @return {DS.InternalModel|Array<DS.InternalModel>} pushed InternalModel(s)
+    */
+    _push: function (data) {
+
       var included = data.included;
       var i, length;
       if (included) {
@@ -10014,7 +10046,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         length = data.data.length;
         var internalModels = new Array(length);
         for (i = 0; i < length; i++) {
-          internalModels[i] = this._pushInternalModel(data.data[i]).getRecord();
+          internalModels[i] = this._pushInternalModel(data.data[i]);
         }
 
         return internalModels;
@@ -10026,9 +10058,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
       var internalModel = this._pushInternalModel(data.data);
 
-      var record = internalModel.getRecord();
-
-      return record;
+      return internalModel;
     },
 
     _hasModelFor: function (type) {
@@ -10593,9 +10623,8 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
       return store._adapterRun(function () {
         var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, id, 'findRecord');
 
-        //TODO Optimize
-        var record = store.push(payload);
-        return record._internalModel;
+        var internalModel = store._push(payload);
+        return internalModel;
       });
     }, function (error) {
       internalModel.notFound();
@@ -10623,14 +10652,7 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     return promise.then(function (adapterPayload) {
       return store._adapterRun(function () {
         var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, null, 'findMany');
-        //TODO Optimize, no need to materialize here
-        var records = store.push(payload);
-        var internalModels = new Array(records.length);
-
-        for (var i = 0; i < records.length; i++) {
-          internalModels[i] = records[i]._internalModel;
-        }
-
+        var internalModels = store._push(payload);
         return internalModels;
       });
     }, null, "DS: Extract payload of " + typeClass);
@@ -10680,9 +10702,8 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
           return null;
         }
 
-        //TODO Optimize
-        var record = store.push(payload);
-        return record._internalModel;
+        var internalModel = store._push(payload);
+        return internalModel;
       });
     }, null, "DS: Extract payload of " + internalModel + " : " + relationship.type);
   }
@@ -10701,8 +10722,7 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     return promise.then(function (adapterPayload) {
       store._adapterRun(function () {
         var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, null, 'findAll');
-        //TODO Optimize
-        store.push(payload);
+        store._push(payload);
       });
 
       store.didUpdateAll(typeClass);
@@ -10721,14 +10741,13 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     promise = (0, _emberDataPrivateSystemStoreCommon._guard)(promise, (0, _emberDataPrivateSystemStoreCommon._bind)(_emberDataPrivateSystemStoreCommon._objectIsAlive, store));
 
     return promise.then(function (adapterPayload) {
-      var records, payload;
+      var internalModels, payload;
       store._adapterRun(function () {
         payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, null, 'query');
-        //TODO Optimize
-        records = store.push(payload);
+        internalModels = store._push(payload);
       });
 
-      recordArray.loadRecords(records, payload);
+      recordArray.loadRecords(internalModels, payload);
 
       return recordArray;
     }, null, "DS: Extract payload of query " + typeClass);
@@ -10744,15 +10763,14 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     promise = (0, _emberDataPrivateSystemStoreCommon._guard)(promise, (0, _emberDataPrivateSystemStoreCommon._bind)(_emberDataPrivateSystemStoreCommon._objectIsAlive, store));
 
     return promise.then(function (adapterPayload) {
-      var record;
+      var internalModel;
       store._adapterRun(function () {
         var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, null, 'queryRecord');
 
-        //TODO Optimize
-        record = store.push(payload);
+        internalModel = store._push(payload);
       });
 
-      return record;
+      return internalModel;
     }, null, "DS: Extract payload of queryRecord " + typeClass);
   }
 });
@@ -17612,7 +17630,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+4463dd47ba";
+  exports.default = "2.11.0-canary+dbf7db44d8";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
