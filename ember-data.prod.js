@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+bae01b8aa9
+ * @version   2.11.0-canary+4463dd47ba
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -1376,6 +1376,7 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
     init: function () {
       this._super.apply(this, arguments);
       this.currentState = _ember.default.A([]);
+      this.flushCanonical();
     },
 
     record: null,
@@ -1394,10 +1395,7 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
     },
 
     flushCanonical: function () {
-      //TODO make this smarter, currently its plenty stupid
-      var toSet = this.canonicalState.filter(function (internalModel) {
-        return !internalModel.isDeleted();
-      });
+      var toSet = this.canonicalState;
 
       //a hack for not removing new records
       //TODO remove once we have proper diffing
@@ -6010,7 +6008,7 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
   exports.default = BelongsToReference;
 });
 define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'ember-data/-private/system/references/reference', 'ember-data/-private/debug', 'ember-data/-private/features'], function (exports, _ember, _emberDataPrivateSystemReferencesReference, _emberDataPrivateDebug, _emberDataPrivateFeatures) {
-
+  var resolve = _ember.default.RSVP.resolve;
   var get = _ember.default.get;
 
   var HasManyReference = function (store, parentInternalModel, hasManyRelationship) {
@@ -6048,13 +6046,13 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
   };
 
   HasManyReference.prototype.meta = function () {
-    return this.hasManyRelationship.manyArray.meta;
+    return this.hasManyRelationship.meta;
   };
 
   HasManyReference.prototype.push = function (objectOrPromise) {
     var _this = this;
 
-    return _ember.default.RSVP.resolve(objectOrPromise).then(function (payload) {
+    return resolve(objectOrPromise).then(function (payload) {
       var array = payload;
 
       if ((0, _emberDataPrivateFeatures.default)("ds-overhaul-references")) {}
@@ -6085,7 +6083,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
 
       _this.hasManyRelationship.computeChanges(internalModels);
 
-      return _this.hasManyRelationship.manyArray;
+      return _this.hasManyRelationship.getManyArray();
     });
   };
 
@@ -6105,7 +6103,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
 
   HasManyReference.prototype.value = function () {
     if (this._isLoaded()) {
-      return this.hasManyRelationship.manyArray;
+      return this.hasManyRelationship.getManyArray();
     }
 
     return null;
@@ -6116,8 +6114,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
       return this.hasManyRelationship.getRecords();
     }
 
-    var manyArray = this.hasManyRelationship.manyArray;
-    return _ember.default.RSVP.resolve(manyArray);
+    return resolve(this.hasManyRelationship.getManyArray());
   };
 
   HasManyReference.prototype.reload = function () {
@@ -7316,29 +7313,40 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
     this._super$constructor(store, record, inverseKey, relationshipMeta);
     this.belongsToType = relationshipMeta.type;
     this.canonicalState = [];
-    this.manyArray = _emberDataPrivateSystemManyArray.default.create({
-      canonicalState: this.canonicalState,
-      store: this.store,
-      relationship: this,
-      type: this.store.modelFor(this.belongsToType),
-      record: record
-    });
     this.isPolymorphic = relationshipMeta.options.polymorphic;
-    this.manyArray.isPolymorphic = this.isPolymorphic;
   }
 
   ManyRelationship.prototype = Object.create(_emberDataPrivateSystemRelationshipsStateRelationship.default.prototype);
+  ManyRelationship.prototype.getManyArray = function () {
+    if (!this._manyArray) {
+      this._manyArray = _emberDataPrivateSystemManyArray.default.create({
+        canonicalState: this.canonicalState,
+        store: this.store,
+        relationship: this,
+        type: this.store.modelFor(this.belongsToType),
+        record: this.record,
+        meta: this.meta,
+        isPolymorphic: this.isPolymorphic
+      });
+    }
+    return this._manyArray;
+  };
+
   ManyRelationship.prototype.constructor = ManyRelationship;
   ManyRelationship.prototype._super$constructor = _emberDataPrivateSystemRelationshipsStateRelationship.default;
 
   ManyRelationship.prototype.destroy = function () {
-    this.manyArray.destroy();
+    if (this._manyArray) {
+      this._manyArray.destroy();
+    }
   };
 
   ManyRelationship.prototype._super$updateMeta = _emberDataPrivateSystemRelationshipsStateRelationship.default.prototype.updateMeta;
   ManyRelationship.prototype.updateMeta = function (meta) {
     this._super$updateMeta(meta);
-    this.manyArray.set('meta', meta);
+    if (this._manyArray) {
+      this._manyArray.set('meta', meta);
+    }
   };
 
   ManyRelationship.prototype._super$addCanonicalRecord = _emberDataPrivateSystemRelationshipsStateRelationship.default.prototype.addCanonicalRecord;
@@ -7360,7 +7368,8 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
       return;
     }
     this._super$addRecord(record, idx);
-    this.manyArray.internalAddRecords([record], idx);
+    // make lazy later
+    this.getManyArray().internalAddRecords([record], idx);
   };
 
   ManyRelationship.prototype._super$removeCanonicalRecordFromOwn = _emberDataPrivateSystemRelationshipsStateRelationship.default.prototype.removeCanonicalRecordFromOwn;
@@ -7380,7 +7389,9 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
 
   ManyRelationship.prototype._super$flushCanonical = _emberDataPrivateSystemRelationshipsStateRelationship.default.prototype.flushCanonical;
   ManyRelationship.prototype.flushCanonical = function () {
-    this.manyArray.flushCanonical();
+    if (this._manyArray) {
+      this._manyArray.flushCanonical();
+    }
     this._super$flushCanonical();
   };
 
@@ -7390,11 +7401,12 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
       return;
     }
     this._super$removeRecordFromOwn(record, idx);
+    var manyArray = this.getManyArray();
     if (idx !== undefined) {
       //TODO(Igor) not used currently, fix
-      this.manyArray.currentState.removeAt(idx);
+      manyArray.currentState.removeAt(idx);
     } else {
-      this.manyArray.internalRemoveRecords([record]);
+      manyArray.internalRemoveRecords([record]);
     }
   };
 
@@ -7404,16 +7416,15 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
   };
 
   ManyRelationship.prototype.reload = function () {
-    var _this = this;
-
-    var manyArrayLoadedState = this.manyArray.get('isLoaded');
+    var manyArray = this.getManyArray();
+    var manyArrayLoadedState = manyArray.get('isLoaded');
 
     if (this._loadingPromise) {
       if (this._loadingPromise.get('isPending')) {
         return this._loadingPromise;
       }
       if (this._loadingPromise.get('isRejected')) {
-        this.manyArray.set('isLoaded', manyArrayLoadedState);
+        manyArray.set('isLoaded', manyArrayLoadedState);
       }
     }
 
@@ -7421,8 +7432,8 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
       this._loadingPromise = (0, _emberDataPrivateSystemPromiseProxies.promiseManyArray)(this.fetchLink(), 'Reload with link');
       return this._loadingPromise;
     } else {
-      this._loadingPromise = (0, _emberDataPrivateSystemPromiseProxies.promiseManyArray)(this.store.scheduleFetchMany(this.manyArray.toArray()).then(function () {
-        return _this.manyArray;
+      this._loadingPromise = (0, _emberDataPrivateSystemPromiseProxies.promiseManyArray)(this.store.scheduleFetchMany(manyArray.toArray()).then(function () {
+        return manyArray;
       }), 'Reload with ids');
       return this._loadingPromise;
     }
@@ -7461,37 +7472,36 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
   };
 
   ManyRelationship.prototype.fetchLink = function () {
-    var _this2 = this;
+    var _this = this;
 
     return this.store.findHasMany(this.record, this.link, this.relationshipMeta).then(function (records) {
       if (records.hasOwnProperty('meta')) {
-        _this2.updateMeta(records.meta);
+        _this.updateMeta(records.meta);
       }
-      _this2.store._backburner.join(function () {
-        _this2.updateRecordsFromAdapter(records);
-        _this2.manyArray.set('isLoaded', true);
+      _this.store._backburner.join(function () {
+        _this.updateRecordsFromAdapter(records);
+        _this.getManyArray().set('isLoaded', true);
       });
-      return _this2.manyArray;
+      return _this.getManyArray();
     });
   };
 
   ManyRelationship.prototype.findRecords = function () {
-    var _this3 = this;
+    var manyArray = this.getManyArray();
+    var array = manyArray.toArray();
+    var internalModels = new Array(array.length);
 
-    var manyArray = this.manyArray.toArray();
-    var internalModels = new Array(manyArray.length);
-
-    for (var i = 0; i < manyArray.length; i++) {
-      internalModels[i] = manyArray[i]._internalModel;
+    for (var i = 0; i < array.length; i++) {
+      internalModels[i] = array[i]._internalModel;
     }
 
     //TODO CLEANUP
     return this.store.findMany(internalModels).then(function () {
-      if (!_this3.manyArray.get('isDestroyed')) {
+      if (!manyArray.get('isDestroyed')) {
         //Goes away after the manyArray refactor
-        _this3.manyArray.set('isLoaded', true);
+        manyArray.set('isLoaded', true);
       }
-      return _this3.manyArray;
+      return manyArray;
     });
   };
   ManyRelationship.prototype.notifyHasManyChanged = function () {
@@ -7499,9 +7509,10 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
   };
 
   ManyRelationship.prototype.getRecords = function () {
-    var _this4 = this;
+    var _this2 = this;
 
     //TODO(Igor) sync server here, once our syncing is not stupid
+    var manyArray = this.getManyArray();
     if (this.isAsync) {
       var promise;
       if (this.link) {
@@ -7509,24 +7520,24 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
           promise = this.findRecords();
         } else {
           promise = this.findLink().then(function () {
-            return _this4.findRecords();
+            return _this2.findRecords();
           });
         }
       } else {
         promise = this.findRecords();
       }
       this._loadingPromise = _emberDataPrivateSystemPromiseProxies.PromiseManyArray.create({
-        content: this.manyArray,
+        content: manyArray,
         promise: promise
       });
       return this._loadingPromise;
     } else {
 
       //TODO(Igor) WTF DO I DO HERE?
-      if (!this.manyArray.get('isDestroyed')) {
-        this.manyArray.set('isLoaded', true);
+      if (!manyArray.get('isDestroyed')) {
+        manyArray.set('isLoaded', true);
       }
-      return this.manyArray;
+      return manyArray;
     }
   };
 
@@ -17601,7 +17612,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+bae01b8aa9";
+  exports.default = "2.11.0-canary+4463dd47ba";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
