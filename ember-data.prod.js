@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+1b923adafc
+ * @version   2.11.0-canary+cd13f1503c
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -13925,8 +13925,8 @@ define('ember-data/serializer', ['exports', 'ember'], function (exports, _ember)
 
     /**
       The `store` property is the application's `store` that contains
-      all records.  It can be used to look up serializer for other model
-      type that may be nested inside the payload response.
+      all records. It can be used to look up serializers for other model
+      types that may be nested inside the payload response.
        Example:
        ```js
       Serializer.extend({
@@ -14002,7 +14002,7 @@ define('ember-data/serializer', ['exports', 'ember'], function (exports, _ember)
       });
       ```
        @method serialize
-      @param {DS.Snapshot} record
+      @param {DS.Snapshot} snapshot
       @param {Object} [options]
       @return {Object}
     */
@@ -17690,7 +17690,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+1b923adafc";
+  exports.default = "2.11.0-canary+cd13f1503c";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
