@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+bcc8ae2b4b
+ * @version   2.11.0-canary+da3f9a6390
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -5285,7 +5285,7 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
       }
 
       recordArrays.forEach(function (array) {
-        return array.removeInternalModel(record);
+        return array._removeInternalModels([record]);
       });
 
       record._recordArrays = null;
@@ -5337,14 +5337,14 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
         this._addRecordToRecordArray(array, record);
       } else {
         recordArrays.delete(array);
-        array.removeInternalModel(record);
+        array._removeInternalModels([record]);
       }
     },
 
     _addRecordToRecordArray: function (array, record) {
       var recordArrays = this.recordArraysForRecord(record);
       if (!recordArrays.has(array)) {
-        array.addInternalModel(record);
+        array._pushInternalModels([record]);
         recordArrays.add(array);
       }
     },
@@ -5599,6 +5599,9 @@ define("ember-data/-private/system/record-arrays/adapter-populated-record-array"
   */
   exports.default = _emberDataPrivateSystemRecordArraysRecordArray.default.extend({
     init: function () {
+      // yes we are touching `this` before super, but ArrayProxy has a bug that requires this.
+      this.set('content', this.get('content') || _ember.default.A());
+
       this._super.apply(this, arguments);
       this.query = this.query || null;
       this.links = null;
@@ -5618,25 +5621,28 @@ define("ember-data/-private/system/record-arrays/adapter-populated-record-array"
     },
 
     /**
-      @method loadRecords
+      @method _setInternalModels
       @param {Array} internalModels
       @param {Object} payload normalized payload
       @private
     */
-    loadRecords: function (internalModels, payload) {
+    _setInternalModels: function (internalModels, payload) {
       var _this = this;
 
+      // TODO: initial load should not cause change events at all, only
+      // subsequent. This requires changing the public api of adapter.query, but
+      // hopefully we can do that soon.
+      this.get('content').setObjects(internalModels);
+
       this.setProperties({
-        content: _ember.default.A(internalModels),
         isLoaded: true,
         isUpdating: false,
-        meta: (0, _emberDataPrivateSystemCloneNull.default)(payload.meta)
+        meta: (0, _emberDataPrivateSystemCloneNull.default)(payload.meta),
+        links: (0, _emberDataPrivateSystemCloneNull.default)(payload.links)
       });
 
-      this.set('links', (0, _emberDataPrivateSystemCloneNull.default)(payload.links));
-
       internalModels.forEach(function (record) {
-        _this.manager.recordArraysForRecord(record).add(_this);
+        return _this.manager.recordArraysForRecord(record).add(_this);
       });
 
       // TODO: should triggering didLoad event be the last action of the runLoop?
@@ -5857,8 +5863,11 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
       @private
       @param {InternalModel} internalModel
     */
-    addInternalModel: function (internalModel) {
-      get(this, 'content').addObject(internalModel);
+    _pushInternalModels: function (internalModels) {
+      // pushObjects because the internalModels._recordArrays set was already
+      // consulted for inclusion, so addObject and its on .contains call is not
+      // required.
+      get(this, 'content').pushObjects(internalModels);
     },
 
     /**
@@ -5867,8 +5876,8 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
       @private
       @param {InternalModel} internalModel
     */
-    removeInternalModel: function (internalModel) {
-      get(this, 'content').removeObject(internalModel);
+    _removeInternalModels: function (internalModels) {
+      get(this, 'content').removeObjects(internalModels);
     },
 
     /**
@@ -10997,23 +11006,24 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     var promise = adapter.query(store, typeClass, query, recordArray);
 
     var serializer = (0, _emberDataPrivateSystemStoreSerializers.serializerForAdapter)(store, adapter, modelName);
-    var label = "DS: Handle Adapter#query of " + typeClass;
+    var label = 'DS: Handle Adapter#query of ' + typeClass;
 
     promise = Promise.resolve(promise, label);
     promise = (0, _emberDataPrivateSystemStoreCommon._guard)(promise, (0, _emberDataPrivateSystemStoreCommon._bind)(_emberDataPrivateSystemStoreCommon._objectIsAlive, store));
 
     return promise.then(function (adapterPayload) {
-      var internalModels, payload;
+      var internalModels = undefined,
+          payload = undefined;
       store._adapterRun(function () {
         payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, null, 'query');
         internalModels = store._push(payload);
       });
 
       (0, _emberDataPrivateDebug.assert)('The response to store.query is expected to be an array but it was a single record. Please wrap your response in an array or use `store.queryRecord` to query for a single record.', Array.isArray(internalModels));
-      recordArray.loadRecords(internalModels, payload);
+      recordArray._setInternalModels(internalModels, payload);
 
       return recordArray;
-    }, null, "DS: Extract payload of query " + typeClass);
+    }, null, 'DS: Extract payload of query ' + typeClass);
   }
 
   function _queryRecord(adapter, store, typeClass, query) {
@@ -18097,7 +18107,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+bcc8ae2b4b";
+  exports.default = "2.11.0-canary+da3f9a6390";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
