@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+6f5312891d
+ * @version   2.11.0-canary+61dbaeb9b4
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -16692,10 +16692,13 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
       var json = {};
 
       if (options && options.includeId) {
-        var id = snapshot.id;
-
-        if (id) {
-          json[get(this, 'primaryKey')] = id;
+        if ((0, _emberDataPrivateFeatures.default)('ds-serialize-id')) {
+          this.serializeId(snapshot, json, get(this, 'primaryKey'));
+        } else {
+          var id = snapshot.id;
+          if (id) {
+            json[get(this, 'primaryKey')] = id;
+          }
         }
       }
 
@@ -17126,6 +17129,39 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
         return this.modelNameFromPayloadKey !== JSONSerializer.prototype.modelNameFromPayloadKey;
       }
 
+    });
+  }
+
+  if ((0, _emberDataPrivateFeatures.default)("ds-serialize-id")) {
+
+    JSONSerializer.reopen({
+
+      /**
+       serializeId can be used to customize how id is serialized
+       For example, your server may expect integer datatype of id
+        By default the snapshot's id (String) is set on the json hash via json[primaryKey] = snapshot.id.
+        ```app/serializers/application.js
+       import DS from 'ember-data';
+        export default DS.JSONSerializer.extend({
+       serializeId(snapshot, json, primaryKey) {
+           var id = snapshot.id;
+           json[primaryKey] = parseInt(id, 10);
+         }
+       });
+       ```
+        @method serializeId
+       @public
+       @param {DS.Snapshot} snapshot
+       @param {Object} json
+       @param {String} primaryKey
+       */
+      serializeId: function (snapshot, json, primaryKey) {
+        var id = snapshot.id;
+
+        if (id) {
+          json[primaryKey] = id;
+        }
+      }
     });
   }
 
@@ -18146,7 +18182,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+6f5312891d";
+  exports.default = "2.11.0-canary+61dbaeb9b4";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
