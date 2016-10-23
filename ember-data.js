@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+b4301d8874
+ * @version   2.11.0-canary+05e84361ab
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -8934,7 +8934,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       var adapter = this.adapterFor(typeClass.modelName);
 
       (0, _emberDataPrivateDebug.assert)("You tried to find a record but you have no adapter (for " + typeClass + ")", adapter);
-      (0, _emberDataPrivateDebug.assert)("You tried to find a record but your adapter (for " + typeClass + ") does not implement 'findRecord'", typeof adapter.findRecord === 'function' || typeof adapter.find === 'function');
+      (0, _emberDataPrivateDebug.assert)("You tried to find a record but your adapter (for " + typeClass + ") does not implement 'findRecord'", typeof adapter.findRecord === 'function');
 
       var promise = (0, _emberDataPrivateSystemStoreFinders._find)(adapter, this, typeClass, id, internalModel, options);
       return promise;
@@ -10595,6 +10595,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     var internalModel = snapshot._internalModel;
     var modelName = snapshot.modelName;
     var typeClass = store.modelFor(modelName);
+    (0, _emberDataPrivateDebug.assert)('You tried to update a record but you have no adapter (for ' + typeClass + ')', adapter);
+    (0, _emberDataPrivateDebug.assert)('You tried to update a record but your adapter (for ' + typeClass + ') does not implement \'' + operation + '\'', typeof adapter[operation] === 'function');
     var promise = adapter[operation](store, typeClass, snapshot);
     var serializer = (0, _emberDataPrivateSystemStoreSerializers.serializerForAdapter)(store, adapter, modelName);
     var label = 'DS: Extract and notify about ' + operation + ' completion of ' + internalModel;
@@ -18107,7 +18109,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+b4301d8874";
+  exports.default = "2.11.0-canary+05e84361ab";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
