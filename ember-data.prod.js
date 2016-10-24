@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.10.0-beta.1
+ * @version   2.10.0-beta.1+31480e1fd8
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -5308,6 +5308,33 @@ define("ember-data/-private/system/record-arrays/adapter-populated-record-array"
     may trigger a search on the server, whose results would be loaded
     into an instance of the `AdapterPopulatedRecordArray`.
   
+    ---
+  
+    If you want to update the array and get the latest records from the
+    adapter, you can invoke [`update()`](#method_update):
+  
+    Example
+  
+    ```javascript
+    // GET /users?isAdmin=true
+    var admins = store.query('user', { isAdmin: true });
+  
+    admins.then(function() {
+      console.log(admins.get("length")); // 42
+    });
+  
+    // somewhere later in the app code, when new admins have been created
+    // in the meantime
+    //
+    // GET /users?isAdmin=true
+    admins.update().then(function() {
+      admins.get('isUpdating'); // false
+      console.log(admins.get("length")); // 123
+    });
+  
+    admins.get('isUpdating'); // true
+    ```
+  
     @class AdapterPopulatedRecordArray
     @namespace DS
     @extends DS.RecordArray
@@ -8794,7 +8821,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       Processing by Api::V1::PersonsController#index as HTML
       Parameters: { "ids" => ["1", "2", "3"] }
       ```
-       This method returns a promise, which is resolved with a `RecordArray`
+       This method returns a promise, which is resolved with an
+      [`AdapterPopulatedRecordArray`](http://emberjs.com/api/data/classes/DS.AdapterPopulatedRecordArray.html)
       once the server returns.
        @since 1.13.0
       @method query
@@ -17256,7 +17284,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.10.0-beta.1";
+  exports.default = "2.10.0-beta.1+31480e1fd8";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
