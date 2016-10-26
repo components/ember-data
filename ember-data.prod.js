@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+ef4ed827cd
+ * @version   2.11.0-canary+f9b66c439c
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -9480,6 +9480,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
     /**
      This method unloads all records in the store.
+     It schedules unloading to happen during the next run loop.
       Optionally you can pass a type which unload all records for a given type.
       ```javascript
      store.unloadAll();
@@ -17785,7 +17786,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+ef4ed827cd";
+  exports.default = "2.11.0-canary+f9b66c439c";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
