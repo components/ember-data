@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+f9b66c439c
+ * @version   2.11.0-canary+3513c4924e
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -12201,8 +12201,50 @@ define('ember-data/adapters/errors', ['exports', 'ember', 'ember-data/-private/d
 
   exports.ServerError = ServerError;
   /**
+    Convert an hash of errors into an array with errors in JSON-API format.
+  
+    ```javascript
+    import DS from 'ember-data';
+  
+    const { errorsHashToArray } = DS;
+  
+    let errors = {
+      base: "Invalid attributes on saving this record",
+      name: "Must be present",
+      age: ["Must be present", "Must be a number"]
+    };
+  
+    let errorsArray = errorsHashToArray(errors);
+    // [
+    //   {
+    //     title: "Invalid Document",
+    //     detail: "Invalid attributes on saving this record",
+    //     source: { pointer: "/data" }
+    //   },
+    //   {
+    //     title: "Invalid Attribute",
+    //     detail: "Must be present",
+    //     source: { pointer: "/data/attributes/name" }
+    //   },
+    //   {
+    //     title: "Invalid Attribute",
+    //     detail: "Must be present",
+    //     source: { pointer: "/data/attributes/age" }
+    //   },
+    //   {
+    //     title: "Invalid Attribute",
+    //     detail: "Must be a number",
+    //     source: { pointer: "/data/attributes/age" }
+    //   }
+    // ]
+    ```
+  
     @method errorsHashToArray
-    @private
+    @public
+    @namespace
+    @for DS
+    @param {Object} errors hash with errors as properties
+    @return {Array} array of errors in JSON-API format
   */
 
   function errorsHashToArray(errors) {
@@ -12233,8 +12275,44 @@ define('ember-data/adapters/errors', ['exports', 'ember', 'ember-data/-private/d
   }
 
   /**
+    Convert an array of errors in JSON-API format into an object.
+  
+    ```javascript
+    import DS from 'ember-data';
+  
+    const { errorsArrayToHash } = DS;
+  
+    let errorsArray = [
+      {
+        title: "Invalid Attribute",
+        detail: "Must be present",
+        source: { pointer: "/data/attributes/name" }
+      },
+      {
+        title: "Invalid Attribute",
+        detail: "Must be present",
+        source: { pointer: "/data/attributes/age" }
+      },
+      {
+        title: "Invalid Attribute",
+        detail: "Must be a number",
+        source: { pointer: "/data/attributes/age" }
+      }
+    ];
+  
+    let errors = errorsArrayToHash(errorsArray);
+    // {
+    //   "name": ["Must be present"],
+    //   "age":  ["Must be present", "must be a number"]
+    // }
+    ```
+  
     @method errorsArrayToHash
-    @private
+    @public
+    @namespace
+    @for DS
+    @param {Array} errors array of errors in JSON-API format
+    @return {Object}
   */
 
   function errorsArrayToHash(errors) {
@@ -18183,7 +18261,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+f9b66c439c";
+  exports.default = "2.11.0-canary+3513c4924e";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
