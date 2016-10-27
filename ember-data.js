@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+3513c4924e
+ * @version   2.11.0-canary+37f5413a37
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -6595,7 +6595,7 @@ define("ember-data/-private/system/relationships/ext", ["exports", "ember", "emb
         comments: DS.hasMany('comment')
       });
      ```
-       Calling `App.Post.typeForRelationship('comments')` will return `App.Comment`.
+       Calling `store.modelFor('post').typeForRelationship('comments', store)` will return `Comment`.
        @method typeForRelationship
       @static
       @param {String} name the name of the relationship
@@ -6626,11 +6626,12 @@ define("ember-data/-private/system/relationships/ext", ["exports", "ember", "emb
         owner: DS.belongsTo('post')
       });
       ```
-       App.Post.inverseFor('comments') -> { type: App.Message, name: 'owner', kind: 'belongsTo' }
-      App.Message.inverseFor('owner') -> { type: App.Post, name: 'comments', kind: 'hasMany' }
+       store.modelFor('post').inverseFor('comments', store) -> { type: App.Message, name: 'owner', kind: 'belongsTo' }
+      store.modelFor('message').inverseFor('owner', store) -> { type: App.Post, name: 'comments', kind: 'hasMany' }
        @method inverseFor
       @static
       @param {String} name the name of the relationship
+      @param {DS.Store} store
       @return {Object} the inverse relationship, or null
     */
     inverseFor: function (name, store) {
@@ -6758,11 +6759,13 @@ define("ember-data/-private/system/relationships/ext", ["exports", "ember", "emb
        ```javascript
       import Ember from 'ember';
       import Blog from 'app/models/blog';
+      import User from 'app/models/user';
+      import Post from 'app/models/post';
        var relationships = Ember.get(Blog, 'relationships');
-      relationships.get(App.User);
+      relationships.get(User);
       //=> [ { name: 'users', kind: 'hasMany' },
       //     { name: 'owner', kind: 'belongsTo' } ]
-      relationships.get(App.Post);
+      relationships.get(Post);
       //=> [ { name: 'posts', kind: 'hasMany' } ]
       ```
        @property relationships
@@ -6833,7 +6836,7 @@ define("ember-data/-private/system/relationships/ext", ["exports", "ember", "emb
       import Ember from 'ember';
       import Blog from 'app/models/blog';
        var relatedTypes = Ember.get(Blog, 'relatedTypes');
-      //=> [ App.User, App.Post ]
+      //=> [ User, Post ]
       ```
        @property relatedTypes
       @static
@@ -18261,7 +18264,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+3513c4924e";
+  exports.default = "2.11.0-canary+37f5413a37";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
