@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+905420fb10
+ * @version   2.11.0-canary+b121ffcbb8
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -15316,6 +15316,11 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
           if (resourceHash.attributes[attributeKey] !== undefined) {
             attributes[key] = resourceHash.attributes[attributeKey];
           }
+          (0, _emberDataPrivateDebug.runInDebug)(function () {
+            if (resourceHash.attributes[attributeKey] === undefined && resourceHash.attributes[key] !== undefined) {
+              (0, _emberDataPrivateDebug.assert)('Your payload for \'' + modelClass.modelName + '\' contains \'' + key + '\', but your serializer is setup to look for \'' + attributeKey + '\'. This is most likely because Ember Data\'s JSON API serializer dasherizes attribute keys by default. You should subclass JSONAPISerializer and implement \'keyForAttribute(key) { return key; }\' to prevent Ember Data from customizing your attribute keys.', false);
+            }
+          });
         });
       }
 
@@ -15366,6 +15371,11 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
             var relationshipHash = resourceHash.relationships[relationshipKey];
             relationships[key] = _this2.extractRelationship(relationshipHash);
           }
+          (0, _emberDataPrivateDebug.runInDebug)(function () {
+            if (resourceHash.relationships[relationshipKey] === undefined && resourceHash.relationships[key] !== undefined) {
+              (0, _emberDataPrivateDebug.assert)('Your payload for \'' + modelClass.modelName + '\' contains \'' + key + '\', but your serializer is setup to look for \'' + relationshipKey + '\'. This is most likely because Ember Data\'s JSON API serializer dasherizes relationship keys by default. You should subclass JSONAPISerializer and implement \'keyForRelationship(key) { return key; }\' to prevent Ember Data from customizing your relationship keys.', false);
+            }
+          });
         });
       }
 
@@ -18264,7 +18274,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+905420fb10";
+  exports.default = "2.11.0-canary+b121ffcbb8";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
