@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+b121ffcbb8
+ * @version   2.11.0-canary+2ac536d0ad
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -791,16 +791,16 @@ define('ember-data/-private/debug', ['exports', 'ember'], function (exports, _em
     return _ember.default.debugSeal.apply(_ember.default, arguments);
   }
 
-  function checkPolymorphic(typeClass, addedRecord) {
-    if (typeClass.__isMixin) {
+  function checkPolymorphic(modelClass, addedModelClass) {
+    if (modelClass.__isMixin) {
       //TODO Need to do this in order to support mixins, should convert to public api
       //once it exists in Ember
-      return typeClass.__mixin.detect(addedRecord.type.PrototypeMixin);
+      return modelClass.__mixin.detect(addedModelClass.PrototypeMixin);
     }
     if (_ember.default.MODEL_FACTORY_INJECTIONS) {
-      typeClass = typeClass.superclass;
+      modelClass = modelClass.superclass;
     }
-    return typeClass.detect(addedRecord.type);
+    return modelClass.detect(addedModelClass);
   }
 
   /*
@@ -816,22 +816,21 @@ define('ember-data/-private/debug', ['exports', 'ember'], function (exports, _em
     `record.relationshipFor(key)`.
   
     @method assertPolymorphicType
-    @param {InternalModel} record
+    @param {InternalModel} internalModel
     @param {RelationshipMeta} relationshipMeta retrieved via
            `record.relationshipFor(key)`
     @param {InternalModel} addedRecord record which
            should be added/set for the relationship
   */
 
-  function assertPolymorphicType(record, relationshipMeta, addedRecord) {
-    var addedType = addedRecord.type.modelName;
-    var recordType = record.type.modelName;
+  function assertPolymorphicType(parentInternalModel, relationshipMeta, addedInternalModel) {
+    var addedModelName = addedInternalModel.modelName;
+    var parentModelName = parentInternalModel.modelName;
     var key = relationshipMeta.key;
-    var typeClass = record.store.modelFor(relationshipMeta.type);
+    var relationshipClass = parentInternalModel.store.modelFor(relationshipMeta.type);
+    var assertionMessage = 'You cannot add a record of modelClass \'' + addedModelName + '\' to the \'' + parentModelName + '.' + key + '\' relationship (only \'' + relationshipClass.modelName + '\' allowed)';
 
-    var assertionMessage = 'You cannot add a record of type \'' + addedType + '\' to the \'' + recordType + '.' + key + '\' relationship (only \'' + typeClass.modelName + '\' allowed)';
-
-    assert(assertionMessage, checkPolymorphic(typeClass, addedRecord));
+    assert(assertionMessage, checkPolymorphic(relationshipClass, addedInternalModel.modelClass));
   }
 });
 define('ember-data/-private/ext/date', ['exports', 'ember', 'ember-data/-private/debug'], function (exports, _ember, _emberDataPrivateDebug) {
@@ -1398,6 +1397,7 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
       if (!this.currentState[index]) {
         return undefined;
       }
+
       return this.currentState[index].getRecord();
     },
 
@@ -2282,15 +2282,16 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
   */
 
   var InternalModel = (function () {
-    function InternalModel(type, id, store, _, data) {
-      this.type = type;
+    function InternalModel(modelClass, id, store, data) {
+      this.modelClass = modelClass;
       this.id = id;
       this.store = store;
       this._data = data || new _emberDataPrivateSystemEmptyObject.default();
-      this.modelName = type.modelName;
+      this.modelName = modelClass.modelName;
       this.dataHasInitialized = false;
       this._loadingPromise = null;
       this._recordArrays = undefined;
+      this._record = null;
       this.currentState = _emberDataPrivateSystemModelStates.default.empty;
       this.isReloading = false;
       this._isDestroyed = false;
@@ -2353,36 +2354,39 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         return this.currentState.dirtyType;
       }
     }, {
-      key: "materializeRecord",
-      value: function materializeRecord() {
-        (0, _emberDataPrivateDebug.assert)("Materialized " + this.modelName + " record with id:" + this.id + "more than once", this.record === null || this.record === undefined);
+      key: "getRecord",
+      value: function getRecord() {
+        if (!this._record) {
 
-        // lookupFactory should really return an object that creates
-        // instances with the injections applied
-        var createOptions = {
-          store: this.store,
-          _internalModel: this,
-          id: this.id,
-          currentState: this.currentState,
-          isError: this.isError,
-          adapterError: this.error
-        };
+          // lookupFactory should really return an object that creates
+          // instances with the injections applied
+          var createOptions = {
+            store: this.store,
+            _internalModel: this,
+            id: this.id,
+            currentState: this.currentState,
+            isError: this.isError,
+            adapterError: this.error
+          };
 
-        if (setOwner) {
-          // ensure that `getOwner(this)` works inside a model instance
-          setOwner(createOptions, (0, _emberDataPrivateUtils.getOwner)(this.store));
-        } else {
-          createOptions.container = this.store.container;
+          if (setOwner) {
+            // ensure that `getOwner(this)` works inside a model instance
+            setOwner(createOptions, (0, _emberDataPrivateUtils.getOwner)(this.store));
+          } else {
+            createOptions.container = this.store.container;
+          }
+
+          this._record = this.modelClass._create(createOptions);
+
+          this._triggerDeferredTriggers();
         }
 
-        this.record = this.type._create(createOptions);
-
-        this._triggerDeferredTriggers();
+        return this._record;
       }
     }, {
       key: "recordObjectWillDestroy",
       value: function recordObjectWillDestroy() {
-        this.record = null;
+        this._record = null;
       }
     }, {
       key: "deleteRecord",
@@ -2402,7 +2406,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       key: "startedReloading",
       value: function startedReloading() {
         this.isReloading = true;
-        if (this.record) {
+        if (this.hasRecord) {
           set(this.record, 'isReloading', true);
         }
       }
@@ -2410,7 +2414,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       key: "finishedReloading",
       value: function finishedReloading() {
         this.isReloading = false;
-        if (this.record) {
+        if (this.hasRecord) {
           set(this.record, 'isReloading', false);
         }
       }
@@ -2418,28 +2422,21 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       key: "reload",
       value: function reload() {
         this.startedReloading();
-        var record = this;
+        var internalModel = this;
         var promiseLabel = "DS: Model#reload of " + this;
+
         return new Promise(function (resolve) {
-          record.send('reloadRecord', resolve);
+          internalModel.send('reloadRecord', resolve);
         }, promiseLabel).then(function () {
-          record.didCleanError();
-          return record;
+          internalModel.didCleanError();
+          return internalModel;
         }, function (error) {
-          record.didError(error);
+          internalModel.didError(error);
           throw error;
         }, "DS: Model#reload complete, update flags").finally(function () {
-          record.finishedReloading();
-          record.updateRecordArrays();
+          internalModel.finishedReloading();
+          internalModel.updateRecordArrays();
         });
-      }
-    }, {
-      key: "getRecord",
-      value: function getRecord() {
-        if (!this.record) {
-          this.materializeRecord();
-        }
-        return this.record;
       }
     }, {
       key: "unloadRecord",
@@ -2449,17 +2446,17 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     }, {
       key: "eachRelationship",
       value: function eachRelationship(callback, binding) {
-        return this.type.eachRelationship(callback, binding);
+        return this.modelClass.eachRelationship(callback, binding);
       }
     }, {
       key: "eachAttribute",
       value: function eachAttribute(callback, binding) {
-        return this.type.eachAttribute(callback, binding);
+        return this.modelClass.eachAttribute(callback, binding);
       }
     }, {
       key: "inverseFor",
       value: function inverseFor(key) {
-        return this.type.inverseFor(key);
+        return this.modelClass.inverseFor(key);
       }
     }, {
       key: "setupData",
@@ -2467,7 +2464,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         var changedKeys = this._changedKeys(data.attributes);
         assign(this._data, data.attributes);
         this.pushedData();
-        if (this.record) {
+        if (this.hasRecord) {
           this.record._notifyProperties(changedKeys);
         }
         this.didInitializeData();
@@ -2489,7 +2486,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       key: "destroy",
       value: function destroy() {
         this._isDestroyed = true;
-        if (this.record) {
+        if (this.hasRecord) {
           return this.record.destroy();
         }
       }
@@ -2600,7 +2597,6 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         var inFlightData = this._inFlightAttributes;
         var newData = assign(copy(inFlightData), currentData);
         var diffData = new _emberDataPrivateSystemEmptyObject.default();
-
         var newDataKeys = Object.keys(newData);
 
         for (var i = 0, _length2 = newDataKeys.length; i < _length2; i++) {
@@ -2652,28 +2648,28 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     }, {
       key: "notifyHasManyAdded",
       value: function notifyHasManyAdded(key, record, idx) {
-        if (this.record) {
+        if (this.hasRecord) {
           this.record.notifyHasManyAdded(key, record, idx);
         }
       }
     }, {
       key: "notifyHasManyRemoved",
       value: function notifyHasManyRemoved(key, record, idx) {
-        if (this.record) {
+        if (this.hasRecord) {
           this.record.notifyHasManyRemoved(key, record, idx);
         }
       }
     }, {
       key: "notifyBelongsToChanged",
       value: function notifyBelongsToChanged(key, record) {
-        if (this.record) {
+        if (this.hasRecord) {
           this.record.notifyBelongsToChanged(key, record);
         }
       }
     }, {
       key: "notifyPropertyChange",
       value: function notifyPropertyChange(key) {
-        if (this.record) {
+        if (this.hasRecord) {
           this.record.notifyPropertyChange(key);
         }
       }
@@ -2767,7 +2763,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         }
 
         this.currentState = state;
-        if (this.record) {
+        if (this.hasRecord) {
           set(this.record, 'currentState', state);
         }
 
@@ -2793,11 +2789,8 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     }, {
       key: "triggerLater",
       value: function triggerLater() {
-        var length = arguments.length;
-        var args = new Array(length);
-
-        for (var i = 0; i < length; i++) {
-          args[i] = arguments[i];
+        for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+          args[_key] = arguments[_key];
         }
 
         if (this._deferredTriggers.push(args) !== 1) {
@@ -2811,7 +2804,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         //TODO: Before 1.0 we want to remove all the events that happen on the pre materialized record,
         //but for now, we queue up all the events triggered before the record was materialized, and flush
         //them once we have the record
-        if (!this.record) {
+        if (!this.hasRecord) {
           return;
         }
         for (var i = 0, l = this._deferredTriggers.length; i < l; i++) {
@@ -2864,7 +2857,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         //TODO(Igor) consider the polymorphic case
         Object.keys(preload).forEach(function (key) {
           var preloadValue = get(preload, key);
-          var relationshipMeta = _this2.type.metaForProperty(key);
+          var relationshipMeta = _this2.modelClass.metaForProperty(key);
           if (relationshipMeta.isRelationship) {
             _this2._preloadRelationship(key, preloadValue);
           } else {
@@ -2875,23 +2868,23 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     }, {
       key: "_preloadRelationship",
       value: function _preloadRelationship(key, preloadValue) {
-        var relationshipMeta = this.type.metaForProperty(key);
-        var type = relationshipMeta.type;
+        var relationshipMeta = this.modelClass.metaForProperty(key);
+        var modelClass = relationshipMeta.type;
         if (relationshipMeta.kind === 'hasMany') {
-          this._preloadHasMany(key, preloadValue, type);
+          this._preloadHasMany(key, preloadValue, modelClass);
         } else {
-          this._preloadBelongsTo(key, preloadValue, type);
+          this._preloadBelongsTo(key, preloadValue, modelClass);
         }
       }
     }, {
       key: "_preloadHasMany",
-      value: function _preloadHasMany(key, preloadValue, type) {
+      value: function _preloadHasMany(key, preloadValue, modelClass) {
         (0, _emberDataPrivateDebug.assert)("You need to pass in an array to set a hasMany property on a record", Array.isArray(preloadValue));
         var recordsToSet = new Array(preloadValue.length);
 
         for (var i = 0; i < preloadValue.length; i++) {
           var recordToPush = preloadValue[i];
-          recordsToSet[i] = this._convertStringOrNumberIntoInternalModel(recordToPush, type);
+          recordsToSet[i] = this._convertStringOrNumberIntoInternalModel(recordToPush, modelClass);
         }
 
         //We use the pathway of setting the hasMany as if it came from the adapter
@@ -2900,8 +2893,8 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       }
     }, {
       key: "_preloadBelongsTo",
-      value: function _preloadBelongsTo(key, preloadValue, type) {
-        var recordToSet = this._convertStringOrNumberIntoInternalModel(preloadValue, type);
+      value: function _preloadBelongsTo(key, preloadValue, modelClass) {
+        var recordToSet = this._convertStringOrNumberIntoInternalModel(preloadValue, modelClass);
 
         //We use the pathway of setting the hasMany as if it came from the adapter
         //because the user told us that they know this relationships exists already
@@ -2909,9 +2902,9 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       }
     }, {
       key: "_convertStringOrNumberIntoInternalModel",
-      value: function _convertStringOrNumberIntoInternalModel(value, type) {
+      value: function _convertStringOrNumberIntoInternalModel(value, modelClass) {
         if (typeof value === 'string' || typeof value === 'number') {
-          return this.store._internalModelForId(type, value);
+          return this.store._internalModelForId(modelClass, value);
         }
         if (value._internalModel) {
           return value._internalModel;
@@ -2927,7 +2920,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       key: "updateRecordArrays",
       value: function updateRecordArrays() {
         this._updatingRecordArraysLater = false;
-        this.store.dataWasUpdated(this.type, this);
+        this.store.dataWasUpdated(this.modelClass, this);
       }
     }, {
       key: "setId",
@@ -2944,7 +2937,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         this.error = error;
         this.isError = true;
 
-        if (this.record) {
+        if (this.hasRecord) {
           this.record.setProperties({
             isError: true,
             adapterError: error
@@ -2957,7 +2950,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         this.error = null;
         this.isError = false;
 
-        if (this.record) {
+        if (this.hasRecord) {
           this.record.setProperties({
             isError: false,
             adapterError: null
@@ -3015,26 +3008,22 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     }, {
       key: "addErrorMessageToAttribute",
       value: function addErrorMessageToAttribute(attribute, message) {
-        var record = this.getRecord();
-        get(record, 'errors')._add(attribute, message);
+        get(this.getRecord(), 'errors')._add(attribute, message);
       }
     }, {
       key: "removeErrorMessageFromAttribute",
       value: function removeErrorMessageFromAttribute(attribute) {
-        var record = this.getRecord();
-        get(record, 'errors')._remove(attribute);
+        get(this.getRecord(), 'errors')._remove(attribute);
       }
     }, {
       key: "clearErrorMessages",
       value: function clearErrorMessages() {
-        var record = this.getRecord();
-        get(record, 'errors')._clear();
+        get(this.getRecord(), 'errors')._clear();
       }
     }, {
       key: "hasErrors",
       value: function hasErrors() {
-        var record = this.getRecord();
-        var errors = get(record, 'errors');
+        var errors = get(this.getRecord(), 'errors');
 
         return !isEmpty(errors);
       }
@@ -3048,10 +3037,9 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     }, {
       key: "adapterDidInvalidate",
       value: function adapterDidInvalidate(errors) {
-        var attribute;
+        var attribute = undefined;
 
         for (attribute in errors) {
-          // TODO @runspired we probably dont need hasOwnProperty
           if (errors.hasOwnProperty(attribute)) {
             this.addErrorMessageToAttribute(attribute, errors[attribute]);
           }
@@ -3124,15 +3112,18 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         var changedKeys = [];
 
         if (updates) {
-          var original, i, value, key;
+          var original = undefined,
+              i = undefined,
+              value = undefined,
+              key = undefined;
           var keys = Object.keys(updates);
-          var length = keys.length;
+          var _length3 = keys.length;
           var attrs = this._attributes;
 
           original = assign(new _emberDataPrivateSystemEmptyObject.default(), this._data);
           original = assign(original, this._inFlightAttributes);
 
-          for (i = 0; i < length; i++) {
+          for (i = 0; i < _length3; i++) {
             key = keys[i];
             value = updates[key];
 
@@ -3159,32 +3150,39 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       }
     }, {
       key: "referenceFor",
-      value: function referenceFor(type, name) {
+      value: function referenceFor(kind, name) {
         var _this3 = this;
 
         var reference = this.references[name];
 
         if (!reference) {
-          var relationship = this._relationships.get(name);
+          (function () {
+            var relationship = _this3._relationships.get(name);
 
-          (0, _emberDataPrivateDebug.runInDebug)(function () {
-            var modelName = _this3.modelName;
-            (0, _emberDataPrivateDebug.assert)("There is no " + type + " relationship named '" + name + "' on a model of type '" + modelName + "'", relationship);
+            (0, _emberDataPrivateDebug.runInDebug)(function () {
+              var modelName = _this3.modelName;
+              (0, _emberDataPrivateDebug.assert)("There is no " + kind + " relationship named '" + name + "' on a model of modelClass '" + modelName + "'", relationship);
 
-            var actualRelationshipKind = relationship.relationshipMeta.kind;
-            (0, _emberDataPrivateDebug.assert)("You tried to get the '" + name + "' relationship on a '" + modelName + "' via record." + type + "('" + name + "'), but the relationship is of type '" + actualRelationshipKind + "'. Use record." + actualRelationshipKind + "('" + name + "') instead.", actualRelationshipKind === type);
-          });
+              var actualRelationshipKind = relationship.relationshipMeta.kind;
+              (0, _emberDataPrivateDebug.assert)("You tried to get the '" + name + "' relationship on a '" + modelName + "' via record." + kind + "('" + name + "'), but the relationship is of kind '" + actualRelationshipKind + "'. Use record." + actualRelationshipKind + "('" + name + "') instead.", actualRelationshipKind === kind);
+            });
 
-          if (type === "belongsTo") {
-            reference = new _emberDataPrivateSystemReferences.BelongsToReference(this.store, this, relationship);
-          } else if (type === "hasMany") {
-            reference = new _emberDataPrivateSystemReferences.HasManyReference(this.store, this, relationship);
-          }
+            if (kind === "belongsTo") {
+              reference = new _emberDataPrivateSystemReferences.BelongsToReference(_this3.store, _this3, relationship);
+            } else if (kind === "hasMany") {
+              reference = new _emberDataPrivateSystemReferences.HasManyReference(_this3.store, _this3, relationship);
+            }
 
-          this.references[name] = reference;
+            _this3.references[name] = reference;
+          })();
         }
 
         return reference;
+      }
+    }, {
+      key: "type",
+      get: function () {
+        return this.modelClass;
       }
     }, {
       key: "recordReference",
@@ -3272,9 +3270,19 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         return this.__implicitRelationships;
       }
     }, {
+      key: "record",
+      get: function () {
+        return this._record;
+      }
+    }, {
       key: "isDestroyed",
       get: function () {
         return this._isDestroyed;
+      }
+    }, {
+      key: "hasRecord",
+      get: function () {
+        return !!this._record;
       }
     }]);
 
@@ -5318,7 +5326,7 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
 
       if (this.liveRecordArrays.has(typeClass)) {
         var liveRecordArray = this.liveRecordArrays.get(typeClass);
-        this._addRecordToRecordArray(liveRecordArray, record);
+        this._addInternalModelToRecordArray(liveRecordArray, record);
       }
     },
 
@@ -5327,24 +5335,24 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
        @method updateFilterRecordArray
       @param {DS.FilteredRecordArray} array
       @param {Function} filter
-      @param {DS.Model} typeClass
-      @param {InternalModel} record
+      @param {DS.Model} modelClass
+      @param {InternalModel} internalModel
     */
-    updateFilterRecordArray: function (array, filter, typeClass, record) {
-      var shouldBeInArray = filter(record.getRecord());
-      var recordArrays = this.recordArraysForRecord(record);
+    updateFilterRecordArray: function (array, filter, modelClass, internalModel) {
+      var shouldBeInArray = filter(internalModel.getRecord());
+      var recordArrays = this.recordArraysForRecord(internalModel);
       if (shouldBeInArray) {
-        this._addRecordToRecordArray(array, record);
+        this._addInternalModelToRecordArray(array, internalModel);
       } else {
         recordArrays.delete(array);
-        array._removeInternalModels([record]);
+        array._removeInternalModels([internalModel]);
       }
     },
 
-    _addRecordToRecordArray: function (array, record) {
-      var recordArrays = this.recordArraysForRecord(record);
+    _addInternalModelToRecordArray: function (array, internalModel) {
+      var recordArrays = this.recordArraysForRecord(internalModel);
       if (!recordArrays.has(array)) {
-        array._pushInternalModels([record]);
+        array._pushInternalModels([internalModel]);
         recordArrays.add(array);
       }
     },
@@ -5358,7 +5366,7 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
         record = records[i];
 
         if (!record.isDeleted() && !record.isEmpty()) {
-          this._addRecordToRecordArray(array, record);
+          this._addInternalModelToRecordArray(array, record);
         }
       }
     },
@@ -6093,12 +6101,11 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
   };
 
   HasManyReference.prototype.ids = function () {
-    var members = this.hasManyRelationship.members;
-    var ids = members.toArray().map(function (internalModel) {
+    var members = this.hasManyRelationship.members.toArray();
+
+    return members.map(function (internalModel) {
       return internalModel.id;
     });
-
-    return ids;
   };
 
   HasManyReference.prototype.meta = function () {
@@ -6172,11 +6179,10 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
     }
 
     var members = this.hasManyRelationship.members.toArray();
-    var isEveryLoaded = members.every(function (internalModel) {
+
+    return members.every(function (internalModel) {
       return internalModel.isLoaded() === true;
     });
-
-    return isEveryLoaded;
   };
 
   HasManyReference.prototype.value = function () {
@@ -6225,8 +6231,7 @@ define('ember-data/-private/system/references/record', ['exports', 'ember', 'emb
     var _this = this;
 
     return _ember.default.RSVP.resolve(objectOrPromise).then(function (data) {
-      var record = _this.store.push(data);
-      return record;
+      return _this.store.push(data);
     });
   };
 
@@ -7358,7 +7363,7 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
         return null;
       }
       var toReturn = this.inverseRecord.getRecord();
-      (0, _emberDataPrivateDebug.assert)("You looked up the '" + this.key + "' relationship on a '" + this.record.type.modelName + "' with id " + this.record.id + " but some of the associated records were not loaded. Either make sure they are all loaded together with the parent record, or specify that the relationship is async (`DS.belongsTo({ async: true })`)", toReturn === null || !toReturn.get('isEmpty'));
+      (0, _emberDataPrivateDebug.assert)("You looked up the '" + this.key + "' relationship on a '" + this.record.modelName + "' with id " + this.record.id + " but some of the associated records were not loaded. Either make sure they are all loaded together with the parent record, or specify that the relationship is async (`DS.belongsTo({ async: true })`)", toReturn === null || !toReturn.get('isEmpty'));
       return toReturn;
     }
   };
@@ -7371,7 +7376,7 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
     }
 
     // reload record, if it is already loaded
-    if (this.inverseRecord && this.inverseRecord.record) {
+    if (this.inverseRecord && this.inverseRecord.hasRecord) {
       return this.inverseRecord.record.reload();
     }
 
@@ -8350,10 +8355,11 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
   //Get the materialized model from the internalModel/promise that returns
   //an internal model and return it in a promiseObject. Useful for returning
   //from find methods
-  function promiseRecord(internalModel, label) {
-    var toReturn = internalModel.then(function (model) {
-      return model.getRecord();
+  function promiseRecord(internalModelPromise, label) {
+    var toReturn = internalModelPromise.then(function (internalModel) {
+      return internalModel.getRecord();
     });
+
     return (0, _emberDataPrivateSystemPromiseProxies.promiseObject)(toReturn, label);
   }
 
@@ -8549,7 +8555,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     createRecord: function (modelName, inputProperties) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's createRecord method", isPresent(modelName));
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember.default.inspect(modelName), typeof modelName === 'string');
-      var typeClass = this.modelFor(modelName);
+      var modelClass = this.modelFor(modelName);
       var properties = copy(inputProperties) || new _emberDataPrivateSystemEmptyObject.default();
 
       // If the passed properties do not include a primary key,
@@ -8564,16 +8570,19 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       // Coerce ID to a string
       properties.id = (0, _emberDataPrivateSystemCoerceId.default)(properties.id);
 
-      var internalModel = this.buildInternalModel(typeClass, properties.id);
+      var internalModel = this.buildInternalModel(modelClass, properties.id);
       var record = internalModel.getRecord();
 
       // Move the record out of its initial `empty` state into
       // the `loaded` state.
+      // TODO @runspired this seems really bad, store should not be changing the state
       internalModel.loadedData();
 
       // Set the properties specified on the record.
+      // TODO @runspired this is probably why we do the bad thing above
       record.setProperties(properties);
 
+      // TODO @runspired this should also be coalesced into some form of internalModel.setState()
       internalModel.eachRelationship(function (key, descriptor) {
         internalModel._relationships.get(key).setHasData(true);
       });
@@ -8946,6 +8955,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     scheduleFetchMany: function (records) {
       var internalModels = new Array(records.length);
       var fetches = new Array(records.length);
+
       for (var i = 0; i < records.length; i++) {
         internalModels[i] = records[i]._internalModel;
       }
@@ -9170,9 +9180,9 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     hasRecordForId: function (modelName, inputId) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's hasRecordForId method", isPresent(modelName));
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember.default.inspect(modelName), typeof modelName === 'string');
-      var typeClass = this.modelFor(modelName);
+      var modelClass = this.modelFor(modelName);
       var id = (0, _emberDataPrivateSystemCoerceId.default)(inputId);
-      var internalModel = this.typeMapFor(typeClass).idToRecord[id];
+      var internalModel = this.typeMapFor(modelClass).idToRecord[id];
       return !!internalModel && internalModel.isLoaded();
     },
 
@@ -9191,14 +9201,14 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       return this._internalModelForId(modelName, id).getRecord();
     },
 
-    _internalModelForId: function (typeName, inputId) {
-      var typeClass = this.modelFor(typeName);
+    _internalModelForId: function (modelName, inputId) {
+      var modelClass = this.modelFor(modelName);
       var id = (0, _emberDataPrivateSystemCoerceId.default)(inputId);
-      var idToRecord = this.typeMapFor(typeClass).idToRecord;
+      var idToRecord = this.typeMapFor(modelClass).idToRecord;
       var record = idToRecord[id];
 
       if (!record || !idToRecord[id]) {
-        record = this.buildInternalModel(typeClass, id);
+        record = this.buildInternalModel(modelClass, id);
       }
 
       return record;
@@ -9401,13 +9411,13 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       (0, _emberDataPrivateDebug.assert)("You need to pass a query hash to the store's queryRecord method", query);
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + _ember.default.inspect(modelName), typeof modelName === 'string');
 
-      var typeClass = this.modelFor(modelName);
+      var modelClass = this.modelFor(modelName);
       var adapter = this.adapterFor(modelName);
 
-      (0, _emberDataPrivateDebug.assert)("You tried to make a query but you have no adapter (for " + typeClass + ")", adapter);
+      (0, _emberDataPrivateDebug.assert)("You tried to make a query but you have no adapter (for " + modelName + ")", adapter);
       (0, _emberDataPrivateDebug.assert)("You tried to make a query but your adapter does not implement `queryRecord`", typeof adapter.queryRecord === 'function');
 
-      return (0, _emberDataPrivateSystemPromiseProxies.promiseObject)((0, _emberDataPrivateSystemStoreFinders._queryRecord)(adapter, this, typeClass, query).then(function (internalModel) {
+      return (0, _emberDataPrivateSystemPromiseProxies.promiseObject)((0, _emberDataPrivateSystemStoreFinders._queryRecord)(adapter, this, modelClass, query).then(function (internalModel) {
         // the promise returned by store.queryRecord is expected to resolve with
         // an instance of DS.Model
         if (internalModel) {
@@ -10240,9 +10250,10 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @return {DS.InternalModel|Array<DS.InternalModel>} pushed InternalModel(s)
     */
     _push: function (data) {
-
       var included = data.included;
-      var i, length;
+      var i = undefined,
+          length = undefined;
+
       if (included) {
         for (i = 0, length = included.length; i < length; i++) {
           this._pushInternalModel(included[i]);
@@ -10252,6 +10263,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       if (Array.isArray(data.data)) {
         length = data.data.length;
         var internalModels = new Array(length);
+
         for (i = 0; i < length; i++) {
           internalModels[i] = this._pushInternalModel(data.data[i]);
         }
@@ -10433,7 +10445,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
       // lookupFactory should really return an object that creates
       // instances with the injections applied
-      var internalModel = new _emberDataPrivateSystemModelInternalModel.default(type, id, this, null, data);
+      var internalModel = new _emberDataPrivateSystemModelInternalModel.default(type, id, this, data);
 
       // if we're creating an item, this process will be done
       // later, once the object has been persisted.
@@ -18274,7 +18286,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+b121ffcbb8";
+  exports.default = "2.11.0-canary+2ac536d0ad";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
