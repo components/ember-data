@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+2ac536d0ad
+ * @version   2.11.0-canary+d0a3bbb6e2
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -2845,13 +2845,13 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         `store.findRecord('comment', 2, { preload: { post: 1 } })` without having to fetch the post.
          Preloaded data can be attributes and relationships passed in either as IDs or as actual
         models.
-         @method _preloadData
+         @method preloadData
         @private
         @param {Object} preload
       */
     }, {
-      key: "_preloadData",
-      value: function _preloadData(preload) {
+      key: "preloadData",
+      value: function preloadData(preload) {
         var _this2 = this;
 
         //TODO(Igor) consider the polymorphic case
@@ -7556,7 +7556,7 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
       this._loadingPromise = (0, _emberDataPrivateSystemPromiseProxies.promiseManyArray)(this.fetchLink(), 'Reload with link');
       return this._loadingPromise;
     } else {
-      this._loadingPromise = (0, _emberDataPrivateSystemPromiseProxies.promiseManyArray)(this.store.scheduleFetchMany(manyArray.toArray()).then(function () {
+      this._loadingPromise = (0, _emberDataPrivateSystemPromiseProxies.promiseManyArray)(this.store._scheduleFetchMany(manyArray.currentState).then(function () {
         return manyArray;
       }), 'Reload with ids');
       return this._loadingPromise;
@@ -8053,7 +8053,6 @@ define("ember-data/-private/system/snapshot", ["exports", "ember", "ember-data/-
       @type {Object}
     */
     this.adapterOptions = options.adapterOptions;
-
     this.include = options.include;
 
     this._changedAttributes = record.changedAttributes();
@@ -8347,7 +8346,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
   var get = _ember.default.get;
   var isNone = _ember.default.isNone;
   var isPresent = _ember.default.isPresent;
-  var Map = _ember.default.Map;
+  var MapWithDefault = _ember.default.MapWithDefault;
   var emberRun = _ember.default.run;
   var set = _ember.default.set;
   var Service = _ember.default.Service;
@@ -8473,7 +8472,9 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       this._instanceCache = new _emberDataPrivateSystemStoreContainerInstanceCache.default((0, _emberDataPrivateUtils.getOwner)(this), this);
 
       //Used to keep track of all the find requests that need to be coalesced
-      this._pendingFetch = Map.create();
+      this._pendingFetch = MapWithDefault.create({ defaultValue: function () {
+          return [];
+        } });
     },
 
     /**
@@ -8859,7 +8860,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     _findRecord: function (internalModel, options) {
       // Refetch if the reload option is passed
       if (options.reload) {
-        return this.scheduleFetch(internalModel, options);
+        return this._scheduleFetch(internalModel, options);
       }
 
       var snapshot = internalModel.createSnapshot(options);
@@ -8868,7 +8869,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
       // Refetch the record if the adapter thinks the record is stale
       if (adapter.shouldReloadRecord(this, snapshot)) {
-        return this.scheduleFetch(internalModel, options);
+        return this._scheduleFetch(internalModel, options);
       }
 
       if (options.backgroundReload === false) {
@@ -8877,7 +8878,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
       // Trigger the background refetch if backgroundReload option is passed
       if (options.backgroundReload || adapter.shouldBackgroundReloadRecord(this, snapshot)) {
-        this.scheduleFetch(internalModel, options);
+        this._scheduleFetch(internalModel, options);
       }
 
       // Return the cached record
@@ -8888,7 +8889,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       options = options || {};
 
       if (options.preload) {
-        internalModel._preloadData(options.preload);
+        internalModel.preloadData(options.preload);
       }
 
       var fetchedInternalModel = this._findEmptyInternalModel(internalModel, options);
@@ -8898,7 +8899,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
     _findEmptyInternalModel: function (internalModel, options) {
       if (internalModel.isEmpty()) {
-        return this.scheduleFetch(internalModel, options);
+        return this._scheduleFetch(internalModel, options);
       }
 
       //TODO double check about reloading
@@ -8934,61 +8935,49 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       This method is called by `findRecord` if it discovers that a particular
       type/id pair hasn't been loaded yet to kick off a request to the
       adapter.
-       @method fetchRecord
+       @method _fetchRecord
       @private
       @param {InternalModel} internalModel model
       @return {Promise} promise
      */
-    // TODO rename this to have an underscore
-    fetchRecord: function (internalModel, options) {
-      var typeClass = internalModel.type;
+    _fetchRecord: function (internalModel, options) {
+      var modelClass = internalModel.type;
       var id = internalModel.id;
-      var adapter = this.adapterFor(typeClass.modelName);
+      var adapter = this.adapterFor(modelClass.modelName);
 
-      (0, _emberDataPrivateDebug.assert)("You tried to find a record but you have no adapter (for " + typeClass + ")", adapter);
-      (0, _emberDataPrivateDebug.assert)("You tried to find a record but your adapter (for " + typeClass + ") does not implement 'findRecord'", typeof adapter.findRecord === 'function');
+      (0, _emberDataPrivateDebug.assert)("You tried to find a record but you have no adapter (for " + modelClass.modelName + ")", adapter);
+      (0, _emberDataPrivateDebug.assert)("You tried to find a record but your adapter (for " + modelClass.modelName + ") does not implement 'findRecord'", typeof adapter.findRecord === 'function');
 
-      var promise = (0, _emberDataPrivateSystemStoreFinders._find)(adapter, this, typeClass, id, internalModel, options);
-      return promise;
+      return (0, _emberDataPrivateSystemStoreFinders._find)(adapter, this, modelClass, id, internalModel, options);
     },
 
-    scheduleFetchMany: function (records) {
-      var internalModels = new Array(records.length);
-      var fetches = new Array(records.length);
-
-      for (var i = 0; i < records.length; i++) {
-        internalModels[i] = records[i]._internalModel;
-      }
+    _scheduleFetchMany: function (internalModels) {
+      var fetches = new Array(internalModels.length);
 
       for (var i = 0; i < internalModels.length; i++) {
-        fetches[i] = this.scheduleFetch(internalModels[i]);
+        fetches[i] = this._scheduleFetch(internalModels[i]);
       }
 
-      return _ember.default.RSVP.Promise.all(fetches);
+      return Promise.all(fetches);
     },
 
-    scheduleFetch: function (internalModel, options) {
-      var typeClass = internalModel.type;
-
+    _scheduleFetch: function (internalModel, options) {
       if (internalModel._loadingPromise) {
         return internalModel._loadingPromise;
       }
 
-      var resolver = _ember.default.RSVP.defer('Fetching ' + typeClass + 'with id: ' + internalModel.id);
+      var modelClass = internalModel.type;
+      var resolver = _ember.default.RSVP.defer('Fetching ' + modelClass.modelName + ' with id: ' + internalModel.id);
       var pendingFetchItem = {
-        record: internalModel,
+        internalModel: internalModel,
         resolver: resolver,
         options: options
       };
       var promise = resolver.promise;
 
       internalModel.loadingData(promise);
+      this._pendingFetch.get(modelClass).push(pendingFetchItem);
 
-      if (!this._pendingFetch.get(typeClass)) {
-        this._pendingFetch.set(typeClass, [pendingFetchItem]);
-      } else {
-        this._pendingFetch.get(typeClass).push(pendingFetchItem);
-      }
       emberRun.scheduleOnce('afterRender', this, this.flushAllPendingFetches);
 
       return promise;
@@ -9000,65 +8989,76 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       }
 
       this._pendingFetch.forEach(this._flushPendingFetchForType, this);
-      this._pendingFetch = Map.create();
+      this._pendingFetch.clear();
     },
 
-    _flushPendingFetchForType: function (pendingFetchItems, typeClass) {
+    _flushPendingFetchForType: function (pendingFetchItems, modelClass) {
       var store = this;
-      var adapter = store.adapterFor(typeClass.modelName);
+      var adapter = store.adapterFor(modelClass.modelName);
       var shouldCoalesce = !!adapter.findMany && adapter.coalesceFindRequests;
-      var records = _ember.default.A(pendingFetchItems).mapBy('record');
+      var totalItems = pendingFetchItems.length;
+      var internalModels = new Array(totalItems);
+      var seeking = new _emberDataPrivateSystemEmptyObject.default();
+
+      for (var i = 0; i < totalItems; i++) {
+        var pendingItem = pendingFetchItems[i];
+        var internalModel = pendingItem.internalModel;
+        internalModels[i] = internalModel;
+        seeking[internalModel.id] = pendingItem;
+      }
 
       function _fetchRecord(recordResolverPair) {
-        recordResolverPair.resolver.resolve(store.fetchRecord(recordResolverPair.record, recordResolverPair.options)); // TODO adapter options
+        var recordFetch = store._fetchRecord(recordResolverPair.internalModel, recordResolverPair.options); // TODO adapter options
+
+        recordResolverPair.resolver.resolve(recordFetch);
       }
 
-      function resolveFoundRecords(records) {
-        records.forEach(function (record) {
-          var pair = _ember.default.A(pendingFetchItems).findBy('record', record);
+      function handleFoundRecords(foundInternalModels, expectedInternalModels) {
+        // resolve found records
+        var found = new _emberDataPrivateSystemEmptyObject.default();
+        for (var i = 0, l = foundInternalModels.length; i < l; i++) {
+          var internalModel = foundInternalModels[i];
+          var pair = seeking[internalModel.id];
+          found[internalModel.id] = internalModel;
+
           if (pair) {
             var resolver = pair.resolver;
-            resolver.resolve(record);
+            resolver.resolve(internalModel);
           }
-        });
-        return records;
-      }
+        }
 
-      function makeMissingRecordsRejector(requestedRecords) {
-        return function rejectMissingRecords(resolvedRecords) {
-          resolvedRecords = _ember.default.A(resolvedRecords);
-          var missingRecords = requestedRecords.reject(function (record) {
-            return resolvedRecords.includes(record);
+        // reject missing records
+        var missingInternalModels = [];
+
+        for (var i = 0, l = expectedInternalModels.length; i < l; i++) {
+          var internalModel = expectedInternalModels[i];
+
+          if (!found[internalModel.id]) {
+            missingInternalModels.push(internalModel);
+          }
+        }
+
+        if (missingInternalModels.length) {
+          (0, _emberDataPrivateDebug.warn)('Ember Data expected to find records with the following ids in the adapter response but they were missing: ' + _ember.default.inspect(missingInternalModels.map(function (r) {
+            return r.id;
+          })), false, {
+            id: 'ds.store.missing-records-from-adapter'
           });
-          if (missingRecords.length) {
-            (0, _emberDataPrivateDebug.warn)('Ember Data expected to find records with the following ids in the adapter response but they were missing: ' + _ember.default.inspect(_ember.default.A(missingRecords).mapBy('id')), false, {
-              id: 'ds.store.missing-records-from-adapter'
-            });
-          }
-          rejectRecords(missingRecords);
-        };
+          rejectInternalModels(missingInternalModels);
+        }
       }
 
-      function makeRecordsRejector(records) {
-        return function (error) {
-          rejectRecords(records, error);
-        };
-      }
+      function rejectInternalModels(internalModels, error) {
+        for (var i = 0, l = internalModels.length; i < l; i++) {
+          var pair = seeking[internalModels[i].id];
 
-      function rejectRecords(records, error) {
-        records.forEach(function (record) {
-          var pair = _ember.default.A(pendingFetchItems).findBy('record', record);
           if (pair) {
-            var resolver = pair.resolver;
-            resolver.reject(error);
+            pair.resolver.reject(error);
           }
-        });
+        }
       }
 
-      if (pendingFetchItems.length === 1) {
-        _fetchRecord(pendingFetchItems[0]);
-      } else if (shouldCoalesce) {
-
+      if (shouldCoalesce) {
         // TODO: Improve records => snapshots => records => snapshots
         //
         // We want to provide records to all store methods and snapshots to all
@@ -9069,24 +9069,47 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         // But since the _findMany() finder is a store method we need to get the
         // records from the grouped snapshots even though the _findMany() finder
         // will once again convert the records to snapshots for adapter.findMany()
+        var snapshots = new Array(totalItems);
+        for (var i = 0; i < totalItems; i++) {
+          snapshots[i] = internalModels[i].createSnapshot();
+        }
 
-        var snapshots = _ember.default.A(records).invoke('createSnapshot');
         var groups = adapter.groupRecordsForFindMany(this, snapshots);
-        groups.forEach(function (groupOfSnapshots) {
-          var groupOfRecords = _ember.default.A(groupOfSnapshots).mapBy('_internalModel');
-          var requestedRecords = _ember.default.A(groupOfRecords);
-          var ids = requestedRecords.mapBy('id');
-          if (ids.length > 1) {
-            (0, _emberDataPrivateSystemStoreFinders._findMany)(adapter, store, typeClass, ids, requestedRecords).then(resolveFoundRecords).then(makeMissingRecordsRejector(requestedRecords)).then(null, makeRecordsRejector(requestedRecords));
+
+        var _loop = function (i, l) {
+          var group = groups[i];
+          var totalInGroup = groups[i].length;
+          var ids = new Array(totalInGroup);
+          var groupedInternalModels = new Array(totalInGroup);
+
+          for (var j = 0; j < totalInGroup; j++) {
+            var internalModel = group[j]._internalModel;
+
+            groupedInternalModels[j] = internalModel;
+            ids[j] = internalModel.id;
+          }
+
+          if (totalInGroup > 1) {
+            (0, _emberDataPrivateSystemStoreFinders._findMany)(adapter, store, modelClass, ids, groupedInternalModels).then(function (foundInternalModels) {
+              handleFoundRecords(foundInternalModels, groupedInternalModels);
+            }).catch(function (error) {
+              rejectInternalModels(groupedInternalModels, error);
+            });
           } else if (ids.length === 1) {
-            var pair = _ember.default.A(pendingFetchItems).findBy('record', groupOfRecords[0]);
+            var pair = seeking[groupedInternalModels[0].id];
             _fetchRecord(pair);
           } else {
             (0, _emberDataPrivateDebug.assert)("You cannot return an empty array from adapter's method groupRecordsForFindMany", false);
           }
-        });
+        };
+
+        for (var i = 0, l = groups.length; i < l; i++) {
+          _loop(i, l);
+        }
       } else {
-        pendingFetchItems.forEach(_fetchRecord);
+        for (var i = 0; i < totalItems; i++) {
+          _fetchRecord(pendingFetchItems[i]);
+        }
       }
     },
 
@@ -9167,7 +9190,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       (0, _emberDataPrivateDebug.assert)("You tried to reload a record but you have no adapter (for " + modelName + ")", adapter);
       (0, _emberDataPrivateDebug.assert)("You tried to reload a record but your adapter does not implement `findRecord`", typeof adapter.findRecord === 'function' || typeof adapter.find === 'function');
 
-      return this.scheduleFetch(internalModel);
+      return this._scheduleFetch(internalModel);
     },
 
     /**
@@ -9205,13 +9228,13 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       var modelClass = this.modelFor(modelName);
       var id = (0, _emberDataPrivateSystemCoerceId.default)(inputId);
       var idToRecord = this.typeMapFor(modelClass).idToRecord;
-      var record = idToRecord[id];
+      var internalModel = idToRecord[id];
 
-      if (!record || !idToRecord[id]) {
-        record = this.buildInternalModel(modelClass, id);
+      if (!internalModel || !idToRecord[id]) {
+        internalModel = this.buildInternalModel(modelClass, id);
       }
 
-      return record;
+      return internalModel;
     },
 
     /**
@@ -18286,7 +18309,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+2ac536d0ad";
+  exports.default = "2.11.0-canary+d0a3bbb6e2";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
