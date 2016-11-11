@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+aa9780f1c8
+ * @version   2.11.0-canary+aa3a3d5dee
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -1331,7 +1331,6 @@ define('ember-data/-private/system/is-array-like', ['exports', 'ember'], functio
   }
 });
 define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/store/common"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStoreCommon) {
-
   var get = _ember.default.get;
   var set = _ember.default.set;
 
@@ -1381,16 +1380,71 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
   exports.default = _ember.default.Object.extend(_ember.default.MutableArray, _ember.default.Evented, {
     init: function () {
       this._super.apply(this, arguments);
+
+      /**
+      The loading state of this array
+       @property {Boolean} isLoaded
+      */
+      this.isLoaded = false;
+      this.length = 0;
+
+      /**
+      Used for async `hasMany` arrays
+      to keep track of when they will resolve.
+       @property {Ember.RSVP.Promise} promise
+      @private
+      */
+      this.promise = null;
+
+      /**
+      Metadata associated with the request for async hasMany relationships.
+       Example
+       Given that the server returns the following JSON payload when fetching a
+      hasMany relationship:
+       ```js
+      {
+        "comments": [{
+          "id": 1,
+          "comment": "This is the first comment",
+        }, {
+      // ...
+        }],
+         "meta": {
+          "page": 1,
+          "total": 5
+        }
+      }
+      ```
+       You can then access the metadata via the `meta` property:
+       ```js
+      post.get('comments').then(function(comments) {
+        var meta = comments.get('meta');
+       // meta.page => 1
+      // meta.total => 5
+      });
+      ```
+       @property {Object} meta
+      @public
+      */
+      this.meta = this.meta || null;
+
+      /**
+      `true` if the relationship is polymorphic, `false` otherwise.
+       @property {Boolean} isPolymorphic
+      @private
+      */
+      this.isPolymorphic = this.isPolymorphic || false;
+
+      /**
+      The relationship which manages this array.
+       @property {ManyRelationship} relationship
+      @private
+      */
+      this.relationship = this.relationship || null;
+
       this.currentState = _ember.default.A([]);
       this.flushCanonical();
     },
-
-    record: null,
-
-    canonicalState: null,
-    currentState: null,
-
-    length: 0,
 
     objectAt: function (index) {
       //Ember observers such as 'firstObject', 'lastObject' might do out of bounds accesses
@@ -1424,59 +1478,7 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
       this.arrayContentDidChange(0, oldLength, this.length);
       //TODO Figure out to notify only on additions and maybe only if unloaded
       this.relationship.notifyHasManyChanged();
-      this.record.updateRecordArrays();
     },
-    /**
-      `true` if the relationship is polymorphic, `false` otherwise.
-       @property {Boolean} isPolymorphic
-      @private
-    */
-    isPolymorphic: false,
-
-    /**
-      The loading state of this array
-       @property {Boolean} isLoaded
-    */
-    isLoaded: false,
-
-    /**
-      The relationship which manages this array.
-       @property {ManyRelationship} relationship
-      @private
-    */
-    relationship: null,
-
-    /**
-      Metadata associated with the request for async hasMany relationships.
-       Example
-       Given that the server returns the following JSON payload when fetching a
-      hasMany relationship:
-       ```js
-      {
-        "comments": [{
-          "id": 1,
-          "comment": "This is the first comment",
-        }, {
-          // ...
-        }],
-         "meta": {
-          "page": 1,
-          "total": 5
-        }
-      }
-      ```
-       You can then access the metadata via the `meta` property:
-       ```js
-      post.get('comments').then(function(comments) {
-        var meta = comments.get('meta');
-         // meta.page => 1
-        // meta.total => 5
-      });
-      ```
-       @property {Object} meta
-      @public
-    */
-    meta: null,
 
     internalReplace: function (idx, amt, objects) {
       if (!objects) {
@@ -1494,9 +1496,8 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
 
     //TODO(Igor) optimize
     internalRemoveRecords: function (records) {
-      var index;
       for (var i = 0; i < records.length; i++) {
-        index = this.currentState.indexOf(records[i]);
+        var index = this.currentState.indexOf(records[i]);
         this.internalReplace(index, 1);
       }
     },
@@ -1510,7 +1511,7 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
     },
 
     replace: function (idx, amt, objects) {
-      var records;
+      var records = undefined;
       if (amt > 0) {
         records = this.currentState.slice(idx, idx + amt);
         this.get('relationship').removeRecords(records);
@@ -1521,13 +1522,6 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
         }), idx);
       }
     },
-    /**
-      Used for async `hasMany` arrays
-      to keep track of when they will resolve.
-       @property {Ember.RSVP.Promise} promise
-      @private
-    */
-    promise: null,
 
     /**
       @method loadingRecordsCount
@@ -1576,10 +1570,10 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
     */
     save: function () {
       var manyArray = this;
-      var promiseLabel = "DS: ManyArray#save " + get(this, 'type');
-      var promise = _ember.default.RSVP.all(this.invoke("save"), promiseLabel).then(function (array) {
+      var promiseLabel = 'DS: ManyArray#save ' + get(this, 'type');
+      var promise = _ember.default.RSVP.all(this.invoke("save"), promiseLabel).then(function () {
         return manyArray;
-      }, null, "DS: ManyArray#save return ManyArray");
+      }, null, 'DS: ManyArray#save return ManyArray');
 
       return _emberDataPrivateSystemPromiseProxies.PromiseArray.create({ promise: promise });
     },
@@ -18481,7 +18475,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+aa9780f1c8";
+  exports.default = "2.11.0-canary+aa3a3d5dee";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
