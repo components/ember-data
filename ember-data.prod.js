@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+1ca87a2085
+ * @version   2.11.0-canary+aa9780f1c8
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -1483,7 +1483,6 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
         //TODO(Igor) probably needed only for unloaded records
         this.relationship.notifyHasManyChanged();
       }
-      this.record.updateRecordArrays();
     },
 
     //TODO(Igor) optimize
@@ -18073,7 +18072,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+1ca87a2085";
+  exports.default = "2.11.0-canary+aa9780f1c8";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
