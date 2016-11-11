@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+aa3a3d5dee
+ * @version   2.11.0-canary+7b452907bc
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -1226,34 +1226,38 @@ define('ember-data/-private/system/debug/debug-info', ['exports', 'ember'], func
     */
     _debugInfo: function () {
       var attributes = ['id'];
-      var relationships = { belongsTo: [], hasMany: [] };
+      var relationships = {};
       var expensiveProperties = [];
 
       this.eachAttribute(function (name, meta) {
         return attributes.push(name);
       });
 
-      this.eachRelationship(function (name, relationship) {
-        relationships[relationship.kind].push(name);
-        expensiveProperties.push(name);
-      });
-
       var groups = [{
         name: 'Attributes',
         properties: attributes,
         expand: true
-      }, {
-        name: 'Belongs To',
-        properties: relationships.belongsTo,
-        expand: true
-      }, {
-        name: 'Has Many',
-        properties: relationships.hasMany,
-        expand: true
-      }, {
+      }];
+
+      this.eachRelationship(function (name, relationship) {
+        var properties = relationships[relationship.kind];
+
+        if (properties === undefined) {
+          properties = relationships[relationship.kind] = [];
+          groups.push({
+            name: relationship.name,
+            properties: properties,
+            expand: true
+          });
+        }
+        properties.push(name);
+        expensiveProperties.push(name);
+      });
+
+      groups.push({
         name: 'Flags',
         properties: ['isLoaded', 'hasDirtyAttributes', 'isSaving', 'isDeleted', 'isError', 'isNew', 'isValid']
-      }];
+      });
 
       return {
         propertyInfo: {
@@ -6205,6 +6209,7 @@ define('ember-data/-private/system/relationship-meta', ['exports', 'ember-inflec
       kind: meta.kind,
       type: typeForRelationshipMeta(meta),
       options: meta.options,
+      name: meta.name,
       parentType: meta.parentType,
       isRelationship: true
     };
@@ -6307,6 +6312,7 @@ define("ember-data/-private/system/relationships/belongs-to", ["exports", "ember
       isRelationship: true,
       options: opts,
       kind: 'belongsTo',
+      name: 'Belongs To',
       key: null
     };
 
@@ -7064,6 +7070,7 @@ define("ember-data/-private/system/relationships/has-many", ["exports", "ember",
       isRelationship: true,
       options: options,
       kind: 'hasMany',
+      name: 'Has Many',
       key: null
     };
 
@@ -18066,7 +18073,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+aa3a3d5dee";
+  exports.default = "2.11.0-canary+7b452907bc";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
