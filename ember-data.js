@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+7b452907bc
+ * @version   2.11.0-canary+000b1e8846
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -7678,7 +7678,7 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
     return set;
   }
 });
-define("ember-data/-private/system/relationships/state/relationship", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/ordered-set"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemOrderedSet) {
+define("ember-data/-private/system/relationships/state/relationship", ["exports", "ember-data/-private/debug", "ember-data/-private/system/ordered-set"], function (exports, _emberDataPrivateDebug, _emberDataPrivateSystemOrderedSet) {
   exports.default = Relationship;
 
   function Relationship(store, record, inverseKey, relationshipMeta) {
@@ -7703,7 +7703,7 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
   Relationship.prototype = {
     constructor: Relationship,
 
-    destroy: _ember.default.K,
+    destroy: function () {},
 
     updateMeta: function (meta) {
       this.meta = meta;
@@ -7907,8 +7907,8 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
       this.setHasLoaded(true);
     },
 
-    notifyRecordRelationshipAdded: _ember.default.K,
-    notifyRecordRelationshipRemoved: _ember.default.K,
+    notifyRecordRelationshipAdded: function () {},
+    notifyRecordRelationshipRemoved: function () {},
 
     /*
       `hasData` for a relationship is a flag to indicate if we consider the
@@ -18482,7 +18482,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+7b452907bc";
+  exports.default = "2.11.0-canary+000b1e8846";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
