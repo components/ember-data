@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+000b1e8846
+ * @version   2.11.0-canary+309319128d
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -1440,7 +1440,7 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
       this.relationship = this.relationship || null;
 
       this.currentState = _ember.default.A([]);
-      this.flushCanonical();
+      this.flushCanonical(false);
     },
 
     objectAt: function (index) {
@@ -1453,6 +1453,8 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
     },
 
     flushCanonical: function () {
+      var isInitialized = arguments.length <= 0 || arguments[0] === undefined ? true : arguments[0];
+
       var toSet = this.canonicalState;
 
       //a hack for not removing new records
@@ -1473,8 +1475,11 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
       }
       this.currentState = toSet;
       this.arrayContentDidChange(0, oldLength, this.length);
-      //TODO Figure out to notify only on additions and maybe only if unloaded
-      this.relationship.notifyHasManyChanged();
+
+      if (isInitialized) {
+        //TODO Figure out to notify only on additions and maybe only if unloaded
+        this.relationship.notifyHasManyChanged();
+      }
     },
 
     internalReplace: function (idx, amt, objects) {
@@ -1485,10 +1490,6 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
       this.currentState.splice.apply(this.currentState, [idx, amt].concat(objects));
       this.set('length', this.currentState.length);
       this.arrayContentDidChange(idx, amt, objects.length);
-      if (objects) {
-        //TODO(Igor) probably needed only for unloaded records
-        this.relationship.notifyHasManyChanged();
-      }
     },
 
     //TODO(Igor) optimize
@@ -18073,7 +18074,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+000b1e8846";
+  exports.default = "2.11.0-canary+309319128d";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
