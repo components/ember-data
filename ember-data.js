@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.10.0-beta.2
+ * @version   2.10.0-beta.2+7231263591
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -2220,8 +2220,6 @@ define('ember-data/-private/system/model/errors', ['exports', 'ember', 'ember-da
   });
 });
 define("ember-data/-private/system/model/internal-model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/model/states", "ember-data/-private/system/relationships/state/create", "ember-data/-private/system/snapshot", "ember-data/-private/system/empty-object", "ember-data/-private/features", "ember-data/-private/utils", "ember-data/-private/system/references"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemModelStates, _emberDataPrivateSystemRelationshipsStateCreate, _emberDataPrivateSystemSnapshot, _emberDataPrivateSystemEmptyObject, _emberDataPrivateFeatures, _emberDataPrivateUtils, _emberDataPrivateSystemReferences) {
-  var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; })();
-
   exports.default = InternalModel;
 
   var Promise = _ember.default.RSVP.Promise;
@@ -2513,11 +2511,9 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
 
       for (var i = 0, _length = changedAttributeNames.length; i < _length; i++) {
         var attribute = changedAttributeNames[i];
-
-        var _changedAttributes$attribute = _slicedToArray(changedAttributes[attribute], 2);
-
-        var oldData = _changedAttributes$attribute[0];
-        var newData = _changedAttributes$attribute[1];
+        var data = changedAttributes[attribute];
+        var oldData = data[0];
+        var newData = data[1];
 
         if (oldData === newData) {
           delete this._attributes[attribute];
@@ -17663,7 +17659,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.10.0-beta.2";
+  exports.default = "2.10.0-beta.2+7231263591";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
