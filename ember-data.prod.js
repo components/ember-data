@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+758ebe7991
+ * @version   2.11.0-canary+c16ae77599
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -5190,8 +5190,8 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
       });
 
       this.liveRecordArrays = MapWithDefault.create({
-        defaultValue: function (typeClass) {
-          return _this.createRecordArray(typeClass);
+        defaultValue: function (modelClass) {
+          return _this.createRecordArray(modelClass);
         }
       });
 
@@ -5306,8 +5306,26 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
       }
     },
 
-    populateLiveRecordArray: function (array, modelName) {
-      var typeMap = this.store.typeMapFor(modelName);
+    syncLiveRecordArray: function (array, modelClass) {
+      var hasNoPotentialDeletions = this.changedRecords.length === 0;
+      var typeMap = this.store.typeMapFor(modelClass);
+      var hasNoInsertionsOrRemovals = typeMap.records.length === array.length;
+
+      /*
+        Ideally the recordArrayManager has knowledge of the changes to be applied to
+        liveRecordArrays, and is capable of strategically flushing those changes and applying
+        small diffs if desired.  However, until we've refactored recordArrayManager, this dirty
+        check prevents us from unnecessarily wiping out live record arrays returned by peekAll.
+       */
+      if (hasNoPotentialDeletions && hasNoInsertionsOrRemovals) {
+        return;
+      }
+
+      this.populateLiveRecordArray(array, modelClass);
+    },
+
+    populateLiveRecordArray: function (array, modelClass) {
+      var typeMap = this.store.typeMapFor(modelClass);
       var records = typeMap.records;
       var record = undefined;
 
@@ -5327,11 +5345,11 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
       method is invoked when the filter is created in th first place.
        @method updateFilter
       @param {Array} array
-      @param {String} modelName
+      @param {Class} modelClass
       @param {Function} filter
     */
-    updateFilter: function (array, modelName, filter) {
-      var typeMap = this.store.typeMapFor(modelName);
+    updateFilter: function (array, modelClass, filter) {
+      var typeMap = this.store.typeMapFor(modelClass);
       var records = typeMap.records;
       var record = undefined;
 
@@ -5339,7 +5357,7 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
         record = records[i];
 
         if (!record.isDeleted() && !record.isEmpty()) {
-          this.updateFilterRecordArray(array, filter, modelName, record);
+          this.updateFilterRecordArray(array, filter, modelClass, record);
         }
       }
     },
@@ -5358,12 +5376,12 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
     /**
       Create a `DS.RecordArray` for a type.
        @method createRecordArray
-      @param {Class} typeClass
+      @param {Class} modelClass
       @return {DS.RecordArray}
     */
-    createRecordArray: function (typeClass) {
+    createRecordArray: function (modelClass) {
       return _emberDataPrivateSystemRecordArrays.RecordArray.create({
-        type: typeClass,
+        type: modelClass,
         content: _ember.default.A(),
         store: this.store,
         isLoaded: true,
@@ -9501,10 +9519,10 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @return {DS.RecordArray}
     */
     peekAll: function (modelName) {
-      var typeClass = this.modelFor(modelName);
+      var modelClass = this.modelFor(modelName);
+      var liveRecordArray = this.recordArrayManager.liveRecordArrayFor(modelClass);
 
-      var liveRecordArray = this.recordArrayManager.liveRecordArrayFor(typeClass);
-      this.recordArrayManager.populateLiveRecordArray(liveRecordArray, typeClass);
+      this.recordArrayManager.syncLiveRecordArray(liveRecordArray, modelClass);
 
       return liveRecordArray;
     },
@@ -18070,7 +18088,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+758ebe7991";
+  exports.default = "2.11.0-canary+c16ae77599";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
