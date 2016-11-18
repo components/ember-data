@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+2c81ed1629
+ * @version   2.11.0-canary+ef34f666f2
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -3635,7 +3635,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       @return {Object} an object whose values are primitive JSON values only
     */
     serialize: function (options) {
-      return this.store.serialize(this, options);
+      return this._internalModel.createSnapshot().serialize(options);
     },
 
     /**
@@ -8520,10 +8520,17 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         the JSON representation
        @method serialize
       @private
+      @deprecated
       @param {DS.Model} record the record to serialize
       @param {Object} options an options hash
     */
     serialize: function (record, options) {
+      if (true) {
+        (0, _emberDataPrivateDebug.deprecate)('Use of store.serialize is deprecated, use record.serialize instead.', false, {
+          id: 'ds.store.serialize',
+          until: '3.0'
+        });
+      }
       var snapshot = record._internalModel.createSnapshot();
       return snapshot.serialize(options);
     },
@@ -18558,7 +18565,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+2c81ed1629";
+  exports.default = "2.11.0-canary+ef34f666f2";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
