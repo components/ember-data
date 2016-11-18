@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+7a12c44a56
+ * @version   2.11.0-canary+2c81ed1629
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -12840,7 +12840,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
   
     ```js
     {
-      "post": {
+      "posts": {
         "id": 1,
         "title": "I'm Running to Reform the W3C's Tag",
         "author": "Yehuda Katz"
@@ -12895,11 +12895,56 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
   
     ```js
     {
-      "person": {
+      "people": {
         "id": 5,
         "firstName": "Barack",
         "lastName": "Obama",
         "occupation": "President"
+      }
+    }
+    ```
+  
+    #### Relationships
+  
+    Relationships are usually represented by ids to the record in the
+    relationship. The related records can then be sideloaded in the
+    response under a key for the type.
+  
+    ```js
+    {
+      "posts": {
+        "id": 5,
+        "title": "I'm Running to Reform the W3C's Tag",
+        "author": "Yehuda Katz",
+        "comments": [1, 2]
+      },
+      "comments": [{
+        "id": 1,
+        "author": "User 1",
+        "message": "First!",
+      }, {
+        "id": 2,
+        "author": "User 2",
+        "message": "Good Luck!",
+      }]
+    }
+    ```
+  
+    If the records in the relationship are not known when the response
+    is serialized its also possible to represent the relationship as a
+    url using the `links` key in the response. Ember Data will fetch
+    this url to resolve the relationship when it is accessed for the
+    first time.
+  
+    ```js
+    {
+      "posts": {
+        "id": 5,
+        "title": "I'm Running to Reform the W3C's Tag",
+        "author": "Yehuda Katz",
+        "links": {
+          "comments": "/posts/5/comments"
+        }
       }
     }
     ```
@@ -18513,7 +18558,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+7a12c44a56";
+  exports.default = "2.11.0-canary+2c81ed1629";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
