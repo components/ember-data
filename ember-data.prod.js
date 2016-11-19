@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+d17a1ea511
+ * @version   2.11.0-canary+cebcbedd7f
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -11587,7 +11587,6 @@ define('ember-data/-private/utils/parse-response-headers', ['exports', 'ember-da
   }
 });
 define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
-  var get = _ember.default.get;
 
   /**
     An adapter is an object that receives requests from a store and
@@ -11827,7 +11826,7 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       @return {Object} serialized snapshot
     */
     serialize: function (snapshot, options) {
-      return get(snapshot.record, 'store').serializerFor(snapshot.modelName).serialize(snapshot, options);
+      return snapshot.serialize(options);
     },
 
     /**
@@ -18468,7 +18467,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+d17a1ea511";
+  exports.default = "2.11.0-canary+cebcbedd7f";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
