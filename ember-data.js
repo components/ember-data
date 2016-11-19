@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+cebcbedd7f
+ * @version   2.11.0-canary+fdc4b2d584
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -9542,19 +9542,28 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     },
 
     /**
-      Returns true if a record for a given type and ID is already loaded.
+     This method returns true if a record for a given modelName and id is already
+     loaded in the store. Use this function to know beforehand if a findRecord()
+     will result in a request or that it will be a cache hit.
+      Example
+      ```javascript
+     store.hasRecordForId('post', 1); // false
+     store.findRecord('post', 1).then(function() {
+        store.hasRecordForId('post', 1); // true
+      });
+     ```
        @method hasRecordForId
       @param {(String|DS.Model)} modelName
-      @param {(String|Integer)} inputId
+      @param {(String|Integer)} id
       @return {Boolean}
     */
-    hasRecordForId: function (modelName, inputId) {
+    hasRecordForId: function (modelName, id) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's hasRecordForId method", isPresent(modelName));
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
 
-      var id = (0, _emberDataPrivateSystemCoerceId.default)(inputId);
+      var trueId = (0, _emberDataPrivateSystemCoerceId.default)(id);
       var modelClass = this.modelFor(modelName);
-      var internalModel = this.typeMapFor(modelClass).idToRecord[id];
+      var internalModel = this.typeMapFor(modelClass).idToRecord[trueId];
 
       return !!internalModel && internalModel.isLoaded();
     },
@@ -10164,24 +10173,19 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     },
 
     /**
-      This method returns if a certain record is already loaded
-      in the store. Use this function to know beforehand if a findRecord()
-      will result in a request or that it will be a cache hit.
-        Example
-       ```javascript
-      store.recordIsLoaded('post', 1); // false
-      store.findRecord('post', 1).then(function() {
-        store.recordIsLoaded('post', 1); // true
-      });
-      ```
-       @method recordIsLoaded
+      This method has been deprecated and is an alias for store.hasRecordForId, which should
+      be used instead.
+       @deprecated
+      @method recordIsLoaded
       @param {String} modelName
       @param {string} id
       @return {boolean}
     */
     recordIsLoaded: function (modelName, id) {
-      (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's recordIsLoaded method", isPresent(modelName));
-      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
+      (0, _emberDataPrivateDebug.deprecate)('Use of recordIsLoaded is deprecated, use hasRecordForId instead.', {
+        id: 'ds.store.recordIsLoaded',
+        until: '3.0'
+      });
       return this.hasRecordForId(modelName, id);
     },
 
@@ -18882,7 +18886,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+cebcbedd7f";
+  exports.default = "2.11.0-canary+fdc4b2d584";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
