@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+fdc4b2d584
+ * @version   2.11.0-canary+fdf56b79d6
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -3662,49 +3662,49 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       that is either loaded from the server or created locally.
        @event ready
     */
-    ready: _ember.default.K,
+    ready: function () {},
 
     /**
       Fired when the record is loaded from the server.
        @event didLoad
     */
-    didLoad: _ember.default.K,
+    didLoad: function () {},
 
     /**
       Fired when the record is updated.
        @event didUpdate
     */
-    didUpdate: _ember.default.K,
+    didUpdate: function () {},
 
     /**
       Fired when a new record is commited to the server.
        @event didCreate
     */
-    didCreate: _ember.default.K,
+    didCreate: function () {},
 
     /**
       Fired when the record is deleted.
        @event didDelete
     */
-    didDelete: _ember.default.K,
+    didDelete: function () {},
 
     /**
       Fired when the record becomes invalid.
        @event becameInvalid
     */
-    becameInvalid: _ember.default.K,
+    becameInvalid: function () {},
 
     /**
       Fired when the record enters the error state.
        @event becameError
     */
-    becameError: _ember.default.K,
+    becameError: function () {},
 
     /**
       Fired when the record is rolled back.
        @event rolledBack
     */
-    rolledBack: _ember.default.K,
+    rolledBack: function () {},
 
     //TODO Do we want to deprecate these?
     /**
@@ -14801,7 +14801,7 @@ define('ember-data/initializers/data-adapter', ['exports', 'ember'], function (e
   exports.default = {
     name: 'data-adapter',
     before: 'store',
-    initialize: _ember.default.K
+    initialize: function () {}
   };
 });
 define('ember-data/initializers/ember-data', ['exports', 'ember-data/setup-container', 'ember-data/-private/core'], function (exports, _emberDataSetupContainer, _emberDataPrivateCore) {
@@ -14855,7 +14855,7 @@ define('ember-data/initializers/injectStore', ['exports', 'ember'], function (ex
   exports.default = {
     name: 'injectStore',
     before: 'store',
-    initialize: _ember.default.K
+    initialize: function () {}
   };
 });
 define('ember-data/initializers/store', ['exports', 'ember'], function (exports, _ember) {
@@ -14870,7 +14870,7 @@ define('ember-data/initializers/store', ['exports', 'ember'], function (exports,
   exports.default = {
     name: 'store',
     after: 'ember-data',
-    initialize: _ember.default.K
+    initialize: function () {}
   };
 });
 define('ember-data/initializers/transforms', ['exports', 'ember'], function (exports, _ember) {
@@ -14885,7 +14885,7 @@ define('ember-data/initializers/transforms', ['exports', 'ember'], function (exp
   exports.default = {
     name: 'transforms',
     before: 'store',
-    initialize: _ember.default.K
+    initialize: function () {}
   };
 });
 define("ember-data/instance-initializers/ember-data", ["exports", "ember-data/-private/instance-initializers/initialize-store-service"], function (exports, _emberDataPrivateInstanceInitializersInitializeStoreService) {
@@ -17608,7 +17608,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
       @param {Object} json
       @param {Object} relationship
     */
-    serializePolymorphicType: _ember.default.K,
+    serializePolymorphicType: function () {},
 
     /**
       `extractMeta` is used to deserialize any meta information in the
@@ -18886,7 +18886,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+fdc4b2d584";
+  exports.default = "2.11.0-canary+fdf56b79d6";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
