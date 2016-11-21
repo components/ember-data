@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+3d3bb46892
+ * @version   2.11.0-canary+46cf8752c0
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -8889,15 +8889,19 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     },
 
     /**
-      The adapter to use to communicate to a backend server or other persistence layer.
-       This can be specified as an instance, class, or string.
+      The default adapter to use to communicate to a backend server or
+      other persistence layer. This will be overridden by an application
+      adapter if present.
        If you want to specify `app/adapters/custom.js` as a string, do:
        ```js
-      adapter: 'custom'
+      import DS from 'ember-data';
+       export default DS.Store.extend({
+        adapter: 'custom',
+      });
       ```
        @property adapter
-      @default DS.JSONAPIAdapter
-      @type {(DS.Adapter|String)}
+      @default '-json-api'
+      @type {String}
     */
     adapter: '-json-api',
 
@@ -9584,7 +9588,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       });
      ```
        @method hasRecordForId
-      @param {(String|DS.Model)} modelName
+      @param {String} modelName
       @param {(String|Integer)} id
       @return {Boolean}
     */
@@ -18687,7 +18691,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+3d3bb46892";
+  exports.default = "2.11.0-canary+46cf8752c0";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
