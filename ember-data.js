@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+ea16bb6baa
+ * @version   2.11.0-canary+3d3bb46892
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -1550,7 +1550,22 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
     },
 
     /**
-      @method reload
+      Reloads all of the records in the manyArray. If the manyArray
+      holds a relationship that was originally fetched using a links url
+      Ember Data will revisit the original links url to repopulate the
+      relationship.
+       If the manyArray holds the result of a `store.query()` reload will
+      re-run the original query.
+       Example
+       ```javascript
+      var user = store.peekRecord('user', 1)
+      user.login().then(function() {
+        user.get('permissions').then(function(permissions) {
+          return permissions.reload();
+        });
+      });
+      ```
+       @method reload
       @public
     */
     reload: function () {
@@ -19090,7 +19105,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+ea16bb6baa";
+  exports.default = "2.11.0-canary+3d3bb46892";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
