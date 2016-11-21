@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+96ecf96e91
+ * @version   2.11.0-canary+d400a52d43
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -16029,12 +16029,6 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
       return normalized;
     },
 
-    /**
-      @method extractAttributes
-      @param {DS.Model} modelClass
-      @param {Object} resourceHash
-      @return {Object}
-    */
     extractAttributes: function (modelClass, resourceHash) {
       var _this = this;
 
@@ -16057,11 +16051,6 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
       return attributes;
     },
 
-    /**
-      @method extractRelationship
-      @param {Object} relationshipHash
-      @return {Object}
-    */
     extractRelationship: function (relationshipHash) {
 
       if (_ember.default.typeOf(relationshipHash.data) === 'object') {
@@ -16082,12 +16071,6 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
       return relationshipHash;
     },
 
-    /**
-      @method extractRelationships
-      @param {Object} modelClass
-      @param {Object} resourceHash
-      @return {Object}
-    */
     extractRelationships: function (modelClass, resourceHash) {
       var _this2 = this;
 
@@ -16140,7 +16123,11 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
     },
 
     /**
-      @method modelNameFromPayloadKey
+      Dasherizes and singularizes the model name in the payload to match
+      the format Ember Data uses internally for the model name.
+       For example the key `posts` would be converted to `post` and the
+      key `studentAssesments` would be converted to `student-assesment`.
+       @method modelNameFromPayloadKey
       @param {String} key
       @return {String} the model's modelName
     */
@@ -16150,7 +16137,10 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
     },
 
     /**
-      @method payloadKeyFromModelName
+      Converts the model name to a pluralized version of the model name.
+       For example `post` would be converted to `posts` and
+      `student-assesment` would be converted to `student-assesments`.
+       @method payloadKeyFromModelName
       @param {String} modelName
       @return {String}
     */
@@ -16159,12 +16149,6 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
       return (0, _emberInflector.pluralize)(modelName);
     },
 
-    /**
-      @method normalize
-      @param {DS.Model} modelClass
-      @param {Object} resourceHash the resource hash from the adapter
-      @return {Object} the normalized resource hash
-    */
     normalize: function (modelClass, resourceHash) {
       if (resourceHash.attributes) {
         this.normalizeUsingDeclaredMapping(modelClass, resourceHash.attributes);
@@ -16237,12 +16221,6 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
       return dasherize(key);
     },
 
-    /**
-      @method serialize
-      @param {DS.Snapshot} snapshot
-      @param {Object} options
-      @return {Object} json
-    */
     serialize: function (snapshot, options) {
       var data = this._super.apply(this, arguments);
 
@@ -16267,13 +16245,6 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
       return { data: data };
     },
 
-    /**
-     @method serializeAttribute
-     @param {DS.Snapshot} snapshot
-     @param {Object} json
-     @param {String} key
-     @param {Object} attribute
-    */
     serializeAttribute: function (snapshot, json, key, attribute) {
       var type = attribute.type;
 
@@ -16296,12 +16267,6 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
       }
     },
 
-    /**
-     @method serializeBelongsTo
-     @param {DS.Snapshot} snapshot
-     @param {Object} json
-     @param {Object} relationship
-    */
     serializeBelongsTo: function (snapshot, json, relationship) {
       var key = relationship.key;
 
@@ -16347,12 +16312,6 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
       }
     },
 
-    /**
-     @method serializeHasMany
-     @param {DS.Snapshot} snapshot
-     @param {Object} json
-     @param {Object} relationship
-    */
     serializeHasMany: function (snapshot, json, relationship) {
       var key = relationship.key;
       var shouldSerializeHasMany = '_shouldSerializeHasMany';
@@ -19004,7 +18963,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+96ecf96e91";
+  exports.default = "2.11.0-canary+d400a52d43";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
