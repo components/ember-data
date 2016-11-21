@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+064bbf84a9
+ * @version   2.11.0-canary+ea16bb6baa
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -7694,8 +7694,6 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
       this.removeCanonicalRecord(this.canonicalState);
     }
     this.flushCanonicalLater();
-    this.setHasData(true);
-    this.setHasLoaded(true);
   };
 
   BelongsToRelationship.prototype._super$addCanonicalRecord = _emberDataPrivateSystemRelationshipsStateRelationship.default.prototype.addCanonicalRecord;
@@ -7832,6 +7830,11 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
     }
 
     return this.findRecord();
+  };
+
+  BelongsToRelationship.prototype.updateData = function (data) {
+    var internalModel = this.store._pushResourceIdentifier(this, data);
+    this.setCanonicalRecord(internalModel);
   };
 });
 define("ember-data/-private/system/relationships/state/create", ["exports", "ember", "ember-data/-private/system/relationships/state/has-many", "ember-data/-private/system/relationships/state/belongs-to", "ember-data/-private/system/empty-object"], function (exports, _ember, _emberDataPrivateSystemRelationshipsStateHasMany, _emberDataPrivateSystemRelationshipsStateBelongsTo, _emberDataPrivateSystemEmptyObject) {
@@ -8117,6 +8120,11 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
     }
   };
 
+  ManyRelationship.prototype.updateData = function (data) {
+    var internalModels = this.store._pushResourceIdentifiers(this, data);
+    this.updateRecordsFromAdapter(internalModels);
+  };
+
   function setForArray(array) {
     var set = new _emberDataPrivateSystemOrderedSet.default();
 
@@ -8129,7 +8137,7 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
     return set;
   }
 });
-define("ember-data/-private/system/relationships/state/relationship", ["exports", "ember-data/-private/debug", "ember-data/-private/system/ordered-set"], function (exports, _emberDataPrivateDebug, _emberDataPrivateSystemOrderedSet) {
+define("ember-data/-private/system/relationships/state/relationship", ["exports", "ember-data/-private/debug", "ember-data/-private/system/ordered-set", "ember-data/-private/system/normalize-link"], function (exports, _emberDataPrivateDebug, _emberDataPrivateSystemOrderedSet, _emberDataPrivateSystemNormalizeLink) {
   exports.default = Relationship;
 
   function Relationship(store, record, inverseKey, relationshipMeta) {
@@ -8326,16 +8334,14 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
     },
 
     updateLink: function (link) {
-      (0, _emberDataPrivateDebug.warn)("You have pushed a record of type '" + this.record.type.modelName + "' with '" + this.key + "' as a link, but the association is not an async relationship.", this.isAsync, {
+      (0, _emberDataPrivateDebug.warn)("You pushed a record of type '" + this.record.type.modelName + "' with a relationship '" + this.key + "' configured as 'async: false'. You've included a link but no primary data, this may be an error in your payload.", this.isAsync || this.hasData, {
         id: 'ds.store.push-link-for-sync-relationship'
       });
       (0, _emberDataPrivateDebug.assert)("You have pushed a record of type '" + this.record.type.modelName + "' with '" + this.key + "' as a link, but the value of that link is not a string.", typeof link === 'string' || link === null);
-      if (link !== this.link) {
-        this.link = link;
-        this.linkPromise = null;
-        this.setHasLoaded(false);
-        this.record.notifyPropertyChange(this.key);
-      }
+
+      this.link = link;
+      this.linkPromise = null;
+      this.record.notifyPropertyChange(this.key);
     },
 
     findLink: function () {
@@ -8354,8 +8360,6 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
       //TODO(Igor) move this to a proper place
       //TODO Once we have adapter support, we need to handle updated and canonical changes
       this.computeChanges(records);
-      this.setHasData(true);
-      this.setHasLoaded(true);
     },
 
     notifyRecordRelationshipAdded: function () {},
@@ -8384,7 +8388,56 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
      */
     setHasLoaded: function (value) {
       this.hasLoaded = value;
-    }
+    },
+
+    /*
+      `push` for a relationship allows the store to push a JSON API Relationship
+      Object onto the relationship. The relationship will then extract and set the
+      meta, data and links of that relationship.
+       `push` use `updateMeta`, `updateData` and `updateLink` to update the state
+      of the relationship.
+     */
+    push: function (payload) {
+
+      var hasData = false;
+      var hasLink = false;
+
+      if (payload.meta) {
+        this.updateMeta(payload.meta);
+      }
+
+      if (payload.data !== undefined) {
+        hasData = true;
+        this.updateData(payload.data);
+      }
+
+      if (payload.links && payload.links.related) {
+        var relatedLink = (0, _emberDataPrivateSystemNormalizeLink.default)(payload.links.related);
+        if (relatedLink && relatedLink.href && relatedLink.href !== this.link) {
+          hasLink = true;
+          this.updateLink(relatedLink.href);
+        }
+      }
+
+      /*
+        Data being pushed into the relationship might contain only data or links,
+        or a combination of both.
+         If we got data we want to set both hasData and hasLoaded to true since
+        this would indicate that we should prefer the local state instead of
+        trying to fetch the link or call findRecord().
+         If we have no data but a link is present we want to set hasLoaded to false
+        without modifying the hasData flag. This will ensure we fetch the updated
+        link next time the relationship is accessed.
+       */
+      if (hasData) {
+        this.setHasData(true);
+        this.setHasLoaded(true);
+      } else if (hasLink) {
+        this.setHasLoaded(false);
+      }
+    },
+
+    updateData: function () {}
   };
 });
 /* global heimdall */
@@ -8788,7 +8841,7 @@ define("ember-data/-private/system/snapshot", ["exports", "ember", "ember-data/-
 /**
   @module ember-data
 */
-define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/model', 'ember-data/-private/debug', 'ember-data/-private/system/normalize-link', 'ember-data/-private/system/normalize-model-name', 'ember-data/adapters/errors', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/store/common', 'ember-data/-private/system/store/serializer-response', 'ember-data/-private/system/store/serializers', 'ember-data/-private/system/store/finders', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/store/container-instance-cache', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/system/empty-object', 'ember-data/-private/features'], function (exports, _ember, _emberDataModel, _emberDataPrivateDebug, _emberDataPrivateSystemNormalizeLink, _emberDataPrivateSystemNormalizeModelName, _emberDataAdaptersErrors, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStoreCommon, _emberDataPrivateSystemStoreSerializerResponse, _emberDataPrivateSystemStoreSerializers, _emberDataPrivateSystemStoreFinders, _emberDataPrivateUtils, _emberDataPrivateSystemCoerceId, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateSystemStoreContainerInstanceCache, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemEmptyObject, _emberDataPrivateFeatures) {
+define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/model', 'ember-data/-private/debug', 'ember-data/-private/system/normalize-model-name', 'ember-data/adapters/errors', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/store/common', 'ember-data/-private/system/store/serializer-response', 'ember-data/-private/system/store/serializers', 'ember-data/-private/system/store/finders', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/store/container-instance-cache', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/system/empty-object', 'ember-data/-private/features'], function (exports, _ember, _emberDataModel, _emberDataPrivateDebug, _emberDataPrivateSystemNormalizeModelName, _emberDataAdaptersErrors, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStoreCommon, _emberDataPrivateSystemStoreSerializerResponse, _emberDataPrivateSystemStoreSerializers, _emberDataPrivateSystemStoreFinders, _emberDataPrivateUtils, _emberDataPrivateSystemCoerceId, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateSystemStoreContainerInstanceCache, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemEmptyObject, _emberDataPrivateFeatures) {
   var badIdFormatAssertion = '`id` passed to `findRecord()` has to be non-empty string or number';
 
   exports.badIdFormatAssertion = badIdFormatAssertion;
@@ -11071,34 +11124,33 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       this._instanceCache.destroy();
 
       this.unloadAll();
+    },
+
+    _pushResourceIdentifier: function (relationship, resourceIdentifier) {
+      if (isNone(resourceIdentifier)) {
+        return;
+      }
+
+      (0, _emberDataPrivateDebug.assert)('A ' + relationship.parentType + ' record was pushed into the store with the value of ' + relationship.key + ' being ' + inspect(resourceIdentifier) + ', but ' + relationship.key + ' is a belongsTo relationship so the value must not be an array. You should probably check your data payload or serializer.', !Array.isArray(resourceIdentifier));
+
+      //TODO:Better asserts
+      return this._internalModelForId(resourceIdentifier.type, resourceIdentifier.id);
+    },
+
+    _pushResourceIdentifiers: function (relationship, resourceIdentifiers) {
+      if (isNone(resourceIdentifiers)) {
+        return;
+      }
+
+      (0, _emberDataPrivateDebug.assert)('A ' + relationship.parentType + ' record was pushed into the store with the value of ' + relationship.key + ' being \'' + inspect(resourceIdentifiers) + '\', but ' + relationship.key + ' is a hasMany relationship so the value must be an array. You should probably check your data payload or serializer.', Array.isArray(resourceIdentifiers));
+
+      var _internalModels = new Array(resourceIdentifiers.length);
+      for (var i = 0; i < resourceIdentifiers.length; i++) {
+        _internalModels[i] = this._pushResourceIdentifier(relationship, resourceIdentifiers[i]);
+      }
+      return _internalModels;
     }
   });
-
-  function deserializeRecordId(store, key, relationship, id) {
-    if (isNone(id)) {
-      return;
-    }
-
-    (0, _emberDataPrivateDebug.assert)('A ' + relationship.parentType + ' record was pushed into the store with the value of ' + key + ' being ' + inspect(id) + ', but ' + key + ' is a belongsTo relationship so the value must not be an array. You should probably check your data payload or serializer.', !Array.isArray(id));
-
-    //TODO:Better asserts
-    return store._internalModelForId(id.type, id.id);
-  }
-
-  function deserializeRecordIds(store, key, relationship, ids) {
-    if (isNone(ids)) {
-      return;
-    }
-
-    (0, _emberDataPrivateDebug.assert)('A ' + relationship.parentType + ' record was pushed into the store with the value of ' + key + ' being \'' + inspect(ids) + '\', but ' + key + ' is a hasMany relationship so the value must be an array. You should probably check your data payload or serializer.', Array.isArray(ids));
-    var _ids = new Array(ids.length);
-
-    for (var i = 0; i < ids.length; i++) {
-      _ids[i] = deserializeRecordId(store, key, relationship, ids[i]);
-    }
-
-    return _ids;
-  }
 
   // Delegation to the adapter and promise management
 
@@ -11156,56 +11208,13 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     }
 
     record.type.eachRelationship(function (key, descriptor) {
-      var kind = descriptor.kind;
-
       if (!data.relationships[key]) {
         return;
       }
 
-      var relationship = undefined;
-
-      if (data.relationships[key].links && data.relationships[key].links.related) {
-        var relatedLink = (0, _emberDataPrivateSystemNormalizeLink.default)(data.relationships[key].links.related);
-        if (relatedLink && relatedLink.href) {
-          relationship = record._relationships.get(key);
-          relationship.updateLink(relatedLink.href);
-        }
-      }
-
-      if (data.relationships[key].meta) {
-        relationship = record._relationships.get(key);
-        relationship.updateMeta(data.relationships[key].meta);
-      }
-
-      // If the data contains a relationship that is specified as an ID (or IDs),
-      // normalizeRelationship will convert them into DS.Model instances
-      // (possibly unloaded) before we push the payload into the store.
-      normalizeRelationship(store, key, descriptor, data.relationships[key]);
-
-      var value = data.relationships[key].data;
-
-      if (value !== undefined) {
-        if (kind === 'belongsTo') {
-          relationship = record._relationships.get(key);
-          relationship.setCanonicalRecord(value);
-        } else if (kind === 'hasMany') {
-          relationship = record._relationships.get(key);
-          relationship.updateRecordsFromAdapter(value);
-        }
-      }
+      var relationship = record._relationships.get(key);
+      relationship.push(data.relationships[key]);
     });
-  }
-
-  function normalizeRelationship(store, key, relationship, jsonPayload) {
-    var data = jsonPayload.data;
-    if (data) {
-      var kind = relationship.kind;
-      if (kind === 'belongsTo') {
-        jsonPayload.data = deserializeRecordId(store, key, relationship, data);
-      } else if (kind === 'hasMany') {
-        jsonPayload.data = deserializeRecordIds(store, key, relationship, data);
-      }
-    }
   }
 
   exports.Store = Store;
@@ -19081,7 +19090,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+064bbf84a9";
+  exports.default = "2.11.0-canary+ea16bb6baa";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
