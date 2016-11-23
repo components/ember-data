@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+46cf8752c0
+ * @version   2.11.0-canary+4b0dd5f1d5
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -13974,7 +13974,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
        @method findHasMany
       @param {DS.Store} store
       @param {DS.Snapshot} snapshot
-      @param {DS.Snapshot} relationship snapshot of the hasMany relationship
+      @param {Object} relationship meta object describing the relationship
       @param {String} url
       @return {Promise} promise
     */
@@ -19109,7 +19109,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+46cf8752c0";
+  exports.default = "2.11.0-canary+4b0dd5f1d5";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
