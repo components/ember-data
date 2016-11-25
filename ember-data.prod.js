@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.0-canary+4b0dd5f1d5
+ * @version   2.11.0-canary+7f48af2012
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -16955,42 +16955,17 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
     },
 
     /**
-      @method normalizeAttributes
-      @private
-    */
-    normalizeAttributes: function (typeClass, hash) {
-      var _this4 = this;
-
-      var payloadKey;
-
-      if (this.keyForAttribute) {
-        typeClass.eachAttribute(function (key) {
-          payloadKey = _this4.keyForAttribute(key, 'deserialize');
-          if (key === payloadKey) {
-            return;
-          }
-          if (hash[payloadKey] === undefined) {
-            return;
-          }
-
-          hash[key] = hash[payloadKey];
-          delete hash[payloadKey];
-        });
-      }
-    },
-
-    /**
       @method normalizeRelationships
       @private
     */
     normalizeRelationships: function (typeClass, hash) {
-      var _this5 = this;
+      var _this4 = this;
 
       var payloadKey;
 
       if (this.keyForRelationship) {
         typeClass.eachRelationship(function (key, relationship) {
-          payloadKey = _this5.keyForRelationship(key, relationship.kind, 'deserialize');
+          payloadKey = _this4.keyForRelationship(key, relationship.kind, 'deserialize');
           if (key === payloadKey) {
             return;
           }
@@ -17239,7 +17214,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
       @return {Object} json
     */
     serialize: function (snapshot, options) {
-      var _this6 = this;
+      var _this5 = this;
 
       var json = {};
 
@@ -17255,14 +17230,14 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
       }
 
       snapshot.eachAttribute(function (key, attribute) {
-        _this6.serializeAttribute(snapshot, json, key, attribute);
+        _this5.serializeAttribute(snapshot, json, key, attribute);
       });
 
       snapshot.eachRelationship(function (key, relationship) {
         if (relationship.kind === 'belongsTo') {
-          _this6.serializeBelongsTo(snapshot, json, relationship);
+          _this5.serializeBelongsTo(snapshot, json, relationship);
         } else if (relationship.kind === 'hasMany') {
-          _this6.serializeHasMany(snapshot, json, relationship);
+          _this5.serializeHasMany(snapshot, json, relationship);
         }
       });
 
@@ -17562,7 +17537,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
       @return {Object} json The deserialized errors
     */
     extractErrors: function (store, typeClass, payload, id) {
-      var _this7 = this;
+      var _this6 = this;
 
       if (payload && typeof payload === 'object' && payload.errors) {
         payload = (0, _emberDataAdaptersErrors.errorsArrayToHash)(payload.errors);
@@ -17570,7 +17545,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
         this.normalizeUsingDeclaredMapping(typeClass, payload);
 
         typeClass.eachAttribute(function (name) {
-          var key = _this7.keyForAttribute(name, 'deserialize');
+          var key = _this6.keyForAttribute(name, 'deserialize');
           if (key !== name && payload[key] !== undefined) {
             payload[name] = payload[key];
             delete payload[key];
@@ -17578,7 +17553,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
         });
 
         typeClass.eachRelationship(function (name) {
-          var key = _this7.keyForRelationship(name, 'deserialize');
+          var key = _this6.keyForRelationship(name, 'deserialize');
           if (key !== name && payload[key] !== undefined) {
             payload[name] = payload[key];
             delete payload[key];
@@ -18691,7 +18666,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.0-canary+4b0dd5f1d5";
+  exports.default = "2.11.0-canary+7f48af2012";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
