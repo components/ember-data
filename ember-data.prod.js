@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.9.0
+ * @version   2.10.0
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -431,102 +431,218 @@ define('ember-data/-private/adapters/build-url-mixin', ['exports', 'ember'], fun
     },
 
     /**
-     * @method urlForFindRecord
-     * @param {String} id
-     * @param {String} modelName
-     * @param {DS.Snapshot} snapshot
-     * @return {String} url
-     */
+     Builds a URL for a `store.findRecord(type, id)` call.
+      Example:
+      ```app/adapters/user.js
+     import DS from 'ember-data';
+      export default DS.JSONAPIAdapter.extend({
+       urlForFindRecord(id, modelName, snapshot) {
+         let baseUrl = this.buildURL();
+         return `${baseUrl}/users/${snapshot.adapterOptions.user_id}/playlists/${id}`;
+       }
+     });
+     ```
+      @method urlForFindRecord
+     @param {String} id
+     @param {String} modelName
+     @param {DS.Snapshot} snapshot
+     @return {String} url
+      */
     urlForFindRecord: function (id, modelName, snapshot) {
       return this._buildURL(modelName, id);
     },
 
     /**
-     * @method urlForFindAll
-     * @param {String} modelName
-     * @param {DS.SnapshotRecordArray} snapshot
-     * @return {String} url
+     Builds a URL for a `store.findAll(type)` call.
+      Example:
+      ```app/adapters/comment.js
+     import DS from 'ember-data';
+      export default DS.JSONAPIAdapter.extend({
+       urlForFindAll(id, modelName, snapshot) {
+         return 'data/comments.json';
+       }
+     });
+     ```
+      @method urlForFindAll
+     @param {String} modelName
+     @param {DS.SnapshotRecordArray} snapshot
+     @return {String} url
      */
     urlForFindAll: function (modelName, snapshot) {
       return this._buildURL(modelName);
     },
 
     /**
-     * @method urlForQuery
-     * @param {Object} query
-     * @param {String} modelName
-     * @return {String} url
+     Builds a URL for a `store.query(type, query)` call.
+      Example:
+      ```app/adapters/application.js
+     import DS from 'ember-data';
+      export default DS.RESTAdapter.extend({
+       host: 'https://api.github.com',
+       urlForQuery (query, modelName) {
+         switch(modelName) {
+           case 'repo':
+             return `https://api.github.com/orgs/${query.orgId}/repos`;
+           default:
+             return this._super(...arguments);
+         }
+       }
+     });
+     ```
+      @method urlForQuery
+     @param {Object} query
+     @param {String} modelName
+     @return {String} url
      */
     urlForQuery: function (query, modelName) {
       return this._buildURL(modelName);
     },
 
     /**
-     * @method urlForQueryRecord
-     * @param {Object} query
-     * @param {String} modelName
-     * @return {String} url
+     Builds a URL for a `store.queryRecord(type, query)` call.
+      Example:
+      ```app/adapters/application.js
+     import DS from 'ember-data';
+      export default DS.RESTAdapter.extend({
+       urlForQueryRecord({ slug }, modelName) {
+         let baseUrl = this.buildURL();
+         return `${baseUrl}/${encodeURIComponent(slug)}`;
+       }
+     });
+     ```
+      @method urlForQueryRecord
+     @param {Object} query
+     @param {String} modelName
+     @return {String} url
      */
     urlForQueryRecord: function (query, modelName) {
       return this._buildURL(modelName);
     },
 
     /**
-     * @method urlForFindMany
-     * @param {Array} ids
-     * @param {String} modelName
-     * @param {Array} snapshots
-     * @return {String} url
+     Builds a URL for coalesceing multiple `store.findRecord(type, id)
+     records into 1 request when the adapter's `coalesceFindRequests`
+     property is true.
+      Example:
+      ```app/adapters/application.js
+     import DS from 'ember-data';
+      export default DS.RESTAdapter.extend({
+       urlForFindMany(ids, modelName) {
+         let baseUrl = this.buildURL();
+         return `${baseUrl}/coalesce`;
+       }
+     });
+     ```
+      @method urlForFindMany
+     @param {Array} ids
+     @param {String} modelName
+     @param {Array} snapshots
+     @return {String} url
      */
     urlForFindMany: function (ids, modelName, snapshots) {
       return this._buildURL(modelName);
     },
 
     /**
-     * @method urlForFindHasMany
-     * @param {String} id
-     * @param {String} modelName
-     * @param {DS.Snapshot} snapshot
-     * @return {String} url
+     Builds a URL for fetching a async hasMany relationship when a url
+     is not provided by the server.
+      Example:
+      ```app/adapters/application.js
+     import DS from 'ember-data';
+      export default DS.JSONAPIAdapter.extend({
+       urlForFindHasMany(id, modelName, snapshot) {
+         let baseUrl = this.buildURL(id, modelName);
+         return `${baseUrl}/relationships`;
+       }
+     });
+     ```
+      @method urlForFindHasMany
+     @param {String} id
+     @param {String} modelName
+     @param {DS.Snapshot} snapshot
+     @return {String} url
      */
     urlForFindHasMany: function (id, modelName, snapshot) {
       return this._buildURL(modelName, id);
     },
 
     /**
-     * @method urlForFindBelongsTo
-     * @param {String} id
-     * @param {String} modelName
-     * @param {DS.Snapshot} snapshot
-     * @return {String} url
+     Builds a URL for fetching a async belongsTo relationship when a url
+     is not provided by the server.
+      Example:
+      ```app/adapters/application.js
+     import DS from 'ember-data';
+      export default DS.JSONAPIAdapter.extend({
+       urlForFindBelongsTo(id, modelName, snapshot) {
+         let baseUrl = this.buildURL(id, modelName);
+         return `${baseUrl}/relationships`;
+       }
+     });
+     ```
+      @method urlForFindBelongsTo
+     @param {String} id
+     @param {String} modelName
+     @param {DS.Snapshot} snapshot
+     @return {String} url
      */
     urlForFindBelongsTo: function (id, modelName, snapshot) {
       return this._buildURL(modelName, id);
     },
 
     /**
-     * @method urlForCreateRecord
-     * @param {String} modelName
-     * @param {DS.Snapshot} snapshot
-     * @return {String} url
+     Builds a URL for a `record.save()` call when the record was created
+     locally using `store.createRecord()`.
+      Example:
+      ```app/adapters/application.js
+     import DS from 'ember-data';
+      export default DS.RESTAdapter.extend({
+       urlForCreateRecord(modelName, snapshot) {
+         return this._super(...arguments) + '/new';
+       }
+     });
+     ```
+      @method urlForCreateRecord
+     @param {String} modelName
+     @param {DS.Snapshot} snapshot
+     @return {String} url
      */
     urlForCreateRecord: function (modelName, snapshot) {
       return this._buildURL(modelName);
     },
 
     /**
-     * @method urlForUpdateRecord
-     * @param {String} id
-     * @param {String} modelName
-     * @param {DS.Snapshot} snapshot
-     * @return {String} url
+     Builds a URL for a `record.save()` call when the record has been update locally.
+      Example:
+      ```app/adapters/application.js
+     import DS from 'ember-data';
+      export default DS.RESTAdapter.extend({
+       urlForUpdateRecord(id, modelName, snapshot) {
+         return `/${id}/feed?access_token=${snapshot.adapterOptions.token}`;
+       }
+     });
+     ```
+      @method urlForUpdateRecord
+     @param {String} id
+     @param {String} modelName
+     @param {DS.Snapshot} snapshot
+     @return {String} url
      */
     urlForUpdateRecord: function (id, modelName, snapshot) {
       return this._buildURL(modelName, id);
     },
 
     /**
-     * @method urlForDeleteRecord
+     Builds a URL for a `record.save()` call when the record has been deleted locally.
+      Example:
+      ```app/adapters/application.js
+     import DS from 'ember-data';
+      export default DS.RESTAdapter.extend({
+       urlForDeleteRecord(id, modelName, snapshot) {
+         return this._super(...arguments) + '/destroy';
+       }
+     });
+     ```
+      * @method urlForDeleteRecord
      * @param {String} id
      * @param {String} modelName
      * @param {DS.Snapshot} snapshot
@@ -638,6 +754,7 @@ define('ember-data/-private/debug', ['exports', 'ember'], function (exports, _em
   exports.deprecate = deprecate;
   exports.info = info;
   exports.runInDebug = runInDebug;
+  exports.instrument = instrument;
   exports.warn = warn;
   exports.debugSeal = debugSeal;
   exports.assertPolymorphicType = assertPolymorphicType;
@@ -660,6 +777,10 @@ define('ember-data/-private/debug', ['exports', 'ember'], function (exports, _em
 
   function runInDebug() {
     return _ember.default.runInDebug.apply(_ember.default, arguments);
+  }
+
+  function instrument(method) {
+    return method();
   }
 
   function warn() {
@@ -2075,8 +2196,6 @@ define('ember-data/-private/system/model/errors', ['exports', 'ember', 'ember-da
   });
 });
 define("ember-data/-private/system/model/internal-model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/model/states", "ember-data/-private/system/relationships/state/create", "ember-data/-private/system/snapshot", "ember-data/-private/system/empty-object", "ember-data/-private/features", "ember-data/-private/utils", "ember-data/-private/system/references"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemModelStates, _emberDataPrivateSystemRelationshipsStateCreate, _emberDataPrivateSystemSnapshot, _emberDataPrivateSystemEmptyObject, _emberDataPrivateFeatures, _emberDataPrivateUtils, _emberDataPrivateSystemReferences) {
-  var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; })();
-
   exports.default = InternalModel;
 
   var Promise = _ember.default.RSVP.Promise;
@@ -2101,6 +2220,9 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       return get(this.currentState, key);
     };
   }
+
+  // this (and all heimdall instrumentation) will be stripped by a babel transform
+  //  https://github.com/heimdalljs/babel5-plugin-strip-heimdall
 
   /*
     `InternalModel` is the Model class that we use internally inside Ember Data to represent models.
@@ -2279,14 +2401,14 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       if (this.record) {
         this.record._notifyProperties(changedKeys);
       }
-      this.didInitalizeData();
+      this.didInitializeData();
     },
 
     becameReady: function () {
       _ember.default.run.schedule('actions', this.store.recordArrayManager, this.store.recordArrayManager.recordWasLoaded, this);
     },
 
-    didInitalizeData: function () {
+    didInitializeData: function () {
       if (!this.dataHasInitialized) {
         this.becameReady();
         this.dataHasInitialized = true;
@@ -2322,7 +2444,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     */
     loadedData: function () {
       this.send('loadedData');
-      this.didInitalizeData();
+      this.didInitializeData();
     },
 
     /*
@@ -2364,11 +2486,9 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
 
       for (var i = 0, _length = changedAttributeNames.length; i < _length; i++) {
         var attribute = changedAttributeNames[i];
-
-        var _changedAttributes$attribute = _slicedToArray(changedAttributes[attribute], 2);
-
-        var oldData = _changedAttributes$attribute[0];
-        var newData = _changedAttributes$attribute[1];
+        var data = changedAttributes[attribute];
+        var oldData = data[0];
+        var newData = data[1];
 
         if (oldData === newData) {
           delete this._attributes[attribute];
@@ -5184,6 +5304,33 @@ define("ember-data/-private/system/record-arrays/adapter-populated-record-array"
     may trigger a search on the server, whose results would be loaded
     into an instance of the `AdapterPopulatedRecordArray`.
   
+    ---
+  
+    If you want to update the array and get the latest records from the
+    adapter, you can invoke [`update()`](#method_update):
+  
+    Example
+  
+    ```javascript
+    // GET /users?isAdmin=true
+    var admins = store.query('user', { isAdmin: true });
+  
+    admins.then(function() {
+      console.log(admins.get("length")); // 42
+    });
+  
+    // somewhere later in the app code, when new admins have been created
+    // in the meantime
+    //
+    // GET /users?isAdmin=true
+    admins.update().then(function() {
+      admins.get('isUpdating'); // false
+      console.log(admins.get("length")); // 123
+    });
+  
+    admins.get('isUpdating'); // true
+    ```
+  
     @class AdapterPopulatedRecordArray
     @namespace DS
     @extends DS.RecordArray
@@ -5366,6 +5513,11 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
       @type DS.Store
     */
     store: null,
+
+    replace: function () {
+      var type = get(this, 'type').toString();
+      throw new Error("The result of a server query (for all " + type + " types) is immutable. To modify contents, use toArray()");
+    },
 
     /**
       Retrieves an object from the content by index.
@@ -7382,6 +7534,7 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
     }
   };
 });
+/* global heimdall */
 define('ember-data/-private/system/snapshot-record-array', ['exports'], function (exports) {
   exports.default = SnapshotRecordArray;
   /**
@@ -7800,15 +7953,16 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     return (0, _emberDataPrivateSystemPromiseProxies.promiseObject)(toReturn, label);
   }
 
-  var get = _ember.default.get;
-  var set = _ember.default.set;
   var once = _ember.default.run.once;
-  var isNone = _ember.default.isNone;
-  var isPresent = _ember.default.isPresent;
   var Promise = _ember.default.RSVP.Promise;
-  var copy = _ember.default.copy;
   var Store;
 
+  var copy = _ember.default.copy;
+  var get = _ember.default.get;
+  var GUID_KEY = _ember.default.GUID_KEY;
+  var isNone = _ember.default.isNone;
+  var isPresent = _ember.default.isPresent;
+  var set = _ember.default.set;
   var Service = _ember.default.Service;
 
   // Implementors Note:
@@ -8663,7 +8817,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       Processing by Api::V1::PersonsController#index as HTML
       Parameters: { "ids" => ["1", "2", "3"] }
       ```
-       This method returns a promise, which is resolved with a `RecordArray`
+       This method returns a promise, which is resolved with an
+      [`AdapterPopulatedRecordArray`](http://emberjs.com/api/data/classes/DS.AdapterPopulatedRecordArray.html)
       once the server returns.
        @since 1.13.0
       @method query
@@ -8681,7 +8836,9 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
       var adapter = this.adapterFor(modelName);
 
-      return (0, _emberDataPrivateSystemPromiseProxies.promiseArray)((0, _emberDataPrivateSystemStoreFinders._query)(adapter, this, typeClass, query, array));
+      var pA = (0, _emberDataPrivateSystemPromiseProxies.promiseArray)((0, _emberDataPrivateSystemStoreFinders._query)(adapter, this, typeClass, query, array));
+
+      return pA;
     },
 
     /**
@@ -8889,9 +9046,12 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @return {Promise} promise
     */
     findAll: function (modelName, options) {
+
       var typeClass = this.modelFor(modelName);
 
-      return this._fetchAll(typeClass, this.peekAll(modelName), options);
+      var fetch = this._fetchAll(typeClass, this.peekAll(modelName), options);
+
+      return fetch;
     },
 
     /**
@@ -9196,7 +9356,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         // normalize relationship IDs into records
         this._backburner.schedule('normalizeRelationships', this, '_setupRelationships', internalModel, data);
         this.updateId(internalModel, data);
-      }
+      } else {}
 
       //We first make sure the primary data has been updated
       //TODO try to move notification to the user to the end of the runloop
@@ -9241,6 +9401,16 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     updateId: function (internalModel, data) {
       var oldId = internalModel.id;
       var id = (0, _emberDataPrivateSystemCoerceId.default)(data.id);
+
+      // ID absolutely can't be missing if the oldID is empty (missing Id in response for a new record)
+
+      // ID absolutely can't be different than oldID if oldID is not null
+
+      // ID can be null if oldID is not null (altered ID in response for a record)
+      // however, this is more than likely a developer error.
+      if (oldId !== null && id === null) {
+        return;
+      }
 
       this.typeMapFor(internalModel.type).idToRecord[id] = internalModel;
 
@@ -9510,6 +9680,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         for (i = 0; i < length; i++) {
           internalModels[i] = this._pushInternalModel(data.data[i]).getRecord();
         }
+
         return internalModels;
       }
 
@@ -9519,7 +9690,9 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
       var internalModel = this._pushInternalModel(data.data);
 
-      return internalModel.getRecord();
+      var record = internalModel.getRecord();
+
+      return record;
     },
 
     _hasModelFor: function (type) {
@@ -10051,6 +10224,7 @@ define('ember-data/-private/system/store/container-instance-cache', ['exports', 
     }
   });
 });
+/* global heimdall */
 define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/store/common", "ember-data/-private/system/store/serializer-response", "ember-data/-private/system/store/serializers"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemStoreCommon, _emberDataPrivateSystemStoreSerializerResponse, _emberDataPrivateSystemStoreSerializers) {
   exports._find = _find;
   exports._findMany = _findMany;
@@ -10219,6 +10393,7 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
       });
 
       recordArray.loadRecords(records, payload);
+
       return recordArray;
     }, null, "DS: Extract payload of query " + typeClass);
   }
@@ -11653,6 +11828,7 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
 
   exports.default = JSONAPIAdapter;
 });
+/* global heimdall */
 /**
   @module ember-data
 */
@@ -12995,6 +13171,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
 
   exports.default = RESTAdapter;
 });
+/* global heimdall */
 /**
   @module ember-data
 */
@@ -17103,7 +17280,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.9.0";
+  exports.default = "2.10.0";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
