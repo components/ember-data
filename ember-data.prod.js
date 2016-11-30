@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.12.0-canary+f76a96169e
+ * @version   2.12.0-canary+91d8977f81
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -7571,193 +7571,216 @@ define("ember-data/-private/system/relationships/has-many", ["exports", "ember",
   @module ember-data
 */
 define("ember-data/-private/system/relationships/state/belongs-to", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/relationships/state/relationship"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemRelationshipsStateRelationship) {
-  exports.default = BelongsToRelationship;
+  var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-  function BelongsToRelationship(store, record, inverseKey, relationshipMeta) {
-    this._super$constructor(store, record, inverseKey, relationshipMeta);
-    this.record = record;
-    this.key = relationshipMeta.key;
-    this.inverseRecord = null;
-    this.canonicalState = null;
-  }
+  var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-  BelongsToRelationship.prototype = Object.create(_emberDataPrivateSystemRelationshipsStateRelationship.default.prototype);
-  BelongsToRelationship.prototype.constructor = BelongsToRelationship;
-  BelongsToRelationship.prototype._super$constructor = _emberDataPrivateSystemRelationshipsStateRelationship.default;
+  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-  BelongsToRelationship.prototype.setRecord = function (newRecord) {
-    if (newRecord) {
-      this.addRecord(newRecord);
-    } else if (this.inverseRecord) {
-      this.removeRecord(this.inverseRecord);
-    }
-    this.setHasData(true);
-    this.setHasLoaded(true);
-  };
+  function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-  BelongsToRelationship.prototype.setCanonicalRecord = function (newRecord) {
-    if (newRecord) {
-      this.addCanonicalRecord(newRecord);
-    } else if (this.canonicalState) {
-      this.removeCanonicalRecord(this.canonicalState);
-    }
-    this.flushCanonicalLater();
-  };
+  var BelongsToRelationship = (function (_Relationship) {
+    _inherits(BelongsToRelationship, _Relationship);
 
-  BelongsToRelationship.prototype._super$addCanonicalRecord = _emberDataPrivateSystemRelationshipsStateRelationship.default.prototype.addCanonicalRecord;
-  BelongsToRelationship.prototype.addCanonicalRecord = function (newRecord) {
-    if (this.canonicalMembers.has(newRecord)) {
-      return;
+    function BelongsToRelationship(store, internalModel, inverseKey, relationshipMeta) {
+      _get(Object.getPrototypeOf(BelongsToRelationship.prototype), "constructor", this).call(this, store, internalModel, inverseKey, relationshipMeta);
+      this.internalModel = internalModel;
+      this.key = relationshipMeta.key;
+      this.inverseRecord = null;
+      this.canonicalState = null;
     }
 
-    if (this.canonicalState) {
-      this.removeCanonicalRecord(this.canonicalState);
-    }
-
-    this.canonicalState = newRecord;
-    this._super$addCanonicalRecord(newRecord);
-  };
-
-  BelongsToRelationship.prototype._super$flushCanonical = _emberDataPrivateSystemRelationshipsStateRelationship.default.prototype.flushCanonical;
-  BelongsToRelationship.prototype.flushCanonical = function () {
-    //temporary fix to not remove newly created records if server returned null.
-    //TODO remove once we have proper diffing
-    if (this.inverseRecord && this.inverseRecord.isNew() && !this.canonicalState) {
-      return;
-    }
-    if (this.inverseRecord !== this.canonicalState) {
-      this.inverseRecord = this.canonicalState;
-      this.record.notifyBelongsToChanged(this.key);
-    }
-    this._super$flushCanonical();
-  };
-
-  BelongsToRelationship.prototype._super$addRecord = _emberDataPrivateSystemRelationshipsStateRelationship.default.prototype.addRecord;
-  BelongsToRelationship.prototype.addRecord = function (newRecord) {
-    if (this.members.has(newRecord)) {
-      return;
-    }
-
-    if (this.inverseRecord) {
-      this.removeRecord(this.inverseRecord);
-    }
-
-    this.inverseRecord = newRecord;
-    this._super$addRecord(newRecord);
-    this.record.notifyBelongsToChanged(this.key);
-  };
-
-  BelongsToRelationship.prototype.setRecordPromise = function (newPromise) {
-    var content = newPromise.get && newPromise.get('content');
-
-    this.setRecord(content ? content._internalModel : content);
-  };
-
-  BelongsToRelationship.prototype._super$removeRecordFromOwn = _emberDataPrivateSystemRelationshipsStateRelationship.default.prototype.removeRecordFromOwn;
-  BelongsToRelationship.prototype.removeRecordFromOwn = function (record) {
-    if (!this.members.has(record)) {
-      return;
-    }
-    this.inverseRecord = null;
-    this._super$removeRecordFromOwn(record);
-    this.record.notifyBelongsToChanged(this.key);
-  };
-
-  BelongsToRelationship.prototype._super$removeCanonicalRecordFromOwn = _emberDataPrivateSystemRelationshipsStateRelationship.default.prototype.removeCanonicalRecordFromOwn;
-  BelongsToRelationship.prototype.removeCanonicalRecordFromOwn = function (record) {
-    if (!this.canonicalMembers.has(record)) {
-      return;
-    }
-    this.canonicalState = null;
-    this._super$removeCanonicalRecordFromOwn(record);
-  };
-
-  BelongsToRelationship.prototype.findRecord = function () {
-    if (this.inverseRecord) {
-      return this.store._findByInternalModel(this.inverseRecord);
-    } else {
-      return _ember.default.RSVP.Promise.resolve(null);
-    }
-  };
-
-  BelongsToRelationship.prototype.fetchLink = function () {
-    var _this = this;
-
-    return this.store.findBelongsTo(this.record, this.link, this.relationshipMeta).then(function (record) {
-      if (record) {
-        _this.addRecord(record);
-      }
-      return record;
-    });
-  };
-
-  BelongsToRelationship.prototype.getRecord = function () {
-    var _this2 = this;
-
-    //TODO(Igor) flushCanonical here once our syncing is not stupid
-    if (this.isAsync) {
-      var promise;
-      if (this.link) {
-        if (this.hasLoaded) {
-          promise = this.findRecord();
-        } else {
-          promise = this.findLink().then(function () {
-            return _this2.findRecord();
-          });
+    _createClass(BelongsToRelationship, [{
+      key: "setRecord",
+      value: function setRecord(newRecord) {
+        if (newRecord) {
+          this.addRecord(newRecord);
+        } else if (this.inverseRecord) {
+          this.removeRecord(this.inverseRecord);
         }
-      } else {
-        promise = this.findRecord();
+        this.setHasData(true);
+        this.setHasLoaded(true);
       }
-
-      return _emberDataPrivateSystemPromiseProxies.PromiseObject.create({
-        promise: promise,
-        content: this.inverseRecord ? this.inverseRecord.getRecord() : null
-      });
-    } else {
-      if (this.inverseRecord === null) {
-        return null;
+    }, {
+      key: "setCanonicalRecord",
+      value: function setCanonicalRecord(newRecord) {
+        if (newRecord) {
+          this.addCanonicalRecord(newRecord);
+        } else if (this.canonicalState) {
+          this.removeCanonicalRecord(this.canonicalState);
+        }
+        this.flushCanonicalLater();
       }
-      var toReturn = this.inverseRecord.getRecord();
+    }, {
+      key: "addCanonicalRecord",
+      value: function addCanonicalRecord(newRecord) {
+        if (this.canonicalMembers.has(newRecord)) {
+          return;
+        }
 
-      return toReturn;
-    }
-  };
+        if (this.canonicalState) {
+          this.removeCanonicalRecord(this.canonicalState);
+        }
 
-  BelongsToRelationship.prototype.reload = function () {
-    // TODO handle case when reload() is triggered multiple times
+        this.canonicalState = newRecord;
+        _get(Object.getPrototypeOf(BelongsToRelationship.prototype), "addCanonicalRecord", this).call(this, newRecord);
+      }
+    }, {
+      key: "flushCanonical",
+      value: function flushCanonical() {
+        //temporary fix to not remove newly created records if server returned null.
+        //TODO remove once we have proper diffing
+        if (this.inverseRecord && this.inverseRecord.isNew() && !this.canonicalState) {
+          return;
+        }
+        if (this.inverseRecord !== this.canonicalState) {
+          this.inverseRecord = this.canonicalState;
+          this.internalModel.notifyBelongsToChanged(this.key);
+        }
 
-    if (this.link) {
-      return this.fetchLink();
-    }
+        _get(Object.getPrototypeOf(BelongsToRelationship.prototype), "flushCanonical", this).call(this);
+      }
+    }, {
+      key: "addRecord",
+      value: function addRecord(newRecord) {
+        if (this.members.has(newRecord)) {
+          return;
+        }
 
-    // reload record, if it is already loaded
-    if (this.inverseRecord && this.inverseRecord.hasRecord) {
-      return this.inverseRecord.record.reload();
-    }
+        if (this.inverseRecord) {
+          this.removeRecord(this.inverseRecord);
+        }
 
-    return this.findRecord();
-  };
+        this.inverseRecord = newRecord;
+        _get(Object.getPrototypeOf(BelongsToRelationship.prototype), "addRecord", this).call(this, newRecord);
+        this.internalModel.notifyBelongsToChanged(this.key);
+      }
+    }, {
+      key: "setRecordPromise",
+      value: function setRecordPromise(newPromise) {
+        var content = newPromise.get && newPromise.get('content');
 
-  BelongsToRelationship.prototype.updateData = function (data) {
-    var internalModel = this.store._pushResourceIdentifier(this, data);
-    this.setCanonicalRecord(internalModel);
-  };
+        this.setRecord(content ? content._internalModel : content);
+      }
+    }, {
+      key: "removeRecordFromOwn",
+      value: function removeRecordFromOwn(record) {
+        if (!this.members.has(record)) {
+          return;
+        }
+        this.inverseRecord = null;
+        _get(Object.getPrototypeOf(BelongsToRelationship.prototype), "removeRecordFromOwn", this).call(this, record);
+        this.internalModel.notifyBelongsToChanged(this.key);
+      }
+    }, {
+      key: "removeCanonicalRecordFromOwn",
+      value: function removeCanonicalRecordFromOwn(record) {
+        if (!this.canonicalMembers.has(record)) {
+          return;
+        }
+        this.canonicalState = null;
+        _get(Object.getPrototypeOf(BelongsToRelationship.prototype), "removeCanonicalRecordFromOwn", this).call(this, record);
+      }
+    }, {
+      key: "findRecord",
+      value: function findRecord() {
+        if (this.inverseRecord) {
+          return this.store._findByInternalModel(this.inverseRecord);
+        } else {
+          return _ember.default.RSVP.Promise.resolve(null);
+        }
+      }
+    }, {
+      key: "fetchLink",
+      value: function fetchLink() {
+        var _this = this;
+
+        return this.store.findBelongsTo(this.internalModel, this.link, this.relationshipMeta).then(function (record) {
+          if (record) {
+            _this.addRecord(record);
+          }
+          return record;
+        });
+      }
+    }, {
+      key: "getRecord",
+      value: function getRecord() {
+        var _this2 = this;
+
+        //TODO(Igor) flushCanonical here once our syncing is not stupid
+        if (this.isAsync) {
+          var promise;
+          if (this.link) {
+            if (this.hasLoaded) {
+              promise = this.findRecord();
+            } else {
+              promise = this.findLink().then(function () {
+                return _this2.findRecord();
+              });
+            }
+          } else {
+            promise = this.findRecord();
+          }
+
+          return _emberDataPrivateSystemPromiseProxies.PromiseObject.create({
+            promise: promise,
+            content: this.inverseRecord ? this.inverseRecord.getRecord() : null
+          });
+        } else {
+          if (this.inverseRecord === null) {
+            return null;
+          }
+          var toReturn = this.inverseRecord.getRecord();
+
+          return toReturn;
+        }
+      }
+    }, {
+      key: "reload",
+      value: function reload() {
+        // TODO handle case when reload() is triggered multiple times
+
+        if (this.link) {
+          return this.fetchLink();
+        }
+
+        // reload record, if it is already loaded
+        if (this.inverseRecord && this.inverseRecord.hasRecord) {
+          return this.inverseRecord.record.reload();
+        }
+
+        return this.findRecord();
+      }
+    }, {
+      key: "updateData",
+      value: function updateData(data) {
+        var internalModel = this.store._pushResourceIdentifier(this, data);
+        this.setCanonicalRecord(internalModel);
+      }
+    }]);
+
+    return BelongsToRelationship;
+  })(_emberDataPrivateSystemRelationshipsStateRelationship.default);
+
+  exports.default = BelongsToRelationship;
 });
 define("ember-data/-private/system/relationships/state/create", ["exports", "ember", "ember-data/-private/system/relationships/state/has-many", "ember-data/-private/system/relationships/state/belongs-to", "ember-data/-private/system/empty-object"], function (exports, _ember, _emberDataPrivateSystemRelationshipsStateHasMany, _emberDataPrivateSystemRelationshipsStateBelongsTo, _emberDataPrivateSystemEmptyObject) {
-  exports.default = Relationships;
+  var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-  var get = _ember.default.get;
+  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+  var _get = _ember.default.get;
 
   function shouldFindInverse(relationshipMeta) {
     var options = relationshipMeta.options;
     return !(options && options.inverse === null);
   }
 
-  function createRelationshipFor(record, relationshipMeta, store) {
+  function createRelationshipFor(internalModel, relationshipMeta, store) {
     var inverseKey = undefined;
     var inverse = null;
     if (shouldFindInverse(relationshipMeta)) {
-      inverse = record.type.inverseFor(relationshipMeta.key, store);
+      inverse = internalModel.type.inverseFor(relationshipMeta.key, store);
     }
 
     if (inverse) {
@@ -7765,269 +7788,313 @@ define("ember-data/-private/system/relationships/state/create", ["exports", "emb
     }
 
     if (relationshipMeta.kind === 'hasMany') {
-      return new _emberDataPrivateSystemRelationshipsStateHasMany.default(store, record, inverseKey, relationshipMeta);
+      return new _emberDataPrivateSystemRelationshipsStateHasMany.default(store, internalModel, inverseKey, relationshipMeta);
     } else {
-      return new _emberDataPrivateSystemRelationshipsStateBelongsTo.default(store, record, inverseKey, relationshipMeta);
+      return new _emberDataPrivateSystemRelationshipsStateBelongsTo.default(store, internalModel, inverseKey, relationshipMeta);
     }
   }
 
-  function Relationships(record) {
-    this.record = record;
-    this.initializedRelationships = new _emberDataPrivateSystemEmptyObject.default();
-  }
-
-  Relationships.prototype.has = function (key) {
-    return !!this.initializedRelationships[key];
-  };
-
-  Relationships.prototype.get = function (key) {
-    var relationships = this.initializedRelationships;
-    var relationshipsByName = get(this.record.type, 'relationshipsByName');
-    if (!relationships[key] && relationshipsByName.get(key)) {
-      relationships[key] = createRelationshipFor(this.record, relationshipsByName.get(key), this.record.store);
+  var Relationships = (function () {
+    function Relationships(internalModel) {
+      this.internalModel = internalModel;
+      this.initializedRelationships = new _emberDataPrivateSystemEmptyObject.default();
     }
-    return relationships[key];
-  };
+
+    // TODO @runspired deprecate this as it was never truly a record instance
+
+    _createClass(Relationships, [{
+      key: "has",
+      value: function has(key) {
+        return !!this.initializedRelationships[key];
+      }
+    }, {
+      key: "get",
+      value: function get(key) {
+        var relationships = this.initializedRelationships;
+        var internalModel = this.internalModel;
+        var relationshipsByName = _get(internalModel.type, 'relationshipsByName');
+
+        if (!relationships[key] && relationshipsByName.get(key)) {
+          relationships[key] = createRelationshipFor(internalModel, relationshipsByName.get(key), internalModel.store);
+        }
+
+        return relationships[key];
+      }
+    }, {
+      key: "record",
+      get: function () {
+        return this.internalModel;
+      }
+    }]);
+
+    return Relationships;
+  })();
+
+  exports.default = Relationships;
 });
 define("ember-data/-private/system/relationships/state/has-many", ["exports", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/relationships/state/relationship", "ember-data/-private/system/ordered-set", "ember-data/-private/system/many-array"], function (exports, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemRelationshipsStateRelationship, _emberDataPrivateSystemOrderedSet, _emberDataPrivateSystemManyArray) {
-  exports.default = ManyRelationship;
+  var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-  function ManyRelationship(store, record, inverseKey, relationshipMeta) {
-    this._super$constructor(store, record, inverseKey, relationshipMeta);
-    this.belongsToType = relationshipMeta.type;
-    this.canonicalState = [];
-    this.isPolymorphic = relationshipMeta.options.polymorphic;
-  }
+  var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-  ManyRelationship.prototype = Object.create(_emberDataPrivateSystemRelationshipsStateRelationship.default.prototype);
-  ManyRelationship.prototype.getManyArray = function () {
-    if (!this._manyArray) {
-      this._manyArray = _emberDataPrivateSystemManyArray.default.create({
-        canonicalState: this.canonicalState,
-        store: this.store,
-        relationship: this,
-        type: this.store.modelFor(this.belongsToType),
-        record: this.record,
-        meta: this.meta,
-        isPolymorphic: this.isPolymorphic
-      });
-    }
-    return this._manyArray;
-  };
+  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-  ManyRelationship.prototype.constructor = ManyRelationship;
-  ManyRelationship.prototype._super$constructor = _emberDataPrivateSystemRelationshipsStateRelationship.default;
+  function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-  ManyRelationship.prototype.destroy = function () {
-    if (this._manyArray) {
-      this._manyArray.destroy();
-    }
-  };
+  var ManyRelationship = (function (_Relationship) {
+    _inherits(ManyRelationship, _Relationship);
 
-  ManyRelationship.prototype._super$updateMeta = _emberDataPrivateSystemRelationshipsStateRelationship.default.prototype.updateMeta;
-  ManyRelationship.prototype.updateMeta = function (meta) {
-    this._super$updateMeta(meta);
-    if (this._manyArray) {
-      this._manyArray.set('meta', meta);
-    }
-  };
-
-  ManyRelationship.prototype._super$addCanonicalRecord = _emberDataPrivateSystemRelationshipsStateRelationship.default.prototype.addCanonicalRecord;
-  ManyRelationship.prototype.addCanonicalRecord = function (record, idx) {
-    if (this.canonicalMembers.has(record)) {
-      return;
-    }
-    if (idx !== undefined) {
-      this.canonicalState.splice(idx, 0, record);
-    } else {
-      this.canonicalState.push(record);
-    }
-    this._super$addCanonicalRecord(record, idx);
-  };
-
-  ManyRelationship.prototype._super$addRecord = _emberDataPrivateSystemRelationshipsStateRelationship.default.prototype.addRecord;
-  ManyRelationship.prototype.addRecord = function (record, idx) {
-    if (this.members.has(record)) {
-      return;
-    }
-    this._super$addRecord(record, idx);
-    // make lazy later
-    this.getManyArray().internalAddRecords([record], idx);
-  };
-
-  ManyRelationship.prototype._super$removeCanonicalRecordFromOwn = _emberDataPrivateSystemRelationshipsStateRelationship.default.prototype.removeCanonicalRecordFromOwn;
-  ManyRelationship.prototype.removeCanonicalRecordFromOwn = function (record, idx) {
-    var i = idx;
-    if (!this.canonicalMembers.has(record)) {
-      return;
-    }
-    if (i === undefined) {
-      i = this.canonicalState.indexOf(record);
-    }
-    if (i > -1) {
-      this.canonicalState.splice(i, 1);
-    }
-    this._super$removeCanonicalRecordFromOwn(record, idx);
-  };
-
-  ManyRelationship.prototype._super$flushCanonical = _emberDataPrivateSystemRelationshipsStateRelationship.default.prototype.flushCanonical;
-  ManyRelationship.prototype.flushCanonical = function () {
-    if (this._manyArray) {
-      this._manyArray.flushCanonical();
-    }
-    this._super$flushCanonical();
-  };
-
-  ManyRelationship.prototype._super$removeRecordFromOwn = _emberDataPrivateSystemRelationshipsStateRelationship.default.prototype.removeRecordFromOwn;
-  ManyRelationship.prototype.removeRecordFromOwn = function (record, idx) {
-    if (!this.members.has(record)) {
-      return;
-    }
-    this._super$removeRecordFromOwn(record, idx);
-    var manyArray = this.getManyArray();
-    if (idx !== undefined) {
-      //TODO(Igor) not used currently, fix
-      manyArray.currentState.removeAt(idx);
-    } else {
-      manyArray.internalRemoveRecords([record]);
-    }
-  };
-
-  ManyRelationship.prototype.notifyRecordRelationshipAdded = function (record, idx) {
-
-    this.record.notifyHasManyAdded(this.key, record, idx);
-  };
-
-  ManyRelationship.prototype.reload = function () {
-    var manyArray = this.getManyArray();
-    var manyArrayLoadedState = manyArray.get('isLoaded');
-
-    if (this._loadingPromise) {
-      if (this._loadingPromise.get('isPending')) {
-        return this._loadingPromise;
-      }
-      if (this._loadingPromise.get('isRejected')) {
-        manyArray.set('isLoaded', manyArrayLoadedState);
-      }
+    function ManyRelationship(store, record, inverseKey, relationshipMeta) {
+      _get(Object.getPrototypeOf(ManyRelationship.prototype), "constructor", this).call(this, store, record, inverseKey, relationshipMeta);
+      this.belongsToType = relationshipMeta.type;
+      this.canonicalState = [];
+      this.isPolymorphic = relationshipMeta.options.polymorphic;
     }
 
-    if (this.link) {
-      this._loadingPromise = (0, _emberDataPrivateSystemPromiseProxies.promiseManyArray)(this.fetchLink(), 'Reload with link');
-      return this._loadingPromise;
-    } else {
-      this._loadingPromise = (0, _emberDataPrivateSystemPromiseProxies.promiseManyArray)(this.store._scheduleFetchMany(manyArray.currentState).then(function () {
-        return manyArray;
-      }), 'Reload with ids');
-      return this._loadingPromise;
-    }
-  };
-
-  ManyRelationship.prototype.computeChanges = function (records) {
-    var members = this.canonicalMembers;
-    var recordsToRemove = [];
-    var length;
-    var record;
-    var i;
-
-    records = setForArray(records);
-
-    members.forEach(function (member) {
-      if (records.has(member)) {
-        return;
-      }
-
-      recordsToRemove.push(member);
-    });
-
-    this.removeCanonicalRecords(recordsToRemove);
-
-    // Using records.toArray() since currently using
-    // removeRecord can modify length, messing stuff up
-    // forEach since it directly looks at "length" each
-    // iteration
-    records = records.toArray();
-    length = records.length;
-    for (i = 0; i < length; i++) {
-      record = records[i];
-      this.removeCanonicalRecord(record);
-      this.addCanonicalRecord(record, i);
-    }
-  };
-
-  ManyRelationship.prototype.fetchLink = function () {
-    var _this = this;
-
-    return this.store.findHasMany(this.record, this.link, this.relationshipMeta).then(function (records) {
-      if (records.hasOwnProperty('meta')) {
-        _this.updateMeta(records.meta);
-      }
-      _this.store._backburner.join(function () {
-        _this.updateRecordsFromAdapter(records);
-        _this.getManyArray().set('isLoaded', true);
-      });
-      return _this.getManyArray();
-    });
-  };
-
-  ManyRelationship.prototype.findRecords = function () {
-    var manyArray = this.getManyArray();
-    var array = manyArray.toArray();
-    var internalModels = new Array(array.length);
-
-    for (var i = 0; i < array.length; i++) {
-      internalModels[i] = array[i]._internalModel;
-    }
-
-    //TODO CLEANUP
-    return this.store.findMany(internalModels).then(function () {
-      if (!manyArray.get('isDestroyed')) {
-        //Goes away after the manyArray refactor
-        manyArray.set('isLoaded', true);
-      }
-      return manyArray;
-    });
-  };
-  ManyRelationship.prototype.notifyHasManyChanged = function () {
-    this.record.notifyHasManyAdded(this.key);
-  };
-
-  ManyRelationship.prototype.getRecords = function () {
-    var _this2 = this;
-
-    //TODO(Igor) sync server here, once our syncing is not stupid
-    var manyArray = this.getManyArray();
-    if (this.isAsync) {
-      var promise;
-      if (this.link) {
-        if (this.hasLoaded) {
-          promise = this.findRecords();
-        } else {
-          promise = this.findLink().then(function () {
-            return _this2.findRecords();
+    _createClass(ManyRelationship, [{
+      key: "getManyArray",
+      value: function getManyArray() {
+        if (!this._manyArray) {
+          this._manyArray = _emberDataPrivateSystemManyArray.default.create({
+            canonicalState: this.canonicalState,
+            store: this.store,
+            relationship: this,
+            type: this.store.modelFor(this.belongsToType),
+            record: this.record,
+            meta: this.meta,
+            isPolymorphic: this.isPolymorphic
           });
         }
-      } else {
-        promise = this.findRecords();
+        return this._manyArray;
       }
-      this._loadingPromise = _emberDataPrivateSystemPromiseProxies.PromiseManyArray.create({
-        content: manyArray,
-        promise: promise
-      });
-      return this._loadingPromise;
-    } else {
-
-      //TODO(Igor) WTF DO I DO HERE?
-      if (!manyArray.get('isDestroyed')) {
-        manyArray.set('isLoaded', true);
+    }, {
+      key: "destroy",
+      value: function destroy() {
+        if (this._manyArray) {
+          this._manyArray.destroy();
+        }
       }
-      return manyArray;
-    }
-  };
+    }, {
+      key: "updateMeta",
+      value: function updateMeta(meta) {
+        _get(Object.getPrototypeOf(ManyRelationship.prototype), "updateMeta", this).call(this, meta);
+        if (this._manyArray) {
+          this._manyArray.set('meta', meta);
+        }
+      }
+    }, {
+      key: "addCanonicalRecord",
+      value: function addCanonicalRecord(record, idx) {
+        if (this.canonicalMembers.has(record)) {
+          return;
+        }
+        if (idx !== undefined) {
+          this.canonicalState.splice(idx, 0, record);
+        } else {
+          this.canonicalState.push(record);
+        }
+        _get(Object.getPrototypeOf(ManyRelationship.prototype), "addCanonicalRecord", this).call(this, record, idx);
+      }
+    }, {
+      key: "addRecord",
+      value: function addRecord(record, idx) {
+        if (this.members.has(record)) {
+          return;
+        }
+        _get(Object.getPrototypeOf(ManyRelationship.prototype), "addRecord", this).call(this, record, idx);
+        // make lazy later
+        this.getManyArray().internalAddRecords([record], idx);
+      }
+    }, {
+      key: "removeCanonicalRecordFromOwn",
+      value: function removeCanonicalRecordFromOwn(record, idx) {
+        var i = idx;
+        if (!this.canonicalMembers.has(record)) {
+          return;
+        }
+        if (i === undefined) {
+          i = this.canonicalState.indexOf(record);
+        }
+        if (i > -1) {
+          this.canonicalState.splice(i, 1);
+        }
+        _get(Object.getPrototypeOf(ManyRelationship.prototype), "removeCanonicalRecordFromOwn", this).call(this, record, idx);
+      }
+    }, {
+      key: "flushCanonical",
+      value: function flushCanonical() {
+        if (this._manyArray) {
+          this._manyArray.flushCanonical();
+        }
+        _get(Object.getPrototypeOf(ManyRelationship.prototype), "flushCanonical", this).call(this);
+      }
+    }, {
+      key: "removeRecordFromOwn",
+      value: function removeRecordFromOwn(record, idx) {
+        if (!this.members.has(record)) {
+          return;
+        }
+        _get(Object.getPrototypeOf(ManyRelationship.prototype), "removeRecordFromOwn", this).call(this, record, idx);
+        var manyArray = this.getManyArray();
+        if (idx !== undefined) {
+          //TODO(Igor) not used currently, fix
+          manyArray.currentState.removeAt(idx);
+        } else {
+          manyArray.internalRemoveRecords([record]);
+        }
+      }
+    }, {
+      key: "notifyRecordRelationshipAdded",
+      value: function notifyRecordRelationshipAdded(record, idx) {
 
-  ManyRelationship.prototype.updateData = function (data) {
-    var internalModels = this.store._pushResourceIdentifiers(this, data);
-    this.updateRecordsFromAdapter(internalModels);
-  };
+        this.record.notifyHasManyAdded(this.key, record, idx);
+      }
+    }, {
+      key: "reload",
+      value: function reload() {
+        var manyArray = this.getManyArray();
+        var manyArrayLoadedState = manyArray.get('isLoaded');
+
+        if (this._loadingPromise) {
+          if (this._loadingPromise.get('isPending')) {
+            return this._loadingPromise;
+          }
+          if (this._loadingPromise.get('isRejected')) {
+            manyArray.set('isLoaded', manyArrayLoadedState);
+          }
+        }
+
+        if (this.link) {
+          this._loadingPromise = (0, _emberDataPrivateSystemPromiseProxies.promiseManyArray)(this.fetchLink(), 'Reload with link');
+          return this._loadingPromise;
+        } else {
+          this._loadingPromise = (0, _emberDataPrivateSystemPromiseProxies.promiseManyArray)(this.store._scheduleFetchMany(manyArray.currentState).then(function () {
+            return manyArray;
+          }), 'Reload with ids');
+          return this._loadingPromise;
+        }
+      }
+    }, {
+      key: "computeChanges",
+      value: function computeChanges(records) {
+        var members = this.canonicalMembers;
+        var recordsToRemove = [];
+        var length;
+        var record;
+        var i;
+
+        records = setForArray(records);
+
+        members.forEach(function (member) {
+          if (records.has(member)) {
+            return;
+          }
+
+          recordsToRemove.push(member);
+        });
+
+        this.removeCanonicalRecords(recordsToRemove);
+
+        // Using records.toArray() since currently using
+        // removeRecord can modify length, messing stuff up
+        // forEach since it directly looks at "length" each
+        // iteration
+        records = records.toArray();
+        length = records.length;
+        for (i = 0; i < length; i++) {
+          record = records[i];
+          this.removeCanonicalRecord(record);
+          this.addCanonicalRecord(record, i);
+        }
+      }
+    }, {
+      key: "fetchLink",
+      value: function fetchLink() {
+        var _this = this;
+
+        return this.store.findHasMany(this.record, this.link, this.relationshipMeta).then(function (records) {
+          if (records.hasOwnProperty('meta')) {
+            _this.updateMeta(records.meta);
+          }
+          _this.store._backburner.join(function () {
+            _this.updateRecordsFromAdapter(records);
+            _this.getManyArray().set('isLoaded', true);
+          });
+          return _this.getManyArray();
+        });
+      }
+    }, {
+      key: "findRecords",
+      value: function findRecords() {
+        var manyArray = this.getManyArray();
+        var array = manyArray.toArray();
+        var internalModels = new Array(array.length);
+
+        for (var i = 0; i < array.length; i++) {
+          internalModels[i] = array[i]._internalModel;
+        }
+
+        //TODO CLEANUP
+        return this.store.findMany(internalModels).then(function () {
+          if (!manyArray.get('isDestroyed')) {
+            //Goes away after the manyArray refactor
+            manyArray.set('isLoaded', true);
+          }
+          return manyArray;
+        });
+      }
+    }, {
+      key: "notifyHasManyChanged",
+      value: function notifyHasManyChanged() {
+        this.record.notifyHasManyAdded(this.key);
+      }
+    }, {
+      key: "getRecords",
+      value: function getRecords() {
+        var _this2 = this;
+
+        //TODO(Igor) sync server here, once our syncing is not stupid
+        var manyArray = this.getManyArray();
+        if (this.isAsync) {
+          var promise;
+          if (this.link) {
+            if (this.hasLoaded) {
+              promise = this.findRecords();
+            } else {
+              promise = this.findLink().then(function () {
+                return _this2.findRecords();
+              });
+            }
+          } else {
+            promise = this.findRecords();
+          }
+          this._loadingPromise = _emberDataPrivateSystemPromiseProxies.PromiseManyArray.create({
+            content: manyArray,
+            promise: promise
+          });
+          return this._loadingPromise;
+        } else {
+
+          //TODO(Igor) WTF DO I DO HERE?
+          // TODO @runspired equal WTFs to Igor
+          if (!manyArray.get('isDestroyed')) {
+            manyArray.set('isLoaded', true);
+          }
+          return manyArray;
+        }
+      }
+    }, {
+      key: "updateData",
+      value: function updateData(data) {
+        var internalModels = this.store._pushResourceIdentifiers(this, data);
+        this.updateRecordsFromAdapter(internalModels);
+      }
+    }]);
+
+    return ManyRelationship;
+  })(_emberDataPrivateSystemRelationshipsStateRelationship.default);
+
+  exports.default = ManyRelationship;
 
   function setForArray(array) {
     var set = new _emberDataPrivateSystemOrderedSet.default();
@@ -8042,303 +8109,351 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
   }
 });
 define("ember-data/-private/system/relationships/state/relationship", ["exports", "ember-data/-private/debug", "ember-data/-private/system/ordered-set", "ember-data/-private/system/normalize-link"], function (exports, _emberDataPrivateDebug, _emberDataPrivateSystemOrderedSet, _emberDataPrivateSystemNormalizeLink) {
-  exports.default = Relationship;
+  var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-  function Relationship(store, record, inverseKey, relationshipMeta) {
-    var async = relationshipMeta.options.async;
-    this.members = new _emberDataPrivateSystemOrderedSet.default();
-    this.canonicalMembers = new _emberDataPrivateSystemOrderedSet.default();
-    this.store = store;
-    this.key = relationshipMeta.key;
-    this.inverseKey = inverseKey;
-    this.record = record;
-    this.isAsync = typeof async === 'undefined' ? true : async;
-    this.relationshipMeta = relationshipMeta;
-    //This probably breaks for polymorphic relationship in complex scenarios, due to
-    //multiple possible modelNames
-    this.inverseKeyForImplicit = this.record.constructor.modelName + this.key;
-    this.linkPromise = null;
-    this.meta = null;
-    this.hasData = false;
-    this.hasLoaded = false;
-  }
+  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-  Relationship.prototype = {
-    constructor: Relationship,
-
-    destroy: function () {},
-
-    updateMeta: function (meta) {
-      this.meta = meta;
-    },
-
-    clear: function () {
-      var members = this.members.list;
-      var member;
-
-      while (members.length > 0) {
-        member = members[0];
-        this.removeRecord(member);
-      }
-    },
-
-    removeRecords: function (records) {
-      var _this = this;
-
-      records.forEach(function (record) {
-        return _this.removeRecord(record);
-      });
-    },
-
-    addRecords: function (records, idx) {
-      var _this2 = this;
-
-      records.forEach(function (record) {
-        _this2.addRecord(record, idx);
-        if (idx !== undefined) {
-          idx++;
-        }
-      });
-    },
-
-    addCanonicalRecords: function (records, idx) {
-      for (var i = 0; i < records.length; i++) {
-        if (idx !== undefined) {
-          this.addCanonicalRecord(records[i], i + idx);
-        } else {
-          this.addCanonicalRecord(records[i]);
-        }
-      }
-    },
-
-    addCanonicalRecord: function (record, idx) {
-      if (!this.canonicalMembers.has(record)) {
-        this.canonicalMembers.add(record);
-        if (this.inverseKey) {
-          record._relationships.get(this.inverseKey).addCanonicalRecord(this.record);
-        } else {
-          if (!record._implicitRelationships[this.inverseKeyForImplicit]) {
-            record._implicitRelationships[this.inverseKeyForImplicit] = new Relationship(this.store, record, this.key, { options: {} });
-          }
-          record._implicitRelationships[this.inverseKeyForImplicit].addCanonicalRecord(this.record);
-        }
-      }
-      this.flushCanonicalLater();
-      this.setHasData(true);
-    },
-
-    removeCanonicalRecords: function (records, idx) {
-      for (var i = 0; i < records.length; i++) {
-        if (idx !== undefined) {
-          this.removeCanonicalRecord(records[i], i + idx);
-        } else {
-          this.removeCanonicalRecord(records[i]);
-        }
-      }
-    },
-
-    removeCanonicalRecord: function (record, idx) {
-      if (this.canonicalMembers.has(record)) {
-        this.removeCanonicalRecordFromOwn(record);
-        if (this.inverseKey) {
-          this.removeCanonicalRecordFromInverse(record);
-        } else {
-          if (record._implicitRelationships[this.inverseKeyForImplicit]) {
-            record._implicitRelationships[this.inverseKeyForImplicit].removeCanonicalRecord(this.record);
-          }
-        }
-      }
-      this.flushCanonicalLater();
-    },
-
-    addRecord: function (record, idx) {
-      if (!this.members.has(record)) {
-        this.members.addWithIndex(record, idx);
-        this.notifyRecordRelationshipAdded(record, idx);
-        if (this.inverseKey) {
-          record._relationships.get(this.inverseKey).addRecord(this.record);
-        } else {
-          if (!record._implicitRelationships[this.inverseKeyForImplicit]) {
-            record._implicitRelationships[this.inverseKeyForImplicit] = new Relationship(this.store, record, this.key, { options: {} });
-          }
-          record._implicitRelationships[this.inverseKeyForImplicit].addRecord(this.record);
-        }
-        this.record.updateRecordArraysLater();
-      }
-      this.setHasData(true);
-    },
-
-    removeRecord: function (record) {
-      if (this.members.has(record)) {
-        this.removeRecordFromOwn(record);
-        if (this.inverseKey) {
-          this.removeRecordFromInverse(record);
-        } else {
-          if (record._implicitRelationships[this.inverseKeyForImplicit]) {
-            record._implicitRelationships[this.inverseKeyForImplicit].removeRecord(this.record);
-          }
-        }
-      }
-    },
-
-    removeRecordFromInverse: function (record) {
-      var inverseRelationship = record._relationships.get(this.inverseKey);
-      //Need to check for existence, as the record might unloading at the moment
-      if (inverseRelationship) {
-        inverseRelationship.removeRecordFromOwn(this.record);
-      }
-    },
-
-    removeRecordFromOwn: function (record) {
-      this.members.delete(record);
-      this.notifyRecordRelationshipRemoved(record);
-      this.record.updateRecordArrays();
-    },
-
-    removeCanonicalRecordFromInverse: function (record) {
-      var inverseRelationship = record._relationships.get(this.inverseKey);
-      //Need to check for existence, as the record might unloading at the moment
-      if (inverseRelationship) {
-        inverseRelationship.removeCanonicalRecordFromOwn(this.record);
-      }
-    },
-
-    removeCanonicalRecordFromOwn: function (record) {
-      this.canonicalMembers.delete(record);
-      this.flushCanonicalLater();
-    },
-
-    flushCanonical: function () {
-      this.willSync = false;
-      //a hack for not removing new records
-      //TODO remove once we have proper diffing
-      var newRecords = [];
-      for (var i = 0; i < this.members.list.length; i++) {
-        if (this.members.list[i].isNew()) {
-          newRecords.push(this.members.list[i]);
-        }
-      }
-      //TODO(Igor) make this less abysmally slow
-      this.members = this.canonicalMembers.copy();
-      for (i = 0; i < newRecords.length; i++) {
-        this.members.add(newRecords[i]);
-      }
-    },
-
-    flushCanonicalLater: function () {
-      var _this3 = this;
-
-      if (this.willSync) {
-        return;
-      }
-      this.willSync = true;
-      this.store._backburner.join(function () {
-        return _this3.store._backburner.schedule('syncRelationships', _this3, _this3.flushCanonical);
-      });
-    },
-
-    updateLink: function (link) {
-
-      this.link = link;
+  var Relationship = (function () {
+    function Relationship(store, internalModel, inverseKey, relationshipMeta) {
+      var async = relationshipMeta.options.async;
+      this.members = new _emberDataPrivateSystemOrderedSet.default();
+      this.canonicalMembers = new _emberDataPrivateSystemOrderedSet.default();
+      this.store = store;
+      this.key = relationshipMeta.key;
+      this.inverseKey = inverseKey;
+      this.internalModel = internalModel;
+      this.isAsync = typeof async === 'undefined' ? true : async;
+      this.relationshipMeta = relationshipMeta;
+      //This probably breaks for polymorphic relationship in complex scenarios, due to
+      //multiple possible modelNames
+      this.inverseKeyForImplicit = this.internalModel.modelName + this.key;
       this.linkPromise = null;
-      this.record.notifyPropertyChange(this.key);
-    },
+      this.meta = null;
+      this.hasData = false;
+      this.hasLoaded = false;
+    }
 
-    findLink: function () {
-      if (this.linkPromise) {
-        return this.linkPromise;
-      } else {
-        var promise = this.fetchLink();
-        this.linkPromise = promise;
-        return promise.then(function (result) {
-          return result;
+    // TODO @runspired deprecate this as it was never truly a record instance
+
+    _createClass(Relationship, [{
+      key: "destroy",
+      value: function destroy() {}
+    }, {
+      key: "updateMeta",
+      value: function updateMeta(meta) {
+        this.meta = meta;
+      }
+    }, {
+      key: "clear",
+      value: function clear() {
+        var members = this.members.list;
+        var member;
+
+        while (members.length > 0) {
+          member = members[0];
+          this.removeRecord(member);
+        }
+      }
+    }, {
+      key: "removeRecords",
+      value: function removeRecords(records) {
+        var _this = this;
+
+        records.forEach(function (record) {
+          return _this.removeRecord(record);
         });
       }
-    },
+    }, {
+      key: "addRecords",
+      value: function addRecords(records, idx) {
+        var _this2 = this;
 
-    updateRecordsFromAdapter: function (records) {
-      //TODO(Igor) move this to a proper place
-      //TODO Once we have adapter support, we need to handle updated and canonical changes
-      this.computeChanges(records);
-    },
-
-    notifyRecordRelationshipAdded: function () {},
-    notifyRecordRelationshipRemoved: function () {},
-
-    /*
-      `hasData` for a relationship is a flag to indicate if we consider the
-      content of this relationship "known". Snapshots uses this to tell the
-      difference between unknown (`undefined`) or empty (`null`). The reason for
-      this is that we wouldn't want to serialize unknown relationships as `null`
-      as that might overwrite remote state.
-       All relationships for a newly created (`store.createRecord()`) are
-      considered known (`hasData === true`).
-     */
-    setHasData: function (value) {
-      this.hasData = value;
-    },
-
-    /*
-      `hasLoaded` is a flag to indicate if we have gotten data from the adapter or
-      not when the relationship has a link.
-       This is used to be able to tell when to fetch the link and when to return
-      the local data in scenarios where the local state is considered known
-      (`hasData === true`).
-       Updating the link will automatically set `hasLoaded` to `false`.
-     */
-    setHasLoaded: function (value) {
-      this.hasLoaded = value;
-    },
-
-    /*
-      `push` for a relationship allows the store to push a JSON API Relationship
-      Object onto the relationship. The relationship will then extract and set the
-      meta, data and links of that relationship.
-       `push` use `updateMeta`, `updateData` and `updateLink` to update the state
-      of the relationship.
-     */
-    push: function (payload) {
-
-      var hasData = false;
-      var hasLink = false;
-
-      if (payload.meta) {
-        this.updateMeta(payload.meta);
+        records.forEach(function (record) {
+          _this2.addRecord(record, idx);
+          if (idx !== undefined) {
+            idx++;
+          }
+        });
       }
-
-      if (payload.data !== undefined) {
-        hasData = true;
-        this.updateData(payload.data);
-      }
-
-      if (payload.links && payload.links.related) {
-        var relatedLink = (0, _emberDataPrivateSystemNormalizeLink.default)(payload.links.related);
-        if (relatedLink && relatedLink.href && relatedLink.href !== this.link) {
-          hasLink = true;
-          this.updateLink(relatedLink.href);
+    }, {
+      key: "addCanonicalRecords",
+      value: function addCanonicalRecords(records, idx) {
+        for (var i = 0; i < records.length; i++) {
+          if (idx !== undefined) {
+            this.addCanonicalRecord(records[i], i + idx);
+          } else {
+            this.addCanonicalRecord(records[i]);
+          }
         }
+      }
+    }, {
+      key: "addCanonicalRecord",
+      value: function addCanonicalRecord(record, idx) {
+        if (!this.canonicalMembers.has(record)) {
+          this.canonicalMembers.add(record);
+          if (this.inverseKey) {
+            record._relationships.get(this.inverseKey).addCanonicalRecord(this.record);
+          } else {
+            if (!record._implicitRelationships[this.inverseKeyForImplicit]) {
+              record._implicitRelationships[this.inverseKeyForImplicit] = new Relationship(this.store, record, this.key, { options: {} });
+            }
+            record._implicitRelationships[this.inverseKeyForImplicit].addCanonicalRecord(this.record);
+          }
+        }
+        this.flushCanonicalLater();
+        this.setHasData(true);
+      }
+    }, {
+      key: "removeCanonicalRecords",
+      value: function removeCanonicalRecords(records, idx) {
+        for (var i = 0; i < records.length; i++) {
+          if (idx !== undefined) {
+            this.removeCanonicalRecord(records[i], i + idx);
+          } else {
+            this.removeCanonicalRecord(records[i]);
+          }
+        }
+      }
+    }, {
+      key: "removeCanonicalRecord",
+      value: function removeCanonicalRecord(record, idx) {
+        if (this.canonicalMembers.has(record)) {
+          this.removeCanonicalRecordFromOwn(record);
+          if (this.inverseKey) {
+            this.removeCanonicalRecordFromInverse(record);
+          } else {
+            if (record._implicitRelationships[this.inverseKeyForImplicit]) {
+              record._implicitRelationships[this.inverseKeyForImplicit].removeCanonicalRecord(this.record);
+            }
+          }
+        }
+        this.flushCanonicalLater();
+      }
+    }, {
+      key: "addRecord",
+      value: function addRecord(record, idx) {
+        if (!this.members.has(record)) {
+          this.members.addWithIndex(record, idx);
+          this.notifyRecordRelationshipAdded(record, idx);
+          if (this.inverseKey) {
+            record._relationships.get(this.inverseKey).addRecord(this.record);
+          } else {
+            if (!record._implicitRelationships[this.inverseKeyForImplicit]) {
+              record._implicitRelationships[this.inverseKeyForImplicit] = new Relationship(this.store, record, this.key, { options: {} });
+            }
+            record._implicitRelationships[this.inverseKeyForImplicit].addRecord(this.record);
+          }
+          this.record.updateRecordArraysLater();
+        }
+        this.setHasData(true);
+      }
+    }, {
+      key: "removeRecord",
+      value: function removeRecord(record) {
+        if (this.members.has(record)) {
+          this.removeRecordFromOwn(record);
+          if (this.inverseKey) {
+            this.removeRecordFromInverse(record);
+          } else {
+            if (record._implicitRelationships[this.inverseKeyForImplicit]) {
+              record._implicitRelationships[this.inverseKeyForImplicit].removeRecord(this.record);
+            }
+          }
+        }
+      }
+    }, {
+      key: "removeRecordFromInverse",
+      value: function removeRecordFromInverse(record) {
+        var inverseRelationship = record._relationships.get(this.inverseKey);
+        //Need to check for existence, as the record might unloading at the moment
+        if (inverseRelationship) {
+          inverseRelationship.removeRecordFromOwn(this.record);
+        }
+      }
+    }, {
+      key: "removeRecordFromOwn",
+      value: function removeRecordFromOwn(record) {
+        this.members.delete(record);
+        this.notifyRecordRelationshipRemoved(record);
+        this.record.updateRecordArrays();
+      }
+    }, {
+      key: "removeCanonicalRecordFromInverse",
+      value: function removeCanonicalRecordFromInverse(record) {
+        var inverseRelationship = record._relationships.get(this.inverseKey);
+        //Need to check for existence, as the record might unloading at the moment
+        if (inverseRelationship) {
+          inverseRelationship.removeCanonicalRecordFromOwn(this.record);
+        }
+      }
+    }, {
+      key: "removeCanonicalRecordFromOwn",
+      value: function removeCanonicalRecordFromOwn(record) {
+        this.canonicalMembers.delete(record);
+        this.flushCanonicalLater();
+      }
+    }, {
+      key: "flushCanonical",
+      value: function flushCanonical() {
+        this.willSync = false;
+        //a hack for not removing new records
+        //TODO remove once we have proper diffing
+        var newRecords = [];
+        for (var i = 0; i < this.members.list.length; i++) {
+          if (this.members.list[i].isNew()) {
+            newRecords.push(this.members.list[i]);
+          }
+        }
+        //TODO(Igor) make this less abysmally slow
+        this.members = this.canonicalMembers.copy();
+        for (i = 0; i < newRecords.length; i++) {
+          this.members.add(newRecords[i]);
+        }
+      }
+    }, {
+      key: "flushCanonicalLater",
+      value: function flushCanonicalLater() {
+        var _this3 = this;
+
+        if (this.willSync) {
+          return;
+        }
+        this.willSync = true;
+        this.store._backburner.join(function () {
+          return _this3.store._backburner.schedule('syncRelationships', _this3, _this3.flushCanonical);
+        });
+      }
+    }, {
+      key: "updateLink",
+      value: function updateLink(link) {
+
+        this.link = link;
+        this.linkPromise = null;
+        this.record.notifyPropertyChange(this.key);
+      }
+    }, {
+      key: "findLink",
+      value: function findLink() {
+        if (this.linkPromise) {
+          return this.linkPromise;
+        } else {
+          var promise = this.fetchLink();
+          this.linkPromise = promise;
+          return promise.then(function (result) {
+            return result;
+          });
+        }
+      }
+    }, {
+      key: "updateRecordsFromAdapter",
+      value: function updateRecordsFromAdapter(records) {
+        //TODO(Igor) move this to a proper place
+        //TODO Once we have adapter support, we need to handle updated and canonical changes
+        this.computeChanges(records);
+      }
+    }, {
+      key: "notifyRecordRelationshipAdded",
+      value: function notifyRecordRelationshipAdded() {}
+    }, {
+      key: "notifyRecordRelationshipRemoved",
+      value: function notifyRecordRelationshipRemoved() {}
+
+      /*
+       `hasData` for a relationship is a flag to indicate if we consider the
+       content of this relationship "known". Snapshots uses this to tell the
+       difference between unknown (`undefined`) or empty (`null`). The reason for
+       this is that we wouldn't want to serialize unknown relationships as `null`
+       as that might overwrite remote state.
+        All relationships for a newly created (`store.createRecord()`) are
+       considered known (`hasData === true`).
+       */
+    }, {
+      key: "setHasData",
+      value: function setHasData(value) {
+        this.hasData = value;
       }
 
       /*
-        Data being pushed into the relationship might contain only data or links,
-        or a combination of both.
-         If we got data we want to set both hasData and hasLoaded to true since
-        this would indicate that we should prefer the local state instead of
-        trying to fetch the link or call findRecord().
-         If we have no data but a link is present we want to set hasLoaded to false
-        without modifying the hasData flag. This will ensure we fetch the updated
-        link next time the relationship is accessed.
+       `hasLoaded` is a flag to indicate if we have gotten data from the adapter or
+       not when the relationship has a link.
+        This is used to be able to tell when to fetch the link and when to return
+       the local data in scenarios where the local state is considered known
+       (`hasData === true`).
+        Updating the link will automatically set `hasLoaded` to `false`.
        */
-      if (hasData) {
-        this.setHasData(true);
-        this.setHasLoaded(true);
-      } else if (hasLink) {
-        this.setHasLoaded(false);
+    }, {
+      key: "setHasLoaded",
+      value: function setHasLoaded(value) {
+        this.hasLoaded = value;
       }
-    },
 
-    updateData: function () {}
-  };
+      /*
+       `push` for a relationship allows the store to push a JSON API Relationship
+       Object onto the relationship. The relationship will then extract and set the
+       meta, data and links of that relationship.
+        `push` use `updateMeta`, `updateData` and `updateLink` to update the state
+       of the relationship.
+       */
+    }, {
+      key: "push",
+      value: function push(payload) {
+
+        var hasData = false;
+        var hasLink = false;
+
+        if (payload.meta) {
+          this.updateMeta(payload.meta);
+        }
+
+        if (payload.data !== undefined) {
+          hasData = true;
+          this.updateData(payload.data);
+        }
+
+        if (payload.links && payload.links.related) {
+          var relatedLink = (0, _emberDataPrivateSystemNormalizeLink.default)(payload.links.related);
+          if (relatedLink && relatedLink.href && relatedLink.href !== this.link) {
+            hasLink = true;
+            this.updateLink(relatedLink.href);
+          }
+        }
+
+        /*
+         Data being pushed into the relationship might contain only data or links,
+         or a combination of both.
+          If we got data we want to set both hasData and hasLoaded to true since
+         this would indicate that we should prefer the local state instead of
+         trying to fetch the link or call findRecord().
+          If we have no data but a link is present we want to set hasLoaded to false
+         without modifying the hasData flag. This will ensure we fetch the updated
+         link next time the relationship is accessed.
+         */
+        if (hasData) {
+          this.setHasData(true);
+          this.setHasLoaded(true);
+        } else if (hasLink) {
+          this.setHasLoaded(false);
+        }
+      }
+    }, {
+      key: "updateData",
+      value: function updateData() {}
+    }, {
+      key: "record",
+      get: function () {
+        return this.internalModel;
+      }
+    }, {
+      key: "parentType",
+      get: function () {
+        return this.internalModel.modelName;
+      }
+    }]);
+
+    return Relationship;
+  })();
+
+  exports.default = Relationship;
 });
 /* global heimdall */
 define('ember-data/-private/system/snapshot-record-array', ['exports'], function (exports) {
@@ -18666,7 +18781,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.12.0-canary+f76a96169e";
+  exports.default = "2.12.0-canary+91d8977f81";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
