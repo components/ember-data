@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.12.0-canary+9861ae6828
+ * @version   2.12.0-canary+3b0c531a4f
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -3300,7 +3300,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
 
   exports.default = InternalModel;
 
-  if ((0, _emberDataPrivateFeatures.default)('ds-reset-attribute')) {
+  if ((0, _emberDataPrivateFeatures.default)('ds-rollback-attribute')) {
     /*
        Returns the latest truth for an attribute - the canonical value, or the
        in-flight value.
@@ -4223,7 +4223,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
     });
   }
 
-  if ((0, _emberDataPrivateFeatures.default)('ds-reset-attribute')) {
+  if ((0, _emberDataPrivateFeatures.default)('ds-rollback-attribute')) {
     Model.reopen({
       /**
         Discards any unsaved changes to the given attribute.
@@ -4232,12 +4232,12 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
         record.get('name'); // 'Untitled Document'
         record.set('name', 'Doc 1');
         record.get('name'); // 'Doc 1'
-        record.resetAttribute('name');
+        record.rollbackAttribute('name');
         record.get('name'); // 'Untitled Document'
         ```
-         @method resetAttribute
+         @method rollbackAttribute
       */
-      resetAttribute: function (attributeName) {
+      rollbackAttribute: function (attributeName) {
         if (attributeName in this._internalModel._attributes) {
           this.set(attributeName, this._internalModel.lastAcknowledgedValue(attributeName));
         }
@@ -19508,7 +19508,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.12.0-canary+9861ae6828";
+  exports.default = "2.12.0-canary+3b0c531a4f";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
