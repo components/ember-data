@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.12.0-canary+91d8977f81
+ * @version   2.12.0-canary+8c9ea4496d
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -3994,17 +3994,20 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
     /**
       Get the reference for the specified belongsTo relationship.
        Example
-       ```javascript
-      // models/blog.js
+       ```app/models/blog.js
       export default DS.Model.extend({
         user: DS.belongsTo({ async: true })
       });
-       var blog = store.push({
-        type: 'blog',
-        id: 1,
-        relationships: {
-          user: {
-            data: { type: 'user', id: 1 }
+      ```
+       ```javascript
+      var blog = store.push({
+        data: {
+          type: 'blog',
+          id: 1,
+          relationships: {
+            user: {
+              data: { type: 'user', id: 1 }
+            }
           }
         }
       });
@@ -4052,14 +4055,16 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
         comments: DS.hasMany({ async: true })
       });
        var blog = store.push({
-        type: 'blog',
-        id: 1,
-        relationships: {
-          comments: {
-            data: [
-              { type: 'comment', id: 1 },
-              { type: 'comment', id: 2 }
-            ]
+        data: {
+          type: 'blog',
+          id: 1,
+          relationships: {
+            comments: {
+              data: [
+                { type: 'comment', id: 1 },
+                { type: 'comment', id: 2 }
+              ]
+            }
           }
         }
       });
@@ -6368,6 +6373,13 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
   var resolve = _ember.default.RSVP.resolve;
   var get = _ember.default.get;
 
+  /**
+     A HasManyReference is a low level API that allows users and addon
+     author to perform meta-operations on a has-many relationship.
+  
+     @class HasManyReference
+     @namespace DS
+  */
   var HasManyReference = function (store, parentInternalModel, hasManyRelationship) {
     this._super$constructor(store, parentInternalModel);
     this.hasManyRelationship = hasManyRelationship;
@@ -6381,6 +6393,45 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
   HasManyReference.prototype.constructor = HasManyReference;
   HasManyReference.prototype._super$constructor = _emberDataPrivateSystemReferencesReference.default;
 
+  /**
+     This returns a string that represents how the reference will be
+     looked up when it is loaded. If the relationship has a link it will
+     use the "link" otherwise it defaults to "id".
+  
+     Example
+  
+     ```app/models/post.js
+     export default DS.Model.extend({
+       comments: DS.hasMany({ async: true })
+     });
+     ```
+  
+     ```javascript
+     var post = store.push({
+       data: {
+         type: 'post',
+         id: 1,
+         relationships: {
+           comments: {
+             data: [{ type: 'comment', id: 1 }]
+           }
+         }
+       }
+     });
+  
+     var commentsRef = post.hasMany('comments');
+  
+     // get the identifier of the reference
+     if (commentsRef.remoteType() === "ids") {
+       var ids = commentsRef.ids();
+     } else if (commentsRef.remoteType() === "link") {
+       var link = commentsRef.link();
+     }
+     ```
+  
+     @method remoteType
+     @return {String} The name of the remote type. This should either be "link" or "ids"
+  */
   HasManyReference.prototype.remoteType = function () {
     if (this.hasManyRelationship.link) {
       return "link";
@@ -6389,10 +6440,77 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
     return "ids";
   };
 
+  /**
+     The link Ember Data will use to fetch or reload this has-many
+     relationship.
+  
+     Example
+  
+     ```app/models/post.js
+     export default DS.Model.extend({
+       comments: DS.hasMany({ async: true })
+     });
+     ```
+  
+     ```javascript
+     var post = store.push({
+       data: {
+         type: 'post',
+         id: 1,
+         relationships: {
+           comments: {
+             links: {
+               related: '/posts/1/comments'
+             }
+           }
+         }
+       }
+     });
+  
+     var commentsRef = post.hasMany('comments');
+  
+     commentsRef.link(); // '/posts/1/comments'
+     ```
+  
+     @method link
+     @return {String} The link Ember Data will use to fetch or reload this has-many relationship.
+  */
   HasManyReference.prototype.link = function () {
     return this.hasManyRelationship.link;
   };
 
+  /**
+     `ids()` returns an array of the record ids in this relationship.
+  
+     Example
+  
+     ```app/models/post.js
+     export default DS.Model.extend({
+       comments: DS.hasMany({ async: true })
+     });
+     ```
+  
+     ```javascript
+     var post = store.push({
+       data: {
+         type: 'post',
+         id: 1,
+         relationships: {
+           comments: {
+             data: [{ type: 'comment', id: 1 }]
+           }
+         }
+       }
+     });
+  
+     var commentsRef = post.hasMany('comments');
+  
+     commentsRef.ids(); // ['1']
+     ```
+  
+     @method remoteType
+     @return {Array} The ids in this has-many relationship
+  */
   HasManyReference.prototype.ids = function () {
     var members = this.hasManyRelationship.members.toArray();
 
@@ -6401,10 +6519,92 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
     });
   };
 
+  /**
+     The link Ember Data will use to fetch or reload this has-many
+     relationship.
+  
+     Example
+  
+     ```app/models/post.js
+     export default DS.Model.extend({
+       comments: DS.hasMany({ async: true })
+     });
+     ```
+  
+     ```javascript
+     var post = store.push({
+       data: {
+         type: 'post',
+         id: 1,
+         relationships: {
+           comments: {
+             links: {
+               related: {
+                 href: '/posts/1/comments',
+                 meta: {
+                   count: 10
+                 }
+               }
+             }
+           }
+         }
+       }
+     });
+  
+     var commentsRef = post.hasMany('comments');
+  
+     commentsRef.meta(); // { count: 10 }
+     ```
+  
+     @method meta
+     @return {Object} The meta information for the has-many relationship.
+  */
   HasManyReference.prototype.meta = function () {
     return this.hasManyRelationship.meta;
   };
 
+  /**
+     `push` can be used to update the data in the relationship and Ember
+     Data will treat the new data as the canonical value of this
+     relationship on the backend.
+  
+     Example
+  
+     ```app/models/post.js
+     export default DS.Model.extend({
+       comments: DS.hasMany({ async: true })
+     });
+     ```
+  
+     ```
+     var post = store.push({
+       data: {
+         type: 'post',
+         id: 1,
+         relationships: {
+           comments: {
+             data: [{ type: 'comment', id: 1 }]
+           }
+         }
+       }
+     });
+  
+     var commentsRef = post.hasMany('comments');
+  
+     commentsRef.ids(); // ['1']
+  
+     commentsRef.push([
+       [{ type: 'comment', id: 2 }],
+       [{ type: 'comment', id: 3 }],
+     ])
+  
+     commentsRef.ids(); // ['2', '3']
+     ```
+  
+     @method push
+     @param {Array|Promise} objectOrPromise a promise that resolves to a JSONAPI document object describing the new value of this relationship.
+     @return {DS.ManyArray}
+  */
   HasManyReference.prototype.push = function (objectOrPromise) {
     var _this = this;
 
@@ -6456,6 +6656,44 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
     });
   };
 
+  /**
+     `value()` sycronously returns the current value of the has-many
+      relationship. Unlike `record.get('relationshipName')`, calling
+      `value()` on a reference does not trigger a fetch if the async
+      relationship is not yet loaded. If the relationship is not loaded
+      it will always return `null`.
+  
+     Example
+  
+     ```app/models/post.js
+     export default DS.Model.extend({
+       comments: DS.hasMany({ async: true })
+     });
+     ```
+  
+     ```javascript
+     var post = store.push({
+       data: {
+         type: 'post',
+         id: 1,
+         relationships: {
+           comments: {
+             data: [{ type: 'comment', id: 1 }]
+           }
+         }
+       }
+     });
+  
+     var commentsRef = post.hasMany('comments');
+  
+     post.get('comments').then(function(comments) {
+       commentsRef.value() === comments
+     })
+     ```
+  
+     @method value
+     @return {DS.ManyArray}
+  */
   HasManyReference.prototype.value = function () {
     if (this._isLoaded()) {
       return this.hasManyRelationship.getManyArray();
@@ -6464,6 +6702,43 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
     return null;
   };
 
+  /**
+     Loads the relationship if it is not already loaded.  If the
+     relationship is already loaded this method does not trigger a new
+     load.
+  
+     Example
+  
+     ```app/models/post.js
+     export default DS.Model.extend({
+       comments: DS.hasMany({ async: true })
+     });
+     ```
+  
+     ```javascript
+     var post = store.push({
+       data: {
+         type: 'post',
+         id: 1,
+         relationships: {
+           comments: {
+             data: [{ type: 'comment', id: 1 }]
+           }
+         }
+       }
+     });
+  
+     var commentsRef = post.hasMany('comments');
+  
+     commentsRef.load().then(function(comments) {
+       //...
+     });
+     ```
+  
+     @method load
+     @return {Promise} a promise that resolves with the ManyArray in
+     this has-many relationship.
+  */
   HasManyReference.prototype.load = function () {
     if (!this._isLoaded()) {
       return this.hasManyRelationship.getRecords();
@@ -6472,6 +6747,40 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
     return resolve(this.hasManyRelationship.getManyArray());
   };
 
+  /**
+     Reloads this has-many relationship.
+  
+     Example
+  
+     ```app/models/post.js
+     export default DS.Model.extend({
+       comments: DS.hasMany({ async: true })
+     });
+     ```
+  
+     ```javascript
+     var post = store.push({
+       data: {
+         type: 'post',
+         id: 1,
+         relationships: {
+           comments: {
+             data: [{ type: 'comment', id: 1 }]
+           }
+         }
+       }
+     });
+  
+     var commentsRef = post.hasMany('comments');
+  
+     commentsRef.reload().then(function(comments) {
+       //...
+     });
+     ```
+  
+     @method reload
+     @return {Promise} a promise that resolves with the ManyArray in this has-many relationship.
+  */
   HasManyReference.prototype.reload = function () {
     return this.hasManyRelationship.reload();
   };
@@ -18781,7 +19090,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.12.0-canary+91d8977f81";
+  exports.default = "2.12.0-canary+8c9ea4496d";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
