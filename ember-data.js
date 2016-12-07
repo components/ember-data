@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.12.0-canary+701eff4750
+ * @version   2.12.0-canary+7d14d16226
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -1215,69 +1215,6 @@ define('ember-data/-private/system/debug/debug-adapter', ['exports', 'ember', 'e
 /**
   @module ember-data
 */
-define('ember-data/-private/system/debug/debug-info', ['exports', 'ember'], function (exports, _ember) {
-  exports.default = _ember.default.Mixin.create({
-
-    /**
-      Provides info about the model for debugging purposes
-      by grouping the properties into more semantic groups.
-       Meant to be used by debugging tools such as the Chrome Ember Extension.
-       - Groups all attributes in "Attributes" group.
-      - Groups all belongsTo relationships in "Belongs To" group.
-      - Groups all hasMany relationships in "Has Many" group.
-      - Groups all flags in "Flags" group.
-      - Flags relationship CPs as expensive properties.
-       @method _debugInfo
-      @for DS.Model
-      @private
-    */
-    _debugInfo: function () {
-      var attributes = ['id'];
-      var relationships = {};
-      var expensiveProperties = [];
-
-      this.eachAttribute(function (name, meta) {
-        return attributes.push(name);
-      });
-
-      var groups = [{
-        name: 'Attributes',
-        properties: attributes,
-        expand: true
-      }];
-
-      this.eachRelationship(function (name, relationship) {
-        var properties = relationships[relationship.kind];
-
-        if (properties === undefined) {
-          properties = relationships[relationship.kind] = [];
-          groups.push({
-            name: relationship.name,
-            properties: properties,
-            expand: true
-          });
-        }
-        properties.push(name);
-        expensiveProperties.push(name);
-      });
-
-      groups.push({
-        name: 'Flags',
-        properties: ['isLoaded', 'hasDirtyAttributes', 'isSaving', 'isDeleted', 'isError', 'isNew', 'isValid']
-      });
-
-      return {
-        propertyInfo: {
-          // include all other mixins / properties (not just the grouped ones)
-          includeOtherProperties: true,
-          groups: groups,
-          // don't pre-calculate unless cached
-          expensiveProperties: expensiveProperties
-        }
-      };
-    }
-  });
-});
 define("ember-data/-private/system/empty-object", ["exports"], function (exports) {
   exports.default = EmptyObject;
   // This exists because `Object.create(null)` is absurdly slow compared
@@ -1630,198 +1567,6 @@ define("ember-data/-private/system/model", ["exports", "ember-data/-private/syst
 /**
   @module ember-data
 */
-define("ember-data/-private/system/model/attr", ["exports", "ember", "ember-data/-private/debug"], function (exports, _ember, _emberDataPrivateDebug) {
-
-  var get = _ember.default.get;
-  var Map = _ember.default.Map;
-
-  /**
-    @module ember-data
-  */
-
-  /**
-    @class Model
-    @namespace DS
-  */
-
-  var AttrClassMethodsMixin = _ember.default.Mixin.create({
-    /**
-      A map whose keys are the attributes of the model (properties
-      described by DS.attr) and whose values are the meta object for the
-      property.
-       Example
-       ```app/models/person.js
-      import DS from 'ember-data';
-       export default DS.Model.extend({
-        firstName: attr('string'),
-        lastName: attr('string'),
-        birthday: attr('date')
-      });
-      ```
-       ```javascript
-      import Ember from 'ember';
-      import Person from 'app/models/person';
-       var attributes = Ember.get(Person, 'attributes')
-       attributes.forEach(function(meta, name) {
-        console.log(name, meta);
-      });
-       // prints:
-      // firstName {type: "string", isAttribute: true, options: Object, parentType: function, name: "firstName"}
-      // lastName {type: "string", isAttribute: true, options: Object, parentType: function, name: "lastName"}
-      // birthday {type: "date", isAttribute: true, options: Object, parentType: function, name: "birthday"}
-      ```
-       @property attributes
-      @static
-      @type {Ember.Map}
-      @readOnly
-    */
-    attributes: _ember.default.computed(function () {
-      var _this = this;
-
-      var map = Map.create();
-
-      this.eachComputedProperty(function (name, meta) {
-        if (meta.isAttribute) {
-          (0, _emberDataPrivateDebug.assert)("You may not set `id` as an attribute on your model. Please remove any lines that look like: `id: DS.attr('<type>')` from " + _this.toString(), name !== 'id');
-
-          meta.name = name;
-          map.set(name, meta);
-        }
-      });
-
-      return map;
-    }).readOnly(),
-
-    /**
-      A map whose keys are the attributes of the model (properties
-      described by DS.attr) and whose values are type of transformation
-      applied to each attribute. This map does not include any
-      attributes that do not have an transformation type.
-       Example
-       ```app/models/person.js
-      import DS from 'ember-data';
-       export default DS.Model.extend({
-        firstName: attr(),
-        lastName: attr('string'),
-        birthday: attr('date')
-      });
-      ```
-       ```javascript
-      import Ember from 'ember';
-      import Person from 'app/models/person';
-       var transformedAttributes = Ember.get(Person, 'transformedAttributes')
-       transformedAttributes.forEach(function(field, type) {
-        console.log(field, type);
-      });
-       // prints:
-      // lastName string
-      // birthday date
-      ```
-       @property transformedAttributes
-      @static
-      @type {Ember.Map}
-      @readOnly
-    */
-    transformedAttributes: _ember.default.computed(function () {
-      var map = Map.create();
-
-      this.eachAttribute(function (key, meta) {
-        if (meta.type) {
-          map.set(key, meta.type);
-        }
-      });
-
-      return map;
-    }).readOnly(),
-
-    /**
-      Iterates through the attributes of the model, calling the passed function on each
-      attribute.
-       The callback method you provide should have the following signature (all
-      parameters are optional):
-       ```javascript
-      function(name, meta);
-      ```
-       - `name` the name of the current property in the iteration
-      - `meta` the meta object for the attribute property in the iteration
-       Note that in addition to a callback, you can also pass an optional target
-      object that will be set as `this` on the context.
-       Example
-       ```javascript
-      import DS from 'ember-data';
-       var Person = DS.Model.extend({
-        firstName: attr('string'),
-        lastName: attr('string'),
-        birthday: attr('date')
-      });
-       Person.eachAttribute(function(name, meta) {
-        console.log(name, meta);
-      });
-       // prints:
-      // firstName {type: "string", isAttribute: true, options: Object, parentType: function, name: "firstName"}
-      // lastName {type: "string", isAttribute: true, options: Object, parentType: function, name: "lastName"}
-      // birthday {type: "date", isAttribute: true, options: Object, parentType: function, name: "birthday"}
-     ```
-       @method eachAttribute
-      @param {Function} callback The callback to execute
-      @param {Object} [binding] the value to which the callback's `this` should be bound
-      @static
-    */
-    eachAttribute: function (callback, binding) {
-      get(this, 'attributes').forEach(function (meta, name) {
-        callback.call(binding, name, meta);
-      });
-    },
-
-    /**
-      Iterates through the transformedAttributes of the model, calling
-      the passed function on each attribute. Note the callback will not be
-      called for any attributes that do not have an transformation type.
-       The callback method you provide should have the following signature (all
-      parameters are optional):
-       ```javascript
-      function(name, type);
-      ```
-       - `name` the name of the current property in the iteration
-      - `type` a string containing the name of the type of transformed
-        applied to the attribute
-       Note that in addition to a callback, you can also pass an optional target
-      object that will be set as `this` on the context.
-       Example
-       ```javascript
-      import DS from 'ember-data';
-       var Person = DS.Model.extend({
-        firstName: attr(),
-        lastName: attr('string'),
-        birthday: attr('date')
-      });
-       Person.eachTransformedAttribute(function(name, type) {
-        console.log(name, type);
-      });
-       // prints:
-      // lastName string
-      // birthday date
-     ```
-       @method eachTransformedAttribute
-      @param {Function} callback The callback to execute
-      @param {Object} [binding] the value to which the callback's `this` should be bound
-      @static
-    */
-    eachTransformedAttribute: function (callback, binding) {
-      get(this, 'transformedAttributes').forEach(function (type, name) {
-        callback.call(binding, name, type);
-      });
-    }
-  });
-
-  exports.AttrClassMethodsMixin = AttrClassMethodsMixin;
-  var AttrInstanceMethodsMixin = _ember.default.Mixin.create({
-    eachAttribute: function (callback, binding) {
-      this.constructor.eachAttribute(callback, binding);
-    }
-  });
-  exports.AttrInstanceMethodsMixin = AttrInstanceMethodsMixin;
-});
 define('ember-data/-private/system/model/errors', ['exports', 'ember', 'ember-data/-private/debug'], function (exports, _ember, _emberDataPrivateDebug) {
 
   var get = _ember.default.get;
@@ -3316,9 +3061,10 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     };
   }
 });
-define("ember-data/-private/system/model/model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/model/errors", "ember-data/-private/system/debug/debug-info", "ember-data/-private/system/relationships/belongs-to", "ember-data/-private/system/relationships/has-many", "ember-data/-private/system/relationships/ext", "ember-data/-private/system/model/attr", "ember-data/-private/features", "ember-data/-private/system/model/states"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemModelErrors, _emberDataPrivateSystemDebugDebugInfo, _emberDataPrivateSystemRelationshipsBelongsTo, _emberDataPrivateSystemRelationshipsHasMany, _emberDataPrivateSystemRelationshipsExt, _emberDataPrivateSystemModelAttr, _emberDataPrivateFeatures, _emberDataPrivateSystemModelStates) {
+define("ember-data/-private/system/model/model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/model/errors", "ember-data/-private/features", "ember-data/-private/system/model/states", "ember-data/-private/system/empty-object", "ember-data/-private/system/relationships/ext"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemModelErrors, _emberDataPrivateFeatures, _emberDataPrivateSystemModelStates, _emberDataPrivateSystemEmptyObject, _emberDataPrivateSystemRelationshipsExt) {
   var get = _ember.default.get;
   var computed = _ember.default.computed;
+  var Map = _ember.default.Map;
 
   /**
     @module ember-data
@@ -3388,7 +3134,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       state.
        Example
        ```javascript
-      var record = store.createRecord('model');
+      let record = store.createRecord('model');
       record.get('isLoaded'); // true
        store.findRecord('model', 1).then(function(model) {
         model.get('isLoaded'); // true
@@ -3406,7 +3152,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       saved) or deleted.
        Example
        ```javascript
-      var record = store.createRecord('model');
+      let record = store.createRecord('model');
       record.get('hasDirtyAttributes'); // true
        store.findRecord('model', 1).then(function(model) {
         model.get('hasDirtyAttributes'); // false
@@ -3429,9 +3175,9 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       persisted to the backend.
        Example
        ```javascript
-      var record = store.createRecord('model');
+      let record = store.createRecord('model');
       record.get('isSaving'); // false
-      var promise = record.save();
+      let promise = record.save();
       record.get('isSaving'); // true
       promise.then(function() {
         record.get('isSaving'); // false
@@ -3451,7 +3197,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       change has persisted.
        Example
        ```javascript
-      var record = store.createRecord('model');
+      let record = store.createRecord('model');
       record.get('isDeleted');    // false
       record.deleteRecord();
        // Locally deleted
@@ -3459,7 +3205,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       record.get('hasDirtyAttributes');  // true
       record.get('isSaving');            // false
        // Persisting the deletion
-      var promise = record.save();
+      let promise = record.save();
       record.get('isDeleted');    // true
       record.get('isSaving');     // true
        // Deletion Persisted
@@ -3481,7 +3227,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       saved.
        Example
        ```javascript
-      var record = store.createRecord('model');
+      let record = store.createRecord('model');
       record.get('isNew'); // true
        record.save().then(function(model) {
         model.get('isNew'); // false
@@ -3510,7 +3256,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       - `deleted` The record has been deleted by the client and not yet saved to the adapter.
        Example
        ```javascript
-      var record = store.createRecord('model');
+      let record = store.createRecord('model');
       record.get('dirtyType'); // 'created'
       ```
        @property dirtyType
@@ -3558,7 +3304,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       attributes for a model it is an error to declare an id
       attribute.
        ```javascript
-      var record = store.createRecord('model');
+      let record = store.createRecord('model');
       record.get('id'); // null
        store.findRecord('model', 1).then(function(model) {
         model.get('id'); // '1'
@@ -3777,7 +3523,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
        export default Ember.Route.extend({
         actions: {
           delete: function() {
-            var controller = this.controller;
+            let controller = this.controller;
             controller.get('model').destroyRecord().then(function() {
               controller.transitionToRoute('model.index');
             });
@@ -3828,8 +3574,8 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
     */
     _notifyProperties: function (keys) {
       _ember.default.beginPropertyChanges();
-      var key;
-      for (var i = 0, length = keys.length; i < length; i++) {
+      var key = undefined;
+      for (var i = 0, _length = keys.length; i < _length; i++) {
         key = keys[i];
         this.notifyPropertyChange(key);
       }
@@ -3853,7 +3599,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       });
       ```
        ```javascript
-      var mascot = store.createRecord('mascot');
+      let mascot = store.createRecord('mascot');
        mascot.changedAttributes(); // {}
        mascot.set('name', 'Tomster');
       mascot.changedAttributes(); // { name: [undefined, 'Tomster'] }
@@ -4042,7 +3788,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       });
       ```
        ```javascript
-      var blog = store.push({
+      let blog = store.push({
         data: {
           type: 'blog',
           id: 1,
@@ -4053,16 +3799,16 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
           }
         }
       });
-      var userRef = blog.belongsTo('user');
+      let userRef = blog.belongsTo('user');
        // check if the user relationship is loaded
-      var isLoaded = userRef.value() !== null;
+      let isLoaded = userRef.value() !== null;
        // get the record of the reference (null if not yet available)
-      var user = userRef.value();
+      let user = userRef.value();
        // get the identifier of the reference
       if (userRef.remoteType() === "id") {
-        var id = userRef.id();
+        let id = userRef.id();
       } else if (userRef.remoteType() === "link") {
-        var link = userRef.link();
+        let link = userRef.link();
       }
        // load user (via store.findRecord or store.findBelongsTo)
       userRef.load().then(...)
@@ -4096,7 +3842,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       export default DS.Model.extend({
         comments: DS.hasMany({ async: true })
       });
-       var blog = store.push({
+       let blog = store.push({
         data: {
           type: 'blog',
           id: 1,
@@ -4110,16 +3856,16 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
           }
         }
       });
-      var commentsRef = blog.hasMany('comments');
+      let commentsRef = blog.hasMany('comments');
        // check if the comments are loaded already
-      var isLoaded = commentsRef.value() !== null;
+      let isLoaded = commentsRef.value() !== null;
        // get the records of the reference (null if not yet available)
-      var comments = commentsRef.value();
+      let comments = commentsRef.value();
        // get the identifier of the reference
       if (commentsRef.remoteType() === "ids") {
-        var ids = commentsRef.ids();
+        let ids = commentsRef.ids();
       } else if (commentsRef.remoteType() === "link") {
-        var link = commentsRef.link();
+        let link = commentsRef.link();
       }
        // load comments (via store.findMany or store.findHasMany)
       commentsRef.load().then(...)
@@ -4141,7 +3887,168 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
 
     setId: _ember.default.observer('id', function () {
       this._internalModel.setId(this.get('id'));
-    })
+    }),
+
+    /**
+     Provides info about the model for debugging purposes
+     by grouping the properties into more semantic groups.
+      Meant to be used by debugging tools such as the Chrome Ember Extension.
+      - Groups all attributes in "Attributes" group.
+     - Groups all belongsTo relationships in "Belongs To" group.
+     - Groups all hasMany relationships in "Has Many" group.
+     - Groups all flags in "Flags" group.
+     - Flags relationship CPs as expensive properties.
+      @method _debugInfo
+     @for DS.Model
+     @private
+     */
+    _debugInfo: function () {
+      var attributes = ['id'];
+      var relationships = {};
+      var expensiveProperties = [];
+
+      this.eachAttribute(function (name, meta) {
+        return attributes.push(name);
+      });
+
+      var groups = [{
+        name: 'Attributes',
+        properties: attributes,
+        expand: true
+      }];
+
+      this.eachRelationship(function (name, relationship) {
+        var properties = relationships[relationship.kind];
+
+        if (properties === undefined) {
+          properties = relationships[relationship.kind] = [];
+          groups.push({
+            name: relationship.name,
+            properties: properties,
+            expand: true
+          });
+        }
+        properties.push(name);
+        expensiveProperties.push(name);
+      });
+
+      groups.push({
+        name: 'Flags',
+        properties: ['isLoaded', 'hasDirtyAttributes', 'isSaving', 'isDeleted', 'isError', 'isNew', 'isValid']
+      });
+
+      return {
+        propertyInfo: {
+          // include all other mixins / properties (not just the grouped ones)
+          includeOtherProperties: true,
+          groups: groups,
+          // don't pre-calculate unless cached
+          expensiveProperties: expensiveProperties
+        }
+      };
+    },
+
+    notifyBelongsToChanged: function (key) {
+      this.notifyPropertyChange(key);
+    },
+
+    /**
+     This Ember.js hook allows an object to be notified when a property
+     is defined.
+      In this case, we use it to be notified when an Ember Data user defines a
+     belongs-to relationship. In that case, we need to set up observers for
+     each one, allowing us to track relationship changes and automatically
+     reflect changes in the inverse has-many array.
+      This hook passes the class being set up, as well as the key and value
+     being defined. So, for example, when the user does this:
+      ```javascript
+     DS.Model.extend({
+      parent: DS.belongsTo('user')
+    });
+     ```
+      This hook would be called with "parent" as the key and the computed
+     property returned by `DS.belongsTo` as the value.
+      @method didDefineProperty
+     @param {Object} proto
+     @param {String} key
+     @param {Ember.ComputedProperty} value
+     */
+    didDefineProperty: function (proto, key, value) {
+      // Check if the value being set is a computed property.
+      if (value instanceof _ember.default.ComputedProperty) {
+
+        // If it is, get the metadata for the relationship. This is
+        // populated by the `DS.belongsTo` helper when it is creating
+        // the computed property.
+        var meta = value.meta();
+
+        meta.parentType = proto.constructor;
+      }
+    },
+
+    /**
+     Given a callback, iterates over each of the relationships in the model,
+     invoking the callback with the name of each relationship and its relationship
+     descriptor.
+       The callback method you provide should have the following signature (all
+     parameters are optional):
+      ```javascript
+     function(name, descriptor);
+     ```
+      - `name` the name of the current property in the iteration
+     - `descriptor` the meta object that describes this relationship
+      The relationship descriptor argument is an object with the following properties.
+      - **key** <span class="type">String</span> the name of this relationship on the Model
+     - **kind** <span class="type">String</span> "hasMany" or "belongsTo"
+     - **options** <span class="type">Object</span> the original options hash passed when the relationship was declared
+     - **parentType** <span class="type">DS.Model</span> the type of the Model that owns this relationship
+     - **type** <span class="type">String</span> the type name of the related Model
+      Note that in addition to a callback, you can also pass an optional target
+     object that will be set as `this` on the context.
+      Example
+      ```app/serializers/application.js
+     import DS from 'ember-data';
+      export default DS.JSONSerializer.extend({
+      serialize: function(record, options) {
+        let json = {};
+         record.eachRelationship(function(name, descriptor) {
+          if (descriptor.kind === 'hasMany') {
+            let serializedHasManyName = name.toUpperCase() + '_IDS';
+            json[serializedHasManyName] = record.get(name).mapBy('id');
+          }
+        });
+         return json;
+      }
+    });
+     ```
+      @method eachRelationship
+     @param {Function} callback the callback to invoke
+     @param {any} binding the value to which the callback's `this` should be bound
+     */
+    eachRelationship: function (callback, binding) {
+      this.constructor.eachRelationship(callback, binding);
+    },
+
+    relationshipFor: function (name) {
+      return get(this.constructor, 'relationshipsByName').get(name);
+    },
+
+    inverseFor: function (key) {
+      return this.constructor.inverseFor(key, this.store);
+    },
+
+    notifyHasManyAdded: function (key) {
+      //We need to notifyPropertyChange in the adding case because we need to make sure
+      //we fetch the newly added record in case it is unloaded
+      //TODO(Igor): Consider whether we could do this only if the record state is unloaded
+
+      //Goes away once hasMany is double promisified
+      this.notifyPropertyChange(key);
+    },
+
+    eachAttribute: function (callback, binding) {
+      this.constructor.eachAttribute(callback, binding);
+    }
   });
 
   /**
@@ -4192,7 +4099,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       The most common place you'll want to access `modelName` is in your serializer's `payloadKeyFromModelName` method. For example, to change payload
      keys to underscore (instead of dasherized), you might use the following code:
       ```javascript
-     export default var PostSerializer = DS.RESTSerializer.extend({
+     export default const PostSerializer = DS.RESTSerializer.extend({
        payloadKeyFromModelName: function(modelName) {
          return Ember.String.underscore(modelName);
        }
@@ -4203,7 +4110,581 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
      @readonly
      @static
     */
-    modelName: null
+    modelName: null,
+
+    /*
+     These class methods below provide relationship
+     introspection abilities about relationships.
+      A note about the computed properties contained here:
+      **These properties are effectively sealed once called for the first time.**
+     To avoid repeatedly doing expensive iteration over a model's fields, these
+     values are computed once and then cached for the remainder of the runtime of
+     your application.
+      If your application needs to modify a class after its initial definition
+     (for example, using `reopen()` to add additional attributes), make sure you
+     do it before using your model with the store, which uses these properties
+     extensively.
+     */
+
+    /**
+     For a given relationship name, returns the model type of the relationship.
+      For example, if you define a model like this:
+      ```app/models/post.js
+     import DS from 'ember-data';
+      export default DS.Model.extend({
+        comments: DS.hasMany('comment')
+      });
+     ```
+      Calling `store.modelFor('post').typeForRelationship('comments', store)` will return `Comment`.
+      @method typeForRelationship
+     @static
+     @param {String} name the name of the relationship
+     @param {store} store an instance of DS.Store
+     @return {DS.Model} the type of the relationship, or undefined
+     */
+    typeForRelationship: function (name, store) {
+      var relationship = get(this, 'relationshipsByName').get(name);
+      return relationship && store.modelFor(relationship.type);
+    },
+
+    inverseMap: _ember.default.computed(function () {
+      return new _emberDataPrivateSystemEmptyObject.default();
+    }),
+
+    /**
+     Find the relationship which is the inverse of the one asked for.
+      For example, if you define models like this:
+      ```app/models/post.js
+     import DS from 'ember-data';
+      export default DS.Model.extend({
+        comments: DS.hasMany('message')
+      });
+     ```
+      ```app/models/message.js
+     import DS from 'ember-data';
+      export default DS.Model.extend({
+        owner: DS.belongsTo('post')
+      });
+     ```
+      store.modelFor('post').inverseFor('comments', store) -> { type: App.Message, name: 'owner', kind: 'belongsTo' }
+     store.modelFor('message').inverseFor('owner', store) -> { type: App.Post, name: 'comments', kind: 'hasMany' }
+      @method inverseFor
+     @static
+     @param {String} name the name of the relationship
+     @param {DS.Store} store
+     @return {Object} the inverse relationship, or null
+     */
+    inverseFor: function (name, store) {
+      var inverseMap = get(this, 'inverseMap');
+      if (inverseMap[name]) {
+        return inverseMap[name];
+      } else {
+        var inverse = this._findInverseFor(name, store);
+        inverseMap[name] = inverse;
+        return inverse;
+      }
+    },
+
+    //Calculate the inverse, ignoring the cache
+    _findInverseFor: function (name, store) {
+
+      var inverseType = this.typeForRelationship(name, store);
+      if (!inverseType) {
+        return null;
+      }
+
+      var propertyMeta = this.metaForProperty(name);
+      //If inverse is manually specified to be null, like  `comments: DS.hasMany('message', { inverse: null })`
+      var options = propertyMeta.options;
+      if (options.inverse === null) {
+        return null;
+      }
+
+      var inverseName = undefined,
+          inverseKind = undefined,
+          inverse = undefined;
+
+      //If inverse is specified manually, return the inverse
+      if (options.inverse) {
+        inverseName = options.inverse;
+        inverse = _ember.default.get(inverseType, 'relationshipsByName').get(inverseName);
+
+        (0, _emberDataPrivateDebug.assert)("We found no inverse relationships by the name of '" + inverseName + "' on the '" + inverseType.modelName + "' model. This is most likely due to a missing attribute on your model definition.", !_ember.default.isNone(inverse));
+
+        inverseKind = inverse.kind;
+      } else {
+        //No inverse was specified manually, we need to use a heuristic to guess one
+        if (propertyMeta.type === propertyMeta.parentType.modelName) {
+          (0, _emberDataPrivateDebug.warn)("Detected a reflexive relationship by the name of '" + name + "' without an inverse option. Look at http://emberjs.com/guides/models/defining-models/#toc_reflexive-relation for how to explicitly specify inverses.", false, {
+            id: 'ds.model.reflexive-relationship-without-inverse'
+          });
+        }
+
+        var possibleRelationships = findPossibleInverses(this, inverseType);
+
+        if (possibleRelationships.length === 0) {
+          return null;
+        }
+
+        var filteredRelationships = possibleRelationships.filter(function (possibleRelationship) {
+          var optionsForRelationship = inverseType.metaForProperty(possibleRelationship.name).options;
+          return name === optionsForRelationship.inverse;
+        });
+
+        (0, _emberDataPrivateDebug.assert)("You defined the '" + name + "' relationship on " + this + ", but you defined the inverse relationships of type " + inverseType.toString() + " multiple times. Look at http://emberjs.com/guides/models/defining-models/#toc_explicit-inverses for how to explicitly specify inverses", filteredRelationships.length < 2);
+
+        if (filteredRelationships.length === 1) {
+          possibleRelationships = filteredRelationships;
+        }
+
+        (0, _emberDataPrivateDebug.assert)("You defined the '" + name + "' relationship on " + this + ", but multiple possible inverse relationships of type " + this + " were found on " + inverseType + ". Look at http://emberjs.com/guides/models/defining-models/#toc_explicit-inverses for how to explicitly specify inverses", possibleRelationships.length === 1);
+
+        inverseName = possibleRelationships[0].name;
+        inverseKind = possibleRelationships[0].kind;
+      }
+
+      function findPossibleInverses(type, inverseType, relationshipsSoFar) {
+        var possibleRelationships = relationshipsSoFar || [];
+
+        var relationshipMap = get(inverseType, 'relationships');
+        if (!relationshipMap) {
+          return possibleRelationships;
+        }
+
+        var relationships = relationshipMap.get(type.modelName);
+
+        relationships = relationships.filter(function (relationship) {
+          var optionsForRelationship = inverseType.metaForProperty(relationship.name).options;
+
+          if (!optionsForRelationship.inverse) {
+            return true;
+          }
+
+          return name === optionsForRelationship.inverse;
+        });
+
+        if (relationships) {
+          possibleRelationships.push.apply(possibleRelationships, relationships);
+        }
+
+        //Recurse to support polymorphism
+        if (type.superclass) {
+          findPossibleInverses(type.superclass, inverseType, possibleRelationships);
+        }
+
+        return possibleRelationships;
+      }
+
+      return {
+        type: inverseType,
+        name: inverseName,
+        kind: inverseKind
+      };
+    },
+
+    /**
+     The model's relationships as a map, keyed on the type of the
+     relationship. The value of each entry is an array containing a descriptor
+     for each relationship with that type, describing the name of the relationship
+     as well as the type.
+      For example, given the following model definition:
+      ```app/models/blog.js
+     import DS from 'ember-data';
+      export default DS.Model.extend({
+        users: DS.hasMany('user'),
+        owner: DS.belongsTo('user'),
+        posts: DS.hasMany('post')
+      });
+     ```
+      This computed property would return a map describing these
+     relationships, like this:
+      ```javascript
+     import Ember from 'ember';
+     import Blog from 'app/models/blog';
+     import User from 'app/models/user';
+     import Post from 'app/models/post';
+      let relationships = Ember.get(Blog, 'relationships');
+     relationships.get(User);
+     //=> [ { name: 'users', kind: 'hasMany' },
+     //     { name: 'owner', kind: 'belongsTo' } ]
+     relationships.get(Post);
+     //=> [ { name: 'posts', kind: 'hasMany' } ]
+     ```
+      @property relationships
+     @static
+     @type Ember.Map
+     @readOnly
+     */
+
+    relationships: _emberDataPrivateSystemRelationshipsExt.relationshipsDescriptor,
+
+    /**
+     A hash containing lists of the model's relationships, grouped
+     by the relationship kind. For example, given a model with this
+     definition:
+      ```app/models/blog.js
+     import DS from 'ember-data';
+      export default DS.Model.extend({
+        users: DS.hasMany('user'),
+        owner: DS.belongsTo('user'),
+         posts: DS.hasMany('post')
+      });
+     ```
+      This property would contain the following:
+      ```javascript
+     import Ember from 'ember';
+     import Blog from 'app/models/blog';
+      let relationshipNames = Ember.get(Blog, 'relationshipNames');
+     relationshipNames.hasMany;
+     //=> ['users', 'posts']
+     relationshipNames.belongsTo;
+     //=> ['owner']
+     ```
+      @property relationshipNames
+     @static
+     @type Object
+     @readOnly
+     */
+    relationshipNames: _ember.default.computed(function () {
+      var names = {
+        hasMany: [],
+        belongsTo: []
+      };
+
+      this.eachComputedProperty(function (name, meta) {
+        if (meta.isRelationship) {
+          names[meta.kind].push(name);
+        }
+      });
+
+      return names;
+    }),
+
+    /**
+     An array of types directly related to a model. Each type will be
+     included once, regardless of the number of relationships it has with
+     the model.
+      For example, given a model with this definition:
+      ```app/models/blog.js
+     import DS from 'ember-data';
+      export default DS.Model.extend({
+        users: DS.hasMany('user'),
+        owner: DS.belongsTo('user'),
+         posts: DS.hasMany('post')
+      });
+     ```
+      This property would contain the following:
+      ```javascript
+     import Ember from 'ember';
+     import Blog from 'app/models/blog';
+      let relatedTypes = Ember.get(Blog, 'relatedTypes');
+     //=> [ User, Post ]
+     ```
+      @property relatedTypes
+     @static
+     @type Ember.Array
+     @readOnly
+     */
+    relatedTypes: _emberDataPrivateSystemRelationshipsExt.relatedTypesDescriptor,
+
+    /**
+     A map whose keys are the relationships of a model and whose values are
+     relationship descriptors.
+      For example, given a model with this
+     definition:
+      ```app/models/blog.js
+     import DS from 'ember-data';
+      export default DS.Model.extend({
+        users: DS.hasMany('user'),
+        owner: DS.belongsTo('user'),
+         posts: DS.hasMany('post')
+      });
+     ```
+      This property would contain the following:
+      ```javascript
+     import Ember from 'ember';
+     import Blog from 'app/models/blog';
+      let relationshipsByName = Ember.get(Blog, 'relationshipsByName');
+     relationshipsByName.get('users');
+     //=> { key: 'users', kind: 'hasMany', type: 'user', options: Object, isRelationship: true }
+     relationshipsByName.get('owner');
+     //=> { key: 'owner', kind: 'belongsTo', type: 'user', options: Object, isRelationship: true }
+     ```
+      @property relationshipsByName
+     @static
+     @type Ember.Map
+     @readOnly
+     */
+    relationshipsByName: _emberDataPrivateSystemRelationshipsExt.relationshipsByNameDescriptor,
+
+    /**
+     A map whose keys are the fields of the model and whose values are strings
+     describing the kind of the field. A model's fields are the union of all of its
+     attributes and relationships.
+      For example:
+      ```app/models/blog.js
+     import DS from 'ember-data';
+      export default DS.Model.extend({
+        users: DS.hasMany('user'),
+        owner: DS.belongsTo('user'),
+         posts: DS.hasMany('post'),
+         title: DS.attr('string')
+      });
+     ```
+      ```js
+     import Ember from 'ember';
+     import Blog from 'app/models/blog';
+      let fields = Ember.get(Blog, 'fields');
+     fields.forEach(function(kind, field) {
+        console.log(field, kind);
+      });
+      // prints:
+     // users, hasMany
+     // owner, belongsTo
+     // posts, hasMany
+     // title, attribute
+     ```
+      @property fields
+     @static
+     @type Ember.Map
+     @readOnly
+     */
+    fields: _ember.default.computed(function () {
+      var map = Map.create();
+
+      this.eachComputedProperty(function (name, meta) {
+        if (meta.isRelationship) {
+          map.set(name, meta.kind);
+        } else if (meta.isAttribute) {
+          map.set(name, 'attribute');
+        }
+      });
+
+      return map;
+    }).readOnly(),
+
+    /**
+     Given a callback, iterates over each of the relationships in the model,
+     invoking the callback with the name of each relationship and its relationship
+     descriptor.
+      @method eachRelationship
+     @static
+     @param {Function} callback the callback to invoke
+     @param {any} binding the value to which the callback's `this` should be bound
+     */
+    eachRelationship: function (callback, binding) {
+      get(this, 'relationshipsByName').forEach(function (relationship, name) {
+        callback.call(binding, name, relationship);
+      });
+    },
+
+    /**
+     Given a callback, iterates over each of the types related to a model,
+     invoking the callback with the related type's class. Each type will be
+     returned just once, regardless of how many different relationships it has
+     with a model.
+      @method eachRelatedType
+     @static
+     @param {Function} callback the callback to invoke
+     @param {any} binding the value to which the callback's `this` should be bound
+     */
+    eachRelatedType: function (callback, binding) {
+      var relationshipTypes = get(this, 'relatedTypes');
+
+      for (var i = 0; i < relationshipTypes.length; i++) {
+        var type = relationshipTypes[i];
+        callback.call(binding, type);
+      }
+    },
+
+    determineRelationshipType: function (knownSide, store) {
+      var knownKey = knownSide.key;
+      var knownKind = knownSide.kind;
+      var inverse = this.inverseFor(knownKey, store);
+      // let key;
+      var otherKind = undefined;
+
+      if (!inverse) {
+        return knownKind === 'belongsTo' ? 'oneToNone' : 'manyToNone';
+      }
+
+      // key = inverse.name;
+      otherKind = inverse.kind;
+
+      if (otherKind === 'belongsTo') {
+        return knownKind === 'belongsTo' ? 'oneToOne' : 'manyToOne';
+      } else {
+        return knownKind === 'belongsTo' ? 'oneToMany' : 'manyToMany';
+      }
+    },
+
+    /**
+     A map whose keys are the attributes of the model (properties
+     described by DS.attr) and whose values are the meta object for the
+     property.
+      Example
+      ```app/models/person.js
+     import DS from 'ember-data';
+      export default DS.Model.extend({
+        firstName: attr('string'),
+        lastName: attr('string'),
+        birthday: attr('date')
+      });
+     ```
+      ```javascript
+     import Ember from 'ember';
+     import Person from 'app/models/person';
+      let attributes = Ember.get(Person, 'attributes')
+      attributes.forEach(function(meta, name) {
+        console.log(name, meta);
+      });
+      // prints:
+     // firstName {type: "string", isAttribute: true, options: Object, parentType: function, name: "firstName"}
+     // lastName {type: "string", isAttribute: true, options: Object, parentType: function, name: "lastName"}
+     // birthday {type: "date", isAttribute: true, options: Object, parentType: function, name: "birthday"}
+     ```
+      @property attributes
+     @static
+     @type {Ember.Map}
+     @readOnly
+     */
+    attributes: _ember.default.computed(function () {
+      var _this3 = this;
+
+      var map = Map.create();
+
+      this.eachComputedProperty(function (name, meta) {
+        if (meta.isAttribute) {
+          (0, _emberDataPrivateDebug.assert)("You may not set `id` as an attribute on your model. Please remove any lines that look like: `id: DS.attr('<type>')` from " + _this3.toString(), name !== 'id');
+
+          meta.name = name;
+          map.set(name, meta);
+        }
+      });
+
+      return map;
+    }).readOnly(),
+
+    /**
+     A map whose keys are the attributes of the model (properties
+     described by DS.attr) and whose values are type of transformation
+     applied to each attribute. This map does not include any
+     attributes that do not have an transformation type.
+      Example
+      ```app/models/person.js
+     import DS from 'ember-data';
+      export default DS.Model.extend({
+        firstName: attr(),
+        lastName: attr('string'),
+        birthday: attr('date')
+      });
+     ```
+      ```javascript
+     import Ember from 'ember';
+     import Person from 'app/models/person';
+      let transformedAttributes = Ember.get(Person, 'transformedAttributes')
+      transformedAttributes.forEach(function(field, type) {
+        console.log(field, type);
+      });
+      // prints:
+     // lastName string
+     // birthday date
+     ```
+      @property transformedAttributes
+     @static
+     @type {Ember.Map}
+     @readOnly
+     */
+    transformedAttributes: _ember.default.computed(function () {
+      var map = Map.create();
+
+      this.eachAttribute(function (key, meta) {
+        if (meta.type) {
+          map.set(key, meta.type);
+        }
+      });
+
+      return map;
+    }).readOnly(),
+
+    /**
+     Iterates through the attributes of the model, calling the passed function on each
+     attribute.
+      The callback method you provide should have the following signature (all
+     parameters are optional):
+      ```javascript
+     function(name, meta);
+     ```
+      - `name` the name of the current property in the iteration
+     - `meta` the meta object for the attribute property in the iteration
+      Note that in addition to a callback, you can also pass an optional target
+     object that will be set as `this` on the context.
+      Example
+      ```javascript
+     import DS from 'ember-data';
+      let Person = DS.Model.extend({
+        firstName: attr('string'),
+        lastName: attr('string'),
+        birthday: attr('date')
+      });
+      Person.eachAttribute(function(name, meta) {
+        console.log(name, meta);
+      });
+      // prints:
+     // firstName {type: "string", isAttribute: true, options: Object, parentType: function, name: "firstName"}
+     // lastName {type: "string", isAttribute: true, options: Object, parentType: function, name: "lastName"}
+     // birthday {type: "date", isAttribute: true, options: Object, parentType: function, name: "birthday"}
+     ```
+      @method eachAttribute
+     @param {Function} callback The callback to execute
+     @param {Object} [binding] the value to which the callback's `this` should be bound
+     @static
+     */
+    eachAttribute: function (callback, binding) {
+      get(this, 'attributes').forEach(function (meta, name) {
+        callback.call(binding, name, meta);
+      });
+    },
+
+    /**
+     Iterates through the transformedAttributes of the model, calling
+     the passed function on each attribute. Note the callback will not be
+     called for any attributes that do not have an transformation type.
+      The callback method you provide should have the following signature (all
+     parameters are optional):
+      ```javascript
+     function(name, type);
+     ```
+      - `name` the name of the current property in the iteration
+     - `type` a string containing the name of the type of transformed
+     applied to the attribute
+      Note that in addition to a callback, you can also pass an optional target
+     object that will be set as `this` on the context.
+      Example
+      ```javascript
+     import DS from 'ember-data';
+      let Person = DS.Model.extend({
+        firstName: attr(),
+        lastName: attr('string'),
+        birthday: attr('date')
+      });
+      Person.eachTransformedAttribute(function(name, type) {
+        console.log(name, type);
+      });
+      // prints:
+     // lastName string
+     // birthday date
+     ```
+      @method eachTransformedAttribute
+     @param {Function} callback The callback to execute
+     @param {Object} [binding] the value to which the callback's `this` should be bound
+     @static
+     */
+    eachTransformedAttribute: function (callback, binding) {
+      get(this, 'transformedAttributes').forEach(function (type, name) {
+        callback.call(binding, name, type);
+      });
+    }
   });
 
   // if `Ember.setOwner` is defined, accessing `this.container` is
@@ -4245,10 +4726,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
     });
   }
 
-  Model.reopenClass(_emberDataPrivateSystemRelationshipsExt.RelationshipsClassMethodsMixin);
-  Model.reopenClass(_emberDataPrivateSystemModelAttr.AttrClassMethodsMixin);
-
-  exports.default = Model.extend(_emberDataPrivateSystemDebugDebugInfo.default, _emberDataPrivateSystemRelationshipsBelongsTo.BelongsToMixin, _emberDataPrivateSystemRelationshipsExt.DidDefinePropertyMixin, _emberDataPrivateSystemRelationshipsExt.RelationshipsInstanceMethodsMixin, _emberDataPrivateSystemRelationshipsHasMany.HasManyMixin, _emberDataPrivateSystemModelAttr.AttrInstanceMethodsMixin);
+  exports.default = Model;
 });
 define('ember-data/-private/system/model/states', ['exports', 'ember-data/-private/debug'], function (exports, _emberDataPrivateDebug) {
 
@@ -7199,21 +7677,9 @@ define("ember-data/-private/system/relationships/belongs-to", ["exports", "ember
       }
     }).meta(meta);
   }
-
-  /*
-    These observers observe all `belongsTo` relationships on the record. See
-    `relationships/ext` to see how these observers get their dependencies.
-  */
-  var BelongsToMixin = _ember.default.Mixin.create({
-    notifyBelongsToChanged: function (key) {
-      this.notifyPropertyChange(key);
-    }
-  });
-  exports.BelongsToMixin = BelongsToMixin;
 });
-define("ember-data/-private/system/relationships/ext", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/relationship-meta", "ember-data/-private/system/empty-object"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemRelationshipMeta, _emberDataPrivateSystemEmptyObject) {
+define("ember-data/-private/system/relationships/ext", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/relationship-meta"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemRelationshipMeta) {
 
-  var get = _ember.default.get;
   var Map = _ember.default.Map;
   var MapWithDefault = _ember.default.MapWithDefault;
 
@@ -7246,6 +7712,7 @@ define("ember-data/-private/system/relationships/ext", ["exports", "ember", "emb
     return map;
   }).readOnly();
 
+  exports.relationshipsDescriptor = relationshipsDescriptor;
   var relatedTypesDescriptor = _ember.default.computed(function () {
     var _this = this;
 
@@ -7276,6 +7743,7 @@ define("ember-data/-private/system/relationships/ext", ["exports", "ember", "emb
     return types;
   }).readOnly();
 
+  exports.relatedTypesDescriptor = relatedTypesDescriptor;
   var relationshipsByNameDescriptor = _ember.default.computed(function () {
     if (_ember.default.testing === true && relationshipsByNameDescriptor._cacheable === true) {
       relationshipsByNameDescriptor._cacheable = false;
@@ -7294,524 +7762,7 @@ define("ember-data/-private/system/relationships/ext", ["exports", "ember", "emb
 
     return map;
   }).readOnly();
-
-  /**
-    @module ember-data
-  */
-
-  /*
-    This file defines several extensions to the base `DS.Model` class that
-    add support for one-to-many relationships.
-  */
-
-  /**
-    @class Model
-    @namespace DS
-  */
-  var DidDefinePropertyMixin = _ember.default.Mixin.create({
-
-    /**
-      This Ember.js hook allows an object to be notified when a property
-      is defined.
-       In this case, we use it to be notified when an Ember Data user defines a
-      belongs-to relationship. In that case, we need to set up observers for
-      each one, allowing us to track relationship changes and automatically
-      reflect changes in the inverse has-many array.
-       This hook passes the class being set up, as well as the key and value
-      being defined. So, for example, when the user does this:
-       ```javascript
-      DS.Model.extend({
-        parent: DS.belongsTo('user')
-      });
-      ```
-       This hook would be called with "parent" as the key and the computed
-      property returned by `DS.belongsTo` as the value.
-       @method didDefineProperty
-      @param {Object} proto
-      @param {String} key
-      @param {Ember.ComputedProperty} value
-    */
-    didDefineProperty: function (proto, key, value) {
-      // Check if the value being set is a computed property.
-      if (value instanceof _ember.default.ComputedProperty) {
-
-        // If it is, get the metadata for the relationship. This is
-        // populated by the `DS.belongsTo` helper when it is creating
-        // the computed property.
-        var meta = value.meta();
-
-        meta.parentType = proto.constructor;
-      }
-    }
-  });
-
-  exports.DidDefinePropertyMixin = DidDefinePropertyMixin;
-  /*
-    These DS.Model extensions add class methods that provide relationship
-    introspection abilities about relationships.
-  
-    A note about the computed properties contained here:
-  
-    **These properties are effectively sealed once called for the first time.**
-    To avoid repeatedly doing expensive iteration over a model's fields, these
-    values are computed once and then cached for the remainder of the runtime of
-    your application.
-  
-    If your application needs to modify a class after its initial definition
-    (for example, using `reopen()` to add additional attributes), make sure you
-    do it before using your model with the store, which uses these properties
-    extensively.
-  */
-
-  var RelationshipsClassMethodsMixin = _ember.default.Mixin.create({
-
-    /**
-      For a given relationship name, returns the model type of the relationship.
-       For example, if you define a model like this:
-       ```app/models/post.js
-      import DS from 'ember-data';
-       export default DS.Model.extend({
-        comments: DS.hasMany('comment')
-      });
-     ```
-       Calling `store.modelFor('post').typeForRelationship('comments', store)` will return `Comment`.
-       @method typeForRelationship
-      @static
-      @param {String} name the name of the relationship
-      @param {store} store an instance of DS.Store
-      @return {DS.Model} the type of the relationship, or undefined
-    */
-    typeForRelationship: function (name, store) {
-      var relationship = get(this, 'relationshipsByName').get(name);
-      return relationship && store.modelFor(relationship.type);
-    },
-
-    inverseMap: _ember.default.computed(function () {
-      return new _emberDataPrivateSystemEmptyObject.default();
-    }),
-
-    /**
-      Find the relationship which is the inverse of the one asked for.
-       For example, if you define models like this:
-       ```app/models/post.js
-      import DS from 'ember-data';
-       export default DS.Model.extend({
-        comments: DS.hasMany('message')
-      });
-      ```
-       ```app/models/message.js
-      import DS from 'ember-data';
-       export default DS.Model.extend({
-        owner: DS.belongsTo('post')
-      });
-      ```
-       store.modelFor('post').inverseFor('comments', store) -> { type: App.Message, name: 'owner', kind: 'belongsTo' }
-      store.modelFor('message').inverseFor('owner', store) -> { type: App.Post, name: 'comments', kind: 'hasMany' }
-       @method inverseFor
-      @static
-      @param {String} name the name of the relationship
-      @param {DS.Store} store
-      @return {Object} the inverse relationship, or null
-    */
-    inverseFor: function (name, store) {
-      var inverseMap = get(this, 'inverseMap');
-      if (inverseMap[name]) {
-        return inverseMap[name];
-      } else {
-        var inverse = this._findInverseFor(name, store);
-        inverseMap[name] = inverse;
-        return inverse;
-      }
-    },
-
-    //Calculate the inverse, ignoring the cache
-    _findInverseFor: function (name, store) {
-
-      var inverseType = this.typeForRelationship(name, store);
-      if (!inverseType) {
-        return null;
-      }
-
-      var propertyMeta = this.metaForProperty(name);
-      //If inverse is manually specified to be null, like  `comments: DS.hasMany('message', { inverse: null })`
-      var options = propertyMeta.options;
-      if (options.inverse === null) {
-        return null;
-      }
-
-      var inverseName, inverseKind, inverse;
-
-      //If inverse is specified manually, return the inverse
-      if (options.inverse) {
-        inverseName = options.inverse;
-        inverse = _ember.default.get(inverseType, 'relationshipsByName').get(inverseName);
-
-        (0, _emberDataPrivateDebug.assert)("We found no inverse relationships by the name of '" + inverseName + "' on the '" + inverseType.modelName + "' model. This is most likely due to a missing attribute on your model definition.", !_ember.default.isNone(inverse));
-
-        inverseKind = inverse.kind;
-      } else {
-        //No inverse was specified manually, we need to use a heuristic to guess one
-        if (propertyMeta.type === propertyMeta.parentType.modelName) {
-          (0, _emberDataPrivateDebug.warn)("Detected a reflexive relationship by the name of '" + name + "' without an inverse option. Look at http://emberjs.com/guides/models/defining-models/#toc_reflexive-relation for how to explicitly specify inverses.", false, {
-            id: 'ds.model.reflexive-relationship-without-inverse'
-          });
-        }
-
-        var possibleRelationships = findPossibleInverses(this, inverseType);
-
-        if (possibleRelationships.length === 0) {
-          return null;
-        }
-
-        var filteredRelationships = possibleRelationships.filter(function (possibleRelationship) {
-          var optionsForRelationship = inverseType.metaForProperty(possibleRelationship.name).options;
-          return name === optionsForRelationship.inverse;
-        });
-
-        (0, _emberDataPrivateDebug.assert)("You defined the '" + name + "' relationship on " + this + ", but you defined the inverse relationships of type " + inverseType.toString() + " multiple times. Look at http://emberjs.com/guides/models/defining-models/#toc_explicit-inverses for how to explicitly specify inverses", filteredRelationships.length < 2);
-
-        if (filteredRelationships.length === 1) {
-          possibleRelationships = filteredRelationships;
-        }
-
-        (0, _emberDataPrivateDebug.assert)("You defined the '" + name + "' relationship on " + this + ", but multiple possible inverse relationships of type " + this + " were found on " + inverseType + ". Look at http://emberjs.com/guides/models/defining-models/#toc_explicit-inverses for how to explicitly specify inverses", possibleRelationships.length === 1);
-
-        inverseName = possibleRelationships[0].name;
-        inverseKind = possibleRelationships[0].kind;
-      }
-
-      function findPossibleInverses(type, inverseType, relationshipsSoFar) {
-        var possibleRelationships = relationshipsSoFar || [];
-
-        var relationshipMap = get(inverseType, 'relationships');
-        if (!relationshipMap) {
-          return possibleRelationships;
-        }
-
-        var relationships = relationshipMap.get(type.modelName);
-
-        relationships = relationships.filter(function (relationship) {
-          var optionsForRelationship = inverseType.metaForProperty(relationship.name).options;
-
-          if (!optionsForRelationship.inverse) {
-            return true;
-          }
-
-          return name === optionsForRelationship.inverse;
-        });
-
-        if (relationships) {
-          possibleRelationships.push.apply(possibleRelationships, relationships);
-        }
-
-        //Recurse to support polymorphism
-        if (type.superclass) {
-          findPossibleInverses(type.superclass, inverseType, possibleRelationships);
-        }
-
-        return possibleRelationships;
-      }
-
-      return {
-        type: inverseType,
-        name: inverseName,
-        kind: inverseKind
-      };
-    },
-
-    /**
-      The model's relationships as a map, keyed on the type of the
-      relationship. The value of each entry is an array containing a descriptor
-      for each relationship with that type, describing the name of the relationship
-      as well as the type.
-       For example, given the following model definition:
-       ```app/models/blog.js
-      import DS from 'ember-data';
-       export default DS.Model.extend({
-        users: DS.hasMany('user'),
-        owner: DS.belongsTo('user'),
-        posts: DS.hasMany('post')
-      });
-      ```
-       This computed property would return a map describing these
-      relationships, like this:
-       ```javascript
-      import Ember from 'ember';
-      import Blog from 'app/models/blog';
-      import User from 'app/models/user';
-      import Post from 'app/models/post';
-       var relationships = Ember.get(Blog, 'relationships');
-      relationships.get(User);
-      //=> [ { name: 'users', kind: 'hasMany' },
-      //     { name: 'owner', kind: 'belongsTo' } ]
-      relationships.get(Post);
-      //=> [ { name: 'posts', kind: 'hasMany' } ]
-      ```
-       @property relationships
-      @static
-      @type Ember.Map
-      @readOnly
-    */
-
-    relationships: relationshipsDescriptor,
-
-    /**
-      A hash containing lists of the model's relationships, grouped
-      by the relationship kind. For example, given a model with this
-      definition:
-       ```app/models/blog.js
-      import DS from 'ember-data';
-       export default DS.Model.extend({
-        users: DS.hasMany('user'),
-        owner: DS.belongsTo('user'),
-         posts: DS.hasMany('post')
-      });
-      ```
-       This property would contain the following:
-       ```javascript
-      import Ember from 'ember';
-      import Blog from 'app/models/blog';
-       var relationshipNames = Ember.get(Blog, 'relationshipNames');
-      relationshipNames.hasMany;
-      //=> ['users', 'posts']
-      relationshipNames.belongsTo;
-      //=> ['owner']
-      ```
-       @property relationshipNames
-      @static
-      @type Object
-      @readOnly
-    */
-    relationshipNames: _ember.default.computed(function () {
-      var names = {
-        hasMany: [],
-        belongsTo: []
-      };
-
-      this.eachComputedProperty(function (name, meta) {
-        if (meta.isRelationship) {
-          names[meta.kind].push(name);
-        }
-      });
-
-      return names;
-    }),
-
-    /**
-      An array of types directly related to a model. Each type will be
-      included once, regardless of the number of relationships it has with
-      the model.
-       For example, given a model with this definition:
-       ```app/models/blog.js
-      import DS from 'ember-data';
-       export default DS.Model.extend({
-        users: DS.hasMany('user'),
-        owner: DS.belongsTo('user'),
-         posts: DS.hasMany('post')
-      });
-      ```
-       This property would contain the following:
-       ```javascript
-      import Ember from 'ember';
-      import Blog from 'app/models/blog';
-       var relatedTypes = Ember.get(Blog, 'relatedTypes');
-      //=> [ User, Post ]
-      ```
-       @property relatedTypes
-      @static
-      @type Ember.Array
-      @readOnly
-    */
-    relatedTypes: relatedTypesDescriptor,
-
-    /**
-      A map whose keys are the relationships of a model and whose values are
-      relationship descriptors.
-       For example, given a model with this
-      definition:
-       ```app/models/blog.js
-      import DS from 'ember-data';
-       export default DS.Model.extend({
-        users: DS.hasMany('user'),
-        owner: DS.belongsTo('user'),
-         posts: DS.hasMany('post')
-      });
-      ```
-       This property would contain the following:
-       ```javascript
-      import Ember from 'ember';
-      import Blog from 'app/models/blog';
-       var relationshipsByName = Ember.get(Blog, 'relationshipsByName');
-      relationshipsByName.get('users');
-      //=> { key: 'users', kind: 'hasMany', type: 'user', options: Object, isRelationship: true }
-      relationshipsByName.get('owner');
-      //=> { key: 'owner', kind: 'belongsTo', type: 'user', options: Object, isRelationship: true }
-      ```
-       @property relationshipsByName
-      @static
-      @type Ember.Map
-      @readOnly
-    */
-    relationshipsByName: relationshipsByNameDescriptor,
-
-    /**
-      A map whose keys are the fields of the model and whose values are strings
-      describing the kind of the field. A model's fields are the union of all of its
-      attributes and relationships.
-       For example:
-       ```app/models/blog.js
-      import DS from 'ember-data';
-       export default DS.Model.extend({
-        users: DS.hasMany('user'),
-        owner: DS.belongsTo('user'),
-         posts: DS.hasMany('post'),
-         title: DS.attr('string')
-      });
-      ```
-       ```js
-      import Ember from 'ember';
-      import Blog from 'app/models/blog';
-       var fields = Ember.get(Blog, 'fields');
-      fields.forEach(function(kind, field) {
-        console.log(field, kind);
-      });
-       // prints:
-      // users, hasMany
-      // owner, belongsTo
-      // posts, hasMany
-      // title, attribute
-      ```
-       @property fields
-      @static
-      @type Ember.Map
-      @readOnly
-    */
-    fields: _ember.default.computed(function () {
-      var map = Map.create();
-
-      this.eachComputedProperty(function (name, meta) {
-        if (meta.isRelationship) {
-          map.set(name, meta.kind);
-        } else if (meta.isAttribute) {
-          map.set(name, 'attribute');
-        }
-      });
-
-      return map;
-    }).readOnly(),
-
-    /**
-      Given a callback, iterates over each of the relationships in the model,
-      invoking the callback with the name of each relationship and its relationship
-      descriptor.
-       @method eachRelationship
-      @static
-      @param {Function} callback the callback to invoke
-      @param {any} binding the value to which the callback's `this` should be bound
-    */
-    eachRelationship: function (callback, binding) {
-      get(this, 'relationshipsByName').forEach(function (relationship, name) {
-        callback.call(binding, name, relationship);
-      });
-    },
-
-    /**
-      Given a callback, iterates over each of the types related to a model,
-      invoking the callback with the related type's class. Each type will be
-      returned just once, regardless of how many different relationships it has
-      with a model.
-       @method eachRelatedType
-      @static
-      @param {Function} callback the callback to invoke
-      @param {any} binding the value to which the callback's `this` should be bound
-    */
-    eachRelatedType: function (callback, binding) {
-      var relationshipTypes = get(this, 'relatedTypes');
-
-      for (var i = 0; i < relationshipTypes.length; i++) {
-        var type = relationshipTypes[i];
-        callback.call(binding, type);
-      }
-    },
-
-    determineRelationshipType: function (knownSide, store) {
-      var knownKey = knownSide.key;
-      var knownKind = knownSide.kind;
-      var inverse = this.inverseFor(knownKey, store);
-      // let key;
-      var otherKind = undefined;
-
-      if (!inverse) {
-        return knownKind === 'belongsTo' ? 'oneToNone' : 'manyToNone';
-      }
-
-      // key = inverse.name;
-      otherKind = inverse.kind;
-
-      if (otherKind === 'belongsTo') {
-        return knownKind === 'belongsTo' ? 'oneToOne' : 'manyToOne';
-      } else {
-        return knownKind === 'belongsTo' ? 'oneToMany' : 'manyToMany';
-      }
-    }
-
-  });
-
-  exports.RelationshipsClassMethodsMixin = RelationshipsClassMethodsMixin;
-  var RelationshipsInstanceMethodsMixin = _ember.default.Mixin.create({
-    /**
-      Given a callback, iterates over each of the relationships in the model,
-      invoking the callback with the name of each relationship and its relationship
-      descriptor.
-        The callback method you provide should have the following signature (all
-      parameters are optional):
-       ```javascript
-      function(name, descriptor);
-      ```
-       - `name` the name of the current property in the iteration
-      - `descriptor` the meta object that describes this relationship
-       The relationship descriptor argument is an object with the following properties.
-      - **key** <span class="type">String</span> the name of this relationship on the Model
-     - **kind** <span class="type">String</span> "hasMany" or "belongsTo"
-     - **options** <span class="type">Object</span> the original options hash passed when the relationship was declared
-     - **parentType** <span class="type">DS.Model</span> the type of the Model that owns this relationship
-     - **type** <span class="type">String</span> the type name of the related Model
-       Note that in addition to a callback, you can also pass an optional target
-      object that will be set as `this` on the context.
-       Example
-       ```app/serializers/application.js
-      import DS from 'ember-data';
-       export default DS.JSONSerializer.extend({
-        serialize: function(record, options) {
-          var json = {};
-           record.eachRelationship(function(name, descriptor) {
-            if (descriptor.kind === 'hasMany') {
-              var serializedHasManyName = name.toUpperCase() + '_IDS';
-              json[serializedHasManyName] = record.get(name).mapBy('id');
-            }
-          });
-           return json;
-        }
-      });
-      ```
-       @method eachRelationship
-      @param {Function} callback the callback to invoke
-      @param {any} binding the value to which the callback's `this` should be bound
-    */
-    eachRelationship: function (callback, binding) {
-      this.constructor.eachRelationship(callback, binding);
-    },
-
-    relationshipFor: function (name) {
-      return get(this.constructor, 'relationshipsByName').get(name);
-    },
-
-    inverseFor: function (key) {
-      return this.constructor.inverseFor(key, this.store);
-    }
-
-  });
-  exports.RelationshipsInstanceMethodsMixin = RelationshipsInstanceMethodsMixin;
+  exports.relationshipsByNameDescriptor = relationshipsByNameDescriptor;
 });
 define("ember-data/-private/system/relationships/has-many", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/normalize-model-name", "ember-data/-private/system/is-array-like"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateSystemIsArrayLike) {
   exports.default = hasMany;
@@ -7970,18 +7921,6 @@ define("ember-data/-private/system/relationships/has-many", ["exports", "ember",
       }
     }).meta(meta);
   }
-
-  var HasManyMixin = _ember.default.Mixin.create({
-    notifyHasManyAdded: function (key) {
-      //We need to notifyPropertyChange in the adding case because we need to make sure
-      //we fetch the newly added record in case it is unloaded
-      //TODO(Igor): Consider whether we could do this only if the record state is unloaded
-
-      //Goes away once hasMany is double promisified
-      this.notifyPropertyChange(key);
-    }
-  });
-  exports.HasManyMixin = HasManyMixin;
 });
 /**
   @module ember-data
@@ -19511,7 +19450,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.12.0-canary+701eff4750";
+  exports.default = "2.12.0-canary+7d14d16226";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
