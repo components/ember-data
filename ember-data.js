@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.12.0-canary+7d14d16226
+ * @version   2.12.0-canary+cd4d91d26f
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -101,29 +101,37 @@ var loader, define, requireModule, require, requirejs;
     this.deps      = !deps.length && callback.length ? defaultDeps : deps;
     this.module    = { exports: {} };
     this.callback  = callback;
-    this.finalized = false;
     this.hasExportsAsDep = false;
     this.isAlias = alias;
     this.reified = new Array(deps.length);
-    this._foundDeps = false;
-    this.isPending = false;
+
+    /*
+       Each module normally passes through these states, in order:
+         new       : initial state
+         pending   : this module is scheduled to be executed
+         reifying  : this module's dependencies are being executed
+         reified   : this module's dependencies finished executing successfully
+         errored   : this module's dependencies failed to execute
+         finalized : this module executed successfully
+     */
+    this.state = 'new';
+
   }
 
   Module.prototype.makeDefaultExport = function() {
     var exports = this.module.exports;
     if (exports !== null &&
         (typeof exports === 'object' || typeof exports === 'function') &&
-          exports['default'] === undefined) {
+          exports['default'] === undefined && !Object.isFrozen(exports)) {
       exports['default'] = exports;
     }
   };
 
   Module.prototype.exports = function() {
-    if (this.finalized) { return this.module.exports; }
+    // if finalized, there is no work to do. If reifying, there is a
+    // circular dependency so we must return our (partial) exports.
+    if (this.state === 'finalized' || this.state === 'reifying') { return this.module.exports; }
     stats.exports++;
-
-    this.finalized = true;
-    this.isPending = false;
 
     if (loader.wrapModules) {
       this.callback = loader.wrapModules(this.name, this.callback);
@@ -132,6 +140,7 @@ var loader, define, requireModule, require, requirejs;
     this.reify();
 
     var result = this.callback.apply(this, this.reified);
+    this.state = 'finalized';
 
     if (!(this.hasExportsAsDep && result === undefined)) {
       this.module.exports = result;
@@ -141,29 +150,40 @@ var loader, define, requireModule, require, requirejs;
   };
 
   Module.prototype.unsee = function() {
-    this.finalized = false;
-    this._foundDeps = false;
-    this.isPending = false;
+    this.state = 'new';
     this.module = { exports: {} };
   };
 
   Module.prototype.reify = function() {
+    if (this.state === 'reified') { return; }
+    this.state = 'reifying';
+    try {
+      this.reified = this._reify();
+      this.state = 'reified';
+    } finally {
+      if (this.state === 'reifying') {
+        this.state = 'errored';
+      }
+    }
+  };
+
+  Module.prototype._reify = function() {
     stats.reify++;
-    var reified = this.reified;
+    var reified = this.reified.slice();
     for (var i = 0; i < reified.length; i++) {
       var mod = reified[i];
       reified[i] = mod.exports ? mod.exports : mod.module.exports();
     }
+    return reified;
   };
 
   Module.prototype.findDeps = function(pending) {
-    if (this._foundDeps) {
+    if (this.state !== 'new') {
       return;
     }
 
     stats.findDeps++;
-    this._foundDeps = true;
-    this.isPending = true;
+    this.state = 'pending';
 
     var deps = this.deps;
 
@@ -240,7 +260,7 @@ var loader, define, requireModule, require, requirejs;
 
     if (!mod) { missingModule(name, referrer); }
 
-    if (pending && !mod.finalized && !mod.isPending) {
+    if (pending && mod.state !== 'pending' && mod.state !== 'finalized') {
       mod.findDeps(pending);
       pending.push(mod);
       stats.pendingQueueLength++;
@@ -16827,7 +16847,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
     serializeHasMany: function (snapshot, json, relationship) {
       var key = relationship.key;
       var shouldSerializeHasMany = '_shouldSerializeHasMany';
-      if ((0, _emberDataPrivateFeatures.default)("ds-check-should-serialize-relationships")) {
+      if (true) {
         shouldSerializeHasMany = 'shouldSerializeHasMany';
       }
 
@@ -18126,7 +18146,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
     serializeHasMany: function (snapshot, json, relationship) {
       var key = relationship.key;
       var shouldSerializeHasMany = '_shouldSerializeHasMany';
-      if ((0, _emberDataPrivateFeatures.default)("ds-check-should-serialize-relationships")) {
+      if (true) {
         shouldSerializeHasMany = 'shouldSerializeHasMany';
       }
 
@@ -19450,7 +19470,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.12.0-canary+7d14d16226";
+  exports.default = "2.12.0-canary+cd4d91d26f";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
