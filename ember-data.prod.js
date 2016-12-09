@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.12.0-canary+cd4d91d26f
+ * @version   2.12.0-canary+4ca90fa332
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -11001,34 +11001,37 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @return {DS.InternalModel|Array<DS.InternalModel>} pushed InternalModel(s)
     */
     _push: function (data) {
-      var included = data.included;
-      var i = undefined,
-          length = undefined;
+      var _this2 = this;
 
-      if (included) {
-        for (i = 0, length = included.length; i < length; i++) {
-          this._pushInternalModel(included[i]);
-        }
-      }
+      var internalModelOrModels = this._backburner.join(function () {
+        var included = data.included;
+        var i = undefined,
+            length = undefined;
 
-      if (Array.isArray(data.data)) {
-        length = data.data.length;
-        var internalModels = new Array(length);
-
-        for (i = 0; i < length; i++) {
-          internalModels[i] = this._pushInternalModel(data.data[i]);
+        if (included) {
+          for (i = 0, length = included.length; i < length; i++) {
+            _this2._pushInternalModel(included[i]);
+          }
         }
 
-        return internalModels;
-      }
+        if (Array.isArray(data.data)) {
+          length = data.data.length;
+          var internalModels = new Array(length);
 
-      if (data.data === null) {
-        return null;
-      }
+          for (i = 0; i < length; i++) {
+            internalModels[i] = _this2._pushInternalModel(data.data[i]);
+          }
+          return internalModels;
+        }
 
-      var internalModel = this._pushInternalModel(data.data);
+        if (data.data === null) {
+          return null;
+        }
 
-      return internalModel;
+        return _this2._pushInternalModel(data.data);
+      });
+
+      return internalModelOrModels;
     },
 
     _hasModelFor: function (modelName) {
@@ -11036,16 +11039,12 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     },
 
     _pushInternalModel: function (data) {
-      var _this2 = this;
-
       var modelName = data.type;
 
       // Actually load the record into the store.
       var internalModel = this._load(data);
 
-      this._backburner.join(function () {
-        _this2._backburner.schedule('normalizeRelationships', _this2, _this2._setupRelationships, internalModel, data);
-      });
+      this._backburner.schedule('normalizeRelationships', this, this._setupRelationships, internalModel, data);
 
       return internalModel;
     },
@@ -19051,7 +19050,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.12.0-canary+cd4d91d26f";
+  exports.default = "2.12.0-canary+4ca90fa332";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
