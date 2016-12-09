@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.12.0-canary+4ca90fa332
+ * @version   2.12.0-canary+5f4be3edb2
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -5009,7 +5009,7 @@ define('ember-data/-private/system/model/states', ['exports', 'ember-data/-priva
       },
 
       reloadRecord: function (internalModel, resolve) {
-        resolve(internalModel.store.reloadRecord(internalModel));
+        resolve(internalModel.store._reloadRecord(internalModel));
       },
 
       rolledBack: function (internalModel) {
@@ -5312,7 +5312,7 @@ define('ember-data/-private/system/model/states', ['exports', 'ember-data/-priva
         },
 
         reloadRecord: function (internalModel, resolve) {
-          resolve(internalModel.store.reloadRecord(internalModel));
+          resolve(internalModel.store._reloadRecord(internalModel));
         },
 
         deleteRecord: function (internalModel) {
@@ -10101,8 +10101,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @param {DS.Model} internalModel
       @return {Promise} promise
     */
-    // TODO @runspired this should be underscored
-    reloadRecord: function (internalModel) {
+    _reloadRecord: function (internalModel) {
       var modelName = internalModel.type.modelName;
       var adapter = this.adapterFor(modelName);
       var id = internalModel.id;
@@ -19471,7 +19470,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.12.0-canary+4ca90fa332";
+  exports.default = "2.12.0-canary+5f4be3edb2";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
