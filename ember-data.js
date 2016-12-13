@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.12.0-canary+fef53029ed
+ * @version   2.12.0-canary+63d725dfe3
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -1256,6 +1256,68 @@ define("ember-data/-private/system/empty-object", ["exports"], function (exports
 
   EmptyObject.prototype = proto;
 });
+define('ember-data/-private/system/identity-map', ['exports', 'ember-data/-private/system/record-map'], function (exports, _emberDataPrivateSystemRecordMap) {
+  var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+  /**
+   `IdentityMap` is a custom storage map for records by modelName
+   used by `DS.Store`.
+  
+   @class IdentityMap
+   @private
+   */
+
+  var IdentityMap = (function () {
+    function IdentityMap() {
+      this._map = Object.create(null);
+    }
+
+    /**
+     Retrieves the `RecordMap` for a given modelName,
+     creating one if one did not already exist. This is
+     similar to `getWithDefault` or `get` on a `MapWithDefault`
+      @method retrieve
+     @param modelName a previously normalized modelName
+     @returns {RecordMap} the RecordMap for the given modelName
+     */
+
+    _createClass(IdentityMap, [{
+      key: 'retrieve',
+      value: function retrieve(modelName) {
+        var recordMap = this._map[modelName];
+
+        if (!recordMap) {
+          recordMap = this._map[modelName] = new _emberDataPrivateSystemRecordMap.default(modelName);
+        }
+
+        return recordMap;
+      }
+
+      /**
+       Clears the contents of all known `RecordMaps`, but does
+       not remove the RecordMap instances.
+        @method clear
+       */
+    }, {
+      key: 'clear',
+      value: function clear() {
+        var recordMaps = this._map;
+        var keys = Object.keys(recordMaps);
+
+        for (var i = 0; i < keys.length; i++) {
+          var key = keys[i];
+          recordMaps[key].clear();
+        }
+      }
+    }]);
+
+    return IdentityMap;
+  })();
+
+  exports.default = IdentityMap;
+});
 define('ember-data/-private/system/is-array-like', ['exports', 'ember'], function (exports, _ember) {
   exports.default = isArrayLike;
 
@@ -2040,6 +2102,8 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
   // this (and all heimdall instrumentation) will be stripped by a babel transform
   //  https://github.com/heimdalljs/babel5-plugin-strip-heimdall
 
+  var InternalModelReferenceId = 1;
+
   /*
     `InternalModel` is the Model class that we use internally inside Ember Data to represent models.
     Internal ED methods should only deal with `InternalModel` objects. It is a fast, plain Javascript class.
@@ -2058,12 +2122,12 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
   */
 
   var InternalModel = (function () {
-    function InternalModel(modelClass, id, store, data) {
-      this.modelClass = modelClass;
+    function InternalModel(modelName, id, store, data) {
       this.id = id;
+      this._internalId = InternalModelReferenceId++;
       this.store = store;
       this._data = data || new _emberDataPrivateSystemEmptyObject.default();
-      this.modelName = modelClass.modelName;
+      this.modelName = modelName;
       this.dataHasInitialized = false;
       this._loadingPromise = null;
       this._recordArrays = undefined;
@@ -2075,6 +2139,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this.error = null;
 
       // caches for lazy getters
+      this._modelClass = null;
       this.__deferredTriggers = null;
       this._references = null;
       this._recordReference = null;
@@ -2694,7 +2759,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       key: "updateRecordArrays",
       value: function updateRecordArrays() {
         this._updatingRecordArraysLater = false;
-        this.store.dataWasUpdated(this.modelClass, this);
+        this.store._dataWasUpdated(this);
       }
     }, {
       key: "setId",
@@ -2952,6 +3017,11 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         }
 
         return reference;
+      }
+    }, {
+      key: "modelClass",
+      get: function () {
+        return this._modelClass || (this._modelClass = this.store.modelFor(this.modelName));
       }
     }, {
       key: "type",
@@ -5733,7 +5803,7 @@ define('ember-data/-private/system/promise-proxies', ['exports', 'ember', 'ember
     });
   }
 });
-define("ember-data/-private/system/record-array-manager", ["exports", "ember", "ember-data/-private/system/record-arrays", "ember-data/-private/system/ordered-set"], function (exports, _ember, _emberDataPrivateSystemRecordArrays, _emberDataPrivateSystemOrderedSet) {
+define("ember-data/-private/system/record-array-manager", ["exports", "ember", "ember-data/-private/system/record-arrays", "ember-data/-private/system/ordered-set", "ember-data/-private/debug"], function (exports, _ember, _emberDataPrivateSystemRecordArrays, _emberDataPrivateSystemOrderedSet, _emberDataPrivateDebug) {
   var get = _ember.default.get;
   var MapWithDefault = _ember.default.MapWithDefault;
   var emberRun = _ember.default.run;
@@ -5755,8 +5825,9 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
       });
 
       this.liveRecordArrays = MapWithDefault.create({
-        defaultValue: function (modelClass) {
-          return _this.createRecordArray(modelClass);
+        defaultValue: function (modelName) {
+          (0, _emberDataPrivateDebug.assert)("liveRecordArrays.get expects modelName not modelClass as the param", typeof modelName === 'string');
+          return _this.createRecordArray(modelName);
         }
       });
 
@@ -5772,9 +5843,9 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
       emberRun.schedule('actions', this, this.updateRecordArrays);
     },
 
-    recordArraysForRecord: function (record) {
-      record._recordArrays = record._recordArrays || _emberDataPrivateSystemOrderedSet.default.create();
-      return record._recordArrays;
+    recordArraysForRecord: function (internalModel) {
+      internalModel._recordArrays = internalModel._recordArrays || _emberDataPrivateSystemOrderedSet.default.create();
+      return internalModel._recordArrays;
     },
 
     /**
@@ -5799,48 +5870,48 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
       this.changedRecords.length = 0;
     },
 
-    _recordWasDeleted: function (record) {
-      var recordArrays = record._recordArrays;
+    _recordWasDeleted: function (internalModel) {
+      var recordArrays = internalModel._recordArrays;
 
       if (!recordArrays) {
         return;
       }
 
       recordArrays.forEach(function (array) {
-        return array._removeInternalModels([record]);
+        return array._removeInternalModels([internalModel]);
       });
 
-      record._recordArrays = null;
+      internalModel._recordArrays = null;
     },
 
-    _recordWasChanged: function (record) {
+    _recordWasChanged: function (internalModel) {
       var _this3 = this;
 
-      var typeClass = record.type;
-      var recordArrays = this.filteredRecordArrays.get(typeClass);
+      var modelName = internalModel.modelName;
+      var recordArrays = this.filteredRecordArrays.get(modelName);
       var filter = undefined;
       recordArrays.forEach(function (array) {
         filter = get(array, 'filterFunction');
-        _this3.updateFilterRecordArray(array, filter, typeClass, record);
+        _this3.updateFilterRecordArray(array, filter, modelName, internalModel);
       });
     },
 
     //Need to update live arrays on loading
-    recordWasLoaded: function (record) {
+    recordWasLoaded: function (internalModel) {
       var _this4 = this;
 
-      var typeClass = record.type;
-      var recordArrays = this.filteredRecordArrays.get(typeClass);
+      var modelName = internalModel.modelName;
+      var recordArrays = this.filteredRecordArrays.get(modelName);
       var filter = undefined;
 
       recordArrays.forEach(function (array) {
         filter = get(array, 'filterFunction');
-        _this4.updateFilterRecordArray(array, filter, typeClass, record);
+        _this4.updateFilterRecordArray(array, filter, modelName, internalModel);
       });
 
-      if (this.liveRecordArrays.has(typeClass)) {
-        var liveRecordArray = this.liveRecordArrays.get(typeClass);
-        this._addInternalModelToRecordArray(liveRecordArray, record);
+      if (this.liveRecordArrays.has(modelName)) {
+        var liveRecordArray = this.liveRecordArrays.get(modelName);
+        this._addInternalModelToRecordArray(liveRecordArray, internalModel);
       }
     },
 
@@ -5849,10 +5920,10 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
        @method updateFilterRecordArray
       @param {DS.FilteredRecordArray} array
       @param {Function} filter
-      @param {DS.Model} modelClass
+      @param {String} modelName
       @param {InternalModel} internalModel
     */
-    updateFilterRecordArray: function (array, filter, modelClass, internalModel) {
+    updateFilterRecordArray: function (array, filter, modelName, internalModel) {
       var shouldBeInArray = filter(internalModel.getRecord());
       var recordArrays = this.recordArraysForRecord(internalModel);
       if (shouldBeInArray) {
@@ -5871,10 +5942,11 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
       }
     },
 
-    syncLiveRecordArray: function (array, modelClass) {
+    syncLiveRecordArray: function (array, modelName) {
+      (0, _emberDataPrivateDebug.assert)("recordArrayManger.syncLiveRecordArray expects modelName not modelClass as the second param", typeof modelName === 'string');
       var hasNoPotentialDeletions = this.changedRecords.length === 0;
-      var typeMap = this.store.typeMapFor(modelClass);
-      var hasNoInsertionsOrRemovals = typeMap.records.length === array.length;
+      var recordMap = this.store._recordMapFor(modelName);
+      var hasNoInsertionsOrRemovals = recordMap.length === array.length;
 
       /*
         Ideally the recordArrayManager has knowledge of the changes to be applied to
@@ -5886,12 +5958,14 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
         return;
       }
 
-      this.populateLiveRecordArray(array, modelClass);
+      this.populateLiveRecordArray(array, modelName);
     },
 
-    populateLiveRecordArray: function (array, modelClass) {
-      var typeMap = this.store.typeMapFor(modelClass);
-      var records = typeMap.records;
+    populateLiveRecordArray: function (array, modelName) {
+      (0, _emberDataPrivateDebug.assert)("recordArrayManger.populateLiveRecordArray expects modelName not modelClass as the second param", typeof modelName === 'string');
+
+      var recordMap = this.store._recordMapFor(modelName);
+      var records = recordMap.records;
       var record = undefined;
 
       for (var i = 0; i < records.length; i++) {
@@ -5910,43 +5984,49 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
       method is invoked when the filter is created in th first place.
        @method updateFilter
       @param {Array} array
-      @param {Class} modelClass
+      @param {String} modelName
       @param {Function} filter
     */
-    updateFilter: function (array, modelClass, filter) {
-      var typeMap = this.store.typeMapFor(modelClass);
-      var records = typeMap.records;
+    updateFilter: function (array, modelName, filter) {
+      (0, _emberDataPrivateDebug.assert)("recordArrayManger.updateFilter expects modelName not modelClass as the second param, received " + modelName, typeof modelName === 'string');
+
+      var recordMap = this.store._recordMapFor(modelName);
+      var records = recordMap.records;
       var record = undefined;
 
       for (var i = 0; i < records.length; i++) {
         record = records[i];
 
         if (!record.isDeleted() && !record.isEmpty()) {
-          this.updateFilterRecordArray(array, filter, modelClass, record);
+          this.updateFilterRecordArray(array, filter, modelName, record);
         }
       }
     },
 
     /**
-      Get the `DS.RecordArray` for a type, which contains all loaded records of
-      given type.
+      Get the `DS.RecordArray` for a modelName, which contains all loaded records of
+      given modelName.
        @method liveRecordArrayFor
-      @param {Class} typeClass
+      @param {String} modelName
       @return {DS.RecordArray}
     */
-    liveRecordArrayFor: function (typeClass) {
-      return this.liveRecordArrays.get(typeClass);
+    liveRecordArrayFor: function (modelName) {
+      (0, _emberDataPrivateDebug.assert)("recordArrayManger.liveRecordArrayFor expects modelName not modelClass as the param", typeof modelName === 'string');
+
+      return this.liveRecordArrays.get(modelName);
     },
 
     /**
-      Create a `DS.RecordArray` for a type.
+      Create a `DS.RecordArray` for a modelName.
        @method createRecordArray
-      @param {Class} modelClass
+      @param {String} modelName
       @return {DS.RecordArray}
     */
-    createRecordArray: function (modelClass) {
+    createRecordArray: function (modelName) {
+      (0, _emberDataPrivateDebug.assert)("recordArrayManger.createRecordArray expects modelName not modelClass as the param", typeof modelName === 'string');
+
       return _emberDataPrivateSystemRecordArrays.RecordArray.create({
-        type: modelClass,
+        modelName: modelName,
         content: _ember.default.A(),
         store: this.store,
         isLoaded: true,
@@ -5955,38 +6035,42 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
     },
 
     /**
-      Create a `DS.FilteredRecordArray` for a type and register it for updates.
+      Create a `DS.FilteredRecordArray` for a modelName and register it for updates.
        @method createFilteredRecordArray
-      @param {DS.Model} typeClass
+      @param {String} modelName
       @param {Function} filter
       @param {Object} query (optional
       @return {DS.FilteredRecordArray}
     */
-    createFilteredRecordArray: function (typeClass, filter, query) {
+    createFilteredRecordArray: function (modelName, filter, query) {
+      (0, _emberDataPrivateDebug.assert)("recordArrayManger.createFilteredRecordArray expects modelName not modelClass as the first param, received " + modelName, typeof modelName === 'string');
+
       var array = _emberDataPrivateSystemRecordArrays.FilteredRecordArray.create({
         query: query,
-        type: typeClass,
+        modelName: modelName,
         content: _ember.default.A(),
         store: this.store,
         manager: this,
         filterFunction: filter
       });
 
-      this.registerFilteredRecordArray(array, typeClass, filter);
+      this.registerFilteredRecordArray(array, modelName, filter);
 
       return array;
     },
 
     /**
-      Create a `DS.AdapterPopulatedRecordArray` for a type with given query.
+      Create a `DS.AdapterPopulatedRecordArray` for a modelName with given query.
        @method createAdapterPopulatedRecordArray
-      @param {DS.Model} typeClass
+      @param {String} modelName
       @param {Object} query
       @return {DS.AdapterPopulatedRecordArray}
     */
-    createAdapterPopulatedRecordArray: function (typeClass, query) {
+    createAdapterPopulatedRecordArray: function (modelName, query) {
+      (0, _emberDataPrivateDebug.assert)("recordArrayManger.createAdapterPopulatedRecordArray expects modelName not modelClass as the first param, received " + modelName, typeof modelName === 'string');
+
       var array = _emberDataPrivateSystemRecordArrays.AdapterPopulatedRecordArray.create({
-        type: typeClass,
+        modelName: modelName,
         query: query,
         content: _ember.default.A(),
         store: this.store,
@@ -5999,20 +6083,22 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
     },
 
     /**
-      Register a RecordArray for a given type to be backed by
+      Register a RecordArray for a given modelName to be backed by
       a filter function. This will cause the array to update
-      automatically when records of that type change attribute
+      automatically when records of that modelName change attribute
       values or states.
        @method registerFilteredRecordArray
       @param {DS.RecordArray} array
-      @param {DS.Model} typeClass
+      @param {String} modelName
       @param {Function} filter
     */
-    registerFilteredRecordArray: function (array, typeClass, filter) {
-      var recordArrays = this.filteredRecordArrays.get(typeClass);
+    registerFilteredRecordArray: function (array, modelName, filter) {
+      (0, _emberDataPrivateDebug.assert)("recordArrayManger.registerFilteredRecordArray expects modelName not modelClass as the second param, received " + modelName, typeof modelName === 'string');
+
+      var recordArrays = this.filteredRecordArrays.get(modelName);
       recordArrays.push(array);
 
-      this.updateFilter(array, typeClass, filter);
+      this.updateFilter(array, modelName, filter);
     },
 
     /**
@@ -6023,10 +6109,10 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
     */
     unregisterRecordArray: function (array) {
 
-      var typeClass = array.type;
+      var modelName = array.modelName;
 
       // unregister filtered record array
-      var recordArrays = this.filteredRecordArrays.get(typeClass);
+      var recordArrays = this.filteredRecordArrays.get(modelName);
       var removedFromFiltered = remove(recordArrays, array);
 
       // remove from adapter populated record array
@@ -6035,10 +6121,10 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
       if (!removedFromFiltered && !removedFromAdapterPopulated) {
 
         // unregister live record array
-        if (this.liveRecordArrays.has(typeClass)) {
-          var liveRecordArrayForType = this.liveRecordArrayFor(typeClass);
+        if (this.liveRecordArrays.has(modelName)) {
+          var liveRecordArrayForType = this.liveRecordArrayFor(modelName);
           if (array === liveRecordArrayForType) {
-            this.liveRecordArrays.delete(typeClass);
+            this.liveRecordArrays.delete(modelName);
           }
         }
       }
@@ -6148,16 +6234,14 @@ define("ember-data/-private/system/record-arrays/adapter-populated-record-array"
     },
 
     replace: function () {
-      var type = get(this, 'type').toString();
-      throw new Error("The result of a server query (on " + type + ") is immutable.");
+      throw new Error("The result of a server query (on " + this.modelName + ") is immutable.");
     },
 
     _update: function () {
       var store = get(this, 'store');
-      var modelName = get(this, 'type.modelName');
       var query = get(this, 'query');
 
-      return store._query(modelName, query, this);
+      return store._query(this.modelName, query, this);
     },
 
     /**
@@ -6181,8 +6265,8 @@ define("ember-data/-private/system/record-arrays/adapter-populated-record-array"
         links: (0, _emberDataPrivateSystemCloneNull.default)(payload.links)
       });
 
-      internalModels.forEach(function (record) {
-        return _this.manager.recordArraysForRecord(record).add(_this);
+      internalModels.forEach(function (internalModel) {
+        return _this.manager.recordArraysForRecord(internalModel).add(_this);
       });
 
       // TODO: should triggering didLoad event be the last action of the runLoop?
@@ -6238,8 +6322,7 @@ define('ember-data/-private/system/record-arrays/filtered-record-array', ['expor
     */
 
     replace: function () {
-      var type = get(this, 'type').toString();
-      throw new Error('The result of a client-side filter (on ' + type + ') is immutable.');
+      throw new Error('The result of a client-side filter (on ' + this.modelName + ') is immutable.');
     },
 
     /**
@@ -6250,7 +6333,7 @@ define('ember-data/-private/system/record-arrays/filtered-record-array', ['expor
       if (get(this, 'isDestroying') || get(this, 'isDestroyed')) {
         return;
       }
-      get(this, 'manager').updateFilter(this, get(this, 'type'), get(this, 'filterFunction'));
+      get(this, 'manager').updateFilter(this, this.modelName, get(this, 'filterFunction'));
     },
 
     updateFilter: _ember.default.observer('filterFunction', function () {
@@ -6259,12 +6342,13 @@ define('ember-data/-private/system/record-arrays/filtered-record-array', ['expor
   });
 });
 define("ember-data/-private/system/record-arrays/record-array", ["exports", "ember", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/snapshot-record-array"], function (exports, _ember, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemSnapshotRecordArray) {
+  var computed = _ember.default.computed;
   var get = _ember.default.get;
   var set = _ember.default.set;
   var Promise = _ember.default.RSVP.Promise;
 
   /**
-    A record array is an array that contains records of a certain type. The record
+    A record array is an array that contains records of a certain modelName. The record
     array materializes records as needed when they are retrieved for the first
     time. You should not create record arrays yourself. Instead, an instance of
     `DS.RecordArray` or its subclasses will be returned by your application's store
@@ -6279,13 +6363,6 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
   exports.default = _ember.default.ArrayProxy.extend(_ember.default.Evented, {
     init: function () {
       this._super.apply(this, arguments);
-
-      /**
-        The model type contained by this record array.
-         @property type
-        @type DS.Model
-        */
-      this.type = this.type || null;
 
       /**
         The array of client ids backing the record array. When a
@@ -6334,9 +6411,20 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
     },
 
     replace: function () {
-      var type = get(this, 'type').toString();
-      throw new Error("The result of a server query (for all " + type + " types) is immutable. To modify contents, use toArray()");
+      throw new Error("The result of a server query (for all " + this.modelName + " types) is immutable. To modify contents, use toArray()");
     },
+
+    /**
+     The modelClass represented by this record array.
+      @property type
+     @type DS.Model
+     */
+    type: computed('modelName', function () {
+      if (!this.modelName) {
+        return null;
+      }
+      return this.store.modelFor(this.modelName);
+    }).readOnly(),
 
     /**
       Retrieves an object from the content by index.
@@ -6391,10 +6479,7 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
       is finished.
      */
     _update: function () {
-      var store = get(this, 'store');
-      var modelName = get(this, 'type.modelName');
-
-      return store.findAll(modelName, { reload: true });
+      return this.store.findAll(this.modelName, { reload: true });
     },
 
     /**
@@ -6436,7 +6521,7 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
     save: function () {
       var _this2 = this;
 
-      var promiseLabel = 'DS: RecordArray#save ' + get(this, 'type');
+      var promiseLabel = "DS: RecordArray#save " + this.modelName;
       var promise = Promise.all(this.invoke('save'), promiseLabel).then(function () {
         return _this2;
       }, null, 'DS: RecordArray#save return RecordArray');
@@ -6502,6 +6587,167 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
 /**
   @module ember-data
 */
+define('ember-data/-private/system/record-map', ['exports', 'ember-data/-private/debug', 'ember-data/-private/system/model/internal-model'], function (exports, _emberDataPrivateDebug, _emberDataPrivateSystemModelInternalModel) {
+  var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+  /**
+   `RecordMap` is a custom storage map for records of a given modelName
+   used by `IdentityMap`.
+  
+   It was extracted from an implicit pojo based "record map" and preserves
+   that interface while we work towards a more official API.
+  
+   @class RecordMap
+   @private
+   */
+
+  var RecordMap = (function () {
+    function RecordMap(modelName) {
+      this.modelName = modelName;
+      this._idToRecord = Object.create(null);
+      this._records = [];
+      this._metadata = null;
+    }
+
+    /**
+      A "map" of records based on their ID for this modelName
+     */
+
+    _createClass(RecordMap, [{
+      key: 'get',
+
+      /**
+       *
+       * @param id
+       * @returns {InternalModel}
+       */
+      value: function get(id) {
+        var r = this._idToRecord[id];
+        return r;
+      }
+    }, {
+      key: 'has',
+      value: function has(id) {
+        return !!this._idToRecord[id];
+      }
+    }, {
+      key: 'set',
+      value: function set(id, internalModel) {
+        (0, _emberDataPrivateDebug.assert)('You cannot index an internalModel by an empty id\'', id);
+        (0, _emberDataPrivateDebug.assert)('You cannot set an index for an internalModel to something other than an internalModel', internalModel instanceof _emberDataPrivateSystemModelInternalModel.default);
+        (0, _emberDataPrivateDebug.assert)('You cannot set an index for an internalModel that is not in the RecordMap', this.contains(internalModel));
+        (0, _emberDataPrivateDebug.assert)('You cannot update the id index of an InternalModel once set. Attempted to update ' + id + '.', !this.has(id) || this.get(id) === internalModel);
+
+        this._idToRecord[id] = internalModel;
+      }
+    }, {
+      key: 'add',
+      value: function add(internalModel, id) {
+        (0, _emberDataPrivateDebug.assert)('You cannot re-add an already present InternalModel to the RecordMap.', !this.contains(internalModel));
+
+        if (id) {
+          this._idToRecord[id] = internalModel;
+        }
+
+        this._records.push(internalModel);
+      }
+    }, {
+      key: 'remove',
+      value: function remove(internalModel, id) {
+        if (id) {
+          delete this._idToRecord[id];
+        }
+
+        var loc = this._records.indexOf(internalModel);
+
+        if (loc !== -1) {
+          this._records.splice(loc, 1);
+        }
+      }
+    }, {
+      key: 'contains',
+      value: function contains(internalModel) {
+        return this._records.indexOf(internalModel) !== -1;
+      }
+
+      /**
+       An array of all records of this modelName
+       */
+    }, {
+      key: 'clear',
+
+      /**
+       Destroy all records in the recordMap and wipe metadata.
+        @method clear
+       */
+      value: function clear() {
+        if (this._records) {
+          var records = this._records;
+          this._records = [];
+          var record = undefined;
+
+          for (var i = 0; i < records.length; i++) {
+            record = records[i];
+            record.unloadRecord();
+            record.destroy(); // maybe within unloadRecord
+          }
+        }
+
+        this._metadata = null;
+      }
+    }, {
+      key: 'destroy',
+      value: function destroy() {
+        this._store = null;
+        this._modelClass = null;
+      }
+    }, {
+      key: 'idToRecord',
+      get: function () {
+        (0, _emberDataPrivateDebug.deprecate)('Use of RecordMap.idToRecord is deprecated, use RecordMap.get(id) instead.', false, {
+          id: 'ds.record-map.idToRecord',
+          until: '2.13'
+        });
+        return this._idToRecord;
+      }
+    }, {
+      key: 'length',
+      get: function () {
+        return this._records.length;
+      }
+    }, {
+      key: 'records',
+      get: function () {
+        return this._records;
+      }
+
+      /**
+       * meta information about records
+       */
+    }, {
+      key: 'metadata',
+      get: function () {
+        return this._metadata || (this._metadata = Object.create(null));
+      }
+
+      /**
+       deprecated (and unsupported) way of accessing modelClass
+        @deprecated
+       */
+    }, {
+      key: 'type',
+      get: function () {
+        throw new Error('RecordMap.type is no longer available');
+      }
+    }]);
+
+    return RecordMap;
+  })();
+
+  exports.default = RecordMap;
+});
 define('ember-data/-private/system/references', ['exports', 'ember-data/-private/system/references/record', 'ember-data/-private/system/references/belongs-to', 'ember-data/-private/system/references/has-many'], function (exports, _emberDataPrivateSystemReferencesRecord, _emberDataPrivateSystemReferencesBelongsTo, _emberDataPrivateSystemReferencesHasMany) {
   exports.RecordReference = _emberDataPrivateSystemReferencesRecord.default;
   exports.BelongsToReference = _emberDataPrivateSystemReferencesBelongsTo.default;
@@ -9240,7 +9486,7 @@ define("ember-data/-private/system/snapshot", ["exports", "ember", "ember-data/-
 /**
   @module ember-data
 */
-define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/model', 'ember-data/-private/debug', 'ember-data/-private/system/normalize-model-name', 'ember-data/adapters/errors', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/store/common', 'ember-data/-private/system/store/serializer-response', 'ember-data/-private/system/store/serializers', 'ember-data/-private/system/store/finders', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/store/container-instance-cache', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/system/empty-object', 'ember-data/-private/features'], function (exports, _ember, _emberDataModel, _emberDataPrivateDebug, _emberDataPrivateSystemNormalizeModelName, _emberDataAdaptersErrors, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStoreCommon, _emberDataPrivateSystemStoreSerializerResponse, _emberDataPrivateSystemStoreSerializers, _emberDataPrivateSystemStoreFinders, _emberDataPrivateUtils, _emberDataPrivateSystemCoerceId, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateSystemStoreContainerInstanceCache, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemEmptyObject, _emberDataPrivateFeatures) {
+define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/model', 'ember-data/-private/debug', 'ember-data/-private/system/normalize-model-name', 'ember-data/adapters/errors', 'ember-data/-private/system/identity-map', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/store/common', 'ember-data/-private/system/store/serializer-response', 'ember-data/-private/system/store/serializers', 'ember-data/-private/system/store/finders', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/store/container-instance-cache', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/system/empty-object', 'ember-data/-private/features'], function (exports, _ember, _emberDataModel, _emberDataPrivateDebug, _emberDataPrivateSystemNormalizeModelName, _emberDataAdaptersErrors, _emberDataPrivateSystemIdentityMap, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStoreCommon, _emberDataPrivateSystemStoreSerializerResponse, _emberDataPrivateSystemStoreSerializers, _emberDataPrivateSystemStoreFinders, _emberDataPrivateUtils, _emberDataPrivateSystemCoerceId, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateSystemStoreContainerInstanceCache, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemEmptyObject, _emberDataPrivateFeatures) {
   var badIdFormatAssertion = '`id` passed to `findRecord()` has to be non-empty string or number';
 
   exports.badIdFormatAssertion = badIdFormatAssertion;
@@ -9251,7 +9497,6 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
   var ENV = _ember.default.ENV;
   var EmberError = _ember.default.Error;
   var get = _ember.default.get;
-  var guidFor = _ember.default.guidFor;
   var inspect = _ember.default.inspect;
   var isNone = _ember.default.isNone;
   var isPresent = _ember.default.isPresent;
@@ -9374,10 +9619,12 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       this._super.apply(this, arguments);
       this._backburner = new Backburner(['normalizeRelationships', 'syncRelationships', 'finished']);
       // internal bookkeeping; not observable
-      this.typeMaps = {};
       this.recordArrayManager = _emberDataPrivateSystemRecordArrayManager.default.create({
         store: this
       });
+      this._identityMap = new _emberDataPrivateSystemIdentityMap.default();
+      this._pendingSave = [];
+      this._instanceCache = new _emberDataPrivateSystemStoreContainerInstanceCache.default((0, _emberDataPrivateUtils.getOwner)(this), this);
 
       /*
         Ember Data uses several specialized micro-queues for organizing
@@ -9489,7 +9736,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     createRecord: function (modelName, inputProperties) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's createRecord method", isPresent(modelName));
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
-      var modelClass = this.modelFor(modelName);
+      var trueModelName = this._classKeyFor(modelName);
       var properties = copy(inputProperties) || new _emberDataPrivateSystemEmptyObject.default();
 
       // If the passed properties do not include a primary key,
@@ -9498,13 +9745,13 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       // to avoid conflicts.
 
       if (isNone(properties.id)) {
-        properties.id = this._generateId(modelName, properties);
+        properties.id = this._generateId(trueModelName, properties);
       }
 
       // Coerce ID to a string
       properties.id = (0, _emberDataPrivateSystemCoerceId.default)(properties.id);
 
-      var internalModel = this.buildInternalModel(modelClass, properties.id);
+      var internalModel = this.buildInternalModel(trueModelName, properties.id);
       var record = internalModel.getRecord();
 
       // Move the record out of its initial `empty` state into
@@ -9595,24 +9842,16 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       // The default `model` hook in Ember.Route calls `find(modelName, id)`,
       // that's why we have to keep this method around even though `findRecord` is
       // the public way to get a record by modelName and id.
-
-      if (arguments.length === 1) {
-        (0, _emberDataPrivateDebug.assert)('Using store.find(type) has been removed. Use store.findAll(type) to retrieve all records for a given type.');
-      }
-
-      if (typeOf(id) === 'object') {
-        (0, _emberDataPrivateDebug.assert)('Calling store.find() with a query object is no longer supported. Use store.query() instead.');
-      }
-
-      if (options) {
-        (0, _emberDataPrivateDebug.assert)('Calling store.find(type, id, { preload: preload }) is no longer supported. Use store.findRecord(type, id, { preload: preload }) instead.');
-      }
-
-      (0, _emberDataPrivateDebug.assert)("You need to pass the model name and id to the store's find method", arguments.length === 2);
+      (0, _emberDataPrivateDebug.assert)('Using store.find(type) has been removed. Use store.findAll(modelName) to retrieve all records for a given type.', arguments.length !== 1);
+      (0, _emberDataPrivateDebug.assert)('Calling store.find() with a query object is no longer supported. Use store.query() instead.', typeOf(id) !== 'object');
+      (0, _emberDataPrivateDebug.assert)('Calling store.find(modelName, id, { preload: preload }) is no longer supported. Use store.findRecord(modelName, id, { preload: preload }) instead.', !options);
+      (0, _emberDataPrivateDebug.assert)('You need to pass the model name and id to the store\'s find method', arguments.length === 2);
       (0, _emberDataPrivateDebug.assert)("You cannot pass `" + inspect(id) + "` as id to the store's find method", typeOf(id) === 'string' || typeOf(id) === 'number');
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
 
-      return this.findRecord(modelName, id);
+      var trueModelName = this._classKeyFor(modelName);
+
+      return this.findRecord(trueModelName, id);
     },
 
     /**
@@ -9778,16 +10017,18 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
       (0, _emberDataPrivateDebug.assert)(badIdFormatAssertion, typeof id === 'string' && id.length > 0 || typeof id === 'number' && !isNaN(id));
 
-      var internalModel = this._internalModelForId(modelName, id);
+      var trueModelName = this._classKeyFor(modelName);
+
+      var internalModel = this._internalModelForId(trueModelName, id);
       options = options || {};
 
-      if (!this.hasRecordForId(modelName, id)) {
+      if (!this.hasRecordForId(trueModelName, id)) {
         return this._findByInternalModel(internalModel, options);
       }
 
       var fetchedInternalModel = this._findRecord(internalModel, options);
 
-      return promiseRecord(fetchedInternalModel, "DS: Store#findRecord " + internalModel.typeKey + " with id: " + get(internalModel, 'id'));
+      return promiseRecord(fetchedInternalModel, 'DS: Store#findRecord ' + trueModelName + ' with id: ' + id);
     },
 
     _findRecord: function (internalModel, options) {
@@ -9857,11 +10098,13 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
       var promises = new Array(ids.length);
 
+      var trueModelName = this._classKeyFor(modelName);
+
       for (var i = 0; i < ids.length; i++) {
-        promises[i] = this.findRecord(modelName, ids[i]);
+        promises[i] = this.findRecord(trueModelName, ids[i]);
       }
 
-      return (0, _emberDataPrivateSystemPromiseProxies.promiseArray)(RSVP.all(promises).then(A, null, "DS: Store#findByIds of " + modelName + " complete"));
+      return (0, _emberDataPrivateSystemPromiseProxies.promiseArray)(RSVP.all(promises).then(A, null, 'DS: Store#findByIds of ' + trueModelName + ' complete'));
     },
 
     /**
@@ -10069,13 +10312,15 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       });
       ```
        @method getReference
-      @param {String} type
+      @param {String} modelName
       @param {String|Integer} id
       @since 2.5.0
       @return {RecordReference}
     */
-    getReference: function (type, id) {
-      return this._internalModelForId(type, id).recordReference;
+    getReference: function (modelName, id) {
+      var trueModelName = this._classKeyFor(modelName);
+
+      return this._internalModelForId(trueModelName, id).recordReference;
     },
 
     /**
@@ -10097,8 +10342,10 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     peekRecord: function (modelName, id) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's peekRecord method", isPresent(modelName));
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
-      if (this.hasRecordForId(modelName, id)) {
-        return this._internalModelForId(modelName, id).getRecord();
+      var trueModelName = this._classKeyFor(modelName);
+
+      if (this.hasRecordForId(trueModelName, id)) {
+        return this._internalModelForId(trueModelName, id).getRecord();
       } else {
         return null;
       }
@@ -10145,10 +10392,10 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     hasRecordForId: function (modelName, id) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's hasRecordForId method", isPresent(modelName));
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
+      var trueModelName = this._classKeyFor(modelName);
 
       var trueId = (0, _emberDataPrivateSystemCoerceId.default)(id);
-      var modelClass = this.modelFor(modelName);
-      var internalModel = this.typeMapFor(modelClass).idToRecord[trueId];
+      var internalModel = this._recordMapFor(trueModelName).get(trueId);
 
       return !!internalModel && internalModel.isLoaded();
     },
@@ -10168,14 +10415,12 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       return this._internalModelForId(modelName, id).getRecord();
     },
 
-    _internalModelForId: function (modelName, inputId) {
-      var modelClass = this.modelFor(modelName);
-      var id = (0, _emberDataPrivateSystemCoerceId.default)(inputId);
-      var idToRecord = this.typeMapFor(modelClass).idToRecord;
-      var internalModel = idToRecord[id];
+    _internalModelForId: function (modelName, id) {
+      var trueId = (0, _emberDataPrivateSystemCoerceId.default)(id);
+      var internalModel = this._recordMapFor(modelName).get(trueId);
 
-      if (!internalModel || !idToRecord[id]) {
-        internalModel = this.buildInternalModel(modelClass, id);
+      if (!internalModel) {
+        internalModel = this.buildInternalModel(modelName, trueId);
       }
 
       return internalModel;
@@ -10276,7 +10521,12 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @return {Promise} promise
     */
     query: function (modelName, query) {
-      return this._query(modelName, query);
+      (0, _emberDataPrivateDebug.assert)('You need to pass a model name to the store\'s query method', isPresent(modelName));
+      (0, _emberDataPrivateDebug.assert)('You need to pass a query hash to the store\'s query method', query);
+      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
+
+      var trueModelName = this._classKeyFor(modelName);
+      return this._query(trueModelName, query);
     },
 
     _query: function (modelName, query, array) {
@@ -10286,11 +10536,11 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
       var modelClass = this.modelFor(modelName);
 
-      array = array || this.recordArrayManager.createAdapterPopulatedRecordArray(modelClass, query);
+      array = array || this.recordArrayManager.createAdapterPopulatedRecordArray(modelName, query);
 
       var adapter = this.adapterFor(modelName);
 
-      (0, _emberDataPrivateDebug.assert)("You tried to load a query but you have no adapter (for " + modelClass.modelName + ")", adapter);
+      (0, _emberDataPrivateDebug.assert)("You tried to load a query but you have no adapter (for " + modelName + ")", adapter);
       (0, _emberDataPrivateDebug.assert)("You tried to load a query but your adapter does not implement `query`", typeof adapter.query === 'function');
 
       var pA = (0, _emberDataPrivateSystemPromiseProxies.promiseArray)((0, _emberDataPrivateSystemStoreFinders._query)(adapter, this, modelClass, query, array));
@@ -10379,11 +10629,12 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's queryRecord method", isPresent(modelName));
       (0, _emberDataPrivateDebug.assert)("You need to pass a query hash to the store's queryRecord method", query);
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
+      var trueModelName = this._classKeyFor(modelName);
 
-      var modelClass = this.modelFor(modelName);
-      var adapter = this.adapterFor(modelName);
+      var modelClass = this.modelFor(trueModelName);
+      var adapter = this.adapterFor(trueModelName);
 
-      (0, _emberDataPrivateDebug.assert)("You tried to make a query but you have no adapter (for " + modelName + ")", adapter);
+      (0, _emberDataPrivateDebug.assert)('You tried to make a query but you have no adapter (for ' + trueModelName + ')', adapter);
       (0, _emberDataPrivateDebug.assert)("You tried to make a query but your adapter does not implement `queryRecord`", typeof adapter.queryRecord === 'function');
 
       return (0, _emberDataPrivateSystemPromiseProxies.promiseObject)((0, _emberDataPrivateSystemStoreFinders._queryRecord)(adapter, this, modelClass, query).then(function (internalModel) {
@@ -10551,9 +10802,9 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's findAll method", isPresent(modelName));
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
 
-      var modelClass = this.modelFor(modelName);
-
-      var fetch = this._fetchAll(modelClass, this.peekAll(modelName), options);
+      var trueModelName = this._classKeyFor(modelName);
+      var modelClass = this.modelFor(trueModelName);
+      var fetch = this._fetchAll(modelClass, this.peekAll(trueModelName), options);
 
       return fetch;
     },
@@ -10568,10 +10819,11 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     _fetchAll: function (modelClass, array, options) {
       options = options || {};
 
-      var adapter = this.adapterFor(modelClass.modelName);
-      var sinceToken = this.typeMapFor(modelClass).metadata.since;
+      var modelName = modelClass.modelName;
+      var adapter = this.adapterFor(modelName);
+      var sinceToken = this._recordMapFor(modelName).metadata.since;
 
-      (0, _emberDataPrivateDebug.assert)("You tried to load all records but you have no adapter (for " + modelClass.modelName + ")", adapter);
+      (0, _emberDataPrivateDebug.assert)("You tried to load all records but you have no adapter (for " + modelName + ")", adapter);
       (0, _emberDataPrivateDebug.assert)("You tried to load all records but your adapter does not implement `findAll`", typeof adapter.findAll === 'function');
 
       if (options.reload) {
@@ -10600,11 +10852,11 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
     /**
       @method didUpdateAll
-      @param {DS.Model} modelClass
+      @param {String} modelName
       @private
     */
-    didUpdateAll: function (modelClass) {
-      var liveRecordArray = this.recordArrayManager.liveRecordArrayFor(modelClass);
+    didUpdateAll: function (modelName) {
+      var liveRecordArray = this.recordArrayManager.liveRecordArrayFor(modelName);
 
       set(liveRecordArray, 'isUpdating', false);
     },
@@ -10631,10 +10883,10 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     peekAll: function (modelName) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's peekAll method", isPresent(modelName));
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
-      var modelClass = this.modelFor(modelName);
-      var liveRecordArray = this.recordArrayManager.liveRecordArrayFor(modelClass);
+      var trueModelName = this._classKeyFor(modelName);
+      var liveRecordArray = this.recordArrayManager.liveRecordArrayFor(trueModelName);
 
-      this.recordArrayManager.syncLiveRecordArray(liveRecordArray, modelClass);
+      this.recordArrayManager.syncLiveRecordArray(liveRecordArray, trueModelName);
 
       return liveRecordArray;
     },
@@ -10654,28 +10906,10 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), !modelName || typeof modelName === 'string');
 
       if (arguments.length === 0) {
-        var typeMaps = this.typeMaps;
-        var keys = Object.keys(typeMaps);
-        var types = new Array(keys.length);
-
-        for (var i = 0; i < keys.length; i++) {
-          types[i] = typeMaps[keys[i]]['type'].modelName;
-        }
-
-        types.forEach(this.unloadAll, this);
+        this._identityMap.clear();
       } else {
-        var modelClass = this.modelFor(modelName);
-        var typeMap = this.typeMapFor(modelClass);
-        var records = typeMap.records.slice();
-        var record = undefined;
-
-        for (var i = 0; i < records.length; i++) {
-          record = records[i];
-          record.unloadRecord();
-          record.destroy(); // maybe within unloadRecord
-        }
-
-        typeMap.metadata = new _emberDataPrivateSystemEmptyObject.default();
+        var trueModelName = this._classKeyFor(modelName);
+        this._recordMapFor(trueModelName).clear();
       }
     },
 
@@ -10736,26 +10970,26 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       var array = undefined;
       var hasQuery = length === 3;
 
+      var trueModelName = this._classKeyFor(modelName);
+
       // allow an optional server query
       if (hasQuery) {
-        promise = this.query(modelName, query);
+        promise = this.query(trueModelName, query);
       } else if (arguments.length === 2) {
         filter = query;
       }
 
-      modelName = this.modelFor(modelName);
-
       if (hasQuery) {
-        array = this.recordArrayManager.createFilteredRecordArray(modelName, filter, query);
+        array = this.recordArrayManager.createFilteredRecordArray(trueModelName, filter, query);
       } else {
-        array = this.recordArrayManager.createFilteredRecordArray(modelName, filter);
+        array = this.recordArrayManager.createFilteredRecordArray(trueModelName, filter);
       }
 
       promise = promise || Promise.resolve(array);
 
       return (0, _emberDataPrivateSystemPromiseProxies.promiseArray)(promise.then(function () {
         return array;
-      }, null, 'DS: Store#filter of ' + modelName));
+      }, null, 'DS: Store#filter of ' + trueModelName));
     },
 
     /**
@@ -10784,12 +11018,11 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       the store to update its  membership in any filters.
       To avoid thrashing, this method is invoked only once per
       run loop per record.
-       @method dataWasUpdated
+       @method _dataWasUpdated
       @private
-      @param {Class} type
       @param {InternalModel} internalModel
     */
-    dataWasUpdated: function (type, internalModel) {
+    _dataWasUpdated: function (internalModel) {
       this.recordArrayManager.recordDidChange(internalModel);
     },
 
@@ -10919,49 +11152,44 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       var id = (0, _emberDataPrivateSystemCoerceId.default)(data.id);
 
       // ID absolutely can't be missing if the oldID is empty (missing Id in response for a new record)
-      (0, _emberDataPrivateDebug.assert)('\'' + internalModel.type.modelName + '\' was saved to the server, but the response does not have an id and your record does not either.', !(id === null && oldId === null));
+      (0, _emberDataPrivateDebug.assert)('\'' + internalModel.modelName + '\' was saved to the server, but the response does not have an id and your record does not either.', !(id === null && oldId === null));
 
       // ID absolutely can't be different than oldID if oldID is not null
-      (0, _emberDataPrivateDebug.assert)('\'' + internalModel.type.modelName + ':' + oldId + '\' was saved to the server, but the response returned the new id \'' + id + '\'. The store cannot assign a new id to a record that already has an id.', !(oldId !== null && id !== oldId));
+      (0, _emberDataPrivateDebug.assert)('\'' + internalModel.modelName + ':' + oldId + '\' was saved to the server, but the response returned the new id \'' + id + '\'. The store cannot assign a new id to a record that already has an id.', !(oldId !== null && id !== oldId));
 
       // ID can be null if oldID is not null (altered ID in response for a record)
       // however, this is more than likely a developer error.
       if (oldId !== null && id === null) {
-        (0, _emberDataPrivateDebug.warn)('Your ' + internalModel.type.modelName + ' record was saved to the server, but the response does not have an id.', !(oldId !== null && id === null));
+        (0, _emberDataPrivateDebug.warn)('Your ' + internalModel.modelName + ' record was saved to the server, but the response does not have an id.', !(oldId !== null && id === null));
         return;
       }
 
-      this.typeMapFor(internalModel.type).idToRecord[id] = internalModel;
+      this._recordMapFor(internalModel.modelName).set(id, internalModel);
 
       internalModel.setId(id);
     },
 
     /**
-      Returns a map of IDs to client IDs for a given type.
-       @method typeMapFor
+     Returns the normalized (dasherized) modelName. This method should be used whenever
+     receiving a modelName in a public method.
+       @method _classKeyFor
+     @param {String} modelName
+     @returns {String}
+     @private
+     */
+    _classKeyFor: function (modelName) {
+      return (0, _emberDataPrivateSystemNormalizeModelName.default)(modelName);
+    },
+
+    /**
+      Returns a map of IDs to client IDs for a given modelName.
+       @method _recordMapFor
       @private
-      @param {DS.Model} modelClass
-      @return {Object} typeMap
+      @param {String} modelName
+      @return {Object} recordMap
     */
-    typeMapFor: function (modelClass) {
-      var typeMaps = get(this, 'typeMaps');
-      var guid = guidFor(modelClass);
-      var typeMap = typeMaps[guid];
-
-      if (typeMap) {
-        return typeMap;
-      }
-
-      typeMap = {
-        idToRecord: new _emberDataPrivateSystemEmptyObject.default(),
-        records: [],
-        metadata: new _emberDataPrivateSystemEmptyObject.default(),
-        type: modelClass
-      };
-
-      typeMaps[guid] = typeMap;
-
-      return typeMap;
+    _recordMapFor: function (modelName) {
+      return this._identityMap.retrieve(modelName);
     },
 
     // ................
@@ -10972,7 +11200,6 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       This internal method is used by `push`.
        @method _load
       @private
-      @param {(String|DS.Model)} type
       @param {Object} data
     */
     _load: function (data) {
@@ -11037,15 +11264,20 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's modelFor method", isPresent(modelName));
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
 
-      var factory = this.modelFactoryFor(modelName);
+      var trueModelName = this._classKeyFor(modelName);
+
+      var factory = this.modelFactoryFor(trueModelName);
       if (!factory) {
         //Support looking up mixins as base types for polymorphic relationships
-        factory = this._modelForMixin(modelName);
+        factory = this._modelForMixin(trueModelName);
       }
       if (!factory) {
-        throw new EmberError("No model was found for '" + modelName + "'");
+        throw new EmberError('No model was found for \'' + trueModelName + '\'');
       }
-      factory.modelName = factory.modelName || (0, _emberDataPrivateSystemNormalizeModelName.default)(modelName);
+
+      (0, _emberDataPrivateDebug.assert)('\'' + inspect(factory) + '\' does not appear to be an ember-data model', typeof factory._create === 'function');
+
+      factory.modelName = factory.modelName || trueModelName;
 
       return factory;
     },
@@ -11053,11 +11285,10 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     modelFactoryFor: function (modelName) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's modelFactoryFor method", isPresent(modelName));
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
-      var normalizedKey = (0, _emberDataPrivateSystemNormalizeModelName.default)(modelName);
-
+      var trueModelName = this._classKeyFor(modelName);
       var owner = (0, _emberDataPrivateUtils.getOwner)(this);
 
-      return owner._lookupFactory('model:' + normalizedKey);
+      return owner._lookupFactory('model:' + trueModelName);
     },
 
     /**
@@ -11276,14 +11507,14 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
             var unknownAttributes = Object.keys(data.attributes || {}).filter(function (key) {
               return !get(modelClass, 'fields').has(key);
             });
-            var unknownAttributesMessage = 'The payload for \'' + modelClass.modelName + '\' contains these unknown attributes: ' + unknownAttributes + '. Make sure they\'ve been defined in your model.';
+            var unknownAttributesMessage = 'The payload for \'' + modelName + '\' contains these unknown attributes: ' + unknownAttributes + '. Make sure they\'ve been defined in your model.';
             (0, _emberDataPrivateDebug.warn)(unknownAttributesMessage, unknownAttributes.length === 0, { id: 'ds.store.unknown-keys-in-payload' });
 
             // Check unknown relationships
             var unknownRelationships = Object.keys(data.relationships || {}).filter(function (key) {
               return !get(modelClass, 'fields').has(key);
             });
-            var unknownRelationshipsMessage = 'The payload for \'' + modelClass.modelName + '\' contains these unknown relationships: ' + unknownRelationships + '. Make sure they\'ve been defined in your model.';
+            var unknownRelationshipsMessage = 'The payload for \'' + modelName + '\' contains these unknown relationships: ' + unknownRelationships + '. Make sure they\'ve been defined in your model.';
             (0, _emberDataPrivateDebug.warn)(unknownRelationshipsMessage, unknownRelationships.length === 0, { id: 'ds.store.unknown-keys-in-payload' });
           })();
         }
@@ -11373,7 +11604,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       } else {
         payload = inputPayload;
         (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
-        serializer = this.serializerFor(modelName);
+        var trueModelName = this._classKeyFor(modelName);
+        serializer = this.serializerFor(trueModelName);
       }
       if ((0, _emberDataPrivateFeatures.default)('ds-pushpayload-return')) {
         return this._adapterRun(function () {
@@ -11405,8 +11637,9 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     normalize: function (modelName, payload) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's normalize method", isPresent(modelName));
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
-      var serializer = this.serializerFor(modelName);
-      var model = this.modelFor(modelName);
+      var trueModelName = this._classKeyFor(modelName);
+      var serializer = this.serializerFor(trueModelName);
+      var model = this.modelFor(trueModelName);
       return serializer.normalize(model, payload);
     },
 
@@ -11415,29 +11648,24 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       initial data.
        @method buildRecord
       @private
-      @param {DS.Model} modelClass
+      @param {String} modelName
       @param {String} id
       @param {Object} data
       @return {InternalModel} internal model
     */
-    buildInternalModel: function (modelClass, id, data) {
-      var typeMap = this.typeMapFor(modelClass);
-      var idToRecord = typeMap.idToRecord;
+    buildInternalModel: function (modelName, id, data) {
 
-      (0, _emberDataPrivateDebug.assert)('The id ' + id + ' has already been used with another record for modelClass ' + modelClass + '.', !id || !idToRecord[id]);
-      (0, _emberDataPrivateDebug.assert)('\'' + inspect(modelClass) + '\' does not appear to be an ember-data model', typeof modelClass._create === 'function');
+      (0, _emberDataPrivateDebug.assert)('You can no longer pass a modelClass as the first argument to store.buildInternalModel. Pass modelName instead.', typeof modelName === 'string');
+
+      var recordMap = this._recordMapFor(modelName);
+
+      (0, _emberDataPrivateDebug.assert)('The id ' + id + ' has already been used with another record for modelClass \'' + modelName + '\'.', !id || !recordMap.get(id));
 
       // lookupFactory should really return an object that creates
       // instances with the injections applied
-      var internalModel = new _emberDataPrivateSystemModelInternalModel.default(modelClass, id, this, data);
+      var internalModel = new _emberDataPrivateSystemModelInternalModel.default(modelName, id, this, data);
 
-      // if we're creating an item, this process will be done
-      // later, once the object has been persisted.
-      if (id) {
-        idToRecord[id] = internalModel;
-      }
-
-      typeMap.records.push(internalModel);
+      recordMap.add(internalModel, id);
 
       return internalModel;
     },
@@ -11459,18 +11687,12 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @param {InternalModel} internalModel
     */
     _dematerializeRecord: function (internalModel) {
-      var modelClass = internalModel.type;
-      var typeMap = this.typeMapFor(modelClass);
+      var recordMap = this._recordMapFor(internalModel.modelName);
       var id = internalModel.id;
 
       internalModel.updateRecordArrays();
 
-      if (id) {
-        delete typeMap.idToRecord[id];
-      }
-
-      var loc = typeMap.records.indexOf(internalModel);
-      typeMap.records.splice(loc, 1);
+      recordMap.remove(internalModel, id);
     },
 
     // ......................
@@ -11494,10 +11716,9 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     adapterFor: function (modelName) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's adapterFor method", isPresent(modelName));
       (0, _emberDataPrivateDebug.assert)('Passing classes to store.adapterFor has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
+      var trueModelName = this._classKeyFor(modelName);
 
-      var normalizedModelName = (0, _emberDataPrivateSystemNormalizeModelName.default)(modelName);
-
-      return this._instanceCache.get('adapter', normalizedModelName);
+      return this._instanceCache.get('adapter', trueModelName);
     },
 
     _adapterRun: function (fn) {
@@ -11528,10 +11749,9 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     serializerFor: function (modelName) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's serializerFor method", isPresent(modelName));
       (0, _emberDataPrivateDebug.assert)('Passing classes to store.serializerFor has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
+      var trueModelName = this._classKeyFor(modelName);
 
-      var normalizedModelName = (0, _emberDataPrivateSystemNormalizeModelName.default)(modelName);
-
-      return this._instanceCache.get('serializer', normalizedModelName);
+      return this._instanceCache.get('serializer', trueModelName);
     },
 
     lookupAdapter: function (name) {
@@ -11597,8 +11817,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     var internalModel = snapshot._internalModel;
     var modelName = snapshot.modelName;
     var modelClass = store.modelFor(modelName);
-    (0, _emberDataPrivateDebug.assert)('You tried to update a record but you have no adapter (for ' + modelClass.modelName + ')', adapter);
-    (0, _emberDataPrivateDebug.assert)('You tried to update a record but your adapter (for ' + modelClass.modelName + ') does not implement \'' + operation + '\'', typeof adapter[operation] === 'function');
+    (0, _emberDataPrivateDebug.assert)('You tried to update a record but you have no adapter (for ' + modelName + ')', adapter);
+    (0, _emberDataPrivateDebug.assert)('You tried to update a record but your adapter (for ' + modelName + ') does not implement \'' + operation + '\'', typeof adapter[operation] === 'function');
     var promise = adapter[operation](store, modelClass, snapshot);
     var serializer = (0, _emberDataPrivateSystemStoreSerializers.serializerForAdapter)(store, adapter, modelName);
     var label = 'DS: Extract and notify about ' + operation + ' completion of ' + internalModel;
@@ -11884,8 +12104,7 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
       (0, _emberDataPrivateDebug.assert)("You made a `findMany` request for " + typeClass.modelName + " records with ids " + ids + ", but the adapter's response did not have any data", payloadIsNotBlank(adapterPayload));
       return store._adapterRun(function () {
         var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, null, 'findMany');
-        var internalModels = store._push(payload);
-        return internalModels;
+        return store._push(payload);
       });
     }, null, "DS: Extract payload of " + typeClass);
   }
@@ -11905,10 +12124,10 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
       (0, _emberDataPrivateDebug.assert)("You made a `findHasMany` request for a " + internalModel.modelName + "'s `" + relationship.key + "` relationship, using link " + link + ", but the adapter's response did not have any data", payloadIsNotBlank(adapterPayload));
       return store._adapterRun(function () {
         var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, null, 'findHasMany');
-        var recordArray = store._push(payload);
+        var internalModelArray = store._push(payload);
 
-        recordArray.meta = payload.meta;
-        return recordArray;
+        internalModelArray.meta = payload.meta;
+        return internalModelArray;
       });
     }, null, "DS: Extract payload of " + internalModel + " : hasMany " + relationship.type);
   }
@@ -11932,8 +12151,7 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
           return null;
         }
 
-        var internalModel = store._push(payload);
-        return internalModel;
+        return store._push(payload);
       });
     }, null, "DS: Extract payload of " + internalModel + " : " + relationship.type);
   }
@@ -11956,7 +12174,7 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
         store._push(payload);
       });
 
-      store.didUpdateAll(typeClass);
+      store.didUpdateAll(modelName);
       return store.peekAll(modelName);
     }, null, "DS: Extract payload of findAll " + typeClass);
   }
@@ -19499,7 +19717,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.12.0-canary+fef53029ed";
+  exports.default = "2.12.0-canary+63d725dfe3";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
