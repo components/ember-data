@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.12.0-canary+c5de6f3001
+ * @version   2.12.0-canary+a1bac10f3a
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -3021,7 +3021,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     }, {
       key: "modelClass",
       get: function () {
-        return this._modelClass || (this._modelClass = this.store.modelFor(this.modelName));
+        return this._modelClass || (this._modelClass = this.store._modelFor(this.modelName));
       }
     }, {
       key: "type",
@@ -6423,7 +6423,7 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
       if (!this.modelName) {
         return null;
       }
-      return this.store.modelFor(this.modelName);
+      return this.store._modelFor(this.modelName);
     }).readOnly(),
 
     /**
@@ -9625,6 +9625,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       this._identityMap = new _emberDataPrivateSystemIdentityMap.default();
       this._pendingSave = [];
       this._instanceCache = new _emberDataPrivateSystemStoreContainerInstanceCache.default((0, _emberDataPrivateUtils.getOwner)(this), this);
+      this._modelClassCache = new _emberDataPrivateSystemEmptyObject.default();
 
       /*
         Ember Data uses several specialized micro-queues for organizing
@@ -10534,7 +10535,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       (0, _emberDataPrivateDebug.assert)("You need to pass a query hash to the store's query method", query);
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
 
-      var modelClass = this.modelFor(modelName);
+      var modelClass = this._modelFor(modelName);
 
       array = array || this.recordArrayManager.createAdapterPopulatedRecordArray(modelName, query);
 
@@ -10631,7 +10632,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
       var trueModelName = this._classKeyFor(modelName);
 
-      var modelClass = this.modelFor(trueModelName);
+      var modelClass = this._modelFor(trueModelName);
       var adapter = this.adapterFor(trueModelName);
 
       (0, _emberDataPrivateDebug.assert)('You tried to make a query but you have no adapter (for ' + trueModelName + ')', adapter);
@@ -10803,7 +10804,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
 
       var trueModelName = this._classKeyFor(modelName);
-      var modelClass = this.modelFor(trueModelName);
+      var modelClass = this._modelFor(trueModelName);
       var fetch = this._fetchAll(modelClass, this.peekAll(trueModelName), options);
 
       return fetch;
@@ -11227,8 +11228,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       relationship metadata. Thus, we look up the mixin and create a mock
       DS.Model, so we can access the relationship CPs of the mixin (`comments`)
       in this case
+       @private
     */
-
     _modelForMixin: function (modelName) {
       var normalizedModelName = (0, _emberDataPrivateSystemNormalizeModelName.default)(modelName);
       // container.registry = 2.1
@@ -11266,22 +11267,39 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
       var trueModelName = this._classKeyFor(modelName);
 
-      var factory = this.modelFactoryFor(trueModelName);
-      if (!factory) {
-        //Support looking up mixins as base types for polymorphic relationships
-        factory = this._modelForMixin(trueModelName);
-      }
-      if (!factory) {
-        throw new EmberError('No model was found for \'' + trueModelName + '\'');
-      }
+      return this._modelFor(trueModelName);
+    },
 
-      (0, _emberDataPrivateDebug.assert)('\'' + inspect(factory) + '\' does not appear to be an ember-data model', typeof factory._create === 'function');
+    /*
+      @private
+     */
+    _modelFor: function (modelName) {
+      var factory = this._modelClassCache[modelName];
 
-      factory.modelName = factory.modelName || trueModelName;
+      if (!factory) {
+        factory = this.modelFactoryFor(modelName);
+
+        if (!factory) {
+          //Support looking up mixins as base types for polymorphic relationships
+          factory = this._modelForMixin(modelName);
+        }
+        if (!factory) {
+          throw new EmberError('No model was found for \'' + modelName + '\'');
+        }
+
+        (0, _emberDataPrivateDebug.assert)('\'' + inspect(factory) + '\' does not appear to be an ember-data model', typeof factory._create === 'function');
+
+        factory.modelName = factory.modelName || modelName;
+
+        this._modelClassCache[modelName] = factory;
+      }
 
       return factory;
     },
 
+    /*
+     @private
+     */
     modelFactoryFor: function (modelName) {
       (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's modelFactoryFor method", isPresent(modelName));
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
@@ -11501,7 +11519,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
         if (ENV.DS_WARN_ON_UNKNOWN_KEYS) {
           (function () {
-            var modelClass = _this2.modelFor(modelName);
+            var modelClass = _this2._modelFor(modelName);
 
             // Check unknown attributes
             var unknownAttributes = Object.keys(data.attributes || {}).filter(function (key) {
@@ -11633,7 +11651,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
       var trueModelName = this._classKeyFor(modelName);
       var serializer = this.serializerFor(trueModelName);
-      var model = this.modelFor(trueModelName);
+      var model = this._modelFor(trueModelName);
       return serializer.normalize(model, payload);
     },
 
@@ -11806,7 +11824,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
   function _commit(adapter, store, operation, snapshot) {
     var internalModel = snapshot._internalModel;
     var modelName = snapshot.modelName;
-    var modelClass = store.modelFor(modelName);
+    var modelClass = store._modelFor(modelName);
     (0, _emberDataPrivateDebug.assert)('You tried to update a record but you have no adapter (for ' + modelName + ')', adapter);
     (0, _emberDataPrivateDebug.assert)('You tried to update a record but your adapter (for ' + modelName + ') does not implement \'' + operation + '\'', typeof adapter[operation] === 'function');
     var promise = adapter[operation](store, modelClass, snapshot);
@@ -16738,7 +16756,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
         return null;
       }
 
-      var modelClass = this.store.modelFor(modelName);
+      var modelClass = this.store._modelFor(modelName);
       var serializer = this.store.serializerFor(modelName);
 
       var _serializer$normalize = serializer.normalize(modelClass, resourceHash);
@@ -18841,7 +18859,7 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
         included: []
       };
 
-      var modelClass = store.modelFor(modelName);
+      var modelClass = store._modelFor(modelName);
       var serializer = store.serializerFor(modelName);
 
       _ember.default.makeArray(arrayHash).forEach(function (hash) {
@@ -19697,7 +19715,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.12.0-canary+c5de6f3001";
+  exports.default = "2.12.0-canary+a1bac10f3a";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
