@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.12.0-canary+63d725dfe3
+ * @version   2.12.0-canary+c5de6f3001
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -11334,8 +11334,6 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @param {Object} inputPayload
     */
     pushPayload: function (modelName, inputPayload) {
-      var _this2 = this;
-
       var serializer = undefined;
       var payload = undefined;
       if (!inputPayload) {
@@ -11348,13 +11346,9 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         serializer = this.serializerFor(trueModelName);
       }
       if ((0, _emberDataPrivateFeatures.default)('ds-pushpayload-return')) {
-        return this._adapterRun(function () {
-          return serializer.pushPayload(_this2, payload);
-        });
+        return serializer.pushPayload(this, payload);
       } else {
-        this._adapterRun(function () {
-          return serializer.pushPayload(_this2, payload);
-        });
+        serializer.pushPayload(this, payload);
       }
     },
 
@@ -11453,10 +11447,6 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       return this._instanceCache.get('adapter', trueModelName);
     },
 
-    _adapterRun: function (fn) {
-      return this._backburner.run(fn);
-    },
-
     // ..............................
     // . RECORD CHANGE NOTIFICATION .
     // ..............................
@@ -11545,7 +11535,15 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     promise = (0, _emberDataPrivateSystemStoreCommon._guard)(promise, (0, _emberDataPrivateSystemStoreCommon._bind)(_emberDataPrivateSystemStoreCommon._objectIsAlive, internalModel));
 
     return promise.then(function (adapterPayload) {
-      store._adapterRun(function () {
+      /*
+        Note to future spelunkers hoping to optimize.
+        We rely on this `run` to create a run loop if needed
+        that `store._push` and `store.didSaveRecord` will both share.
+         We use `join` because it is often the case that we
+        have an outer run loop available still from the first
+        call to `store._push`;
+       */
+      store._backburner.join(function () {
         var payload = undefined,
             data = undefined;
         if (adapterPayload) {
@@ -11778,21 +11776,19 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     }
   }
 
-  function _find(adapter, store, typeClass, id, internalModel, options) {
+  function _find(adapter, store, modelClass, id, internalModel, options) {
     var snapshot = internalModel.createSnapshot(options);
-    var promise = adapter.findRecord(store, typeClass, id, snapshot);
+    var promise = adapter.findRecord(store, modelClass, id, snapshot);
     var serializer = (0, _emberDataPrivateSystemStoreSerializers.serializerForAdapter)(store, adapter, internalModel.type.modelName);
-    var label = "DS: Handle Adapter#findRecord of " + typeClass + " with id: " + id;
+    var label = "DS: Handle Adapter#findRecord of " + modelClass + " with id: " + id;
 
     promise = Promise.resolve(promise, label);
     promise = (0, _emberDataPrivateSystemStoreCommon._guard)(promise, (0, _emberDataPrivateSystemStoreCommon._bind)(_emberDataPrivateSystemStoreCommon._objectIsAlive, store));
 
     return promise.then(function (adapterPayload) {
-      return store._adapterRun(function () {
-        var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, id, 'findRecord');
+      var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, modelClass, adapterPayload, id, 'findRecord');
 
-        return store._push(payload);
-      });
+      return store._push(payload);
     }, function (error) {
       internalModel.notFound();
       if (internalModel.isEmpty()) {
@@ -11800,14 +11796,14 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
       }
 
       throw error;
-    }, "DS: Extract payload of '" + typeClass + "'");
+    }, "DS: Extract payload of '" + modelClass + "'");
   }
 
-  function _findMany(adapter, store, typeClass, ids, internalModels) {
+  function _findMany(adapter, store, modelClass, ids, internalModels) {
     var snapshots = _ember.default.A(internalModels).invoke('createSnapshot');
-    var promise = adapter.findMany(store, typeClass, ids, snapshots);
-    var serializer = (0, _emberDataPrivateSystemStoreSerializers.serializerForAdapter)(store, adapter, typeClass.modelName);
-    var label = "DS: Handle Adapter#findMany of " + typeClass;
+    var promise = adapter.findMany(store, modelClass, ids, snapshots);
+    var serializer = (0, _emberDataPrivateSystemStoreSerializers.serializerForAdapter)(store, adapter, modelClass.modelName);
+    var label = "DS: Handle Adapter#findMany of " + modelClass;
 
     if (promise === undefined) {
       throw new Error('adapter.findMany returned undefined, this was very likely a mistake');
@@ -11817,16 +11813,14 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     promise = (0, _emberDataPrivateSystemStoreCommon._guard)(promise, (0, _emberDataPrivateSystemStoreCommon._bind)(_emberDataPrivateSystemStoreCommon._objectIsAlive, store));
 
     return promise.then(function (adapterPayload) {
-      return store._adapterRun(function () {
-        var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, null, 'findMany');
-        return store._push(payload);
-      });
-    }, null, "DS: Extract payload of " + typeClass);
+      var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, modelClass, adapterPayload, null, 'findMany');
+      return store._push(payload);
+    }, null, "DS: Extract payload of " + modelClass);
   }
 
   function _findHasMany(adapter, store, internalModel, link, relationship) {
     var snapshot = internalModel.createSnapshot();
-    var typeClass = store.modelFor(relationship.type);
+    var modelClass = store.modelFor(relationship.type);
     var promise = adapter.findHasMany(store, snapshot, link, relationship);
     var serializer = (0, _emberDataPrivateSystemStoreSerializers.serializerForAdapter)(store, adapter, relationship.type);
     var label = "DS: Handle Adapter#findHasMany of " + internalModel + " : " + relationship.type;
@@ -11836,19 +11830,17 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     promise = (0, _emberDataPrivateSystemStoreCommon._guard)(promise, (0, _emberDataPrivateSystemStoreCommon._bind)(_emberDataPrivateSystemStoreCommon._objectIsAlive, internalModel));
 
     return promise.then(function (adapterPayload) {
-      return store._adapterRun(function () {
-        var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, null, 'findHasMany');
-        var internalModelArray = store._push(payload);
+      var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, modelClass, adapterPayload, null, 'findHasMany');
+      var internalModelArray = store._push(payload);
 
-        internalModelArray.meta = payload.meta;
-        return internalModelArray;
-      });
+      internalModelArray.meta = payload.meta;
+      return internalModelArray;
     }, null, "DS: Extract payload of " + internalModel + " : hasMany " + relationship.type);
   }
 
   function _findBelongsTo(adapter, store, internalModel, link, relationship) {
     var snapshot = internalModel.createSnapshot();
-    var typeClass = store.modelFor(relationship.type);
+    var modelClass = store.modelFor(relationship.type);
     var promise = adapter.findBelongsTo(store, snapshot, link, relationship);
     var serializer = (0, _emberDataPrivateSystemStoreSerializers.serializerForAdapter)(store, adapter, relationship.type);
     var label = "DS: Handle Adapter#findBelongsTo of " + internalModel + " : " + relationship.type;
@@ -11858,64 +11850,57 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     promise = (0, _emberDataPrivateSystemStoreCommon._guard)(promise, (0, _emberDataPrivateSystemStoreCommon._bind)(_emberDataPrivateSystemStoreCommon._objectIsAlive, internalModel));
 
     return promise.then(function (adapterPayload) {
-      return store._adapterRun(function () {
-        var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, null, 'findBelongsTo');
+      var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, modelClass, adapterPayload, null, 'findBelongsTo');
 
-        if (!payload.data) {
-          return null;
-        }
+      if (!payload.data) {
+        return null;
+      }
 
-        return store._push(payload);
-      });
+      return store._push(payload);
     }, null, "DS: Extract payload of " + internalModel + " : " + relationship.type);
   }
 
-  function _findAll(adapter, store, typeClass, sinceToken, options) {
-    var modelName = typeClass.modelName;
+  function _findAll(adapter, store, modelClass, sinceToken, options) {
+    var modelName = modelClass.modelName;
     var recordArray = store.peekAll(modelName);
     var snapshotArray = recordArray._createSnapshot(options);
-    var promise = adapter.findAll(store, typeClass, sinceToken, snapshotArray);
+    var promise = adapter.findAll(store, modelClass, sinceToken, snapshotArray);
     var serializer = (0, _emberDataPrivateSystemStoreSerializers.serializerForAdapter)(store, adapter, modelName);
-    var label = "DS: Handle Adapter#findAll of " + typeClass;
+    var label = "DS: Handle Adapter#findAll of " + modelClass;
 
     promise = Promise.resolve(promise, label);
     promise = (0, _emberDataPrivateSystemStoreCommon._guard)(promise, (0, _emberDataPrivateSystemStoreCommon._bind)(_emberDataPrivateSystemStoreCommon._objectIsAlive, store));
 
     return promise.then(function (adapterPayload) {
-      store._adapterRun(function () {
-        var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, null, 'findAll');
-        store._push(payload);
-      });
+      var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, modelClass, adapterPayload, null, 'findAll');
 
+      store._push(payload);
       store.didUpdateAll(modelName);
+
       return store.peekAll(modelName);
-    }, null, "DS: Extract payload of findAll " + typeClass);
+    }, null, "DS: Extract payload of findAll " + modelClass);
   }
 
-  function _query(adapter, store, typeClass, query, recordArray) {
-    var modelName = typeClass.modelName;
-    var promise = adapter.query(store, typeClass, query, recordArray);
+  function _query(adapter, store, modelClass, query, recordArray) {
+    var modelName = modelClass.modelName;
+    var promise = adapter.query(store, modelClass, query, recordArray);
 
     var serializer = (0, _emberDataPrivateSystemStoreSerializers.serializerForAdapter)(store, adapter, modelName);
 
-    var label = 'DS: Handle Adapter#query of ' + typeClass;
+    var label = 'DS: Handle Adapter#query of ' + modelClass;
 
     promise = Promise.resolve(promise, label);
     promise = (0, _emberDataPrivateSystemStoreCommon._guard)(promise, (0, _emberDataPrivateSystemStoreCommon._bind)(_emberDataPrivateSystemStoreCommon._objectIsAlive, store));
 
     return promise.then(function (adapterPayload) {
-      var internalModels = undefined,
-          payload = undefined;
-      store._adapterRun(function () {
-        payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, typeClass, adapterPayload, null, 'query');
+      var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, modelClass, adapterPayload, null, 'query');
 
-        internalModels = store._push(payload);
-      });
+      var internalModels = store._push(payload);
 
       recordArray._setInternalModels(internalModels, payload);
 
       return recordArray;
-    }, null, 'DS: Extract payload of query ' + typeClass);
+    }, null, 'DS: Extract payload of query ' + modelName);
   }
 
   function _queryRecord(adapter, store, modelClass, query) {
@@ -11928,15 +11913,10 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     promise = (0, _emberDataPrivateSystemStoreCommon._guard)(promise, (0, _emberDataPrivateSystemStoreCommon._bind)(_emberDataPrivateSystemStoreCommon._objectIsAlive, store));
 
     return promise.then(function (adapterPayload) {
-      var internalModel = undefined;
-      store._adapterRun(function () {
-        var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, modelClass, adapterPayload, null, 'queryRecord');
+      var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, modelClass, adapterPayload, null, 'queryRecord');
 
-        internalModel = store._push(payload);
-      });
-
-      return internalModel;
-    }, null, "DS: Extract payload of queryRecord " + modelClass);
+      return store._push(payload);
+    }, null, "DS: Extract payload of queryRecord " + modelName);
   }
 });
 define('ember-data/-private/system/store/serializer-response', ['exports', 'ember', 'ember-data/-private/debug'], function (exports, _ember, _emberDataPrivateDebug) {
@@ -19271,7 +19251,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.12.0-canary+63d725dfe3";
+  exports.default = "2.12.0-canary+c5de6f3001";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
