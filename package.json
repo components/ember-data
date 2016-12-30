@@ -1,5 +1,5 @@
 {
-  "name": "components-ember-data",
+  "name": "ember-data",
   "version": "2.11.0-beta.1",
   "description": "A data persistence library for Ember.js.",
   "keywords": [
@@ -15,5 +15,6 @@
       "ember-data": { "deps": ["ember"], "exports": "DS" },
       "ember-data.prod": { "deps": ["ember"], "exports": "DS" }
     }
-  }
+  },
+  "private": true
 }
