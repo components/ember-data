@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.12.0-canary+7f4c84066d
+ * @version   2.12.0-canary+21c77a12aa
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -478,7 +478,7 @@ define('ember-data/-private/adapters/build-url-mixin', ['exports', 'ember'], fun
       ```app/adapters/comment.js
      import DS from 'ember-data';
       export default DS.JSONAPIAdapter.extend({
-       urlForFindAll(id, modelName, snapshot) {
+       urlForFindAll(modelName, snapshot) {
          return 'data/comments.json';
        }
      });
@@ -3546,7 +3546,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       Marks the record as deleted but does not save it. You must call
       `save` afterwards if you want to persist it. You might use this
       method if you want to allow the user to still `rollbackAttributes()`
-      after a delete it was made.
+      after a delete was made.
        Example
        ```app/routes/model/delete.js
       import Ember from 'ember';
@@ -3587,7 +3587,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       });
       ```
        If you pass an object on the `adapterOptions` property of the options
-      argument it will be passed to you adapter via the snapshot
+      argument it will be passed to your adapter via the snapshot
        ```js
       record.destroyRecord({ adapterOptions: { subscribe: false } });
       ```
@@ -19269,7 +19269,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.12.0-canary+7f4c84066d";
+  exports.default = "2.12.0-canary+21c77a12aa";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -19287,10 +19287,15 @@ define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "em
   if (typeof define !== 'undefined' && define.amd) {
     define('ember-inflector', ['exports'], function (__exports__) {
       __exports__['default'] = _emberInflectorLibSystem.Inflector;
+      __exports__.pluralize = _emberInflectorLibSystem.pluralize;
+      __exports__.singularize = _emberInflectorLibSystem.singularize;
+
       return _emberInflectorLibSystem.Inflector;
     });
   } else if (typeof module !== 'undefined' && module['exports']) {
     module['exports'] = _emberInflectorLibSystem.Inflector;
+    _emberInflectorLibSystem.Inflector.singularize = _emberInflectorLibSystem.singularize;
+    _emberInflectorLibSystem.Inflector.pluralize = _emberInflectorLibSystem.pluralize;
   }
 });
 /* global define, module */
