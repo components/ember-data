@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+a3b1a16a64
+ * @version   2.13.0-canary+99b4b2264a
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -6495,8 +6495,8 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
       this._super.apply(this, arguments);
     },
 
-    /**
-    r   @method _createSnapshot
+    /*
+      @method _createSnapshot
       @private
     */
     _createSnapshot: function (options) {
@@ -6504,8 +6504,8 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
       return new _emberDataPrivateSystemSnapshotRecordArray.default(this, this.get('meta'), options);
     },
 
-    /**
-    r   @method _takeSnapshot
+    /*
+      @method _takeSnapshot
       @private
     */
     _takeSnapshot: function () {
@@ -7584,9 +7584,9 @@ define('ember-data/-private/system/references/record', ['exports', 'ember', 'emb
      });
      ```
   
-    @method
+    @method push
     @param {Promise|Object}
-    @returns Promise<record> a promise for the value (record or relationship)
+    @return Promise<record> a promise for the value (record or relationship)
   */
   RecordReference.prototype.push = function (objectOrPromise) {
     var _this = this;
@@ -19356,7 +19356,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+a3b1a16a64";
+  exports.default = "2.13.0-canary+99b4b2264a";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
