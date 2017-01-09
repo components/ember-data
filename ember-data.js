@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.12.0-canary+21c77a12aa
+ * @version   2.12.0-canary+be37733286
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -9122,36 +9122,108 @@ define('ember-data/-private/system/snapshot-record-array', ['exports'], function
       @type {Array}
     */
     this._recordArray = recordArray;
+
     /**
       Number of records in the array
-      @property length
+       Example
+       ```app/adapters/post.js
+      import DS from 'ember-data'
+       export default DS.JSONAPIAdapter.extend({
+        shouldReloadAll(store, snapshotRecordArray) {
+          return !snapshotRecordArray.length;
+        },
+      });
+      ```
+       @property length
       @type {Number}
     */
     this.length = recordArray.get('length');
+
     /**
       The type of the underlying records for the snapshots in the array, as a DS.Model
       @property type
       @type {DS.Model}
     */
     this.type = recordArray.get('type');
+
     /**
-      Meta object
-      @property meta
+      Meta objects for the record array.
+       Example
+       ```app/adapters/post.js
+      import DS from 'ember-data'
+       export default DS.JSONAPIAdapter.extend({
+        shouldReloadAll(store, snapshotRecordArray) {
+          var lastRequestTime = snapshotRecordArray.meta.lastRequestTime;
+          var twentyMinutes = 20 * 60 * 1000;
+          return Date.now() > lastRequestTime + twentyMinutes;
+        },
+      });
+      ```
+       @property meta
       @type {Object}
     */
     this.meta = meta;
+
     /**
-      A hash of adapter options
-      @property adapterOptions
+      A hash of adapter options passed into the store method for this request.
+       Example
+       ```app/adapters/post.js
+      import MyCustomAdapter from './custom-adapter';
+       export default MyCustomAdapter.extend({
+        findAll(store, type, sinceToken, snapshotRecordArray) {
+          if (snapshotRecordArray.adapterOptions.subscribe) {
+            // ...
+          }
+          // ...
+        }
+      });
+      ```
+       @property adapterOptions
       @type {Object}
     */
     this.adapterOptions = options.adapterOptions;
 
+    /**
+      The relationships to include for this request.
+       Example
+       ```app/adapters/application.js
+      import DS from 'ember-data';
+       export default DS.Adapter.extend({
+        findAll(store, type, snapshotRecordArray) {
+          var url = `/${type.modelName}?include=${encodeURIComponent(snapshotRecordArray.include)}`;
+           return fetch(url).then((response) => response.json())
+        }
+      });
+       @property include
+      @type {String|Array}
+    */
     this.include = options.include;
   }
 
   /**
     Get snapshots of the underlying record array
+  
+    Example
+  
+    ```app/adapters/post.js
+    import DS from 'ember-data'
+  
+    export default DS.JSONAPIAdapter.extend({
+      shouldReloadAll(store, snapshotArray) {
+        var snapshots = snapshotArray.snapshots();
+  
+        return snapshots.any(function(ticketSnapshot) {
+          var timeDiff = moment().diff(ticketSnapshot.attr('lastAccessedAt'), 'minutes');
+          if (timeDiff > 20) {
+            return true;
+          } else {
+            return false;
+          }
+        });
+      }
+    });
+    ```
+  
     @method snapshots
     @return {Array} Array of snapshots
   */
@@ -9478,7 +9550,22 @@ define("ember-data/-private/system/snapshot", ["exports", "ember", "ember-data/-
     },
 
     /**
-      @method serialize
+      Serializes the snapshot using the serializer for the model.
+       Example
+       ```app/adapters/application.js
+      import DS from 'ember-data';
+       export default DS.Adapter.extend({
+        createRecord(store, type, snapshot) {
+          var data = snapshot.serialize({ includeId: true });
+          var url = `/${type.modelName}`;
+           return fetch(url, {
+            method: 'POST',
+            body: data,
+          }).then((response) => response.json())
+        }
+      });
+      ```
+       @method serialize
       @param {Object} options
       @return {Object} an object whose values are primitive JSON values only
      */
@@ -10763,7 +10850,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         }
       });
       ```
-        See [peekAll](#method_peekAll) to get an array of current records in the
+       See [peekAll](#method_peekAll) to get an array of current records in the
       store, without waiting until a reload is finished.
        ### Retrieving Related Model Records
        If you use an adapter such as Ember's default
@@ -19719,7 +19806,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.12.0-canary+21c77a12aa";
+  exports.default = "2.12.0-canary+be37733286";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
