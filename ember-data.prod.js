@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+2f10ee93fd
+ * @version   2.13.0-canary+2a8e7ff788
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -13921,8 +13921,8 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
     {
       "people": {
         "id": 5,
-        "firstName": "Barack",
-        "lastName": "Obama",
+        "firstName": "Zaphod",
+        "lastName": "Beetlebrox",
         "occupation": "President"
       }
     }
@@ -19376,7 +19376,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+2f10ee93fd";
+  exports.default = "2.13.0-canary+2a8e7ff788";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
