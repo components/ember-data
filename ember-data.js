@@ -3,10 +3,10 @@
 
 /*!
  * @overview  Ember Data
- * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
+ * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+99b4b2264a
+ * @version   2.13.0-canary+2f10ee93fd
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -11327,8 +11327,15 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       // container._registry = 1.11 - 2.0
       // container = < 1.11
       var owner = (0, _emberDataPrivateUtils.getOwner)(this);
+      var mixin = undefined;
 
-      var mixin = owner._lookupFactory('mixin:' + normalizedModelName);
+      if (owner.factoryFor) {
+        var MaybeMixin = owner.factoryFor('mixin:' + normalizedModelName);
+        mixin = MaybeMixin && MaybeMixin.class;
+      } else {
+        mixin = owner._lookupFactory('mixin:' + normalizedModelName);
+      }
+
       if (mixin) {
         //Cache the class as a model
         owner.register('model:' + normalizedModelName, _emberDataModel.default.extend(mixin));
@@ -11397,7 +11404,14 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       var trueModelName = this._classKeyFor(modelName);
       var owner = (0, _emberDataPrivateUtils.getOwner)(this);
 
-      return owner._lookupFactory('model:' + trueModelName);
+      if (owner.factoryFor) {
+        var MaybeModel = owner.factoryFor('model:' + trueModelName);
+        var MaybeModelFactory = MaybeModel && MaybeModel.class;
+
+        return MaybeModelFactory;
+      } else {
+        return owner._lookupFactory('model:' + trueModelName);
+      }
     },
 
     /**
@@ -11594,7 +11608,13 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     },
 
     _hasModelFor: function (modelName) {
-      return !!(0, _emberDataPrivateUtils.getOwner)(this)._lookupFactory('model:' + modelName);
+      var owner = (0, _emberDataPrivateUtils.getOwner)(this);
+
+      if (owner.factoryFor) {
+        return !!owner.factoryFor('model:' + modelName);
+      } else {
+        return !!owner._lookupFactory('model:' + modelName);
+      }
     },
 
     _pushInternalModel: function (data) {
@@ -12659,7 +12679,7 @@ define('ember-data/-private/utils', ['exports', 'ember'], function (exports, _em
     ember-container-inject-owner is a new feature in Ember 2.3 that finally provides a public
     API for looking items up.  This function serves as a super simple polyfill to avoid
     triggering deprecations.
-  */
+   */
   function getOwner(context) {
     var owner;
 
@@ -19806,7 +19826,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+99b4b2264a";
+  exports.default = "2.13.0-canary+2f10ee93fd";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
