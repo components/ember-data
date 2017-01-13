@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+4932cbaa6b
+ * @version   2.13.0-canary+37f2b50de7
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -14084,8 +14084,7 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
 
         serializer.serializeIntoHash(data, type, snapshot, { includeId: true });
 
-        var id = snapshot.id;
-        var url = this.buildURL(type.modelName, id, snapshot, 'updateRecord');
+        var url = this.buildURL(type.modelName, snapshot.id, snapshot, 'updateRecord');
 
         return this.ajax(url, 'PATCH', { data: data });
       }
@@ -14459,9 +14458,9 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       import DS from 'ember-data';
        export default DS.RESTAdapter.extend({
         sortQueryParams: function(params) {
-          var sortedKeys = Object.keys(params).sort().reverse();
-          var len = sortedKeys.length, newParams = {};
-           for (var i = 0; i < len; i++) {
+          let sortedKeys = Object.keys(params).sort().reverse();
+          let len = sortedKeys.length, newParams = {};
+           for (let i = 0; i < len; i++) {
             newParams[sortedKeys[i]] = params[sortedKeys[i]];
           }
           return newParams;
@@ -14975,8 +14974,8 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       });
 
       function splitGroupToFitInUrl(group, maxURLLength, paramNameLength) {
-        var baseUrl = adapter._stripIDFromURL(store, group[0]);
         var idsSize = 0;
+        var baseUrl = adapter._stripIDFromURL(store, group[0]);
         var splitGroups = [[]];
 
         group.forEach(function (snapshot) {
@@ -15230,7 +15229,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       @return {String} detailed error message
     */
     generatedDetailedMessage: function (status, headers, payload, requestData) {
-      var shortenedPayload;
+      var shortenedPayload = undefined;
       var payloadContentType = headers["Content-Type"] || "Empty Content-Type";
 
       if (payloadContentType === "text/html" && payload.length > 250) {
@@ -15689,7 +15688,7 @@ define('ember-data/attr', ['exports', 'ember', 'ember-data/-private/debug'], fun
     @namespace
     @method attr
     @for DS
-    @param {String} type the attribute type
+    @param {String|Object} type the attribute type
     @param {Object} options a hash of options
     @return {Attribute}
   */
@@ -15720,7 +15719,7 @@ define('ember-data/attr', ['exports', 'ember', 'ember-data/-private/debug'], fun
       set: function (key, value) {
         var internalModel = this._internalModel;
         var oldValue = getValue(internalModel, key);
-        var originalValue;
+        var originalValue = undefined;
 
         if (value !== oldValue) {
           // Add the new value to the changed attributes hash; it will get deleted by
@@ -16523,19 +16522,19 @@ define('ember-data/serializers/embedded-records-mixin', ['exports', 'ember', 'em
       @param {Object} json
     */
     removeEmbeddedForeignKey: function (snapshot, embeddedSnapshot, relationship, json) {
-      if (relationship.kind === 'hasMany') {
-        return;
-      } else if (relationship.kind === 'belongsTo') {
+      if (relationship.kind === 'belongsTo') {
         var parentRecord = snapshot.type.inverseFor(relationship.key, this.store);
         if (parentRecord) {
-          var name = parentRecord.name;
+          var _name = parentRecord.name;
           var embeddedSerializer = this.store.serializerFor(embeddedSnapshot.modelName);
-          var parentKey = embeddedSerializer.keyForRelationship(name, parentRecord.kind, 'deserialize');
+          var parentKey = embeddedSerializer.keyForRelationship(_name, parentRecord.kind, 'deserialize');
           if (parentKey) {
             delete json[parentKey];
           }
         }
-      }
+      } /*else if (relationship.kind === 'hasMany') {
+        return;
+        }*/
     },
 
     // checks config for attrs option to embedded (always) - serialize and deserialize
@@ -16868,8 +16867,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-data/-priv
 
         relationshipDataHash.type = modelName;
       } else {
-        var type = this.modelNameFromPayloadKey(relationshipDataHash.type);
-        relationshipDataHash.type = type;
+        relationshipDataHash.type = this.modelNameFromPayloadKey(relationshipDataHash.type);
       }
 
       return relationshipDataHash;
@@ -17965,7 +17963,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
     extractAttributes: function (modelClass, resourceHash) {
       var _this2 = this;
 
-      var attributeKey;
+      var attributeKey = undefined;
       var attributes = {};
 
       modelClass.eachAttribute(function (key) {
@@ -18119,7 +18117,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
     normalizeRelationships: function (typeClass, hash) {
       var _this4 = this;
 
-      var payloadKey;
+      var payloadKey = undefined;
 
       if (this.keyForRelationship) {
         typeClass.eachRelationship(function (key, relationship) {
@@ -18143,10 +18141,11 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
     */
     normalizeUsingDeclaredMapping: function (modelClass, hash) {
       var attrs = get(this, 'attrs');
-      var normalizedKey, payloadKey, key;
+      var normalizedKey = undefined;
+      var payloadKey = undefined;
 
       if (attrs) {
-        for (key in attrs) {
+        for (var key in attrs) {
           normalizedKey = payloadKey = this._getMappedKey(key, modelClass);
 
           if (hash[payloadKey] === undefined) {
@@ -18183,7 +18182,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
       });
 
       var attrs = get(this, 'attrs');
-      var mappedKey;
+      var mappedKey = undefined;
       if (attrs && attrs[key]) {
         mappedKey = attrs[key];
         //We need to account for both the { title: 'post_title' } and
@@ -18459,9 +18458,9 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/-private/
      @param {Object} attribute
     */
     serializeAttribute: function (snapshot, json, key, attribute) {
-      var type = attribute.type;
 
       if (this._canSerialize(key)) {
+        var type = attribute.type;
         var value = snapshot.attr(key);
         if (type) {
           var transform = this.transformFor(type);
@@ -19085,6 +19084,8 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
       @private
     */
     _normalizeResponse: function (store, primaryModelClass, payload, id, requestType, isSingle) {
+      var _this2 = this;
+
       var documentHash = {
         data: null,
         included: []
@@ -19098,7 +19099,7 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
 
       var keys = Object.keys(payload);
 
-      for (var i = 0, _length = keys.length; i < _length; i++) {
+      var _loop = function (i, _length) {
         var prop = keys[i];
         var modelName = prop;
         var forcedSecondary = false;
@@ -19125,19 +19126,19 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
           modelName = prop.substr(1);
         }
 
-        var typeName = this.modelNameFromPayloadKey(modelName);
+        var typeName = _this2.modelNameFromPayloadKey(modelName);
         if (!store.modelFactoryFor(typeName)) {
-          (0, _emberDataPrivateDebug.warn)(this.warnMessageNoModelForKey(modelName, typeName), false, {
+          (0, _emberDataPrivateDebug.warn)(_this2.warnMessageNoModelForKey(modelName, typeName), false, {
             id: 'ds.serializer.model-for-key-missing'
           });
-          continue;
+          return "continue";
         }
 
-        var isPrimary = !forcedSecondary && this.isPrimaryType(store, typeName, primaryModelClass);
+        var isPrimary = !forcedSecondary && _this2.isPrimaryType(store, typeName, primaryModelClass);
         var value = payload[prop];
 
         if (value === null) {
-          continue;
+          return "continue";
         }
 
         (0, _emberDataPrivateDebug.runInDebug)(function () {
@@ -19160,7 +19161,7 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
           ```
          */
         if (isPrimary && _ember.default.typeOf(value) !== 'array') {
-          var _normalizePolymorphicRecord2 = this._normalizePolymorphicRecord(store, value, prop, primaryModelClass, this);
+          var _normalizePolymorphicRecord2 = _this2._normalizePolymorphicRecord(store, value, prop, primaryModelClass, _this2);
 
           var _data = _normalizePolymorphicRecord2.data;
           var _included = _normalizePolymorphicRecord2.included;
@@ -19171,10 +19172,10 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
 
             (_documentHash$included2 = documentHash.included).push.apply(_documentHash$included2, _toConsumableArray(_included));
           }
-          continue;
+          return "continue";
         }
 
-        var _normalizeArray = this._normalizeArray(store, typeName, value, prop);
+        var _normalizeArray = _this2._normalizeArray(store, typeName, value, prop);
 
         var data = _normalizeArray.data;
         var included = _normalizeArray.included;
@@ -19215,6 +19216,12 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
             }
           }
         }
+      };
+
+      for (var i = 0, _length = keys.length; i < _length; i++) {
+        var _ret = _loop(i, _length);
+
+        if (_ret === "continue") continue;
       }
 
       return documentHash;
@@ -19254,18 +19261,20 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
       @param {Object} payload
     */
     pushPayload: function (store, payload) {
+      var _this3 = this;
+
       var documentHash = {
         data: [],
         included: []
       };
 
-      for (var prop in payload) {
-        var modelName = this.modelNameFromPayloadKey(prop);
+      var _loop2 = function (prop) {
+        var modelName = _this3.modelNameFromPayloadKey(prop);
         if (!store.modelFactoryFor(modelName)) {
-          (0, _emberDataPrivateDebug.warn)(this.warnMessageNoModelForKey(prop, modelName), false, {
+          (0, _emberDataPrivateDebug.warn)(_this3.warnMessageNoModelForKey(prop, modelName), false, {
             id: 'ds.serializer.model-for-key-missing'
           });
-          continue;
+          return "continue";
         }
         var type = store.modelFor(modelName);
         var typeSerializer = store.serializerFor(type.modelName);
@@ -19283,6 +19292,12 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
             (_documentHash$included5 = documentHash.included).push.apply(_documentHash$included5, _toConsumableArray(included));
           }
         });
+      };
+
+      for (var prop in payload) {
+        var _ret2 = _loop2(prop);
+
+        if (_ret2 === "continue") continue;
       }
 
       if ((0, _emberDataPrivateFeatures.default)('ds-pushpayload-return')) {
@@ -19540,8 +19555,8 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
     */
     serializePolymorphicType: function (snapshot, json, relationship) {
       var key = relationship.key;
-      var belongsTo = snapshot.belongsTo(key);
       var typeKey = this.keyForPolymorphicType(key, relationship.type, 'serialize');
+      var belongsTo = snapshot.belongsTo(key);
 
       // old way of getting the key for the polymorphic type
       key = this.keyForAttribute ? this.keyForAttribute(key, "serialize") : key;
@@ -19720,7 +19735,7 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
         how the model name from should be mapped from the payload.
          @method payloadTypeFromModelName
         @public
-        @param {String} modelname modelName from the record
+        @param {String} modelName modelName from the record
         @return {String} payloadType
       */
       payloadTypeFromModelName: function (modelName) {
@@ -19875,7 +19890,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+4932cbaa6b";
+  exports.default = "2.13.0-canary+37f2b50de7";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
