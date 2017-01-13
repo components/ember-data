@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+d93b536091
+ * @version   2.13.0-canary+06dbc97970
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -2069,7 +2069,6 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
   var inspect = _ember.default.inspect;
   var isEmpty = _ember.default.isEmpty;
   var isEqual = _ember.default.isEqual;
-  var emberRun = _ember.default.run;
   var setOwner = _ember.default.setOwner;
   var RSVP = _ember.default.RSVP;
   var Promise = _ember.default.RSVP.Promise;
@@ -2137,6 +2136,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this._isDestroyed = false;
       this.isError = false;
       this.error = null;
+      this._isUpdatingRecordArrays = false;
 
       // caches for lazy getters
       this._modelClass = null;
@@ -2313,7 +2313,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     }, {
       key: "becameReady",
       value: function becameReady() {
-        emberRun.schedule('actions', this.store.recordArrayManager, this.store.recordArrayManager.recordWasLoaded, this);
+        this.store.recordArrayManager.recordWasLoaded(this);
       }
     }, {
       key: "didInitializeData",
@@ -2464,7 +2464,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       key: "adapterDidDirty",
       value: function adapterDidDirty() {
         this.send('becomeDirty');
-        this.updateRecordArraysLater();
+        this.updateRecordArrays();
       }
 
       /*
@@ -2610,7 +2610,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
           setups[i].setup(this);
         }
 
-        this.updateRecordArraysLater();
+        this.updateRecordArrays();
       }
     }, {
       key: "_unhandledEvent",
@@ -2635,7 +2635,8 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         if (this._deferredTriggers.push(args) !== 1) {
           return;
         }
-        emberRun.schedule('actions', this, this._triggerDeferredTriggers);
+
+        this.store._updateInternalModel(this);
       }
     }, {
       key: "_triggerDeferredTriggers",
@@ -2758,8 +2759,11 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     }, {
       key: "updateRecordArrays",
       value: function updateRecordArrays() {
-        this._updatingRecordArraysLater = false;
-        this.store._dataWasUpdated(this);
+        if (this._isUpdatingRecordArrays) {
+          return;
+        }
+        this._isUpdatingRecordArrays = true;
+        this.store.recordArrayManager.recordDidChange(this);
       }
     }, {
       key: "setId",
@@ -2821,28 +2825,13 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         this._inFlightAttributes = new _emberDataPrivateSystemEmptyObject.default();
 
         this.send('didCommit');
-        this.updateRecordArraysLater();
+        this.updateRecordArrays();
 
         if (!data) {
           return;
         }
 
         this.record._notifyProperties(changedKeys);
-      }
-
-      /*
-        @method updateRecordArraysLater
-        @private
-      */
-    }, {
-      key: "updateRecordArraysLater",
-      value: function updateRecordArraysLater() {
-        // quick hack (something like this could be pushed into run.once
-        if (this._updatingRecordArraysLater) {
-          return;
-        }
-        this._updatingRecordArraysLater = true;
-        emberRun.schedule('actions', this, this.updateRecordArrays);
       }
     }, {
       key: "addErrorMessageToAttribute",
@@ -4997,7 +4986,7 @@ define('ember-data/-private/system/model/states', ['exports', 'ember-data/-priva
       internalModel.send('becomeDirty');
     }
 
-    internalModel.updateRecordArraysLater();
+    internalModel.updateRecordArrays();
   }
 
   // Implementation notes:
@@ -5832,11 +5821,12 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
       });
 
       this.changedRecords = [];
+      this.loadedRecords = [];
       this._adapterPopulatedRecordArrays = [];
     },
 
-    recordDidChange: function (record) {
-      if (this.changedRecords.push(record) !== 1) {
+    recordDidChange: function (internalModel) {
+      if (this.changedRecords.push(internalModel) !== 1) {
         return;
       }
 
@@ -5856,18 +5846,21 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
        @method updateRecordArrays
     */
     updateRecordArrays: function () {
-      var _this2 = this;
+      var updated = this.changedRecords;
 
-      this.changedRecords.forEach(function (internalModel) {
+      for (var i = 0, l = updated.length; i < l; i++) {
+        var internalModel = updated[i];
 
         if (internalModel.isDestroyed || internalModel.currentState.stateName === 'root.deleted.saved') {
-          _this2._recordWasDeleted(internalModel);
+          this._recordWasDeleted(internalModel);
         } else {
-          _this2._recordWasChanged(internalModel);
+          this._recordWasChanged(internalModel);
         }
-      });
 
-      this.changedRecords.length = 0;
+        internalModel._isUpdatingRecordArrays = false;
+      }
+
+      updated.length = 0;
     },
 
     _recordWasDeleted: function (internalModel) {
@@ -5885,34 +5878,49 @@ define("ember-data/-private/system/record-array-manager", ["exports", "ember", "
     },
 
     _recordWasChanged: function (internalModel) {
-      var _this3 = this;
+      var _this2 = this;
 
       var modelName = internalModel.modelName;
       var recordArrays = this.filteredRecordArrays.get(modelName);
       var filter = undefined;
       recordArrays.forEach(function (array) {
         filter = get(array, 'filterFunction');
-        _this3.updateFilterRecordArray(array, filter, modelName, internalModel);
+        _this2.updateFilterRecordArray(array, filter, modelName, internalModel);
       });
     },
 
     //Need to update live arrays on loading
     recordWasLoaded: function (internalModel) {
-      var _this4 = this;
-
-      var modelName = internalModel.modelName;
-      var recordArrays = this.filteredRecordArrays.get(modelName);
-      var filter = undefined;
-
-      recordArrays.forEach(function (array) {
-        filter = get(array, 'filterFunction');
-        _this4.updateFilterRecordArray(array, filter, modelName, internalModel);
-      });
-
-      if (this.liveRecordArrays.has(modelName)) {
-        var liveRecordArray = this.liveRecordArrays.get(modelName);
-        this._addInternalModelToRecordArray(liveRecordArray, internalModel);
+      if (this.loadedRecords.push(internalModel) !== 1) {
+        return;
       }
+
+      emberRun.schedule('actions', this, this._flushLoadedRecords);
+    },
+
+    _flushLoadedRecords: function () {
+      var internalModels = this.loadedRecords;
+
+      for (var i = 0, l = internalModels.length; i < l; i++) {
+        var internalModel = internalModels[i];
+        var modelName = internalModel.modelName;
+
+        var recordArrays = this.filteredRecordArrays.get(modelName);
+        var filter = undefined;
+
+        for (var j = 0, rL = recordArrays.length; j < rL; j++) {
+          var array = recordArrays[j];
+          filter = get(array, 'filterFunction');
+          this.updateFilterRecordArray(array, filter, modelName, internalModel);
+        }
+
+        if (this.liveRecordArrays.has(modelName)) {
+          var liveRecordArray = this.liveRecordArrays.get(modelName);
+          this._addInternalModelToRecordArray(liveRecordArray, internalModel);
+        }
+      }
+
+      this.loadedRecords.length = 0;
     },
 
     /**
@@ -8439,14 +8447,19 @@ define("ember-data/-private/system/relationships/state/create", ["exports", "emb
       key: "get",
       value: function get(key) {
         var relationships = this.initializedRelationships;
-        var internalModel = this.internalModel;
-        var relationshipsByName = _get(internalModel.type, 'relationshipsByName');
+        var relationship = relationships[key];
 
-        if (!relationships[key] && relationshipsByName.get(key)) {
-          relationships[key] = createRelationshipFor(internalModel, relationshipsByName.get(key), internalModel.store);
+        if (!relationship) {
+          var internalModel = this.internalModel;
+          var relationshipsByName = _get(internalModel.type, 'relationshipsByName');
+          var rel = relationshipsByName.get(key);
+
+          if (rel) {
+            relationship = relationships[key] = createRelationshipFor(internalModel, rel, internalModel.store);
+          }
         }
 
-        return relationships[key];
+        return relationship;
       }
     }, {
       key: "record",
@@ -8608,14 +8621,10 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
       value: function computeChanges(records) {
         var members = this.canonicalMembers;
         var recordsToRemove = [];
-        var length;
-        var record;
-        var i;
-
-        records = setForArray(records);
+        var recordSet = setForArray(records);
 
         members.forEach(function (member) {
-          if (records.has(member)) {
+          if (recordSet.has(member)) {
             return;
           }
 
@@ -8624,14 +8633,8 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
 
         this.removeCanonicalRecords(recordsToRemove);
 
-        // Using records.toArray() since currently using
-        // removeRecord can modify length, messing stuff up
-        // forEach since it directly looks at "length" each
-        // iteration
-        records = records.toArray();
-        length = records.length;
-        for (i = 0; i < length; i++) {
-          record = records[i];
+        for (var i = 0, l = records.length; i < l; i++) {
+          var record = records[i];
           this.removeCanonicalRecord(record);
           this.addCanonicalRecord(record, i);
         }
@@ -8873,7 +8876,7 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
             }
             record._implicitRelationships[this.inverseKeyForImplicit].addRecord(this.record);
           }
-          this.record.updateRecordArraysLater();
+          this.record.updateRecordArrays();
         }
         this.setHasData(true);
       }
@@ -8925,33 +8928,31 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
     }, {
       key: "flushCanonical",
       value: function flushCanonical() {
+        var list = this.members.list;
         this.willSync = false;
         //a hack for not removing new records
         //TODO remove once we have proper diffing
         var newRecords = [];
-        for (var i = 0; i < this.members.list.length; i++) {
-          if (this.members.list[i].isNew()) {
-            newRecords.push(this.members.list[i]);
+        for (var i = 0; i < list.length; i++) {
+          if (list[i].isNew()) {
+            newRecords.push(list[i]);
           }
         }
+
         //TODO(Igor) make this less abysmally slow
         this.members = this.canonicalMembers.copy();
-        for (i = 0; i < newRecords.length; i++) {
+        for (var i = 0; i < newRecords.length; i++) {
           this.members.add(newRecords[i]);
         }
       }
     }, {
       key: "flushCanonicalLater",
       value: function flushCanonicalLater() {
-        var _this3 = this;
-
         if (this.willSync) {
           return;
         }
         this.willSync = true;
-        this.store._backburner.join(function () {
-          return _this3.store._backburner.schedule('syncRelationships', _this3, _this3.flushCanonical);
-        });
+        this.store._updateRelationshipState(this);
       }
     }, {
       key: "updateLink",
@@ -9726,10 +9727,13 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
        */
       // used for coalescing record save requests
       this._pendingSave = [];
+      // used for coalescing relationship updates
+      this._updatedRelationships = [];
       // used for coalescing relationship setup needs
       this._pushedInternalModels = [];
-      // stores a reference to the flush for relationship setup
-      this._relationshipFlush = null;
+      // used for coalescing internal model updates
+      this._updatedInternalModels = [];
+
       // used to keep track of all the find requests that need to be coalesced
       this._pendingFetch = MapWithDefault.create({ defaultValue: function () {
           return [];
@@ -11101,23 +11105,6 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       return this.hasRecordForId(modelName, id);
     },
 
-    // ............
-    // . UPDATING .
-    // ............
-
-    /**
-      If the adapter updates attributes the record will notify
-      the store to update its  membership in any filters.
-      To avoid thrashing, this method is invoked only once per
-      run loop per record.
-       @method _dataWasUpdated
-      @private
-      @param {InternalModel} internalModel
-    */
-    _dataWasUpdated: function (internalModel) {
-      this.recordArrayManager.recordDidChange(internalModel);
-    },
-
     // ..............
     // . PERSISTING .
     // ..............
@@ -11297,7 +11284,6 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     _load: function (data) {
       var internalModel = this._internalModelForId(data.type, data.id);
 
-      // TODO @runspired move this out of here
       internalModel.setupData(data);
 
       this.recordArrayManager.recordDidChange(internalModel);
@@ -11658,16 +11644,15 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     },
 
     _setupRelationshipsForModel: function (internalModel, data) {
-      this._pushedInternalModels.push(internalModel, data);
-      if (this._relationshipFlush === null) {
-        this._relationshipFlush = this._backburner.schedule('normalizeRelationships', this, this._setupRelationships);
+      if (this._pushedInternalModels.push(internalModel, data) !== 2) {
+        return;
       }
+
+      this._backburner.schedule('normalizeRelationships', this, this._setupRelationships);
     },
 
     _setupRelationships: function () {
       var pushed = this._pushedInternalModels;
-      this._pushedInternalModels = [];
-      this._relationshipFlush = null;
 
       for (var i = 0, l = pushed.length; i < l; i += 2) {
         // This will convert relationships specified as IDs into DS.Model instances
@@ -11677,6 +11662,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         var data = pushed[i + 1];
         setupRelationships(this, internalModel, data);
       }
+
+      pushed.length = 0;
     },
 
     /**
@@ -11892,12 +11879,50 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     willDestroy: function () {
       this._super.apply(this, arguments);
       this._pushedInternalModels = null;
-      this._backburner.cancel(this._relationshipFlush);
-      this._relationshipFlush = null;
       this.recordArrayManager.destroy();
       this._instanceCache.destroy();
 
       this.unloadAll();
+    },
+
+    _updateRelationshipState: function (relationship) {
+      var _this3 = this;
+
+      if (this._updatedRelationships.push(relationship) !== 1) {
+        return;
+      }
+
+      this._backburner.join(function () {
+        _this3._backburner.schedule('syncRelationships', _this3, _this3._flushUpdatedRelationships);
+      });
+    },
+
+    _flushUpdatedRelationships: function () {
+      var updated = this._updatedRelationships;
+
+      for (var i = 0, l = updated.length; i < l; i++) {
+        updated[i].flushCanonical();
+      }
+
+      updated.length = 0;
+    },
+
+    _updateInternalModel: function (internalModel) {
+      if (this._updatedInternalModels.push(internalModel) !== 1) {
+        return;
+      }
+
+      emberRun.schedule('actions', this, this._flushUpdatedInternalModels);
+    },
+
+    _flushUpdatedInternalModels: function () {
+      var updated = this._updatedInternalModels;
+
+      for (var i = 0, l = updated.length; i < l; i++) {
+        updated[i]._triggerDeferredTriggers();
+      }
+
+      updated.length = 0;
     },
 
     _pushResourceIdentifier: function (relationship, resourceIdentifier) {
@@ -19826,7 +19851,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+d93b536091";
+  exports.default = "2.13.0-canary+06dbc97970";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
