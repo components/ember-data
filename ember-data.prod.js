@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+06dbc97970
+ * @version   2.13.0-canary+4932cbaa6b
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -9097,7 +9097,9 @@ define('ember-data/-private/system/snapshot-record-array', ['exports'], function
   };
 });
 define("ember-data/-private/system/snapshot", ["exports", "ember", "ember-data/-private/system/empty-object"], function (exports, _ember, _emberDataPrivateSystemEmptyObject) {
-  exports.default = Snapshot;
+  var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
   var get = _ember.default.get;
 
@@ -9109,329 +9111,351 @@ define("ember-data/-private/system/snapshot", ["exports", "ember", "ember-data/-
     @param {DS.Model} internalModel The model to create a snapshot from
   */
 
-  function Snapshot(internalModel) {
-    var _this = this;
+  var Snapshot = (function () {
+    function Snapshot(internalModel) {
+      var _this = this;
 
-    var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+      var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-    this._attributes = new _emberDataPrivateSystemEmptyObject.default();
-    this._belongsToRelationships = new _emberDataPrivateSystemEmptyObject.default();
-    this._belongsToIds = new _emberDataPrivateSystemEmptyObject.default();
-    this._hasManyRelationships = new _emberDataPrivateSystemEmptyObject.default();
-    this._hasManyIds = new _emberDataPrivateSystemEmptyObject.default();
+      this._attributes = new _emberDataPrivateSystemEmptyObject.default();
+      this._belongsToRelationships = new _emberDataPrivateSystemEmptyObject.default();
+      this._belongsToIds = new _emberDataPrivateSystemEmptyObject.default();
+      this._hasManyRelationships = new _emberDataPrivateSystemEmptyObject.default();
+      this._hasManyIds = new _emberDataPrivateSystemEmptyObject.default();
+      this._internalModel = internalModel;
 
-    var record = internalModel.getRecord();
-    this.record = record;
-    record.eachAttribute(function (keyName) {
-      return _this._attributes[keyName] = get(record, keyName);
-    });
+      var record = internalModel.getRecord();
 
-    this.id = internalModel.id;
-    this._internalModel = internalModel;
-    this.type = internalModel.type;
-    this.modelName = internalModel.type.modelName;
+      /**
+       The underlying record for this snapshot. Can be used to access methods and
+       properties defined on the record.
+        Example
+        ```javascript
+       let json = snapshot.record.toJSON();
+       ```
+        @property record
+       @type {DS.Model}
+       */
+      this.record = record;
+      record.eachAttribute(function (keyName) {
+        return _this._attributes[keyName] = get(record, keyName);
+      });
 
-    /**
-      A hash of adapter options
-      @property adapterOptions
-      @type {Object}
-    */
-    this.adapterOptions = options.adapterOptions;
-    this.include = options.include;
+      /**
+       The id of the snapshot's underlying record
+        Example
+        ```javascript
+       // store.push('post', { id: 1, author: 'Tomster', title: 'Ember.js rocks' });
+       postSnapshot.id; // => '1'
+       ```
+        @property id
+       @type {String}
+       */
+      this.id = internalModel.id;
 
-    this._changedAttributes = record.changedAttributes();
-  }
+      /**
+       A hash of adapter options
+       @property adapterOptions
+       @type {Object}
+       */
+      this.adapterOptions = options.adapterOptions;
+      this.include = options.include;
 
-  Snapshot.prototype = {
-    constructor: Snapshot,
+      /**
+       The type of the underlying record for this snapshot, as a DS.Model.
+        @property type
+       @type {DS.Model}
+       */
+      // TODO @runspired we should deprecate this in favor of modelClass but only once
+      // we've cleaned up the internals enough that a public change to follow suite is
+      // uncontroversial.
+      this.type = internalModel.modelClass;
 
-    /**
-      The id of the snapshot's underlying record
-       Example
-       ```javascript
-      // store.push('post', { id: 1, author: 'Tomster', title: 'Ember.js rocks' });
-      postSnapshot.id; // => '1'
-      ```
-       @property id
-      @type {String}
-    */
-    id: null,
+      /**
+       The name of the type of the underlying record for this snapshot, as a string.
+        @property modelName
+       @type {String}
+       */
+      this.modelName = internalModel.modelName;
 
-    /**
-      The underlying record for this snapshot. Can be used to access methods and
-      properties defined on the record.
-       Example
-       ```javascript
-      var json = snapshot.record.toJSON();
-      ```
-       @property record
-      @type {DS.Model}
-    */
-    record: null,
-
-    /**
-      The type of the underlying record for this snapshot, as a DS.Model.
-       @property type
-      @type {DS.Model}
-    */
-    type: null,
-
-    /**
-      The name of the type of the underlying record for this snapshot, as a string.
-       @property modelName
-      @type {String}
-    */
-    modelName: null,
+      this._changedAttributes = record.changedAttributes();
+    }
 
     /**
-      Returns the value of an attribute.
-       Example
-       ```javascript
-      // store.push('post', { id: 1, author: 'Tomster', title: 'Ember.js rocks' });
-      postSnapshot.attr('author'); // => 'Tomster'
-      postSnapshot.attr('title'); // => 'Ember.js rocks'
-      ```
-       Note: Values are loaded eagerly and cached when the snapshot is created.
-       @method attr
-      @param {String} keyName
-      @return {Object} The attribute value or undefined
-    */
-    attr: function (keyName) {
-      if (keyName in this._attributes) {
-        return this._attributes[keyName];
-      }
-      throw new _ember.default.Error("Model '" + _ember.default.inspect(this.record) + "' has no attribute named '" + keyName + "' defined.");
-    },
+     Returns the value of an attribute.
+      Example
+      ```javascript
+     // store.push('post', { id: 1, author: 'Tomster', title: 'Ember.js rocks' });
+     postSnapshot.attr('author'); // => 'Tomster'
+     postSnapshot.attr('title'); // => 'Ember.js rocks'
+     ```
+      Note: Values are loaded eagerly and cached when the snapshot is created.
+      @method attr
+     @param {String} keyName
+     @return {Object} The attribute value or undefined
+     */
 
-    /**
-      Returns all attributes and their corresponding values.
-       Example
-       ```javascript
-      // store.push('post', { id: 1, author: 'Tomster', title: 'Ember.js rocks' });
-      postSnapshot.attributes(); // => { author: 'Tomster', title: 'Ember.js rocks' }
-      ```
-       @method attributes
-      @return {Object} All attributes of the current snapshot
-    */
-    attributes: function () {
-      return _ember.default.copy(this._attributes);
-    },
-
-    /**
-      Returns all changed attributes and their old and new values.
-       Example
-       ```javascript
-      // store.push('post', { id: 1, author: 'Tomster', title: 'Ember.js rocks' });
-      postModel.set('title', 'Ember.js rocks!');
-      postSnapshot.changedAttributes(); // => { title: ['Ember.js rocks', 'Ember.js rocks!'] }
-      ```
-       @method changedAttributes
-      @return {Object} All changed attributes of the current snapshot
-    */
-    changedAttributes: function () {
-      var changedAttributes = new _emberDataPrivateSystemEmptyObject.default();
-      var changedAttributeKeys = Object.keys(this._changedAttributes);
-
-      for (var i = 0, _length = changedAttributeKeys.length; i < _length; i++) {
-        var key = changedAttributeKeys[i];
-        changedAttributes[key] = _ember.default.copy(this._changedAttributes[key]);
-      }
-
-      return changedAttributes;
-    },
-
-    /**
-      Returns the current value of a belongsTo relationship.
-       `belongsTo` takes an optional hash of options as a second parameter,
-      currently supported options are:
-      - `id`: set to `true` if you only want the ID of the related record to be
-        returned.
-       Example
-       ```javascript
-      // store.push('post', { id: 1, title: 'Hello World' });
-      // store.createRecord('comment', { body: 'Lorem ipsum', post: post });
-      commentSnapshot.belongsTo('post'); // => DS.Snapshot
-      commentSnapshot.belongsTo('post', { id: true }); // => '1'
-       // store.push('comment', { id: 1, body: 'Lorem ipsum' });
-      commentSnapshot.belongsTo('post'); // => undefined
-      ```
-       Calling `belongsTo` will return a new Snapshot as long as there's any known
-      data for the relationship available, such as an ID. If the relationship is
-      known but unset, `belongsTo` will return `null`. If the contents of the
-      relationship is unknown `belongsTo` will return `undefined`.
-       Note: Relationships are loaded lazily and cached upon first access.
-       @method belongsTo
-      @param {String} keyName
-      @param {Object} [options]
-      @return {(DS.Snapshot|String|null|undefined)} A snapshot or ID of a known
-        relationship or null if the relationship is known but unset. undefined
-        will be returned if the contents of the relationship is unknown.
-    */
-    belongsTo: function (keyName, options) {
-      var id = options && options.id;
-      var relationship, inverseRecord, hasData;
-      var result;
-
-      if (id && keyName in this._belongsToIds) {
-        return this._belongsToIds[keyName];
-      }
-
-      if (!id && keyName in this._belongsToRelationships) {
-        return this._belongsToRelationships[keyName];
-      }
-
-      relationship = this._internalModel._relationships.get(keyName);
-      if (!(relationship && relationship.relationshipMeta.kind === 'belongsTo')) {
-        throw new _ember.default.Error("Model '" + _ember.default.inspect(this.record) + "' has no belongsTo relationship named '" + keyName + "' defined.");
-      }
-
-      hasData = get(relationship, 'hasData');
-      inverseRecord = get(relationship, 'inverseRecord');
-
-      if (hasData) {
-        if (inverseRecord && !inverseRecord.isDeleted()) {
-          if (id) {
-            result = get(inverseRecord, 'id');
-          } else {
-            result = inverseRecord.createSnapshot();
-          }
-        } else {
-          result = null;
+    _createClass(Snapshot, [{
+      key: "attr",
+      value: function attr(keyName) {
+        if (keyName in this._attributes) {
+          return this._attributes[keyName];
         }
+        throw new _ember.default.Error("Model '" + _ember.default.inspect(this.record) + "' has no attribute named '" + keyName + "' defined.");
       }
 
-      if (id) {
-        this._belongsToIds[keyName] = result;
-      } else {
-        this._belongsToRelationships[keyName] = result;
+      /**
+       Returns all attributes and their corresponding values.
+        Example
+        ```javascript
+       // store.push('post', { id: 1, author: 'Tomster', title: 'Ember.js rocks' });
+       postSnapshot.attributes(); // => { author: 'Tomster', title: 'Ember.js rocks' }
+       ```
+        @method attributes
+       @return {Object} All attributes of the current snapshot
+       */
+    }, {
+      key: "attributes",
+      value: function attributes() {
+        return _ember.default.copy(this._attributes);
       }
 
-      return result;
-    },
+      /**
+       Returns all changed attributes and their old and new values.
+        Example
+        ```javascript
+       // store.push('post', { id: 1, author: 'Tomster', title: 'Ember.js rocks' });
+       postModel.set('title', 'Ember.js rocks!');
+       postSnapshot.changedAttributes(); // => { title: ['Ember.js rocks', 'Ember.js rocks!'] }
+       ```
+        @method changedAttributes
+       @return {Object} All changed attributes of the current snapshot
+       */
+    }, {
+      key: "changedAttributes",
+      value: function changedAttributes() {
+        var changedAttributes = new _emberDataPrivateSystemEmptyObject.default();
+        var changedAttributeKeys = Object.keys(this._changedAttributes);
 
-    /**
-      Returns the current value of a hasMany relationship.
-       `hasMany` takes an optional hash of options as a second parameter,
-      currently supported options are:
-      - `ids`: set to `true` if you only want the IDs of the related records to be
-        returned.
-       Example
-       ```javascript
-      // store.push('post', { id: 1, title: 'Hello World', comments: [2, 3] });
-      postSnapshot.hasMany('comments'); // => [DS.Snapshot, DS.Snapshot]
-      postSnapshot.hasMany('comments', { ids: true }); // => ['2', '3']
+        for (var i = 0, _length = changedAttributeKeys.length; i < _length; i++) {
+          var key = changedAttributeKeys[i];
+          changedAttributes[key] = _ember.default.copy(this._changedAttributes[key]);
+        }
+
+        return changedAttributes;
+      }
+
+      /**
+       Returns the current value of a belongsTo relationship.
+        `belongsTo` takes an optional hash of options as a second parameter,
+       currently supported options are:
+        - `id`: set to `true` if you only want the ID of the related record to be
+       returned.
+        Example
+        ```javascript
        // store.push('post', { id: 1, title: 'Hello World' });
-      postSnapshot.hasMany('comments'); // => undefined
-      ```
-       Note: Relationships are loaded lazily and cached upon first access.
-       @method hasMany
-      @param {String} keyName
-      @param {Object} [options]
-      @return {(Array|undefined)} An array of snapshots or IDs of a known
-        relationship or an empty array if the relationship is known but unset.
-        undefined will be returned if the contents of the relationship is unknown.
-    */
-    hasMany: function (keyName, options) {
-      var ids = options && options.ids;
-      var relationship, members, hasData;
-      var results;
+       // store.createRecord('comment', { body: 'Lorem ipsum', post: post });
+       commentSnapshot.belongsTo('post'); // => DS.Snapshot
+       commentSnapshot.belongsTo('post', { id: true }); // => '1'
+        // store.push('comment', { id: 1, body: 'Lorem ipsum' });
+       commentSnapshot.belongsTo('post'); // => undefined
+       ```
+        Calling `belongsTo` will return a new Snapshot as long as there's any known
+       data for the relationship available, such as an ID. If the relationship is
+       known but unset, `belongsTo` will return `null`. If the contents of the
+       relationship is unknown `belongsTo` will return `undefined`.
+        Note: Relationships are loaded lazily and cached upon first access.
+        @method belongsTo
+       @param {String} keyName
+       @param {Object} [options]
+       @return {(DS.Snapshot|String|null|undefined)} A snapshot or ID of a known
+       relationship or null if the relationship is known but unset. undefined
+       will be returned if the contents of the relationship is unknown.
+       */
+    }, {
+      key: "belongsTo",
+      value: function belongsTo(keyName, options) {
+        var id = options && options.id;
+        var relationship = undefined,
+            inverseRecord = undefined,
+            hasData = undefined;
+        var result = undefined;
 
-      if (ids && keyName in this._hasManyIds) {
-        return this._hasManyIds[keyName];
-      }
+        if (id && keyName in this._belongsToIds) {
+          return this._belongsToIds[keyName];
+        }
 
-      if (!ids && keyName in this._hasManyRelationships) {
-        return this._hasManyRelationships[keyName];
-      }
+        if (!id && keyName in this._belongsToRelationships) {
+          return this._belongsToRelationships[keyName];
+        }
 
-      relationship = this._internalModel._relationships.get(keyName);
-      if (!(relationship && relationship.relationshipMeta.kind === 'hasMany')) {
-        throw new _ember.default.Error("Model '" + _ember.default.inspect(this.record) + "' has no hasMany relationship named '" + keyName + "' defined.");
-      }
+        relationship = this._internalModel._relationships.get(keyName);
+        if (!(relationship && relationship.relationshipMeta.kind === 'belongsTo')) {
+          throw new _ember.default.Error("Model '" + _ember.default.inspect(this.record) + "' has no belongsTo relationship named '" + keyName + "' defined.");
+        }
 
-      hasData = get(relationship, 'hasData');
-      members = get(relationship, 'members');
+        hasData = get(relationship, 'hasData');
+        inverseRecord = get(relationship, 'inverseRecord');
 
-      if (hasData) {
-        results = [];
-        members.forEach(function (member) {
-          if (!member.isDeleted()) {
-            if (ids) {
-              results.push(member.id);
+        if (hasData) {
+          if (inverseRecord && !inverseRecord.isDeleted()) {
+            if (id) {
+              result = get(inverseRecord, 'id');
             } else {
-              results.push(member.createSnapshot());
+              result = inverseRecord.createSnapshot();
             }
+          } else {
+            result = null;
+          }
+        }
+
+        if (id) {
+          this._belongsToIds[keyName] = result;
+        } else {
+          this._belongsToRelationships[keyName] = result;
+        }
+
+        return result;
+      }
+
+      /**
+       Returns the current value of a hasMany relationship.
+        `hasMany` takes an optional hash of options as a second parameter,
+       currently supported options are:
+        - `ids`: set to `true` if you only want the IDs of the related records to be
+       returned.
+        Example
+        ```javascript
+       // store.push('post', { id: 1, title: 'Hello World', comments: [2, 3] });
+       postSnapshot.hasMany('comments'); // => [DS.Snapshot, DS.Snapshot]
+       postSnapshot.hasMany('comments', { ids: true }); // => ['2', '3']
+        // store.push('post', { id: 1, title: 'Hello World' });
+       postSnapshot.hasMany('comments'); // => undefined
+       ```
+        Note: Relationships are loaded lazily and cached upon first access.
+        @method hasMany
+       @param {String} keyName
+       @param {Object} [options]
+       @return {(Array|undefined)} An array of snapshots or IDs of a known
+       relationship or an empty array if the relationship is known but unset.
+       undefined will be returned if the contents of the relationship is unknown.
+       */
+    }, {
+      key: "hasMany",
+      value: function hasMany(keyName, options) {
+        var ids = options && options.ids;
+        var relationship = undefined,
+            members = undefined,
+            hasData = undefined;
+        var results = undefined;
+
+        if (ids && keyName in this._hasManyIds) {
+          return this._hasManyIds[keyName];
+        }
+
+        if (!ids && keyName in this._hasManyRelationships) {
+          return this._hasManyRelationships[keyName];
+        }
+
+        relationship = this._internalModel._relationships.get(keyName);
+        if (!(relationship && relationship.relationshipMeta.kind === 'hasMany')) {
+          throw new _ember.default.Error("Model '" + _ember.default.inspect(this.record) + "' has no hasMany relationship named '" + keyName + "' defined.");
+        }
+
+        hasData = get(relationship, 'hasData');
+        members = get(relationship, 'members');
+
+        if (hasData) {
+          results = [];
+          members.forEach(function (member) {
+            if (!member.isDeleted()) {
+              if (ids) {
+                results.push(member.id);
+              } else {
+                results.push(member.createSnapshot());
+              }
+            }
+          });
+        }
+
+        if (ids) {
+          this._hasManyIds[keyName] = results;
+        } else {
+          this._hasManyRelationships[keyName] = results;
+        }
+
+        return results;
+      }
+
+      /**
+        Iterates through all the attributes of the model, calling the passed
+        function on each attribute.
+         Example
+         ```javascript
+        snapshot.eachAttribute(function(name, meta) {
+          // ...
+        });
+        ```
+         @method eachAttribute
+        @param {Function} callback the callback to execute
+        @param {Object} [binding] the value to which the callback's `this` should be bound
+      */
+    }, {
+      key: "eachAttribute",
+      value: function eachAttribute(callback, binding) {
+        this.record.eachAttribute(callback, binding);
+      }
+
+      /**
+        Iterates through all the relationships of the model, calling the passed
+        function on each relationship.
+         Example
+         ```javascript
+        snapshot.eachRelationship(function(name, relationship) {
+          // ...
+        });
+        ```
+         @method eachRelationship
+        @param {Function} callback the callback to execute
+        @param {Object} [binding] the value to which the callback's `this` should be bound
+      */
+    }, {
+      key: "eachRelationship",
+      value: function eachRelationship(callback, binding) {
+        this.record.eachRelationship(callback, binding);
+      }
+
+      /**
+        Serializes the snapshot using the serializer for the model.
+         Example
+         ```app/adapters/application.js
+        import DS from 'ember-data';
+         export default DS.Adapter.extend({
+          createRecord(store, type, snapshot) {
+            var data = snapshot.serialize({ includeId: true });
+            var url = `/${type.modelName}`;
+             return fetch(url, {
+              method: 'POST',
+              body: data,
+            }).then((response) => response.json())
           }
         });
+        ```
+         @method serialize
+        @param {Object} options
+        @return {Object} an object whose values are primitive JSON values only
+       */
+    }, {
+      key: "serialize",
+      value: function serialize(options) {
+        return this.record.store.serializerFor(this.modelName).serialize(this, options);
       }
+    }]);
 
-      if (ids) {
-        this._hasManyIds[keyName] = results;
-      } else {
-        this._hasManyRelationships[keyName] = results;
-      }
+    return Snapshot;
+  })();
 
-      return results;
-    },
-
-    /**
-      Iterates through all the attributes of the model, calling the passed
-      function on each attribute.
-       Example
-       ```javascript
-      snapshot.eachAttribute(function(name, meta) {
-        // ...
-      });
-      ```
-       @method eachAttribute
-      @param {Function} callback the callback to execute
-      @param {Object} [binding] the value to which the callback's `this` should be bound
-    */
-    eachAttribute: function (callback, binding) {
-      this.record.eachAttribute(callback, binding);
-    },
-
-    /**
-      Iterates through all the relationships of the model, calling the passed
-      function on each relationship.
-       Example
-       ```javascript
-      snapshot.eachRelationship(function(name, relationship) {
-        // ...
-      });
-      ```
-       @method eachRelationship
-      @param {Function} callback the callback to execute
-      @param {Object} [binding] the value to which the callback's `this` should be bound
-    */
-    eachRelationship: function (callback, binding) {
-      this.record.eachRelationship(callback, binding);
-    },
-
-    /**
-      Serializes the snapshot using the serializer for the model.
-       Example
-       ```app/adapters/application.js
-      import DS from 'ember-data';
-       export default DS.Adapter.extend({
-        createRecord(store, type, snapshot) {
-          var data = snapshot.serialize({ includeId: true });
-          var url = `/${type.modelName}`;
-           return fetch(url, {
-            method: 'POST',
-            body: data,
-          }).then((response) => response.json())
-        }
-      });
-      ```
-       @method serialize
-      @param {Object} options
-      @return {Object} an object whose values are primitive JSON values only
-     */
-    serialize: function (options) {
-      return this.record.store.serializerFor(this.modelName).serialize(this, options);
-    }
-  };
+  exports.default = Snapshot;
 });
 /**
   @module ember-data
@@ -19401,7 +19425,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+06dbc97970";
+  exports.default = "2.13.0-canary+4932cbaa6b";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
