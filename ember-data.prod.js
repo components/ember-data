@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+ba5874bb39
+ * @version   2.13.0-canary+6d96eda226
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -2077,10 +2077,21 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     return _extractPivotNameCache[name] || (_extractPivotNameCache[name] = splitOnDot(name)[0]);
   }
 
+  function areAllModelsUnloaded(internalModels) {
+    for (var i = 0; i < internalModels.length; ++i) {
+      var record = internalModels[i].record;
+      if (record && !(record.get('isDestroyed') || record.get('isDestroying'))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   // this (and all heimdall instrumentation) will be stripped by a babel transform
   //  https://github.com/heimdalljs/babel5-plugin-strip-heimdall
 
   var InternalModelReferenceId = 1;
+  var nextBfsId = 1;
 
   /*
     `InternalModel` is the Model class that we use internally inside Ember Data to represent models.
@@ -2104,17 +2115,25 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this.id = id;
       this._internalId = InternalModelReferenceId++;
       this.store = store;
-      this._data = data || new _emberDataPrivateSystemEmptyObject.default();
       this.modelName = modelName;
-      this.dataHasInitialized = false;
       this._loadingPromise = null;
       this._record = null;
-      this.currentState = _emberDataPrivateSystemModelStates.default.empty;
-      this.isReloading = false;
       this._isDestroyed = false;
       this.isError = false;
-      this.error = null;
       this._isUpdatingRecordArrays = false;
+
+      // During dematerialization we don't want to rematerialize the record.  The
+      // reason this might happen is that dematerialization removes records from
+      // record arrays,  and Ember arrays will always `objectAt(0)` and
+      // `objectAt(len - 1)` to test whether or not `firstObject` or `lastObject`
+      // have changed.
+      this._isDematerializing = false;
+
+      this.resetRecord();
+
+      if (data) {
+        this.__data = data;
+      }
 
       // caches for lazy getters
       this._modelClass = null;
@@ -2122,10 +2141,12 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this.__recordArrays = null;
       this._references = null;
       this._recordReference = null;
-      this.__inFlightAttributes = null;
       this.__relationships = null;
-      this.__attributes = null;
       this.__implicitRelationships = null;
+
+      // Used during the mark phase of unloading to avoid checking the same internal
+      // model twice in the same scan
+      this._bfsId = 0;
     }
 
     _createClass(InternalModel, [{
@@ -2176,7 +2197,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     }, {
       key: "getRecord",
       value: function getRecord() {
-        if (!this._record) {
+        if (!this._record && !this._isDematerializing) {
 
           // lookupFactory should really return an object that creates
           // instances with the injections applied
@@ -2204,9 +2225,27 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         return this._record;
       }
     }, {
-      key: "recordObjectWillDestroy",
-      value: function recordObjectWillDestroy() {
+      key: "resetRecord",
+      value: function resetRecord() {
         this._record = null;
+        this.dataHasInitialized = false;
+        this.isReloading = false;
+        this.error = null;
+        this.currentState = _emberDataPrivateSystemModelStates.default.empty;
+        this.__attributes = null;
+        this.__inFlightAttributes = null;
+        this._data = null;
+      }
+    }, {
+      key: "dematerializeRecord",
+      value: function dematerializeRecord() {
+        if (this.record) {
+          this._isDematerializing = true;
+          this.record.destroy();
+          this.destroyRelationships();
+          this.updateRecordArrays();
+          this.resetRecord();
+        }
       }
     }, {
       key: "deleteRecord",
@@ -2258,15 +2297,114 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
           internalModel.updateRecordArrays();
         });
       }
+
+      /**
+        Computes the set of internal models reachable from `this` across exactly one
+        relationship.
+         @return {Array} An array containing the internal models that `this` belongs
+        to or has many.
+      */
+    }, {
+      key: "_directlyRelatedInternalModels",
+      value: function _directlyRelatedInternalModels() {
+        var _this = this;
+
+        var array = [];
+        this.type.eachRelationship(function (key, relationship) {
+          if (_this._relationships.has(key)) {
+            var _relationship = _this._relationships.get(key);
+            var localRelationships = _relationship.members.toArray();
+            var serverRelationships = _relationship.canonicalMembers.toArray();
+
+            array = array.concat(localRelationships, serverRelationships);
+          }
+        });
+        return array;
+      }
+
+      /**
+        Computes the set of internal models reachable from this internal model.
+         Reachability is determined over the relationship graph (ie a graph where
+        nodes are internal models and edges are belongs to or has many
+        relationships).
+         @return {Array} An array including `this` and all internal models reachable
+        from `this`.
+      */
+    }, {
+      key: "_allRelatedInternalModels",
+      value: function _allRelatedInternalModels() {
+        var array = [];
+        var queue = [];
+        var bfsId = nextBfsId++;
+        queue.push(this);
+        this._bfsId = bfsId;
+        while (queue.length > 0) {
+          var node = queue.shift();
+          array.push(node);
+          var related = node._directlyRelatedInternalModels();
+          for (var i = 0; i < related.length; ++i) {
+            var internalModel = related[i];
+
+            if (internalModel._bfsId < bfsId) {
+              queue.push(internalModel);
+              internalModel._bfsId = bfsId;
+            }
+          }
+        }
+        return array;
+      }
+
+      /**
+        Unload the record for this internal model. This will cause the record to be
+        destroyed and freed up for garbage collection. It will also do a check
+        for cleaning up internal models.
+         This check is performed by first computing the set of related internal
+        models. If all records in this set are unloaded, then the entire set is
+        destroyed. Otherwise, nothing in the set is destroyed.
+         This means that this internal model will be freed up for garbage collection
+        once all models that refer to it via some relationship are also unloaded.
+      */
     }, {
       key: "unloadRecord",
       value: function unloadRecord() {
         this.send('unloadRecord');
+        this.dematerializeRecord();
+        _ember.default.run.schedule('destroy', this, '_checkForOrphanedInternalModels');
+      }
+    }, {
+      key: "_checkForOrphanedInternalModels",
+      value: function _checkForOrphanedInternalModels() {
+        this._isDematerializing = false;
+        if (this.isDestroyed) {
+          return;
+        }
+
+        this._cleanupOrphanedInternalModels();
+      }
+    }, {
+      key: "_cleanupOrphanedInternalModels",
+      value: function _cleanupOrphanedInternalModels() {
+        var relatedInternalModels = this._allRelatedInternalModels();
+        if (areAllModelsUnloaded(relatedInternalModels)) {
+          for (var i = 0; i < relatedInternalModels.length; ++i) {
+            var internalModel = relatedInternalModels[i];
+            if (!internalModel.isDestroyed) {
+              internalModel.destroy();
+            }
+          }
+        }
       }
     }, {
       key: "eachRelationship",
       value: function eachRelationship(callback, binding) {
         return this.modelClass.eachRelationship(callback, binding);
+      }
+    }, {
+      key: "destroy",
+      value: function destroy() {
+
+        this.store._removeFromIdMap(this);
+        this._isDestroyed = true;
       }
     }, {
       key: "eachAttribute",
@@ -2303,20 +2441,12 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         }
       }
     }, {
-      key: "destroy",
-      value: function destroy() {
-        this._isDestroyed = true;
-        if (this.hasRecord) {
-          return this.record.destroy();
-        }
-      }
+      key: "createSnapshot",
 
       /*
         @method createSnapshot
         @private
       */
-    }, {
-      key: "createSnapshot",
       value: function createSnapshot(options) {
         return new _emberDataPrivateSystemSnapshot.default(this, options);
       }
@@ -2640,18 +2770,33 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     }, {
       key: "clearRelationships",
       value: function clearRelationships() {
-        var _this = this;
+        var _this2 = this;
 
         this.eachRelationship(function (name, relationship) {
-          if (_this._relationships.has(name)) {
-            var rel = _this._relationships.get(name);
+          if (_this2._relationships.has(name)) {
+            var rel = _this2._relationships.get(name);
             rel.clear();
             rel.destroy();
           }
         });
         Object.keys(this._implicitRelationships).forEach(function (key) {
-          _this._implicitRelationships[key].clear();
-          _this._implicitRelationships[key].destroy();
+          _this2._implicitRelationships[key].clear();
+          _this2._implicitRelationships[key].destroy();
+        });
+      }
+    }, {
+      key: "destroyRelationships",
+      value: function destroyRelationships() {
+        var _this3 = this;
+
+        this.eachRelationship(function (name, relationship) {
+          if (_this3._relationships.has(name)) {
+            var rel = _this3._relationships.get(name);
+            rel.destroy();
+          }
+        });
+        Object.keys(this._implicitRelationships).forEach(function (key) {
+          _this3._implicitRelationships[key].destroy();
         });
       }
 
@@ -2671,16 +2816,16 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     }, {
       key: "preloadData",
       value: function preloadData(preload) {
-        var _this2 = this;
+        var _this4 = this;
 
         //TODO(Igor) consider the polymorphic case
         Object.keys(preload).forEach(function (key) {
           var preloadValue = get(preload, key);
-          var relationshipMeta = _this2.modelClass.metaForProperty(key);
+          var relationshipMeta = _this4.modelClass.metaForProperty(key);
           if (relationshipMeta.isRelationship) {
-            _this2._preloadRelationship(key, preloadValue);
+            _this4._preloadRelationship(key, preloadValue);
           } else {
-            _this2._data[key] = preloadValue;
+            _this4._data[key] = preloadValue;
           }
         });
       }
@@ -3044,6 +3189,17 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       },
       set: function (v) {
         this.__inFlightAttributes = v;
+      }
+    }, {
+      key: "_data",
+      get: function () {
+        if (this.__data === null) {
+          this.__data = new _emberDataPrivateSystemEmptyObject.default();
+        }
+        return this.__data;
+      },
+      set: function (v) {
+        this.__data = v;
       }
 
       /*
@@ -3809,14 +3965,6 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
 
       _ember.default.tryInvoke(this, name, args);
       this._super.apply(this, arguments);
-    },
-
-    willDestroy: function () {
-      //TODO Move!
-      this._super.apply(this, arguments);
-      this._internalModel.clearRelationships();
-      this._internalModel.recordObjectWillDestroy();
-      //TODO should we set internalModel to null here?
     },
 
     // This is a temporary solution until we refactor DS.Model to not
@@ -5217,12 +5365,7 @@ define('ember-data/-private/system/model/states', ['exports', 'ember-data/-priva
     // in-flight state, rolling back the record doesn't move
     // you out of the in-flight state.
     rolledBack: function () {},
-    unloadRecord: function (internalModel) {
-      // clear relationships before moving to deleted state
-      // otherwise it fails
-      internalModel.clearRelationships();
-      internalModel.transitionTo('deleted.saved');
-    },
+    unloadRecord: function (internalModel) {},
 
     propertyWasReset: function () {},
 
@@ -5331,12 +5474,7 @@ define('ember-data/-private/system/model/states', ['exports', 'ember-data/-priva
           internalModel.transitionTo('deleted.uncommitted');
         },
 
-        unloadRecord: function (internalModel) {
-          // clear relationships before moving to deleted state
-          // otherwise it fails
-          internalModel.clearRelationships();
-          internalModel.transitionTo('deleted.saved');
-        },
+        unloadRecord: function (internalModel) {},
 
         didCommit: function () {},
 
@@ -5439,8 +5577,6 @@ define('ember-data/-private/system/model/states', ['exports', 'ember-data/-priva
 
         setup: function (internalModel) {
           internalModel.clearRelationships();
-          var store = internalModel.store;
-          store._dematerializeRecord(internalModel);
         },
 
         invokeLifecycleCallbacks: function (internalModel) {
@@ -5815,7 +5951,13 @@ define('ember-data/-private/system/record-array-manager', ['exports', 'ember', '
         for (var i = 0, l = updated.length; i < l; i++) {
           var internalModel = updated[i];
 
-          if (internalModel.isDestroyed || internalModel.currentState.stateName === 'root.deleted.saved') {
+          // During dematerialization we don't want to rematerialize the record.
+          // recordWasDeleted can cause other records to rematerialize because it
+          // removes the internal model from the array and Ember arrays will always
+          // `objectAt(0)` and `objectAt(len -1)` to check whether `firstObject` or
+          // `lastObject` have changed.  When this happens we don't want those
+          // models to rematerialize their records.
+          if (internalModel._isDematerializing || internalModel.isDestroyed || internalModel.currentState.stateName === 'root.deleted.saved') {
             this._recordWasDeleted(internalModel);
           } else {
             this._recordWasChanged(internalModel);
@@ -6680,7 +6822,6 @@ define('ember-data/-private/system/record-map', ['exports', 'ember-data/-private
           for (var i = 0; i < records.length; i++) {
             record = records[i];
             record.unloadRecord();
-            record.destroy(); // maybe within unloadRecord
           }
         }
 
@@ -8180,6 +8321,11 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
         _get(Object.getPrototypeOf(BelongsToRelationship.prototype), "addCanonicalRecord", this).call(this, newRecord);
       }
     }, {
+      key: "inverseDidDematerialize",
+      value: function inverseDidDematerialize() {
+        this.notifyBelongsToChanged();
+      }
+    }, {
       key: "flushCanonical",
       value: function flushCanonical() {
         //temporary fix to not remove newly created records if server returned null.
@@ -8189,7 +8335,7 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
         }
         if (this.inverseRecord !== this.canonicalState) {
           this.inverseRecord = this.canonicalState;
-          this.internalModel.notifyBelongsToChanged(this.key);
+          this.notifyBelongsToChanged();
         }
 
         _get(Object.getPrototypeOf(BelongsToRelationship.prototype), "flushCanonical", this).call(this);
@@ -8207,7 +8353,7 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
 
         this.inverseRecord = newRecord;
         _get(Object.getPrototypeOf(BelongsToRelationship.prototype), "addRecord", this).call(this, newRecord);
-        this.internalModel.notifyBelongsToChanged(this.key);
+        this.notifyBelongsToChanged();
       }
     }, {
       key: "setRecordPromise",
@@ -8224,6 +8370,11 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
         }
         this.inverseRecord = null;
         _get(Object.getPrototypeOf(BelongsToRelationship.prototype), "removeRecordFromOwn", this).call(this, record);
+        this.notifyBelongsToChanged();
+      }
+    }, {
+      key: "notifyBelongsToChanged",
+      value: function notifyBelongsToChanged() {
         this.internalModel.notifyBelongsToChanged(this.key);
       }
     }, {
@@ -8430,8 +8581,10 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
     }, {
       key: "destroy",
       value: function destroy() {
+        _get(Object.getPrototypeOf(ManyRelationship.prototype), "destroy", this).call(this);
         if (this._manyArray) {
           this._manyArray.destroy();
+          this._manyArray = null;
         }
       }
     }, {
@@ -8454,6 +8607,15 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
           this.canonicalState.push(record);
         }
         _get(Object.getPrototypeOf(ManyRelationship.prototype), "addCanonicalRecord", this).call(this, record, idx);
+      }
+    }, {
+      key: "inverseDidDematerialize",
+      value: function inverseDidDematerialize() {
+        if (this._manyArray) {
+          this._manyArray.destroy();
+          this._manyArray = null;
+        }
+        this.notifyHasManyChanged();
       }
     }, {
       key: "addRecord",
@@ -8687,7 +8849,31 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
 
     _createClass(Relationship, [{
       key: "destroy",
-      value: function destroy() {}
+      value: function destroy() {
+        var _this = this;
+
+        if (!this.inverseKey) {
+          return;
+        }
+
+        var allMembers =
+        // we actually want a union of members and canonicalMembers
+        // they should be disjoint but currently are not due to a bug
+        this.members.toArray().concat(this.canonicalMembers.toArray());
+
+        allMembers.forEach(function (inverseInternalModel) {
+          var relationship = inverseInternalModel._relationships.get(_this.inverseKey);
+          // TODO: there is always a relationship in this case; this guard exists
+          // because there are tests that fail in teardown after putting things in
+          // invalid state
+          if (relationship) {
+            relationship.inverseDidDematerialize();
+          }
+        });
+      }
+    }, {
+      key: "inverseDidDematerialize",
+      value: function inverseDidDematerialize() {}
     }, {
       key: "updateMeta",
       value: function updateMeta(meta) {
@@ -8696,30 +8882,35 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
     }, {
       key: "clear",
       value: function clear() {
-        var members = this.members.list;
-        var member;
 
+        var members = this.members.list;
         while (members.length > 0) {
-          member = members[0];
+          var member = members[0];
           this.removeRecord(member);
+        }
+
+        var canonicalMembers = this.canonicalMembers.list;
+        while (canonicalMembers.length > 0) {
+          var member = canonicalMembers[0];
+          this.removeCanonicalRecord(member);
         }
       }
     }, {
       key: "removeRecords",
       value: function removeRecords(records) {
-        var _this = this;
+        var _this2 = this;
 
         records.forEach(function (record) {
-          return _this.removeRecord(record);
+          return _this2.removeRecord(record);
         });
       }
     }, {
       key: "addRecords",
       value: function addRecords(records, idx) {
-        var _this2 = this;
+        var _this3 = this;
 
         records.forEach(function (record) {
-          _this2.addRecord(record, idx);
+          _this3.addRecord(record, idx);
           if (idx !== undefined) {
             idx++;
           }
@@ -11599,15 +11790,13 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     /**
       When a record is destroyed, this un-indexes it and
       removes it from any record arrays so it can be GCed.
-       @method _dematerializeRecord
+       @method _removeFromIdMap
       @private
       @param {InternalModel} internalModel
     */
-    _dematerializeRecord: function (internalModel) {
+    _removeFromIdMap: function (internalModel) {
       var recordMap = this._recordMapFor(internalModel.modelName);
       var id = internalModel.id;
-
-      internalModel.updateRecordArrays();
 
       recordMap.remove(internalModel, id);
     },
@@ -19493,7 +19682,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+ba5874bb39";
+  exports.default = "2.13.0-canary+6d96eda226";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
