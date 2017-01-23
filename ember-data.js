@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+3620bc189c
+ * @version   2.13.0-canary+0c26d2df8c
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -11368,7 +11368,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @return {boolean}
     */
     recordIsLoaded: function (modelName, id) {
-      (0, _emberDataPrivateDebug.deprecate)('Use of recordIsLoaded is deprecated, use hasRecordForId instead.', {
+      (0, _emberDataPrivateDebug.deprecate)('Use of recordIsLoaded is deprecated, use hasRecordForId instead.', false, {
         id: 'ds.store.recordIsLoaded',
         until: '3.0'
       });
@@ -12129,7 +12129,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     },
 
     lookupAdapter: function (name) {
-      (0, _emberDataPrivateDebug.deprecate)('Use of lookupAdapter is deprecated, use adapterFor instead.', {
+      (0, _emberDataPrivateDebug.deprecate)('Use of lookupAdapter is deprecated, use adapterFor instead.', false, {
         id: 'ds.store.lookupAdapter',
         until: '3.0'
       });
@@ -12137,7 +12137,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     },
 
     lookupSerializer: function (name) {
-      (0, _emberDataPrivateDebug.deprecate)('Use of lookupSerializer is deprecated, use serializerFor instead.', {
+      (0, _emberDataPrivateDebug.deprecate)('Use of lookupSerializer is deprecated, use serializerFor instead.', false, {
         id: 'ds.store.lookupSerializer',
         until: '3.0'
       });
@@ -20134,7 +20134,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+3620bc189c";
+  exports.default = "2.13.0-canary+0c26d2df8c";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
