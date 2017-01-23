@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+76931797a4
+ * @version   2.13.0-canary+3620bc189c
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -10662,6 +10662,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     /**
       This method delegates a query to the adapter. This is the one place where
       adapter-level semantics are exposed to the application.
+       Each time this method is called a new request is made through the adapter.
        Exposing queries this way seems preferable to creating an abstract query
       language for all server-side queries, and then require all adapters to
       implement them.
@@ -19682,7 +19683,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+76931797a4";
+  exports.default = "2.13.0-canary+3620bc189c";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
