@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+858731baf7
+ * @version   2.13.0-canary+c7151ecaed
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -423,10 +423,10 @@ define('ember-data/-private/adapters/build-url-mixin', ['exports', 'ember'], fun
       @return {String} url
     */
     _buildURL: function (modelName, id) {
+      var path = undefined;
       var url = [];
       var host = get(this, 'host');
       var prefix = this.urlPrefix();
-      var path;
 
       if (modelName) {
         path = this.pathForType(modelName);
@@ -873,7 +873,8 @@ define('ember-data/-private/ext/date', ['exports', 'ember', 'ember-data/-private
   var numericKeys = [1, 4, 5, 6, 7, 10, 11];
 
   var parseDate = function (date) {
-    var timestamp, struct;
+    var timestamp = undefined,
+        struct = undefined;
     var minutesOffset = 0;
 
     // ES5 §15.9.4.2 states that the string should attempt to be parsed as a Date Time String Format string
@@ -882,7 +883,7 @@ define('ember-data/-private/ext/date', ['exports', 'ember', 'ember-data/-private
     //              1 YYYY                2 MM       3 DD           4 HH    5 mm       6 ss        7 msec        8 Z 9 ±    10 tzHH    11 tzmm
     if (struct = /^(\d{4}|[+\-]\d{6})(?:-(\d{2})(?:-(\d{2}))?)?(?:T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{3}))?)?(?:(Z)|([+\-])(\d{2})(?:(\d{2}))?)?)?$/.exec(date)) {
       // avoid NaN timestamps caused by “undefined” values being passed to Date.UTC
-      for (var i = 0, k; k = numericKeys[i]; ++i) {
+      for (var i = 0, k = undefined; k = numericKeys[i]; ++i) {
         struct[k] = +struct[k] || 0;
       }
 
@@ -1167,8 +1168,7 @@ define('ember-data/-private/system/debug/debug-adapter', ['exports', 'ember', 'e
         if (count++ > _this.attributeLimit) {
           return false;
         }
-        var value = get(record, key);
-        columnValues[key] = value;
+        columnValues[key] = get(record, key);
       });
       return columnValues;
     },
@@ -1553,7 +1553,7 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
       @private
     */
     loadingRecordsCount: function (count) {
-      this.loadingRecordsCount = count;
+      this._loadingRecordsCount = count;
     },
 
     /**
@@ -1561,8 +1561,8 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
       @private
     */
     loadedRecord: function () {
-      this.loadingRecordsCount--;
-      if (this.loadingRecordsCount === 0) {
+      this._loadingRecordsCount--;
+      if (this._loadingRecordsCount === 0) {
         set(this, 'isLoaded', true);
         this.trigger('didLoad');
       }
@@ -1627,7 +1627,7 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
     createRecord: function (hash) {
       var store = get(this, 'store');
       var type = get(this, 'type');
-      var record;
+      var record = undefined;
 
       (0, _emberDataPrivateDebug.assert)("You cannot add '" + type.modelName + "' records to this polymorphic relationship.", !get(this, 'isPolymorphic'));
       record = store.createRecord(type.modelName, hash);
@@ -1682,7 +1682,7 @@ define('ember-data/-private/system/model/errors', ['exports', 'ember', 'ember-da
     And you attempted to save a record that did not validate on the backend:
   
     ```javascript
-    var user = store.createRecord('user', {
+    let user = store.createRecord('user', {
       username: 'tomster',
       email: 'invalidEmail'
     });
@@ -1781,7 +1781,7 @@ define('ember-data/-private/system/model/errors', ['exports', 'ember', 'ember-da
     /**
       Returns errors for a given attribute
        ```javascript
-      var user = store.createRecord('user', {
+      let user = store.createRecord('user', {
         username: 'tomster',
         email: 'invalidEmail'
       });
@@ -5817,7 +5817,7 @@ define('ember-data/-private/system/promise-proxies', ['exports', 'ember', 'ember
     Example
   
     ```javascript
-    var promiseArray = DS.PromiseArray.create({
+    let promiseArray = DS.PromiseArray.create({
       promise: $.getJSON('/some/remote/data.json')
     });
   
@@ -5849,7 +5849,7 @@ define('ember-data/-private/system/promise-proxies', ['exports', 'ember', 'ember
     Example
   
     ```javascript
-    var promiseObject = DS.PromiseObject.create({
+    let promiseObject = DS.PromiseObject.create({
       promise: $.getJSON('/some/remote/data.json')
     });
   
@@ -6995,7 +6995,7 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
         user: DS.belongsTo({ async: true })
       });
   
-      var blog = store.push({
+      let blog = store.push({
         type: 'blog',
         id: 1,
         relationships: {
@@ -7004,13 +7004,13 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
           }
         }
       });
-      var userRef = blog.belongsTo('user');
+      let userRef = blog.belongsTo('user');
   
       // get the identifier of the reference
       if (userRef.remoteType() === "id") {
-        var id = userRef.id();
+        let id = userRef.id();
       } else if (userRef.remoteType() === "link") {
-        var link = userRef.link();
+        let link = userRef.link();
       }
       ```
   
@@ -7040,7 +7040,7 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
         user: DS.belongsTo({ async: true })
       });
   
-      var blog = store.push({
+      let blog = store.push({
         data: {
           type: 'blog',
           id: 1,
@@ -7051,11 +7051,11 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
           }
         }
       });
-      var userRef = blog.belongsTo('user');
+      let userRef = blog.belongsTo('user');
   
       // get the identifier of the reference
       if (userRef.remoteType() === "id") {
-        var id = userRef.id();
+        let id = userRef.id();
       }
       ```
   
@@ -7079,7 +7079,7 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
         user: DS.belongsTo({ async: true })
       });
   
-      var blog = store.push({
+      let blog = store.push({
         data: {
           type: 'blog',
           id: 1,
@@ -7092,11 +7092,11 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
           }
         }
       });
-      var userRef = blog.belongsTo('user');
+      let userRef = blog.belongsTo('user');
   
       // get the identifier of the reference
       if (userRef.remoteType() === "link") {
-        var link = userRef.link();
+        let link = userRef.link();
       }
       ```
   
@@ -7118,7 +7118,7 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
         user: DS.belongsTo({ async: true })
       });
   
-      var blog = store.push({
+      let blog = store.push({
         data: {
           type: 'blog',
           id: 1,
@@ -7137,7 +7137,7 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
         }
       });
   
-      var userRef = blog.belongsTo('user');
+      let userRef = blog.belongsTo('user');
   
       userRef.meta() // { lastUpdated: 1458014400000 }
       ```
@@ -7162,7 +7162,7 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
         user: DS.belongsTo({ async: true })
       });
   
-      var blog = store.push({
+      let blog = store.push({
         data: {
           type: 'blog',
           id: 1,
@@ -7173,7 +7173,7 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
           }
         }
       });
-      var userRef = blog.belongsTo('user');
+      let userRef = blog.belongsTo('user');
   
       // provide data for reference
       userRef.push({
@@ -7197,7 +7197,7 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
     var _this = this;
 
     return _ember.default.RSVP.resolve(objectOrPromise).then(function (data) {
-      var record;
+      var record = undefined;
 
       if (data instanceof _emberDataModel.default) {
         if ((0, _emberDataPrivateFeatures.default)('ds-overhaul-references')) {
@@ -7234,7 +7234,7 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
         user: DS.belongsTo({ async: true })
       });
   
-      var blog = store.push({
+      let blog = store.push({
         data: {
           type: 'blog',
           id: 1,
@@ -7245,7 +7245,7 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
           }
         }
       });
-      var userRef = blog.belongsTo('user');
+      let userRef = blog.belongsTo('user');
   
       userRef.value(); // null
   
@@ -7290,7 +7290,7 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
         user: DS.belongsTo({ async: true })
       });
   
-      var blog = store.push({
+      let blog = store.push({
         data: {
           type: 'blog',
           id: 1,
@@ -7301,7 +7301,7 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
           }
         }
       });
-      var userRef = blog.belongsTo('user');
+      let userRef = blog.belongsTo('user');
   
       userRef.value(); // null
   
@@ -7340,7 +7340,7 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
         user: DS.belongsTo({ async: true })
       });
   
-      var blog = store.push({
+      let blog = store.push({
         data: {
           type: 'blog',
           id: 1,
@@ -7351,7 +7351,7 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
           }
         }
       });
-      var userRef = blog.belongsTo('user');
+      let userRef = blog.belongsTo('user');
   
       userRef.reload().then(function(user) {
         userRef.value() === user
@@ -7408,7 +7408,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
      ```
   
      ```javascript
-     var post = store.push({
+     let post = store.push({
        data: {
          type: 'post',
          id: 1,
@@ -7420,13 +7420,13 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
        }
      });
   
-     var commentsRef = post.hasMany('comments');
+     let commentsRef = post.hasMany('comments');
   
      // get the identifier of the reference
      if (commentsRef.remoteType() === "ids") {
-       var ids = commentsRef.ids();
+       let ids = commentsRef.ids();
      } else if (commentsRef.remoteType() === "link") {
-       var link = commentsRef.link();
+       let link = commentsRef.link();
      }
      ```
   
@@ -7454,7 +7454,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
      ```
   
      ```javascript
-     var post = store.push({
+     let post = store.push({
        data: {
          type: 'post',
          id: 1,
@@ -7468,7 +7468,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
        }
      });
   
-     var commentsRef = post.hasMany('comments');
+     let commentsRef = post.hasMany('comments');
   
      commentsRef.link(); // '/posts/1/comments'
      ```
@@ -7492,7 +7492,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
      ```
   
      ```javascript
-     var post = store.push({
+     let post = store.push({
        data: {
          type: 'post',
          id: 1,
@@ -7504,7 +7504,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
        }
      });
   
-     var commentsRef = post.hasMany('comments');
+     let commentsRef = post.hasMany('comments');
   
      commentsRef.ids(); // ['1']
      ```
@@ -7533,7 +7533,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
      ```
   
      ```javascript
-     var post = store.push({
+     let post = store.push({
        data: {
          type: 'post',
          id: 1,
@@ -7552,7 +7552,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
        }
      });
   
-     var commentsRef = post.hasMany('comments');
+     let commentsRef = post.hasMany('comments');
   
      commentsRef.meta(); // { count: 10 }
      ```
@@ -7578,7 +7578,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
      ```
   
      ```
-     var post = store.push({
+     let post = store.push({
        data: {
          type: 'post',
          id: 1,
@@ -7590,7 +7590,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
        }
      });
   
-     var commentsRef = post.hasMany('comments');
+     let commentsRef = post.hasMany('comments');
   
      commentsRef.ids(); // ['1']
   
@@ -7695,7 +7695,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
      ```
   
      ```javascript
-     var post = store.push({
+     let post = store.push({
        data: {
          type: 'post',
          id: 1,
@@ -7707,7 +7707,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
        }
      });
   
-     var commentsRef = post.hasMany('comments');
+     let commentsRef = post.hasMany('comments');
   
      post.get('comments').then(function(comments) {
        commentsRef.value() === comments
@@ -7739,7 +7739,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
      ```
   
      ```javascript
-     var post = store.push({
+     let post = store.push({
        data: {
          type: 'post',
          id: 1,
@@ -7751,7 +7751,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
        }
      });
   
-     var commentsRef = post.hasMany('comments');
+     let commentsRef = post.hasMany('comments');
   
      commentsRef.load().then(function(comments) {
        //...
@@ -7782,7 +7782,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
      ```
   
      ```javascript
-     var post = store.push({
+     let post = store.push({
        data: {
          type: 'post',
          id: 1,
@@ -7794,7 +7794,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
        }
      });
   
-     var commentsRef = post.hasMany('comments');
+     let commentsRef = post.hasMany('comments');
   
      commentsRef.reload().then(function(comments) {
        //...
@@ -7838,7 +7838,7 @@ define('ember-data/-private/system/references/record', ['exports', 'ember', 'emb
      Example
   
      ```javascript
-     var userRef = store.getReference('user', 1);
+     let userRef = store.getReference('user', 1);
   
      userRef.id(); // '1'
      ```
@@ -7858,7 +7858,7 @@ define('ember-data/-private/system/references/record', ['exports', 'ember', 'emb
      Example
   
      ```javascript
-     var userRef = store.getReference('user', 1);
+     const userRef = store.getReference('user', 1);
   
      userRef.remoteType(); // 'identity'
      ```
@@ -7888,7 +7888,7 @@ define('ember-data/-private/system/references/record', ['exports', 'ember', 'emb
      Example
   
      ```javascript
-     var userRef = store.getReference('user', 1);
+     let userRef = store.getReference('user', 1);
   
      // provide data for reference
      userRef.push({ data: { id: 1, username: "@user" }}).then(function(user) {
@@ -7916,7 +7916,7 @@ define('ember-data/-private/system/references/record', ['exports', 'ember', 'emb
      Example
   
      ```javascript
-     var userRef = store.getReference('user', 1);
+     let userRef = store.getReference('user', 1);
   
      userRef.value(); // user
      ```
@@ -7935,7 +7935,7 @@ define('ember-data/-private/system/references/record', ['exports', 'ember', 'emb
      Example
   
      ```javascript
-     var userRef = store.getReference('user', 1);
+     let userRef = store.getReference('user', 1);
   
      // load user (via store.find)
      userRef.load().then(...)
@@ -7955,7 +7955,7 @@ define('ember-data/-private/system/references/record', ['exports', 'ember', 'emb
      Example
   
      ```javascript
-     var userRef = store.getReference('user', 1);
+     let userRef = store.getReference('user', 1);
   
      // or trigger a reload
      userRef.reload().then(...)
@@ -7992,7 +7992,7 @@ define('ember-data/-private/system/relationship-meta', ['exports', 'ember-inflec
   exports.relationshipFromMeta = relationshipFromMeta;
 
   function typeForRelationshipMeta(meta) {
-    var modelName;
+    var modelName = undefined;
 
     modelName = meta.type || meta.key;
     if (meta.kind === 'hasMany') {
@@ -8090,7 +8090,8 @@ define("ember-data/-private/system/relationships/belongs-to", ["exports", "ember
   */
 
   function belongsTo(modelName, options) {
-    var opts, userEnteredModelName;
+    var opts = undefined,
+        userEnteredModelName = undefined;
     if (typeof modelName === 'object') {
       opts = modelName;
       userEnteredModelName = undefined;
@@ -8191,7 +8192,7 @@ define("ember-data/-private/system/relationships/ext", ["exports", "ember", "emb
       relatedTypesDescriptor._cacheable = false;
     }
 
-    var modelName;
+    var modelName = undefined;
     var types = _ember.default.A();
 
     // Loop through each computed property on the class,
@@ -8547,7 +8548,7 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
 
         //TODO(Igor) flushCanonical here once our syncing is not stupid
         if (this.isAsync) {
-          var promise;
+          var promise = undefined;
           if (this.link) {
             if (this.hasLoaded) {
               promise = this.findRecord();
@@ -12895,7 +12896,7 @@ define("ember-data/-private/transforms/number", ["exports", "ember", "ember-data
    */
   exports.default = _emberDataTransform.default.extend({
     deserialize: function (serialized) {
-      var transformed;
+      var transformed = undefined;
 
       if (empty(serialized)) {
         return null;
@@ -12907,7 +12908,7 @@ define("ember-data/-private/transforms/number", ["exports", "ember", "ember-data
     },
 
     serialize: function (deserialized) {
-      var transformed;
+      var transformed = undefined;
 
       if (empty(deserialized)) {
         return null;
@@ -12974,7 +12975,7 @@ define('ember-data/-private/utils', ['exports', 'ember'], function (exports, _em
     triggering deprecations.
    */
   function getOwner(context) {
-    var owner;
+    var owner = undefined;
 
     if (_ember.default.getOwner) {
       owner = _ember.default.getOwner(context);
@@ -20134,7 +20135,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+858731baf7";
+  exports.default = "2.13.0-canary+c7151ecaed";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
