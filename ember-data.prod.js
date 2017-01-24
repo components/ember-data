@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+c7151ecaed
+ * @version   2.13.0-canary+e5dac10e43
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -423,10 +423,10 @@ define('ember-data/-private/adapters/build-url-mixin', ['exports', 'ember'], fun
       @return {String} url
     */
     _buildURL: function (modelName, id) {
-      var path = undefined;
       var url = [];
       var host = get(this, 'host');
       var prefix = this.urlPrefix();
+      var path;
 
       if (modelName) {
         path = this.pathForType(modelName);
@@ -873,8 +873,7 @@ define('ember-data/-private/ext/date', ['exports', 'ember', 'ember-data/-private
   var numericKeys = [1, 4, 5, 6, 7, 10, 11];
 
   var parseDate = function (date) {
-    var timestamp = undefined,
-        struct = undefined;
+    var timestamp, struct;
     var minutesOffset = 0;
 
     // ES5 §15.9.4.2 states that the string should attempt to be parsed as a Date Time String Format string
@@ -883,7 +882,7 @@ define('ember-data/-private/ext/date', ['exports', 'ember', 'ember-data/-private
     //              1 YYYY                2 MM       3 DD           4 HH    5 mm       6 ss        7 msec        8 Z 9 ±    10 tzHH    11 tzmm
     if (struct = /^(\d{4}|[+\-]\d{6})(?:-(\d{2})(?:-(\d{2}))?)?(?:T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{3}))?)?(?:(Z)|([+\-])(\d{2})(?:(\d{2}))?)?)?$/.exec(date)) {
       // avoid NaN timestamps caused by “undefined” values being passed to Date.UTC
-      for (var i = 0, k = undefined; k = numericKeys[i]; ++i) {
+      for (var i = 0, k; k = numericKeys[i]; ++i) {
         struct[k] = +struct[k] || 0;
       }
 
@@ -12595,7 +12594,7 @@ define("ember-data/-private/transforms/number", ["exports", "ember", "ember-data
    */
   exports.default = _emberDataTransform.default.extend({
     deserialize: function (serialized) {
-      var transformed = undefined;
+      var transformed;
 
       if (empty(serialized)) {
         return null;
@@ -12607,7 +12606,7 @@ define("ember-data/-private/transforms/number", ["exports", "ember", "ember-data
     },
 
     serialize: function (deserialized) {
-      var transformed = undefined;
+      var transformed;
 
       if (empty(deserialized)) {
         return null;
@@ -12674,7 +12673,7 @@ define('ember-data/-private/utils', ['exports', 'ember'], function (exports, _em
     triggering deprecations.
    */
   function getOwner(context) {
-    var owner = undefined;
+    var owner;
 
     if (_ember.default.getOwner) {
       owner = _ember.default.getOwner(context);
@@ -19684,7 +19683,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+c7151ecaed";
+  exports.default = "2.13.0-canary+e5dac10e43";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
