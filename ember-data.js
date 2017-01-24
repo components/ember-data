@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+0c26d2df8c
+ * @version   2.13.0-canary+693a254034
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -3802,8 +3802,8 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
     },
 
     /**
-      @method unloadRecord
-      @private
+      Unloads the record from the store. This will cause the record to be destroyed and freed up for garbage collection.
+       @method unloadRecord
     */
     unloadRecord: function () {
       if (this.isDestroyed) {
@@ -20134,7 +20134,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+0c26d2df8c";
+  exports.default = "2.13.0-canary+693a254034";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
