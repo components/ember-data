@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+693a254034
+ * @version   2.13.0-canary+858731baf7
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -10176,8 +10176,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     },
 
     /**
-      For symmetry, a record can be unloaded via the store. Only
-      non-dirty records can be unloaded.
+      For symmetry, a record can be unloaded via the store.
+      This will cause the record to be destroyed and freed up for garbage collection.
        Example
        ```javascript
       store.findRecord('post', 1).then(function(post) {
@@ -20134,7 +20134,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+693a254034";
+  exports.default = "2.13.0-canary+858731baf7";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
