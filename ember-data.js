@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+e5dac10e43
+ * @version   2.13.0-canary+440cae6b82
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -423,10 +423,10 @@ define('ember-data/-private/adapters/build-url-mixin', ['exports', 'ember'], fun
       @return {String} url
     */
     _buildURL: function (modelName, id) {
+      var path = undefined;
       var url = [];
       var host = get(this, 'host');
       var prefix = this.urlPrefix();
-      var path;
 
       if (modelName) {
         path = this.pathForType(modelName);
@@ -873,7 +873,8 @@ define('ember-data/-private/ext/date', ['exports', 'ember', 'ember-data/-private
   var numericKeys = [1, 4, 5, 6, 7, 10, 11];
 
   var parseDate = function (date) {
-    var timestamp, struct;
+    var timestamp = undefined,
+        struct = undefined;
     var minutesOffset = 0;
 
     // ES5 §15.9.4.2 states that the string should attempt to be parsed as a Date Time String Format string
@@ -882,7 +883,7 @@ define('ember-data/-private/ext/date', ['exports', 'ember', 'ember-data/-private
     //              1 YYYY                2 MM       3 DD           4 HH    5 mm       6 ss        7 msec        8 Z 9 ±    10 tzHH    11 tzmm
     if (struct = /^(\d{4}|[+\-]\d{6})(?:-(\d{2})(?:-(\d{2}))?)?(?:T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{3}))?)?(?:(Z)|([+\-])(\d{2})(?:(\d{2}))?)?)?$/.exec(date)) {
       // avoid NaN timestamps caused by “undefined” values being passed to Date.UTC
-      for (var i = 0, k; k = numericKeys[i]; ++i) {
+      for (var i = 0, k = undefined; k = numericKeys[i]; ++i) {
         struct[k] = +struct[k] || 0;
       }
 
@@ -10238,6 +10239,21 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       method to find the necessary data. If the record is already present in the
       store, it depends on the reload behavior _when_ the returned promise
       resolves.
+       ### Preloading
+       You can optionally `preload` specific attributes and relationships that you know of
+      by passing them via the passed `options`.
+       For example, if your Ember route looks like `/posts/1/comments/2` and your API route
+      for the comment also looks like `/posts/1/comments/2` if you want to fetch the comment
+      without fetching the post you can pass in the post to the `findRecord` call:
+       ```javascript
+      store.findRecord('comment', 2, { preload: { post: 1 } });
+      ```
+       If you have access to the post model you can also pass the model itself:
+       ```javascript
+      store.findRecord('post', 1).then(function (myPostModel) {
+        store.findRecord('comment', 2, { post: myPostModel });
+      });
+      ```
        ### Reloading
        The reload behavior is configured either via the passed `options` hash or
       the result of the adapter's `shouldReloadRecord`.
@@ -12895,7 +12911,7 @@ define("ember-data/-private/transforms/number", ["exports", "ember", "ember-data
    */
   exports.default = _emberDataTransform.default.extend({
     deserialize: function (serialized) {
-      var transformed;
+      var transformed = undefined;
 
       if (empty(serialized)) {
         return null;
@@ -12907,7 +12923,7 @@ define("ember-data/-private/transforms/number", ["exports", "ember", "ember-data
     },
 
     serialize: function (deserialized) {
-      var transformed;
+      var transformed = undefined;
 
       if (empty(deserialized)) {
         return null;
@@ -12974,7 +12990,7 @@ define('ember-data/-private/utils', ['exports', 'ember'], function (exports, _em
     triggering deprecations.
    */
   function getOwner(context) {
-    var owner;
+    var owner = undefined;
 
     if (_ember.default.getOwner) {
       owner = _ember.default.getOwner(context);
@@ -20134,7 +20150,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+e5dac10e43";
+  exports.default = "2.13.0-canary+440cae6b82";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
