@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+3506441354
+ * @version   2.13.0-canary+af401754a2
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -13140,8 +13140,8 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
        ```app/adapters/application.js
       import DS from 'ember-data';
        export default DS.Adapter.extend({
-        findRecord: function(store, type, id, snapshot) {
-           return new Ember.RSVP.Promise(function(resolve, reject) {
+        findRecord(store, type, id, snapshot) {
+          return new Ember.RSVP.Promise(function(resolve, reject) {
             Ember.$.getJSON(`/${type.modelName}/${id}`).then(function(data) {
               resolve(data);
             }, function(jqXHR) {
@@ -13166,7 +13166,7 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
        ```app/adapters/application.js
       import DS from 'ember-data';
        export default DS.Adapter.extend({
-        findAll: function(store, type, sinceToken) {
+        findAll(store, type, sinceToken) {
           var query = { since: sinceToken };
           return new Ember.RSVP.Promise(function(resolve, reject) {
             Ember.$.getJSON(`/${type.modelName}`, query).then(function(data) {
@@ -13193,7 +13193,7 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
        ```app/adapters/application.js
       import DS from 'ember-data';
        export default DS.Adapter.extend({
-        query: function(store, type, query) {
+        query(store, type, query) {
           return new Ember.RSVP.Promise(function(resolve, reject) {
             Ember.$.getJSON(`/${type.modelName}`, query).then(function(data) {
               resolve(data);
@@ -13225,7 +13225,7 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       import DS from 'ember-data';
       import Ember from 'ember';
        export default DS.Adapter.extend(DS.BuildURLMixin, {
-        queryRecord: function(store, type, query) {
+        queryRecord(store, type, query) {
           return new Ember.RSVP.Promise(function(resolve, reject) {
             Ember.$.getJSON(`/${type.modelName}`, query).then(function(data) {
               resolve(data);
@@ -13259,7 +13259,7 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       import DS from 'ember-data';
       import { v4 } from 'uuid';
        export default DS.Adapter.extend({
-        generateIdForRecord: function(store, inputProperties) {
+        generateIdForRecord(store, inputProperties) {
           return v4();
         }
       });
@@ -13279,7 +13279,7 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
        ```app/adapters/application.js
       import DS from 'ember-data';
        export default DS.Adapter.extend({
-        createRecord: function(store, type, snapshot) {
+        createRecord(store, type, snapshot) {
           var data = this.serialize(snapshot, { includeId: true });
           var url = `/${type.modelName}`;
            // ...
@@ -13303,7 +13303,7 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
        ```app/adapters/application.js
       import DS from 'ember-data';
        export default DS.Adapter.extend({
-        createRecord: function(store, type, snapshot) {
+        createRecord(store, type, snapshot) {
           var data = this.serialize(snapshot, { includeId: true });
            return new Ember.RSVP.Promise(function(resolve, reject) {
             Ember.$.ajax({
@@ -13344,7 +13344,7 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
        ```app/adapters/application.js
       import DS from 'ember-data';
        export default DS.Adapter.extend({
-        updateRecord: function(store, type, snapshot) {
+        updateRecord(store, type, snapshot) {
           var data = this.serialize(snapshot, { includeId: true });
           var id = snapshot.id;
            return new Ember.RSVP.Promise(function(resolve, reject) {
@@ -13379,7 +13379,7 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
        ```app/adapters/application.js
       import DS from 'ember-data';
        export default DS.Adapter.extend({
-        deleteRecord: function(store, type, snapshot) {
+        deleteRecord(store, type, snapshot) {
           var data = this.serialize(snapshot, { includeId: true });
           var id = snapshot.id;
            return new Ember.RSVP.Promise(function(resolve, reject) {
@@ -13477,7 +13477,7 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       in each route you have data that is no more than 20 minutes old you could
       write:
        ```javascript
-      shouldReloadRecord: function(store, ticketSnapshot) {
+      shouldReloadRecord(store, ticketSnapshot) {
         var timeDiff = moment().diff(ticketSnapshot.attr('lastAccessedAt'), 'minutes');
         if (timeDiff > 20) {
           return true;
@@ -13518,7 +13518,7 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       in each route you have data that is no more than 20 minutes old you could
       write:
        ```javascript
-      shouldReloadAll: function(store, snapshotArray) {
+      shouldReloadAll(store, snapshotArray) {
         var snapshots = snapshotArray.snapshots();
          return snapshots.any(function(ticketSnapshot) {
           var timeDiff = moment().diff(ticketSnapshot.attr('lastAccessedAt'), 'minutes');
@@ -13563,7 +13563,7 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       connection, or if the network is down, you can implement
       `shouldBackgroundReloadRecord` as follows:
        ```javascript
-      shouldBackgroundReloadRecord: function(store, snapshot) {
+      shouldBackgroundReloadRecord(store, snapshot) {
         var connection = window.navigator.connection;
         if (connection === 'cellular' || connection === 'none') {
           return false;
@@ -13596,7 +13596,7 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       connection, or if the network is down, you can implement
       `shouldBackgroundReloadAll` as follows:
        ```javascript
-      shouldBackgroundReloadAll: function(store, snapshotArray) {
+      shouldBackgroundReloadAll(store, snapshotArray) {
         var connection = window.navigator.connection;
         if (connection === 'cellular' || connection === 'none') {
           return false;
@@ -20150,7 +20150,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+3506441354";
+  exports.default = "2.13.0-canary+af401754a2";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
