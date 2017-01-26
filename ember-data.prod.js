@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+af401754a2
+ * @version   2.13.0-canary+3b814b62fa
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -15603,7 +15603,7 @@ define('ember-data/attr', ['exports', 'ember', 'ember-data/-private/debug'], fun
   
     ```app/transforms/text.js
     export default DS.Transform.extend({
-      serialize: function(value, options) {
+      serialize(value, options) {
         if (options.uppercase) {
           return value.toUpperCase();
         }
@@ -15611,7 +15611,7 @@ define('ember-data/attr', ['exports', 'ember', 'ember-data/-private/debug'], fun
         return value;
       },
   
-      deserialize: function(value) {
+      deserialize(value) {
         return value;
       }
     })
@@ -15920,7 +15920,7 @@ define('ember-data/serializer', ['exports', 'ember'], function (exports, _ember)
        Example:
        ```js
       Serializer.extend({
-        extractRelationship: function(relationshipModelName, relationshipHash) {
+        extractRelationship(relationshipModelName, relationshipHash) {
           var modelClass = this.store.modelFor(relationshipModelName);
           var relationshipSerializer = this.store.serializerFor(relationshipModelName);
           return relationshipSerializer.normalize(modelClass, relationshipHash);
@@ -19699,7 +19699,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+af401754a2";
+  exports.default = "2.13.0-canary+3b814b62fa";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
