@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.12.0-beta.1
+ * @version   2.12.0-beta.1+6e1ee33112
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -880,7 +880,7 @@ define('ember-data/-private/ext/date', ['exports', 'ember', 'ember-data/-private
     // before falling back to any implementation-specific date parsing, so that’s what we do, even if native
     // implementations could be faster
     //              1 YYYY                2 MM       3 DD           4 HH    5 mm       6 ss        7 msec        8 Z 9 ±    10 tzHH    11 tzmm
-    if (struct = /^(\d{4}|[+\-]\d{6})(?:-(\d{2})(?:-(\d{2}))?)?(?:T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{3}))?)?(?:(Z)|([+\-])(\d{2})(?:(\d{2}))?)?)?$/.exec(date)) {
+    if (struct = /^(\d{4}|[+\-]\d{6})(?:-(\d{2})(?:-(\d{2}))?)?(?:T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{3}))?)?(?:(Z)|([+\-])(\d{2}):?(?:(\d{2}))?)?)?$/.exec(date)) {
       // avoid NaN timestamps caused by “undefined” values being passed to Date.UTC
       for (var i = 0, k; k = numericKeys[i]; ++i) {
         struct[k] = +struct[k] || 0;
@@ -11101,8 +11101,15 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       // container._registry = 1.11 - 2.0
       // container = < 1.11
       var owner = (0, _emberDataPrivateUtils.getOwner)(this);
+      var mixin = undefined;
 
-      var mixin = owner._lookupFactory('mixin:' + normalizedModelName);
+      if (owner.factoryFor) {
+        var MaybeMixin = owner.factoryFor('mixin:' + normalizedModelName);
+        mixin = MaybeMixin && MaybeMixin.class;
+      } else {
+        mixin = owner._lookupFactory('mixin:' + normalizedModelName);
+      }
+
       if (mixin) {
         //Cache the class as a model
         owner.register('model:' + normalizedModelName, _emberDataModel.default.extend(mixin));
@@ -11165,7 +11172,14 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       var trueModelName = this._classKeyFor(modelName);
       var owner = (0, _emberDataPrivateUtils.getOwner)(this);
 
-      return owner._lookupFactory('model:' + trueModelName);
+      if (owner.factoryFor) {
+        var MaybeModel = owner.factoryFor('model:' + trueModelName);
+        var MaybeModelFactory = MaybeModel && MaybeModel.class;
+
+        return MaybeModelFactory;
+      } else {
+        return owner._lookupFactory('model:' + trueModelName);
+      }
     },
 
     /**
@@ -11360,7 +11374,13 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     },
 
     _hasModelFor: function (modelName) {
-      return !!(0, _emberDataPrivateUtils.getOwner)(this)._lookupFactory('model:' + modelName);
+      var owner = (0, _emberDataPrivateUtils.getOwner)(this);
+
+      if (owner.factoryFor) {
+        return !!owner.factoryFor('model:' + modelName);
+      } else {
+        return !!owner._lookupFactory('model:' + modelName);
+      }
     },
 
     _pushInternalModel: function (data) {
@@ -12359,7 +12379,7 @@ define('ember-data/-private/utils', ['exports', 'ember'], function (exports, _em
     ember-container-inject-owner is a new feature in Ember 2.3 that finally provides a public
     API for looking items up.  This function serves as a super simple polyfill to avoid
     triggering deprecations.
-  */
+   */
   function getOwner(context) {
     var owner;
 
@@ -19356,7 +19376,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.12.0-beta.1";
+  exports.default = "2.12.0-beta.1+6e1ee33112";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
