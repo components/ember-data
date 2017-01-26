@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+440cae6b82
+ * @version   2.13.0-canary+b6b4df1a5a
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -9932,14 +9932,14 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
        To create a new instance of a `Post`:
        ```js
       store.createRecord('post', {
-        title: "Rails is omakase"
+        title: 'Rails is omakase'
       });
       ```
        To create a new instance of a `Post` that has a relationship with a `User` record:
        ```js
       let user = this.store.peekRecord('user', 1);
       store.createRecord('post', {
-        title: "Rails is omakase",
+        title: 'Rails is omakase',
         user: user
       });
       ```
@@ -10013,7 +10013,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
        Example
        ```javascript
       let post = store.createRecord('post', {
-        title: "Rails is omakase"
+        title: 'Rails is omakase'
       });
        store.deleteRecord(post);
       ```
@@ -10072,7 +10072,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
        ```app/routes/post.js
       import Ember from 'ember';
        export default Ember.Route.extend({
-        model: function(params) {
+        model(params) {
           return this.store.findRecord('post', params.post_id);
         }
       });
@@ -10119,7 +10119,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       //   }
       // ]
       store.findRecord('post', 1, { reload: true }).then(function(post) {
-        post.get("revision"); // 2
+        post.get('revision'); // 2
       });
       ```
        If no reload is indicated via the abovementioned ways, then the promise
@@ -10166,7 +10166,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
        ```app/routes/post/edit.js
       import Ember from 'ember';
        export default Ember.Route.extend({
-        model: function(params) {
+        model(params) {
           return this.store.findRecord('post', params.post_id, { backgroundReload: false });
         }
       });
@@ -10176,7 +10176,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
        ```app/routes/post/edit.js
       import Ember from 'ember';
        export default Ember.Route.extend({
-        model: function(params) {
+        model(params) {
           return this.store.findRecord('post', params.post_id, {
             adapterOptions: { subscribe: false }
           });
@@ -10186,7 +10186,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
        ```app/adapters/post.js
       import MyCustomAdapter from './custom-adapter';
        export default MyCustomAdapter.extend({
-        findRecord: function(store, type, id, snapshot) {
+        findRecord(store, type, id, snapshot) {
           if (snapshot.adapterOptions.subscribe) {
             // ...
           }
@@ -10209,8 +10209,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
        ```app/routes/post.js
       import Ember from 'ember';
        export default Ember.Route.extend({
-        model: function(params) {
-         return this.store.findRecord('post', params.post_id, {include: 'comments'});
+        model(params) {
+         return this.store.findRecord('post', params.post_id, { include: 'comments' });
         }
       });
        ```
@@ -10223,8 +10223,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
        ```app/routes/post.js
       import Ember from 'ember';
        export default Ember.Route.extend({
-        model: function(params) {
-         return this.store.findRecord('post', params.post_id, {include: 'comments,comments.author'});
+        model(params) {
+         return this.store.findRecord('post', params.post_id, { include: 'comments,comments.author' });
         }
       });
        ```
@@ -10507,7 +10507,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
        // get the record of the reference (null if not yet available)
       let user = userRef.value();
        // get the identifier of the reference
-      if (userRef.remoteType() === "id") {
+      if (userRef.remoteType() === 'id') {
       let id = userRef.id();
       }
        // load user (via store.find)
@@ -10515,8 +10515,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
        // or trigger a reload
       userRef.reload().then(...)
        // provide data for reference
-      userRef.push({ id: 1, username: "@user" }).then(function(user) {
-      userRef.value() === user;
+      userRef.push({ id: 1, username: '@user' }).then(function(user) {
+        userRef.value() === user;
       });
       ```
        @method getReference
@@ -10583,8 +10583,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       ```javascript
      store.hasRecordForId('post', 1); // false
      store.findRecord('post', 1).then(function() {
-        store.hasRecordForId('post', 1); // true
-      });
+       store.hasRecordForId('post', 1); // true
+     });
      ```
        @method hasRecordForId
       @param {String} modelName
@@ -10758,10 +10758,10 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       ```
        The request is made through the adapters' `queryRecord`:
        ```app/adapters/user.js
-      import DS from "ember-data";
+      import DS from 'ember-data';
        export default DS.Adapter.extend({
         queryRecord(modelName, query) {
-          return Ember.$.getJSON("/api/current_user");
+          return Ember.$.getJSON('/api/current_user');
         }
       });
       ```
@@ -10833,7 +10833,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
        ```app/routes/authors.js
       import Ember from 'ember';
        export default Ember.Route.extend({
-        model: function(params) {
+        model(params) {
           return this.store.findAll('author');
         }
       });
@@ -10860,7 +10860,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       //   }
       // ]
       store.findAll('author', { reload: true }).then(function(authors) {
-        authors.getEach("id"); // ['first', 'second']
+        authors.getEach('id'); // ['first', 'second']
       });
       ```
        If no reload is indicated via the abovementioned ways, then the promise
@@ -10907,7 +10907,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
        ```app/routes/post/edit.js
       import Ember from 'ember';
        export default Ember.Route.extend({
-        model: function() {
+        model() {
           return this.store.findAll('post', { backgroundReload: false });
         }
       });
@@ -10917,7 +10917,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
        ```app/routes/posts.js
       import Ember from 'ember';
        export default Ember.Route.extend({
-        model: function(params) {
+        model(params) {
           return this.store.findAll('post', {
             adapterOptions: { subscribe: false }
           });
@@ -10927,7 +10927,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
        ```app/adapters/post.js
       import MyCustomAdapter from './custom-adapter';
        export default MyCustomAdapter.extend({
-        findAll: function(store, type, sinceToken, snapshotRecordArray) {
+        findAll(store, type, sinceToken, snapshotRecordArray) {
           if (snapshotRecordArray.adapterOptions.subscribe) {
             // ...
           }
@@ -10951,8 +10951,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
        ```app/routes/posts.js
       import Ember from 'ember';
        export default Ember.Route.extend({
-        model: function() {
-         return this.store.findAll('post', {include: 'comments'});
+        model() {
+         return this.store.findAll('post', { include: 'comments' });
         }
       });
        ```
@@ -10963,8 +10963,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
        ```app/routes/posts.js
       import Ember from 'ember';
        export default Ember.Route.extend({
-        model: function() {
-         return this.store.findAll('post', {include: 'comments,comments.author'});
+        model() {
+         return this.store.findAll('post', { include: 'comments,comments.author' });
         }
       });
        ```
@@ -11354,7 +11354,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       In case someone defined a relationship to a mixin, for example:
       ```
         let Comment = DS.Model.extend({
-          owner: belongsTo('commentable'. { polymorphic: true})
+          owner: belongsTo('commentable'. { polymorphic: true })
         });
         let Commentable = Ember.Mixin.create({
           comments: hasMany('comment')
@@ -19699,7 +19699,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+440cae6b82";
+  exports.default = "2.13.0-canary+b6b4df1a5a";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
