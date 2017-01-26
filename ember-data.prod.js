@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+b6b4df1a5a
+ * @version   2.13.0-canary+3506441354
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -881,7 +881,7 @@ define('ember-data/-private/ext/date', ['exports', 'ember', 'ember-data/-private
     // before falling back to any implementation-specific date parsing, so that’s what we do, even if native
     // implementations could be faster
     //              1 YYYY                2 MM       3 DD           4 HH    5 mm       6 ss        7 msec        8 Z 9 ±    10 tzHH    11 tzmm
-    if (struct = /^(\d{4}|[+\-]\d{6})(?:-(\d{2})(?:-(\d{2}))?)?(?:T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{3}))?)?(?:(Z)|([+\-])(\d{2})(?:(\d{2}))?)?)?$/.exec(date)) {
+    if (struct = /^(\d{4}|[+\-]\d{6})(?:-(\d{2})(?:-(\d{2}))?)?(?:T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{3}))?)?(?:(Z)|([+\-])(\d{2}):?(?:(\d{2}))?)?)?$/.exec(date)) {
       // avoid NaN timestamps caused by “undefined” values being passed to Date.UTC
       for (var i = 0, k = undefined; k = numericKeys[i]; ++i) {
         struct[k] = +struct[k] || 0;
@@ -19699,7 +19699,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+b6b4df1a5a";
+  exports.default = "2.13.0-canary+3506441354";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
