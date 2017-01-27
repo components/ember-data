@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+b412640ed1
+ * @version   2.13.0-canary+7f220ef721
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -13478,7 +13478,7 @@ define('ember-data/adapters/errors', ['exports', 'ember', 'ember-data/-private/d
     import DS from 'ember-data';
   
     export default DS.RESTAdapter.extend({
-      updateRecord: function() {
+      updateRecord() {
         // Fictional adapter that always rejects
         return Ember.RSVP.reject(new DS.InvalidError([
           {
@@ -13674,9 +13674,9 @@ define('ember-data/adapters/errors', ['exports', 'ember', 'ember-data/-private/d
     const { errorsHashToArray } = DS;
   
     let errors = {
-      base: "Invalid attributes on saving this record",
-      name: "Must be present",
-      age: ["Must be present", "Must be a number"]
+      base: 'Invalid attributes on saving this record',
+      name: 'Must be present',
+      age: ['Must be present', 'Must be a number']
     };
   
     let errorsArray = errorsHashToArray(errors);
@@ -13749,19 +13749,19 @@ define('ember-data/adapters/errors', ['exports', 'ember', 'ember-data/-private/d
   
     let errorsArray = [
       {
-        title: "Invalid Attribute",
-        detail: "Must be present",
-        source: { pointer: "/data/attributes/name" }
+        title: 'Invalid Attribute',
+        detail: 'Must be present',
+        source: { pointer: '/data/attributes/name' }
       },
       {
-        title: "Invalid Attribute",
-        detail: "Must be present",
-        source: { pointer: "/data/attributes/age" }
+        title: 'Invalid Attribute',
+        detail: 'Must be present',
+        source: { pointer: '/data/attributes/age' }
       },
       {
-        title: "Invalid Attribute",
-        detail: "Must be a number",
-        source: { pointer: "/data/attributes/age" }
+        title: 'Invalid Attribute',
+        detail: 'Must be a number',
+        source: { pointer: '/data/attributes/age' }
       }
     ];
   
@@ -15603,7 +15603,7 @@ define('ember-data/attr', ['exports', 'ember', 'ember-data/-private/debug'], fun
   
     ```app/transforms/text.js
     export default DS.Transform.extend({
-      serialize: function(value, options) {
+      serialize(value, options) {
         if (options.uppercase) {
           return value.toUpperCase();
         }
@@ -15611,7 +15611,7 @@ define('ember-data/attr', ['exports', 'ember', 'ember-data/-private/debug'], fun
         return value;
       },
   
-      deserialize: function(value) {
+      deserialize(value) {
         return value;
       }
     })
@@ -19699,7 +19699,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+b412640ed1";
+  exports.default = "2.13.0-canary+7f220ef721";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
