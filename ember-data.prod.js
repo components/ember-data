@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+2b66c8a13f
+ * @version   2.13.0-canary+97d78e604b
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -19612,10 +19612,11 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   
     // Converts centigrade in the JSON to fahrenheit in the app
     export default DS.Transform.extend({
-      deserialize: function(serialized, options) {
+      deserialize(serialized, options) {
         return (serialized *  1.8) + 32;
       },
-      serialize: function(deserialized, options) {
+  
+      serialize(deserialized, options) {
         return (deserialized - 32) / 1.8;
       }
     });
@@ -19638,11 +19639,11 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   
     ```app/transforms/markdown.js
     export default DS.Transform.extend({
-      serialize: function (deserialized, options) {
+      serialize(deserialized, options) {
         return deserialized.raw;
       },
   
-      deserialize: function (serialized, options) {
+      deserialize(serialized, options) {
         var markdownOptions = options.markdown || {};
   
         return marked(serialized, markdownOptions);
@@ -19670,7 +19671,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
       method must return the serialized value.
        Example
        ```javascript
-      serialize: function(deserialized, options) {
+      serialize(deserialized, options) {
         return Ember.isEmpty(deserialized) ? null : Number(deserialized);
       }
       ```
@@ -19686,7 +19687,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
       return the deserialized value for the record attribute.
        Example
        ```javascript
-      deserialize: function(serialized, options) {
+      deserialize(serialized, options) {
         return empty(serialized) ? null : Number(serialized);
       }
       ```
@@ -19699,7 +19700,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+2b66c8a13f";
+  exports.default = "2.13.0-canary+97d78e604b";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
