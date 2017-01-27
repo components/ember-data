@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+969a1facef
+ * @version   2.13.0-canary+4f1a7b14ab
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -14338,8 +14338,8 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
   
     export default DS.RESTAdapter.extend({
       headers: {
-        "API_KEY": "secret key",
-        "ANOTHER_HEADER": "Some header value"
+        'API_KEY': 'secret key',
+        'ANOTHER_HEADER': 'Some header value'
       }
     });
     ```
@@ -14354,8 +14354,8 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
     export default DS.RESTAdapter.extend({
       headers: Ember.computed('session.authToken', function() {
         return {
-          "API_KEY": this.get("session.authToken"),
-          "ANOTHER_HEADER": "Some header value"
+          'API_KEY': this.get('session.authToken'),
+          'ANOTHER_HEADER': 'Some header value'
         };
       })
     });
@@ -14374,8 +14374,8 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
     export default DS.RESTAdapter.extend({
       headers: Ember.computed(function() {
         return {
-          "API_KEY": Ember.get(document.cookie.match(/apiKey\=([^;]*)/), "1"),
-          "ANOTHER_HEADER": "Some header value"
+          'API_KEY': Ember.get(document.cookie.match(/apiKey\=([^;]*)/), '1'),
+          'ANOTHER_HEADER': 'Some header value'
         };
       }).volatile()
     });
@@ -14395,7 +14395,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       server.
        For example:
        ```js
-        store.query('posts', { sort: 'price', category: 'pets' });
+      store.query('posts', { sort: 'price', category: 'pets' });
       ```
        will generate a requests like this `/posts?category=pets&sort=price`, even if the
       parameters were specified in a different order.
@@ -14407,13 +14407,13 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
        ```app/adapters/application.js
       import DS from 'ember-data';
        export default DS.RESTAdapter.extend({
-        sortQueryParams: function(params) {
+        sortQueryParams(params) {
           let sortedKeys = Object.keys(params).sort().reverse();
           let len = sortedKeys.length, newParams = {};
            for (let i = 0; i < len; i++) {
             newParams[sortedKeys[i]] = params[sortedKeys[i]];
           }
-          return newParams;
+           return newParams;
         }
       });
       ```
@@ -14511,8 +14511,8 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       import DS from 'ember-data';
        export default DS.RESTAdapter.extend({
         headers: {
-          "API_KEY": "secret key",
-          "ANOTHER_HEADER": "Some header value"
+          'API_KEY': 'secret key',
+          'ANOTHER_HEADER': 'Some header value'
         }
       });
       ```
@@ -19700,7 +19700,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+969a1facef";
+  exports.default = "2.13.0-canary+4f1a7b14ab";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
