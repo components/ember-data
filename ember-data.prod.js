@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+7f220ef721
+ * @version   2.13.0-canary+2b66c8a13f
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -18741,7 +18741,7 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
     import DS from 'ember-data';
   
     export default DS.RESTSerializer.extend({
-      keyForAttribute: function(attr, method) {
+      keyForAttribute(attr, method) {
         return Ember.String.underscore(attr).toUpperCase();
       }
     });
@@ -18766,7 +18766,7 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
        ```app/serializers/post.js
       import DS from 'ember-data';
        export default DS.RESTSerializer.extend({
-        keyForPolymorphicType: function(key, relationship) {
+        keyForPolymorphicType(key, relationship) {
           var relationshipKey = this.keyForRelationship(key);
            return 'type-' + relationshipKey;
         }
@@ -19160,7 +19160,7 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
        ```app/serializers/application.js
       import DS from 'ember-data';
        export default DS.RESTSerializer.extend({
-        modelNameFromPayloadKey: function(payloadKey) {
+        modelNameFromPayloadKey(payloadKey) {
           if (payloadKey === 'blog/post') {
             return this._super(payloadKey.replace('blog/', ''));
           } else {
@@ -19227,12 +19227,12 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
        ```app/serializers/post.js
       import DS from 'ember-data';
        export default DS.RESTSerializer.extend({
-        serialize: function(snapshot, options) {
+        serialize(snapshot, options) {
           var json = {
             POST_TTL: snapshot.attr('title'),
             POST_BDY: snapshot.attr('body'),
             POST_CMS: snapshot.hasMany('comments', { ids: true })
-          }
+          };
            if (options.includeId) {
             json.POST_ID_ = snapshot.id;
           }
@@ -19247,11 +19247,11 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
        ```app/serializers/application.js
       import DS from 'ember-data';
        export default DS.RESTSerializer.extend({
-        serialize: function(snapshot, options) {
+        serialize(snapshot, options) {
           var json = {};
            snapshot.eachAttribute(function(name) {
             json[serverAttributeName(name)] = snapshot.attr(name);
-          })
+          });
            snapshot.eachRelationship(function(name, relationship) {
             if (relationship.kind === 'hasMany') {
               json[serverHasManyName(name)] = snapshot.hasMany(name, { ids: true });
@@ -19285,7 +19285,7 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
        ```app/serializers/post.js
       import DS from 'ember-data';
        export default DS.RESTSerializer.extend({
-        serialize: function(snapshot, options) {
+        serialize(snapshot, options) {
           var json = this._super(snapshot, options);
            json.subject = json.title;
           delete json.title;
@@ -19311,7 +19311,7 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
        ```app/serializers/application.js
       import DS from 'ember-data';
        export default DS.RESTSerializer.extend({
-        serializeIntoHash: function(data, type, record, options) {
+        serializeIntoHash(data, type, record, options) {
           var root = Ember.String.decamelize(type.modelName);
           data[root] = this.serialize(record, options);
         }
@@ -19346,7 +19346,7 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
        ```app/serializers/application.js
       import DS from 'ember-data';
        export default DS.RESTSerializer.extend({
-        payloadKeyFromModelName: function(modelName) {
+        payloadKeyFromModelName(modelName) {
           return Ember.String.dasherize(modelName);
         }
       });
@@ -19540,7 +19540,7 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
         import DS from "ember-data";
          export default DS.RESTSerializer.extend({
           payloadTypeFromModelName(modelName) {
-            return "api::v1::" + modelName;
+            return 'api::v1::' + modelName;
           }
         });
         ```
@@ -19699,7 +19699,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+7f220ef721";
+  exports.default = "2.13.0-canary+2b66c8a13f";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
