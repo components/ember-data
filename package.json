@@ -1,6 +1,6 @@
 {
   "name": "components-ember-data",
-  "version": "2.11.0+4fa27757b0",
+  "version": "2.11.1",
   "description": "A data persistence library for Ember.js.",
   "keywords": [
     "ember"
