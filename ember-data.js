@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.12.0-beta.2+315b31ccb4
+ * @version   2.12.0-beta.2+83ca6e29f2
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -1481,7 +1481,12 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
     flushCanonical: function () {
       var isInitialized = arguments.length <= 0 || arguments[0] === undefined ? true : arguments[0];
 
-      var toSet = this.canonicalState;
+      // TODO make this smarter, currently its plenty stupid
+      // TODO this filtering was re-introduced as a bugfix, but seems unneeded in 2.13
+      // with the changes to internalModel cleanup in that version.
+      var toSet = this.canonicalState.filter(function (internalModel) {
+        return internalModel.currentState.stateName !== 'root.deleted.saved';
+      });
 
       //a hack for not removing new records
       //TODO remove once we have proper diffing
@@ -19824,7 +19829,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.12.0-beta.2+315b31ccb4";
+  exports.default = "2.12.0-beta.2+83ca6e29f2";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
