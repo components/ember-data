@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+33457bcb04
+ * @version   2.13.0-canary+df15ae60c2
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -1049,20 +1049,58 @@ define('ember-data/-private/initializers/transforms', ['exports', 'ember-data/-p
     registry.register('transform:string', _emberDataPrivateTransforms.StringTransform);
   }
 });
-define('ember-data/-private/instance-initializers/initialize-store-service', ['exports'], function (exports) {
+define('ember-data/-private/instance-initializers/initialize-store-service', ['exports', 'ember-data/-private/debug'], function (exports, _emberDataPrivateDebug) {
   exports.default = initializeStoreService;
+
   /*
-   Configures a registry for use with an Ember-Data
-   store.
+    Configures a registry for use with an Ember-Data
+    store.
   
-   @method initializeStoreService
-   @param {Ember.ApplicationInstance} applicationOrRegistry
-   */
+    @method initializeStoreService
+    @param {Ember.ApplicationInstance} applicationOrRegistry
+  */
 
   function initializeStoreService(application) {
     var container = application.lookup ? application : application.container;
     // Eagerly generate the store so defaultStore is populated.
     container.lookup('service:store');
+
+    var initializers = application.application.constructor.initializers;
+    deprecateOldEmberDataInitializers(initializers);
+  }
+
+  var deprecatedInitializerNames = ['data-adapter', 'injectStore', 'transforms', 'store'];
+
+  function matchesDeprecatedInititalizer(name) {
+    return deprecatedInitializerNames.indexOf(name) !== -1;
+  }
+
+  function deprecateOldEmberDataInitializers(initializers) {
+    // collect all of the initializers
+    var initializersArray = Object.keys(initializers).map(function (key) {
+      return initializers[key];
+    });
+
+    // filter out all of the Ember Data initializer. We have some
+    // deprecated initializers that depend on other deprecated
+    // initializers which may trigger the deprecation warning
+    // unintentionally.
+    var nonEmberDataInitializers = initializersArray.filter(function (initializer) {
+      return !matchesDeprecatedInititalizer(initializer.name);
+    });
+
+    nonEmberDataInitializers.forEach(warnForDeprecatedInitializers);
+  }
+
+  function warnForDeprecatedInitializers(initializer) {
+    var deprecatedBeforeInitializer = matchesDeprecatedInititalizer(initializer.before);
+    var deprecatedAfterInitializer = matchesDeprecatedInititalizer(initializer.after);
+    var deprecatedProp = deprecatedBeforeInitializer ? 'before' : 'after';
+
+    (0, _emberDataPrivateDebug.deprecate)('The initializer `' + initializer[deprecatedProp] + '` has been deprecated. Please update your `' + initializer.name + '` initializer to use use `' + deprecatedProp + ': \'ember-data\'` instead.', !(deprecatedBeforeInitializer || deprecatedAfterInitializer), {
+      id: 'ds.deprecated-initializers',
+      until: '3.0.0'
+    });
   }
 });
 define("ember-data/-private/serializers", ["exports", "ember-data/serializers/json-api", "ember-data/serializers/json", "ember-data/serializers/rest"], function (exports, _emberDataSerializersJsonApi, _emberDataSerializersJson, _emberDataSerializersRest) {
@@ -12994,9 +13032,7 @@ define('ember-data/-private/utils', ['exports', 'ember'], function (exports, _em
 
     if (_ember.default.getOwner) {
       owner = _ember.default.getOwner(context);
-    }
-
-    if (!owner && context.container) {
+    } else if (context.container) {
       owner = context.container;
     }
 
@@ -20147,7 +20183,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+33457bcb04";
+  exports.default = "2.13.0-canary+df15ae60c2";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
