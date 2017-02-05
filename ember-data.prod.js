@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+6f885b8438
+ * @version   2.13.0-canary+8ae5670c08
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -10569,7 +10569,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
        This method will synchronously return the record if it is available in the store,
       otherwise it will return `null`. A record is available if it has been fetched earlier, or
       pushed manually into the store.
-       _Note: This is an synchronous method and does not return a promise._
+       _Note: This is a synchronous method and does not return a promise._
        ```js
       let post = store.peekRecord('post', 1);
        post.get('id'); // 1
@@ -19727,7 +19727,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+6f885b8438";
+  exports.default = "2.13.0-canary+8ae5670c08";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
