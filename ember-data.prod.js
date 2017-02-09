@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+8ae5670c08
+ * @version   2.13.0-canary+ff4e5c6a9a
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -13443,7 +13443,7 @@ define('ember-data/adapters/errors', ['exports', 'ember', 'ember-data/-private/d
   }
 
   var extendedErrorsEnabled = false;
-  if ((0, _emberDataPrivateFeatures.default)('ds-extended-errors')) {
+  if (true) {
     extendedErrorsEnabled = true;
   }
 
@@ -15022,7 +15022,7 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       var errors = this.normalizeErrorResponse(status, headers, payload);
       var detailedMessage = this.generatedDetailedMessage(status, headers, payload, requestData);
 
-      if ((0, _emberDataPrivateFeatures.default)('ds-extended-errors')) {
+      if (true) {
         switch (status) {
           case 401:
             return new _emberDataAdaptersErrors.UnauthorizedError(errors, detailedMessage);
@@ -15741,7 +15741,7 @@ define("ember-data", ["exports", "ember", "ember-data/-private/debug", "ember-da
   _emberDataPrivateCore.default.TimeoutError = _emberDataAdaptersErrors.TimeoutError;
   _emberDataPrivateCore.default.AbortError = _emberDataAdaptersErrors.AbortError;
 
-  if ((0, _emberDataPrivateFeatures.default)('ds-extended-errors')) {
+  if (true) {
     _emberDataPrivateCore.default.UnauthorizedError = _emberDataAdaptersErrors.UnauthorizedError;
     _emberDataPrivateCore.default.ForbiddenError = _emberDataAdaptersErrors.ForbiddenError;
     _emberDataPrivateCore.default.NotFoundError = _emberDataAdaptersErrors.NotFoundError;
@@ -19727,7 +19727,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+8ae5670c08";
+  exports.default = "2.13.0-canary+ff4e5c6a9a";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
