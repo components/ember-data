@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+d1187c0340
+ * @version   2.13.0-canary+d4772a1d59
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -12868,6 +12868,7 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       normalized by the serializer.
        Here is an example `findRecord` implementation:
        ```app/adapters/application.js
+      import Ember from 'ember';
       import DS from 'ember-data';
        export default DS.Adapter.extend({
         findRecord(store, type, id, snapshot) {
@@ -12894,11 +12895,12 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       The `findAll()` method is used to retrieve all records for a given type.
        Example
        ```app/adapters/application.js
+      import Ember from 'ember';
       import DS from 'ember-data';
        export default DS.Adapter.extend({
         findAll(store, type, sinceToken) {
-          var query = { since: sinceToken };
-          return new Ember.RSVP.Promise(function(resolve, reject) {
+          let query = { since: sinceToken };
+           return new Ember.RSVP.Promise(function(resolve, reject) {
             Ember.$.getJSON(`/${type.modelName}`, query).then(function(data) {
               resolve(data);
             }, function(jqXHR) {
@@ -12921,6 +12923,7 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       This method is called when you call `query` on the store.
        Example
        ```app/adapters/application.js
+      import Ember from 'ember';
       import DS from 'ember-data';
        export default DS.Adapter.extend({
         query(store, type, query) {
@@ -12952,8 +12955,8 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
        Here is an example `queryRecord` implementation:
        Example
        ```app/adapters/application.js
-      import DS from 'ember-data';
       import Ember from 'ember';
+      import DS from 'ember-data';
        export default DS.Adapter.extend(DS.BuildURLMixin, {
         queryRecord(store, type, query) {
           return new Ember.RSVP.Promise(function(resolve, reject) {
@@ -13010,8 +13013,8 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       import DS from 'ember-data';
        export default DS.Adapter.extend({
         createRecord(store, type, snapshot) {
-          var data = this.serialize(snapshot, { includeId: true });
-          var url = `/${type.modelName}`;
+          let data = this.serialize(snapshot, { includeId: true });
+          let url = `/${type.modelName}`;
            // ...
         }
       });
@@ -13031,10 +13034,11 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
        Serializes the record and sends it to the server.
        Example
        ```app/adapters/application.js
+      import Ember from 'ember';
       import DS from 'ember-data';
        export default DS.Adapter.extend({
         createRecord(store, type, snapshot) {
-          var data = this.serialize(snapshot, { includeId: true });
+          let data = this.serialize(snapshot, { includeId: true });
            return new Ember.RSVP.Promise(function(resolve, reject) {
             Ember.$.ajax({
               type: 'POST',
@@ -13072,11 +13076,12 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       applied on the backend.
        Example
        ```app/adapters/application.js
+      import Ember from 'ember';
       import DS from 'ember-data';
        export default DS.Adapter.extend({
         updateRecord(store, type, snapshot) {
-          var data = this.serialize(snapshot, { includeId: true });
-          var id = snapshot.id;
+          let data = this.serialize(snapshot, { includeId: true });
+          let id = snapshot.id;
            return new Ember.RSVP.Promise(function(resolve, reject) {
             Ember.$.ajax({
               type: 'PUT',
@@ -13107,11 +13112,12 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
        Sends a delete request for the record to the server.
        Example
        ```app/adapters/application.js
+      import Ember from 'ember';
       import DS from 'ember-data';
        export default DS.Adapter.extend({
         deleteRecord(store, type, snapshot) {
-          var data = this.serialize(snapshot, { includeId: true });
-          var id = snapshot.id;
+          let data = this.serialize(snapshot, { includeId: true });
+          let id = snapshot.id;
            return new Ember.RSVP.Promise(function(resolve, reject) {
             Ember.$.ajax({
               type: 'DELETE',
@@ -13151,6 +13157,7 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       requests to find multiple records at once if coalesceFindRequests
       is true.
        ```app/adapters/application.js
+      import Ember from 'ember';
       import DS from 'ember-data';
        export default DS.Adapter.extend({
         findMany(store, type, ids, snapshots) {
@@ -13208,8 +13215,9 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       write:
        ```javascript
       shouldReloadRecord(store, ticketSnapshot) {
-        var timeDiff = moment().diff(ticketSnapshot.attr('lastAccessedAt'), 'minutes');
-        if (timeDiff > 20) {
+        let lastAccessedAt = ticketSnapshot.attr('lastAccessedAt');
+        let timeDiff = moment().diff(lastAccessedAt, 'minutes');
+         if (timeDiff > 20) {
           return true;
         } else {
           return false;
@@ -13249,10 +13257,11 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       write:
        ```javascript
       shouldReloadAll(store, snapshotArray) {
-        var snapshots = snapshotArray.snapshots();
-         return snapshots.any(function(ticketSnapshot) {
-          var timeDiff = moment().diff(ticketSnapshot.attr('lastAccessedAt'), 'minutes');
-          if (timeDiff > 20) {
+        let snapshots = snapshotArray.snapshots();
+         return snapshots.any((ticketSnapshot) => {
+          let lastAccessedAt = ticketSnapshot.attr('lastAccessedAt');
+          let timeDiff = moment().diff(lastAccessedAt, 'minutes');
+           if (timeDiff > 20) {
             return true;
           } else {
             return false;
@@ -13294,8 +13303,8 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       `shouldBackgroundReloadRecord` as follows:
        ```javascript
       shouldBackgroundReloadRecord(store, snapshot) {
-        var connection = window.navigator.connection;
-        if (connection === 'cellular' || connection === 'none') {
+        let connection = window.navigator.connection;
+         if (connection === 'cellular' || connection === 'none') {
           return false;
         } else {
           return true;
@@ -13327,8 +13336,8 @@ define('ember-data/adapter', ['exports', 'ember'], function (exports, _ember) {
       `shouldBackgroundReloadAll` as follows:
        ```javascript
       shouldBackgroundReloadAll(store, snapshotArray) {
-        var connection = window.navigator.connection;
-        if (connection === 'cellular' || connection === 'none') {
+        let connection = window.navigator.connection;
+         if (connection === 'cellular' || connection === 'none') {
           return false;
         } else {
           return true;
@@ -19733,7 +19742,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+d1187c0340";
+  exports.default = "2.13.0-canary+d4772a1d59";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
