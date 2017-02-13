@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+ff4e5c6a9a
+ * @version   2.13.0-canary+d1187c0340
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -15614,9 +15614,11 @@ define('ember-data/attr', ['exports', 'ember', 'ember-data/-private/debug'], fun
     export default DS.Model.extend({
       username: attr('string'),
       email: attr('string'),
-      settings: attr({defaultValue: function() {
-        return {};
-      }})
+      settings: attr({
+        defaultValue() {
+          return {};
+        }
+      })
     });
     ```
   
@@ -15625,6 +15627,8 @@ define('ember-data/attr', ['exports', 'ember', 'ember-data/-private/debug'], fun
     transformation and adapt the corresponding value, based on the config:
   
     ```app/models/post.js
+    import DS from 'ember-data';
+  
     export default DS.Model.extend({
       text: DS.attr('text', {
         uppercase: true
@@ -15633,6 +15637,8 @@ define('ember-data/attr', ['exports', 'ember', 'ember-data/-private/debug'], fun
     ```
   
     ```app/transforms/text.js
+    import DS from 'ember-data';
+  
     export default DS.Transform.extend({
       serialize(value, options) {
         if (options.uppercase) {
@@ -19727,7 +19733,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+ff4e5c6a9a";
+  exports.default = "2.13.0-canary+d1187c0340";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
