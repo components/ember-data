@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+d4772a1d59
+ * @version   2.13.0-canary+ac659cee25
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -3352,6 +3352,36 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
     @module ember-data
   */
 
+  function findPossibleInverses(type, inverseType, name, relationshipsSoFar) {
+    var possibleRelationships = relationshipsSoFar || [];
+
+    var relationshipMap = get(inverseType, 'relationships');
+    if (!relationshipMap) {
+      return possibleRelationships;
+    }
+
+    var relationships = relationshipMap.get(type.modelName).filter(function (relationship) {
+      var optionsForRelationship = inverseType.metaForProperty(relationship.name).options;
+
+      if (!optionsForRelationship.inverse) {
+        return true;
+      }
+
+      return name === optionsForRelationship.inverse;
+    });
+
+    if (relationships) {
+      possibleRelationships.push.apply(possibleRelationships, relationships);
+    }
+
+    //Recurse to support polymorphism
+    if (type.superclass) {
+      findPossibleInverses(type.superclass, inverseType, name, possibleRelationships);
+    }
+
+    return possibleRelationships;
+  }
+
   function intersection(array1, array2) {
     var result = [];
     array1.forEach(function (element) {
@@ -4494,7 +4524,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
           });
         }
 
-        var possibleRelationships = findPossibleInverses(this, inverseType);
+        var possibleRelationships = findPossibleInverses(this, inverseType, name);
 
         if (possibleRelationships.length === 0) {
           return null;
@@ -4515,38 +4545,6 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
 
         inverseName = possibleRelationships[0].name;
         inverseKind = possibleRelationships[0].kind;
-      }
-
-      function findPossibleInverses(type, inverseType, relationshipsSoFar) {
-        var possibleRelationships = relationshipsSoFar || [];
-
-        var relationshipMap = get(inverseType, 'relationships');
-        if (!relationshipMap) {
-          return possibleRelationships;
-        }
-
-        var relationships = relationshipMap.get(type.modelName);
-
-        relationships = relationships.filter(function (relationship) {
-          var optionsForRelationship = inverseType.metaForProperty(relationship.name).options;
-
-          if (!optionsForRelationship.inverse) {
-            return true;
-          }
-
-          return name === optionsForRelationship.inverse;
-        });
-
-        if (relationships) {
-          possibleRelationships.push.apply(possibleRelationships, relationships);
-        }
-
-        //Recurse to support polymorphism
-        if (type.superclass) {
-          findPossibleInverses(type.superclass, inverseType, possibleRelationships);
-        }
-
-        return possibleRelationships;
       }
 
       return {
@@ -20198,7 +20196,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+d4772a1d59";
+  exports.default = "2.13.0-canary+ac659cee25";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
