@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+ac659cee25
+ * @version   2.13.0-canary+04b53683bb
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -1713,8 +1713,8 @@ define('ember-data/-private/system/model/errors', ['exports', 'ember', 'ember-da
     import DS from 'ember-data';
   
     export default DS.Model.extend({
-      username: attr('string'),
-      email: attr('string')
+      username: DS.attr('string'),
+      email: DS.attr('string')
     });
     ```
     And you attempted to save a record that did not validate on the backend:
@@ -3904,8 +3904,8 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
        ```app/models/mascot.js
       import DS from 'ember-data';
        export default DS.Model.extend({
-        name: attr('string'),
-        isAdmin: attr('boolean', {
+        name: DS.attr('string'),
+        isAdmin: DS.attr('boolean', {
           defaultValue: false
         })
       });
@@ -4798,9 +4798,9 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       ```app/models/person.js
      import DS from 'ember-data';
       export default DS.Model.extend({
-        firstName: attr('string'),
-        lastName: attr('string'),
-        birthday: attr('date')
+        firstName: DS.attr('string'),
+        lastName: DS.attr('string'),
+        birthday: DS.attr('date')
       });
      ```
       ```javascript
@@ -4846,9 +4846,9 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       ```app/models/person.js
      import DS from 'ember-data';
       export default DS.Model.extend({
-        firstName: attr(),
-        lastName: attr('string'),
-        birthday: attr('date')
+        firstName: DS.attr(),
+        lastName: DS.attr('string'),
+        birthday: DS.attr('date')
       });
      ```
       ```javascript
@@ -4895,9 +4895,9 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       ```javascript
      import DS from 'ember-data';
       let Person = DS.Model.extend({
-        firstName: attr('string'),
-        lastName: attr('string'),
-        birthday: attr('date')
+        firstName: DS.attr('string'),
+        lastName: DS.attr('string'),
+        birthday: DS.attr('date')
       });
       Person.eachAttribute(function(name, meta) {
         console.log(name, meta);
@@ -4936,9 +4936,9 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       ```javascript
      import DS from 'ember-data';
       let Person = DS.Model.extend({
-        firstName: attr(),
-        lastName: attr('string'),
-        birthday: attr('date')
+        firstName: DS.attr(),
+        lastName: DS.attr('string'),
+        birthday: DS.attr('date')
       });
       Person.eachTransformedAttribute(function(name, type) {
         console.log(name, type);
@@ -15952,9 +15952,9 @@ define('ember-data/attr', ['exports', 'ember', 'ember-data/-private/debug'], fun
     import DS from 'ember-data';
   
     export default DS.Model.extend({
-      username: attr('string'),
-      email: attr('string'),
-      settings: attr({
+      username: DS.attr('string'),
+      email: DS.attr('string'),
+      settings: DS.attr({
         defaultValue() {
           return {};
         }
@@ -20196,7 +20196,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+ac659cee25";
+  exports.default = "2.13.0-canary+04b53683bb";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
