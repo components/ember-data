@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+b50ed5c056
+ * @version   2.13.0-canary+0327809018
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -19741,7 +19741,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+b50ed5c056";
+  exports.default = "2.13.0-canary+0327809018";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -20202,37 +20202,49 @@ define('ember-inflector/lib/utils/make-helper', ['exports', 'ember'], function (
     return _ember.default.Handlebars.makeBoundHelper(helperFunction);
   }
 });
-define('ember-load-initializers', ['exports', 'ember'], function (exports, _ember) {
+define('ember-load-initializers', ['exports'], function (exports) {
+  function resolveInitializer(moduleName) {
+    var module = require(moduleName, null, null, true);
+    if (!module) {
+      throw new Error(moduleName + ' must export an initializer.');
+    }
+    var initializer = module['default'];
+    if (!initializer.name) {
+      initializer.name = moduleName.slice(moduleName.lastIndexOf('/') + 1);
+    }
+    return initializer;
+  }
+
+  function registerInitializers(app, moduleNames) {
+    for (var i = 0; i < moduleNames.length; i++) {
+      app.initializer(resolveInitializer(moduleNames[i]));
+    }
+  }
+
+  function registerInstanceInitializers(app, moduleNames) {
+    for (var i = 0; i < moduleNames.length; i++) {
+      app.instanceInitializer(resolveInitializer(moduleNames[i]));
+    }
+  }
+
   exports.default = function (app, prefix) {
-    var regex = new RegExp('^' + prefix + '\/((?:instance-)?initializers)\/');
-    var getKeys = Object.keys || _ember.default.keys;
-
-    getKeys(requirejs._eak_seen).map(function (moduleName) {
-      return {
-        moduleName: moduleName,
-        matches: regex.exec(moduleName)
-      };
-    }).filter(function (dep) {
-      return dep.matches && dep.matches.length === 2;
-    }).forEach(function (dep) {
-      var moduleName = dep.moduleName;
-
-      var module = require(moduleName, null, null, true);
-      if (!module) {
-        throw new Error(moduleName + ' must export an initializer.');
+    var initializerPrefix = prefix + '/initializers/';
+    var instanceInitializerPrefix = prefix + '/instance-initializers/';
+    var initializers = [];
+    var instanceInitializers = [];
+    // this is 2 pass because generally the first pass is the problem
+    // and is reduced, and resolveInitializer has potential to deopt
+    var moduleNames = Object.keys(requirejs._eak_seen);
+    for (var i = 0; i < moduleNames.length; i++) {
+      var moduleName = moduleNames[i];
+      if (moduleName.lastIndexOf(initializerPrefix, 0) === 0) {
+        initializers.push(moduleName);
+      } else if (moduleName.lastIndexOf(instanceInitializerPrefix, 0) === 0) {
+        instanceInitializers.push(moduleName);
       }
-
-      var initializerType = _ember.default.String.camelize(dep.matches[1].substring(0, dep.matches[1].length - 1));
-      var initializer = module['default'];
-      if (!initializer.name) {
-        var initializerName = moduleName.match(/[^\/]+\/?$/)[0];
-        initializer.name = initializerName;
-      }
-
-      if (app[initializerType]) {
-        app[initializerType](initializer);
-      }
-    });
+    }
+    registerInitializers(app, initializers);
+    registerInstanceInitializers(app, instanceInitializers);
   };
 });
 define('ember', [], function() {
