@@ -1919,7 +1919,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
             createOptions.container = this.store.container;
           }
 
-          this._record = this.modelClass._create(createOptions);
+          this._record = this.store.modelFactoryFor(this.modelName).create(createOptions);
 
           this._triggerDeferredTriggers();
         }
@@ -3991,15 +3991,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
   });
 
   Model.reopenClass({
-    /**
-      Alias DS.Model's `create` method to `_create`. This allows us to create DS.Model
-      instances from within the store, but if end users accidentally call `create()`
-      (instead of `createRecord()`), we can raise an error.
-       @method _create
-      @private
-      @static
-    */
-    _create: Model.create,
+    isModel: true,
 
     /**
       Override the class' `create()` method to raise an error. This
@@ -4011,10 +4003,6 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       @private
       @static
     */
-    create: function () {
-      throw new _ember.default.Error("You should not call `create` on a model. Instead, call `store.createRecord` with the attributes you would like to set.");
-    },
-
     /**
      Represents the model's class name as a string. This can be used to look up the model through
      DS.Store's modelFor method.
@@ -11116,6 +11104,12 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @private
      */
     _modelFor: function (modelName) {
+      var maybeFactory = this._modelFactoryFor(modelName);
+      // for factorFor factory/class split
+      return maybeFactory.class ? maybeFactory.class : maybeFactory;
+    },
+
+    _modelFactoryFor: function (modelName) {
       var factory = this._modelClassCache[modelName];
 
       if (!factory) {
@@ -11129,7 +11123,11 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
           throw new EmberError('No model was found for \'' + modelName + '\'');
         }
 
-        factory.modelName = factory.modelName || modelName;
+        // interopt with the future
+        var klass = (0, _emberDataPrivateUtils.getOwner)(this).factoryFor ? factory.class : factory;
+
+        // TODO: deprecate this
+        klass.modelName = klass.modelName || modelName;
 
         this._modelClassCache[modelName] = factory;
       }
@@ -11145,10 +11143,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       var owner = (0, _emberDataPrivateUtils.getOwner)(this);
 
       if (owner.factoryFor) {
-        var MaybeModel = owner.factoryFor('model:' + trueModelName);
-        var MaybeModelFactory = MaybeModel && MaybeModel.class;
-
-        return MaybeModelFactory;
+        return owner.factoryFor('model:' + trueModelName);
       } else {
         return owner._lookupFactory('model:' + trueModelName);
       }
@@ -19410,7 +19405,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+e2f35a79fa";
+  exports.default = "2.13.0-canary+08b04621c0";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -19928,7 +19923,7 @@ define('ember', [], function() {
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+e2f35a79fa
+ * @version   2.13.0-canary+08b04621c0
  */
 
 var loader, define, requireModule, require, requirejs;
