@@ -9638,7 +9638,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @return {DS.Model} record
     */
     createRecord: function (modelName, inputProperties) {
-      var trueModelName = this._classKeyFor(modelName);
+      var normalizedModelName = this._classKeyFor(modelName);
       var properties = copy(inputProperties) || new _emberDataPrivateSystemEmptyObject.default();
 
       // If the passed properties do not include a primary key,
@@ -9647,13 +9647,13 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       // to avoid conflicts.
 
       if (isNone(properties.id)) {
-        properties.id = this._generateId(trueModelName, properties);
+        properties.id = this._generateId(normalizedModelName, properties);
       }
 
       // Coerce ID to a string
       properties.id = (0, _emberDataPrivateSystemCoerceId.default)(properties.id);
 
-      var internalModel = this.buildInternalModel(trueModelName, properties.id);
+      var internalModel = this.buildInternalModel(normalizedModelName, properties.id);
       var record = internalModel.getRecord();
 
       // Move the record out of its initial `empty` state into
@@ -9745,9 +9745,9 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       // that's why we have to keep this method around even though `findRecord` is
       // the public way to get a record by modelName and id.
 
-      var trueModelName = this._classKeyFor(modelName);
+      var normalizedModelName = this._classKeyFor(modelName);
 
-      return this.findRecord(trueModelName, id);
+      return this.findRecord(normalizedModelName, id);
     },
 
     /**
@@ -9925,18 +9925,18 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     */
     findRecord: function (modelName, id, options) {
 
-      var trueModelName = this._classKeyFor(modelName);
+      var normalizedModelName = this._classKeyFor(modelName);
 
-      var internalModel = this._internalModelForId(trueModelName, id);
+      var internalModel = this._internalModelForId(normalizedModelName, id);
       options = options || {};
 
-      if (!this.hasRecordForId(trueModelName, id)) {
+      if (!this.hasRecordForId(normalizedModelName, id)) {
         return this._findByInternalModel(internalModel, options);
       }
 
       var fetchedInternalModel = this._findRecord(internalModel, options);
 
-      return promiseRecord(fetchedInternalModel, 'DS: Store#findRecord ' + trueModelName + ' with id: ' + id);
+      return promiseRecord(fetchedInternalModel, 'DS: Store#findRecord ' + normalizedModelName + ' with id: ' + id);
     },
 
     _findRecord: function (internalModel, options) {
@@ -9976,7 +9976,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
       var fetchedInternalModel = this._findEmptyInternalModel(internalModel, options);
 
-      return promiseRecord(fetchedInternalModel, "DS: Store#findRecord " + internalModel.typeKey + " with id: " + get(internalModel, 'id'));
+      return promiseRecord(fetchedInternalModel, 'DS: Store#findRecord ' + internalModel.modelName + ' with id: ' + internalModel.id);
     },
 
     _findEmptyInternalModel: function (internalModel, options) {
@@ -10002,15 +10002,16 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @return {Promise} promise
     */
     findByIds: function (modelName, ids) {
+
       var promises = new Array(ids.length);
 
-      var trueModelName = this._classKeyFor(modelName);
+      var normalizedModelName = this._classKeyFor(modelName);
 
       for (var i = 0; i < ids.length; i++) {
-        promises[i] = this.findRecord(trueModelName, ids[i]);
+        promises[i] = this.findRecord(normalizedModelName, ids[i]);
       }
 
-      return (0, _emberDataPrivateSystemPromiseProxies.promiseArray)(RSVP.all(promises).then(A, null, 'DS: Store#findByIds of ' + trueModelName + ' complete'));
+      return (0, _emberDataPrivateSystemPromiseProxies.promiseArray)(RSVP.all(promises).then(A, null, 'DS: Store#findByIds of ' + normalizedModelName + ' complete'));
     },
 
     /**
@@ -10023,11 +10024,10 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @return {Promise} promise
      */
     _fetchRecord: function (internalModel, options) {
-      var modelClass = internalModel.type;
-      var id = internalModel.id;
-      var adapter = this.adapterFor(modelClass.modelName);
+      var modelName = internalModel.modelName;
+      var adapter = this.adapterFor(modelName);
 
-      return (0, _emberDataPrivateSystemStoreFinders._find)(adapter, this, modelClass, id, internalModel, options);
+      return (0, _emberDataPrivateSystemStoreFinders._find)(adapter, this, internalModel.type, internalModel.id, internalModel, options);
     },
 
     _scheduleFetchMany: function (internalModels) {
@@ -10045,13 +10045,17 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         return internalModel._loadingPromise;
       }
 
-      var modelClass = internalModel.type;
-      var resolver = RSVP.defer('Fetching ' + modelClass.modelName + ' with id: ' + internalModel.id);
+      var id = internalModel.id;
+      var modelName = internalModel.modelName;
+
+      var resolver = RSVP.defer('Fetching ' + modelName + '\' with id: ' + id);
       var pendingFetchItem = {
         internalModel: internalModel,
         resolver: resolver,
         options: options
       };
+
+      var modelClass = internalModel.type; // TODO: is this needed?
       var promise = resolver.promise;
 
       internalModel.loadingData(promise);
@@ -10214,9 +10218,9 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @return {RecordReference}
     */
     getReference: function (modelName, id) {
-      var trueModelName = this._classKeyFor(modelName);
+      var normalizedModelName = this._classKeyFor(modelName);
 
-      return this._internalModelForId(trueModelName, id).recordReference;
+      return this._internalModelForId(normalizedModelName, id).recordReference;
     },
 
     /**
@@ -10236,10 +10240,10 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @return {DS.Model|null} record
     */
     peekRecord: function (modelName, id) {
-      var trueModelName = this._classKeyFor(modelName);
+      var normalizedModelName = this._classKeyFor(modelName);
 
-      if (this.hasRecordForId(trueModelName, id)) {
-        return this._internalModelForId(trueModelName, id).getRecord();
+      if (this.hasRecordForId(normalizedModelName, id)) {
+        return this._internalModelForId(normalizedModelName, id).getRecord();
       } else {
         return null;
       }
@@ -10256,9 +10260,10 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @return {Promise} promise
     */
     _reloadRecord: function (internalModel) {
-      var modelName = internalModel.type.modelName;
-      var adapter = this.adapterFor(modelName);
       var id = internalModel.id;
+      var modelName = internalModel.modelName;
+
+      var adapter = this.adapterFor(modelName);
 
       return this._scheduleFetch(internalModel);
     },
@@ -10280,10 +10285,11 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @return {Boolean}
     */
     hasRecordForId: function (modelName, id) {
-      var trueModelName = this._classKeyFor(modelName);
+
+      var normalizedModelName = this._classKeyFor(modelName);
 
       var trueId = (0, _emberDataPrivateSystemCoerceId.default)(id);
-      var internalModel = this._recordMapFor(trueModelName).get(trueId);
+      var internalModel = this._recordMapFor(normalizedModelName).get(trueId);
 
       return !!internalModel && internalModel.isLoaded();
     },
@@ -10298,6 +10304,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @return {DS.Model} record
     */
     recordForId: function (modelName, id) {
+
       return this._internalModelForId(modelName, id).getRecord();
     },
 
@@ -10338,29 +10345,29 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       then use that URL in the future to make a request for the relationship.
        @method findHasMany
       @private
-      @param {DS.Model} owner
+      @param {InternalModel} internalModel
       @param {any} link
       @param {(Relationship)} relationship
       @return {Promise} promise
     */
-    findHasMany: function (owner, link, relationship) {
-      var adapter = this.adapterFor(owner.type.modelName);
+    findHasMany: function (internalModel, link, relationship) {
+      var adapter = this.adapterFor(internalModel.modelName);
 
-      return (0, _emberDataPrivateSystemStoreFinders._findHasMany)(adapter, this, owner, link, relationship);
+      return (0, _emberDataPrivateSystemStoreFinders._findHasMany)(adapter, this, internalModel, link, relationship);
     },
 
     /**
       @method findBelongsTo
       @private
-      @param {DS.Model} owner
+      @param {InternalModel} internalModel
       @param {any} link
       @param {Relationship} relationship
       @return {Promise} promise
     */
-    findBelongsTo: function (owner, link, relationship) {
-      var adapter = this.adapterFor(owner.type.modelName);
+    findBelongsTo: function (internalModel, link, relationship) {
+      var adapter = this.adapterFor(internalModel.modelName);
 
-      return (0, _emberDataPrivateSystemStoreFinders._findBelongsTo)(adapter, this, owner, link, relationship);
+      return (0, _emberDataPrivateSystemStoreFinders._findBelongsTo)(adapter, this, internalModel, link, relationship);
     },
 
     /**
@@ -10403,8 +10410,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     */
     query: function (modelName, query) {
 
-      var trueModelName = this._classKeyFor(modelName);
-      return this._query(trueModelName, query);
+      var normalizedModelName = this._classKeyFor(modelName);
+      return this._query(normalizedModelName, query);
     },
 
     _query: function (modelName, query, array) {
@@ -10497,10 +10504,11 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @return {Promise} promise which resolves with the found record or `null`
     */
     queryRecord: function (modelName, query) {
-      var trueModelName = this._classKeyFor(modelName);
 
-      var modelClass = this._modelFor(trueModelName);
-      var adapter = this.adapterFor(trueModelName);
+      var normalizedModelName = this._classKeyFor(modelName);
+
+      var modelClass = this._modelFor(normalizedModelName);
+      var adapter = this.adapterFor(normalizedModelName);
 
       return (0, _emberDataPrivateSystemPromiseProxies.promiseObject)((0, _emberDataPrivateSystemStoreFinders._queryRecord)(adapter, this, modelClass, query).then(function (internalModel) {
         // the promise returned by store.queryRecord is expected to resolve with
@@ -10664,9 +10672,9 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @return {Promise} promise
     */
     findAll: function (modelName, options) {
-      var trueModelName = this._classKeyFor(modelName);
-      var modelClass = this._modelFor(trueModelName);
-      var fetch = this._fetchAll(modelClass, this.peekAll(trueModelName), options);
+      var normalizedModelName = this._classKeyFor(modelName);
+      var modelClass = this._modelFor(normalizedModelName);
+      var fetch = this._fetchAll(modelClass, this.peekAll(normalizedModelName), options);
 
       return fetch;
     },
@@ -10740,10 +10748,10 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @return {DS.RecordArray}
     */
     peekAll: function (modelName) {
-      var trueModelName = this._classKeyFor(modelName);
-      var liveRecordArray = this.recordArrayManager.liveRecordArrayFor(trueModelName);
+      var normalizedModelName = this._classKeyFor(modelName);
+      var liveRecordArray = this.recordArrayManager.liveRecordArrayFor(normalizedModelName);
 
-      this.recordArrayManager.syncLiveRecordArray(liveRecordArray, trueModelName);
+      this.recordArrayManager.syncLiveRecordArray(liveRecordArray, normalizedModelName);
 
       return liveRecordArray;
     },
@@ -10764,8 +10772,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       if (arguments.length === 0) {
         this._identityMap.clear();
       } else {
-        var trueModelName = this._classKeyFor(modelName);
-        this._recordMapFor(trueModelName).clear();
+        var normalizedModelName = this._classKeyFor(modelName);
+        this._recordMapFor(normalizedModelName).clear();
       }
     },
 
@@ -10822,26 +10830,26 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       var array = undefined;
       var hasQuery = length === 3;
 
-      var trueModelName = this._classKeyFor(modelName);
+      var normalizedModelName = this._classKeyFor(modelName);
 
       // allow an optional server query
       if (hasQuery) {
-        promise = this.query(trueModelName, query);
+        promise = this.query(normalizedModelName, query);
       } else if (arguments.length === 2) {
         filter = query;
       }
 
       if (hasQuery) {
-        array = this.recordArrayManager.createFilteredRecordArray(trueModelName, filter, query);
+        array = this.recordArrayManager.createFilteredRecordArray(normalizedModelName, filter, query);
       } else {
-        array = this.recordArrayManager.createFilteredRecordArray(trueModelName, filter);
+        array = this.recordArrayManager.createFilteredRecordArray(normalizedModelName, filter);
       }
 
       promise = promise || Promise.resolve(array);
 
       return (0, _emberDataPrivateSystemPromiseProxies.promiseArray)(promise.then(function () {
         return array;
-      }, null, 'DS: Store#filter of ' + trueModelName));
+      }, null, 'DS: Store#filter of ' + normalizedModelName));
     },
 
     /**
@@ -10897,10 +10905,10 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         var snapshot = pendingItem.snapshot;
         var resolver = pendingItem.resolver;
         var internalModel = snapshot._internalModel;
-        var adapter = this.adapterFor(internalModel.modelClass.modelName);
+        var adapter = this.adapterFor(internalModel.modelName);
         var operation = undefined;
 
-        if (get(internalModel, 'currentState.stateName') === 'root.deleted.saved') {
+        if (internalModel.currentState.stateName === 'root.deleted.saved') {
           return resolver.resolve();
         } else if (internalModel.isNew()) {
           operation = 'createRecord';
@@ -10978,6 +10986,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     */
     updateId: function (internalModel, data) {
       var oldId = internalModel.id;
+      var modelName = internalModel.modelName;
       var id = (0, _emberDataPrivateSystemCoerceId.default)(data.id);
 
       // ID absolutely can't be missing if the oldID is empty (missing Id in response for a new record)
@@ -11054,8 +11063,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       in this case
        @private
     */
-    _modelForMixin: function (modelName) {
-      var normalizedModelName = (0, _emberDataPrivateSystemNormalizeModelName.default)(modelName);
+    _modelForMixin: function (normalizedModelName) {
       // container.registry = 2.1
       // container._registry = 1.11 - 2.0
       // container = < 1.11
@@ -11095,9 +11103,9 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     */
     modelFor: function (modelName) {
 
-      var trueModelName = this._classKeyFor(modelName);
+      var normalizedModelName = this._classKeyFor(modelName);
 
-      return this._modelFor(trueModelName);
+      return this._modelFor(normalizedModelName);
     },
 
     /*
@@ -11139,13 +11147,14 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
      @private
      */
     modelFactoryFor: function (modelName) {
-      var trueModelName = this._classKeyFor(modelName);
+
+      var normalizedModelName = this._classKeyFor(modelName);
       var owner = (0, _emberDataPrivateUtils.getOwner)(this);
 
       if (owner.factoryFor) {
-        return owner.factoryFor('model:' + trueModelName);
+        return owner.factoryFor('model:' + normalizedModelName);
       } else {
-        return owner._lookupFactory('model:' + trueModelName);
+        return owner._lookupFactory('model:' + normalizedModelName);
       }
     },
 
@@ -11435,8 +11444,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       } else {
         payload = inputPayload;
 
-        var trueModelName = this._classKeyFor(modelName);
-        serializer = this.serializerFor(trueModelName);
+        var normalizedModelName = this._classKeyFor(modelName);
+        serializer = this.serializerFor(normalizedModelName);
       }
       if ((0, _emberDataPrivateFeatures.default)('ds-pushpayload-return')) {
         return serializer.pushPayload(this, payload);
@@ -11462,9 +11471,9 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @return {Object} The normalized payload
     */
     normalize: function (modelName, payload) {
-      var trueModelName = this._classKeyFor(modelName);
-      var serializer = this.serializerFor(trueModelName);
-      var model = this._modelFor(trueModelName);
+      var normalizedModelName = this._classKeyFor(modelName);
+      var serializer = this.serializerFor(normalizedModelName);
+      var model = this._modelFor(normalizedModelName);
       return serializer.normalize(model, payload);
     },
 
@@ -11533,9 +11542,9 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @return DS.Adapter
     */
     adapterFor: function (modelName) {
-      var trueModelName = this._classKeyFor(modelName);
+      var normalizedModelName = this._classKeyFor(modelName);
 
-      return this._instanceCache.get('adapter', trueModelName);
+      return this._instanceCache.get('adapter', normalizedModelName);
     },
 
     // ..............................
@@ -11560,9 +11569,9 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @return {DS.Serializer}
     */
     serializerFor: function (modelName) {
-      var trueModelName = this._classKeyFor(modelName);
+      var normalizedModelName = this._classKeyFor(modelName);
 
-      return this._instanceCache.get('serializer', trueModelName);
+      return this._instanceCache.get('serializer', normalizedModelName);
     },
 
     lookupAdapter: function (name) {
@@ -11894,7 +11903,6 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
   exports._findAll = _findAll;
   exports._query = _query;
   exports._queryRecord = _queryRecord;
-
   var Promise = _ember.default.RSVP.Promise;
 
   function payloadIsNotBlank(adapterPayload) {
@@ -11907,9 +11915,11 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
 
   function _find(adapter, store, modelClass, id, internalModel, options) {
     var snapshot = internalModel.createSnapshot(options);
+    var modelName = internalModel.modelName;
+
     var promise = adapter.findRecord(store, modelClass, id, snapshot);
-    var serializer = (0, _emberDataPrivateSystemStoreSerializers.serializerForAdapter)(store, adapter, internalModel.type.modelName);
-    var label = "DS: Handle Adapter#findRecord of " + modelClass + " with id: " + id;
+    var serializer = (0, _emberDataPrivateSystemStoreSerializers.serializerForAdapter)(store, adapter, modelName);
+    var label = "DS: Handle Adapter#findRecord of '" + modelName + "' with id: '" + id + "'";
 
     promise = Promise.resolve(promise, label);
     promise = (0, _emberDataPrivateSystemStoreCommon._guard)(promise, (0, _emberDataPrivateSystemStoreCommon._bind)(_emberDataPrivateSystemStoreCommon._objectIsAlive, store));
@@ -11925,14 +11935,16 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
       }
 
       throw error;
-    }, "DS: Extract payload of '" + modelClass + "'");
+    }, "DS: Extract payload of '" + modelName + "'");
   }
 
   function _findMany(adapter, store, modelClass, ids, internalModels) {
     var snapshots = _ember.default.A(internalModels).invoke('createSnapshot');
+    var modelName = modelClass.modelName;
+    // TODO: pass in modelName, or something
     var promise = adapter.findMany(store, modelClass, ids, snapshots);
-    var serializer = (0, _emberDataPrivateSystemStoreSerializers.serializerForAdapter)(store, adapter, modelClass.modelName);
-    var label = "DS: Handle Adapter#findMany of " + modelClass;
+    var serializer = (0, _emberDataPrivateSystemStoreSerializers.serializerForAdapter)(store, adapter, modelName);
+    var label = "DS: Handle Adapter#findMany of '" + modelName + "'";
 
     if (promise === undefined) {
       throw new Error('adapter.findMany returned undefined, this was very likely a mistake');
@@ -11944,7 +11956,7 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     return promise.then(function (adapterPayload) {
       var payload = (0, _emberDataPrivateSystemStoreSerializerResponse.normalizeResponseHelper)(serializer, store, modelClass, adapterPayload, null, 'findMany');
       return store._push(payload);
-    }, null, "DS: Extract payload of " + modelClass);
+    }, null, "DS: Extract payload of " + modelName);
   }
 
   function _findHasMany(adapter, store, internalModel, link, relationship) {
@@ -11952,7 +11964,7 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     var modelClass = store.modelFor(relationship.type);
     var promise = adapter.findHasMany(store, snapshot, link, relationship);
     var serializer = (0, _emberDataPrivateSystemStoreSerializers.serializerForAdapter)(store, adapter, relationship.type);
-    var label = "DS: Handle Adapter#findHasMany of " + internalModel + " : " + relationship.type;
+    var label = "DS: Handle Adapter#findHasMany of '" + internalModel.modelName + "' : '" + relationship.type + "'";
 
     promise = Promise.resolve(promise, label);
     promise = (0, _emberDataPrivateSystemStoreCommon._guard)(promise, (0, _emberDataPrivateSystemStoreCommon._bind)(_emberDataPrivateSystemStoreCommon._objectIsAlive, store));
@@ -11964,7 +11976,7 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
 
       internalModelArray.meta = payload.meta;
       return internalModelArray;
-    }, null, "DS: Extract payload of " + internalModel + " : hasMany " + relationship.type);
+    }, null, "DS: Extract payload of '" + internalModel.modelName + "' : hasMany '" + relationship.type + "'");
   }
 
   function _findBelongsTo(adapter, store, internalModel, link, relationship) {
@@ -11972,7 +11984,7 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     var modelClass = store.modelFor(relationship.type);
     var promise = adapter.findBelongsTo(store, snapshot, link, relationship);
     var serializer = (0, _emberDataPrivateSystemStoreSerializers.serializerForAdapter)(store, adapter, relationship.type);
-    var label = "DS: Handle Adapter#findBelongsTo of " + internalModel + " : " + relationship.type;
+    var label = "DS: Handle Adapter#findBelongsTo of " + internalModel.modelName + " : " + relationship.type;
 
     promise = Promise.resolve(promise, label);
     promise = (0, _emberDataPrivateSystemStoreCommon._guard)(promise, (0, _emberDataPrivateSystemStoreCommon._bind)(_emberDataPrivateSystemStoreCommon._objectIsAlive, store));
@@ -11986,11 +11998,11 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
       }
 
       return store._push(payload);
-    }, null, "DS: Extract payload of " + internalModel + " : " + relationship.type);
+    }, null, "DS: Extract payload of " + internalModel.modelName + " : " + relationship.type);
   }
 
   function _findAll(adapter, store, modelClass, sinceToken, options) {
-    var modelName = modelClass.modelName;
+    var modelName = modelClass.modelName; // TODO: pass in modelName
     var recordArray = store.peekAll(modelName);
     var snapshotArray = recordArray._createSnapshot(options);
     var promise = adapter.findAll(store, modelClass, sinceToken, snapshotArray);
@@ -12007,16 +12019,16 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
       store.didUpdateAll(modelName);
 
       return store.peekAll(modelName);
-    }, null, "DS: Extract payload of findAll " + modelClass);
+    }, null, 'DS: Extract payload of findAll ${modelName}');
   }
 
   function _query(adapter, store, modelClass, query, recordArray) {
-    var modelName = modelClass.modelName;
+    var modelName = modelClass.modelName; // TODO: name yo
     var promise = adapter.query(store, modelClass, query, recordArray);
 
     var serializer = (0, _emberDataPrivateSystemStoreSerializers.serializerForAdapter)(store, adapter, modelName);
 
-    var label = 'DS: Handle Adapter#query of ' + modelClass;
+    var label = "DS: Handle Adapter#query of " + modelClass;
 
     promise = Promise.resolve(promise, label);
     promise = (0, _emberDataPrivateSystemStoreCommon._guard)(promise, (0, _emberDataPrivateSystemStoreCommon._bind)(_emberDataPrivateSystemStoreCommon._objectIsAlive, store));
@@ -12029,7 +12041,7 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
       recordArray._setInternalModels(internalModels, payload);
 
       return recordArray;
-    }, null, 'DS: Extract payload of query ' + modelName);
+    }, null, "DS: Extract payload of query " + modelName);
   }
 
   function _queryRecord(adapter, store, modelClass, query) {
@@ -12133,11 +12145,11 @@ define('ember-data/-private/system/store/serializer-response', ['exports', 'embe
 define("ember-data/-private/system/store/serializers", ["exports"], function (exports) {
   exports.serializerForAdapter = serializerForAdapter;
 
-  function serializerForAdapter(store, adapter, type) {
+  function serializerForAdapter(store, adapter, modelName) {
     var serializer = adapter.serializer;
 
     if (serializer === undefined) {
-      serializer = store.serializerFor(type);
+      serializer = store.serializerFor(modelName);
     }
 
     if (serializer === null || serializer === undefined) {
@@ -19405,7 +19417,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+08b04621c0";
+  exports.default = "2.13.0-canary+11e1347be3";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -19923,7 +19935,7 @@ define('ember', [], function() {
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+08b04621c0
+ * @version   2.13.0-canary+11e1347be3
  */
 
 var loader, define, requireModule, require, requirejs;
