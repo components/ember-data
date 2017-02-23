@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.1
+ * @version   2.11.1+9133cffc2d
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -10647,16 +10647,17 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       }
 
       if (mixin) {
+        var ModelForMixin = _emberDataModel.default.extend(mixin);
+        ModelForMixin.reopenClass({
+          __isMixin: true,
+          __mixin: mixin
+        });
+
         //Cache the class as a model
-        owner.register('model:' + normalizedModelName, _emberDataModel.default.extend(mixin));
-      }
-      var factory = this.modelFactoryFor(normalizedModelName);
-      if (factory) {
-        factory.__isMixin = true;
-        factory.__mixin = mixin;
+        owner.register('model:' + normalizedModelName, ModelForMixin);
       }
 
-      return factory;
+      return this.modelFactoryFor(normalizedModelName);
     },
 
     /**
@@ -19127,7 +19128,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.1";
+  exports.default = "2.11.1+9133cffc2d";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
