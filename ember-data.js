@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.12.0-beta.3
+ * @version   2.12.0-beta.4
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -2222,7 +2222,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
             createOptions.container = this.store.container;
           }
 
-          this._record = this.modelClass._create(createOptions);
+          this._record = this.store.modelFactoryFor(this.modelName).create(createOptions);
 
           this._triggerDeferredTriggers();
         }
@@ -3164,6 +3164,36 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
   /**
     @module ember-data
   */
+
+  function findPossibleInverses(type, inverseType, name, relationshipsSoFar) {
+    var possibleRelationships = relationshipsSoFar || [];
+
+    var relationshipMap = get(inverseType, 'relationships');
+    if (!relationshipMap) {
+      return possibleRelationships;
+    }
+
+    var relationships = relationshipMap.get(type.modelName).filter(function (relationship) {
+      var optionsForRelationship = inverseType.metaForProperty(relationship.name).options;
+
+      if (!optionsForRelationship.inverse) {
+        return true;
+      }
+
+      return name === optionsForRelationship.inverse;
+    });
+
+    if (relationships) {
+      possibleRelationships.push.apply(possibleRelationships, relationships);
+    }
+
+    //Recurse to support polymorphism
+    if (type.superclass) {
+      findPossibleInverses(type.superclass, inverseType, name, possibleRelationships);
+    }
+
+    return possibleRelationships;
+  }
 
   function intersection(array1, array2) {
     var result = [];
@@ -4157,16 +4187,20 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
     }
   });
 
+  (0, _emberDataPrivateDebug.runInDebug)(function () {
+    Model.reopen({
+      init: function () {
+        this._super.apply(this, arguments);
+
+        if (!this._internalModel) {
+          throw new _ember.default.Error('You should not call `create` on a model. Instead, call `store.createRecord` with the attributes you would like to set.');
+        }
+      }
+    });
+  });
+
   Model.reopenClass({
-    /**
-      Alias DS.Model's `create` method to `_create`. This allows us to create DS.Model
-      instances from within the store, but if end users accidentally call `create()`
-      (instead of `createRecord()`), we can raise an error.
-       @method _create
-      @private
-      @static
-    */
-    _create: Model.create,
+    isModel: true,
 
     /**
       Override the class' `create()` method to raise an error. This
@@ -4178,10 +4212,6 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       @private
       @static
     */
-    create: function () {
-      throw new _ember.default.Error("You should not call `create` on a model. Instead, call `store.createRecord` with the attributes you would like to set.");
-    },
-
     /**
      Represents the model's class name as a string. This can be used to look up the model through
      DS.Store's modelFor method.
@@ -4315,7 +4345,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
           });
         }
 
-        var possibleRelationships = findPossibleInverses(this, inverseType);
+        var possibleRelationships = findPossibleInverses(this, inverseType, name);
 
         if (possibleRelationships.length === 0) {
           return null;
@@ -4336,38 +4366,6 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
 
         inverseName = possibleRelationships[0].name;
         inverseKind = possibleRelationships[0].kind;
-      }
-
-      function findPossibleInverses(type, inverseType, relationshipsSoFar) {
-        var possibleRelationships = relationshipsSoFar || [];
-
-        var relationshipMap = get(inverseType, 'relationships');
-        if (!relationshipMap) {
-          return possibleRelationships;
-        }
-
-        var relationships = relationshipMap.get(type.modelName);
-
-        relationships = relationships.filter(function (relationship) {
-          var optionsForRelationship = inverseType.metaForProperty(relationship.name).options;
-
-          if (!optionsForRelationship.inverse) {
-            return true;
-          }
-
-          return name === optionsForRelationship.inverse;
-        });
-
-        if (relationships) {
-          possibleRelationships.push.apply(possibleRelationships, relationships);
-        }
-
-        //Recurse to support polymorphism
-        if (type.superclass) {
-          findPossibleInverses(type.superclass, inverseType, possibleRelationships);
-        }
-
-        return possibleRelationships;
       }
 
       return {
@@ -11342,16 +11340,17 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       }
 
       if (mixin) {
+        var ModelForMixin = _emberDataModel.default.extend(mixin);
+        ModelForMixin.reopenClass({
+          __isMixin: true,
+          __mixin: mixin
+        });
+
         //Cache the class as a model
-        owner.register('model:' + normalizedModelName, _emberDataModel.default.extend(mixin));
-      }
-      var factory = this.modelFactoryFor(normalizedModelName);
-      if (factory) {
-        factory.__isMixin = true;
-        factory.__mixin = mixin;
+        owner.register('model:' + normalizedModelName, ModelForMixin);
       }
 
-      return factory;
+      return this.modelFactoryFor(normalizedModelName);
     },
 
     /**
@@ -11377,6 +11376,12 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       @private
      */
     _modelFor: function (modelName) {
+      var maybeFactory = this._modelFactoryFor(modelName);
+      // for factorFor factory/class split
+      return maybeFactory.class ? maybeFactory.class : maybeFactory;
+    },
+
+    _modelFactoryFor: function (modelName) {
       var factory = this._modelClassCache[modelName];
 
       if (!factory) {
@@ -11390,9 +11395,13 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
           throw new EmberError('No model was found for \'' + modelName + '\'');
         }
 
-        (0, _emberDataPrivateDebug.assert)('\'' + inspect(factory) + '\' does not appear to be an ember-data model', typeof factory._create === 'function');
+        // interopt with the future
+        var klass = (0, _emberDataPrivateUtils.getOwner)(this).factoryFor ? factory.class : factory;
 
-        factory.modelName = factory.modelName || modelName;
+        (0, _emberDataPrivateDebug.assert)('\'' + inspect(klass) + '\' does not appear to be an ember-data model', klass.isModel);
+
+        // TODO: deprecate this
+        klass.modelName = klass.modelName || modelName;
 
         this._modelClassCache[modelName] = factory;
       }
@@ -11404,16 +11413,13 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
      @private
      */
     modelFactoryFor: function (modelName) {
-      (0, _emberDataPrivateDebug.assert)("You need to pass a model name to the store's modelFactoryFor method", isPresent(modelName));
-      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + inspect(modelName), typeof modelName === 'string');
+      (0, _emberDataPrivateDebug.assert)('You need to pass a model name to the store\'s modelFactoryFor method', isPresent(modelName));
+      (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + modelName, typeof modelName === 'string');
       var trueModelName = this._classKeyFor(modelName);
       var owner = (0, _emberDataPrivateUtils.getOwner)(this);
 
       if (owner.factoryFor) {
-        var MaybeModel = owner.factoryFor('model:' + trueModelName);
-        var MaybeModelFactory = MaybeModel && MaybeModel.class;
-
-        return MaybeModelFactory;
+        return owner.factoryFor('model:' + trueModelName);
       } else {
         return owner._lookupFactory('model:' + trueModelName);
       }
@@ -19829,7 +19835,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.12.0-beta.3";
+  exports.default = "2.12.0-beta.4";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
