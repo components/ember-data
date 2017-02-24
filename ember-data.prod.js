@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.11.1+9133cffc2d
+ * @version   2.11.1+0c7ebb8a5f
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -2388,7 +2388,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
             createOptions.container = this.store.container;
           }
 
-          this._record = this.modelClass._create(createOptions);
+          this._record = this.store.modelFactoryFor(this.modelName).create(createOptions);
 
           this._triggerDeferredTriggers();
         }
@@ -4134,15 +4134,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
   });
 
   Model.reopenClass({
-    /**
-      Alias DS.Model's `create` method to `_create`. This allows us to create DS.Model
-      instances from within the store, but if end users accidentally call `create()`
-      (instead of `createRecord()`), we can raise an error.
-       @method _create
-      @private
-      @static
-    */
-    _create: Model.create,
+    isModel: true,
 
     /**
       Override the class' `create()` method to raise an error. This
@@ -4154,10 +4146,6 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       @private
       @static
     */
-    create: function () {
-      throw new _ember.default.Error("You should not call `create` on a model. Instead, call `store.createRecord` with the attributes you would like to set.");
-    },
-
     /**
      Represents the model's class name as a string. This can be used to look up the model through
      DS.Store's modelFor method.
@@ -8905,6 +8893,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
         store: this
       });
       this._pendingSave = [];
+      this._modelClassCache = new _emberDataPrivateSystemEmptyObject.default();
       this._instanceCache = new _emberDataPrivateSystemStoreContainerInstanceCache.default((0, _emberDataPrivateUtils.getOwner)(this), this);
 
       //Used to keep track of all the find requests that need to be coalesced
@@ -10473,13 +10462,49 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     */
     modelFor: function (modelName) {
 
-      var factory = this.modelFactoryFor(modelName);
+      var normalizedModelName = (0, _emberDataPrivateSystemNormalizeModelName.default)(modelName);
+      var factory = this.modelFactoryFor(normalizedModelName);
       if (!factory) {
         //Support looking up mixins as base types for polymorphic relationships
-        factory = this._modelForMixin(modelName);
+        factory = this._modelForMixin(normalizedModelName);
       }
       if (!factory) {
-        throw new EmberError("No model was found for '" + modelName + "'");
+        throw new EmberError("No model was found for '" + normalizedModelName + "'");
+      }
+
+      return this._modelFor(normalizedModelName);
+    },
+
+    /*
+      @private
+     */
+    _modelFor: function (modelName) {
+      var maybeFactory = this._modelFactoryFor(modelName);
+      // for factorFor factory/class split
+      return maybeFactory.class ? maybeFactory.class : maybeFactory;
+    },
+
+    _modelFactoryFor: function (modelName) {
+      var factory = this._modelClassCache[modelName];
+
+      if (!factory) {
+        factory = this.modelFactoryFor(modelName);
+
+        if (!factory) {
+          //Support looking up mixins as base types for polymorphic relationships
+          factory = this._modelForMixin(modelName);
+        }
+        if (!factory) {
+          throw new EmberError('No model was found for \'' + modelName + '\'');
+        }
+
+        // interopt with the future
+        var klass = (0, _emberDataPrivateUtils.getOwner)(this).factoryFor ? factory.class : factory;
+
+        // TODO: deprecate this
+        klass.modelName = klass.modelName || modelName;
+
+        this._modelClassCache[modelName] = factory;
       }
       factory.modelName = factory.modelName || (0, _emberDataPrivateSystemNormalizeModelName.default)(modelName);
 
@@ -10487,17 +10512,13 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
     },
 
     modelFactoryFor: function (modelName) {
-      var normalizedKey = (0, _emberDataPrivateSystemNormalizeModelName.default)(modelName);
-
+      var trueModelName = (0, _emberDataPrivateSystemNormalizeModelName.default)(modelName);
       var owner = (0, _emberDataPrivateUtils.getOwner)(this);
 
       if (owner.factoryFor) {
-        var MaybeModel = owner.factoryFor('model:' + normalizedKey);
-        var MaybeModelFactory = MaybeModel && MaybeModel.class;
-
-        return MaybeModelFactory;
+        return owner.factoryFor('model:' + trueModelName);
       } else {
-        return owner._lookupFactory('model:' + normalizedKey);
+        return owner._lookupFactory('model:' + trueModelName);
       }
     },
 
@@ -18710,7 +18731,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.11.1+9133cffc2d";
+  exports.default = "2.11.1+0c7ebb8a5f";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
