@@ -516,8 +516,9 @@ define('ember-data/-private/debug', ['exports', 'ember'], function (exports, _em
     var addedModelName = addedInternalModel.modelName;
     var parentModelName = parentInternalModel.modelName;
     var key = relationshipMeta.key;
-    var relationshipClass = parentInternalModel.store.modelFor(relationshipMeta.type);
-    var assertionMessage = 'You cannot add a record of modelClass \'' + addedModelName + '\' to the \'' + parentModelName + '.' + key + '\' relationship (only \'' + relationshipClass.modelName + '\' allowed)';
+    var relationshipModelName = relationshipMeta.type;
+    var relationshipClass = parentInternalModel.store.modelFor(relationshipModelName);
+    var assertionMessage = 'You cannot add a record of modelClass \'' + addedModelName + '\' to the \'' + parentModelName + '.' + key + '\' relationship (only \'' + relationshipModelName + '\' allowed)';
 
     assert(assertionMessage, checkPolymorphic(relationshipClass, addedInternalModel.modelClass));
   }
@@ -8910,10 +8911,10 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
     }, {
       key: "updateLink",
       value: function updateLink(link) {
-        (0, _emberDataPrivateDebug.warn)("You pushed a record of type '" + this.record.type.modelName + "' with a relationship '" + this.key + "' configured as 'async: false'. You've included a link but no primary data, this may be an error in your payload.", this.isAsync || this.hasData, {
+        (0, _emberDataPrivateDebug.warn)("You pushed a record of type '" + this.record.modelName + "' with a relationship '" + this.key + "' configured as 'async: false'. You've included a link but no primary data, this may be an error in your payload.", this.isAsync || this.hasData, {
           id: 'ds.store.push-link-for-sync-relationship'
         });
-        (0, _emberDataPrivateDebug.assert)("You have pushed a record of type '" + this.record.type.modelName + "' with '" + this.key + "' as a link, but the value of that link is not a string.", typeof link === 'string' || link === null);
+        (0, _emberDataPrivateDebug.assert)("You have pushed a record of type '" + this.record.modelName + "' with '" + this.key + "' as a link, but the value of that link is not a string.", typeof link === 'string' || link === null);
 
         this.link = link;
         this.linkPromise = null;
@@ -19865,7 +19866,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+5e8798ff3d";
+  exports.default = "2.13.0-canary+20f6ae39f3";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -20383,7 +20384,7 @@ define('ember', [], function() {
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+5e8798ff3d
+ * @version   2.13.0-canary+20f6ae39f3
  */
 
 var loader, define, requireModule, require, requirejs;
