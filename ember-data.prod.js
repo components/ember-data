@@ -10058,9 +10058,11 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
       var promise = resolver.promise;
 
       internalModel.loadingData(promise);
-      this._pendingFetch.get(modelName).push(pendingFetchItem);
+      if (this._pendingFetch.size === 0) {
+        emberRun.schedule('afterRender', this, this.flushAllPendingFetches);
+      }
 
-      emberRun.scheduleOnce('afterRender', this, this.flushAllPendingFetches);
+      this._pendingFetch.get(modelName).push(pendingFetchItem);
 
       return promise;
     },
@@ -19399,7 +19401,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+0cf6d90196";
+  exports.default = "2.13.0-canary+a6f14ecafa";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -19917,7 +19919,7 @@ define('ember', [], function() {
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+0cf6d90196
+ * @version   2.13.0-canary+a6f14ecafa
  */
 
 var loader, define, requireModule, require, requirejs;
