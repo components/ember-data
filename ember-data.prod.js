@@ -11336,6 +11336,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/mode
 
     _hasModelFor: function (modelName) {
       var owner = (0, _emberDataPrivateUtils.getOwner)(this);
+      modelName = (0, _emberDataPrivateSystemNormalizeModelName.default)(modelName);
 
       if (owner.factoryFor) {
         return !!owner.factoryFor('model:' + modelName);
@@ -18565,7 +18566,7 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
         included: []
       };
 
-      var modelClass = store._modelFor(modelName);
+      var modelClass = store.modelFor(modelName);
       var serializer = store.serializerFor(modelName);
 
       _ember.default.makeArray(arrayHash).forEach(function (hash) {
@@ -18757,8 +18758,7 @@ define("ember-data/serializers/rest", ["exports", "ember", "ember-data/-private/
     },
 
     isPrimaryType: function (store, typeName, primaryTypeClass) {
-      var typeClass = store.modelFor(typeName);
-      return typeClass.modelName === primaryTypeClass.modelName;
+      return store.modelFor(typeName) === primaryTypeClass;
     },
 
     /**
@@ -19401,7 +19401,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+a6f14ecafa";
+  exports.default = "2.13.0-canary+3bd0c5d97d";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -19919,7 +19919,7 @@ define('ember', [], function() {
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+a6f14ecafa
+ * @version   2.13.0-canary+3bd0c5d97d
  */
 
 var loader, define, requireModule, require, requirejs;

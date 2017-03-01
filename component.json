@@ -2,7 +2,7 @@
   "name": "ember-data",
   "repo": "components/ember-data",
   "description": "A data persistence library for Ember.js.",
-  "version": "2.13.0-canary+a6f14ecafa",
+  "version": "2.13.0-canary+3bd0c5d97d",
   "license": "MIT",
   "main": "ember-data.js",
   "scripts": [
