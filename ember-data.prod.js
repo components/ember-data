@@ -952,7 +952,7 @@ define("ember-data/-private/system/empty-object", ["exports"], function (exports
 
   EmptyObject.prototype = proto;
 });
-define('ember-data/-private/system/identity-map', ['exports', 'ember-data/-private/system/record-map'], function (exports, _emberDataPrivateSystemRecordMap) {
+define('ember-data/-private/system/identity-map', ['exports', 'ember-data/-private/system/internal-model-map'], function (exports, _emberDataPrivateSystemInternalModelMap) {
   var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
   function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
@@ -971,40 +971,40 @@ define('ember-data/-private/system/identity-map', ['exports', 'ember-data/-priva
     }
 
     /**
-     Retrieves the `RecordMap` for a given modelName,
+     Retrieves the `InternalModelMap` for a given modelName,
      creating one if one did not already exist. This is
      similar to `getWithDefault` or `get` on a `MapWithDefault`
       @method retrieve
      @param modelName a previously normalized modelName
-     @returns {RecordMap} the RecordMap for the given modelName
+     @returns {InternalModelMap} the InternalModelMap for the given modelName
      */
 
     _createClass(IdentityMap, [{
       key: 'retrieve',
       value: function retrieve(modelName) {
-        var recordMap = this._map[modelName];
+        var map = this._map[modelName];
 
-        if (!recordMap) {
-          recordMap = this._map[modelName] = new _emberDataPrivateSystemRecordMap.default(modelName);
+        if (!map) {
+          map = this._map[modelName] = new _emberDataPrivateSystemInternalModelMap.default(modelName);
         }
 
-        return recordMap;
+        return map;
       }
 
       /**
        Clears the contents of all known `RecordMaps`, but does
-       not remove the RecordMap instances.
+       not remove the InternalModelMap instances.
         @method clear
        */
     }, {
       key: 'clear',
       value: function clear() {
-        var recordMaps = this._map;
-        var keys = Object.keys(recordMaps);
+        var map = this._map;
+        var keys = Object.keys(map);
 
         for (var i = 0; i < keys.length; i++) {
           var key = keys[i];
-          recordMaps[key].clear();
+          map[key].clear();
         }
       }
     }]);
@@ -1013,6 +1013,156 @@ define('ember-data/-private/system/identity-map', ['exports', 'ember-data/-priva
   })();
 
   exports.default = IdentityMap;
+});
+define('ember-data/-private/system/internal-model-map', ['exports', 'ember-data/-private/debug', 'ember-data/-private/system/model/internal-model'], function (exports, _emberDataPrivateDebug, _emberDataPrivateSystemModelInternalModel) {
+  var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+  /**
+   `InternalModelMap` is a custom storage map for internalModels of a given modelName
+   used by `IdentityMap`.
+  
+   It was extracted from an implicit pojo based "internalModel map" and preserves
+   that interface while we work towards a more official API.
+  
+   @class InternalModelMap
+   @private
+   */
+
+  var InternalModelMap = (function () {
+    function InternalModelMap(modelName) {
+      this.modelName = modelName;
+      this._idToModel = Object.create(null);
+      this._models = [];
+      this._metadata = null;
+    }
+
+    /**
+      A "map" of records based on their ID for this modelName
+     */
+
+    _createClass(InternalModelMap, [{
+      key: 'get',
+
+      /**
+       *
+       * @param id
+       * @returns {InternalModel}
+       */
+      value: function get(id) {
+        var r = this._idToModel[id];
+        return r;
+      }
+    }, {
+      key: 'has',
+      value: function has(id) {
+        return !!this._idToModel[id];
+      }
+    }, {
+      key: 'set',
+      value: function set(id, internalModel) {
+
+        this._idToModel[id] = internalModel;
+      }
+    }, {
+      key: 'add',
+      value: function add(internalModel, id) {
+
+        if (id) {
+          this._idToModel[id] = internalModel;
+        }
+
+        this._models.push(internalModel);
+      }
+    }, {
+      key: 'remove',
+      value: function remove(internalModel, id) {
+        if (id) {
+          delete this._idToModel[id];
+        }
+
+        var loc = this._models.indexOf(internalModel);
+
+        if (loc !== -1) {
+          this._models.splice(loc, 1);
+        }
+      }
+    }, {
+      key: 'contains',
+      value: function contains(internalModel) {
+        return this._models.indexOf(internalModel) !== -1;
+      }
+
+      /**
+       An array of all models of this modelName
+       */
+    }, {
+      key: 'clear',
+
+      /**
+       Destroy all models in the internalModelTest and wipe metadata.
+        @method clear
+       */
+      value: function clear() {
+        if (this._models) {
+          var models = this._models;
+          this._models = [];
+
+          for (var i = 0; i < models.length; i++) {
+            var model = models[i];
+            model.unloadRecord();
+          }
+        }
+
+        this._metadata = null;
+      }
+    }, {
+      key: 'destroy',
+      value: function destroy() {
+        this._store = null;
+        this._modelClass = null;
+      }
+    }, {
+      key: 'idToRecord',
+      get: function () {
+        return this._idToModel;
+      }
+    }, {
+      key: 'length',
+      get: function () {
+        return this._models.length;
+      }
+    }, {
+      key: 'models',
+      get: function () {
+        return this._models;
+      }
+
+      /**
+       * meta information about internalModels
+       */
+    }, {
+      key: 'metadata',
+      get: function () {
+        return this._metadata || (this._metadata = Object.create(null));
+      }
+
+      /**
+       deprecated (and unsupported) way of accessing modelClass
+        @deprecated
+       */
+    }, {
+      key: 'type',
+      get: function () {
+        throw new Error('InternalModelMap.type is no longer available');
+      }
+    }]);
+
+    return InternalModelMap;
+  })();
+
+  exports.default = InternalModelMap;
 });
 define('ember-data/-private/system/is-array-like', ['exports', 'ember'], function (exports, _ember) {
   exports.default = isArrayLike;
@@ -5756,8 +5906,8 @@ define('ember-data/-private/system/record-array-manager', ['exports', 'ember', '
       key: 'syncLiveRecordArray',
       value: function syncLiveRecordArray(array, modelName) {
         var hasNoPotentialDeletions = this.changedRecords.length === 0;
-        var recordMap = this.store._recordMapFor(modelName);
-        var hasNoInsertionsOrRemovals = recordMap.length === array.length;
+        var map = this.store._internalModelsFor(modelName);
+        var hasNoInsertionsOrRemovals = map.length === array.length;
 
         /*
           Ideally the recordArrayManager has knowledge of the changes to be applied to
@@ -5774,15 +5924,14 @@ define('ember-data/-private/system/record-array-manager', ['exports', 'ember', '
     }, {
       key: 'populateLiveRecordArray',
       value: function populateLiveRecordArray(array, modelName) {
-        var recordMap = this.store._recordMapFor(modelName);
-        var records = recordMap.records;
-        var record = undefined;
+        var modelMap = this.store._internalModelsFor(modelName);
+        var internalModels = modelMap.models;
 
-        for (var i = 0; i < records.length; i++) {
-          record = records[i];
+        for (var i = 0; i < internalModels.length; i++) {
+          var internalModel = internalModels[i];
 
-          if (!record.isDeleted() && !record.isEmpty()) {
-            this._addInternalModelToRecordArray(array, record);
+          if (!internalModel.isDeleted() && !internalModel.isEmpty()) {
+            this._addInternalModelToRecordArray(array, internalModel);
           }
         }
       }
@@ -5800,15 +5949,14 @@ define('ember-data/-private/system/record-array-manager', ['exports', 'ember', '
     }, {
       key: 'updateFilter',
       value: function updateFilter(array, modelName, filter) {
-        var recordMap = this.store._recordMapFor(modelName);
-        var records = recordMap.records;
-        var record = undefined;
+        var modelMap = this.store._internalModelsFor(modelName);
+        var internalModels = modelMap.models;
 
-        for (var i = 0; i < records.length; i++) {
-          record = records[i];
+        for (var i = 0; i < internalModels.length; i++) {
+          var internalModel = internalModels[i];
 
-          if (!record.isDeleted() && !record.isEmpty()) {
-            this.updateFilterRecordArray(array, filter, modelName, record);
+          if (!internalModel.isDeleted() && !internalModel.isEmpty()) {
+            this.updateFilterRecordArray(array, filter, modelName, internalModel);
           }
         }
       }
@@ -6412,157 +6560,6 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
 /**
   @module ember-data
 */
-define('ember-data/-private/system/record-map', ['exports', 'ember-data/-private/debug', 'ember-data/-private/system/model/internal-model'], function (exports, _emberDataPrivateDebug, _emberDataPrivateSystemModelInternalModel) {
-  var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-  /**
-   `RecordMap` is a custom storage map for records of a given modelName
-   used by `IdentityMap`.
-  
-   It was extracted from an implicit pojo based "record map" and preserves
-   that interface while we work towards a more official API.
-  
-   @class RecordMap
-   @private
-   */
-
-  var RecordMap = (function () {
-    function RecordMap(modelName) {
-      this.modelName = modelName;
-      this._idToRecord = Object.create(null);
-      this._records = [];
-      this._metadata = null;
-    }
-
-    /**
-      A "map" of records based on their ID for this modelName
-     */
-
-    _createClass(RecordMap, [{
-      key: 'get',
-
-      /**
-       *
-       * @param id
-       * @returns {InternalModel}
-       */
-      value: function get(id) {
-        var r = this._idToRecord[id];
-        return r;
-      }
-    }, {
-      key: 'has',
-      value: function has(id) {
-        return !!this._idToRecord[id];
-      }
-    }, {
-      key: 'set',
-      value: function set(id, internalModel) {
-
-        this._idToRecord[id] = internalModel;
-      }
-    }, {
-      key: 'add',
-      value: function add(internalModel, id) {
-
-        if (id) {
-          this._idToRecord[id] = internalModel;
-        }
-
-        this._records.push(internalModel);
-      }
-    }, {
-      key: 'remove',
-      value: function remove(internalModel, id) {
-        if (id) {
-          delete this._idToRecord[id];
-        }
-
-        var loc = this._records.indexOf(internalModel);
-
-        if (loc !== -1) {
-          this._records.splice(loc, 1);
-        }
-      }
-    }, {
-      key: 'contains',
-      value: function contains(internalModel) {
-        return this._records.indexOf(internalModel) !== -1;
-      }
-
-      /**
-       An array of all records of this modelName
-       */
-    }, {
-      key: 'clear',
-
-      /**
-       Destroy all records in the recordMap and wipe metadata.
-        @method clear
-       */
-      value: function clear() {
-        if (this._records) {
-          var records = this._records;
-          this._records = [];
-          var record = undefined;
-
-          for (var i = 0; i < records.length; i++) {
-            record = records[i];
-            record.unloadRecord();
-          }
-        }
-
-        this._metadata = null;
-      }
-    }, {
-      key: 'destroy',
-      value: function destroy() {
-        this._store = null;
-        this._modelClass = null;
-      }
-    }, {
-      key: 'idToRecord',
-      get: function () {
-        return this._idToRecord;
-      }
-    }, {
-      key: 'length',
-      get: function () {
-        return this._records.length;
-      }
-    }, {
-      key: 'records',
-      get: function () {
-        return this._records;
-      }
-
-      /**
-       * meta information about records
-       */
-    }, {
-      key: 'metadata',
-      get: function () {
-        return this._metadata || (this._metadata = Object.create(null));
-      }
-
-      /**
-       deprecated (and unsupported) way of accessing modelClass
-        @deprecated
-       */
-    }, {
-      key: 'type',
-      get: function () {
-        throw new Error('RecordMap.type is no longer available');
-      }
-    }]);
-
-    return RecordMap;
-  })();
-
-  exports.default = RecordMap;
-});
 define('ember-data/-private/system/references', ['exports', 'ember-data/-private/system/references/record', 'ember-data/-private/system/references/belongs-to', 'ember-data/-private/system/references/has-many'], function (exports, _emberDataPrivateSystemReferencesRecord, _emberDataPrivateSystemReferencesBelongsTo, _emberDataPrivateSystemReferencesHasMany) {
   exports.RecordReference = _emberDataPrivateSystemReferencesRecord.default;
   exports.BelongsToReference = _emberDataPrivateSystemReferencesBelongsTo.default;
@@ -10314,7 +10311,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       var normalizedModelName = (0, _emberDataPrivateSystemNormalizeModelName.default)(modelName);
 
       var trueId = (0, _emberDataPrivateSystemCoerceId.default)(id);
-      var internalModel = this._recordMapFor(normalizedModelName).get(trueId);
+      var internalModel = this._internalModelsFor(normalizedModelName).get(trueId);
 
       return !!internalModel && internalModel.isLoaded();
     },
@@ -10335,7 +10332,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
 
     _internalModelForId: function (modelName, id) {
       var trueId = (0, _emberDataPrivateSystemCoerceId.default)(id);
-      var internalModel = this._recordMapFor(modelName).get(trueId);
+      var internalModel = this._internalModelsFor(modelName).get(trueId);
 
       if (!internalModel) {
         internalModel = this.buildInternalModel(modelName, trueId);
@@ -10712,7 +10709,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       var options = arguments.length <= 2 || arguments[2] === undefined ? {} : arguments[2];
 
       var adapter = this.adapterFor(modelName);
-      var sinceToken = this._recordMapFor(modelName).metadata.since;
+      var sinceToken = this._internalModelsFor(modelName).metadata.since;
 
       if (options.reload) {
         set(array, 'isUpdating', true);
@@ -10794,7 +10791,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
         this._identityMap.clear();
       } else {
         var normalizedModelName = (0, _emberDataPrivateSystemNormalizeModelName.default)(modelName);
-        this._recordMapFor(normalizedModelName).clear();
+        this._internalModelsFor(normalizedModelName).clear();
       }
     },
 
@@ -11020,19 +11017,19 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
         return;
       }
 
-      this._recordMapFor(internalModel.modelName).set(id, internalModel);
+      this._internalModelsFor(internalModel.modelName).set(id, internalModel);
 
       internalModel.setId(id);
     },
 
     /**
       Returns a map of IDs to client IDs for a given modelName.
-       @method _recordMapFor
+       @method _internalModelsFor
       @private
       @param {String} modelName
       @return {Object} recordMap
     */
-    _recordMapFor: function (modelName) {
+    _internalModelsFor: function (modelName) {
       return this._identityMap.retrieve(modelName);
     },
 
@@ -11499,7 +11496,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
     */
     buildInternalModel: function (modelName, id, data) {
 
-      var recordMap = this._recordMapFor(modelName);
+      var recordMap = this._internalModelsFor(modelName);
 
       // lookupFactory should really return an object that creates
       // instances with the injections applied
@@ -11527,7 +11524,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       @param {InternalModel} internalModel
     */
     _removeFromIdMap: function (internalModel) {
-      var recordMap = this._recordMapFor(internalModel.modelName);
+      var recordMap = this._internalModelsFor(internalModel.modelName);
       var id = internalModel.id;
 
       recordMap.remove(internalModel, id);
@@ -19427,7 +19424,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+904e412c1f";
+  exports.default = "2.13.0-canary+e30a97de0e";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -19945,7 +19942,7 @@ define('ember', [], function() {
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+904e412c1f
+ * @version   2.13.0-canary+e30a97de0e
  */
 
 var loader, define, requireModule, require, requirejs;
