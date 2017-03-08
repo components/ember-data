@@ -5618,11 +5618,9 @@ define('ember-data/-private/system/promise-proxies', ['exports', 'ember', 'ember
 
   var PromiseManyArray = PromiseArray.extend({
     reload: function () {
-      //I don't think this should ever happen right now, but worth guarding if we refactor the async relationships
       (0, _emberDataPrivateDebug.assert)('You are trying to reload an async manyArray before it has been created', get(this, 'content'));
-      return PromiseManyArray.create({
-        promise: get(this, 'content').reload()
-      });
+      this.set('promise', this.get('content').reload());
+      return this;
     },
 
     createRecord: proxyToContent('createRecord'),
@@ -8392,44 +8390,67 @@ define("ember-data/-private/system/relationships/state/create", ["exports", "emb
 
   exports.default = Relationships;
 });
-define("ember-data/-private/system/relationships/state/has-many", ["exports", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/relationships/state/relationship", "ember-data/-private/system/ordered-set", "ember-data/-private/system/many-array"], function (exports, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemRelationshipsStateRelationship, _emberDataPrivateSystemOrderedSet, _emberDataPrivateSystemManyArray) {
-  var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+define('ember-data/-private/system/relationships/state/has-many', ['exports', 'ember-data/-private/debug', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/relationships/state/relationship', 'ember-data/-private/system/ordered-set', 'ember-data/-private/system/many-array'], function (exports, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemRelationshipsStateRelationship, _emberDataPrivateSystemOrderedSet, _emberDataPrivateSystemManyArray) {
+  var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-  var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+  var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-  function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+  function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
   var ManyRelationship = (function (_Relationship) {
     _inherits(ManyRelationship, _Relationship);
 
     function ManyRelationship(store, record, inverseKey, relationshipMeta) {
-      _get(Object.getPrototypeOf(ManyRelationship.prototype), "constructor", this).call(this, store, record, inverseKey, relationshipMeta);
+      _get(Object.getPrototypeOf(ManyRelationship.prototype), 'constructor', this).call(this, store, record, inverseKey, relationshipMeta);
       this.belongsToType = relationshipMeta.type;
       this.canonicalState = [];
       this.isPolymorphic = relationshipMeta.options.polymorphic;
+      this._manyArray = null;
+      this.__loadingPromise = null;
     }
 
     _createClass(ManyRelationship, [{
-      key: "destroy",
+      key: '_updateLoadingPromise',
+      value: function _updateLoadingPromise(promise, content) {
+        if (this.__loadingPromise) {
+          if (content) {
+            this.__loadingPromise.set('content', content);
+          }
+          this.__loadingPromise.set('promise', promise);
+        } else {
+          this.__loadingPromise = new _emberDataPrivateSystemPromiseProxies.PromiseManyArray({
+            promise: promise,
+            content: content
+          });
+        }
+
+        return this.__loadingPromise;
+      }
+    }, {
+      key: 'destroy',
       value: function destroy() {
-        _get(Object.getPrototypeOf(ManyRelationship.prototype), "destroy", this).call(this);
+        _get(Object.getPrototypeOf(ManyRelationship.prototype), 'destroy', this).call(this);
         if (this._manyArray) {
           this._manyArray.destroy();
           this._manyArray = null;
         }
+
+        if (this._loadingPromise) {
+          this._loadingPromise.destroy();
+        }
       }
     }, {
-      key: "updateMeta",
+      key: 'updateMeta',
       value: function updateMeta(meta) {
-        _get(Object.getPrototypeOf(ManyRelationship.prototype), "updateMeta", this).call(this, meta);
+        _get(Object.getPrototypeOf(ManyRelationship.prototype), 'updateMeta', this).call(this, meta);
         if (this._manyArray) {
           this._manyArray.set('meta', meta);
         }
       }
     }, {
-      key: "addCanonicalRecord",
+      key: 'addCanonicalRecord',
       value: function addCanonicalRecord(record, idx) {
         if (this.canonicalMembers.has(record)) {
           return;
@@ -8439,10 +8460,10 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
         } else {
           this.canonicalState.push(record);
         }
-        _get(Object.getPrototypeOf(ManyRelationship.prototype), "addCanonicalRecord", this).call(this, record, idx);
+        _get(Object.getPrototypeOf(ManyRelationship.prototype), 'addCanonicalRecord', this).call(this, record, idx);
       }
     }, {
-      key: "inverseDidDematerialize",
+      key: 'inverseDidDematerialize',
       value: function inverseDidDematerialize() {
         if (this._manyArray) {
           this._manyArray.destroy();
@@ -8451,17 +8472,17 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
         this.notifyHasManyChanged();
       }
     }, {
-      key: "addRecord",
+      key: 'addRecord',
       value: function addRecord(record, idx) {
         if (this.members.has(record)) {
           return;
         }
-        _get(Object.getPrototypeOf(ManyRelationship.prototype), "addRecord", this).call(this, record, idx);
+        _get(Object.getPrototypeOf(ManyRelationship.prototype), 'addRecord', this).call(this, record, idx);
         // make lazy later
         this.manyArray.internalAddRecords([record], idx);
       }
     }, {
-      key: "removeCanonicalRecordFromOwn",
+      key: 'removeCanonicalRecordFromOwn',
       value: function removeCanonicalRecordFromOwn(record, idx) {
         var i = idx;
         if (!this.canonicalMembers.has(record)) {
@@ -8473,23 +8494,23 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
         if (i > -1) {
           this.canonicalState.splice(i, 1);
         }
-        _get(Object.getPrototypeOf(ManyRelationship.prototype), "removeCanonicalRecordFromOwn", this).call(this, record, idx);
+        _get(Object.getPrototypeOf(ManyRelationship.prototype), 'removeCanonicalRecordFromOwn', this).call(this, record, idx);
       }
     }, {
-      key: "flushCanonical",
+      key: 'flushCanonical',
       value: function flushCanonical() {
         if (this._manyArray) {
           this._manyArray.flushCanonical();
         }
-        _get(Object.getPrototypeOf(ManyRelationship.prototype), "flushCanonical", this).call(this);
+        _get(Object.getPrototypeOf(ManyRelationship.prototype), 'flushCanonical', this).call(this);
       }
     }, {
-      key: "removeRecordFromOwn",
+      key: 'removeRecordFromOwn',
       value: function removeRecordFromOwn(record, idx) {
         if (!this.members.has(record)) {
           return;
         }
-        _get(Object.getPrototypeOf(ManyRelationship.prototype), "removeRecordFromOwn", this).call(this, record, idx);
+        _get(Object.getPrototypeOf(ManyRelationship.prototype), 'removeRecordFromOwn', this).call(this, record, idx);
         var manyArray = this.manyArray;
         if (idx !== undefined) {
           //TODO(Igor) not used currently, fix
@@ -8499,14 +8520,14 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
         }
       }
     }, {
-      key: "notifyRecordRelationshipAdded",
+      key: 'notifyRecordRelationshipAdded',
       value: function notifyRecordRelationshipAdded(record, idx) {
         (0, _emberDataPrivateDebug.assertPolymorphicType)(this.record, this.relationshipMeta, record);
 
         this.record.notifyHasManyAdded(this.key, record, idx);
       }
     }, {
-      key: "reload",
+      key: 'reload',
       value: function reload() {
         var manyArray = this.manyArray;
         var manyArrayLoadedState = manyArray.get('isLoaded');
@@ -8520,18 +8541,20 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
           }
         }
 
+        var promise = undefined;
         if (this.link) {
-          this._loadingPromise = (0, _emberDataPrivateSystemPromiseProxies.promiseManyArray)(this.fetchLink(), 'Reload with link');
-          return this._loadingPromise;
+          promise = this.fetchLink();
         } else {
-          this._loadingPromise = (0, _emberDataPrivateSystemPromiseProxies.promiseManyArray)(this.store._scheduleFetchMany(manyArray.currentState).then(function () {
+          promise = this.store._scheduleFetchMany(manyArray.currentState).then(function () {
             return manyArray;
-          }), 'Reload with ids');
-          return this._loadingPromise;
+          });
         }
+
+        this._updateLoadingPromise(promise);
+        return this._loadingPromise;
       }
     }, {
-      key: "computeChanges",
+      key: 'computeChanges',
       value: function computeChanges(records) {
         var members = this.canonicalMembers;
         var recordsToRemove = [];
@@ -8554,7 +8577,7 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
         }
       }
     }, {
-      key: "fetchLink",
+      key: 'fetchLink',
       value: function fetchLink() {
         var _this = this;
 
@@ -8570,7 +8593,7 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
         });
       }
     }, {
-      key: "findRecords",
+      key: 'findRecords',
       value: function findRecords() {
         var manyArray = this.manyArray;
         var internalModels = manyArray.currentState;
@@ -8585,19 +8608,19 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
         });
       }
     }, {
-      key: "notifyHasManyChanged",
+      key: 'notifyHasManyChanged',
       value: function notifyHasManyChanged() {
         this.record.notifyHasManyAdded(this.key);
       }
     }, {
-      key: "getRecords",
+      key: 'getRecords',
       value: function getRecords() {
         var _this2 = this;
 
         //TODO(Igor) sync server here, once our syncing is not stupid
         var manyArray = this.manyArray;
         if (this.isAsync) {
-          var promise;
+          var promise = undefined;
           if (this.link) {
             if (this.hasLoaded) {
               promise = this.findRecords();
@@ -8609,13 +8632,9 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
           } else {
             promise = this.findRecords();
           }
-          this._loadingPromise = _emberDataPrivateSystemPromiseProxies.PromiseManyArray.create({
-            content: manyArray,
-            promise: promise
-          });
-          return this._loadingPromise;
+          return this._updateLoadingPromise(promise, manyArray);
         } else {
-          (0, _emberDataPrivateDebug.assert)("You looked up the '" + this.key + "' relationship on a '" + this.record.type.modelName + "' with id " + this.record.id + " but some of the associated records were not loaded. Either make sure they are all loaded together with the parent record, or specify that the relationship is async ('DS.hasMany({ async: true })')", manyArray.isEvery('isEmpty', false));
+          (0, _emberDataPrivateDebug.assert)('You looked up the \'' + this.key + '\' relationship on a \'' + this.record.type.modelName + '\' with id ' + this.record.id + ' but some of the associated records were not loaded. Either make sure they are all loaded together with the parent record, or specify that the relationship is async (\'DS.hasMany({ async: true })\')', manyArray.isEvery('isEmpty', false));
 
           //TODO(Igor) WTF DO I DO HERE?
           // TODO @runspired equal WTFs to Igor
@@ -8626,13 +8645,18 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
         }
       }
     }, {
-      key: "updateData",
+      key: 'updateData',
       value: function updateData(data) {
         var internalModels = this.store._pushResourceIdentifiers(this, data);
         this.updateRecordsFromAdapter(internalModels);
       }
     }, {
-      key: "manyArray",
+      key: '_loadingPromise',
+      get: function () {
+        return this.__loadingPromise;
+      }
+    }, {
+      key: 'manyArray',
       get: function () {
         if (!this._manyArray) {
           this._manyArray = _emberDataPrivateSystemManyArray.default.create({
@@ -19871,7 +19895,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+e229498fa8";
+  exports.default = "2.13.0-canary+904e412c1f";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -20389,7 +20413,7 @@ define('ember', [], function() {
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+e229498fa8
+ * @version   2.13.0-canary+904e412c1f
  */
 
 var loader, define, requireModule, require, requirejs;
