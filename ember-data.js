@@ -7944,8 +7944,9 @@ define("ember-data/-private/system/relationships/ext", ["exports", "ember", "emb
   }).readOnly();
   exports.relationshipsByNameDescriptor = relationshipsByNameDescriptor;
 });
-define("ember-data/-private/system/relationships/has-many", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/normalize-model-name", "ember-data/-private/system/is-array-like"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateSystemIsArrayLike) {
+define('ember-data/-private/system/relationships/has-many', ['exports', 'ember', 'ember-data/-private/debug', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/system/is-array-like'], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemNormalizeModelName, _emberDataPrivateSystemIsArrayLike) {
   exports.default = hasMany;
+  var get = _ember.default.get;
 
   /**
     `DS.hasMany` is used to define One-To-Many and Many-To-Many
@@ -8018,7 +8019,7 @@ define("ember-data/-private/system/relationships/has-many", ["exports", "ember",
     the `post` relationship on the inverse because post is the only
     relationship to that model.
   
-    However, sometimes you may have multiple `belongsTo`/`hasManys` for the
+    However, sometimes you may have multiple `belongsTo`/`hasMany` for the
     same type. You can specify which property on the related model is
     the inverse using `DS.hasMany`'s `inverse` option:
   
@@ -8060,7 +8061,7 @@ define("ember-data/-private/system/relationships/has-many", ["exports", "ember",
       type = undefined;
     }
 
-    (0, _emberDataPrivateDebug.assert)("The first argument to DS.hasMany must be a string representing a model type key, not an instance of " + _ember.default.inspect(type) + ". E.g., to define a relation to the Comment model, use DS.hasMany('comment')", typeof type === 'string' || typeof type === 'undefined');
+    (0, _emberDataPrivateDebug.assert)('The first argument to DS.hasMany must be a string representing a model type key, not an instance of ' + _ember.default.inspect(type) + '. E.g., to define a relation to the Comment model, use DS.hasMany(\'comment\')', typeof type === 'string' || typeof type === 'undefined');
 
     options = options || {};
 
@@ -8074,8 +8075,8 @@ define("ember-data/-private/system/relationships/has-many", ["exports", "ember",
     // the first time the CP is called.
     var meta = {
       type: type,
-      isRelationship: true,
       options: options,
+      isRelationship: true,
       kind: 'hasMany',
       name: 'Has Many',
       key: null
@@ -8083,12 +8084,11 @@ define("ember-data/-private/system/relationships/has-many", ["exports", "ember",
 
     return _ember.default.computed({
       get: function (key) {
-        var relationship = this._internalModel._relationships.get(key);
-        return relationship.getRecords();
+        return this._internalModel._relationships.get(key).getRecords();
       },
       set: function (key, records) {
-        (0, _emberDataPrivateDebug.assert)("You must pass an array of records to set a hasMany relationship", (0, _emberDataPrivateSystemIsArrayLike.default)(records));
-        (0, _emberDataPrivateDebug.assert)("All elements of a hasMany relationship must be instances of DS.Model, you passed " + _ember.default.inspect(records), (function () {
+        (0, _emberDataPrivateDebug.assert)('You must pass an array of records to set a hasMany relationship', (0, _emberDataPrivateSystemIsArrayLike.default)(records));
+        (0, _emberDataPrivateDebug.assert)('All elements of a hasMany relationship must be instances of DS.Model, you passed ' + _ember.default.inspect(records), (function () {
           return _ember.default.A(records).every(function (record) {
             return record.hasOwnProperty('_internalModel') === true;
           });
@@ -8096,7 +8096,9 @@ define("ember-data/-private/system/relationships/has-many", ["exports", "ember",
 
         var relationship = this._internalModel._relationships.get(key);
         relationship.clear();
-        relationship.addRecords(_ember.default.A(records).mapBy('_internalModel'));
+        relationship.addRecords(records.map(function (record) {
+          return get(record, '_internalModel');
+        }));
         return relationship.getRecords();
       }
     }).meta(meta);
@@ -8389,27 +8391,27 @@ define("ember-data/-private/system/relationships/state/create", ["exports", "emb
 
   exports.default = Relationships;
 });
-define("ember-data/-private/system/relationships/state/has-many", ["exports", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/relationships/state/relationship", "ember-data/-private/system/ordered-set", "ember-data/-private/system/many-array"], function (exports, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemRelationshipsStateRelationship, _emberDataPrivateSystemOrderedSet, _emberDataPrivateSystemManyArray) {
-  var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+define('ember-data/-private/system/relationships/state/has-many', ['exports', 'ember-data/-private/debug', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/relationships/state/relationship', 'ember-data/-private/system/ordered-set', 'ember-data/-private/system/many-array'], function (exports, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemRelationshipsStateRelationship, _emberDataPrivateSystemOrderedSet, _emberDataPrivateSystemManyArray) {
+  var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-  var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
+  var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
 
-  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-  function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+  function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
   var ManyRelationship = (function (_Relationship) {
     _inherits(ManyRelationship, _Relationship);
 
     function ManyRelationship(store, record, inverseKey, relationshipMeta) {
-      _get(Object.getPrototypeOf(ManyRelationship.prototype), "constructor", this).call(this, store, record, inverseKey, relationshipMeta);
+      _get(Object.getPrototypeOf(ManyRelationship.prototype), 'constructor', this).call(this, store, record, inverseKey, relationshipMeta);
       this.belongsToType = relationshipMeta.type;
       this.canonicalState = [];
       this.isPolymorphic = relationshipMeta.options.polymorphic;
     }
 
     _createClass(ManyRelationship, [{
-      key: "getManyArray",
+      key: 'getManyArray',
       value: function getManyArray() {
         if (!this._manyArray) {
           this._manyArray = _emberDataPrivateSystemManyArray.default.create({
@@ -8425,24 +8427,24 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
         return this._manyArray;
       }
     }, {
-      key: "destroy",
+      key: 'destroy',
       value: function destroy() {
-        _get(Object.getPrototypeOf(ManyRelationship.prototype), "destroy", this).call(this);
+        _get(Object.getPrototypeOf(ManyRelationship.prototype), 'destroy', this).call(this);
         if (this._manyArray) {
           this._manyArray.destroy();
           this._manyArray = null;
         }
       }
     }, {
-      key: "updateMeta",
+      key: 'updateMeta',
       value: function updateMeta(meta) {
-        _get(Object.getPrototypeOf(ManyRelationship.prototype), "updateMeta", this).call(this, meta);
+        _get(Object.getPrototypeOf(ManyRelationship.prototype), 'updateMeta', this).call(this, meta);
         if (this._manyArray) {
           this._manyArray.set('meta', meta);
         }
       }
     }, {
-      key: "addCanonicalRecord",
+      key: 'addCanonicalRecord',
       value: function addCanonicalRecord(record, idx) {
         if (this.canonicalMembers.has(record)) {
           return;
@@ -8452,10 +8454,10 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
         } else {
           this.canonicalState.push(record);
         }
-        _get(Object.getPrototypeOf(ManyRelationship.prototype), "addCanonicalRecord", this).call(this, record, idx);
+        _get(Object.getPrototypeOf(ManyRelationship.prototype), 'addCanonicalRecord', this).call(this, record, idx);
       }
     }, {
-      key: "inverseDidDematerialize",
+      key: 'inverseDidDematerialize',
       value: function inverseDidDematerialize() {
         if (this._manyArray) {
           this._manyArray.destroy();
@@ -8464,17 +8466,17 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
         this.notifyHasManyChanged();
       }
     }, {
-      key: "addRecord",
+      key: 'addRecord',
       value: function addRecord(record, idx) {
         if (this.members.has(record)) {
           return;
         }
-        _get(Object.getPrototypeOf(ManyRelationship.prototype), "addRecord", this).call(this, record, idx);
+        _get(Object.getPrototypeOf(ManyRelationship.prototype), 'addRecord', this).call(this, record, idx);
         // make lazy later
         this.getManyArray().internalAddRecords([record], idx);
       }
     }, {
-      key: "removeCanonicalRecordFromOwn",
+      key: 'removeCanonicalRecordFromOwn',
       value: function removeCanonicalRecordFromOwn(record, idx) {
         var i = idx;
         if (!this.canonicalMembers.has(record)) {
@@ -8486,23 +8488,23 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
         if (i > -1) {
           this.canonicalState.splice(i, 1);
         }
-        _get(Object.getPrototypeOf(ManyRelationship.prototype), "removeCanonicalRecordFromOwn", this).call(this, record, idx);
+        _get(Object.getPrototypeOf(ManyRelationship.prototype), 'removeCanonicalRecordFromOwn', this).call(this, record, idx);
       }
     }, {
-      key: "flushCanonical",
+      key: 'flushCanonical',
       value: function flushCanonical() {
         if (this._manyArray) {
           this._manyArray.flushCanonical();
         }
-        _get(Object.getPrototypeOf(ManyRelationship.prototype), "flushCanonical", this).call(this);
+        _get(Object.getPrototypeOf(ManyRelationship.prototype), 'flushCanonical', this).call(this);
       }
     }, {
-      key: "removeRecordFromOwn",
+      key: 'removeRecordFromOwn',
       value: function removeRecordFromOwn(record, idx) {
         if (!this.members.has(record)) {
           return;
         }
-        _get(Object.getPrototypeOf(ManyRelationship.prototype), "removeRecordFromOwn", this).call(this, record, idx);
+        _get(Object.getPrototypeOf(ManyRelationship.prototype), 'removeRecordFromOwn', this).call(this, record, idx);
         var manyArray = this.getManyArray();
         if (idx !== undefined) {
           //TODO(Igor) not used currently, fix
@@ -8512,14 +8514,14 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
         }
       }
     }, {
-      key: "notifyRecordRelationshipAdded",
+      key: 'notifyRecordRelationshipAdded',
       value: function notifyRecordRelationshipAdded(record, idx) {
         (0, _emberDataPrivateDebug.assertPolymorphicType)(this.record, this.relationshipMeta, record);
 
         this.record.notifyHasManyAdded(this.key, record, idx);
       }
     }, {
-      key: "reload",
+      key: 'reload',
       value: function reload() {
         var manyArray = this.getManyArray();
         var manyArrayLoadedState = manyArray.get('isLoaded');
@@ -8544,7 +8546,7 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
         }
       }
     }, {
-      key: "computeChanges",
+      key: 'computeChanges',
       value: function computeChanges(records) {
         var members = this.canonicalMembers;
         var recordsToRemove = [];
@@ -8567,7 +8569,7 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
         }
       }
     }, {
-      key: "fetchLink",
+      key: 'fetchLink',
       value: function fetchLink() {
         var _this = this;
 
@@ -8583,7 +8585,7 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
         });
       }
     }, {
-      key: "findRecords",
+      key: 'findRecords',
       value: function findRecords() {
         var manyArray = this.getManyArray();
         var array = manyArray.toArray();
@@ -8603,12 +8605,12 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
         });
       }
     }, {
-      key: "notifyHasManyChanged",
+      key: 'notifyHasManyChanged',
       value: function notifyHasManyChanged() {
         this.record.notifyHasManyAdded(this.key);
       }
     }, {
-      key: "getRecords",
+      key: 'getRecords',
       value: function getRecords() {
         var _this2 = this;
 
@@ -8633,7 +8635,7 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
           });
           return this._loadingPromise;
         } else {
-          (0, _emberDataPrivateDebug.assert)("You looked up the '" + this.key + "' relationship on a '" + this.record.type.modelName + "' with id " + this.record.id + " but some of the associated records were not loaded. Either make sure they are all loaded together with the parent record, or specify that the relationship is async (`DS.hasMany({ async: true })`)", manyArray.isEvery('isEmpty', false));
+          (0, _emberDataPrivateDebug.assert)('You looked up the \'' + this.key + '\' relationship on a \'' + this.record.type.modelName + '\' with id ' + this.record.id + ' but some of the associated records were not loaded. Either make sure they are all loaded together with the parent record, or specify that the relationship is async (\'DS.hasMany({ async: true })\')', manyArray.isEvery('isEmpty', false));
 
           //TODO(Igor) WTF DO I DO HERE?
           // TODO @runspired equal WTFs to Igor
@@ -8644,7 +8646,7 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
         }
       }
     }, {
-      key: "updateData",
+      key: 'updateData',
       value: function updateData(data) {
         var internalModels = this.store._pushResourceIdentifiers(this, data);
         this.updateRecordsFromAdapter(internalModels);
@@ -8668,10 +8670,10 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
     return set;
   }
 });
-define("ember-data/-private/system/relationships/state/relationship", ["exports", "ember-data/-private/debug", "ember-data/-private/system/ordered-set", "ember-data/-private/system/normalize-link"], function (exports, _emberDataPrivateDebug, _emberDataPrivateSystemOrderedSet, _emberDataPrivateSystemNormalizeLink) {
-  var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+define('ember-data/-private/system/relationships/state/relationship', ['exports', 'ember-data/-private/debug', 'ember-data/-private/system/ordered-set', 'ember-data/-private/system/normalize-link'], function (exports, _emberDataPrivateDebug, _emberDataPrivateSystemOrderedSet, _emberDataPrivateSystemNormalizeLink) {
+  var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
   var Relationship = (function () {
     function Relationship(store, internalModel, inverseKey, relationshipMeta) {
@@ -8696,7 +8698,7 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
     // TODO @runspired deprecate this as it was never truly a record instance
 
     _createClass(Relationship, [{
-      key: "destroy",
+      key: 'destroy',
       value: function destroy() {
         var _this = this;
 
@@ -8720,15 +8722,15 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
         });
       }
     }, {
-      key: "inverseDidDematerialize",
+      key: 'inverseDidDematerialize',
       value: function inverseDidDematerialize() {}
     }, {
-      key: "updateMeta",
+      key: 'updateMeta',
       value: function updateMeta(meta) {
         this.meta = meta;
       }
     }, {
-      key: "clear",
+      key: 'clear',
       value: function clear() {
 
         var members = this.members.list;
@@ -8744,7 +8746,7 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
         }
       }
     }, {
-      key: "removeRecords",
+      key: 'removeRecords',
       value: function removeRecords(records) {
         var _this2 = this;
 
@@ -8753,7 +8755,7 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
         });
       }
     }, {
-      key: "addRecords",
+      key: 'addRecords',
       value: function addRecords(records, idx) {
         var _this3 = this;
 
@@ -8765,7 +8767,7 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
         });
       }
     }, {
-      key: "addCanonicalRecords",
+      key: 'addCanonicalRecords',
       value: function addCanonicalRecords(records, idx) {
         for (var i = 0; i < records.length; i++) {
           if (idx !== undefined) {
@@ -8776,7 +8778,7 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
         }
       }
     }, {
-      key: "addCanonicalRecord",
+      key: 'addCanonicalRecord',
       value: function addCanonicalRecord(record, idx) {
         if (!this.canonicalMembers.has(record)) {
           this.canonicalMembers.add(record);
@@ -8793,7 +8795,7 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
         this.setHasData(true);
       }
     }, {
-      key: "removeCanonicalRecords",
+      key: 'removeCanonicalRecords',
       value: function removeCanonicalRecords(records, idx) {
         for (var i = 0; i < records.length; i++) {
           if (idx !== undefined) {
@@ -8804,7 +8806,7 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
         }
       }
     }, {
-      key: "removeCanonicalRecord",
+      key: 'removeCanonicalRecord',
       value: function removeCanonicalRecord(record, idx) {
         if (this.canonicalMembers.has(record)) {
           this.removeCanonicalRecordFromOwn(record);
@@ -8819,7 +8821,7 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
         this.flushCanonicalLater();
       }
     }, {
-      key: "addRecord",
+      key: 'addRecord',
       value: function addRecord(record, idx) {
         if (!this.members.has(record)) {
           this.members.addWithIndex(record, idx);
@@ -8837,7 +8839,7 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
         this.setHasData(true);
       }
     }, {
-      key: "removeRecord",
+      key: 'removeRecord',
       value: function removeRecord(record) {
         if (this.members.has(record)) {
           this.removeRecordFromOwn(record);
@@ -8851,7 +8853,7 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
         }
       }
     }, {
-      key: "removeRecordFromInverse",
+      key: 'removeRecordFromInverse',
       value: function removeRecordFromInverse(record) {
         var inverseRelationship = record._relationships.get(this.inverseKey);
         //Need to check for existence, as the record might unloading at the moment
@@ -8860,14 +8862,14 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
         }
       }
     }, {
-      key: "removeRecordFromOwn",
+      key: 'removeRecordFromOwn',
       value: function removeRecordFromOwn(record) {
         this.members.delete(record);
         this.notifyRecordRelationshipRemoved(record);
         this.record.updateRecordArrays();
       }
     }, {
-      key: "removeCanonicalRecordFromInverse",
+      key: 'removeCanonicalRecordFromInverse',
       value: function removeCanonicalRecordFromInverse(record) {
         var inverseRelationship = record._relationships.get(this.inverseKey);
         //Need to check for existence, as the record might unloading at the moment
@@ -8876,13 +8878,13 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
         }
       }
     }, {
-      key: "removeCanonicalRecordFromOwn",
+      key: 'removeCanonicalRecordFromOwn',
       value: function removeCanonicalRecordFromOwn(record) {
         this.canonicalMembers.delete(record);
         this.flushCanonicalLater();
       }
     }, {
-      key: "flushCanonical",
+      key: 'flushCanonical',
       value: function flushCanonical() {
         var list = this.members.list;
         this.willSync = false;
@@ -8902,7 +8904,7 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
         }
       }
     }, {
-      key: "flushCanonicalLater",
+      key: 'flushCanonicalLater',
       value: function flushCanonicalLater() {
         if (this.willSync) {
           return;
@@ -8911,19 +8913,19 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
         this.store._updateRelationshipState(this);
       }
     }, {
-      key: "updateLink",
+      key: 'updateLink',
       value: function updateLink(link) {
-        (0, _emberDataPrivateDebug.warn)("You pushed a record of type '" + this.record.modelName + "' with a relationship '" + this.key + "' configured as 'async: false'. You've included a link but no primary data, this may be an error in your payload.", this.isAsync || this.hasData, {
+        (0, _emberDataPrivateDebug.warn)('You pushed a record of type \'' + this.record.modelName + '\' with a relationship \'' + this.key + '\' configured as \'async: false\'. You\'ve included a link but no primary data, this may be an error in your payload.', this.isAsync || this.hasData, {
           id: 'ds.store.push-link-for-sync-relationship'
         });
-        (0, _emberDataPrivateDebug.assert)("You have pushed a record of type '" + this.record.modelName + "' with '" + this.key + "' as a link, but the value of that link is not a string.", typeof link === 'string' || link === null);
+        (0, _emberDataPrivateDebug.assert)('You have pushed a record of type \'' + this.record.modelName + '\' with \'' + this.key + '\' as a link, but the value of that link is not a string.', typeof link === 'string' || link === null);
 
         this.link = link;
         this.linkPromise = null;
         this.record.notifyPropertyChange(this.key);
       }
     }, {
-      key: "findLink",
+      key: 'findLink',
       value: function findLink() {
         if (this.linkPromise) {
           return this.linkPromise;
@@ -8936,17 +8938,17 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
         }
       }
     }, {
-      key: "updateRecordsFromAdapter",
+      key: 'updateRecordsFromAdapter',
       value: function updateRecordsFromAdapter(records) {
         //TODO(Igor) move this to a proper place
         //TODO Once we have adapter support, we need to handle updated and canonical changes
         this.computeChanges(records);
       }
     }, {
-      key: "notifyRecordRelationshipAdded",
+      key: 'notifyRecordRelationshipAdded',
       value: function notifyRecordRelationshipAdded() {}
     }, {
-      key: "notifyRecordRelationshipRemoved",
+      key: 'notifyRecordRelationshipRemoved',
       value: function notifyRecordRelationshipRemoved() {}
 
       /*
@@ -8959,7 +8961,7 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
        considered known (`hasData === true`).
        */
     }, {
-      key: "setHasData",
+      key: 'setHasData',
       value: function setHasData(value) {
         this.hasData = value;
       }
@@ -8973,7 +8975,7 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
         Updating the link will automatically set `hasLoaded` to `false`.
        */
     }, {
-      key: "setHasLoaded",
+      key: 'setHasLoaded',
       value: function setHasLoaded(value) {
         this.hasLoaded = value;
       }
@@ -8986,7 +8988,7 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
        of the relationship.
        */
     }, {
-      key: "push",
+      key: 'push',
       value: function push(payload) {
 
         var hasData = false;
@@ -9027,15 +9029,15 @@ define("ember-data/-private/system/relationships/state/relationship", ["exports"
         }
       }
     }, {
-      key: "updateData",
+      key: 'updateData',
       value: function updateData() {}
     }, {
-      key: "record",
+      key: 'record',
       get: function () {
         return this.internalModel;
       }
     }, {
-      key: "parentType",
+      key: 'parentType',
       get: function () {
         return this.internalModel.modelName;
       }
@@ -19871,7 +19873,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+fcf0e3917f";
+  exports.default = "2.13.0-canary+ac354276d1";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -20389,7 +20391,7 @@ define('ember', [], function() {
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+fcf0e3917f
+ * @version   2.13.0-canary+ac354276d1
  */
 
 var loader, define, requireModule, require, requirejs;
