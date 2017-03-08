@@ -1178,12 +1178,13 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
     },
 
     objectAt: function (index) {
+      var object = this.currentState[index];
       //Ember observers such as 'firstObject', 'lastObject' might do out of bounds accesses
-      if (!this.currentState[index]) {
-        return undefined;
+      if (object === undefined) {
+        return;
       }
 
-      return this.currentState[index].getRecord();
+      return object.getRecord();
     },
 
     flushCanonical: function () {
@@ -7370,7 +7371,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
 
       _this.hasManyRelationship.computeChanges(internalModels);
 
-      return _this.hasManyRelationship.getManyArray();
+      return _this.hasManyRelationship.manyArray;
     });
   };
 
@@ -7427,7 +7428,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
   */
   HasManyReference.prototype.value = function () {
     if (this._isLoaded()) {
-      return this.hasManyRelationship.getManyArray();
+      return this.hasManyRelationship.manyArray;
     }
 
     return null;
@@ -7475,7 +7476,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
       return this.hasManyRelationship.getRecords();
     }
 
-    return resolve(this.hasManyRelationship.getManyArray());
+    return resolve(this.hasManyRelationship.manyArray);
   };
 
   /**
@@ -8411,22 +8412,6 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
     }
 
     _createClass(ManyRelationship, [{
-      key: "getManyArray",
-      value: function getManyArray() {
-        if (!this._manyArray) {
-          this._manyArray = _emberDataPrivateSystemManyArray.default.create({
-            canonicalState: this.canonicalState,
-            store: this.store,
-            relationship: this,
-            type: this.store.modelFor(this.belongsToType),
-            record: this.record,
-            meta: this.meta,
-            isPolymorphic: this.isPolymorphic
-          });
-        }
-        return this._manyArray;
-      }
-    }, {
       key: "destroy",
       value: function destroy() {
         _get(Object.getPrototypeOf(ManyRelationship.prototype), "destroy", this).call(this);
@@ -8473,7 +8458,7 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
         }
         _get(Object.getPrototypeOf(ManyRelationship.prototype), "addRecord", this).call(this, record, idx);
         // make lazy later
-        this.getManyArray().internalAddRecords([record], idx);
+        this.manyArray.internalAddRecords([record], idx);
       }
     }, {
       key: "removeCanonicalRecordFromOwn",
@@ -8505,7 +8490,7 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
           return;
         }
         _get(Object.getPrototypeOf(ManyRelationship.prototype), "removeRecordFromOwn", this).call(this, record, idx);
-        var manyArray = this.getManyArray();
+        var manyArray = this.manyArray;
         if (idx !== undefined) {
           //TODO(Igor) not used currently, fix
           manyArray.currentState.removeAt(idx);
@@ -8523,7 +8508,7 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
     }, {
       key: "reload",
       value: function reload() {
-        var manyArray = this.getManyArray();
+        var manyArray = this.manyArray;
         var manyArrayLoadedState = manyArray.get('isLoaded');
 
         if (this._loadingPromise) {
@@ -8579,21 +8564,16 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
           }
           _this.store._backburner.join(function () {
             _this.updateRecordsFromAdapter(records);
-            _this.getManyArray().set('isLoaded', true);
+            _this.manyArray.set('isLoaded', true);
           });
-          return _this.getManyArray();
+          return _this.manyArray;
         });
       }
     }, {
       key: "findRecords",
       value: function findRecords() {
-        var manyArray = this.getManyArray();
-        var array = manyArray.toArray();
-        var internalModels = new Array(array.length);
-
-        for (var i = 0; i < array.length; i++) {
-          internalModels[i] = array[i]._internalModel;
-        }
+        var manyArray = this.manyArray;
+        var internalModels = manyArray.currentState;
 
         //TODO CLEANUP
         return this.store.findMany(internalModels).then(function () {
@@ -8615,7 +8595,7 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
         var _this2 = this;
 
         //TODO(Igor) sync server here, once our syncing is not stupid
-        var manyArray = this.getManyArray();
+        var manyArray = this.manyArray;
         if (this.isAsync) {
           var promise;
           if (this.link) {
@@ -8650,6 +8630,22 @@ define("ember-data/-private/system/relationships/state/has-many", ["exports", "e
       value: function updateData(data) {
         var internalModels = this.store._pushResourceIdentifiers(this, data);
         this.updateRecordsFromAdapter(internalModels);
+      }
+    }, {
+      key: "manyArray",
+      get: function () {
+        if (!this._manyArray) {
+          this._manyArray = _emberDataPrivateSystemManyArray.default.create({
+            canonicalState: this.canonicalState,
+            store: this.store,
+            relationship: this,
+            type: this.store.modelFor(this.belongsToType),
+            record: this.record,
+            meta: this.meta,
+            isPolymorphic: this.isPolymorphic
+          });
+        }
+        return this._manyArray;
       }
     }]);
 
@@ -19875,7 +19871,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+1e9bf996f0";
+  exports.default = "2.13.0-canary+83f1308e1a";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -20393,7 +20389,7 @@ define('ember', [], function() {
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+1e9bf996f0
+ * @version   2.13.0-canary+83f1308e1a
  */
 
 var loader, define, requireModule, require, requirejs;
