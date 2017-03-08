@@ -15756,6 +15756,8 @@ define('ember-data/serializers/embedded-records-mixin', ['exports', 'ember', 'em
     To set up embedded records, include the mixin when extending a serializer,
     then define and configure embedded (model) relationships.
   
+    Note that embedded records will serialize with the serializer for their model instead of the serializer in which they are defined.
+  
     Below is an example of a per-type serializer (`post` type).
   
     ```app/serializers/post.js
@@ -19406,7 +19408,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+ac354276d1";
+  exports.default = "2.13.0-canary+8fa3ea7dfb";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -19924,7 +19926,7 @@ define('ember', [], function() {
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+ac354276d1
+ * @version   2.13.0-canary+8fa3ea7dfb
  */
 
 var loader, define, requireModule, require, requirejs;
