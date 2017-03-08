@@ -1173,7 +1173,7 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
       */
       this.relationship = this.relationship || null;
 
-      this.currentState = _ember.default.A([]);
+      this.currentState = [];
       this.flushCanonical(false);
     },
 
@@ -19871,7 +19871,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+83f1308e1a";
+  exports.default = "2.13.0-canary+e229498fa8";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -20389,7 +20389,7 @@ define('ember', [], function() {
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+83f1308e1a
+ * @version   2.13.0-canary+e229498fa8
  */
 
 var loader, define, requireModule, require, requirejs;
