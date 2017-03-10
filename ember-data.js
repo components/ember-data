@@ -943,6 +943,68 @@ define('ember-data/-private/system/debug/debug-adapter', ['exports', 'ember', 'e
 /**
   @module ember-data
 */
+define("ember-data/-private/system/diff-array", ["exports"], function (exports) {
+  exports.default = diffArray;
+  /**
+    @namespace
+    @method diff-array
+    @for DS
+    @param {Array} oldArray the old array
+    @param {Array} newArray the new array
+    @return {hash} {
+        firstChangeIndex: <integer>,  // null if no change
+        addedCount: <integer>,        // 0 if no change
+        removedCount: <integer>       // 0 if no change
+      }
+  */
+
+  function diffArray(oldArray, newArray) {
+    var oldLength = oldArray.length;
+    var newLength = newArray.length;
+
+    var shortestLength = Math.min(oldLength, newLength);
+    var firstChangeIndex = null; // null signifies no changes
+
+    // find the first change
+    for (var i = 0; i < shortestLength; i++) {
+      // compare each item in the array
+      if (oldArray[i] !== newArray[i]) {
+        firstChangeIndex = i;
+        break;
+      }
+    }
+
+    if (firstChangeIndex === null && newLength !== oldLength) {
+      // no change found in the overlapping block
+      // and array lengths differ,
+      // so change starts at end of overlap
+      firstChangeIndex = shortestLength;
+    }
+
+    var addedCount = 0;
+    var removedCount = 0;
+    if (firstChangeIndex !== null) {
+      // we found a change, find the end of the change
+      var unchangedEndBlockLength = shortestLength - firstChangeIndex;
+      // walk back from the end of both arrays until we find a change
+      for (var i = 1; i <= shortestLength; i++) {
+        // compare each item in the array
+        if (oldArray[oldLength - i] !== newArray[newLength - i]) {
+          unchangedEndBlockLength = i - 1;
+          break;
+        }
+      }
+      addedCount = newLength - unchangedEndBlockLength - firstChangeIndex;
+      removedCount = oldLength - unchangedEndBlockLength - firstChangeIndex;
+    }
+
+    return {
+      firstChangeIndex: firstChangeIndex,
+      addedCount: addedCount,
+      removedCount: removedCount
+    };
+  }
+});
 define("ember-data/-private/system/empty-object", ["exports"], function (exports) {
   exports.default = EmptyObject;
   // This exists because `Object.create(null)` is absurdly slow compared
@@ -1220,7 +1282,7 @@ define('ember-data/-private/system/is-array-like', ['exports', 'ember'], functio
     return false;
   }
 });
-define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/store/common"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStoreCommon) {
+define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/store/common", "ember-data/-private/system/diff-array"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStoreCommon, _emberDataPrivateSystemDiffArray) {
   var get = _ember.default.get;
   var set = _ember.default.set;
 
@@ -1349,6 +1411,10 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
     flushCanonical: function () {
       var isInitialized = arguments.length <= 0 || arguments[0] === undefined ? true : arguments[0];
 
+      // It’s possible the parent side of the relationship may have been unloaded by this point
+      if (!(0, _emberDataPrivateSystemStoreCommon._objectIsAlive)(this)) {
+        return;
+      }
       var toSet = this.canonicalState;
 
       //a hack for not removing new records
@@ -1361,18 +1427,22 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
         return internalModel.isNew() && toSet.indexOf(internalModel) === -1;
       });
       toSet = toSet.concat(newRecords);
-      var oldLength = this.length;
-      this.arrayContentWillChange(0, this.length, toSet.length);
-      // It’s possible the parent side of the relationship may have been unloaded by this point
-      if ((0, _emberDataPrivateSystemStoreCommon._objectIsAlive)(this)) {
-        this.set('length', toSet.length);
-      }
-      this.currentState = toSet;
-      this.arrayContentDidChange(0, oldLength, this.length);
 
-      if (isInitialized) {
-        //TODO Figure out to notify only on additions and maybe only if unloaded
-        this.relationship.notifyHasManyChanged();
+      // diff to find changes
+      var diff = (0, _emberDataPrivateSystemDiffArray.default)(this.currentState, toSet);
+
+      if (diff.firstChangeIndex !== null) {
+        // it's null if no change found
+        // we found a change
+        this.arrayContentWillChange(diff.firstChangeIndex, diff.removedCount, diff.addedCount);
+        this.set('length', toSet.length);
+        this.currentState = toSet;
+        this.arrayContentDidChange(diff.firstChangeIndex, diff.removedCount, diff.addedCount);
+        if (isInitialized && diff.addedCount > 0) {
+          //notify only on additions
+          //TODO only notify if unloaded
+          this.relationship.notifyHasManyChanged();
+        }
       }
     },
 
@@ -1495,10 +1565,9 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
     createRecord: function (hash) {
       var store = get(this, 'store');
       var type = get(this, 'type');
-      var record = undefined;
 
       (0, _emberDataPrivateDebug.assert)("You cannot add '" + type.modelName + "' records to this polymorphic relationship.", !get(this, 'isPolymorphic'));
-      record = store.createRecord(type.modelName, hash);
+      var record = store.createRecord(type.modelName, hash);
       this.pushObject(record);
 
       return record;
@@ -19898,7 +19967,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.13.0-canary+c53b8f8776";
+  exports.default = "2.13.0-canary+03440c14e1";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -20416,7 +20485,7 @@ define('ember', [], function() {
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-canary+c53b8f8776
+ * @version   2.13.0-canary+03440c14e1
  */
 
 var loader, define, requireModule, require, requirejs;
