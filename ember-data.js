@@ -781,11 +781,11 @@ define("ember-data/-private/serializers", ["exports", "ember-data/serializers/js
 /**
   @module ember-data
 */
-define("ember-data/-private/system/clone-null", ["exports", "ember-data/-private/system/empty-object"], function (exports, _emberDataPrivateSystemEmptyObject) {
+define("ember-data/-private/system/clone-null", ["exports"], function (exports) {
   exports.default = cloneNull;
 
   function cloneNull(source) {
-    var clone = new _emberDataPrivateSystemEmptyObject.default();
+    var clone = Object.create(null);
     for (var key in source) {
       clone[key] = source[key];
     }
@@ -1994,7 +1994,7 @@ define('ember-data/-private/system/model/errors', ['exports', 'ember', 'ember-da
     }
   });
 });
-define("ember-data/-private/system/model/internal-model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/model/states", "ember-data/-private/system/relationships/state/create", "ember-data/-private/system/snapshot", "ember-data/-private/system/empty-object", "ember-data/-private/features", "ember-data/-private/system/ordered-set", "ember-data/-private/utils", "ember-data/-private/system/references"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemModelStates, _emberDataPrivateSystemRelationshipsStateCreate, _emberDataPrivateSystemSnapshot, _emberDataPrivateSystemEmptyObject, _emberDataPrivateFeatures, _emberDataPrivateSystemOrderedSet, _emberDataPrivateUtils, _emberDataPrivateSystemReferences) {
+define("ember-data/-private/system/model/internal-model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/model/states", "ember-data/-private/system/relationships/state/create", "ember-data/-private/system/snapshot", "ember-data/-private/features", "ember-data/-private/system/ordered-set", "ember-data/-private/utils", "ember-data/-private/system/references"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemModelStates, _emberDataPrivateSystemRelationshipsStateCreate, _emberDataPrivateSystemSnapshot, _emberDataPrivateFeatures, _emberDataPrivateSystemOrderedSet, _emberDataPrivateUtils, _emberDataPrivateSystemReferences) {
   var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
   function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -2022,10 +2022,10 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
      and setups. It may also be faster to do a two level cache (from: { to }) instead of caching based
      on a key that adds the two together.
    */
-  var TransitionChainMap = new _emberDataPrivateSystemEmptyObject.default();
+  var TransitionChainMap = Object.create(null);
 
-  var _extractPivotNameCache = new _emberDataPrivateSystemEmptyObject.default();
-  var _splitOnDotCache = new _emberDataPrivateSystemEmptyObject.default();
+  var _extractPivotNameCache = Object.create(null);
+  var _splitOnDotCache = Object.create(null);
 
   function splitOnDot(name) {
     return _splitOnDotCache[name] || (_splitOnDotCache[name] = name.split('.'));
@@ -2461,7 +2461,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       key: "flushChangedAttributes",
       value: function flushChangedAttributes() {
         this._inFlightAttributes = this._attributes;
-        this._attributes = new _emberDataPrivateSystemEmptyObject.default();
+        this._attributes = Object.create(null);
       }
     }, {
       key: "hasChangedAttributes",
@@ -2509,7 +2509,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         var currentData = this._attributes;
         var inFlightData = this._inFlightAttributes;
         var newData = assign(copy(inFlightData), currentData);
-        var diffData = new _emberDataPrivateSystemEmptyObject.default();
+        var diffData = Object.create(null);
         var newDataKeys = Object.keys(newData);
 
         for (var i = 0, _length2 = newDataKeys.length; i < _length2; i++) {
@@ -2591,10 +2591,10 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       value: function rollbackAttributes() {
         var dirtyKeys = Object.keys(this._attributes);
 
-        this._attributes = new _emberDataPrivateSystemEmptyObject.default();
+        this._attributes = Object.create(null);
 
         if (get(this, 'isError')) {
-          this._inFlightAttributes = new _emberDataPrivateSystemEmptyObject.default();
+          this._inFlightAttributes = Object.create(null);
           this.didCleanError();
         }
 
@@ -2611,7 +2611,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         }
 
         if (this.isValid()) {
-          this._inFlightAttributes = new _emberDataPrivateSystemEmptyObject.default();
+          this._inFlightAttributes = Object.create(null);
         }
 
         this.send('rolledBack');
@@ -2911,7 +2911,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
           assign(this._data, data);
         }
 
-        this._inFlightAttributes = new _emberDataPrivateSystemEmptyObject.default();
+        this._inFlightAttributes = Object.create(null);
 
         this.send('didCommit');
         this.updateRecordArrays();
@@ -2988,7 +2988,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
             attrs[keys[i]] = this._inFlightAttributes[keys[i]];
           }
         }
-        this._inFlightAttributes = new _emberDataPrivateSystemEmptyObject.default();
+        this._inFlightAttributes = Object.create(null);
       }
 
       /*
@@ -3037,7 +3037,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
           var _length3 = keys.length;
           var attrs = this._attributes;
 
-          original = assign(new _emberDataPrivateSystemEmptyObject.default(), this._data);
+          original = assign(Object.create(null), this._data);
           original = assign(original, this._inFlightAttributes);
 
           for (i = 0; i < _length3; i++) {
@@ -3126,7 +3126,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       key: "references",
       get: function () {
         if (this._references === null) {
-          this._references = new _emberDataPrivateSystemEmptyObject.default();
+          this._references = Object.create(null);
         }
         return this._references;
       }
@@ -3142,7 +3142,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       key: "_attributes",
       get: function () {
         if (this.__attributes === null) {
-          this.__attributes = new _emberDataPrivateSystemEmptyObject.default();
+          this.__attributes = Object.create(null);
         }
         return this.__attributes;
       },
@@ -3162,7 +3162,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       key: "_inFlightAttributes",
       get: function () {
         if (this.__inFlightAttributes === null) {
-          this.__inFlightAttributes = new _emberDataPrivateSystemEmptyObject.default();
+          this.__inFlightAttributes = Object.create(null);
         }
         return this.__inFlightAttributes;
       },
@@ -3173,7 +3173,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       key: "_data",
       get: function () {
         if (this.__data === null) {
-          this.__data = new _emberDataPrivateSystemEmptyObject.default();
+          this.__data = Object.create(null);
         }
         return this.__data;
       },
@@ -3206,7 +3206,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       key: "_implicitRelationships",
       get: function () {
         if (this.__implicitRelationships === null) {
-          this.__implicitRelationships = new _emberDataPrivateSystemEmptyObject.default();
+          this.__implicitRelationships = Object.create(null);
         }
         return this.__implicitRelationships;
       }
@@ -3248,7 +3248,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     };
   }
 });
-define("ember-data/-private/system/model/model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/model/errors", "ember-data/-private/features", "ember-data/-private/system/model/states", "ember-data/-private/system/empty-object", "ember-data/-private/system/relationships/ext"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemModelErrors, _emberDataPrivateFeatures, _emberDataPrivateSystemModelStates, _emberDataPrivateSystemEmptyObject, _emberDataPrivateSystemRelationshipsExt) {
+define("ember-data/-private/system/model/model", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/model/errors", "ember-data/-private/features", "ember-data/-private/system/model/states", "ember-data/-private/system/relationships/ext"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemModelErrors, _emberDataPrivateFeatures, _emberDataPrivateSystemModelStates, _emberDataPrivateSystemRelationshipsExt) {
   var get = _ember.default.get;
   var computed = _ember.default.computed;
   var Map = _ember.default.Map;
@@ -4360,7 +4360,7 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
     },
 
     inverseMap: _ember.default.computed(function () {
-      return new _emberDataPrivateSystemEmptyObject.default();
+      return Object.create(null);
     }),
 
     /**
@@ -8387,7 +8387,7 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
 
   exports.default = BelongsToRelationship;
 });
-define("ember-data/-private/system/relationships/state/create", ["exports", "ember", "ember-data/-private/system/relationships/state/has-many", "ember-data/-private/system/relationships/state/belongs-to", "ember-data/-private/system/empty-object", "ember-data/-private/debug"], function (exports, _ember, _emberDataPrivateSystemRelationshipsStateHasMany, _emberDataPrivateSystemRelationshipsStateBelongsTo, _emberDataPrivateSystemEmptyObject, _emberDataPrivateDebug) {
+define("ember-data/-private/system/relationships/state/create", ["exports", "ember", "ember-data/-private/system/relationships/state/has-many", "ember-data/-private/system/relationships/state/belongs-to", "ember-data/-private/debug"], function (exports, _ember, _emberDataPrivateSystemRelationshipsStateHasMany, _emberDataPrivateSystemRelationshipsStateBelongsTo, _emberDataPrivateDebug) {
   var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
   function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -8425,7 +8425,7 @@ define("ember-data/-private/system/relationships/state/create", ["exports", "emb
   var Relationships = (function () {
     function Relationships(internalModel) {
       this.internalModel = internalModel;
-      this.initializedRelationships = new _emberDataPrivateSystemEmptyObject.default();
+      this.initializedRelationships = Object.create(null);
     }
 
     // TODO @runspired deprecate this as it was never truly a record instance
@@ -9291,7 +9291,7 @@ define('ember-data/-private/system/snapshot-record-array', ['exports'], function
     return this._snapshots;
   };
 });
-define("ember-data/-private/system/snapshot", ["exports", "ember", "ember-data/-private/system/empty-object"], function (exports, _ember, _emberDataPrivateSystemEmptyObject) {
+define("ember-data/-private/system/snapshot", ["exports", "ember"], function (exports, _ember) {
   var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
   function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -9312,11 +9312,11 @@ define("ember-data/-private/system/snapshot", ["exports", "ember", "ember-data/-
 
       var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
-      this._attributes = new _emberDataPrivateSystemEmptyObject.default();
-      this._belongsToRelationships = new _emberDataPrivateSystemEmptyObject.default();
-      this._belongsToIds = new _emberDataPrivateSystemEmptyObject.default();
-      this._hasManyRelationships = new _emberDataPrivateSystemEmptyObject.default();
-      this._hasManyIds = new _emberDataPrivateSystemEmptyObject.default();
+      this._attributes = Object.create(null);
+      this._belongsToRelationships = Object.create(null);
+      this._belongsToIds = Object.create(null);
+      this._hasManyRelationships = Object.create(null);
+      this._hasManyIds = Object.create(null);
       this._internalModel = internalModel;
 
       var record = internalModel.getRecord();
@@ -9429,7 +9429,7 @@ define("ember-data/-private/system/snapshot", ["exports", "ember", "ember-data/-
     }, {
       key: "changedAttributes",
       value: function changedAttributes() {
-        var changedAttributes = new _emberDataPrivateSystemEmptyObject.default();
+        var changedAttributes = Object.create(null);
         var changedAttributeKeys = Object.keys(this._changedAttributes);
 
         for (var i = 0, _length = changedAttributeKeys.length; i < _length; i++) {
@@ -9655,7 +9655,7 @@ define("ember-data/-private/system/snapshot", ["exports", "ember", "ember-data/-
 /**
   @module ember-data
 */
-define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-private/debug', 'ember-data/model', 'ember-data/-private/system/normalize-model-name', 'ember-data/adapters/errors', 'ember-data/-private/system/identity-map', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/store/common', 'ember-data/-private/system/store/serializer-response', 'ember-data/-private/system/store/serializers', 'ember-data/-private/system/store/finders', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/store/container-instance-cache', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/system/empty-object', 'ember-data/-private/features'], function (exports, _ember, _emberDataPrivateDebug, _emberDataModel, _emberDataPrivateSystemNormalizeModelName, _emberDataAdaptersErrors, _emberDataPrivateSystemIdentityMap, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStoreCommon, _emberDataPrivateSystemStoreSerializerResponse, _emberDataPrivateSystemStoreSerializers, _emberDataPrivateSystemStoreFinders, _emberDataPrivateUtils, _emberDataPrivateSystemCoerceId, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateSystemStoreContainerInstanceCache, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateSystemEmptyObject, _emberDataPrivateFeatures) {
+define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-private/debug', 'ember-data/model', 'ember-data/-private/system/normalize-model-name', 'ember-data/adapters/errors', 'ember-data/-private/system/identity-map', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/store/common', 'ember-data/-private/system/store/serializer-response', 'ember-data/-private/system/store/serializers', 'ember-data/-private/system/store/finders', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/store/container-instance-cache', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/features'], function (exports, _ember, _emberDataPrivateDebug, _emberDataModel, _emberDataPrivateSystemNormalizeModelName, _emberDataAdaptersErrors, _emberDataPrivateSystemIdentityMap, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStoreCommon, _emberDataPrivateSystemStoreSerializerResponse, _emberDataPrivateSystemStoreSerializers, _emberDataPrivateSystemStoreFinders, _emberDataPrivateUtils, _emberDataPrivateSystemCoerceId, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateSystemStoreContainerInstanceCache, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateFeatures) {
   var badIdFormatAssertion = '`id` passed to `findRecord()` has to be non-empty string or number';
 
   exports.badIdFormatAssertion = badIdFormatAssertion;
@@ -9792,7 +9792,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       this._identityMap = new _emberDataPrivateSystemIdentityMap.default();
       this._pendingSave = [];
       this._instanceCache = new _emberDataPrivateSystemStoreContainerInstanceCache.default((0, _emberDataPrivateUtils.getOwner)(this), this);
-      this._modelFactoryCache = new _emberDataPrivateSystemEmptyObject.default();
+      this._modelFactoryCache = Object.create(null);
 
       /*
         Ember Data uses several specialized micro-queues for organizing
@@ -9908,7 +9908,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       (0, _emberDataPrivateDebug.assert)('You need to pass a model name to the store\'s createRecord method', isPresent(modelName));
       (0, _emberDataPrivateDebug.assert)('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + modelName, typeof modelName === 'string');
       var normalizedModelName = (0, _emberDataPrivateSystemNormalizeModelName.default)(modelName);
-      var properties = copy(inputProperties) || new _emberDataPrivateSystemEmptyObject.default();
+      var properties = copy(inputProperties) || Object.create(null);
 
       // If the passed properties do not include a primary key,
       // give the adapter an opportunity to generate one. Typically,
@@ -10364,7 +10364,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       var shouldCoalesce = !!adapter.findMany && adapter.coalesceFindRequests;
       var totalItems = pendingFetchItems.length;
       var internalModels = new Array(totalItems);
-      var seeking = new _emberDataPrivateSystemEmptyObject.default();
+      var seeking = Object.create(null);
 
       for (var i = 0; i < totalItems; i++) {
         var pendingItem = pendingFetchItems[i];
@@ -10381,7 +10381,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
 
       function handleFoundRecords(foundInternalModels, expectedInternalModels) {
         // resolve found records
-        var found = new _emberDataPrivateSystemEmptyObject.default();
+        var found = Object.create(null);
         for (var i = 0, l = foundInternalModels.length; i < l; i++) {
           var internalModel = foundInternalModels[i];
           var pair = seeking[internalModel.id];
@@ -12151,7 +12151,7 @@ define('ember-data/-private/system/store/common', ['exports', 'ember'], function
     return !(get(object, "isDestroyed") || get(object, "isDestroying"));
   }
 });
-define('ember-data/-private/system/store/container-instance-cache', ['exports', 'ember', 'ember-data/-private/system/empty-object'], function (exports, _ember, _emberDataPrivateSystemEmptyObject) {
+define('ember-data/-private/system/store/container-instance-cache', ['exports', 'ember'], function (exports, _ember) {
   var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
   function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
@@ -12185,8 +12185,8 @@ define('ember-data/-private/system/store/container-instance-cache', ['exports', 
       this._owner = owner;
       this._store = store;
       this._namespaces = {
-        adapter: new _emberDataPrivateSystemEmptyObject.default(),
-        serializer: new _emberDataPrivateSystemEmptyObject.default()
+        adapter: Object.create(null),
+        serializer: Object.create(null)
       };
     }
 
@@ -12823,7 +12823,7 @@ define('ember-data/-private/utils', ['exports', 'ember'], function (exports, _em
   exports.modelHasAttributeOrRelationshipNamedType = modelHasAttributeOrRelationshipNamedType;
   exports.getOwner = getOwner;
 });
-define('ember-data/-private/utils/parse-response-headers', ['exports', 'ember-data/-private/system/empty-object'], function (exports, _emberDataPrivateSystemEmptyObject) {
+define('ember-data/-private/utils/parse-response-headers', ['exports'], function (exports) {
   exports.default = parseResponseHeaders;
 
   function _toArray(arr) { return Array.isArray(arr) ? arr : Array.from(arr); }
@@ -12831,7 +12831,7 @@ define('ember-data/-private/utils/parse-response-headers', ['exports', 'ember-da
   var CLRF = '\u000d\u000a';
 
   function parseResponseHeaders(headersString) {
-    var headers = new _emberDataPrivateSystemEmptyObject.default();
+    var headers = Object.create(null);
 
     if (!headersString) {
       return headers;
@@ -19970,7 +19970,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.14.0-canary+7715a63e3d";
+  exports.default = "2.14.0-canary+09bd826da7";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -20488,7 +20488,7 @@ define('ember', [], function() {
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.0-canary+7715a63e3d
+ * @version   2.14.0-canary+09bd826da7
  */
 
 var loader, define, requireModule, require, requirejs;
