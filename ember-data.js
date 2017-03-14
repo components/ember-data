@@ -2078,7 +2078,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this._record = null;
       this._isDestroyed = false;
       this.isError = false;
-      this._isUpdatingRecordArrays = false;
+      this._isUpdatingRecordArrays = false; // used by the recordArrayManager
 
       // During dematerialization we don't want to rematerialize the record.  The
       // reason this might happen is that dematerialization removes records from
@@ -2108,6 +2108,18 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     }
 
     _createClass(InternalModel, [{
+      key: "isHiddenFromRecordArrays",
+      value: function isHiddenFromRecordArrays() {
+        // During dematerialization we don't want to rematerialize the record.
+        // recordWasDeleted can cause other records to rematerialize because it
+        // removes the internal model from the array and Ember arrays will always
+        // `objectAt(0)` and `objectAt(len -1)` to check whether `firstObject` or
+        // `lastObject` have changed.  When this happens we don't want those
+        // models to rematerialize their records.
+
+        return this._isDematerializing || this.isDestroyed || this.currentState.stateName === 'root.deleted.saved' || this.isEmpty();
+      }
+    }, {
       key: "isEmpty",
       value: function isEmpty() {
         return this.currentState.isEmpty;
@@ -2848,10 +2860,6 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     }, {
       key: "updateRecordArrays",
       value: function updateRecordArrays() {
-        if (this._isUpdatingRecordArrays) {
-          return;
-        }
-        this._isUpdatingRecordArrays = true;
         this.store.recordArrayManager.recordDidChange(this);
       }
     }, {
@@ -5916,161 +5924,183 @@ define('ember-data/-private/system/record-array-manager', ['exports', 'ember', '
         }
       });
 
-      this.changedRecords = [];
-      this.loadedRecords = [];
+      this._pending = Object.create(null);
       this._adapterPopulatedRecordArrays = [];
     }
 
     _createClass(RecordArrayManager, [{
       key: 'recordDidChange',
       value: function recordDidChange(internalModel) {
-        if (this.changedRecords.push(internalModel) !== 1) {
-          return;
-        }
-
-        emberRun.schedule('actions', this, this.updateRecordArrays);
+        // TODO: change name
+        // TODO: track that it was also a change
+        this.internalModelDidChange(internalModel);
       }
-    }, {
-      key: 'recordArraysForRecord',
-      value: function recordArraysForRecord(internalModel) {
-
-        return internalModel._recordArrays;
-      }
-
-      /**
-        This method is invoked whenever data is loaded into the store by the
-        adapter or updated by the adapter, or when a record has changed.
-         It updates all record arrays that a record belongs to.
-         To avoid thrashing, it only runs at most once per run loop.
-         @method updateRecordArrays
-      */
-    }, {
-      key: 'updateRecordArrays',
-      value: function updateRecordArrays() {
-        var updated = this.changedRecords;
-
-        for (var i = 0, l = updated.length; i < l; i++) {
-          var internalModel = updated[i];
-
-          // During dematerialization we don't want to rematerialize the record.
-          // recordWasDeleted can cause other records to rematerialize because it
-          // removes the internal model from the array and Ember arrays will always
-          // `objectAt(0)` and `objectAt(len -1)` to check whether `firstObject` or
-          // `lastObject` have changed.  When this happens we don't want those
-          // models to rematerialize their records.
-          if (internalModel._isDematerializing || internalModel.isDestroyed || internalModel.currentState.stateName === 'root.deleted.saved') {
-            this._recordWasDeleted(internalModel);
-          } else {
-            this._recordWasChanged(internalModel);
-          }
-
-          internalModel._isUpdatingRecordArrays = false;
-        }
-
-        updated.length = 0;
-      }
-    }, {
-      key: '_recordWasDeleted',
-      value: function _recordWasDeleted(internalModel) {
-        var recordArrays = internalModel.__recordArrays;
-
-        if (!recordArrays) {
-          return;
-        }
-
-        recordArrays.forEach(function (array) {
-          return array._removeInternalModels([internalModel]);
-        });
-
-        internalModel.__recordArrays = null;
-      }
-    }, {
-      key: '_recordWasChanged',
-      value: function _recordWasChanged(internalModel) {
-        var _this2 = this;
-
-        var modelName = internalModel.modelName;
-        var recordArrays = this.filteredRecordArrays.get(modelName);
-        var filter = undefined;
-        recordArrays.forEach(function (array) {
-          filter = get(array, 'filterFunction');
-          _this2.updateFilterRecordArray(array, filter, modelName, internalModel);
-        });
-      }
-
-      //Need to update live arrays on loading
     }, {
       key: 'recordWasLoaded',
       value: function recordWasLoaded(internalModel) {
-        if (this.loadedRecords.push(internalModel) !== 1) {
+        // TODO: change name
+        // TODO: track that it was also that it was first loaded
+        this.internalModelDidChange(internalModel);
+      }
+    }, {
+      key: 'internalModelDidChange',
+      value: function internalModelDidChange(internalModel) {
+
+        var modelName = internalModel.modelName;
+
+        if (internalModel._pendingRecordArrayManagerFlush) {
           return;
         }
 
-        emberRun.schedule('actions', this, this._flushLoadedRecords);
+        internalModel._pendingRecordArrayManagerFlush = true;
+
+        var pending = this._pending;
+        var models = pending[modelName] = pending[modelName] || [];
+        if (models.push(internalModel) !== 1) {
+          return;
+        }
+
+        emberRun.schedule('actions', this, this._flush);
       }
     }, {
-      key: '_flushLoadedRecords',
-      value: function _flushLoadedRecords() {
-        var internalModels = this.loadedRecords;
+      key: '_flush',
+      value: function _flush() {
+        var _this2 = this;
 
-        for (var i = 0, l = internalModels.length; i < l; i++) {
-          var internalModel = internalModels[i];
-          var modelName = internalModel.modelName;
+        var pending = this._pending;
+        this._pending = Object.create(null);
+        var modelsToRemove = [];
 
-          var recordArrays = this.filteredRecordArrays.get(modelName);
-          var filter = undefined;
+        Object.keys(pending).forEach(function (modelName) {
+          var internalModels = pending[modelName];
 
-          for (var j = 0, rL = recordArrays.length; j < rL; j++) {
-            var array = recordArrays[j];
-            filter = get(array, 'filterFunction');
-            this.updateFilterRecordArray(array, filter, modelName, internalModel);
+          internalModels.forEach(function (internalModel) {
+            // mark internalModels, so they can once again be processed by the
+            // recordArrayManager
+            internalModel._pendingRecordArrayManagerFlush = false;
+            // build up a set of models to ensure we have purged correctly;
+            if (internalModel.isHiddenFromRecordArrays()) {
+              modelsToRemove.push(internalModel);
+            }
+          });
+
+          // process filteredRecordArrays
+          if (_this2.filteredRecordArrays.has(modelName)) {
+            var recordArrays = _this2.filteredRecordArrays.get(modelName);
+            for (var i = 0; i < recordArrays.length; i++) {
+              _this2.updateFilterRecordArray(recordArrays[i], modelName, internalModels);
+            }
           }
 
-          if (this.liveRecordArrays.has(modelName)) {
-            var liveRecordArray = this.liveRecordArrays.get(modelName);
-            this._addInternalModelToRecordArray(liveRecordArray, internalModel);
+          // TODO: skip if it only changed
+          // process liveRecordArrays
+          if (_this2.liveRecordArrays.has(modelName)) {
+            _this2.updateLiveRecordArray(modelName, internalModels);
+          }
+
+          // process adapterPopulatedRecordArrays
+          if (modelsToRemove.length > 0) {
+            _this2.removeFromAdapterPopulatedRecordArrays(modelsToRemove);
+          }
+        });
+      }
+    }, {
+      key: 'updateLiveRecordArray',
+      value: function updateLiveRecordArray(modelName, internalModels) {
+        var array = this.liveRecordArrays.get(modelName);
+
+        var modelsToAdd = [];
+        var modelsToRemove = [];
+
+        for (var i = 0; i < internalModels.length; i++) {
+          var internalModel = internalModels[i];
+          var isDeleted = internalModel.isHiddenFromRecordArrays();
+          var recordArrays = internalModel._recordArrays;
+
+          if (!isDeleted && !internalModel.isEmpty()) {
+            if (!recordArrays.has(array)) {
+              modelsToAdd.push(internalModel);
+              recordArrays.add(array);
+            }
+          }
+
+          if (isDeleted) {
+            modelsToRemove.push(internalModel);
+            recordArrays.delete(array);
           }
         }
 
-        this.loadedRecords.length = 0;
+        if (modelsToAdd.length > 0) {
+          array._pushInternalModels(modelsToAdd);
+        }
+        if (modelsToRemove.length > 0) {
+          array._removeInternalModels(modelsToRemove);
+        }
+      }
+    }, {
+      key: 'removeFromAdapterPopulatedRecordArrays',
+      value: function removeFromAdapterPopulatedRecordArrays(internalModels) {
+        for (var i = 0; i < internalModels.length; i++) {
+          var internalModel = internalModels[i];
+          var list = internalModel._recordArrays.list;
+
+          for (var j = 0; j < list.length; j++) {
+            // TODO: group by arrays, so we can batch remove
+            list[j]._removeInternalModels([internalModel]);
+          }
+
+          internalModel._recordArrays.clear();
+        }
       }
 
       /**
         Update an individual filter.
-         @method updateFilterRecordArray
+         @private
+        @method updateFilterRecordArray
         @param {DS.FilteredRecordArray} array
-        @param {Function} filter
         @param {String} modelName
-        @param {InternalModel} internalModel
+        @param {Array} internalModels
       */
     }, {
       key: 'updateFilterRecordArray',
-      value: function updateFilterRecordArray(array, filter, modelName, internalModel) {
-        var shouldBeInArray = filter(internalModel.getRecord());
-        var recordArrays = this.recordArraysForRecord(internalModel);
-        if (shouldBeInArray) {
-          this._addInternalModelToRecordArray(array, internalModel);
-        } else {
-          recordArrays.delete(array);
-          array._removeInternalModels([internalModel]);
+      value: function updateFilterRecordArray(array, modelName, internalModels) {
+
+        var filter = get(array, 'filterFunction');
+
+        var shouldBeInAdded = [];
+        var shouldBeRemoved = [];
+
+        for (var i = 0; i < internalModels.length; i++) {
+          var internalModel = internalModels[i];
+          if (internalModel.isHiddenFromRecordArrays() === false && filter(internalModel.getRecord())) {
+            if (internalModel._recordArrays.has(array)) {
+              continue;
+            }
+            shouldBeInAdded.push(internalModel);
+            internalModel._recordArrays.add(array);
+          } else {
+            if (internalModel._recordArrays.delete(array)) {
+              shouldBeRemoved.push(internalModel);
+            }
+          }
+        }
+
+        if (shouldBeInAdded.length > 0) {
+          array._pushInternalModels(shouldBeInAdded);
+        }
+        if (shouldBeRemoved.length > 0) {
+          array._removeInternalModels(shouldBeRemoved);
         }
       }
-    }, {
-      key: '_addInternalModelToRecordArray',
-      value: function _addInternalModelToRecordArray(array, internalModel) {
-        var recordArrays = this.recordArraysForRecord(internalModel);
-        if (!recordArrays.has(array)) {
-          array._pushInternalModels([internalModel]);
-          recordArrays.add(array);
-        }
-      }
+
+      // TODO: remove, utilize existing flush code but make it flush sync based on 1 modelName
     }, {
       key: 'syncLiveRecordArray',
       value: function syncLiveRecordArray(array, modelName) {
         (0, _emberDataPrivateDebug.assert)('recordArrayManger.syncLiveRecordArray expects modelName not modelClass as the second param', typeof modelName === 'string');
-        var hasNoPotentialDeletions = this.changedRecords.length === 0;
+        var hasNoPotentialDeletions = Object.keys(this._pending).length === 0;
         var map = this.store._internalModelsFor(modelName);
-        var hasNoInsertionsOrRemovals = map.length === array.length;
+        var hasNoInsertionsOrRemovals = get(map, 'length') === get(array, 'length');
 
         /*
           Ideally the recordArrayManager has knowledge of the changes to be applied to
@@ -6082,23 +6112,29 @@ define('ember-data/-private/system/record-array-manager', ['exports', 'ember', '
           return;
         }
 
-        this.populateLiveRecordArray(array, modelName);
+        this.populateLiveRecordArray(array, map.models);
       }
+
+      // TODO: remove, when syncLiveRecordArray is removed
     }, {
       key: 'populateLiveRecordArray',
-      value: function populateLiveRecordArray(array, modelName) {
-        (0, _emberDataPrivateDebug.assert)('recordArrayManger.populateLiveRecordArray expects modelName not modelClass as the second param', typeof modelName === 'string');
+      value: function populateLiveRecordArray(array, internalModels) {
 
-        var modelMap = this.store._internalModelsFor(modelName);
-        var internalModels = modelMap.models;
-
+        var modelsToAdd = [];
         for (var i = 0; i < internalModels.length; i++) {
           var internalModel = internalModels[i];
 
-          if (!internalModel.isDeleted() && !internalModel.isEmpty()) {
-            this._addInternalModelToRecordArray(array, internalModel);
+          if (!internalModel.isHiddenFromRecordArrays()) {
+            var recordArrays = internalModel._recordArrays;
+
+            if (!recordArrays.has(array)) {
+              modelsToAdd.push(internalModel);
+              recordArrays.add(array);
+            }
           }
         }
+
+        array._pushInternalModels(modelsToAdd);
       }
 
       /**
@@ -6119,13 +6155,7 @@ define('ember-data/-private/system/record-array-manager', ['exports', 'ember', '
         var modelMap = this.store._internalModelsFor(modelName);
         var internalModels = modelMap.models;
 
-        for (var i = 0; i < internalModels.length; i++) {
-          var internalModel = internalModels[i];
-
-          if (!internalModel.isDeleted() && !internalModel.isEmpty()) {
-            this.updateFilterRecordArray(array, filter, modelName, internalModel);
-          }
-        }
+        this.updateFilterRecordArray(array, filter, internalModels);
       }
 
       /**
@@ -6230,9 +6260,7 @@ define('ember-data/-private/system/record-array-manager', ['exports', 'ember', '
       value: function registerFilteredRecordArray(array, modelName, filter) {
         (0, _emberDataPrivateDebug.assert)('recordArrayManger.registerFilteredRecordArray expects modelName not modelClass as the second param, received ' + modelName, typeof modelName === 'string');
 
-        var recordArrays = this.filteredRecordArrays.get(modelName);
-        recordArrays.push(array);
-
+        this.filteredRecordArrays.get(modelName).push(array);
         this.updateFilter(array, modelName, filter);
       }
 
@@ -6414,7 +6442,8 @@ define("ember-data/-private/system/record-arrays/adapter-populated-record-array"
 
       for (var i = 0, l = internalModels.length; i < l; i++) {
         var internalModel = internalModels[i];
-        this.manager.recordArraysForRecord(internalModel).add(this);
+
+        internalModel._recordArrays.add(this);
       }
 
       // TODO: should triggering didLoad event be the last action of the runLoop?
@@ -6632,7 +6661,7 @@ define("ember-data/-private/system/record-arrays/record-array", ["exports", "emb
 
     /**
       Adds an internal model to the `RecordArray` without duplicates
-       @method addInternalModel
+       @method _pushInternalModels
       @private
       @param {InternalModel} internalModel
     */
@@ -12411,7 +12440,7 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
       store._push(payload);
       store.didUpdateAll(modelName);
 
-      return store.peekAll(modelName);
+      return recordArray;
     }, null, 'DS: Extract payload of findAll ${modelName}');
   }
 
@@ -19970,7 +19999,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.14.0-canary+4cf156b3f0";
+  exports.default = "2.14.0-canary+e44824cd97";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -20488,7 +20517,7 @@ define('ember', [], function() {
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.0-canary+4cf156b3f0
+ * @version   2.14.0-canary+e44824cd97
  */
 
 var loader, define, requireModule, require, requirejs;
