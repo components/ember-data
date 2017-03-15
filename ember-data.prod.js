@@ -12538,9 +12538,6 @@ define('ember-data/-private/utils', ['exports', 'ember'], function (exports, _em
 });
 define('ember-data/-private/utils/parse-response-headers', ['exports'], function (exports) {
   exports.default = parseResponseHeaders;
-
-  function _toArray(arr) { return Array.isArray(arr) ? arr : Array.from(arr); }
-
   var CLRF = '\u000d\u000a';
 
   function parseResponseHeaders(headersString) {
@@ -12551,23 +12548,29 @@ define('ember-data/-private/utils/parse-response-headers', ['exports'], function
     }
 
     var headerPairs = headersString.split(CLRF);
+    for (var i = 0; i < headerPairs.length; i++) {
+      var header = headerPairs[i];
+      var j = 0;
+      var foundSep = false;
 
-    headerPairs.forEach(function (header) {
-      var _header$split = header.split(':');
+      for (; j < header.length; j++) {
+        if (header.charCodeAt(j) === 58 /* ':' */) {
+            foundSep = true;
+            break;
+          }
+      }
 
-      var _header$split2 = _toArray(_header$split);
+      if (foundSep === false) {
+        break;
+      }
 
-      var field = _header$split2[0];
-
-      var value = _header$split2.slice(1);
-
-      field = field.trim();
-      value = value.join(':').trim();
+      var field = header.substring(0, j).trim();
+      var value = header.substring(j + 1, header.length).trim();
 
       if (value) {
         headers[field] = value;
       }
-    });
+    }
 
     return headers;
   }
@@ -19533,7 +19536,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.14.0-canary+e44824cd97";
+  exports.default = "2.14.0-canary+2edaf160a8";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -20051,7 +20054,7 @@ define('ember', [], function() {
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.0-canary+e44824cd97
+ * @version   2.14.0-canary+2edaf160a8
  */
 
 var loader, define, requireModule, require, requirejs;
