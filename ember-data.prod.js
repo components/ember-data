@@ -1263,7 +1263,6 @@ define('ember-data/-private/system/is-array-like', ['exports', 'ember'], functio
 });
 define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/store/common", "ember-data/-private/system/diff-array"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStoreCommon, _emberDataPrivateSystemDiffArray) {
   var get = _ember.default.get;
-  var set = _ember.default.set;
 
   /**
     A `ManyArray` is a `MutableArray` that represents the contents of a has-many
@@ -1461,27 +1460,6 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
         this.get('relationship').addRecords(objects.map(function (obj) {
           return obj._internalModel;
         }), idx);
-      }
-    },
-
-    /**
-      @method loadingRecordsCount
-      @param {Number} count
-      @private
-    */
-    loadingRecordsCount: function (count) {
-      this._loadingRecordsCount = count;
-    },
-
-    /**
-      @method loadedRecord
-      @private
-    */
-    loadedRecord: function () {
-      this._loadingRecordsCount--;
-      if (this._loadingRecordsCount === 0) {
-        set(this, 'isLoaded', true);
-        this.trigger('didLoad');
       }
     },
 
@@ -19551,7 +19529,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.14.0-canary+89588f5254";
+  exports.default = "2.14.0-canary+5036248ac7";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -20069,7 +20047,7 @@ define('ember', [], function() {
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.0-canary+89588f5254
+ * @version   2.14.0-canary+5036248ac7
  */
 
 var loader, define, requireModule, require, requirejs;
