@@ -1397,14 +1397,14 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
 
       //a hack for not removing new records
       //TODO remove once we have proper diffing
-      var newRecords = this.currentState.filter(
+      var newInternalModels = this.currentState.filter(
       // only add new records which are not yet in the canonical state of this
       // relationship (a new record can be in the canonical state if it has
       // been 'acknowleged' to be in the relationship via a store.push)
       function (internalModel) {
         return internalModel.isNew() && toSet.indexOf(internalModel) === -1;
       });
-      toSet = toSet.concat(newRecords);
+      toSet = toSet.concat(newInternalModels);
 
       // diff to find changes
       var diff = (0, _emberDataPrivateSystemDiffArray.default)(this.currentState, toSet);
@@ -1435,7 +1435,7 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
     },
 
     //TODO(Igor) optimize
-    internalRemoveRecords: function (records) {
+    internalRemoveInternalModels: function (records) {
       for (var i = 0; i < records.length; i++) {
         var index = this.currentState.indexOf(records[i]);
         this.internalReplace(index, 1);
@@ -1443,7 +1443,7 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
     },
 
     //TODO(Igor) optimize
-    internalAddRecords: function (records, idx) {
+    internalAddInternalModels: function (records, idx) {
       if (idx === undefined) {
         idx = this.currentState.length;
       }
@@ -1454,10 +1454,10 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
       var records = undefined;
       if (amt > 0) {
         records = this.currentState.slice(idx, idx + amt);
-        this.get('relationship').removeRecords(records);
+        this.get('relationship').removeInternalModels(records);
       }
       if (objects) {
-        this.get('relationship').addRecords(objects.map(function (obj) {
+        this.get('relationship').addInternalModels(objects.map(function (obj) {
           return obj._internalModel;
         }), idx);
       }
@@ -2679,11 +2679,14 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         if (!this.hasRecord) {
           return;
         }
-        for (var i = 0, l = this._deferredTriggers.length; i < l; i++) {
-          this.record.trigger.apply(this.record, this._deferredTriggers[i]);
+        var triggers = this._deferredTriggers;
+        var record = this.record;
+        var trigger = record.trigger;
+        for (var i = 0, l = triggers.length; i < l; i++) {
+          trigger.apply(record, triggers[i]);
         }
 
-        this._deferredTriggers.length = 0;
+        triggers.length = 0;
       }
 
       /*
@@ -3589,49 +3592,49 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       that is either loaded from the server or created locally.
        @event ready
     */
-    ready: function () {},
+    ready: null,
 
     /**
       Fired when the record is loaded from the server.
        @event didLoad
     */
-    didLoad: function () {},
+    didLoad: null,
 
     /**
       Fired when the record is updated.
        @event didUpdate
     */
-    didUpdate: function () {},
+    didUpdate: null,
 
     /**
       Fired when a new record is commited to the server.
        @event didCreate
     */
-    didCreate: function () {},
+    didCreate: null,
 
     /**
       Fired when the record is deleted.
        @event didDelete
     */
-    didDelete: function () {},
+    didDelete: null,
 
     /**
       Fired when the record becomes invalid.
        @event becameInvalid
     */
-    becameInvalid: function () {},
+    becameInvalid: null,
 
     /**
       Fired when the record enters the error state.
        @event becameError
     */
-    becameError: function () {},
+    becameError: null,
 
     /**
       Fired when the record is rolled back.
        @event rolledBack
     */
-    rolledBack: function () {},
+    rolledBack: null,
 
     //TODO Do we want to deprecate these?
     /**
@@ -3914,14 +3917,18 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       @param {String} name
     */
     trigger: function (name) {
-      var length = arguments.length;
-      var args = new Array(length - 1);
+      var fn = this[name];
 
-      for (var i = 1; i < length; i++) {
-        args[i - 1] = arguments[i];
+      if (typeof fn === 'function') {
+        var _length2 = arguments.length;
+        var args = new Array(_length2 - 1);
+
+        for (var i = 1; i < _length2; i++) {
+          args[i - 1] = arguments[i];
+        }
+        fn.apply(this, args);
       }
 
-      _ember.default.tryInvoke(this, name, args);
       this._super.apply(this, arguments);
     },
 
@@ -8045,7 +8052,7 @@ define("ember-data/-private/system/relationships/has-many", ["exports", "ember",
 
         var relationship = this._internalModel._relationships.get(key);
         relationship.clear();
-        relationship.addRecords(records.map(function (record) {
+        relationship.addInternalModels(records.map(function (record) {
           return get(record, '_internalModel');
         }));
         return relationship.getRecords();
@@ -8423,7 +8430,7 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
         }
         _get(Object.getPrototypeOf(ManyRelationship.prototype), 'addRecord', this).call(this, record, idx);
         // make lazy later
-        this.manyArray.internalAddRecords([record], idx);
+        this.manyArray.internalAddInternalModels([record], idx);
       }
     }, {
       key: 'removeCanonicalRecordFromOwn',
@@ -8460,7 +8467,7 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
           //TODO(Igor) not used currently, fix
           manyArray.currentState.removeAt(idx);
         } else {
-          manyArray.internalRemoveRecords([record]);
+          manyArray.internalRemoveInternalModels([record]);
         }
       }
     }, {
@@ -8708,21 +8715,21 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
         }
       }
     }, {
-      key: 'removeRecords',
-      value: function removeRecords(records) {
+      key: 'removeInternalModels',
+      value: function removeInternalModels(internalModels) {
         var _this2 = this;
 
-        records.forEach(function (record) {
-          return _this2.removeRecord(record);
+        internalModels.forEach(function (intenralModel) {
+          return _this2.removeRecord(intenralModel);
         });
       }
     }, {
-      key: 'addRecords',
-      value: function addRecords(records, idx) {
+      key: 'addInternalModels',
+      value: function addInternalModels(internalModels, idx) {
         var _this3 = this;
 
-        records.forEach(function (record) {
-          _this3.addRecord(record, idx);
+        internalModels.forEach(function (internalModel) {
+          _this3.addRecord(internalModel, idx);
           if (idx !== undefined) {
             idx++;
           }
@@ -19529,7 +19536,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.14.0-canary+5036248ac7";
+  exports.default = "2.14.0-canary+d288e68244";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -20047,7 +20054,7 @@ define('ember', [], function() {
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.0-canary+5036248ac7
+ * @version   2.14.0-canary+d288e68244
  */
 
 var loader, define, requireModule, require, requirejs;
