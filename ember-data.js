@@ -2715,14 +2715,11 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         if (!this.hasRecord) {
           return;
         }
-        var triggers = this._deferredTriggers;
-        var record = this.record;
-        var trigger = record.trigger;
-        for (var i = 0, l = triggers.length; i < l; i++) {
-          trigger.apply(record, triggers[i]);
+        for (var i = 0, l = this._deferredTriggers.length; i < l; i++) {
+          this.record.trigger.apply(this.record, this._deferredTriggers[i]);
         }
 
-        triggers.length = 0;
+        this._deferredTriggers.length = 0;
       }
 
       /*
@@ -3642,49 +3639,49 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       that is either loaded from the server or created locally.
        @event ready
     */
-    ready: null,
+    ready: function () {},
 
     /**
       Fired when the record is loaded from the server.
        @event didLoad
     */
-    didLoad: null,
+    didLoad: function () {},
 
     /**
       Fired when the record is updated.
        @event didUpdate
     */
-    didUpdate: null,
+    didUpdate: function () {},
 
     /**
       Fired when a new record is commited to the server.
        @event didCreate
     */
-    didCreate: null,
+    didCreate: function () {},
 
     /**
       Fired when the record is deleted.
        @event didDelete
     */
-    didDelete: null,
+    didDelete: function () {},
 
     /**
       Fired when the record becomes invalid.
        @event becameInvalid
     */
-    becameInvalid: null,
+    becameInvalid: function () {},
 
     /**
       Fired when the record enters the error state.
        @event becameError
     */
-    becameError: null,
+    becameError: function () {},
 
     /**
       Fired when the record is rolled back.
        @event rolledBack
     */
-    rolledBack: null,
+    rolledBack: function () {},
 
     //TODO Do we want to deprecate these?
     /**
@@ -3967,18 +3964,14 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
       @param {String} name
     */
     trigger: function (name) {
-      var fn = this[name];
+      var length = arguments.length;
+      var args = new Array(length - 1);
 
-      if (typeof fn === 'function') {
-        var _length2 = arguments.length;
-        var args = new Array(_length2 - 1);
-
-        for (var i = 1; i < _length2; i++) {
-          args[i - 1] = arguments[i];
-        }
-        fn.apply(this, args);
+      for (var i = 1; i < length; i++) {
+        args[i - 1] = arguments[i];
       }
 
+      _ember.default.tryInvoke(this, name, args);
       this._super.apply(this, arguments);
     },
 
@@ -20001,7 +19994,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.14.0-canary+d288e68244";
+  exports.default = "2.14.0-canary+c8e45ec5f8";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -20519,7 +20512,7 @@ define('ember', [], function() {
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.0-canary+d288e68244
+ * @version   2.14.0-canary+c8e45ec5f8
  */
 
 var loader, define, requireModule, require, requirejs;
