@@ -5905,7 +5905,6 @@ define('ember-data/-private/system/record-array-manager', ['exports', 'ember', '
   function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
   var get = _ember.default.get;
-  var MapWithDefault = _ember.default.MapWithDefault;
   var emberRun = _ember.default.run;
 
   /**
@@ -5916,24 +5915,11 @@ define('ember-data/-private/system/record-array-manager', ['exports', 'ember', '
 
   var RecordArrayManager = (function () {
     function RecordArrayManager(options) {
-      var _this = this;
-
       this.store = options.store;
       this.isDestroying = false;
       this.isDestroyed = false;
-      this.filteredRecordArrays = MapWithDefault.create({
-        defaultValue: function () {
-          return [];
-        }
-      });
-
-      this.liveRecordArrays = MapWithDefault.create({
-        defaultValue: function (modelName) {
-          (0, _emberDataPrivateDebug.assert)('liveRecordArrays.get expects modelName not modelClass as the param', typeof modelName === 'string');
-          return _this.createRecordArray(modelName);
-        }
-      });
-
+      this._filteredRecordArrays = Object.create(null);
+      this._liveRecordArrays = Object.create(null);
       this._pending = Object.create(null);
       this._adapterPopulatedRecordArrays = [];
     }
@@ -5975,16 +5961,15 @@ define('ember-data/-private/system/record-array-manager', ['exports', 'ember', '
     }, {
       key: '_flush',
       value: function _flush() {
-        var _this2 = this;
 
         var pending = this._pending;
         this._pending = Object.create(null);
         var modelsToRemove = [];
 
-        Object.keys(pending).forEach(function (modelName) {
+        for (var modelName in pending) {
           var internalModels = pending[modelName];
-
-          internalModels.forEach(function (internalModel) {
+          for (var j = 0; j < internalModels.length; j++) {
+            var internalModel = internalModels[j];
             // mark internalModels, so they can once again be processed by the
             // recordArrayManager
             internalModel._pendingRecordArrayManagerFlush = false;
@@ -5992,32 +5977,32 @@ define('ember-data/-private/system/record-array-manager', ['exports', 'ember', '
             if (internalModel.isHiddenFromRecordArrays()) {
               modelsToRemove.push(internalModel);
             }
-          });
+          }
 
           // process filteredRecordArrays
-          if (_this2.filteredRecordArrays.has(modelName)) {
-            var recordArrays = _this2.filteredRecordArrays.get(modelName);
+          if (this._filteredRecordArrays[modelName]) {
+            var recordArrays = this.filteredRecordArraysFor(modelName);
             for (var i = 0; i < recordArrays.length; i++) {
-              _this2.updateFilterRecordArray(recordArrays[i], modelName, internalModels);
+              this.updateFilterRecordArray(recordArrays[i], modelName, internalModels);
             }
           }
 
           // TODO: skip if it only changed
           // process liveRecordArrays
-          if (_this2.liveRecordArrays.has(modelName)) {
-            _this2.updateLiveRecordArray(modelName, internalModels);
+          if (this._liveRecordArrays[modelName]) {
+            this.updateLiveRecordArray(modelName, internalModels);
           }
 
           // process adapterPopulatedRecordArrays
           if (modelsToRemove.length > 0) {
-            _this2.removeFromAdapterPopulatedRecordArrays(modelsToRemove);
+            this.removeFromAdapterPopulatedRecordArrays(modelsToRemove);
           }
-        });
+        }
       }
     }, {
       key: 'updateLiveRecordArray',
       value: function updateLiveRecordArray(modelName, internalModels) {
-        var array = this.liveRecordArrays.get(modelName);
+        var array = this.liveRecordArrayFor(modelName);
 
         var modelsToAdd = [];
         var modelsToRemove = [];
@@ -6180,7 +6165,22 @@ define('ember-data/-private/system/record-array-manager', ['exports', 'ember', '
       value: function liveRecordArrayFor(modelName) {
         (0, _emberDataPrivateDebug.assert)('recordArrayManger.liveRecordArrayFor expects modelName not modelClass as the param', typeof modelName === 'string');
 
-        return this.liveRecordArrays.get(modelName);
+        return this._liveRecordArrays[modelName] || (this._liveRecordArrays[modelName] = this.createRecordArray(modelName));
+      }
+
+      /**
+        Get the `DS.RecordArray` for a modelName, which contains all loaded records of
+        given modelName.
+         @method filteredRecordArraysFor
+        @param {String} modelName
+        @return {DS.RecordArray}
+      */
+    }, {
+      key: 'filteredRecordArraysFor',
+      value: function filteredRecordArraysFor(modelName) {
+        (0, _emberDataPrivateDebug.assert)('recordArrayManger.filteredRecordArraysFor expects modelName not modelClass as the param', typeof modelName === 'string');
+
+        return this._filteredRecordArrays[modelName] || (this._filteredRecordArrays[modelName] = []);
       }
 
       /**
@@ -6270,7 +6270,7 @@ define('ember-data/-private/system/record-array-manager', ['exports', 'ember', '
       value: function registerFilteredRecordArray(array, modelName, filter) {
         (0, _emberDataPrivateDebug.assert)('recordArrayManger.registerFilteredRecordArray expects modelName not modelClass as the second param, received ' + modelName, typeof modelName === 'string');
 
-        this.filteredRecordArrays.get(modelName).push(array);
+        this.filteredRecordArraysFor(modelName).push(array);
         this.updateFilter(array, modelName, filter);
       }
 
@@ -6287,7 +6287,7 @@ define('ember-data/-private/system/record-array-manager', ['exports', 'ember', '
         var modelName = array.modelName;
 
         // unregister filtered record array
-        var recordArrays = this.filteredRecordArrays.get(modelName);
+        var recordArrays = this.filteredRecordArraysFor(modelName);
         var removedFromFiltered = remove(recordArrays, array);
 
         // remove from adapter populated record array
@@ -6295,11 +6295,11 @@ define('ember-data/-private/system/record-array-manager', ['exports', 'ember', '
 
         if (!removedFromFiltered && !removedFromAdapterPopulated) {
 
+          var liveRecordArrayForType = this._liveRecordArrays[modelName];
           // unregister live record array
-          if (this.liveRecordArrays.has(modelName)) {
-            var liveRecordArrayForType = this.liveRecordArrayFor(modelName);
+          if (liveRecordArrayForType) {
             if (array === liveRecordArrayForType) {
-              this.liveRecordArrays.delete(modelName);
+              delete this._liveRecordArrays[modelName];
             }
           }
         }
@@ -6307,10 +6307,14 @@ define('ember-data/-private/system/record-array-manager', ['exports', 'ember', '
     }, {
       key: 'willDestroy',
       value: function willDestroy() {
-        this.filteredRecordArrays.forEach(function (value) {
-          return flatten(value).forEach(destroy);
+        var _this = this;
+
+        Object.keys(this._filteredRecordArrays).forEach(function (modelName) {
+          return flatten(_this._filteredRecordArrays[modelName]).forEach(destroy);
         });
-        this.liveRecordArrays.forEach(destroy);
+        Object.keys(this._liveRecordArrays).forEach(function (modelName) {
+          return _this._liveRecordArrays[modelName].destroy();
+        });
         this._adapterPopulatedRecordArrays.forEach(destroy);
         this.isDestroyed = true;
       }
@@ -20012,7 +20016,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.14.0-canary+42d3c0871a";
+  exports.default = "2.14.0-canary+89588f5254";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -20530,7 +20534,7 @@ define('ember', [], function() {
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.0-canary+42d3c0871a
+ * @version   2.14.0-canary+89588f5254
  */
 
 var loader, define, requireModule, require, requirejs;
