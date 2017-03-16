@@ -2473,12 +2473,12 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       key: "flushChangedAttributes",
       value: function flushChangedAttributes() {
         this._inFlightAttributes = this._attributes;
-        this._attributes = Object.create(null);
+        this._attributes = null;
       }
     }, {
       key: "hasChangedAttributes",
       value: function hasChangedAttributes() {
-        return Object.keys(this._attributes).length > 0;
+        return this.__attributes !== null && Object.keys(this.__attributes).length > 0;
       }
 
       /*
@@ -2601,12 +2601,14 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     }, {
       key: "rollbackAttributes",
       value: function rollbackAttributes() {
-        var dirtyKeys = Object.keys(this._attributes);
-
-        this._attributes = Object.create(null);
+        var dirtyKeys = undefined;
+        if (this.hasChangedAttributes()) {
+          dirtyKeys = Object.keys(this._attributes);
+          this._attributes = null;
+        }
 
         if (get(this, 'isError')) {
-          this._inFlightAttributes = Object.create(null);
+          this._inFlightAttributes = null;
           this.didCleanError();
         }
 
@@ -2623,12 +2625,14 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         }
 
         if (this.isValid()) {
-          this._inFlightAttributes = Object.create(null);
+          this._inFlightAttributes = null;
         }
 
         this.send('rolledBack');
 
-        this.record._notifyProperties(dirtyKeys);
+        if (dirtyKeys && dirtyKeys.length > 0) {
+          this.record._notifyProperties(dirtyKeys);
+        }
       }
 
       /*
@@ -2919,7 +2923,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
           assign(this._data, data);
         }
 
-        this._inFlightAttributes = Object.create(null);
+        this._inFlightAttributes = null;
 
         this.send('didCommit');
         this.updateRecordArrays();
@@ -2990,13 +2994,15 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       key: "_saveWasRejected",
       value: function _saveWasRejected() {
         var keys = Object.keys(this._inFlightAttributes);
-        var attrs = this._attributes;
-        for (var i = 0; i < keys.length; i++) {
-          if (attrs[keys[i]] === undefined) {
-            attrs[keys[i]] = this._inFlightAttributes[keys[i]];
+        if (keys.length > 0) {
+          var attrs = this._attributes;
+          for (var i = 0; i < keys.length; i++) {
+            if (attrs[keys[i]] === undefined) {
+              attrs[keys[i]] = this._inFlightAttributes[keys[i]];
+            }
           }
         }
-        this._inFlightAttributes = Object.create(null);
+        this._inFlightAttributes = null;
       }
 
       /*
@@ -3043,7 +3049,11 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
               key = undefined;
           var keys = Object.keys(updates);
           var _length3 = keys.length;
-          var attrs = this._attributes;
+          var hasAttrs = this.hasChangedAttributes();
+          var attrs = undefined;
+          if (hasAttrs) {
+            attrs = this._attributes;
+          }
 
           original = assign(Object.create(null), this._data);
           original = assign(original, this._inFlightAttributes);
@@ -3056,7 +3066,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
             // this attributes. We never override this value when merging
             // updates from the backend so we should not sent a change
             // notification if the server value differs from the original.
-            if (attrs[key] !== undefined) {
+            if (hasAttrs === true && attrs[key] !== undefined) {
               continue;
             }
 
@@ -20002,7 +20012,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.14.0-canary+4fe677fee8";
+  exports.default = "2.14.0-canary+42d3c0871a";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -20520,7 +20530,7 @@ define('ember', [], function() {
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.0-canary+4fe677fee8
+ * @version   2.14.0-canary+42d3c0871a
  */
 
 var loader, define, requireModule, require, requirejs;
