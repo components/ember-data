@@ -2352,7 +2352,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       value: function destroy() {
         (0, _emberDataPrivateDebug.assert)("Cannot destroy an internalModel while its record is materialized", !this.record || this.record.get('isDestroyed') || this.record.get('isDestroying'));
 
-        this.store._removeFromIdMap(this);
+        this.store._internalModelDestroyed(this);
         this._isDestroyed = true;
       }
     }, {
@@ -2368,6 +2368,8 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     }, {
       key: "setupData",
       value: function setupData(data) {
+        this.store._internalModelDidReceiveRelationshipData(this.modelName, this.id, data.relationships);
+
         var changedKeys = undefined;
 
         if (this.hasRecord) {
@@ -2893,6 +2895,8 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       key: "adapterDidCommit",
       value: function adapterDidCommit(data) {
         if (data) {
+          this.store._internalModelDidReceiveRelationshipData(this.modelName, this.id, data.relationships);
+
           data = data.attributes;
         }
 
@@ -4393,12 +4397,24 @@ define("ember-data/-private/system/model/model", ["exports", "ember", "ember-dat
      */
     inverseFor: function (name, store) {
       var inverseMap = get(this, 'inverseMap');
-      if (inverseMap[name]) {
+      if (inverseMap[name] !== undefined) {
         return inverseMap[name];
       } else {
-        var inverse = this._findInverseFor(name, store);
-        inverseMap[name] = inverse;
-        return inverse;
+        var relationship = get(this, 'relationshipsByName').get(name);
+        if (!relationship) {
+          inverseMap[name] = null;
+          return null;
+        }
+
+        var options = relationship.options;
+        if (options && options.inverse === null) {
+          // populate the cache with a miss entry so we can skip getting and going
+          // through `relationshipsByName`
+          inverseMap[name] = null;
+          return null;
+        }
+
+        return inverseMap[name] = this._findInverseFor(name, store);
       }
     },
 
@@ -8209,6 +8225,618 @@ define("ember-data/-private/system/relationships/has-many", ["exports", "ember",
 /**
   @module ember-data
 */
+define('ember-data/-private/system/relationships/relationship-payloads-manager', ['exports', 'ember', 'ember-data/-private/system/relationships/relationship-payloads'], function (exports, _ember, _emberDataPrivateSystemRelationshipsRelationshipPayloads) {
+  var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+  var _get = _ember.default.get;
+
+  /**
+    Manages relationship payloads for a given store, for uninitialized
+    relationships.  Acts as a single source of truth (of payloads) for both sides
+    of an uninitialized relationship so they can agree on the most up-to-date
+    payload received without needing too much eager processing when those payloads
+    are pushed into the store.
+  
+    This minimizes the work spent on relationships that are never initialized.
+  
+    Once relationships are initialized, their state is managed in a relationship
+    state object (eg BelongsToRelationship or ManyRelationship).
+  
+  
+    @example
+  
+      let relationshipPayloadsManager = new RelationshipPayloadsManager(store);
+  
+      const User = DS.Model.extend({
+        hobbies: DS.hasMany('hobby')
+      });
+  
+      const Hobby = DS.Model.extend({
+        user: DS.belongsTo('user')
+      });
+  
+      let userPayload = {
+        data: {
+          id: 1,
+          type: 'user',
+          relationships: {
+            hobbies: {
+              data: [{
+                id: 2,
+                type: 'hobby'
+              }]
+            }
+          }
+        },
+      };
+      relationshipPayloadsManager.push('user', 1, userPayload.data.relationships);
+  
+      relationshipPayloadsManager.get('hobby', 2, 'user') === {
+        {
+          data: {
+            id: 1,
+            type: 'user'
+          }
+        }
+      }
+  
+    @private
+    @class RelationshipPayloadsManager
+  */
+
+  var RelationshipPayloadsManager = (function () {
+    function RelationshipPayloadsManager(store) {
+      this._store = store;
+      // cache of `RelationshipPayload`s
+      this._cache = Object.create(null);
+    }
+
+    /**
+      Find the payload for the given relationship of the given model.
+       Returns the payload for the given relationship, whether raw or computed from
+      the payload of the inverse relationship.
+       @example
+         relationshipPayloadsManager.get('hobby', 2, 'user') === {
+          {
+            data: {
+              id: 1,
+              type: 'user'
+            }
+          }
+        }
+       @method
+    */
+
+    _createClass(RelationshipPayloadsManager, [{
+      key: 'get',
+      value: function get(modelName, id, relationshipName) {
+        var modelClass = this._store._modelFor(modelName);
+        var relationshipsByName = _get(modelClass, 'relationshipsByName');
+        var relationshipPayloads = this._getRelationshipPayloads(modelName, relationshipName, modelClass, relationshipsByName, false);
+        return relationshipPayloads && relationshipPayloads.get(modelName, id, relationshipName);
+      }
+
+      /**
+        Push a model's relationships payload into this cache.
+         @example
+           let userPayload = {
+            data: {
+              id: 1,
+              type: 'user',
+              relationships: {
+                hobbies: {
+                  data: [{
+                    id: 2,
+                    type: 'hobby'
+                  }]
+                }
+              }
+            },
+          };
+          relationshipPayloadsManager.push('user', 1, userPayload.data.relationships);
+         @method
+      */
+    }, {
+      key: 'push',
+      value: function push(modelName, id, relationshipsData) {
+        var _this = this;
+
+        if (!relationshipsData) {
+          return;
+        }
+
+        var modelClass = this._store._modelFor(modelName);
+        var relationshipsByName = _get(modelClass, 'relationshipsByName');
+        Object.keys(relationshipsData).forEach(function (key) {
+          var relationshipPayloads = _this._getRelationshipPayloads(modelName, key, modelClass, relationshipsByName, true);
+          if (relationshipPayloads) {
+            relationshipPayloads.push(modelName, id, key, relationshipsData[key]);
+          }
+        });
+      }
+
+      /**
+        Unload a model's relationships payload.
+         @method
+      */
+    }, {
+      key: 'unload',
+      value: function unload(modelName, id) {
+        var _this2 = this;
+
+        var modelClass = this._store._modelFor(modelName);
+        var relationshipsByName = _get(modelClass, 'relationshipsByName');
+        relationshipsByName.forEach(function (_, relationshipName) {
+          var relationshipPayloads = _this2._getRelationshipPayloads(modelName, relationshipName, modelClass, relationshipsByName, false);
+          if (relationshipPayloads) {
+            relationshipPayloads.unload(modelName, id, relationshipName);
+          }
+        });
+      }
+
+      /**
+        Find the RelationshipPayloads object for the given relationship.  The same
+        RelationshipPayloads object is returned for either side of a relationship.
+         @example
+           const User = DS.Model.extend({
+            hobbies: DS.hasMany('hobby')
+          });
+           const Hobby = DS.Model.extend({
+            user: DS.belongsTo('user')
+          });
+           relationshipPayloads.get('user', 'hobbies') === relationshipPayloads.get('hobby', 'user');
+         The signature has a somewhat large arity to avoid extra work, such as
+          a)  string maipulation & allocation with `modelName` and
+             `relationshipName`
+          b)  repeatedly getting `relationshipsByName` via `Ember.get`
+          @private
+        @method
+      */
+    }, {
+      key: '_getRelationshipPayloads',
+      value: function _getRelationshipPayloads(modelName, relationshipName, modelClass, relationshipsByName, init) {
+        if (!relationshipsByName.has(relationshipName)) {
+          return;
+        }
+
+        var key = modelName + ':' + relationshipName;
+        if (!this._cache[key] && init) {
+          return this._initializeRelationshipPayloads(modelName, relationshipName, modelClass, relationshipsByName);
+        }
+
+        return this._cache[key];
+      }
+
+      /**
+        Create the `RelationshipsPayload` for the relationship `modelName`, `relationshipName`, and its inverse.
+         @private
+        @method
+      */
+    }, {
+      key: '_initializeRelationshipPayloads',
+      value: function _initializeRelationshipPayloads(modelName, relationshipName, modelClass, relationshipsByName) {
+        var relationshipMeta = relationshipsByName.get(relationshipName);
+        var inverseMeta = modelClass.inverseFor(relationshipName, this._store);
+
+        var inverseModelName = undefined;
+        var inverseRelationshipName = undefined;
+        var inverseRelationshipMeta = undefined;
+
+        // figure out the inverse relationship; we need two things
+        //  a) the inverse model name
+        //- b) the name of the inverse relationship
+        if (inverseMeta) {
+          inverseRelationshipName = inverseMeta.name;
+          inverseModelName = relationshipMeta.type;
+          inverseRelationshipMeta = _get(inverseMeta.type, 'relationshipsByName').get(inverseRelationshipName);
+        } else {
+          // relationship has no inverse
+          inverseModelName = inverseRelationshipName = '';
+          inverseRelationshipMeta = null;
+        }
+
+        var lhsKey = modelName + ':' + relationshipName;
+        var rhsKey = inverseModelName + ':' + inverseRelationshipName;
+
+        // populate the cache for both sides of the relationship, as they both use
+        // the same `RelationshipPayloads`.
+        //
+        // This works out better than creating a single common key, because to
+        // compute that key we would need to do work to look up the inverse
+        //
+        return this._cache[lhsKey] = this._cache[rhsKey] = new _emberDataPrivateSystemRelationshipsRelationshipPayloads.default(this._store, modelName, relationshipName, relationshipMeta, inverseModelName, inverseRelationshipName, inverseRelationshipMeta);
+      }
+    }]);
+
+    return RelationshipPayloadsManager;
+  })();
+
+  exports.default = RelationshipPayloadsManager;
+});
+define('ember-data/-private/system/relationships/relationship-payloads', ['exports', 'ember-data/-private/debug'], function (exports, _emberDataPrivateDebug) {
+  var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+  function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+  /**
+    Manages the payloads for both sides of a single relationship, across all model
+    instances.
+  
+    For example, with
+  
+      const User = DS.Model.extend({
+        hobbies: DS.hasMany('hobby')
+      });
+  
+      const Hobby = DS.Model.extend({
+        user: DS.belongsTo('user')
+      });
+  
+      let relationshipPayloads = new RelationshipPayloads('user', 'hobbies', 'hobby', 'user');
+  
+      let userPayload = {
+        data: {
+          id: 1,
+          type: 'user',
+          relationships: {
+            hobbies: {
+              data: [{
+                id: 2,
+                type: 'hobby',
+              }]
+            }
+          }
+        }
+      };
+  
+      // here we expect the payload of the individual relationship
+      relationshipPayloads.push('user', 1, 'hobbies', userPayload.data.relationships.hobbies);
+  
+      relationshipPayloads.get('user', 1, 'hobbies');
+      relationshipPayloads.get('hobby', 2, 'user');
+  
+    @class RelationshipPayloads
+    @private
+  */
+
+  var RelationshipPayloads = (function () {
+    function RelationshipPayloads(store, modelName, relationshipName, relationshipMeta, inverseModelName, inverseRelationshipName, inverseRelationshipMeta) {
+      this._store = store;
+
+      this._lhsModelName = modelName;
+      this._lhsRelationshipName = relationshipName;
+      this._lhsRelationshipMeta = relationshipMeta;
+
+      this._rhsModelName = inverseModelName;
+      this._rhsRelationshipName = inverseRelationshipName;
+      this._rhsRelationshipMeta = inverseRelationshipMeta;
+
+      // a map of id -> payloads for the left hand side of the relationship.
+      this._lhsPayloads = Object.create(null);
+      if (modelName !== inverseModelName || relationshipName !== inverseRelationshipName) {
+        // The common case of a non-reflexive relationship, or a reflexive
+        // relationship whose inverse is not itself
+        this._rhsPayloads = Object.create(null);
+        this._isReflexive = false;
+      } else {
+        // Edge case when we have a reflexive relationship to itself
+        //  eg user hasMany friends inverse friends
+        //
+        //  In this case there aren't really two sides to the relationship, but
+        //  we set `_rhsPayloads = _lhsPayloads` to make things easier to reason
+        //  about
+        this._rhsPayloads = this._lhsPayloads;
+        this._isReflexive = true;
+      }
+
+      // When we push relationship payloads, just stash them in a queue until
+      // somebody actually asks for one of them.
+      //
+      // This is a queue of the relationship payloads that have been pushed for
+      // either side of this relationship
+      this._pendingPayloads = [];
+    }
+
+    /**
+      Get the payload for the relationship of an individual record.
+       This might return the raw payload as pushed into the store, or one computed
+      from the payload of the inverse relationship.
+       @method
+    */
+
+    _createClass(RelationshipPayloads, [{
+      key: 'get',
+      value: function get(modelName, id, relationshipName) {
+        this._flushPending();
+
+        if (this._isLHS(modelName, relationshipName)) {
+          return this._lhsPayloads[id];
+        } else {
+          (0, _emberDataPrivateDebug.assert)(modelName + ':' + relationshipName + ' is not either side of this relationship, ' + this._lhsModelName + ':' + this._lhsRelationshipName + '<->' + this._rhsModelName + ':' + this._rhsRelationshipName, this._isRHS(modelName, relationshipName));
+          return this._rhsPayloads[id];
+        }
+      }
+
+      /**
+        Push a relationship payload for an individual record.
+         This will make the payload available later for both this relationship and its inverse.
+         @method
+      */
+    }, {
+      key: 'push',
+      value: function push(modelName, id, relationshipName, relationshipData) {
+        this._pendingPayloads.push([modelName, id, relationshipName, relationshipData]);
+      }
+
+      /**
+        Unload the relationship payload for an individual record.
+         This does not unload the inverse relationship payload.
+         @method
+      */
+    }, {
+      key: 'unload',
+      value: function unload(modelName, id, relationshipName) {
+        this._flushPending();
+
+        if (this._isLHS(modelName, relationshipName)) {
+          delete this._lhsPayloads[id];
+        } else {
+          (0, _emberDataPrivateDebug.assert)(modelName + ':' + relationshipName + ' is not either side of this relationship, ' + this._lhsModelName + ':' + this._lhsRelationshipName + '<->' + this._rhsModelName + ':' + this._rhsRelationshipName, this._isRHS(modelName, relationshipName));
+          delete this._rhsPayloads[id];
+        }
+      }
+
+      /**
+        @return {boolean} true iff `modelName` and `relationshipName` refer to the
+        left hand side of this relationship, as opposed to the right hand side.
+         @method
+      */
+    }, {
+      key: '_isLHS',
+      value: function _isLHS(modelName, relationshipName) {
+        return modelName === this._lhsModelName && relationshipName === this._lhsRelationshipName;
+      }
+
+      /**
+        @return {boolean} true iff `modelName` and `relationshipName` refer to the
+        right hand side of this relationship, as opposed to the left hand side.
+         @method
+      */
+    }, {
+      key: '_isRHS',
+      value: function _isRHS(modelName, relationshipName) {
+        return modelName === this._rhsModelName && relationshipName === this._rhsRelationshipName;
+      }
+    }, {
+      key: '_flushPending',
+      value: function _flushPending() {
+        if (this._pendingPayloads.length === 0) {
+          return;
+        }
+
+        var payloadsToBeProcessed = this._pendingPayloads.splice(0, this._pendingPayloads.length);
+        for (var i = 0; i < payloadsToBeProcessed.length; ++i) {
+          var modelName = payloadsToBeProcessed[i][0];
+          var id = payloadsToBeProcessed[i][1];
+          var relationshipName = payloadsToBeProcessed[i][2];
+          var relationshipData = payloadsToBeProcessed[i][3];
+
+          // TODO: maybe delay this allocation slightly?
+          var inverseRelationshipData = {
+            data: {
+              id: id,
+              type: modelName
+            }
+          };
+
+          // start flushing this individual payload.  The logic is the same whether
+          // it's for the left hand side of the relationship or the right hand side,
+          // except the role of primary and inverse idToPayloads is reversed
+          //
+          var previousPayload = undefined;
+          var idToPayloads = undefined;
+          var inverseIdToPayloads = undefined;
+          var inverseIsMany = undefined;
+          if (this._isLHS(modelName, relationshipName)) {
+            previousPayload = this._lhsPayloads[id];
+            idToPayloads = this._lhsPayloads;
+            inverseIdToPayloads = this._rhsPayloads;
+            inverseIsMany = this._rhsRelationshipIsMany;
+          } else {
+            (0, _emberDataPrivateDebug.assert)(modelName + ':' + relationshipName + ' is not either side of this relationship, ' + this._lhsModelName + ':' + this._lhsRelationshipName + '<->' + this._rhsModelName + ':' + this._rhsRelationshipName, this._isRHS(modelName, relationshipName));
+            previousPayload = this._rhsPayloads[id];
+            idToPayloads = this._rhsPayloads;
+            inverseIdToPayloads = this._lhsPayloads;
+            inverseIsMany = this._lhsRelationshipIsMany;
+          }
+
+          // actually flush this individual payload
+          //
+          // We remove the previous inverse before populating our current one
+          // because we may have multiple payloads for the same relationship, in
+          // which case the last one wins.
+          //
+          // eg if user hasMany helicopters, and helicopter belongsTo user and we see
+          //
+          //  [{
+          //    data: {
+          //      id: 1,
+          //      type: 'helicopter',
+          //      relationships: {
+          //        user: {
+          //          id: 2,
+          //          type: 'user'
+          //        }
+          //      }
+          //    }
+          //  }, {
+          //    data: {
+          //      id: 1,
+          //      type: 'helicopter',
+          //      relationships: {
+          //        user: {
+          //          id: 4,
+          //          type: 'user'
+          //        }
+          //      }
+          //    }
+          //  }]
+          //
+          // Then we will initially have set user:2 as having helicopter:1, which we
+          // need to remove before adding helicopter:1 to user:4
+          //
+          this._removeInverse(id, previousPayload, inverseIdToPayloads);
+          idToPayloads[id] = relationshipData;
+          this._populateInverse(relationshipData, inverseRelationshipData, inverseIdToPayloads, inverseIsMany);
+        }
+      }
+
+      /**
+        Populate the inverse relationship for `relationshipData`.
+         If `relationshipData` is an array (eg because the relationship is hasMany)
+        this means populate each inverse, otherwise populate only the single
+        inverse.
+         @private
+        @method
+      */
+    }, {
+      key: '_populateInverse',
+      value: function _populateInverse(relationshipData, inversePayload, inverseIdToPayloads, inverseIsMany) {
+        if (!relationshipData.data) {
+          // This id doesn't have an inverse, eg a belongsTo with a payload
+          // { data: null }, so there's nothing to populate
+          return;
+        }
+
+        if (Array.isArray(relationshipData.data)) {
+          for (var i = 0; i < relationshipData.data.length; ++i) {
+            var inverseId = relationshipData.data[i].id;
+            this._addToInverse(inversePayload, inverseId, inverseIdToPayloads, inverseIsMany);
+          }
+        } else {
+          var inverseId = relationshipData.data.id;
+          this._addToInverse(inversePayload, inverseId, inverseIdToPayloads, inverseIsMany);
+        }
+      }
+
+      /**
+        Actually add `inversePayload` to `inverseIdToPayloads`.  This is part of
+        `_populateInverse` after we've normalized the case of `relationshipData`
+        being either an array or a pojo.
+         We still have to handle the case that the *inverse* relationship payload may
+        be an array or pojo.
+         @private
+        @method
+      */
+    }, {
+      key: '_addToInverse',
+      value: function _addToInverse(inversePayload, inverseId, inverseIdToPayloads, inverseIsMany) {
+        if (this._isReflexive && inversePayload.data.id === inverseId) {
+          // eg <user:1>.friends = [{ id: 1, type: 'user' }]
+          return;
+        }
+
+        var existingPayload = inverseIdToPayloads[inverseId];
+        var existingData = existingPayload && existingPayload.data;
+
+        if (existingData) {
+          // There already is an inverse, either add or overwrite depehnding on
+          // whether the inverse is a many relationship or not
+          //
+          if (Array.isArray(existingData)) {
+            existingData.push(inversePayload.data);
+          } else {
+            inverseIdToPayloads[inverseId] = inversePayload;
+          }
+        } else {
+          // first time we're populating the inverse side
+          //
+          if (inverseIsMany) {
+            inverseIdToPayloads[inverseId] = {
+              data: [inversePayload.data]
+            };
+          } else {
+            inverseIdToPayloads[inverseId] = inversePayload;
+          }
+        }
+      }
+    }, {
+      key: '_removeInverse',
+
+      /**
+        Remove the relationship in `previousPayload` from its inverse(s), because
+        this relationship payload has just been updated (eg because the same
+        relationship had multiple payloads pushed before the relationship was
+        initialized).
+         @method
+      */
+      value: function _removeInverse(id, previousPayload, inverseIdToPayloads) {
+        var data = previousPayload && previousPayload.data;
+        if (!data) {
+          // either this is the first time we've seen a payload for this id, or its
+          // previous payload indicated that it had no inverse, eg a belongsTo
+          // relationship with payload { data: null }
+          //
+          // In either case there's nothing that needs to be removed from the
+          // inverse map of payloads
+          return;
+        }
+
+        if (Array.isArray(data)) {
+          // TODO: diff rather than removeall addall?
+          for (var i = 0; i < data.length; ++i) {
+            this._removeFromInverse(id, data[i].id, inverseIdToPayloads);
+          }
+        } else {
+          this._removeFromInverse(id, data.id, inverseIdToPayloads);
+        }
+      }
+
+      /**
+        Remove `id` from its inverse record with id `inverseId`.  If the inverse
+        relationship is a belongsTo, this means just setting it to null, if the
+        inverse relationship is a hasMany, then remove that id from its array of ids.
+         @method
+      */
+    }, {
+      key: '_removeFromInverse',
+      value: function _removeFromInverse(id, inverseId, inversePayloads) {
+        var inversePayload = inversePayloads[inverseId];
+        var data = inversePayload && inversePayload.data;
+
+        if (!data) {
+          return;
+        }
+
+        if (Array.isArray(data)) {
+          inversePayload.data = data.filter(function (x) {
+            return x.id !== id;
+          });
+        } else {
+          inversePayloads[inverseId] = {
+            data: null
+          };
+        }
+      }
+    }, {
+      key: '_lhsRelationshipIsMany',
+      get: function () {
+        return this._lhsRelationshipMeta && this._lhsRelationshipMeta.kind === 'hasMany';
+      }
+    }, {
+      key: '_rhsRelationshipIsMany',
+      get: function () {
+        return this._rhsRelationshipMeta && this._rhsRelationshipMeta.kind === 'hasMany';
+      }
+    }]);
+
+    return RelationshipPayloads;
+  })();
+
+  exports.default = RelationshipPayloads;
+});
 define("ember-data/-private/system/relationships/state/belongs-to", ["exports", "ember", "ember-data/-private/debug", "ember-data/-private/system/promise-proxies", "ember-data/-private/system/relationships/state/relationship"], function (exports, _ember, _emberDataPrivateDebug, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemRelationshipsStateRelationship) {
   var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
@@ -8249,6 +8877,21 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
           this.removeCanonicalRecord(this.canonicalState);
         }
         this.flushCanonicalLater();
+      }
+    }, {
+      key: "setInitialCanonicalRecord",
+      value: function setInitialCanonicalRecord(record) {
+        if (!record) {
+          return;
+        }
+
+        // When we initialize a belongsTo relationship, we want to avoid work like
+        // notifying our internalModel that we've "changed" and excessive thrash on
+        // setting up inverse relationships
+        this.canonicalMembers.add(record);
+        this.members.add(record);
+        this.inverseRecord = this.canonicalState = record;
+        this.setupInverseRelationship(record);
       }
     }, {
       key: "addCanonicalRecord",
@@ -8404,9 +9047,13 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
       }
     }, {
       key: "updateData",
-      value: function updateData(data) {
+      value: function updateData(data, initial) {
         var internalModel = this.store._pushResourceIdentifier(this, data);
-        this.setCanonicalRecord(internalModel);
+        if (initial) {
+          this.setInitialCanonicalRecord(internalModel);
+        } else {
+          this.setCanonicalRecord(internalModel);
+        }
       }
     }]);
 
@@ -8468,14 +9115,22 @@ define("ember-data/-private/system/relationships/state/create", ["exports", "emb
       value: function get(key) {
         var relationships = this.initializedRelationships;
         var relationship = relationships[key];
+        var internalModel = this.internalModel;
 
         if (!relationship) {
-          var internalModel = this.internalModel;
           var relationshipsByName = _get(internalModel.type, 'relationshipsByName');
           var rel = relationshipsByName.get(key);
 
-          if (rel) {
-            relationship = relationships[key] = createRelationshipFor(internalModel, rel, internalModel.store);
+          if (!rel) {
+            return undefined;
+          }
+
+          var relationshipPayload = internalModel.store._relationshipsPayloads.get(internalModel.modelName, internalModel.id, key);
+
+          relationship = relationships[key] = createRelationshipFor(internalModel, rel, internalModel.store);
+
+          if (relationshipPayload) {
+            relationship.push(relationshipPayload, true);
           }
         }
 
@@ -8680,19 +9335,32 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
         }
       }
     }, {
+      key: 'setInitialInternalModels',
+      value: function setInitialInternalModels(internalModels) {
+        var _this = this;
+
+        var args = [0, this.canonicalState.length].concat(internalModels);
+        this.canonicalState.splice.apply(this.canonicalState, args);
+        internalModels.forEach(function (internalModel) {
+          _this.canonicalMembers.add(internalModel);
+          _this.members.add(internalModel);
+          _this.setupInverseRelationship(internalModel);
+        });
+      }
+    }, {
       key: 'fetchLink',
       value: function fetchLink() {
-        var _this = this;
+        var _this2 = this;
 
         return this.store.findHasMany(this.record, this.link, this.relationshipMeta).then(function (records) {
           if (records.hasOwnProperty('meta')) {
-            _this.updateMeta(records.meta);
+            _this2.updateMeta(records.meta);
           }
-          _this.store._backburner.join(function () {
-            _this.updateRecordsFromAdapter(records);
-            _this.manyArray.set('isLoaded', true);
+          _this2.store._backburner.join(function () {
+            _this2.updateRecordsFromAdapter(records);
+            _this2.manyArray.set('isLoaded', true);
           });
-          return _this.manyArray;
+          return _this2.manyArray;
         });
       }
     }, {
@@ -8718,7 +9386,7 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
     }, {
       key: 'getRecords',
       value: function getRecords() {
-        var _this2 = this;
+        var _this3 = this;
 
         //TODO(Igor) sync server here, once our syncing is not stupid
         var manyArray = this.manyArray;
@@ -8729,7 +9397,7 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
               promise = this.findRecords();
             } else {
               promise = this.findLink().then(function () {
-                return _this2.findRecords();
+                return _this3.findRecords();
               });
             }
           } else {
@@ -8749,9 +9417,13 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
       }
     }, {
       key: 'updateData',
-      value: function updateData(data) {
+      value: function updateData(data, initial) {
         var internalModels = this.store._pushResourceIdentifiers(this, data);
-        this.updateRecordsFromAdapter(internalModels);
+        if (initial) {
+          this.setInitialInternalModels(internalModels);
+        } else {
+          this.updateRecordsFromAdapter(internalModels);
+        }
       }
     }, {
       key: '_loadingPromise',
@@ -8801,6 +9473,7 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
   var Relationship = (function () {
     function Relationship(store, internalModel, inverseKey, relationshipMeta) {
       var async = relationshipMeta.options.async;
+      var polymorphic = relationshipMeta.options.polymorphic;
       this.members = new _emberDataPrivateSystemOrderedSet.default();
       this.canonicalMembers = new _emberDataPrivateSystemOrderedSet.default();
       this.store = store;
@@ -8808,6 +9481,7 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
       this.inverseKey = inverseKey;
       this.internalModel = internalModel;
       this.isAsync = typeof async === 'undefined' ? true : async;
+      this.isPolymorphic = typeof polymorphic === 'undefined' ? true : polymorphic;
       this.relationshipMeta = relationshipMeta;
       //This probably breaks for polymorphic relationship in complex scenarios, due to
       //multiple possible modelNames
@@ -8905,17 +9579,34 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
       value: function addCanonicalRecord(record, idx) {
         if (!this.canonicalMembers.has(record)) {
           this.canonicalMembers.add(record);
-          if (this.inverseKey) {
-            record._relationships.get(this.inverseKey).addCanonicalRecord(this.record);
-          } else {
-            if (!record._implicitRelationships[this.inverseKeyForImplicit]) {
-              record._implicitRelationships[this.inverseKeyForImplicit] = new Relationship(this.store, record, this.key, { options: {} });
-            }
-            record._implicitRelationships[this.inverseKeyForImplicit].addCanonicalRecord(this.record);
-          }
+          this.setupInverseRelationship(record);
         }
         this.flushCanonicalLater();
         this.setHasData(true);
+      }
+    }, {
+      key: 'setupInverseRelationship',
+      value: function setupInverseRelationship(internalModel) {
+        if (this.inverseKey) {
+          var relationships = internalModel._relationships;
+          var relationshipExisted = relationships.has(this.inverseKey);
+          var relationship = relationships.get(this.inverseKey);
+          if (relationshipExisted || this.isPolymorphic) {
+            // if we have only just initialized the inverse relationship, then it
+            // already has this.internalModel in its canonicalMembers, so skip the
+            // unnecessary work.  The exception to this is polymorphic
+            // relationships whose members are determined by their inverse, as those
+            // relationships cannot efficiently find their inverse payloads.
+            relationship.addCanonicalRecord(this.internalModel);
+          }
+        } else {
+          var relationships = internalModel._implicitRelationships;
+          var relationship = relationships[this.inverseKeyForImplicit];
+          if (!relationship) {
+            relationship = relationships[this.inverseKeyForImplicit] = new Relationship(this.store, internalModel, this.key, { options: {} });
+          }
+          relationship.addCanonicalRecord(this.internalModel);
+        }
       }
     }, {
       key: 'removeCanonicalRecords',
@@ -9112,7 +9803,7 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
        */
     }, {
       key: 'push',
-      value: function push(payload) {
+      value: function push(payload, initial) {
 
         var hasData = false;
         var hasLink = false;
@@ -9123,14 +9814,14 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
 
         if (payload.data !== undefined) {
           hasData = true;
-          this.updateData(payload.data);
+          this.updateData(payload.data, initial);
         }
 
         if (payload.links && payload.links.related) {
           var relatedLink = (0, _emberDataPrivateSystemNormalizeLink.default)(payload.links.related);
           if (relatedLink && relatedLink.href && relatedLink.href !== this.link) {
             hasLink = true;
-            this.updateLink(relatedLink.href);
+            this.updateLink(relatedLink.href, initial);
           }
         }
 
@@ -9683,7 +10374,7 @@ define("ember-data/-private/system/snapshot", ["exports", "ember"], function (ex
 /**
   @module ember-data
 */
-define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-private/debug', 'ember-data/model', 'ember-data/-private/system/normalize-model-name', 'ember-data/adapters/errors', 'ember-data/-private/system/identity-map', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/store/common', 'ember-data/-private/system/store/serializer-response', 'ember-data/-private/system/store/serializers', 'ember-data/-private/system/store/finders', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/store/container-instance-cache', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/features'], function (exports, _ember, _emberDataPrivateDebug, _emberDataModel, _emberDataPrivateSystemNormalizeModelName, _emberDataAdaptersErrors, _emberDataPrivateSystemIdentityMap, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStoreCommon, _emberDataPrivateSystemStoreSerializerResponse, _emberDataPrivateSystemStoreSerializers, _emberDataPrivateSystemStoreFinders, _emberDataPrivateUtils, _emberDataPrivateSystemCoerceId, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateSystemStoreContainerInstanceCache, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateFeatures) {
+define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-private/debug', 'ember-data/model', 'ember-data/-private/system/normalize-model-name', 'ember-data/adapters/errors', 'ember-data/-private/system/identity-map', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/store/common', 'ember-data/-private/system/store/serializer-response', 'ember-data/-private/system/store/serializers', 'ember-data/-private/system/relationships/relationship-payloads-manager', 'ember-data/-private/system/store/finders', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/store/container-instance-cache', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/features'], function (exports, _ember, _emberDataPrivateDebug, _emberDataModel, _emberDataPrivateSystemNormalizeModelName, _emberDataAdaptersErrors, _emberDataPrivateSystemIdentityMap, _emberDataPrivateSystemPromiseProxies, _emberDataPrivateSystemStoreCommon, _emberDataPrivateSystemStoreSerializerResponse, _emberDataPrivateSystemStoreSerializers, _emberDataPrivateSystemRelationshipsRelationshipPayloadsManager, _emberDataPrivateSystemStoreFinders, _emberDataPrivateUtils, _emberDataPrivateSystemCoerceId, _emberDataPrivateSystemRecordArrayManager, _emberDataPrivateSystemStoreContainerInstanceCache, _emberDataPrivateSystemModelInternalModel, _emberDataPrivateFeatures) {
   var badIdFormatAssertion = '`id` passed to `findRecord()` has to be non-empty string or number';
 
   exports.badIdFormatAssertion = badIdFormatAssertion;
@@ -9821,6 +10512,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       this._pendingSave = [];
       this._instanceCache = new _emberDataPrivateSystemStoreContainerInstanceCache.default((0, _emberDataPrivateUtils.getOwner)(this), this);
       this._modelFactoryCache = Object.create(null);
+      this._relationshipsPayloads = new _emberDataPrivateSystemRelationshipsRelationshipPayloadsManager.default(this);
 
       /*
         Ember Data uses several specialized micro-queues for organizing
@@ -10646,6 +11338,15 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       }
 
       return internalModel;
+    },
+
+    _internalModelDidReceiveRelationshipData: function (modelName, id, relationshipData) {
+      this._relationshipsPayloads.push(modelName, id, relationshipData);
+    },
+
+    _internalModelDestroyed: function (internalModel) {
+      this._removeFromIdMap(internalModel);
+      this._relationshipsPayloads.unload(internalModel.modelName, internalModel.id);
     },
 
     /**
@@ -11779,13 +12480,19 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
     _setupRelationships: function () {
       var pushed = this._pushedInternalModels;
 
+      // Cache the inverse maps for each modelClass that we visit during this
+      // payload push.  In the common case where we are pushing many more
+      // instances than types we want to minimize the cost of looking up the
+      // inverse map and the overhead of Ember.get adds up.
+      var modelNameToInverseMap = Object.create(null);
+
       for (var i = 0, l = pushed.length; i < l; i += 2) {
         // This will convert relationships specified as IDs into DS.Model instances
         // (possibly unloaded) and also create the data structures used to track
         // relationships.
         var internalModel = pushed[i];
         var data = pushed[i + 1];
-        setupRelationships(this, internalModel, data);
+        setupRelationships(this, internalModel, data, modelNameToInverseMap);
       }
 
       pushed.length = 0;
@@ -12132,14 +12839,81 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
     }, label);
   }
 
-  function setupRelationships(store, internalModel, data) {
-    internalModel.type.eachRelationship(function (key, descriptor) {
-      if (!data.relationships[key]) {
+  function isInverseRelationshipInitialized(store, internalModel, data, key, modelNameToInverseMap) {
+    var relationshipData = data.relationships[key].data;
+
+    if (!relationshipData) {
+      // can't check inverse for eg { comments: { links: { related: URL }}}
+      return false;
+    }
+
+    var inverseMap = modelNameToInverseMap[internalModel.modelName];
+    if (!inverseMap) {
+      inverseMap = modelNameToInverseMap[internalModel.modelName] = get(internalModel.type, 'inverseMap');
+    }
+    var inverseRelationshipMetadata = inverseMap[key];
+    if (inverseRelationshipMetadata === undefined) {
+      inverseRelationshipMetadata = internalModel.type.inverseFor(key, store);
+    }
+
+    if (!inverseRelationshipMetadata) {
+      return false;
+    }
+
+    var _inverseRelationshipMetadata = inverseRelationshipMetadata;
+    var inverseRelationshipName = _inverseRelationshipMetadata.name;
+
+    if (Array.isArray(relationshipData)) {
+      for (var i = 0; i < relationshipData.length; ++i) {
+        var inverseInternalModel = store._internalModelsFor(relationshipData[i].type).get(relationshipData[i].id);
+        if (inverseInternalModel && inverseInternalModel._relationships.has(inverseRelationshipName)) {
+          return true;
+        }
+      }
+
+      return false;
+    } else {
+      var inverseInternalModel = store._internalModelsFor(relationshipData.type).get(relationshipData.id);
+      return inverseInternalModel && inverseInternalModel._relationships.has(inverseRelationshipName);
+    }
+  }
+
+  function setupRelationships(store, internalModel, data, modelNameToInverseMap) {
+    var relationships = internalModel._relationships;
+
+    internalModel.type.eachRelationship(function (relationshipName) {
+      if (!data.relationships[relationshipName]) {
         return;
       }
 
-      var relationship = internalModel._relationships.get(key);
-      relationship.push(data.relationships[key]);
+      var relationshipRequiresNotification = relationships.has(relationshipName) || isInverseRelationshipInitialized(store, internalModel, data, relationshipName, modelNameToInverseMap);
+
+      if (relationshipRequiresNotification) {
+        var relationshipData = data.relationships[relationshipName];
+        relationships.get(relationshipName).push(relationshipData);
+      }
+
+      // in debug, assert payload validity eagerly
+      (0, _emberDataPrivateDebug.runInDebug)(function () {
+        var relationshipMeta = get(internalModel.type, 'relationshipsByName').get(relationshipName);
+        var relationshipData = data.relationships[relationshipName];
+        if (!relationshipData || !relationshipMeta) {
+          return;
+        }
+
+        if (relationshipData.links) {
+          var isAsync = relationshipMeta.options && relationshipMeta.options.async !== false;
+          (0, _emberDataPrivateDebug.warn)('You pushed a record of type \'' + internalModel.type.modelName + '\' with a relationship \'' + relationshipName + '\' configured as \'async: false\'. You\'ve included a link but no primary data, this may be an error in your payload.', isAsync || relationshipData.data, {
+            id: 'ds.store.push-link-for-sync-relationship'
+          });
+        } else if (relationshipData.data) {
+          if (relationshipMeta.kind === 'belongsTo') {
+            (0, _emberDataPrivateDebug.assert)('A ' + internalModel.type.modelName + ' record was pushed into the store with the value of ' + relationshipName + ' being ' + inspect(relationshipData.data) + ', but ' + relationshipName + ' is a belongsTo relationship so the value must not be an array. You should probably check your data payload or serializer.', !Array.isArray(relationshipData.data));
+          } else if (relationshipMeta.kind === 'hasMany') {
+            (0, _emberDataPrivateDebug.assert)('A ' + internalModel.type.modelName + ' record was pushed into the store with the value of ' + relationshipName + ' being \'' + inspect(relationshipData.data) + '\', but ' + relationshipName + ' is a hasMany relationship so the value must be an array. You should probably check your data payload or serializer.', Array.isArray(relationshipData.data));
+          }
+        }
+      });
     });
   }
 
@@ -20001,7 +20775,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.14.0-canary+074d8c6d45";
+  exports.default = "2.14.0-canary+552e1d6810";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
@@ -20519,7 +21293,7 @@ define('ember', [], function() {
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.0-canary+074d8c6d45
+ * @version   2.14.0-canary+552e1d6810
  */
 
 var loader, define, requireModule, require, requirejs;
