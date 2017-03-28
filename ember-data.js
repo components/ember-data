@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.0-canary+b7166f65df
+ * @version   2.14.0-canary+551e39a1ce
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -2355,7 +2355,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
 
   function areAllModelsUnloaded(internalModels) {
     for (var i = 0; i < internalModels.length; ++i) {
-      var record = internalModels[i].record;
+      var record = internalModels[i]._record;
       if (record && !(record.get('isDestroyed') || record.get('isDestroying'))) {
         return false;
       }
@@ -2516,9 +2516,9 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     };
 
     InternalModel.prototype.dematerializeRecord = function dematerializeRecord() {
-      if (this.record) {
+      if (this._record) {
         this._isDematerializing = true;
-        this.record.destroy();
+        this._record.destroy();
         this.destroyRelationships();
         this.updateRecordArrays();
         this.resetRecord();
@@ -2540,14 +2540,14 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     InternalModel.prototype.startedReloading = function startedReloading() {
       this.isReloading = true;
       if (this.hasRecord) {
-        set(this.record, 'isReloading', true);
+        set(this._record, 'isReloading', true);
       }
     };
 
     InternalModel.prototype.finishedReloading = function finishedReloading() {
       this.isReloading = false;
       if (this.hasRecord) {
-        set(this.record, 'isReloading', false);
+        set(this._record, 'isReloading', false);
       }
     };
 
@@ -2640,7 +2640,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     };
 
     InternalModel.prototype.destroy = function destroy() {
-      (0, _debug.assert)("Cannot destroy an internalModel while its record is materialized", !this.record || this.record.get('isDestroyed') || this.record.get('isDestroying'));
+      (0, _debug.assert)("Cannot destroy an internalModel while its record is materialized", !this._record || this._record.get('isDestroyed') || this._record.get('isDestroying'));
 
       this.store._internalModelDestroyed(this);
       this._isDestroyed = true;
@@ -2667,7 +2667,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this.pushedData();
 
       if (this.hasRecord) {
-        this.record._notifyProperties(changedKeys);
+        this._record._notifyProperties(changedKeys);
       }
       this.didInitializeData();
     };
@@ -2767,25 +2767,25 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
 
     InternalModel.prototype.notifyHasManyAdded = function notifyHasManyAdded(key, record, idx) {
       if (this.hasRecord) {
-        this.record.notifyHasManyAdded(key, record, idx);
+        this._record.notifyHasManyAdded(key, record, idx);
       }
     };
 
     InternalModel.prototype.notifyHasManyRemoved = function notifyHasManyRemoved(key, record, idx) {
       if (this.hasRecord) {
-        this.record.notifyHasManyRemoved(key, record, idx);
+        this._record.notifyHasManyRemoved(key, record, idx);
       }
     };
 
     InternalModel.prototype.notifyBelongsToChanged = function notifyBelongsToChanged(key, record) {
       if (this.hasRecord) {
-        this.record.notifyBelongsToChanged(key, record);
+        this._record.notifyBelongsToChanged(key, record);
       }
     };
 
     InternalModel.prototype.notifyPropertyChange = function notifyPropertyChange(key) {
       if (this.hasRecord) {
-        this.record.notifyPropertyChange(key);
+        this._record.notifyPropertyChange(key);
       }
     };
 
@@ -2820,7 +2820,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this.send('rolledBack');
 
       if (dirtyKeys && dirtyKeys.length > 0) {
-        this.record._notifyProperties(dirtyKeys);
+        this._record._notifyProperties(dirtyKeys);
       }
     };
 
@@ -2875,7 +2875,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
 
       this.currentState = state;
       if (this.hasRecord) {
-        set(this.record, 'currentState', state);
+        set(this._record, 'currentState', state);
       }
 
       for (i = 0, l = setups.length; i < l; i++) {
@@ -2917,7 +2917,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         return;
       }
       var triggers = this._deferredTriggers;
-      var record = this.record;
+      var record = this._record;
       var trigger = record.trigger;
       for (var i = 0, l = triggers.length; i < l; i++) {
         trigger.apply(record, triggers[i]);
@@ -3020,8 +3020,8 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     InternalModel.prototype.setId = function setId(id) {
       (0, _debug.assert)('A record\'s id cannot be changed once it is in the loaded state', this.id === null || this.id === id || this.isNew());
       this.id = id;
-      if (this.record.get('id') !== id) {
-        this.record.set('id', id);
+      if (this._record.get('id') !== id) {
+        this._record.set('id', id);
       }
     };
 
@@ -3030,7 +3030,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this.isError = true;
 
       if (this.hasRecord) {
-        this.record.setProperties({
+        this._record.setProperties({
           isError: true,
           adapterError: error
         });
@@ -3042,7 +3042,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this.isError = false;
 
       if (this.hasRecord) {
-        this.record.setProperties({
+        this._record.setProperties({
           isError: false,
           adapterError: null
         });
@@ -3073,7 +3073,7 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         return;
       }
 
-      this.record._notifyProperties(changedKeys);
+      this._record._notifyProperties(changedKeys);
     };
 
     InternalModel.prototype.addErrorMessageToAttribute = function addErrorMessageToAttribute(attribute, message) {
@@ -3290,11 +3290,6 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
           this.__implicitRelationships = Object.create(null);
         }
         return this.__implicitRelationships;
-      }
-    }, {
-      key: "record",
-      get: function () {
-        return this._record;
       }
     }, {
       key: "isDestroyed",
@@ -7065,7 +7060,9 @@ define('ember-data/-private/system/references/record', ['exports', 'ember', 'emb
      @return {DS.Model} the record for this RecordReference
   */
   RecordReference.prototype.value = function () {
-    return this.internalModel.record;
+    if (this.internalModel.hasRecord) {
+      return this.internalModel.getRecord();
+    }
   };
 
   /**
@@ -8247,7 +8244,7 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
 
       // reload record, if it is already loaded
       if (this.inverseRecord && this.inverseRecord.hasRecord) {
-        return this.inverseRecord.record.reload();
+        return this.inverseRecord.getRecord().reload();
       }
 
       return this.findRecord();
@@ -17873,7 +17870,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.14.0-canary+b7166f65df";
+  exports.default = "2.14.0-canary+551e39a1ce";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
