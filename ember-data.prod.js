@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.0-canary+1bad70b5b5
+ * @version   2.14.0-canary+4494718f1f
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -8657,8 +8657,8 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
     Relationship.prototype.removeInternalModels = function removeInternalModels(internalModels) {
       var _this2 = this;
 
-      internalModels.forEach(function (intenralModel) {
-        return _this2.removeRecord(intenralModel);
+      internalModels.forEach(function (internalModel) {
+        return _this2.removeRecord(internalModel);
       });
     };
 
@@ -10360,6 +10360,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       instead).
        This method can be used when it is certain that the server will return a
       single object for the primary data.
+       Each time this method is called a new request is made through the adapter.
        Let's assume our API provides an endpoint for the currently logged in user
       via:
        ```
@@ -17365,7 +17366,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.14.0-canary+1bad70b5b5";
+  exports.default = "2.14.0-canary+4494718f1f";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
