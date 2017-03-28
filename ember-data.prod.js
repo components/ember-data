@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.0-canary+d0ea470053
+ * @version   2.14.0-canary+3509c58e53
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -10143,6 +10143,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
        This method will synchronously return the record if it is available in the store,
       otherwise it will return `null`. A record is available if it has been fetched earlier, or
       pushed manually into the store.
+       See [findRecord](#method_findRecord) if you would like to request this record from the backend.
        _Note: This is a synchronous method and does not return a promise._
        ```js
       let post = store.peekRecord('post', 1);
@@ -10360,6 +10361,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       instead).
        This method can be used when it is certain that the server will return a
       single object for the primary data.
+       Each time this method is called a new request is made through the adapter.
        Let's assume our API provides an endpoint for the currently logged in user
       via:
        ```
@@ -17365,7 +17367,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.14.0-canary+d0ea470053";
+  exports.default = "2.14.0-canary+3509c58e53";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
