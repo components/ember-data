@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.0-canary+f818378c54
+ * @version   2.14.0-canary+b7166f65df
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -2887,12 +2887,12 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
         if (_this2._relationships.has(name)) {
           var rel = _this2._relationships.get(name);
           rel.clear();
-          rel.destroy();
+          rel.removeInverseRelationships();
         }
       });
       Object.keys(this._implicitRelationships).forEach(function (key) {
         _this2._implicitRelationships[key].clear();
-        _this2._implicitRelationships[key].destroy();
+        _this2._implicitRelationships[key].removeInverseRelationships();
       });
     };
 
@@ -2902,11 +2902,11 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       this.eachRelationship(function (name, relationship) {
         if (_this3._relationships.has(name)) {
           var rel = _this3._relationships.get(name);
-          rel.destroy();
+          rel.removeInverseRelationships();
         }
       });
       Object.keys(this._implicitRelationships).forEach(function (key) {
-        _this3._implicitRelationships[key].destroy();
+        _this3._implicitRelationships[key].removeInverseRelationships();
       });
     };
 
@@ -8295,8 +8295,8 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
       return this.__loadingPromise;
     };
 
-    ManyRelationship.prototype.destroy = function destroy() {
-      _Relationship.prototype.destroy.call(this);
+    ManyRelationship.prototype.removeInverseRelationships = function removeInverseRelationships() {
+      _Relationship.prototype.removeInverseRelationships.call(this);
       if (this._manyArray) {
         this._manyArray.destroy();
         this._manyArray = null;
@@ -8610,7 +8610,7 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
     // TODO @runspired deprecate this as it was never truly a record instance
 
 
-    Relationship.prototype.destroy = function destroy() {
+    Relationship.prototype.removeInverseRelationships = function removeInverseRelationships() {
       var _this = this;
 
       if (!this.inverseKey) {
@@ -17365,7 +17365,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.14.0-canary+f818378c54";
+  exports.default = "2.14.0-canary+b7166f65df";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
