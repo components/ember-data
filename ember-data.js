@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.0-canary+42c97d499f
+ * @version   2.14.0-canary+f818378c54
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -9749,7 +9749,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       // Coerce ID to a string
       properties.id = (0, _coerceId.default)(properties.id);
 
-      var internalModel = this.buildInternalModel(normalizedModelName, properties.id);
+      var internalModel = this._buildInternalModel(normalizedModelName, properties.id);
       var record = internalModel.getRecord();
 
       // Move the record out of its initial `empty` state into
@@ -10446,7 +10446,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       var internalModel = this._internalModelsFor(modelName).get(trueId);
 
       if (!internalModel) {
-        internalModel = this.buildInternalModel(modelName, trueId);
+        internalModel = this._buildInternalModel(modelName, trueId);
       }
 
       return internalModel;
@@ -11721,16 +11721,16 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
     /**
       Build a brand new record for a given type, ID, and
       initial data.
-       @method buildRecord
+       @method _buildInternalModel
       @private
       @param {String} modelName
       @param {String} id
       @param {Object} data
       @return {InternalModel} internal model
     */
-    buildInternalModel: function (modelName, id, data) {
+    _buildInternalModel: function (modelName, id, data) {
 
-      (0, _debug.assert)('You can no longer pass a modelClass as the first argument to store.buildInternalModel. Pass modelName instead.', typeof modelName === 'string');
+      (0, _debug.assert)('You can no longer pass a modelClass as the first argument to store._buildInternalModel. Pass modelName instead.', typeof modelName === 'string');
 
       var recordMap = this._internalModelsFor(modelName);
 
@@ -11743,6 +11743,10 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       recordMap.add(internalModel, id);
 
       return internalModel;
+    },
+    buildInternalModel: function (modelName, id, data) {
+      (0, _debug.deprecate)('buildInternalModel was documented as private and will be removed in the next version of Ember Data.');
+      return this._buildInternalModel(modelName, id, data);
     },
 
 
@@ -17869,7 +17873,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.14.0-canary+42c97d499f";
+  exports.default = "2.14.0-canary+f818378c54";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
