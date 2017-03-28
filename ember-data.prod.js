@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.0-canary+3509c58e53
+ * @version   2.14.0-canary+42c97d499f
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -8338,6 +8338,7 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
       if (this.members.has(record)) {
         return;
       }
+
       _Relationship.prototype.addRecord.call(this, record, idx);
       // make lazy later
       this.manyArray.internalAddInternalModels([record], idx);
@@ -8379,7 +8380,6 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
     };
 
     ManyRelationship.prototype.notifyRecordRelationshipAdded = function notifyRecordRelationshipAdded(record, idx) {
-
       this.record.notifyHasManyAdded(this.key, record, idx);
     };
 
@@ -8624,12 +8624,7 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
 
       allMembers.forEach(function (inverseInternalModel) {
         var relationship = inverseInternalModel._relationships.get(_this.inverseKey);
-        // TODO: there is always a relationship in this case; this guard exists
-        // because there are tests that fail in teardown after putting things in
-        // invalid state
-        if (relationship) {
-          relationship.inverseDidDematerialize();
-        }
+        relationship.inverseDidDematerialize();
       });
     };
 
@@ -17367,7 +17362,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.14.0-canary+3509c58e53";
+  exports.default = "2.14.0-canary+42c97d499f";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
