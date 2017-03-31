@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.0-canary+a00df6de09
+ * @version   2.14.0-canary+357cd99a5a
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -8921,150 +8921,151 @@ define('ember-data/-private/system/snapshot-record-array', ['exports'], function
   'use strict';
 
   exports.__esModule = true;
-  exports.default = SnapshotRecordArray;
-  /**
-    @module ember-data
-  */
 
-  /**
-    @class SnapshotRecordArray
-    @namespace DS
-    @private
-    @constructor
-    @param {Array} snapshots An array of snapshots
-    @param {Object} meta
-  */
-  function SnapshotRecordArray(recordArray, meta) {
-    var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
 
-    /**
-      An array of snapshots
-      @private
-      @property _snapshots
-      @type {Array}
-    */
-    this._snapshots = null;
-    /**
-      An array of records
-      @private
-      @property _recordArray
-      @type {Array}
-    */
-    this._recordArray = recordArray;
+  var _createClass = function () {
+    function defineProperties(target, props) {
+      for (var i = 0; i < props.length; i++) {
+        var descriptor = props[i];
+        descriptor.enumerable = descriptor.enumerable || false;
+        descriptor.configurable = true;
+        if ("value" in descriptor) descriptor.writable = true;
+        Object.defineProperty(target, descriptor.key, descriptor);
+      }
+    }
 
-    /**
-      Number of records in the array
-       Example
-       ```app/adapters/post.js
-      import DS from 'ember-data'
-       export default DS.JSONAPIAdapter.extend({
-        shouldReloadAll(store, snapshotRecordArray) {
-          return !snapshotRecordArray.length;
-        },
-      });
-      ```
-       @property length
-      @type {Number}
-    */
-    this.length = recordArray.get('length');
+    return function (Constructor, protoProps, staticProps) {
+      if (protoProps) defineProperties(Constructor.prototype, protoProps);
+      if (staticProps) defineProperties(Constructor, staticProps);
+      return Constructor;
+    };
+  }();
+
+  var SnapshotRecordArray = function () {
+    function SnapshotRecordArray(recordArray, meta) {
+      var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+      /**
+        An array of snapshots
+        @private
+        @property _snapshots
+        @type {Array}
+      */
+      this._snapshots = null;
+
+      /**
+        An array of records
+        @private
+        @property _recordArray
+        @type {Array}
+      */
+      this._recordArray = recordArray;
+
+      /**
+        Number of records in the array
+         Example
+         ```app/adapters/post.js
+        import DS from 'ember-data'
+         export default DS.JSONAPIAdapter.extend({
+          shouldReloadAll(store, snapshotRecordArray) {
+            return !snapshotRecordArray.length;
+          },
+        });
+        ```
+         @property length
+        @type {Number}
+      */
+      this.length = recordArray.get('length');
+
+      this._type = null;
+
+      /**
+        Meta objects for the record array.
+         Example
+         ```app/adapters/post.js
+        import DS from 'ember-data'
+         export default DS.JSONAPIAdapter.extend({
+          shouldReloadAll(store, snapshotRecordArray) {
+            var lastRequestTime = snapshotRecordArray.meta.lastRequestTime;
+            var twentyMinutes = 20 * 60 * 1000;
+            return Date.now() > lastRequestTime + twentyMinutes;
+          },
+        });
+        ```
+         @property meta
+        @type {Object}
+      */
+      this.meta = meta;
+
+      /**
+        A hash of adapter options passed into the store method for this request.
+         Example
+         ```app/adapters/post.js
+        import MyCustomAdapter from './custom-adapter';
+         export default MyCustomAdapter.extend({
+          findAll(store, type, sinceToken, snapshotRecordArray) {
+            if (snapshotRecordArray.adapterOptions.subscribe) {
+              // ...
+            }
+            // ...
+          }
+        });
+        ```
+         @property adapterOptions
+        @type {Object}
+      */
+      this.adapterOptions = options.adapterOptions;
+
+      /**
+        The relationships to include for this request.
+         Example
+         ```app/adapters/application.js
+        import DS from 'ember-data';
+         export default DS.Adapter.extend({
+          findAll(store, type, snapshotRecordArray) {
+            var url = `/${type.modelName}?include=${encodeURIComponent(snapshotRecordArray.include)}`;
+             return fetch(url).then((response) => response.json())
+          }
+        });
+         @property include
+        @type {String|Array}
+      */
+      this.include = options.include;
+    }
 
     /**
       The type of the underlying records for the snapshots in the array, as a DS.Model
       @property type
       @type {DS.Model}
     */
-    this.type = recordArray.get('type');
 
-    /**
-      Meta objects for the record array.
-       Example
-       ```app/adapters/post.js
-      import DS from 'ember-data'
-       export default DS.JSONAPIAdapter.extend({
-        shouldReloadAll(store, snapshotRecordArray) {
-          var lastRequestTime = snapshotRecordArray.meta.lastRequestTime;
-          var twentyMinutes = 20 * 60 * 1000;
-          return Date.now() > lastRequestTime + twentyMinutes;
-        },
-      });
-      ```
-       @property meta
-      @type {Object}
-    */
-    this.meta = meta;
 
-    /**
-      A hash of adapter options passed into the store method for this request.
-       Example
-       ```app/adapters/post.js
-      import MyCustomAdapter from './custom-adapter';
-       export default MyCustomAdapter.extend({
-        findAll(store, type, sinceToken, snapshotRecordArray) {
-          if (snapshotRecordArray.adapterOptions.subscribe) {
-            // ...
-          }
-          // ...
-        }
-      });
-      ```
-       @property adapterOptions
-      @type {Object}
-    */
-    this.adapterOptions = options.adapterOptions;
-
-    /**
-      The relationships to include for this request.
-       Example
-       ```app/adapters/application.js
-      import DS from 'ember-data';
-       export default DS.Adapter.extend({
-        findAll(store, type, snapshotRecordArray) {
-          var url = `/${type.modelName}?include=${encodeURIComponent(snapshotRecordArray.include)}`;
-           return fetch(url).then((response) => response.json())
-        }
-      });
-       @property include
-      @type {String|Array}
-    */
-    this.include = options.include;
-  }
-
-  /**
-    Get snapshots of the underlying record array
-  
-    Example
-  
-    ```app/adapters/post.js
-    import DS from 'ember-data'
-  
-    export default DS.JSONAPIAdapter.extend({
-      shouldReloadAll(store, snapshotArray) {
-        var snapshots = snapshotArray.snapshots();
-  
-        return snapshots.any(function(ticketSnapshot) {
-          var timeDiff = moment().diff(ticketSnapshot.attr('lastAccessedAt'), 'minutes');
-          if (timeDiff > 20) {
-            return true;
-          } else {
-            return false;
-          }
-        });
+    SnapshotRecordArray.prototype.snapshots = function snapshots() {
+      if (this._snapshots !== null) {
+        return this._snapshots;
       }
-    });
-    ```
-  
-    @method snapshots
-    @return {Array} Array of snapshots
-  */
-  SnapshotRecordArray.prototype.snapshots = function () {
-    if (this._snapshots !== null) {
+
+      this._snapshots = this._recordArray._takeSnapshot();
+
       return this._snapshots;
-    }
+    };
 
-    this._snapshots = this._recordArray._takeSnapshot();
+    _createClass(SnapshotRecordArray, [{
+      key: 'type',
+      get: function () {
+        return this._type || (this._type = this._recordArray.get('type'));
+      }
+    }]);
 
-    return this._snapshots;
-  };
+    return SnapshotRecordArray;
+  }();
+
+  exports.default = SnapshotRecordArray;
 });
 define("ember-data/-private/system/snapshot", ["exports", "ember"], function (exports, _ember) {
   "use strict";
@@ -9076,6 +9077,24 @@ define("ember-data/-private/system/snapshot", ["exports", "ember"], function (ex
       throw new TypeError("Cannot call a class as a function");
     }
   }
+
+  var _createClass = function () {
+    function defineProperties(target, props) {
+      for (var i = 0; i < props.length; i++) {
+        var descriptor = props[i];
+        descriptor.enumerable = descriptor.enumerable || false;
+        descriptor.configurable = true;
+        if ("value" in descriptor) descriptor.writable = true;
+        Object.defineProperty(target, descriptor.key, descriptor);
+      }
+    }
+
+    return function (Constructor, protoProps, staticProps) {
+      if (protoProps) defineProperties(Constructor.prototype, protoProps);
+      if (staticProps) defineProperties(Constructor, staticProps);
+      return Constructor;
+    };
+  }();
 
   var get = _ember.default.get;
 
@@ -9130,16 +9149,6 @@ define("ember-data/-private/system/snapshot", ["exports", "ember"], function (ex
       this.include = options.include;
 
       /**
-       The type of the underlying record for this snapshot, as a DS.Model.
-        @property type
-       @type {DS.Model}
-       */
-      // TODO @runspired we should deprecate this in favor of modelClass but only once
-      // we've cleaned up the internals enough that a public change to follow suite is
-      // uncontroversial.
-      this.type = internalModel.modelClass;
-
-      /**
        The name of the type of the underlying record for this snapshot, as a string.
         @property modelName
        @type {String}
@@ -9150,17 +9159,9 @@ define("ember-data/-private/system/snapshot", ["exports", "ember"], function (ex
     }
 
     /**
-     Returns the value of an attribute.
-      Example
-      ```javascript
-     // store.push('post', { id: 1, author: 'Tomster', title: 'Ember.js rocks' });
-     postSnapshot.attr('author'); // => 'Tomster'
-     postSnapshot.attr('title'); // => 'Ember.js rocks'
-     ```
-      Note: Values are loaded eagerly and cached when the snapshot is created.
-      @method attr
-     @param {String} keyName
-     @return {Object} The attribute value or undefined
+     The type of the underlying record for this snapshot, as a DS.Model.
+      @property type
+     @type {DS.Model}
      */
 
 
@@ -9287,6 +9288,16 @@ define("ember-data/-private/system/snapshot", ["exports", "ember"], function (ex
     Snapshot.prototype.serialize = function serialize(options) {
       return this.record.store.serializerFor(this.modelName).serialize(this, options);
     };
+
+    _createClass(Snapshot, [{
+      key: "type",
+      get: function () {
+        // TODO @runspired we should deprecate this in favor of modelClass but only once
+        // we've cleaned up the internals enough that a public change to follow suite is
+        // uncontroversial.
+        return this._internalModel.modelClass;
+      }
+    }]);
 
     return Snapshot;
   }();
@@ -17368,7 +17379,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.14.0-canary+a00df6de09";
+  exports.default = "2.14.0-canary+357cd99a5a";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
