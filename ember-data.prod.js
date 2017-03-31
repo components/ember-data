@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.0-canary+357cd99a5a
+ * @version   2.14.0-canary+de59092fde
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -11890,13 +11890,13 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     var modelName = internalModel.modelName;
 
     var promise = adapter.findRecord(store, modelClass, id, snapshot);
-    var serializer = (0, _serializers.serializerForAdapter)(store, adapter, modelName);
     var label = "DS: Handle Adapter#findRecord of '" + modelName + "' with id: '" + id + "'";
 
     promise = Promise.resolve(promise, label);
     promise = (0, _common._guard)(promise, (0, _common._bind)(_common._objectIsAlive, store));
 
     return promise.then(function (adapterPayload) {
+      var serializer = (0, _serializers.serializerForAdapter)(store, adapter, modelName);
       var payload = (0, _serializerResponse.normalizeResponseHelper)(serializer, store, modelClass, adapterPayload, id, 'findRecord');
 
 
@@ -11915,7 +11915,6 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     var snapshots = _ember.default.A(internalModels).invoke('createSnapshot');
     var modelClass = store.modelFor(modelName); // `adapter.findMany` gets the modelClass still
     var promise = adapter.findMany(store, modelClass, ids, snapshots);
-    var serializer = (0, _serializers.serializerForAdapter)(store, adapter, modelName);
     var label = "DS: Handle Adapter#findMany of '" + modelName + "'";
 
     if (promise === undefined) {
@@ -11926,6 +11925,7 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     promise = (0, _common._guard)(promise, (0, _common._bind)(_common._objectIsAlive, store));
 
     return promise.then(function (adapterPayload) {
+      var serializer = (0, _serializers.serializerForAdapter)(store, adapter, modelName);
       var payload = (0, _serializerResponse.normalizeResponseHelper)(serializer, store, modelClass, adapterPayload, null, 'findMany');
       return store._push(payload);
     }, null, "DS: Extract payload of " + modelName);
@@ -11935,7 +11935,6 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     var snapshot = internalModel.createSnapshot();
     var modelClass = store.modelFor(relationship.type);
     var promise = adapter.findHasMany(store, snapshot, link, relationship);
-    var serializer = (0, _serializers.serializerForAdapter)(store, adapter, relationship.type);
     var label = "DS: Handle Adapter#findHasMany of '" + internalModel.modelName + "' : '" + relationship.type + "'";
 
     promise = Promise.resolve(promise, label);
@@ -11943,6 +11942,7 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     promise = (0, _common._guard)(promise, (0, _common._bind)(_common._objectIsAlive, internalModel));
 
     return promise.then(function (adapterPayload) {
+      var serializer = (0, _serializers.serializerForAdapter)(store, adapter, relationship.type);
       var payload = (0, _serializerResponse.normalizeResponseHelper)(serializer, store, modelClass, adapterPayload, null, 'findHasMany');
       var internalModelArray = store._push(payload);
 
@@ -11955,7 +11955,6 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     var snapshot = internalModel.createSnapshot();
     var modelClass = store.modelFor(relationship.type);
     var promise = adapter.findBelongsTo(store, snapshot, link, relationship);
-    var serializer = (0, _serializers.serializerForAdapter)(store, adapter, relationship.type);
     var label = "DS: Handle Adapter#findBelongsTo of " + internalModel.modelName + " : " + relationship.type;
 
     promise = Promise.resolve(promise, label);
@@ -11963,6 +11962,7 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     promise = (0, _common._guard)(promise, (0, _common._bind)(_common._objectIsAlive, internalModel));
 
     return promise.then(function (adapterPayload) {
+      var serializer = (0, _serializers.serializerForAdapter)(store, adapter, relationship.type);
       var payload = (0, _serializerResponse.normalizeResponseHelper)(serializer, store, modelClass, adapterPayload, null, 'findBelongsTo');
 
       if (!payload.data) {
@@ -11978,13 +11978,13 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     var recordArray = store.peekAll(modelName);
     var snapshotArray = recordArray._createSnapshot(options);
     var promise = adapter.findAll(store, modelClass, sinceToken, snapshotArray);
-    var serializer = (0, _serializers.serializerForAdapter)(store, adapter, modelName);
     var label = "DS: Handle Adapter#findAll of " + modelClass;
 
     promise = Promise.resolve(promise, label);
     promise = (0, _common._guard)(promise, (0, _common._bind)(_common._objectIsAlive, store));
 
     return promise.then(function (adapterPayload) {
+      var serializer = (0, _serializers.serializerForAdapter)(store, adapter, modelName);
       var payload = (0, _serializerResponse.normalizeResponseHelper)(serializer, store, modelClass, adapterPayload, null, 'findAll');
 
       store._push(payload);
@@ -11998,14 +11998,14 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
     var modelClass = store.modelFor(modelName); // adapter.query needs the class
     var promise = adapter.query(store, modelClass, query, recordArray);
 
-    var serializer = (0, _serializers.serializerForAdapter)(store, adapter, modelName);
-
     var label = "DS: Handle Adapter#query of " + modelClass;
 
     promise = Promise.resolve(promise, label);
     promise = (0, _common._guard)(promise, (0, _common._bind)(_common._objectIsAlive, store));
 
     return promise.then(function (adapterPayload) {
+      var serializer = (0, _serializers.serializerForAdapter)(store, adapter, modelName);
+
       var payload = (0, _serializerResponse.normalizeResponseHelper)(serializer, store, modelClass, adapterPayload, null, 'query');
 
       var internalModels = store._push(payload);
@@ -12019,13 +12019,13 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
   function _queryRecord(adapter, store, modelName, query) {
     var modelClass = store.modelFor(modelName); // adapter.queryRecord needs the class
     var promise = adapter.queryRecord(store, modelClass, query);
-    var serializer = (0, _serializers.serializerForAdapter)(store, adapter, modelName);
     var label = "DS: Handle Adapter#queryRecord of " + modelName;
 
     promise = Promise.resolve(promise, label);
     promise = (0, _common._guard)(promise, (0, _common._bind)(_common._objectIsAlive, store));
 
     return promise.then(function (adapterPayload) {
+      var serializer = (0, _serializers.serializerForAdapter)(store, adapter, modelName);
       var payload = (0, _serializerResponse.normalizeResponseHelper)(serializer, store, modelClass, adapterPayload, null, 'queryRecord');
 
       return store._push(payload);
@@ -17379,7 +17379,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.14.0-canary+357cd99a5a";
+  exports.default = "2.14.0-canary+de59092fde";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
