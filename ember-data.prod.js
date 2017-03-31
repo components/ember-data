@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.0-canary+551e39a1ce
+ * @version   2.14.0-canary+ab35b2d31d
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -8430,6 +8430,10 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
 
     ManyRelationship.prototype.setInitialInternalModels = function setInitialInternalModels(internalModels) {
       var _this2 = this;
+
+      if (!internalModels) {
+        return;
+      }
 
       var args = [0, this.canonicalState.length].concat(internalModels);
       this.canonicalState.splice.apply(this.canonicalState, args);
@@ -17362,7 +17366,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.14.0-canary+551e39a1ce";
+  exports.default = "2.14.0-canary+ab35b2d31d";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
