@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.0-canary+de59092fde
+ * @version   2.14.0-canary+b03427f07c
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -1695,16 +1695,16 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
       this.flushCanonical(false);
     },
     objectAt: function (index) {
-      var object = this.currentState[index];
+      var internalModel = this.currentState[index];
       //Ember observers such as 'firstObject', 'lastObject' might do out of bounds accesses
-      if (object === undefined) {
+      if (internalModel === undefined) {
         (0, _debug.warn)("ManyArray#objectAt(index) return undefined for index '" + index + "'. See https://github.com/emberjs/data/issues/4758", false, {
           id: 'ds.many-array.object-at-undefined'
         });
         return;
       }
 
-      return object.getRecord();
+      return internalModel.getRecord();
     },
     flushCanonical: function () {
       var isInitialized = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
@@ -1718,8 +1718,8 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
       //a hack for not removing new records
       //TODO remove once we have proper diffing
       var newInternalModels = this.currentState.filter(
-      // only add new records which are not yet in the canonical state of this
-      // relationship (a new record can be in the canonical state if it has
+      // only add new internalModels which are not yet in the canonical state of this
+      // relationship (a new internalModel can be in the canonical state if it has
       // been 'acknowleged' to be in the relationship via a store.push)
       function (internalModel) {
         return internalModel.isNew() && toSet.indexOf(internalModel) === -1;
@@ -1755,26 +1755,26 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
 
 
     //TODO(Igor) optimize
-    internalRemoveInternalModels: function (records) {
-      for (var i = 0; i < records.length; i++) {
-        var index = this.currentState.indexOf(records[i]);
+    _removeInternalModels: function (internalModels) {
+      for (var i = 0; i < internalModels.length; i++) {
+        var index = this.currentState.indexOf(internalModels[i]);
         this.internalReplace(index, 1);
       }
     },
 
 
     //TODO(Igor) optimize
-    internalAddInternalModels: function (records, idx) {
+    _addInternalModels: function (internalModels, idx) {
       if (idx === undefined) {
         idx = this.currentState.length;
       }
-      this.internalReplace(idx, 0, records);
+      this.internalReplace(idx, 0, internalModels);
     },
     replace: function (idx, amt, objects) {
-      var records = void 0;
+      var internalModels = void 0;
       if (amt > 0) {
-        records = this.currentState.slice(idx, idx + amt);
-        this.get('relationship').removeInternalModels(records);
+        internalModels = this.currentState.slice(idx, idx + amt);
+        this.get('relationship').removeInternalModels(internalModels);
       }
       if (objects) {
         this.get('relationship').addInternalModels(objects.map(function (obj) {
@@ -2992,15 +2992,15 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
 
       //We use the pathway of setting the hasMany as if it came from the adapter
       //because the user told us that they know this relationships exists already
-      this._relationships.get(key).updateRecordsFromAdapter(recordsToSet);
+      this._relationships.get(key).updateInternalModelsFromAdapter(recordsToSet);
     };
 
     InternalModel.prototype._preloadBelongsTo = function _preloadBelongsTo(key, preloadValue, modelClass) {
-      var recordToSet = this._convertStringOrNumberIntoInternalModel(preloadValue, modelClass);
+      var internalModelToSet = this._convertStringOrNumberIntoInternalModel(preloadValue, modelClass);
 
       //We use the pathway of setting the hasMany as if it came from the adapter
       //because the user told us that they know this relationships exists already
-      this._relationships.get(key).setRecord(recordToSet);
+      this._relationships.get(key).setInternalModel(internalModelToSet);
     };
 
     InternalModel.prototype._convertStringOrNumberIntoInternalModel = function _convertStringOrNumberIntoInternalModel(value, modelClass) {
@@ -6190,8 +6190,8 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
      @return {String} The id of the record in this belongsTo relationship.
   */
   BelongsToReference.prototype.id = function () {
-    var inverseRecord = this.belongsToRelationship.inverseRecord;
-    return inverseRecord && inverseRecord.id;
+    var inverseInternalModel = this.belongsToRelationship.inverseInternalModel;
+    return inverseInternalModel && inverseInternalModel.id;
   };
 
   /**
@@ -6340,7 +6340,7 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
 
       (0, _debug.assertPolymorphicType)(_this.internalModel, _this.belongsToRelationship.relationshipMeta, record._internalModel);
 
-      _this.belongsToRelationship.setCanonicalRecord(record._internalModel);
+      _this.belongsToRelationship.setCanonicalInternalModel(record._internalModel);
 
       return record;
     });
@@ -6395,10 +6395,10 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
      @return {DS.Model} the record in this relationship
   */
   BelongsToReference.prototype.value = function () {
-    var inverseRecord = this.belongsToRelationship.inverseRecord;
+    var inverseInternalModel = this.belongsToRelationship.inverseInternalModel;
 
-    if (inverseRecord && inverseRecord.isLoaded()) {
-      return inverseRecord.getRecord();
+    if (inverseInternalModel && inverseInternalModel.isLoaded()) {
+      return inverseInternalModel.getRecord();
     }
 
     return null;
@@ -7285,9 +7285,9 @@ define("ember-data/-private/system/relationships/belongs-to", ["exports", "ember
         if (value && value.then) {
           this._internalModel._relationships.get(key).setRecordPromise(value);
         } else if (value) {
-          this._internalModel._relationships.get(key).setRecord(value._internalModel);
+          this._internalModel._relationships.get(key).setInternalModel(value._internalModel);
         } else {
-          this._internalModel._relationships.get(key).setRecord(value);
+          this._internalModel._relationships.get(key).setInternalModel(value);
         }
 
         return this._internalModel._relationships.get(key).getRecord();
@@ -8072,55 +8072,55 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
 
       _this.internalModel = internalModel;
       _this.key = relationshipMeta.key;
-      _this.inverseRecord = null;
+      _this.inverseInternalModel = null;
       _this.canonicalState = null;
       return _this;
     }
 
-    BelongsToRelationship.prototype.setRecord = function setRecord(newRecord) {
-      if (newRecord) {
-        this.addRecord(newRecord);
-      } else if (this.inverseRecord) {
-        this.removeRecord(this.inverseRecord);
+    BelongsToRelationship.prototype.setInternalModel = function setInternalModel(internalModel) {
+      if (internalModel) {
+        this.addInternalModel(internalModel);
+      } else if (this.inverseInternalModel) {
+        this.removeInternalModel(this.inverseInternalModel);
       }
       this.setHasData(true);
       this.setHasLoaded(true);
     };
 
-    BelongsToRelationship.prototype.setCanonicalRecord = function setCanonicalRecord(newRecord) {
-      if (newRecord) {
-        this.addCanonicalRecord(newRecord);
+    BelongsToRelationship.prototype.setCanonicalInternalModel = function setCanonicalInternalModel(internalModel) {
+      if (internalModel) {
+        this.addCanonicalInternalModel(internalModel);
       } else if (this.canonicalState) {
-        this.removeCanonicalRecord(this.canonicalState);
+        this.removeCanonicalInternalModel(this.canonicalState);
       }
       this.flushCanonicalLater();
     };
 
-    BelongsToRelationship.prototype.setInitialCanonicalRecord = function setInitialCanonicalRecord(record) {
-      if (!record) {
+    BelongsToRelationship.prototype.setInitialCanonicalInternalModel = function setInitialCanonicalInternalModel(internalModel) {
+      if (!internalModel) {
         return;
       }
 
       // When we initialize a belongsTo relationship, we want to avoid work like
       // notifying our internalModel that we've "changed" and excessive thrash on
       // setting up inverse relationships
-      this.canonicalMembers.add(record);
-      this.members.add(record);
-      this.inverseRecord = this.canonicalState = record;
-      this.setupInverseRelationship(record);
+      this.canonicalMembers.add(internalModel);
+      this.members.add(internalModel);
+      this.inverseInternalModel = this.canonicalState = internalModel;
+      this.setupInverseRelationship(internalModel);
     };
 
-    BelongsToRelationship.prototype.addCanonicalRecord = function addCanonicalRecord(newRecord) {
-      if (this.canonicalMembers.has(newRecord)) {
+    BelongsToRelationship.prototype.addCanonicalInternalModel = function addCanonicalInternalModel(internalModel) {
+      if (this.canonicalMembers.has(internalModel)) {
         return;
       }
 
       if (this.canonicalState) {
-        this.removeCanonicalRecord(this.canonicalState);
+        this.removeCanonicalInternalModel(this.canonicalState);
       }
 
-      this.canonicalState = newRecord;
-      _Relationship.prototype.addCanonicalRecord.call(this, newRecord);
+      this.canonicalState = internalModel;
+      _Relationship.prototype.addCanonicalInternalModel.call(this, internalModel);
     };
 
     BelongsToRelationship.prototype.inverseDidDematerialize = function inverseDidDematerialize() {
@@ -8130,45 +8130,45 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
     BelongsToRelationship.prototype.flushCanonical = function flushCanonical() {
       //temporary fix to not remove newly created records if server returned null.
       //TODO remove once we have proper diffing
-      if (this.inverseRecord && this.inverseRecord.isNew() && !this.canonicalState) {
+      if (this.inverseInternalModel && this.inverseInternalModel.isNew() && !this.canonicalState) {
         return;
       }
-      if (this.inverseRecord !== this.canonicalState) {
-        this.inverseRecord = this.canonicalState;
+      if (this.inverseInternalModel !== this.canonicalState) {
+        this.inverseInternalModel = this.canonicalState;
         this.notifyBelongsToChanged();
       }
 
       _Relationship.prototype.flushCanonical.call(this);
     };
 
-    BelongsToRelationship.prototype.addRecord = function addRecord(newRecord) {
-      if (this.members.has(newRecord)) {
+    BelongsToRelationship.prototype.addInternalModel = function addInternalModel(internalModel) {
+      if (this.members.has(internalModel)) {
         return;
       }
 
-      (0, _debug.assertPolymorphicType)(this.internalModel, this.relationshipMeta, newRecord);
+      (0, _debug.assertPolymorphicType)(this.internalModel, this.relationshipMeta, internalModel);
 
-      if (this.inverseRecord) {
-        this.removeRecord(this.inverseRecord);
+      if (this.inverseInternalModel) {
+        this.removeInternalModel(this.inverseInternalModel);
       }
 
-      this.inverseRecord = newRecord;
-      _Relationship.prototype.addRecord.call(this, newRecord);
+      this.inverseInternalModel = internalModel;
+      _Relationship.prototype.addInternalModel.call(this, internalModel);
       this.notifyBelongsToChanged();
     };
 
     BelongsToRelationship.prototype.setRecordPromise = function setRecordPromise(newPromise) {
       var content = newPromise.get && newPromise.get('content');
       (0, _debug.assert)("You passed in a promise that did not originate from an EmberData relationship. You can only pass promises that come from a belongsTo or hasMany relationship to the get call.", content !== undefined);
-      this.setRecord(content ? content._internalModel : content);
+      this.setInternalModel(content ? content._internalModel : content);
     };
 
-    BelongsToRelationship.prototype.removeRecordFromOwn = function removeRecordFromOwn(record) {
-      if (!this.members.has(record)) {
+    BelongsToRelationship.prototype.removeInternalModelFromOwn = function removeInternalModelFromOwn(internalModel) {
+      if (!this.members.has(internalModel)) {
         return;
       }
-      this.inverseRecord = null;
-      _Relationship.prototype.removeRecordFromOwn.call(this, record);
+      this.inverseInternalModel = null;
+      _Relationship.prototype.removeInternalModelFromOwn.call(this, internalModel);
       this.notifyBelongsToChanged();
     };
 
@@ -8176,17 +8176,17 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
       this.internalModel.notifyBelongsToChanged(this.key);
     };
 
-    BelongsToRelationship.prototype.removeCanonicalRecordFromOwn = function removeCanonicalRecordFromOwn(record) {
-      if (!this.canonicalMembers.has(record)) {
+    BelongsToRelationship.prototype.removeCanonicalInternalModelFromOwn = function removeCanonicalInternalModelFromOwn(internalModel) {
+      if (!this.canonicalMembers.has(internalModel)) {
         return;
       }
       this.canonicalState = null;
-      _Relationship.prototype.removeCanonicalRecordFromOwn.call(this, record);
+      _Relationship.prototype.removeCanonicalInternalModelFromOwn.call(this, internalModel);
     };
 
     BelongsToRelationship.prototype.findRecord = function findRecord() {
-      if (this.inverseRecord) {
-        return this.store._findByInternalModel(this.inverseRecord);
+      if (this.inverseInternalModel) {
+        return this.store._findByInternalModel(this.inverseInternalModel);
       } else {
         return _ember.default.RSVP.Promise.resolve(null);
       }
@@ -8195,11 +8195,11 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
     BelongsToRelationship.prototype.fetchLink = function fetchLink() {
       var _this2 = this;
 
-      return this.store.findBelongsTo(this.internalModel, this.link, this.relationshipMeta).then(function (record) {
-        if (record) {
-          _this2.addRecord(record);
+      return this.store.findBelongsTo(this.internalModel, this.link, this.relationshipMeta).then(function (internalModel) {
+        if (internalModel) {
+          _this2.addInternalModel(internalModel);
         }
-        return record;
+        return internalModel;
       });
     };
 
@@ -8223,13 +8223,13 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
 
         return _promiseProxies.PromiseObject.create({
           promise: promise,
-          content: this.inverseRecord ? this.inverseRecord.getRecord() : null
+          content: this.inverseInternalModel ? this.inverseInternalModel.getRecord() : null
         });
       } else {
-        if (this.inverseRecord === null) {
+        if (this.inverseInternalModel === null) {
           return null;
         }
-        var toReturn = this.inverseRecord.getRecord();
+        var toReturn = this.inverseInternalModel.getRecord();
         (0, _debug.assert)("You looked up the '" + this.key + "' relationship on a '" + this.internalModel.modelName + "' with id " + this.internalModel.id + " but some of the associated records were not loaded. Either make sure they are all loaded together with the parent record, or specify that the relationship is async (`DS.belongsTo({ async: true })`)", toReturn === null || !toReturn.get('isEmpty'));
         return toReturn;
       }
@@ -8243,8 +8243,8 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
       }
 
       // reload record, if it is already loaded
-      if (this.inverseRecord && this.inverseRecord.hasRecord) {
-        return this.inverseRecord.getRecord().reload();
+      if (this.inverseInternalModel && this.inverseInternalModel.hasRecord) {
+        return this.inverseInternalModel.getRecord().reload();
       }
 
       return this.findRecord();
@@ -8253,9 +8253,9 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
     BelongsToRelationship.prototype.updateData = function updateData(data, initial) {
       var internalModel = this.store._pushResourceIdentifier(this, data);
       if (initial) {
-        this.setInitialCanonicalRecord(internalModel);
+        this.setInitialCanonicalInternalModel(internalModel);
       } else {
-        this.setCanonicalRecord(internalModel);
+        this.setCanonicalInternalModel(internalModel);
       }
     };
 
@@ -8432,10 +8432,10 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
   var ManyRelationship = function (_Relationship) {
     _inherits(ManyRelationship, _Relationship);
 
-    function ManyRelationship(store, record, inverseKey, relationshipMeta) {
+    function ManyRelationship(store, internalModel, inverseKey, relationshipMeta) {
       _classCallCheck(this, ManyRelationship);
 
-      var _this = _possibleConstructorReturn(this, _Relationship.call(this, store, record, inverseKey, relationshipMeta));
+      var _this = _possibleConstructorReturn(this, _Relationship.call(this, store, internalModel, inverseKey, relationshipMeta));
 
       _this.belongsToType = relationshipMeta.type;
       _this.canonicalState = [];
@@ -8480,16 +8480,16 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
       }
     };
 
-    ManyRelationship.prototype.addCanonicalRecord = function addCanonicalRecord(record, idx) {
-      if (this.canonicalMembers.has(record)) {
+    ManyRelationship.prototype.addCanonicalInternalModel = function addCanonicalInternalModel(internalModel, idx) {
+      if (this.canonicalMembers.has(internalModel)) {
         return;
       }
       if (idx !== undefined) {
-        this.canonicalState.splice(idx, 0, record);
+        this.canonicalState.splice(idx, 0, internalModel);
       } else {
-        this.canonicalState.push(record);
+        this.canonicalState.push(internalModel);
       }
-      _Relationship.prototype.addCanonicalRecord.call(this, record, idx);
+      _Relationship.prototype.addCanonicalInternalModel.call(this, internalModel, idx);
     };
 
     ManyRelationship.prototype.inverseDidDematerialize = function inverseDidDematerialize() {
@@ -8500,29 +8500,29 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
       this.notifyHasManyChanged();
     };
 
-    ManyRelationship.prototype.addRecord = function addRecord(record, idx) {
-      if (this.members.has(record)) {
+    ManyRelationship.prototype.addInternalModel = function addInternalModel(internalModel, idx) {
+      if (this.members.has(internalModel)) {
         return;
       }
 
-      (0, _debug.assertPolymorphicType)(this.record, this.relationshipMeta, record);
-      _Relationship.prototype.addRecord.call(this, record, idx);
+      (0, _debug.assertPolymorphicType)(this.internalModel, this.relationshipMeta, internalModel);
+      _Relationship.prototype.addInternalModel.call(this, internalModel, idx);
       // make lazy later
-      this.manyArray.internalAddInternalModels([record], idx);
+      this.manyArray._addInternalModels([internalModel], idx);
     };
 
-    ManyRelationship.prototype.removeCanonicalRecordFromOwn = function removeCanonicalRecordFromOwn(record, idx) {
+    ManyRelationship.prototype.removeCanonicalInternalModelFromOwn = function removeCanonicalInternalModelFromOwn(internalModel, idx) {
       var i = idx;
-      if (!this.canonicalMembers.has(record)) {
+      if (!this.canonicalMembers.has(internalModel)) {
         return;
       }
       if (i === undefined) {
-        i = this.canonicalState.indexOf(record);
+        i = this.canonicalState.indexOf(internalModel);
       }
       if (i > -1) {
         this.canonicalState.splice(i, 1);
       }
-      _Relationship.prototype.removeCanonicalRecordFromOwn.call(this, record, idx);
+      _Relationship.prototype.removeCanonicalInternalModelFromOwn.call(this, internalModel, idx);
     };
 
     ManyRelationship.prototype.flushCanonical = function flushCanonical() {
@@ -8532,22 +8532,22 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
       _Relationship.prototype.flushCanonical.call(this);
     };
 
-    ManyRelationship.prototype.removeRecordFromOwn = function removeRecordFromOwn(record, idx) {
-      if (!this.members.has(record)) {
+    ManyRelationship.prototype.removeInternalModelFromOwn = function removeInternalModelFromOwn(internalModel, idx) {
+      if (!this.members.has(internalModel)) {
         return;
       }
-      _Relationship.prototype.removeRecordFromOwn.call(this, record, idx);
+      _Relationship.prototype.removeInternalModelFromOwn.call(this, internalModel, idx);
       var manyArray = this.manyArray;
       if (idx !== undefined) {
         //TODO(Igor) not used currently, fix
         manyArray.currentState.removeAt(idx);
       } else {
-        manyArray.internalRemoveInternalModels([record]);
+        manyArray._removeInternalModels([internalModel]);
       }
     };
 
-    ManyRelationship.prototype.notifyRecordRelationshipAdded = function notifyRecordRelationshipAdded(record, idx) {
-      this.record.notifyHasManyAdded(this.key, record, idx);
+    ManyRelationship.prototype.notifyRecordRelationshipAdded = function notifyRecordRelationshipAdded(internalModel, idx) {
+      this.internalModel.notifyHasManyAdded(this.key, internalModel, idx);
     };
 
     ManyRelationship.prototype.reload = function reload() {
@@ -8577,26 +8577,26 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
     };
 
     ManyRelationship.prototype.computeChanges = function computeChanges() {
-      var records = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+      var internalModels = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
 
       var members = this.canonicalMembers;
-      var recordsToRemove = [];
-      var recordSet = setForArray(records);
+      var internalModelsToRemove = [];
+      var internalModelSet = setForArray(internalModels);
 
       members.forEach(function (member) {
-        if (recordSet.has(member)) {
+        if (internalModelSet.has(member)) {
           return;
         }
 
-        recordsToRemove.push(member);
+        internalModelsToRemove.push(member);
       });
 
-      this.removeCanonicalRecords(recordsToRemove);
+      this.removeCanonicalInternalModels(internalModelsToRemove);
 
-      for (var i = 0, l = records.length; i < l; i++) {
-        var record = records[i];
-        this.removeCanonicalRecord(record);
-        this.addCanonicalRecord(record, i);
+      for (var i = 0, l = internalModels.length; i < l; i++) {
+        var internalModel = internalModels[i];
+        this.removeCanonicalInternalModel(internalModel);
+        this.addCanonicalInternalModel(internalModel, i);
       }
     };
 
@@ -8619,12 +8619,12 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
     ManyRelationship.prototype.fetchLink = function fetchLink() {
       var _this3 = this;
 
-      return this.store.findHasMany(this.record, this.link, this.relationshipMeta).then(function (records) {
+      return this.store.findHasMany(this.internalModel, this.link, this.relationshipMeta).then(function (records) {
         if (records.hasOwnProperty('meta')) {
           _this3.updateMeta(records.meta);
         }
         _this3.store._backburner.join(function () {
-          _this3.updateRecordsFromAdapter(records);
+          _this3.updateInternalModelsFromAdapter(records);
           _this3.manyArray.set('isLoaded', true);
         });
         return _this3.manyArray;
@@ -8646,7 +8646,7 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
     };
 
     ManyRelationship.prototype.notifyHasManyChanged = function notifyHasManyChanged() {
-      this.record.notifyHasManyAdded(this.key);
+      this.internalModel.notifyHasManyAdded(this.key);
     };
 
     ManyRelationship.prototype.getRecords = function getRecords() {
@@ -8669,7 +8669,7 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
         }
         return this._updateLoadingPromise(promise, manyArray);
       } else {
-        (0, _debug.assert)('You looked up the \'' + this.key + '\' relationship on a \'' + this.record.type.modelName + '\' with id ' + this.record.id + ' but some of the associated records were not loaded. Either make sure they are all loaded together with the parent record, or specify that the relationship is async (\'DS.hasMany({ async: true })\')', manyArray.isEvery('isEmpty', false));
+        (0, _debug.assert)('You looked up the \'' + this.key + '\' relationship on a \'' + this.internalModel.type.modelName + '\' with id ' + this.internalModel.id + ' but some of the associated records were not loaded. Either make sure they are all loaded together with the parent record, or specify that the relationship is async (\'DS.hasMany({ async: true })\')', manyArray.isEvery('isEmpty', false));
 
         //TODO(Igor) WTF DO I DO HERE?
         // TODO @runspired equal WTFs to Igor
@@ -8685,7 +8685,7 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
       if (initial) {
         this.setInitialInternalModels(internalModels);
       } else {
-        this.updateRecordsFromAdapter(internalModels);
+        this.updateInternalModelsFromAdapter(internalModels);
       }
     };
 
@@ -8703,7 +8703,7 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
             store: this.store,
             relationship: this,
             type: this.store.modelFor(this.belongsToType),
-            record: this.record,
+            record: this.internalModel,
             meta: this.meta,
             isPolymorphic: this.isPolymorphic
           });
@@ -8783,9 +8783,6 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
       this.hasLoaded = false;
     }
 
-    // TODO @runspired deprecate this as it was never truly a record instance
-
-
     Relationship.prototype.removeInverseRelationships = function removeInverseRelationships() {
       var _this = this;
 
@@ -8815,13 +8812,13 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
       var members = this.members.list;
       while (members.length > 0) {
         var member = members[0];
-        this.removeRecord(member);
+        this.removeInternalModel(member);
       }
 
       var canonicalMembers = this.canonicalMembers.list;
       while (canonicalMembers.length > 0) {
         var _member = canonicalMembers[0];
-        this.removeCanonicalRecord(_member);
+        this.removeCanonicalInternalModel(_member);
       }
     };
 
@@ -8829,7 +8826,7 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
       var _this2 = this;
 
       internalModels.forEach(function (internalModel) {
-        return _this2.removeRecord(internalModel);
+        return _this2.removeInternalModel(internalModel);
       });
     };
 
@@ -8837,27 +8834,27 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
       var _this3 = this;
 
       internalModels.forEach(function (internalModel) {
-        _this3.addRecord(internalModel, idx);
+        _this3.addInternalModel(internalModel, idx);
         if (idx !== undefined) {
           idx++;
         }
       });
     };
 
-    Relationship.prototype.addCanonicalRecords = function addCanonicalRecords(records, idx) {
-      for (var i = 0; i < records.length; i++) {
+    Relationship.prototype.addCanonicalInternalModels = function addCanonicalInternalModels(internalModels, idx) {
+      for (var i = 0; i < internalModels.length; i++) {
         if (idx !== undefined) {
-          this.addCanonicalRecord(records[i], i + idx);
+          this.addCanonicalInternalModel(internalModels[i], i + idx);
         } else {
-          this.addCanonicalRecord(records[i]);
+          this.addCanonicalInternalModel(internalModels[i]);
         }
       }
     };
 
-    Relationship.prototype.addCanonicalRecord = function addCanonicalRecord(record, idx) {
-      if (!this.canonicalMembers.has(record)) {
-        this.canonicalMembers.add(record);
-        this.setupInverseRelationship(record);
+    Relationship.prototype.addCanonicalInternalModel = function addCanonicalInternalModel(internalModel, idx) {
+      if (!this.canonicalMembers.has(internalModel)) {
+        this.canonicalMembers.add(internalModel);
+        this.setupInverseRelationship(internalModel);
       }
       this.flushCanonicalLater();
       this.setHasData(true);
@@ -8874,7 +8871,7 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
           // unnecessary work.  The exception to this is polymorphic
           // relationships whose members are determined by their inverse, as those
           // relationships cannot efficiently find their inverse payloads.
-          relationship.addCanonicalRecord(this.internalModel);
+          relationship.addCanonicalInternalModel(this.internalModel);
         }
       } else {
         var _relationships = internalModel._implicitRelationships;
@@ -8882,107 +8879,107 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
         if (!_relationship) {
           _relationship = _relationships[this.inverseKeyForImplicit] = new Relationship(this.store, internalModel, this.key, { options: {} });
         }
-        _relationship.addCanonicalRecord(this.internalModel);
+        _relationship.addCanonicalInternalModel(this.internalModel);
       }
     };
 
-    Relationship.prototype.removeCanonicalRecords = function removeCanonicalRecords(records, idx) {
-      for (var i = 0; i < records.length; i++) {
+    Relationship.prototype.removeCanonicalInternalModels = function removeCanonicalInternalModels(internalModels, idx) {
+      for (var i = 0; i < internalModels.length; i++) {
         if (idx !== undefined) {
-          this.removeCanonicalRecord(records[i], i + idx);
+          this.removeCanonicalInternalModel(internalModels[i], i + idx);
         } else {
-          this.removeCanonicalRecord(records[i]);
+          this.removeCanonicalInternalModel(internalModels[i]);
         }
       }
     };
 
-    Relationship.prototype.removeCanonicalRecord = function removeCanonicalRecord(record, idx) {
-      if (this.canonicalMembers.has(record)) {
-        this.removeCanonicalRecordFromOwn(record);
+    Relationship.prototype.removeCanonicalInternalModel = function removeCanonicalInternalModel(internalModel, idx) {
+      if (this.canonicalMembers.has(internalModel)) {
+        this.removeCanonicalInternalModelFromOwn(internalModel);
         if (this.inverseKey) {
-          this.removeCanonicalRecordFromInverse(record);
+          this.removeCanonicalInternalModelFromInverse(internalModel);
         } else {
-          if (record._implicitRelationships[this.inverseKeyForImplicit]) {
-            record._implicitRelationships[this.inverseKeyForImplicit].removeCanonicalRecord(this.record);
+          if (internalModel._implicitRelationships[this.inverseKeyForImplicit]) {
+            internalModel._implicitRelationships[this.inverseKeyForImplicit].removeCanonicalInternalModel(this.internalModel);
           }
         }
       }
       this.flushCanonicalLater();
     };
 
-    Relationship.prototype.addRecord = function addRecord(record, idx) {
-      if (!this.members.has(record)) {
-        this.members.addWithIndex(record, idx);
-        this.notifyRecordRelationshipAdded(record, idx);
+    Relationship.prototype.addInternalModel = function addInternalModel(internalModel, idx) {
+      if (!this.members.has(internalModel)) {
+        this.members.addWithIndex(internalModel, idx);
+        this.notifyRecordRelationshipAdded(internalModel, idx);
         if (this.inverseKey) {
-          record._relationships.get(this.inverseKey).addRecord(this.record);
+          internalModel._relationships.get(this.inverseKey).addInternalModel(this.internalModel);
         } else {
-          if (!record._implicitRelationships[this.inverseKeyForImplicit]) {
-            record._implicitRelationships[this.inverseKeyForImplicit] = new Relationship(this.store, record, this.key, { options: {} });
+          if (!internalModel._implicitRelationships[this.inverseKeyForImplicit]) {
+            internalModel._implicitRelationships[this.inverseKeyForImplicit] = new Relationship(this.store, internalModel, this.key, { options: {} });
           }
-          record._implicitRelationships[this.inverseKeyForImplicit].addRecord(this.record);
+          internalModel._implicitRelationships[this.inverseKeyForImplicit].addInternalModel(this.internalModel);
         }
-        this.record.updateRecordArrays();
+        this.internalModel.updateRecordArrays();
       }
       this.setHasData(true);
     };
 
-    Relationship.prototype.removeRecord = function removeRecord(record) {
-      if (this.members.has(record)) {
-        this.removeRecordFromOwn(record);
+    Relationship.prototype.removeInternalModel = function removeInternalModel(internalModel) {
+      if (this.members.has(internalModel)) {
+        this.removeInternalModelFromOwn(internalModel);
         if (this.inverseKey) {
-          this.removeRecordFromInverse(record);
+          this.removeInternalModelFromInverse(internalModel);
         } else {
-          if (record._implicitRelationships[this.inverseKeyForImplicit]) {
-            record._implicitRelationships[this.inverseKeyForImplicit].removeRecord(this.record);
+          if (internalModel._implicitRelationships[this.inverseKeyForImplicit]) {
+            internalModel._implicitRelationships[this.inverseKeyForImplicit].removeInternalModel(this.internalModel);
           }
         }
       }
     };
 
-    Relationship.prototype.removeRecordFromInverse = function removeRecordFromInverse(record) {
-      var inverseRelationship = record._relationships.get(this.inverseKey);
+    Relationship.prototype.removeInternalModelFromInverse = function removeInternalModelFromInverse(internalModel) {
+      var inverseRelationship = internalModel._relationships.get(this.inverseKey);
       //Need to check for existence, as the record might unloading at the moment
       if (inverseRelationship) {
-        inverseRelationship.removeRecordFromOwn(this.record);
+        inverseRelationship.removeInternalModelFromOwn(this.internalModel);
       }
     };
 
-    Relationship.prototype.removeRecordFromOwn = function removeRecordFromOwn(record) {
-      this.members.delete(record);
-      this.notifyRecordRelationshipRemoved(record);
-      this.record.updateRecordArrays();
+    Relationship.prototype.removeInternalModelFromOwn = function removeInternalModelFromOwn(internalModel) {
+      this.members.delete(internalModel);
+      this.notifyRecordRelationshipRemoved(internalModel);
+      this.internalModel.updateRecordArrays();
     };
 
-    Relationship.prototype.removeCanonicalRecordFromInverse = function removeCanonicalRecordFromInverse(record) {
-      var inverseRelationship = record._relationships.get(this.inverseKey);
+    Relationship.prototype.removeCanonicalInternalModelFromInverse = function removeCanonicalInternalModelFromInverse(internalModel) {
+      var inverseRelationship = internalModel._relationships.get(this.inverseKey);
       //Need to check for existence, as the record might unloading at the moment
       if (inverseRelationship) {
-        inverseRelationship.removeCanonicalRecordFromOwn(this.record);
+        inverseRelationship.removeCanonicalInternalModelFromOwn(this.internalModel);
       }
     };
 
-    Relationship.prototype.removeCanonicalRecordFromOwn = function removeCanonicalRecordFromOwn(record) {
-      this.canonicalMembers.delete(record);
+    Relationship.prototype.removeCanonicalInternalModelFromOwn = function removeCanonicalInternalModelFromOwn(internalModel) {
+      this.canonicalMembers.delete(internalModel);
       this.flushCanonicalLater();
     };
 
     Relationship.prototype.flushCanonical = function flushCanonical() {
       var list = this.members.list;
       this.willSync = false;
-      //a hack for not removing new records
+      //a hack for not removing new internalModels
       //TODO remove once we have proper diffing
-      var newRecords = [];
+      var newInternalModels = [];
       for (var i = 0; i < list.length; i++) {
         if (list[i].isNew()) {
-          newRecords.push(list[i]);
+          newInternalModels.push(list[i]);
         }
       }
 
       //TODO(Igor) make this less abysmally slow
       this.members = this.canonicalMembers.copy();
-      for (var _i = 0; _i < newRecords.length; _i++) {
-        this.members.add(newRecords[_i]);
+      for (var _i = 0; _i < newInternalModels.length; _i++) {
+        this.members.add(newInternalModels[_i]);
       }
     };
 
@@ -8995,14 +8992,14 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
     };
 
     Relationship.prototype.updateLink = function updateLink(link) {
-      (0, _debug.warn)('You pushed a record of type \'' + this.record.modelName + '\' with a relationship \'' + this.key + '\' configured as \'async: false\'. You\'ve included a link but no primary data, this may be an error in your payload.', this.isAsync || this.hasData, {
+      (0, _debug.warn)('You pushed a record of type \'' + this.internalModel.modelName + '\' with a relationship \'' + this.key + '\' configured as \'async: false\'. You\'ve included a link but no primary data, this may be an error in your payload.', this.isAsync || this.hasData, {
         id: 'ds.store.push-link-for-sync-relationship'
       });
-      (0, _debug.assert)('You have pushed a record of type \'' + this.record.modelName + '\' with \'' + this.key + '\' as a link, but the value of that link is not a string.', typeof link === 'string' || link === null);
+      (0, _debug.assert)('You have pushed a record of type \'' + this.internalModel.modelName + '\' with \'' + this.key + '\' as a link, but the value of that link is not a string.', typeof link === 'string' || link === null);
 
       this.link = link;
       this.linkPromise = null;
-      this.record.notifyPropertyChange(this.key);
+      this.internalModel.notifyPropertyChange(this.key);
     };
 
     Relationship.prototype.findLink = function findLink() {
@@ -9017,10 +9014,10 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
       }
     };
 
-    Relationship.prototype.updateRecordsFromAdapter = function updateRecordsFromAdapter(records) {
+    Relationship.prototype.updateInternalModelsFromAdapter = function updateInternalModelsFromAdapter(internalModels) {
       //TODO(Igor) move this to a proper place
       //TODO Once we have adapter support, we need to handle updated and canonical changes
-      this.computeChanges(records);
+      this.computeChanges(internalModels);
     };
 
     Relationship.prototype.notifyRecordRelationshipAdded = function notifyRecordRelationshipAdded() {};
@@ -9078,11 +9075,6 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
     Relationship.prototype.updateData = function updateData() {};
 
     _createClass(Relationship, [{
-      key: 'record',
-      get: function () {
-        return this.internalModel;
-      }
-    }, {
       key: 'parentType',
       get: function () {
         return this.internalModel.modelName;
@@ -9372,7 +9364,7 @@ define("ember-data/-private/system/snapshot", ["exports", "ember"], function (ex
     Snapshot.prototype.belongsTo = function belongsTo(keyName, options) {
       var id = options && options.id;
       var relationship = void 0,
-          inverseRecord = void 0,
+          inverseInternalModel = void 0,
           hasData = void 0;
       var result = void 0;
 
@@ -9390,14 +9382,14 @@ define("ember-data/-private/system/snapshot", ["exports", "ember"], function (ex
       }
 
       hasData = get(relationship, 'hasData');
-      inverseRecord = get(relationship, 'inverseRecord');
+      inverseInternalModel = get(relationship, 'inverseInternalModel');
 
       if (hasData) {
-        if (inverseRecord && !inverseRecord.isDeleted()) {
+        if (inverseInternalModel && !inverseInternalModel.isDeleted()) {
           if (id) {
-            result = get(inverseRecord, 'id');
+            result = get(inverseInternalModel, 'id');
           } else {
-            result = inverseRecord.createSnapshot();
+            result = inverseInternalModel.createSnapshot();
           }
         } else {
           result = null;
@@ -11909,7 +11901,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
         return;
       }
 
-      (0, _debug.assert)('A ' + relationship.record.modelName + ' record was pushed into the store with the value of ' + relationship.key + ' being ' + inspect(resourceIdentifier) + ', but ' + relationship.key + ' is a belongsTo relationship so the value must not be an array. You should probably check your data payload or serializer.', !Array.isArray(resourceIdentifier));
+      (0, _debug.assert)('A ' + relationship.internalModel.modelName + ' record was pushed into the store with the value of ' + relationship.key + ' being ' + inspect(resourceIdentifier) + ', but ' + relationship.key + ' is a belongsTo relationship so the value must not be an array. You should probably check your data payload or serializer.', !Array.isArray(resourceIdentifier));
 
       //TODO:Better asserts
       return this._internalModelForId(resourceIdentifier.type, resourceIdentifier.id);
@@ -11919,7 +11911,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
         return;
       }
 
-      (0, _debug.assert)('A ' + relationship.record.modelName + ' record was pushed into the store with the value of ' + relationship.key + ' being \'' + inspect(resourceIdentifiers) + '\', but ' + relationship.key + ' is a hasMany relationship so the value must be an array. You should probably check your data payload or serializer.', Array.isArray(resourceIdentifiers));
+      (0, _debug.assert)('A ' + relationship.internalModel.modelName + ' record was pushed into the store with the value of ' + relationship.key + ' being \'' + inspect(resourceIdentifiers) + '\', but ' + relationship.key + ' is a hasMany relationship so the value must be an array. You should probably check your data payload or serializer.', Array.isArray(resourceIdentifiers));
 
       var _internalModels = new Array(resourceIdentifiers.length);
       for (var i = 0; i < resourceIdentifiers.length; i++) {
@@ -17889,7 +17881,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.14.0-canary+de59092fde";
+  exports.default = "2.14.0-canary+b03427f07c";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
