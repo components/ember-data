@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.0-canary+b03427f07c
+ * @version   2.14.0-canary+33f0ced2bd
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -1670,7 +1670,6 @@ define("ember-data/-private/system/many-array", ["exports", "ember", "ember-data
     },
     objectAt: function (index) {
       var internalModel = this.currentState[index];
-      //Ember observers such as 'firstObject', 'lastObject' might do out of bounds accesses
       if (internalModel === undefined) {
         return;
       }
@@ -17371,7 +17370,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.14.0-canary+b03427f07c";
+  exports.default = "2.14.0-canary+33f0ced2bd";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
