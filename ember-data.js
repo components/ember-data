@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.0-canary+2015435e5d
+ * @version   2.14.0-canary+ac2dbe0b8e
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -8248,6 +8248,7 @@ define("ember-data/-private/system/relationships/state/belongs-to", ["exports", 
     };
 
     BelongsToRelationship.prototype.updateData = function updateData(data, initial) {
+      (0, _debug.assert)("Ember Data expected the data for the " + this.key + " relationship on a " + this.internalModel.toString() + " to be in a JSON API format and include an `id` and `type` property but it found " + _ember.default.inspect(data) + ". Please check your serializer and make sure it is serializing the relationship payload into a JSON API format.", data === null || data.id !== undefined && data.type !== undefined);
       var internalModel = this.store._pushResourceIdentifier(this, data);
       if (initial) {
         this.setInitialCanonicalInternalModel(internalModel);
@@ -17883,7 +17884,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.14.0-canary+2015435e5d";
+  exports.default = "2.14.0-canary+ac2dbe0b8e";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
