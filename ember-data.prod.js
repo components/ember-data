@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.0-canary+ec394520dc
+ * @version   2.14.0-canary+2015435e5d
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -10649,14 +10649,17 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
 
 
     /**
-      @method didUpdateAll
+      @method _didUpdateAll
       @param {String} modelName
       @private
     */
-    didUpdateAll: function (modelName) {
+    _didUpdateAll: function (modelName) {
       var liveRecordArray = this.recordArrayManager.liveRecordArrayFor(modelName);
 
       set(liveRecordArray, 'isUpdating', false);
+    },
+    didUpdateAll: function (modelName) {
+      return this._didUpdateAll(modelName);
     },
 
 
@@ -11981,7 +11984,7 @@ define("ember-data/-private/system/store/finders", ["exports", "ember", "ember-d
       var payload = (0, _serializerResponse.normalizeResponseHelper)(serializer, store, modelClass, adapterPayload, null, 'findAll');
 
       store._push(payload);
-      store.didUpdateAll(modelName);
+      store._didUpdateAll(modelName);
 
       return recordArray;
     }, null, 'DS: Extract payload of findAll ${modelName}');
@@ -17372,7 +17375,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.14.0-canary+ec394520dc";
+  exports.default = "2.14.0-canary+2015435e5d";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
