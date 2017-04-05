@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.0-canary+d9d6448ca3
+ * @version   2.14.0-canary+ec394520dc
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -1081,6 +1081,7 @@ define('ember-data/-private/instance-initializers/initialize-store-service', ['e
   exports.__esModule = true;
   exports.default = initializeStoreService;
 
+
   /*
     Configures a registry for use with an Ember-Data
     store.
@@ -1090,34 +1091,34 @@ define('ember-data/-private/instance-initializers/initialize-store-service', ['e
   */
   function initializeStoreService(application) {
     var container = application.lookup ? application : application.container;
+
     // Eagerly generate the store so defaultStore is populated.
     container.lookup('service:store');
 
-    var initializers = application.application.constructor.initializers;
-    deprecateOldEmberDataInitializers(initializers);
+    deprecateOldEmberDataInitializers(application.application.constructor.initializers);
   }
 
-  var deprecatedInitializerNames = ['data-adapter', 'injectStore', 'transforms', 'store'];
+  var DEPRECATED_INITIALIZER_NAMES = ['data-adapter', 'injectStore', 'transforms', 'store'];
 
   function matchesDeprecatedInititalizer(name) {
-    return deprecatedInitializerNames.indexOf(name) !== -1;
+    return DEPRECATED_INITIALIZER_NAMES.indexOf(name) !== -1;
   }
 
   function deprecateOldEmberDataInitializers(initializers) {
     // collect all of the initializers
-    var initializersArray = Object.keys(initializers).map(function (key) {
-      return initializers[key];
-    });
+    var keys = Object.keys(initializers);
 
-    // filter out all of the Ember Data initializer. We have some
-    // deprecated initializers that depend on other deprecated
-    // initializers which may trigger the deprecation warning
-    // unintentionally.
-    var nonEmberDataInitializers = initializersArray.filter(function (initializer) {
-      return !matchesDeprecatedInititalizer(initializer.name);
-    });
+    for (var i = 0; i < keys.length; i++) {
+      var name = keys[i];
 
-    nonEmberDataInitializers.forEach(warnForDeprecatedInitializers);
+      // filter out all of the Ember Data initializer. We have some
+      // deprecated initializers that depend on other deprecated
+      // initializers which may trigger the deprecation warning
+      // unintentionally.
+      if (!matchesDeprecatedInititalizer(name)) {
+        warnForDeprecatedInitializers(initializers[name]);
+      }
+    }
   }
 
   function warnForDeprecatedInitializers(initializer) {
@@ -17371,7 +17372,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.14.0-canary+d9d6448ca3";
+  exports.default = "2.14.0-canary+ec394520dc";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
