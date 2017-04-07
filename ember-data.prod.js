@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2016 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.12.1
+ * @version   2.12.1+111b7744e1
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -11773,6 +11773,8 @@ define('ember-data/-private/system/store/container-instance-cache', ['exports', 
 
   var ContainerInstanceCache = (function () {
     function ContainerInstanceCache(owner, store) {
+      this.isDestroying = false;
+      this.isDestroyed = false;
       this._owner = owner;
       this._store = store;
       this._namespaces = {
@@ -11852,11 +11854,10 @@ define('ember-data/-private/system/store/container-instance-cache', ['exports', 
     }, {
       key: 'destroy',
       value: function destroy() {
+        this.isDestroying = true;
         this.destroyCache(this._namespaces.adapter);
         this.destroyCache(this._namespaces.serializer);
-        this._namespaces = null;
-        this._store = null;
-        this._owner = null;
+        this.isDestroyed = true;
       }
     }, {
       key: 'toString',
@@ -19363,7 +19364,7 @@ define('ember-data/transform', ['exports', 'ember'], function (exports, _ember) 
   });
 });
 define("ember-data/version", ["exports"], function (exports) {
-  exports.default = "2.12.1";
+  exports.default = "2.12.1+111b7744e1";
 });
 define("ember-inflector", ["exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (exports, _ember, _emberInflectorLibSystem, _emberInflectorLibExtString) {
 
