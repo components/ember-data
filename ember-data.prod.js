@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.0-beta.3
+ * @version   2.13.0-beta.4
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -2371,7 +2371,10 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
   var InternalModel = function () {
     function InternalModel(modelName, id, store, data) {
       this.id = id;
-      this._internalId = InternalModelReferenceId++;
+
+      // this ensure ordered set can quickly identify this as unique
+      this[_ember.default.GUID_KEY] = InternalModelReferenceId++ + 'internal-model';
+
       this.store = store;
       this.modelName = modelName;
       this._loadingPromise = null;
@@ -11075,6 +11078,8 @@ define('ember-data/-private/system/store/container-instance-cache', ['exports', 
 
   var ContainerInstanceCache = function () {
     function ContainerInstanceCache(owner, store) {
+      this.isDestroying = false;
+      this.isDestroyed = false;
       this._owner = owner;
       this._store = store;
       this._namespaces = {
@@ -11147,11 +11152,10 @@ define('ember-data/-private/system/store/container-instance-cache', ['exports', 
     };
 
     ContainerInstanceCache.prototype.destroy = function destroy() {
+      this.isDestroying = true;
       this.destroyCache(this._namespaces.adapter);
       this.destroyCache(this._namespaces.serializer);
-      this._namespaces = null;
-      this._store = null;
-      this._owner = null;
+      this.isDestroyed = true;
     };
 
     ContainerInstanceCache.prototype.toString = function toString() {
@@ -16675,7 +16679,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.13.0-beta.3";
+  exports.default = "2.13.0-beta.4";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
