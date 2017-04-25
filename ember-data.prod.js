@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.0-canary+ef10fe1b50
+ * @version   2.14.0-canary+347a98f8cc
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -1758,7 +1758,13 @@ define('ember-data/-private/system/coerce-id', ['exports'], function (exports) {
   // ID into the URL, and if we later try to deserialize that URL and find the
   // corresponding record, we will not know if it is a string or a number.
   function coerceId(id) {
-    return id === null || id === undefined || id === '' ? null : id + '';
+    if (id === null || id === undefined || id === '') {
+      return null;
+    }
+    if (typeof id === 'string') {
+      return id;
+    }
+    return '' + id;
   }
 });
 define('ember-data/-private/system/debug/debug-adapter', ['exports', 'ember', 'ember-data/-private/system/model/model'], function (exports, _ember, _model) {
@@ -17659,7 +17665,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.14.0-canary+ef10fe1b50";
+  exports.default = "2.14.0-canary+347a98f8cc";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
