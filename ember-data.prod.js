@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.0-canary+35e014baa8
+ * @version   2.14.0-canary+4304c47afe
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -10435,11 +10435,11 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       var internalModels = new Array(totalItems);
       var seeking = Object.create(null);
 
-      for (var i = 0; i < totalItems; i++) {
-        var pendingItem = pendingFetchItems[i];
-        var internalModel = pendingItem.internalModel;
-        internalModels[i] = internalModel;
-        seeking[internalModel.id] = pendingItem;
+      for (var _i = 0; _i < totalItems; _i++) {
+        var pendingItem = pendingFetchItems[_i];
+        var _internalModel = pendingItem.internalModel;
+        internalModels[_i] = _internalModel;
+        seeking[_internalModel.id] = pendingItem;
       }
 
       function _fetchRecord(recordResolverPair) {
@@ -10451,25 +10451,25 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       function handleFoundRecords(foundInternalModels, expectedInternalModels) {
         // resolve found records
         var found = Object.create(null);
-        for (var _i = 0, l = foundInternalModels.length; _i < l; _i++) {
-          var _internalModel = foundInternalModels[_i];
-          var pair = seeking[_internalModel.id];
-          found[_internalModel.id] = _internalModel;
+        for (var _i2 = 0, _l = foundInternalModels.length; _i2 < _l; _i2++) {
+          var _internalModel2 = foundInternalModels[_i2];
+          var _pair = seeking[_internalModel2.id];
+          found[_internalModel2.id] = _internalModel2;
 
-          if (pair) {
-            var resolver = pair.resolver;
-            resolver.resolve(_internalModel);
+          if (_pair) {
+            var resolver = _pair.resolver;
+            resolver.resolve(_internalModel2);
           }
         }
 
         // reject missing records
         var missingInternalModels = [];
 
-        for (var _i2 = 0, _l = expectedInternalModels.length; _i2 < _l; _i2++) {
-          var _internalModel2 = expectedInternalModels[_i2];
+        for (var _i3 = 0, _l2 = expectedInternalModels.length; _i3 < _l2; _i3++) {
+          var _internalModel3 = expectedInternalModels[_i3];
 
-          if (!found[_internalModel2.id]) {
-            missingInternalModels.push(_internalModel2);
+          if (!found[_internalModel3.id]) {
+            missingInternalModels.push(_internalModel3);
           }
         }
 
@@ -10479,12 +10479,12 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       }
 
       function rejectInternalModels(internalModels, error) {
-        for (var _i3 = 0, l = internalModels.length; _i3 < l; _i3++) {
-          var _internalModel3 = internalModels[_i3];
-          var pair = seeking[_internalModel3.id];
+        for (var _i4 = 0, _l3 = internalModels.length; _i4 < _l3; _i4++) {
+          var _internalModel4 = internalModels[_i4];
+          var _pair2 = seeking[_internalModel4.id];
 
-          if (pair) {
-            pair.resolver.reject(error || new Error('Expected: \'' + _internalModel3 + '\' to be present in the adapter provided payload, but it was not found.'));
+          if (_pair2) {
+            _pair2.resolver.reject(error || new Error('Expected: \'' + _internalModel4 + '\' to be present in the adapter provided payload, but it was not found.'));
           }
         }
       }
@@ -10501,39 +10501,37 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
         // records from the grouped snapshots even though the _findMany() finder
         // will once again convert the records to snapshots for adapter.findMany()
         var snapshots = new Array(totalItems);
-        for (var _i4 = 0; _i4 < totalItems; _i4++) {
-          snapshots[_i4] = internalModels[_i4].createSnapshot();
+        for (var _i5 = 0; _i5 < totalItems; _i5++) {
+          snapshots[_i5] = internalModels[_i5].createSnapshot();
         }
 
         var groups = adapter.groupRecordsForFindMany(this, snapshots);
 
-        var _loop = function (l, _i5) {
-          var group = groups[_i5];
-          var totalInGroup = groups[_i5].length;
+        for (var i = 0, l = groups.length; i < l; i++) {
+          var group = groups[i];
+          var totalInGroup = groups[i].length;
           var ids = new Array(totalInGroup);
           var groupedInternalModels = new Array(totalInGroup);
 
           for (var j = 0; j < totalInGroup; j++) {
-            var _internalModel4 = group[j]._internalModel;
+            var internalModel = group[j]._internalModel;
 
-            groupedInternalModels[j] = _internalModel4;
-            ids[j] = _internalModel4.id;
+            groupedInternalModels[j] = internalModel;
+            ids[j] = internalModel.id;
           }
 
           if (totalInGroup > 1) {
-            (0, _finders._findMany)(adapter, store, modelName, ids, groupedInternalModels).then(function (foundInternalModels) {
-              handleFoundRecords(foundInternalModels, groupedInternalModels);
-            }).catch(function (error) {
-              rejectInternalModels(groupedInternalModels, error);
-            });
+            (function (groupedInternalModels) {
+              (0, _finders._findMany)(adapter, store, modelName, ids, groupedInternalModels).then(function (foundInternalModels) {
+                handleFoundRecords(foundInternalModels, groupedInternalModels);
+              }).catch(function (error) {
+                rejectInternalModels(groupedInternalModels, error);
+              });
+            })(groupedInternalModels);
           } else if (ids.length === 1) {
             var pair = seeking[groupedInternalModels[0].id];
             _fetchRecord(pair);
           } else {}
-        };
-
-        for (var _i5 = 0, l = groups.length; _i5 < l; _i5++) {
-          _loop(l, _i5);
         }
       } else {
         for (var _i6 = 0; _i6 < totalItems; _i6++) {
@@ -16945,8 +16943,6 @@ define('ember-data/serializers/rest', ['exports', 'ember', 'ember-inflector', 'e
       return serializer.normalize(modelClass, hash, prop);
     },
     _normalizeResponse: function (store, primaryModelClass, payload, id, requestType, isSingle) {
-      var _this2 = this;
-
       var documentHash = {
         data: null,
         included: []
@@ -16959,7 +16955,7 @@ define('ember-data/serializers/rest', ['exports', 'ember', 'ember-inflector', 'e
 
       var keys = Object.keys(payload);
 
-      var _loop = function (i, length) {
+      for (var i = 0, length = keys.length; i < length; i++) {
         var prop = keys[i];
         var modelName = prop;
         var forcedSecondary = false;
@@ -16986,16 +16982,16 @@ define('ember-data/serializers/rest', ['exports', 'ember', 'ember-inflector', 'e
           modelName = prop.substr(1);
         }
 
-        var typeName = _this2.modelNameFromPayloadKey(modelName);
+        var typeName = this.modelNameFromPayloadKey(modelName);
         if (!store.modelFactoryFor(typeName)) {
-          return 'continue';
+          continue;
         }
 
-        var isPrimary = !forcedSecondary && _this2.isPrimaryType(store, typeName, primaryModelClass);
+        var isPrimary = !forcedSecondary && this.isPrimaryType(store, typeName, primaryModelClass);
         var value = payload[prop];
 
         if (value === null) {
-          return 'continue';
+          continue;
         }
 
         /*
@@ -17007,8 +17003,8 @@ define('ember-data/serializers/rest', ['exports', 'ember', 'ember-inflector', 'e
           }
           ```
          */
-        if (isPrimary && _ember.default.typeOf(value) !== 'array') {
-          var _normalizePolymorphic2 = _this2._normalizePolymorphicRecord(store, value, prop, primaryModelClass, _this2),
+        if (isPrimary && !Array.isArray(value)) {
+          var _normalizePolymorphic2 = this._normalizePolymorphicRecord(store, value, prop, primaryModelClass, this),
               _data = _normalizePolymorphic2.data,
               _included = _normalizePolymorphic2.included;
 
@@ -17018,10 +17014,10 @@ define('ember-data/serializers/rest', ['exports', 'ember', 'ember-inflector', 'e
 
             (_documentHash$include2 = documentHash.included).push.apply(_documentHash$include2, _toConsumableArray(_included));
           }
-          return 'continue';
+          continue;
         }
 
-        var _normalizeArray = _this2._normalizeArray(store, typeName, value, prop),
+        var _normalizeArray = this._normalizeArray(store, typeName, value, prop),
             data = _normalizeArray.data,
             included = _normalizeArray.included;
 
@@ -17061,12 +17057,6 @@ define('ember-data/serializers/rest', ['exports', 'ember', 'ember-inflector', 'e
             }
           }
         }
-      };
-
-      for (var i = 0, length = keys.length; i < length; i++) {
-        var _ret = _loop(i, length);
-
-        if (_ret === 'continue') continue;
       }
 
       return documentHash;
@@ -17075,23 +17065,21 @@ define('ember-data/serializers/rest', ['exports', 'ember', 'ember-inflector', 'e
       return store.modelFor(typeName) === primaryTypeClass;
     },
     pushPayload: function (store, payload) {
-      var _this3 = this;
-
       var documentHash = {
         data: [],
         included: []
       };
 
-      var _loop2 = function (_prop) {
-        var modelName = _this3.modelNameFromPayloadKey(_prop);
+      for (var prop in payload) {
+        var modelName = this.modelNameFromPayloadKey(prop);
         if (!store.modelFactoryFor(modelName)) {
-          return 'continue';
+          continue;
         }
         var type = store.modelFor(modelName);
         var typeSerializer = store.serializerFor(type.modelName);
 
-        _ember.default.makeArray(payload[_prop]).forEach(function (hash) {
-          var _typeSerializer$norma = typeSerializer.normalize(type, hash, _prop),
+        _ember.default.makeArray(payload[prop]).forEach(function (hash) {
+          var _typeSerializer$norma = typeSerializer.normalize(type, hash, prop),
               data = _typeSerializer$norma.data,
               included = _typeSerializer$norma.included;
 
@@ -17102,12 +17090,6 @@ define('ember-data/serializers/rest', ['exports', 'ember', 'ember-inflector', 'e
             (_documentHash$include5 = documentHash.included).push.apply(_documentHash$include5, _toConsumableArray(included));
           }
         });
-      };
-
-      for (var _prop in payload) {
-        var _ret2 = _loop2(_prop);
-
-        if (_ret2 === 'continue') continue;
       }
 
       if ((0, _private.isEnabled)('ds-pushpayload-return')) {
@@ -17189,24 +17171,24 @@ define('ember-data/serializers/rest', ['exports', 'ember', 'ember-inflector', 'e
         if ((0, _private.isEnabled)("ds-payload-type-hooks")) {
 
           var payloadType = resourceHash[typeProperty];
-          var _type = this.modelNameFromPayloadType(payloadType);
+          var type = this.modelNameFromPayloadType(payloadType);
           var deprecatedTypeLookup = this.modelNameFromPayloadKey(payloadType);
 
           if (payloadType !== deprecatedTypeLookup && !this._hasCustomModelNameFromPayloadType() && this._hasCustomModelNameFromPayloadKey()) {
 
-            _type = deprecatedTypeLookup;
+            type = deprecatedTypeLookup;
           }
 
           return {
             id: relationshipHash,
-            type: _type
+            type: type
           };
         } else {
 
-          var _type2 = this.modelNameFromPayloadKey(resourceHash[typeProperty]);
+          var _type = this.modelNameFromPayloadKey(resourceHash[typeProperty]);
           return {
             id: relationshipHash,
-            type: _type2
+            type: _type
           };
         }
       }
@@ -17609,7 +17591,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.14.0-canary+35e014baa8";
+  exports.default = "2.14.0-canary+4304c47afe";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
