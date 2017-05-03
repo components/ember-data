@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.15.0-canary+7e2f78bf78
+ * @version   2.15.0-canary+7e9ebdade9
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -231,7 +231,11 @@ var loader, define, requireModule, require, requirejs;
     this.name = path;
   }
 
-  define.alias = function (path) {
+  define.alias = function (path, target) {
+    if (arguments.length === 2) {
+      return define(target, new Alias(path));
+    }
+
     return new Alias(path);
   };
 
@@ -310,6 +314,7 @@ var loader, define, requireModule, require, requirejs;
   });
   define('foo/baz', [], define.alias('foo'));
   define('foo/quz', define.alias('foo'));
+  define.alias('foo', 'foo/qux');
   define('foo/bar', ['foo', './quz', './baz', './asdf', './bar', '../foo'], function () {});
   define('foo/main', ['foo/bar'], function () {});
 
@@ -16213,7 +16218,7 @@ define('ember-data/serializers/json', ['exports', 'ember', 'ember-data/serialize
       - `normalizeResponse` - entry method to the serializer.
       - `normalizeCreateRecordResponse` - a `normalizeResponse` for a specific operation is called.
       - `normalizeSingleResponse`|`normalizeArrayResponse` - for methods like `createRecord` we expect
-        a single record back, while for methods like `findAll` we expect multiple methods back.
+        a single record back, while for methods like `findAll` we expect multiple records back.
       - `normalize` - `normalizeArray` iterates and calls `normalize` for each of its records while `normalizeSingle`
         calls it once. This is the method you most likely want to subclass.
       - `extractId` | `extractAttributes` | `extractRelationships` - `normalize` delegates to these methods to
@@ -17591,7 +17596,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.15.0-canary+7e2f78bf78";
+  exports.default = "2.15.0-canary+7e9ebdade9";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
