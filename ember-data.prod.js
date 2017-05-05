@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.0-beta.1
+ * @version   2.14.0-beta.2
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -231,7 +231,11 @@ var loader, define, requireModule, require, requirejs;
     this.name = path;
   }
 
-  define.alias = function (path) {
+  define.alias = function (path, target) {
+    if (arguments.length === 2) {
+      return define(target, new Alias(path));
+    }
+
     return new Alias(path);
   };
 
@@ -310,6 +314,7 @@ var loader, define, requireModule, require, requirejs;
   });
   define('foo/baz', [], define.alias('foo'));
   define('foo/quz', define.alias('foo'));
+  define.alias('foo', 'foo/qux');
   define('foo/bar', ['foo', './quz', './baz', './asdf', './bar', '../foo'], function () {});
   define('foo/main', ['foo/bar'], function () {});
 
@@ -14869,15 +14874,20 @@ define('ember-data/instance-initializers/initialize-store-service', ['exports'],
     store.
   
     @method initializeStoreService
-    @param {Ember.ApplicationInstance} applicationOrRegistry
+    @param {Ember.ApplicationInstance | Ember.EngineInstance} instance
   */
-  function initializeStoreService(application) {
-    var container = application.lookup ? application : application.container;
+  function initializeStoreService(instance) {
+    // instance.lookup supports Ember 2.1 and higher
+    // instance.container supports Ember 1.11 - 2.0
+    var container = instance.lookup ? instance : instance.container;
 
     // Eagerly generate the store so defaultStore is populated.
     container.lookup('service:store');
 
-    deprecateOldEmberDataInitializers(application.application.constructor.initializers);
+    // In Ember 2.4+ instance.base is the `Ember.Application` or `Ember.Engine` instance
+    // In Ember 1.11 - 2.3 we fallback to `instance.application`
+    var base = instance.base || instance.application;
+    deprecateOldEmberDataInitializers(base.constructor.initializers);
   }
 
   var DEPRECATED_INITIALIZER_NAMES = ['data-adapter', 'injectStore', 'transforms', 'store'];
@@ -17591,7 +17601,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.14.0-beta.1";
+  exports.default = "2.14.0-beta.2";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
