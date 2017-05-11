@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.15.0-canary+ccec0bd8be
+ * @version   2.15.0-canary+337524f003
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -7083,7 +7083,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
      commentsRef.ids(); // ['1']
      ```
   
-     @method remoteType
+     @method ids
      @return {Array} The ids in this has-many relationship
   */
   HasManyReference.prototype.ids = function () {
@@ -18188,7 +18188,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.15.0-canary+ccec0bd8be";
+  exports.default = "2.15.0-canary+337524f003";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
