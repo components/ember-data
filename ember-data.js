@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.15.0-canary+337524f003
+ * @version   2.15.0-canary+4914cbd035
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -6723,7 +6723,7 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
       ```
   
      @method meta
-     @return {Object} The meta information for the belongs-oo relationship.
+     @return {Object} The meta information for the belongs-to relationship.
   */
   BelongsToReference.prototype.meta = function () {
     return this.belongsToRelationship.meta;
@@ -7105,8 +7105,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
   };
 
   /**
-     The link Ember Data will use to fetch or reload this has-many
-     relationship.
+     The meta data for the has-many relationship.
   
      Example
   
@@ -18223,7 +18222,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.15.0-canary+337524f003";
+  exports.default = "2.15.0-canary+4914cbd035";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
