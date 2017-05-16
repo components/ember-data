@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.15.0-canary+4914cbd035
+ * @version   2.15.0-canary+58bd396007
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -231,11 +231,7 @@ var loader, define, requireModule, require, requirejs;
     this.name = path;
   }
 
-  define.alias = function (path, target) {
-    if (arguments.length === 2) {
-      return define(target, new Alias(path));
-    }
-
+  define.alias = function (path) {
     return new Alias(path);
   };
 
@@ -314,7 +310,6 @@ var loader, define, requireModule, require, requirejs;
   });
   define('foo/baz', [], define.alias('foo'));
   define('foo/quz', define.alias('foo'));
-  define.alias('foo', 'foo/qux');
   define('foo/bar', ['foo', './quz', './baz', './asdf', './bar', '../foo'], function () {});
   define('foo/main', ['foo/bar'], function () {});
 
@@ -5796,10 +5791,11 @@ define('ember-data/-private/system/promise-proxies', ['exports', 'ember'], funct
     });
   }
 });
-define('ember-data/-private/system/record-array-manager', ['exports', 'ember', 'ember-data/-private/system/record-arrays'], function (exports, _ember, _recordArrays) {
-  'use strict';
+define("ember-data/-private/system/record-array-manager", ["exports", "ember", "ember-data/-private/system/record-arrays", "ember-data/-private/system/clone-null"], function (exports, _ember, _recordArrays, _cloneNull) {
+  "use strict";
 
   exports.__esModule = true;
+  exports.associateWithRecordArray = associateWithRecordArray;
 
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
@@ -5808,6 +5804,7 @@ define('ember-data/-private/system/record-array-manager', ['exports', 'ember', '
   }
 
   var get = _ember.default.get,
+      set = _ember.default.set,
       emberRun = _ember.default.run;
 
   var RecordArrayManager = function () {
@@ -5879,63 +5876,22 @@ define('ember-data/-private/system/record-array-manager', ['exports', 'ember', '
           }
         }
 
-        // TODO: skip if it only changed
-        // process liveRecordArrays
-        if (this._liveRecordArrays[modelName]) {
-          this.updateLiveRecordArray(modelName, internalModels);
+        var array = this._liveRecordArrays[modelName];
+        if (array) {
+          // TODO: skip if it only changed
+          // process liveRecordArrays
+          this.updateLiveRecordArray(array, internalModels);
         }
 
         // process adapterPopulatedRecordArrays
         if (modelsToRemove.length > 0) {
-          this.removeFromAdapterPopulatedRecordArrays(modelsToRemove);
+          removeFromAdapterPopulatedRecordArrays(modelsToRemove);
         }
       }
     };
 
-    RecordArrayManager.prototype.updateLiveRecordArray = function updateLiveRecordArray(modelName, internalModels) {
-      var array = this.liveRecordArrayFor(modelName);
-
-      var modelsToAdd = [];
-      var modelsToRemove = [];
-
-      for (var i = 0; i < internalModels.length; i++) {
-        var internalModel = internalModels[i];
-        var isDeleted = internalModel.isHiddenFromRecordArrays();
-        var recordArrays = internalModel._recordArrays;
-
-        if (!isDeleted && !internalModel.isEmpty()) {
-          if (!recordArrays.has(array)) {
-            modelsToAdd.push(internalModel);
-            recordArrays.add(array);
-          }
-        }
-
-        if (isDeleted) {
-          modelsToRemove.push(internalModel);
-          recordArrays.delete(array);
-        }
-      }
-
-      if (modelsToAdd.length > 0) {
-        array._pushInternalModels(modelsToAdd);
-      }
-      if (modelsToRemove.length > 0) {
-        array._removeInternalModels(modelsToRemove);
-      }
-    };
-
-    RecordArrayManager.prototype.removeFromAdapterPopulatedRecordArrays = function removeFromAdapterPopulatedRecordArrays(internalModels) {
-      for (var i = 0; i < internalModels.length; i++) {
-        var internalModel = internalModels[i];
-        var list = internalModel._recordArrays.list;
-
-        for (var j = 0; j < list.length; j++) {
-          // TODO: group by arrays, so we can batch remove
-          list[j]._removeInternalModels([internalModel]);
-        }
-
-        internalModel._recordArrays.clear();
-      }
+    RecordArrayManager.prototype.updateLiveRecordArray = function updateLiveRecordArray(array, internalModels) {
+      return _updateLiveRecordArray(array, internalModels);
     };
 
     RecordArrayManager.prototype.updateFilterRecordArray = function updateFilterRecordArray(array, modelName, internalModels) {
@@ -5968,8 +5924,8 @@ define('ember-data/-private/system/record-array-manager', ['exports', 'ember', '
       }
     };
 
-    RecordArrayManager.prototype.syncLiveRecordArray = function syncLiveRecordArray(array, modelName) {
-      (false && _ember.default.assert('recordArrayManger.syncLiveRecordArray expects modelName not modelClass as the second param', typeof modelName === 'string'));
+    RecordArrayManager.prototype._syncLiveRecordArray = function _syncLiveRecordArray(array, modelName) {
+      (false && _ember.default.assert("recordArrayManger.syncLiveRecordArray expects modelName not modelClass as the second param", typeof modelName === 'string'));
 
       var hasNoPotentialDeletions = Object.keys(this._pending).length === 0;
       var map = this.store._internalModelsFor(modelName);
@@ -5980,27 +5936,19 @@ define('ember-data/-private/system/record-array-manager', ['exports', 'ember', '
         liveRecordArrays, and is capable of strategically flushing those changes and applying
         small diffs if desired.  However, until we've refactored recordArrayManager, this dirty
         check prevents us from unnecessarily wiping out live record arrays returned by peekAll.
-       */
+        */
       if (hasNoPotentialDeletions && hasNoInsertionsOrRemovals) {
         return;
       }
 
-      this.populateLiveRecordArray(array, map.models);
-    };
-
-    RecordArrayManager.prototype.populateLiveRecordArray = function populateLiveRecordArray(array, internalModels) {
-
+      var internalModels = this._visibleInternalModelsByType(modelName);
       var modelsToAdd = [];
       for (var i = 0; i < internalModels.length; i++) {
         var internalModel = internalModels[i];
-
-        if (!internalModel.isHiddenFromRecordArrays()) {
-          var recordArrays = internalModel._recordArrays;
-
-          if (!recordArrays.has(array)) {
-            modelsToAdd.push(internalModel);
-            recordArrays.add(array);
-          }
+        var recordArrays = internalModel._recordArrays;
+        if (recordArrays.has(array) === false) {
+          recordArrays.add(array);
+          modelsToAdd.push(internalModel);
         }
       }
 
@@ -6008,7 +5956,7 @@ define('ember-data/-private/system/record-array-manager', ['exports', 'ember', '
     };
 
     RecordArrayManager.prototype.updateFilter = function updateFilter(array, modelName, filter) {
-      (false && _ember.default.assert('recordArrayManger.updateFilter expects modelName not modelClass as the second param, received ' + modelName, typeof modelName === 'string'));
+      (false && _ember.default.assert("recordArrayManger.updateFilter expects modelName not modelClass as the second param, received " + modelName, typeof modelName === 'string'));
 
       var modelMap = this.store._internalModelsFor(modelName);
       var internalModels = modelMap.models;
@@ -6016,34 +5964,73 @@ define('ember-data/-private/system/record-array-manager', ['exports', 'ember', '
       this.updateFilterRecordArray(array, filter, internalModels);
     };
 
+    RecordArrayManager.prototype._didUpdateAll = function _didUpdateAll(modelName) {
+      var recordArray = this._liveRecordArrays[modelName];
+      if (recordArray) {
+        set(recordArray, 'isUpdating', false);
+      }
+    };
+
     RecordArrayManager.prototype.liveRecordArrayFor = function liveRecordArrayFor(modelName) {
-      (false && _ember.default.assert('recordArrayManger.liveRecordArrayFor expects modelName not modelClass as the param', typeof modelName === 'string'));
+      (false && _ember.default.assert("recordArrayManger.liveRecordArrayFor expects modelName not modelClass as the param", typeof modelName === 'string'));
 
 
-      return this._liveRecordArrays[modelName] || (this._liveRecordArrays[modelName] = this.createRecordArray(modelName));
+      var array = this._liveRecordArrays[modelName];
+
+      if (array) {
+        // if the array already exists, synchronize
+        this._syncLiveRecordArray(array, modelName);
+      } else {
+        // if the array is being newly created merely create it with its initial
+        // content already set. This prevents unneeded change events.
+        var internalModels = this._visibleInternalModelsByType(modelName);
+        array = this.createRecordArray(modelName, internalModels);
+        this._liveRecordArrays[modelName] = array;
+      }
+
+      return array;
+    };
+
+    RecordArrayManager.prototype._visibleInternalModelsByType = function _visibleInternalModelsByType(modelName) {
+      var all = this.store._internalModelsFor(modelName)._models;
+      var visible = [];
+      for (var i = 0; i < all.length; i++) {
+        var model = all[i];
+        if (model.isHiddenFromRecordArrays() === false) {
+          visible.push(model);
+        }
+      }
+      return visible;
     };
 
     RecordArrayManager.prototype.filteredRecordArraysFor = function filteredRecordArraysFor(modelName) {
-      (false && _ember.default.assert('recordArrayManger.filteredRecordArraysFor expects modelName not modelClass as the param', typeof modelName === 'string'));
+      (false && _ember.default.assert("recordArrayManger.filteredRecordArraysFor expects modelName not modelClass as the param", typeof modelName === 'string'));
 
 
       return this._filteredRecordArrays[modelName] || (this._filteredRecordArrays[modelName] = []);
     };
 
-    RecordArrayManager.prototype.createRecordArray = function createRecordArray(modelName) {
-      (false && _ember.default.assert('recordArrayManger.createRecordArray expects modelName not modelClass as the param', typeof modelName === 'string'));
+    RecordArrayManager.prototype.createRecordArray = function createRecordArray(modelName, content) {
+      (false && _ember.default.assert("recordArrayManger.createRecordArray expects modelName not modelClass as the param", typeof modelName === 'string'));
 
-      return _recordArrays.RecordArray.create({
+
+      var array = _recordArrays.RecordArray.create({
         modelName: modelName,
-        content: _ember.default.A(),
+        content: _ember.default.A(content || []),
         store: this.store,
         isLoaded: true,
         manager: this
       });
+
+      if (Array.isArray(content)) {
+        associateWithRecordArray(content, array);
+      }
+
+      return array;
     };
 
     RecordArrayManager.prototype.createFilteredRecordArray = function createFilteredRecordArray(modelName, filter, query) {
-      (false && _ember.default.assert('recordArrayManger.createFilteredRecordArray expects modelName not modelClass as the first param, received ' + modelName, typeof modelName === 'string'));
+      (false && _ember.default.assert("recordArrayManger.createFilteredRecordArray expects modelName not modelClass as the first param, received " + modelName, typeof modelName === 'string'));
 
       var array = _recordArrays.FilteredRecordArray.create({
         query: query,
@@ -6059,17 +6046,34 @@ define('ember-data/-private/system/record-array-manager', ['exports', 'ember', '
       return array;
     };
 
-    RecordArrayManager.prototype.createAdapterPopulatedRecordArray = function createAdapterPopulatedRecordArray(modelName, query) {
-      (false && _ember.default.assert('recordArrayManger.createAdapterPopulatedRecordArray expects modelName not modelClass as the first param, received ' + modelName, typeof modelName === 'string'));
+    RecordArrayManager.prototype.createAdapterPopulatedRecordArray = function createAdapterPopulatedRecordArray(modelName, query, internalModels, payload) {
+      (false && _ember.default.assert("recordArrayManger.createAdapterPopulatedRecordArray expects modelName not modelClass as the first param, received " + modelName, typeof modelName === 'string'));
 
 
-      var array = _recordArrays.AdapterPopulatedRecordArray.create({
-        modelName: modelName,
-        query: query,
-        content: _ember.default.A(),
-        store: this.store,
-        manager: this
-      });
+      var array = void 0;
+      if (Array.isArray(internalModels)) {
+        array = _recordArrays.AdapterPopulatedRecordArray.create({
+          modelName: modelName,
+          query: query,
+          content: _ember.default.A(internalModels),
+          store: this.store,
+          manager: this,
+          isLoaded: true,
+          isUpdating: false,
+          meta: (0, _cloneNull.default)(payload.meta),
+          links: (0, _cloneNull.default)(payload.links)
+        });
+
+        associateWithRecordArray(internalModels, array);
+      } else {
+        array = _recordArrays.AdapterPopulatedRecordArray.create({
+          modelName: modelName,
+          query: query,
+          content: _ember.default.A(),
+          store: this.store,
+          manager: this
+        });
+      }
 
       this._adapterPopulatedRecordArrays.push(array);
 
@@ -6077,7 +6081,7 @@ define('ember-data/-private/system/record-array-manager', ['exports', 'ember', '
     };
 
     RecordArrayManager.prototype.registerFilteredRecordArray = function registerFilteredRecordArray(array, modelName, filter) {
-      (false && _ember.default.assert('recordArrayManger.registerFilteredRecordArray expects modelName not modelClass as the second param, received ' + modelName, typeof modelName === 'string'));
+      (false && _ember.default.assert("recordArrayManger.registerFilteredRecordArray expects modelName not modelClass as the second param, received " + modelName, typeof modelName === 'string'));
 
 
       this.filteredRecordArraysFor(modelName).push(array);
@@ -6156,6 +6160,57 @@ define('ember-data/-private/system/record-array-manager', ['exports', 'ember', '
 
     return false;
   }
+
+  function _updateLiveRecordArray(array, internalModels) {
+    var modelsToAdd = [];
+    var modelsToRemove = [];
+
+    for (var i = 0; i < internalModels.length; i++) {
+      var internalModel = internalModels[i];
+      var isDeleted = internalModel.isHiddenFromRecordArrays();
+      var recordArrays = internalModel._recordArrays;
+
+      if (!isDeleted && !internalModel.isEmpty()) {
+        if (!recordArrays.has(array)) {
+          modelsToAdd.push(internalModel);
+          recordArrays.add(array);
+        }
+      }
+
+      if (isDeleted) {
+        modelsToRemove.push(internalModel);
+        recordArrays.delete(array);
+      }
+    }
+
+    if (modelsToAdd.length > 0) {
+      array._pushInternalModels(modelsToAdd);
+    }
+    if (modelsToRemove.length > 0) {
+      array._removeInternalModels(modelsToRemove);
+    }
+  }
+
+  function removeFromAdapterPopulatedRecordArrays(internalModels) {
+    for (var i = 0; i < internalModels.length; i++) {
+      var internalModel = internalModels[i];
+      var list = internalModel._recordArrays.list;
+
+      for (var j = 0; j < list.length; j++) {
+        // TODO: group by arrays, so we can batch remove
+        list[j]._removeInternalModels([internalModel]);
+      }
+
+      internalModel._recordArrays.clear();
+    }
+  }
+
+  function associateWithRecordArray(internalModels, array) {
+    for (var i = 0, l = internalModels.length; i < l; i++) {
+      var internalModel = internalModels[i];
+      internalModel._recordArrays.add(array);
+    }
+  }
 });
 define("ember-data/-private/system/record-arrays", ["exports", "ember-data/-private/system/record-arrays/record-array", "ember-data/-private/system/record-arrays/filtered-record-array", "ember-data/-private/system/record-arrays/adapter-populated-record-array"], function (exports, _recordArray, _filteredRecordArray, _adapterPopulatedRecordArray) {
   "use strict";
@@ -6166,7 +6221,7 @@ define("ember-data/-private/system/record-arrays", ["exports", "ember-data/-priv
   exports.FilteredRecordArray = _filteredRecordArray.default;
   exports.AdapterPopulatedRecordArray = _adapterPopulatedRecordArray.default;
 });
-define("ember-data/-private/system/record-arrays/adapter-populated-record-array", ["exports", "ember", "ember-data/-private/system/record-arrays/record-array", "ember-data/-private/system/clone-null"], function (exports, _ember, _recordArray, _cloneNull) {
+define("ember-data/-private/system/record-arrays/adapter-populated-record-array", ["exports", "ember", "ember-data/-private/system/record-arrays/record-array", "ember-data/-private/system/clone-null", "ember-data/-private/system/record-array-manager"], function (exports, _ember, _recordArray, _cloneNull, _recordArrayManager) {
   "use strict";
 
   exports.__esModule = true;
@@ -6211,11 +6266,7 @@ define("ember-data/-private/system/record-arrays/adapter-populated-record-array"
         links: (0, _cloneNull.default)(payload.links)
       });
 
-      for (var i = 0, l = internalModels.length; i < l; i++) {
-        var internalModel = internalModels[i];
-
-        internalModel._recordArrays.add(this);
-      }
+      (0, _recordArrayManager.associateWithRecordArray)(internalModels, this);
 
       // TODO: should triggering didLoad event be the last action of the runLoop?
       _ember.default.run.once(this, 'trigger', 'didLoad');
@@ -11018,9 +11069,6 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       (false && _ember.default.assert('You need to pass a query hash to the store\'s query method', query));
       (false && _ember.default.assert('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + modelName, typeof modelName === 'string'));
 
-
-      array = array || this.recordArrayManager.createAdapterPopulatedRecordArray(modelName, query);
-
       var adapter = this.adapterFor(modelName);
       (false && _ember.default.assert('You tried to load a query but you have no adapter (for ' + modelName + ')', adapter));
       (false && _ember.default.assert('You tried to load a query but your adapter does not implement \'query\'', typeof adapter.query === 'function'));
@@ -11345,9 +11393,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       @private
     */
     _didUpdateAll: function (modelName) {
-      var liveRecordArray = this.recordArrayManager.liveRecordArrayFor(modelName);
-
-      set(liveRecordArray, 'isUpdating', false);
+      this.recordArrayManager._didUpdateAll(modelName);
     },
     didUpdateAll: function (modelName) {
       (false && !(false) && _ember.default.deprecate('didUpdateAll was documented as private and will be removed in the next version of Ember Data.', false, { id: 'ember-data.didUpdateAll', until: '2.17.0' }));
@@ -11380,11 +11426,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       (false && _ember.default.assert('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + modelName, typeof modelName === 'string'));
 
       var normalizedModelName = (0, _normalizeModelName.default)(modelName);
-      var liveRecordArray = this.recordArrayManager.liveRecordArrayFor(normalizedModelName);
-
-      this.recordArrayManager.syncLiveRecordArray(liveRecordArray, normalizedModelName);
-
-      return liveRecordArray;
+      return this.recordArrayManager.liveRecordArrayFor(normalizedModelName);
     },
 
 
@@ -12813,7 +12855,14 @@ define('ember-data/-private/system/store/finders', ['exports', 'ember', 'ember-d
 
   function _query(adapter, store, modelName, query, recordArray) {
     var modelClass = store.modelFor(modelName); // adapter.query needs the class
-    var promise = adapter.query(store, modelClass, query, recordArray);
+
+    var promise = void 0;
+    if (adapter.query.length > 3) {
+      recordArray = recordArray || store.recordArrayManager.createAdapterPopulatedRecordArray(modelName, query);
+      promise = adapter.query(store, modelClass, query, recordArray);
+    } else {
+      promise = adapter.query(store, modelClass, query);
+    }
 
     var label = 'DS: Handle Adapter#query of ' + modelClass;
 
@@ -12829,7 +12878,11 @@ define('ember-data/-private/system/store/finders', ['exports', 'ember', 'ember-d
 
       (false && _ember.default.assert('The response to store.query is expected to be an array but it was a single record. Please wrap your response in an array or use `store.queryRecord` to query for a single record.', Array.isArray(internalModels)));
 
-      recordArray._setInternalModels(internalModels, payload);
+      if (recordArray) {
+        recordArray._setInternalModels(internalModels, payload);
+      } else {
+        recordArray = store.recordArrayManager.createAdapterPopulatedRecordArray(modelName, query, internalModels, payload);
+      }
 
       return recordArray;
     }, null, 'DS: Extract payload of query ' + modelName);
@@ -18187,7 +18240,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.15.0-canary+4914cbd035";
+  exports.default = "2.15.0-canary+58bd396007";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
