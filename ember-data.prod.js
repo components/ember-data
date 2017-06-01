@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.15.0-canary+69cdc9e637
+ * @version   2.15.0-canary+27d2aec29d
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -1342,7 +1342,7 @@ define('ember-data/-private/global', ['exports'], function (exports) {
   // export real global
   exports.default = checkGlobal(checkElementIdShadowing(typeof global === 'object' && global)) || checkGlobal(typeof self === 'object' && self) || checkGlobal(typeof window === 'object' && window) || new Function('return this')();
 });
-define('ember-data/-private', ['exports', 'ember-data/-private/system/model/model', 'ember-data/-private/system/model/errors', 'ember-data/-private/system/store', 'ember-data/-private/core', 'ember-data/-private/system/relationships/belongs-to', 'ember-data/-private/system/relationships/has-many', 'ember-data/-private/adapters/build-url-mixin', 'ember-data/-private/system/snapshot', 'ember-data/-private/adapters/errors', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/utils/parse-response-headers', 'ember-data/-private/system/model/states', 'ember-data/-private/global', 'ember-data/-private/features', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/record-arrays', 'ember-data/-private/system/many-array', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/relationships/state/relationship', 'ember-data/-private/system/debug/debug-adapter', 'ember-data/-private/system/diff-array', 'ember-data/-private/system/relationships/relationship-payloads-manager', 'ember-data/-private/system/relationships/relationship-payloads', 'ember-data/-private/system/snapshot-record-array'], function (exports, _model, _errors, _store, _core, _belongsTo, _hasMany, _buildUrlMixin, _snapshot, _errors2, _normalizeModelName, _utils, _coerceId, _parseResponseHeaders, _states, _global, _features, _internalModel, _promiseProxies, _recordArrays, _manyArray, _recordArrayManager, _relationship, _debugAdapter, _diffArray, _relationshipPayloadsManager, _relationshipPayloads, _snapshotRecordArray) {
+define('ember-data/-private', ['exports', 'ember-data/-private/system/model/model', 'ember-data/-private/system/model/errors', 'ember-data/-private/system/store', 'ember-data/-private/core', 'ember-data/-private/system/relationships/belongs-to', 'ember-data/-private/system/relationships/has-many', 'ember-data/-private/adapters/build-url-mixin', 'ember-data/-private/system/snapshot', 'ember-data/-private/adapters/errors', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/utils/parse-response-headers', 'ember-data/-private/global', 'ember-data/-private/features', 'ember-data/-private/system/model/states', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/system/store/container-instance-cache', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/record-arrays', 'ember-data/-private/system/many-array', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/relationships/state/relationship', 'ember-data/-private/system/debug/debug-adapter', 'ember-data/-private/system/diff-array', 'ember-data/-private/system/relationships/relationship-payloads-manager', 'ember-data/-private/system/relationships/relationship-payloads', 'ember-data/-private/system/snapshot-record-array'], function (exports, _model, _errors, _store, _core, _belongsTo, _hasMany, _buildUrlMixin, _snapshot, _errors2, _normalizeModelName, _utils, _coerceId, _parseResponseHeaders, _global, _features, _states, _internalModel, _containerInstanceCache, _promiseProxies, _recordArrays, _manyArray, _recordArrayManager, _relationship, _debugAdapter, _diffArray, _relationshipPayloadsManager, _relationshipPayloads, _snapshotRecordArray) {
   'use strict';
 
   exports.__esModule = true;
@@ -1490,12 +1490,6 @@ define('ember-data/-private', ['exports', 'ember-data/-private/system/model/mode
       return _parseResponseHeaders.default;
     }
   });
-  Object.defineProperty(exports, 'RootState', {
-    enumerable: true,
-    get: function () {
-      return _states.default;
-    }
-  });
   Object.defineProperty(exports, 'global', {
     enumerable: true,
     get: function () {
@@ -1508,10 +1502,22 @@ define('ember-data/-private', ['exports', 'ember-data/-private/system/model/mode
       return _features.default;
     }
   });
+  Object.defineProperty(exports, 'RootState', {
+    enumerable: true,
+    get: function () {
+      return _states.default;
+    }
+  });
   Object.defineProperty(exports, 'InternalModel', {
     enumerable: true,
     get: function () {
       return _internalModel.default;
+    }
+  });
+  Object.defineProperty(exports, 'ContainerInstanceCache', {
+    enumerable: true,
+    get: function () {
+      return _containerInstanceCache.default;
     }
   });
   Object.defineProperty(exports, 'PromiseArray', {
@@ -18240,7 +18246,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.15.0-canary+69cdc9e637";
+  exports.default = "2.15.0-canary+27d2aec29d";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
