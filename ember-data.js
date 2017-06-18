@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.13.1+872dbd6732
+ * @version   2.13.1+ae42497b63
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -2369,7 +2369,6 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       isEmpty = _ember.default.isEmpty,
       isEqual = _ember.default.isEqual,
       setOwner = _ember.default.setOwner,
-      run = _ember.default.run,
       RSVP = _ember.default.RSVP,
       Promise = _ember.default.RSVP.Promise;
 
@@ -2456,7 +2455,6 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
       // `objectAt(len - 1)` to test whether or not `firstObject` or `lastObject`
       // have changed.
       this._isDematerializing = false;
-      this._scheduledDestroy = null;
 
       this.resetRecord();
 
@@ -2650,22 +2648,11 @@ define("ember-data/-private/system/model/internal-model", ["exports", "ember", "
     InternalModel.prototype.unloadRecord = function unloadRecord() {
       this.send('unloadRecord');
       this.dematerializeRecord();
-      if (this._scheduledDestroy === null) {
-        this._scheduledDestroy = run.schedule('destroy', this, '_checkForOrphanedInternalModels');
-      }
-    };
-
-    InternalModel.prototype.cancelDestroy = function cancelDestroy() {
-      (0, _debug.assert)("You cannot cancel the destruction of an InternalModel once it has already been destroyed", !this.isDestroyed);
-
-      this._isDematerializing = false;
-      run.cancel(this._scheduledDestroy);
-      this._scheduledDestroy = null;
+      _ember.default.run.schedule('destroy', this, '_checkForOrphanedInternalModels');
     };
 
     InternalModel.prototype._checkForOrphanedInternalModels = function _checkForOrphanedInternalModels() {
       this._isDematerializing = false;
-      this._scheduledDestroy = null;
       if (this.isDestroyed) {
         return;
       }
@@ -9861,10 +9848,6 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
 
       if (!internalModel) {
         internalModel = this.buildInternalModel(modelName, trueId);
-      } else {
-        // if we already have an internalModel, we need to ensure any async teardown is cancelled
-        //   since we want it again.
-        internalModel.cancelDestroy();
       }
 
       return internalModel;
@@ -17202,7 +17185,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.13.1+872dbd6732";
+  exports.default = "2.13.1+ae42497b63";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
