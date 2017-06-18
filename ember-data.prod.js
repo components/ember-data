@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.0-beta.2
+ * @version   2.14.0-beta.3+d4b9430411
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -32,9 +32,9 @@ var loader, define, requireModule, require, requirejs;
     requirejs: requirejs
   };
 
-  requirejs = require = requireModule = function (name) {
+  requirejs = require = requireModule = function (id) {
     var pending = [];
-    var mod = findModule(name, '(require)', pending);
+    var mod = findModule(id, '(require)', pending);
 
     for (var i = pending.length - 1; i >= 0; i--) {
       pending[i].exports();
@@ -60,29 +60,20 @@ var loader, define, requireModule, require, requirejs;
     }
   };
 
-  var _isArray;
-  if (!Array.isArray) {
-    _isArray = function (x) {
-      return Object.prototype.toString.call(x) === '[object Array]';
-    };
-  } else {
-    _isArray = Array.isArray;
-  }
-
   var registry = dict();
   var seen = dict();
 
   var uuid = 0;
 
   function unsupportedModule(length) {
-    throw new Error('an unsupported module was defined, expected `define(name, deps, module)` instead got: `' + length + '` arguments to define`');
+    throw new Error('an unsupported module was defined, expected `define(id, deps, module)` instead got: `' + length + '` arguments to define`');
   }
 
   var defaultDeps = ['require', 'exports', 'module'];
 
-  function Module(name, deps, callback, alias) {
-    this.id = uuid++;
-    this.name = name;
+  function Module(id, deps, callback, alias) {
+    this.uuid = uuid++;
+    this.id = id;
     this.deps = !deps.length && callback.length ? defaultDeps : deps;
     this.module = { exports: {} };
     this.callback = callback;
@@ -117,12 +108,13 @@ var loader, define, requireModule, require, requirejs;
     }
 
     if (loader.wrapModules) {
-      this.callback = loader.wrapModules(this.name, this.callback);
+      this.callback = loader.wrapModules(this.id, this.callback);
     }
 
     this.reify();
 
     var result = this.callback.apply(this, this.reified);
+    this.reified.length = 0;
     this.state = 'finalized';
 
     if (!(this.hasExportsAsDep && result === undefined)) {
@@ -181,27 +173,28 @@ var loader, define, requireModule, require, requirejs;
       } else if (dep === 'module') {
         entry.exports = this.module;
       } else {
-        entry.module = findModule(resolve(dep, this.name), this.name, pending);
+        entry.module = findModule(resolve(dep, this.id), this.id, pending);
       }
     }
   };
 
   Module.prototype.makeRequire = function () {
-    var name = this.name;
+    var id = this.id;
     var r = function (dep) {
-      return require(resolve(dep, name));
+      return require(resolve(dep, id));
     };
     r['default'] = r;
+    r.moduleId = id;
     r.has = function (dep) {
-      return has(resolve(dep, name));
+      return has(resolve(dep, id));
     };
     return r;
   };
 
-  define = function (name, deps, callback) {
-    var module = registry[name];
+  define = function (id, deps, callback) {
+    var module = registry[id];
 
-    // If a module for this name has already been defined and is in any state
+    // If a module for this id has already been defined and is in any state
     // other than `new` (meaning it has been or is currently being required),
     // then we return early to avoid redefinition.
     if (module && module.state !== 'new') {
@@ -212,46 +205,65 @@ var loader, define, requireModule, require, requirejs;
       unsupportedModule(arguments.length);
     }
 
-    if (!_isArray(deps)) {
+    if (!Array.isArray(deps)) {
       callback = deps;
       deps = [];
     }
 
     if (callback instanceof Alias) {
-      registry[name] = new Module(callback.name, deps, callback, true);
+      registry[id] = new Module(callback.id, deps, callback, true);
     } else {
-      registry[name] = new Module(name, deps, callback, false);
+      registry[id] = new Module(id, deps, callback, false);
     }
   };
 
+  define.exports = function (name, defaultExport) {
+    var module = registry[name];
+
+    // If a module for this name has already been defined and is in any state
+    // other than `new` (meaning it has been or is currently being required),
+    // then we return early to avoid redefinition.
+    if (module && module.state !== 'new') {
+      return;
+    }
+
+    module = new Module(name, [], noop, null);
+    module.module.exports = defaultExport;
+    module.state = 'finalized';
+    registry[name] = module;
+
+    return module;
+  };
+
+  function noop() {}
   // we don't support all of AMD
   // define.amd = {};
 
-  function Alias(path) {
-    this.name = path;
+  function Alias(id) {
+    this.id = id;
   }
 
-  define.alias = function (path, target) {
+  define.alias = function (id, target) {
     if (arguments.length === 2) {
-      return define(target, new Alias(path));
+      return define(target, new Alias(id));
     }
 
-    return new Alias(path);
+    return new Alias(id);
   };
 
-  function missingModule(name, referrer) {
-    throw new Error('Could not find module `' + name + '` imported from `' + referrer + '`');
+  function missingModule(id, referrer) {
+    throw new Error('Could not find module `' + id + '` imported from `' + referrer + '`');
   }
 
-  function findModule(name, referrer, pending) {
-    var mod = registry[name] || registry[name + '/index'];
+  function findModule(id, referrer, pending) {
+    var mod = registry[id] || registry[id + '/index'];
 
     while (mod && mod.isAlias) {
-      mod = registry[mod.name];
+      mod = registry[mod.id];
     }
 
     if (!mod) {
-      missingModule(name, referrer);
+      missingModule(id, referrer);
     }
 
     if (pending && mod.state !== 'pending' && mod.state !== 'finalized') {
@@ -261,13 +273,13 @@ var loader, define, requireModule, require, requirejs;
     return mod;
   }
 
-  function resolve(child, name) {
+  function resolve(child, id) {
     if (child.charAt(0) !== '.') {
       return child;
     }
 
     var parts = child.split('/');
-    var nameParts = name.split('/');
+    var nameParts = id.split('/');
     var parentBase = nameParts.slice(0, -1);
 
     for (var i = 0, l = parts.length; i < l; i++) {
@@ -288,14 +300,14 @@ var loader, define, requireModule, require, requirejs;
     return parentBase.join('/');
   }
 
-  function has(name) {
-    return !!(registry[name] || registry[name + '/index']);
+  function has(id) {
+    return !!(registry[id] || registry[id + '/index']);
   }
 
   requirejs.entries = requirejs._eak_seen = registry;
   requirejs.has = has;
-  requirejs.unsee = function (moduleName) {
-    findModule(moduleName, '(unsee)', false).unsee();
+  requirejs.unsee = function (id) {
+    findModule(id, '(unsee)', false).unsee();
   };
 
   requirejs.clear = function () {
@@ -317,7 +329,9 @@ var loader, define, requireModule, require, requirejs;
   define.alias('foo', 'foo/qux');
   define('foo/bar', ['foo', './quz', './baz', './asdf', './bar', '../foo'], function () {});
   define('foo/main', ['foo/bar'], function () {});
+  define.exports('foo/exports', {});
 
+  require('foo/exports');
   require('foo/main');
   require.unsee('foo/bar');
 
@@ -1374,7 +1388,7 @@ define('ember-data/-private/global', ['exports'], function (exports) {
   // export real global
   exports.default = checkGlobal(checkElementIdShadowing(typeof global === 'object' && global)) || checkGlobal(typeof self === 'object' && self) || checkGlobal(typeof window === 'object' && window) || new Function('return this')();
 });
-define('ember-data/-private', ['exports', 'ember-data/-private/system/model/model', 'ember-data/-private/system/model/errors', 'ember-data/-private/system/store', 'ember-data/-private/core', 'ember-data/-private/system/relationships/belongs-to', 'ember-data/-private/system/relationships/has-many', 'ember-data/-private/adapters/build-url-mixin', 'ember-data/-private/system/snapshot', 'ember-data/-private/adapters/errors', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/utils/parse-response-headers', 'ember-data/-private/system/model/states', 'ember-data/-private/global', 'ember-data/-private/features', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/record-arrays', 'ember-data/-private/system/many-array', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/relationships/state/relationship', 'ember-data/-private/system/debug/debug-adapter', 'ember-data/-private/system/diff-array', 'ember-data/-private/system/relationships/relationship-payloads-manager', 'ember-data/-private/system/relationships/relationship-payloads', 'ember-data/-private/system/snapshot-record-array'], function (exports, _model, _errors, _store, _core, _belongsTo, _hasMany, _buildUrlMixin, _snapshot, _errors2, _normalizeModelName, _utils, _coerceId, _parseResponseHeaders, _states, _global, _features, _internalModel, _promiseProxies, _recordArrays, _manyArray, _recordArrayManager, _relationship, _debugAdapter, _diffArray, _relationshipPayloadsManager, _relationshipPayloads, _snapshotRecordArray) {
+define('ember-data/-private', ['exports', 'ember-data/-private/system/model/model', 'ember-data/-private/system/model/errors', 'ember-data/-private/system/store', 'ember-data/-private/core', 'ember-data/-private/system/relationships/belongs-to', 'ember-data/-private/system/relationships/has-many', 'ember-data/-private/adapters/build-url-mixin', 'ember-data/-private/system/snapshot', 'ember-data/-private/adapters/errors', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/utils/parse-response-headers', 'ember-data/-private/global', 'ember-data/-private/features', 'ember-data/-private/system/model/states', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/system/store/container-instance-cache', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/record-arrays', 'ember-data/-private/system/many-array', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/relationships/state/relationship', 'ember-data/-private/system/debug/debug-adapter', 'ember-data/-private/system/diff-array', 'ember-data/-private/system/relationships/relationship-payloads-manager', 'ember-data/-private/system/relationships/relationship-payloads', 'ember-data/-private/system/snapshot-record-array'], function (exports, _model, _errors, _store, _core, _belongsTo, _hasMany, _buildUrlMixin, _snapshot, _errors2, _normalizeModelName, _utils, _coerceId, _parseResponseHeaders, _global, _features, _states, _internalModel, _containerInstanceCache, _promiseProxies, _recordArrays, _manyArray, _recordArrayManager, _relationship, _debugAdapter, _diffArray, _relationshipPayloadsManager, _relationshipPayloads, _snapshotRecordArray) {
   'use strict';
 
   exports.__esModule = true;
@@ -1522,12 +1536,6 @@ define('ember-data/-private', ['exports', 'ember-data/-private/system/model/mode
       return _parseResponseHeaders.default;
     }
   });
-  Object.defineProperty(exports, 'RootState', {
-    enumerable: true,
-    get: function () {
-      return _states.default;
-    }
-  });
   Object.defineProperty(exports, 'global', {
     enumerable: true,
     get: function () {
@@ -1540,10 +1548,22 @@ define('ember-data/-private', ['exports', 'ember-data/-private/system/model/mode
       return _features.default;
     }
   });
+  Object.defineProperty(exports, 'RootState', {
+    enumerable: true,
+    get: function () {
+      return _states.default;
+    }
+  });
   Object.defineProperty(exports, 'InternalModel', {
     enumerable: true,
     get: function () {
       return _internalModel.default;
+    }
+  });
+  Object.defineProperty(exports, 'ContainerInstanceCache', {
+    enumerable: true,
+    get: function () {
+      return _containerInstanceCache.default;
     }
   });
   Object.defineProperty(exports, 'PromiseArray', {
@@ -8152,13 +8172,12 @@ define('ember-data/-private/system/relationships/relationship-payloads', ['expor
             id: id,
             type: modelName
           }
-        };
 
-        // start flushing this individual payload.  The logic is the same whether
-        // it's for the left hand side of the relationship or the right hand side,
-        // except the role of primary and inverse idToPayloads is reversed
-        //
-        var previousPayload = void 0;
+          // start flushing this individual payload.  The logic is the same whether
+          // it's for the left hand side of the relationship or the right hand side,
+          // except the role of primary and inverse idToPayloads is reversed
+          //
+        };var previousPayload = void 0;
         var idToPayloads = void 0;
         var inverseIdToPayloads = void 0;
         var inverseIsMany = void 0;
@@ -17601,7 +17620,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.14.0-beta.2";
+  exports.default = "2.14.0-beta.3+d4b9430411";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
