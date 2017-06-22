@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.16.0-canary+ae6250b513
+ * @version   2.16.0-canary+70cfc71a25
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -4474,7 +4474,7 @@ define('ember-data/-private/system/model/model', ['exports', 'ember', 'ember-dat
       } else {
         //No inverse was specified manually, we need to use a heuristic to guess one
         if (propertyMeta.parentType && propertyMeta.type === propertyMeta.parentType.modelName) {
-          (false && _ember.default.warn('Detected a reflexive relationship by the name of \'' + name + '\' without an inverse option. Look at http://emberjs.com/guides/models/defining-models/#toc_reflexive-relation for how to explicitly specify inverses.', false, {
+          (false && _ember.default.warn('Detected a reflexive relationship by the name of \'' + name + '\' without an inverse option. Look at https://emberjs.com/guides/models/defining-models/#toc_reflexive-relation for how to explicitly specify inverses.', false, {
             id: 'ds.model.reflexive-relationship-without-inverse'
           }));
         }
@@ -4490,14 +4490,14 @@ define('ember-data/-private/system/model/model', ['exports', 'ember', 'ember-dat
           return name === optionsForRelationship.inverse;
         });
 
-        (false && _ember.default.assert("You defined the '" + name + "' relationship on " + this + ", but you defined the inverse relationships of type " + inverseType.toString() + " multiple times. Look at http://emberjs.com/guides/models/defining-models/#toc_explicit-inverses for how to explicitly specify inverses", filteredRelationships.length < 2));
+        (false && _ember.default.assert("You defined the '" + name + "' relationship on " + this + ", but you defined the inverse relationships of type " + inverseType.toString() + " multiple times. Look at https://emberjs.com/guides/models/defining-models/#toc_explicit-inverses for how to explicitly specify inverses", filteredRelationships.length < 2));
 
 
         if (filteredRelationships.length === 1) {
           possibleRelationships = filteredRelationships;
         }
 
-        (false && _ember.default.assert("You defined the '" + name + "' relationship on " + this + ", but multiple possible inverse relationships of type " + this + " were found on " + inverseType + ". Look at http://emberjs.com/guides/models/defining-models/#toc_explicit-inverses for how to explicitly specify inverses", possibleRelationships.length === 1));
+        (false && _ember.default.assert("You defined the '" + name + "' relationship on " + this + ", but multiple possible inverse relationships of type " + this + " were found on " + inverseType + ". Look at https://emberjs.com/guides/models/defining-models/#toc_explicit-inverses for how to explicitly specify inverses", possibleRelationships.length === 1));
 
 
         inverseName = possibleRelationships[0].name;
@@ -7783,13 +7783,13 @@ define('ember-data/-private/system/relationships/belongs-to', ['exports', 'ember
     return _ember.default.computed({
       get: function (key) {
         if (opts.hasOwnProperty('serialize')) {
-          (false && _ember.default.warn('You provided a serialize option on the "' + key + '" property in the "' + this._internalModel.modelName + '" class, this belongs in the serializer. See DS.Serializer and it\'s implementations http://emberjs.com/api/data/classes/DS.Serializer.html', false, {
+          (false && _ember.default.warn('You provided a serialize option on the "' + key + '" property in the "' + this._internalModel.modelName + '" class, this belongs in the serializer. See DS.Serializer and it\'s implementations https://emberjs.com/api/data/classes/DS.Serializer.html', false, {
             id: 'ds.model.serialize-option-in-belongs-to'
           }));
         }
 
         if (opts.hasOwnProperty('embedded')) {
-          (false && _ember.default.warn('You provided an embedded option on the "' + key + '" property in the "' + this._internalModel.modelName + '" class, this belongs in the serializer. See DS.EmbeddedRecordsMixin http://emberjs.com/api/data/classes/DS.EmbeddedRecordsMixin.html', false, {
+          (false && _ember.default.warn('You provided an embedded option on the "' + key + '" property in the "' + this._internalModel.modelName + '" class, this belongs in the serializer. See DS.EmbeddedRecordsMixin https://emberjs.com/api/data/classes/DS.EmbeddedRecordsMixin.html', false, {
             id: 'ds.model.embedded-option-in-belongs-to'
           }));
         }
@@ -10501,7 +10501,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
        See [peekRecord](#method_peekRecord) to get the cached version of a record.
        ### Retrieving Related Model Records
        If you use an adapter such as Ember's default
-      [`JSONAPIAdapter`](http://emberjs.com/api/data/classes/DS.JSONAPIAdapter.html)
+      [`JSONAPIAdapter`](https://emberjs.com/api/data/classes/DS.JSONAPIAdapter.html)
       that supports the [JSON API specification](http://jsonapi.org/) and if your server
       endpoint supports the use of an
       ['include' query parameter](http://jsonapi.org/format/#fetching-includes),
@@ -11071,7 +11071,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       Parameters: { "ids" => ["1", "2", "3"] }
       ```
        This method returns a promise, which is resolved with an
-      [`AdapterPopulatedRecordArray`](http://emberjs.com/api/data/classes/DS.AdapterPopulatedRecordArray.html)
+      [`AdapterPopulatedRecordArray`](https://emberjs.com/api/data/classes/DS.AdapterPopulatedRecordArray.html)
       once the server returns.
        @since 1.13.0
       @method query
@@ -11322,7 +11322,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       store, without waiting until a reload is finished.
        ### Retrieving Related Model Records
        If you use an adapter such as Ember's default
-      [`JSONAPIAdapter`](http://emberjs.com/api/data/classes/DS.JSONAPIAdapter.html)
+      [`JSONAPIAdapter`](https://emberjs.com/api/data/classes/DS.JSONAPIAdapter.html)
       that supports the [JSON API specification](http://jsonapi.org/) and if your server
       endpoint supports the use of an
       ['include' query parameter](http://jsonapi.org/format/#fetching-includes),
@@ -11623,7 +11623,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
         var operation = void 0;
 
         if (internalModel.currentState.stateName === 'root.deleted.saved') {
-          return resolver.resolve();
+          resolver.resolve();
+          continue;
         } else if (internalModel.isNew()) {
           operation = 'createRecord';
         } else if (internalModel.isDeleted()) {
@@ -11813,7 +11814,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       Returns the model class for the particular `modelName`.
        The class of a model might be useful if you want to get a list of all the
       relationship names of the model, see
-      [`relationshipNames`](http://emberjs.com/api/data/classes/DS.Model.html#property_relationshipNames)
+      [`relationshipNames`](https://emberjs.com/api/data/classes/DS.Model.html#property_relationshipNames)
       for example.
        @method modelFor
       @param {String} modelName
@@ -12772,7 +12773,7 @@ define('ember-data/-private/system/store/finders', ['exports', 'ember', 'ember-d
       var serializer = (0, _serializers.serializerForAdapter)(store, adapter, modelName);
       var payload = (0, _serializerResponse.normalizeResponseHelper)(serializer, store, modelClass, adapterPayload, id, 'findRecord');
       (false && _ember.default.assert('Ember Data expected the primary data returned from a \'findRecord\' response to be an object but instead it found an array.', !Array.isArray(payload.data)));
-      (false && _ember.default.warn('You requested a record of type \'' + modelName + '\' with id \'' + id + '\' but the adapter returned a payload with primary data having an id of \'' + payload.data.id + '\'. Use \'store.findRecord()\' when the requested id is the same as the one returned by the adapter. In other cases use \'store.queryRecord()\' instead http://emberjs.com/api/data/classes/DS.Store.html#method_queryRecord', payload.data.id === id, {
+      (false && _ember.default.warn('You requested a record of type \'' + modelName + '\' with id \'' + id + '\' but the adapter returned a payload with primary data having an id of \'' + payload.data.id + '\'. Use \'store.findRecord()\' when the requested id is the same as the one returned by the adapter. In other cases use \'store.queryRecord()\' instead https://emberjs.com/api/data/classes/DS.Store.html#method_queryRecord', payload.data.id === id, {
         id: 'ds.store.findRecord.id-mismatch'
       }));
 
@@ -13122,7 +13123,7 @@ define('ember-data/-private/utils/parse-response-headers', ['exports'], function
       }
 
       if (foundSep === false) {
-        break;
+        continue;
       }
 
       var field = header.substring(0, j).trim();
@@ -16715,7 +16716,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-inflector'
     JSONAPISerializer.reopen({
       willMergeMixin: function (props) {
         var constructor = this.constructor;
-        (false && _ember.default.warn('You\'ve defined \'extractMeta\' in ' + constructor.toString() + ' which is not used for serializers extending JSONAPISerializer. Read more at http://emberjs.com/api/data/classes/DS.JSONAPISerializer.html#toc_customizing-meta on how to customize meta when using JSON API.', _ember.default.isNone(props.extractMeta) || props.extractMeta === _json.default.prototype.extractMeta, {
+        (false && _ember.default.warn('You\'ve defined \'extractMeta\' in ' + constructor.toString() + ' which is not used for serializers extending JSONAPISerializer. Read more at https://emberjs.com/api/data/classes/DS.JSONAPISerializer.html#toc_customizing-meta on how to customize meta when using JSON API.', _ember.default.isNone(props.extractMeta) || props.extractMeta === _json.default.prototype.extractMeta, {
           id: 'ds.serializer.json-api.extractMeta'
         }));
         (false && _ember.default.warn('The JSONAPISerializer does not work with the EmbeddedRecordsMixin because the JSON API spec does not describe how to format embedded resources.', !props.isEmbeddedRecordsMixin, {
@@ -18264,7 +18265,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.16.0-canary+ae6250b513";
+  exports.default = "2.16.0-canary+70cfc71a25";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
