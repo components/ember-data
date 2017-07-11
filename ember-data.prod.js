@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.2
+ * @version   2.14.4
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -10056,7 +10056,9 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
 
       // TODO @runspired this should also be coalesced into some form of internalModel.setState()
       internalModel.eachRelationship(function (key, descriptor) {
-        internalModel._relationships.get(key).setHasData(true);
+        if (properties[key] !== undefined) {
+          internalModel._relationships.get(key).setHasData(true);
+        }
       });
 
       return record;
@@ -12691,7 +12693,7 @@ define('ember-data/-private/utils/parse-response-headers', ['exports'], function
       }
 
       if (foundSep === false) {
-        break;
+        continue;
       }
 
       var field = header.substring(0, j).trim();
@@ -17637,7 +17639,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.14.2";
+  exports.default = "2.14.4";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
