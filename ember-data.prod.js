@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.16.0-canary+0818c0eef6
+ * @version   2.16.0-canary+995af63629
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -7240,7 +7240,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember', 'e
   };
 
   /**
-     `value()` sycronously returns the current value of the has-many
+     `value()` synchronously returns the current value of the has-many
       relationship. Unlike `record.get('relationshipName')`, calling
       `value()` on a reference does not trigger a fetch if the async
       relationship is not yet loaded. If the relationship is not loaded
@@ -18093,7 +18093,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.16.0-canary+0818c0eef6";
+  exports.default = "2.16.0-canary+995af63629";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
