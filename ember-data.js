@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.16.0-canary+f77dbf9382
+ * @version   2.16.0-canary+bdec055d8e
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -9470,6 +9470,7 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
     };
 
     Relationship.prototype.updateInternalModelsFromAdapter = function updateInternalModelsFromAdapter(internalModels) {
+      this.setHasData(true);
       //TODO(Igor) move this to a proper place
       //TODO Once we have adapter support, we need to handle updated and canonical changes
       this.computeChanges(internalModels);
@@ -18129,7 +18130,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.16.0-canary+f77dbf9382";
+  exports.default = "2.16.0-canary+bdec055d8e";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
