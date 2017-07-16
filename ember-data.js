@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.16.0-canary+aea8dfa58e
+ * @version   2.16.0-canary+038a18cbe6
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -3140,12 +3140,6 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
       }
     };
 
-    InternalModel.prototype.notifyHasManyRemoved = function notifyHasManyRemoved(key, record, idx) {
-      if (this.hasRecord) {
-        this._record.notifyHasManyRemoved(key, record, idx);
-      }
-    };
-
     InternalModel.prototype.notifyBelongsToChanged = function notifyBelongsToChanged(key, record) {
       if (this.hasRecord) {
         this._record.notifyBelongsToChanged(key, record);
@@ -3179,7 +3173,7 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
       }
 
       if (this.isNew()) {
-        this.clearRelationships();
+        this.removeFromInverseRelationships(true);
       }
 
       if (this.isValid()) {
@@ -3295,19 +3289,28 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
       triggers.length = 0;
     };
 
-    InternalModel.prototype.clearRelationships = function clearRelationships() {
+    InternalModel.prototype.removeFromInverseRelationships = function removeFromInverseRelationships() {
       var _this2 = this;
 
-      this.eachRelationship(function (name, relationship) {
+      var isNew = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
+      this.eachRelationship(function (name) {
         if (_this2._relationships.has(name)) {
           var rel = _this2._relationships.get(name);
-          rel.clear();
-          rel.removeInverseRelationships();
+
+          rel.removeCompletelyFromInverse();
+          if (isNew === true) {
+            rel.clear();
+          }
         }
       });
       Object.keys(this._implicitRelationships).forEach(function (key) {
-        _this2._implicitRelationships[key].clear();
-        _this2._implicitRelationships[key].removeInverseRelationships();
+        var rel = _this2._implicitRelationships[key];
+
+        rel.removeCompletelyFromInverse();
+        if (isNew === true) {
+          rel.clear();
+        }
       });
     };
 
@@ -5430,7 +5433,7 @@ define('ember-data/-private/system/model/states', ['exports'], function (exports
         isDirty: false,
 
         setup: function (internalModel) {
-          internalModel.clearRelationships();
+          internalModel.removeFromInverseRelationships();
         },
         invokeLifecycleCallbacks: function (internalModel) {
           internalModel.triggerLater('didDelete', internalModel);
@@ -8577,6 +8580,19 @@ define('ember-data/-private/system/relationships/state/belongs-to', ['exports', 
       this.notifyBelongsToChanged();
     };
 
+    BelongsToRelationship.prototype.removeCompletelyFromOwn = function removeCompletelyFromOwn(internalModel) {
+      _Relationship.prototype.removeCompletelyFromOwn.call(this, internalModel);
+
+      if (this.canonicalState === internalModel) {
+        this.canonicalState = null;
+      }
+
+      if (this.inverseInternalModel === internalModel) {
+        this.inverseInternalModel = null;
+        this.notifyBelongsToChanged();
+      }
+    };
+
     BelongsToRelationship.prototype.flushCanonical = function flushCanonical() {
       //temporary fix to not remove newly created records if server returned null.
       //TODO remove once we have proper diffing
@@ -8977,6 +8993,26 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
       _Relationship.prototype.removeCanonicalInternalModelFromOwn.call(this, internalModel, idx);
     };
 
+    ManyRelationship.prototype.removeCompletelyFromOwn = function removeCompletelyFromOwn(internalModel) {
+      _Relationship.prototype.removeCompletelyFromOwn.call(this, internalModel);
+
+      var canonicalIndex = this.canonicalState.indexOf(internalModel);
+
+      if (canonicalIndex !== -1) {
+        this.canonicalState.splice(canonicalIndex, 1);
+      }
+
+      var manyArray = this._manyArray;
+
+      if (manyArray) {
+        var idx = manyArray.currentState.indexOf(internalModel);
+
+        if (idx !== -1) {
+          manyArray.internalReplace(idx, 1);
+        }
+      }
+    };
+
     ManyRelationship.prototype.flushCanonical = function flushCanonical() {
       if (this._manyArray) {
         this._manyArray.flushCanonical();
@@ -9184,7 +9220,7 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
     return set;
   }
 });
-define('ember-data/-private/system/relationships/state/relationship', ['exports', 'ember-data/-private/system/ordered-set', 'ember-data/-private/system/normalize-link'], function (exports, _orderedSet, _normalizeLink2) {
+define('ember-data/-private/system/relationships/state/relationship', ['exports', 'ember-data/-private/system/ordered-set', 'ember-data/-private/system/normalize-link', 'ember'], function (exports, _orderedSet, _normalizeLink2, _ember) {
   'use strict';
 
   exports.__esModule = true;
@@ -9212,6 +9248,8 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
       return Constructor;
     };
   }();
+
+  var guidFor = _ember.default.guidFor;
 
   var Relationship = function () {
     function Relationship(store, internalModel, inverseKey, relationshipMeta) {
@@ -9401,7 +9439,6 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
 
     Relationship.prototype.removeInternalModelFromOwn = function removeInternalModelFromOwn(internalModel) {
       this.members.delete(internalModel);
-      this.notifyRecordRelationshipRemoved(internalModel);
       this.internalModel.updateRecordArrays();
     };
 
@@ -9416,6 +9453,38 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
     Relationship.prototype.removeCanonicalInternalModelFromOwn = function removeCanonicalInternalModelFromOwn(internalModel) {
       this.canonicalMembers.delete(internalModel);
       this.flushCanonicalLater();
+    };
+
+    Relationship.prototype.removeCompletelyFromInverse = function removeCompletelyFromInverse() {
+      var _this4 = this;
+
+      if (!this.inverseKey) {
+        return;
+      }
+
+      // we actually want a union of members and canonicalMembers
+      // they should be disjoint but currently are not due to a bug
+      var seen = Object.create(null);
+      var internalModel = this.internalModel;
+
+      var unload = function (inverseInternalModel) {
+        var id = guidFor(inverseInternalModel);
+
+        if (seen[id] === undefined) {
+          var relationship = inverseInternalModel._relationships.get(_this4.inverseKey);
+          relationship.removeCompletelyFromOwn(internalModel);
+          seen[id] = true;
+        }
+      };
+
+      this.members.forEach(unload);
+      this.canonicalMembers.forEach(unload);
+    };
+
+    Relationship.prototype.removeCompletelyFromOwn = function removeCompletelyFromOwn(internalModel) {
+      this.canonicalMembers.delete(internalModel);
+      this.members.delete(internalModel);
+      this.internalModel.updateRecordArrays();
     };
 
     Relationship.prototype.flushCanonical = function flushCanonical() {
@@ -9446,10 +9515,10 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
     };
 
     Relationship.prototype.updateLink = function updateLink(link) {
-      (false && Ember.warn('You pushed a record of type \'' + this.internalModel.modelName + '\' with a relationship \'' + this.key + '\' configured as \'async: false\'. You\'ve included a link but no primary data, this may be an error in your payload.', this.isAsync || this.hasData, {
+      (false && _ember.default.warn('You pushed a record of type \'' + this.internalModel.modelName + '\' with a relationship \'' + this.key + '\' configured as \'async: false\'. You\'ve included a link but no primary data, this may be an error in your payload.', this.isAsync || this.hasData, {
         id: 'ds.store.push-link-for-sync-relationship'
       }));
-      (false && Ember.assert('You have pushed a record of type \'' + this.internalModel.modelName + '\' with \'' + this.key + '\' as a link, but the value of that link is not a string.', typeof link === 'string' || link === null));
+      (false && _ember.default.assert('You have pushed a record of type \'' + this.internalModel.modelName + '\' with \'' + this.key + '\' as a link, but the value of that link is not a string.', typeof link === 'string' || link === null));
 
 
       this.link = link;
@@ -9477,8 +9546,6 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
     };
 
     Relationship.prototype.notifyRecordRelationshipAdded = function notifyRecordRelationshipAdded() {};
-
-    Relationship.prototype.notifyRecordRelationshipRemoved = function notifyRecordRelationshipRemoved() {};
 
     Relationship.prototype.setHasData = function setHasData(value) {
       this.hasData = value;
@@ -18130,7 +18197,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.16.0-canary+aea8dfa58e";
+  exports.default = "2.16.0-canary+038a18cbe6";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
