@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.15.0-beta.2+3261de4848
+ * @version   2.15.0-beta.2+951381a12a
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -3380,8 +3380,12 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
           }
         }
       });
-      Object.keys(this._implicitRelationships).forEach(function (key) {
-        var rel = _this2._implicitRelationships[key];
+
+      var implicitRelationships = this._implicitRelationships;
+      this.__implicitRelationships = null;
+
+      Object.keys(implicitRelationships).forEach(function (key) {
+        var rel = implicitRelationships[key];
 
         rel.removeCompletelyFromInverse();
         if (isNew === true) {
@@ -3399,8 +3403,11 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
           rel.removeInverseRelationships();
         }
       });
-      Object.keys(this._implicitRelationships).forEach(function (key) {
-        _this3._implicitRelationships[key].removeInverseRelationships();
+
+      var implicitRelationships = this._implicitRelationships;
+      this.__implicitRelationships = null;
+      Object.keys(implicitRelationships).forEach(function (key) {
+        implicitRelationships[key].removeInverseRelationships();
       });
     };
 
@@ -18333,7 +18340,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.15.0-beta.2+3261de4848";
+  exports.default = "2.15.0-beta.2+951381a12a";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
