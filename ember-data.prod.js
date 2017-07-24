@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.6
+ * @version   2.14.6+a096d67c54
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -8957,33 +8957,41 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
     };
 
     ManyRelationship.prototype.setInitialInternalModels = function setInitialInternalModels(internalModels) {
-      var _this2 = this;
+      var _canonicalState;
 
-      if (!internalModels) {
+      if (Array.isArray(internalModels) === false || internalModels.length === 0) {
         return;
       }
 
-      var args = [0, this.canonicalState.length].concat(internalModels);
-      this.canonicalState.splice.apply(this.canonicalState, args);
-      internalModels.forEach(function (internalModel) {
-        _this2.canonicalMembers.add(internalModel);
-        _this2.members.add(internalModel);
-        _this2.setupInverseRelationship(internalModel);
-      });
+      var forCanonical = [];
+
+      for (var i = 0; i < internalModels.length; i++) {
+        var internalModel = internalModels[i];
+        if (this.canonicalMembers.has(internalModel)) {
+          continue;
+        }
+
+        forCanonical.push(internalModel);
+        this.canonicalMembers.add(internalModel);
+        this.members.add(internalModel);
+        this.setupInverseRelationship(internalModel);
+      }
+
+      (_canonicalState = this.canonicalState).splice.apply(_canonicalState, [0, this.canonicalState.length].concat(forCanonical));
     };
 
     ManyRelationship.prototype.fetchLink = function fetchLink() {
-      var _this3 = this;
+      var _this2 = this;
 
       return this.store.findHasMany(this.internalModel, this.link, this.relationshipMeta).then(function (records) {
         if (records.hasOwnProperty('meta')) {
-          _this3.updateMeta(records.meta);
+          _this2.updateMeta(records.meta);
         }
-        _this3.store._backburner.join(function () {
-          _this3.updateInternalModelsFromAdapter(records);
-          _this3.manyArray.set('isLoaded', true);
+        _this2.store._backburner.join(function () {
+          _this2.updateInternalModelsFromAdapter(records);
+          _this2.manyArray.set('isLoaded', true);
         });
-        return _this3.manyArray;
+        return _this2.manyArray;
       });
     };
 
@@ -9006,7 +9014,7 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
     };
 
     ManyRelationship.prototype.getRecords = function getRecords() {
-      var _this4 = this;
+      var _this3 = this;
 
       //TODO(Igor) sync server here, once our syncing is not stupid
       var manyArray = this.manyArray;
@@ -9017,7 +9025,7 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
             promise = this.findRecords();
           } else {
             promise = this.findLink().then(function () {
-              return _this4.findRecords();
+              return _this3.findRecords();
             });
           }
         } else {
@@ -17713,7 +17721,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.14.6";
+  exports.default = "2.14.6+a096d67c54";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
