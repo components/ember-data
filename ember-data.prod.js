@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.6+57832a45a0
+ * @version   2.14.6+ffbcc42fcd
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -3017,17 +3017,11 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
     };
 
     InternalModel.prototype._directlyRelatedInternalModels = function _directlyRelatedInternalModels() {
-      var _this = this;
-
       var array = [];
-      this.type.eachRelationship(function (key, relationship) {
-        if (_this._relationships.has(key)) {
-          var _relationship = _this._relationships.get(key);
-          var localRelationships = _relationship.members.toArray();
-          var serverRelationships = _relationship.canonicalMembers.toArray();
-
-          array = array.concat(localRelationships, serverRelationships);
-        }
+      this._relationships.forEach(function (name, rel) {
+        var local = rel.members.toArray();
+        var server = rel.canonicalMembers.toArray();
+        array = array.concat(local, server);
       });
       return array;
     };
@@ -3057,6 +3051,7 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
     InternalModel.prototype.unloadRecord = function unloadRecord() {
       this.send('unloadRecord');
       this.dematerializeRecord();
+
       if (this._scheduledDestroy === null) {
         this._scheduledDestroy = run.schedule('destroy', this, '_checkForOrphanedInternalModels');
       }
@@ -3098,6 +3093,11 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
     InternalModel.prototype.destroy = function destroy() {
 
       this.store._internalModelDestroyed(this);
+
+      this._relationships.forEach(function (name, rel) {
+        return rel.destroy();
+      });
+
       this._isDestroyed = true;
     };
 
@@ -3376,18 +3376,12 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
     };
 
     InternalModel.prototype.removeFromInverseRelationships = function removeFromInverseRelationships() {
-      var _this2 = this;
-
       var isNew = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
 
-      this.eachRelationship(function (name) {
-        if (_this2._relationships.has(name)) {
-          var rel = _this2._relationships.get(name);
-
-          rel.removeCompletelyFromInverse();
-          if (isNew === true) {
-            rel.clear();
-          }
+      this._relationships.forEach(function (name, rel) {
+        rel.removeCompletelyFromInverse();
+        if (isNew === true) {
+          rel.clear();
         }
       });
 
@@ -3405,33 +3399,44 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
     };
 
     InternalModel.prototype.destroyRelationships = function destroyRelationships() {
-      var _this3 = this;
+      var _this = this;
 
-      this.eachRelationship(function (name, relationship) {
-        if (_this3._relationships.has(name)) {
-          var rel = _this3._relationships.get(name);
+      this._relationships.forEach(function (name, rel) {
+        if (rel._inverseIsAsync()) {
+          rel.removeInternalModelFromInverse(_this);
           rel.removeInverseRelationships();
+        } else {
+          rel.removeCompletelyFromInverse();
         }
       });
 
       var implicitRelationships = this._implicitRelationships;
       this.__implicitRelationships = null;
       Object.keys(implicitRelationships).forEach(function (key) {
-        implicitRelationships[key].removeInverseRelationships();
+        var rel = implicitRelationships[key];
+
+        if (rel._inverseIsAsync()) {
+          rel.removeInternalModelFromInverse(_this);
+          rel.removeInverseRelationships();
+        } else {
+          rel.removeCompletelyFromInverse();
+        }
+
+        rel.destroy();
       });
     };
 
     InternalModel.prototype.preloadData = function preloadData(preload) {
-      var _this4 = this;
+      var _this2 = this;
 
       //TODO(Igor) consider the polymorphic case
       Object.keys(preload).forEach(function (key) {
         var preloadValue = get(preload, key);
-        var relationshipMeta = _this4.modelClass.metaForProperty(key);
+        var relationshipMeta = _this2.modelClass.metaForProperty(key);
         if (relationshipMeta.isRelationship) {
-          _this4._preloadRelationship(key, preloadValue);
+          _this2._preloadRelationship(key, preloadValue);
         } else {
-          _this4._data[key] = preloadValue;
+          _this2._data[key] = preloadValue;
         }
       });
     };
@@ -3635,7 +3640,7 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
     };
 
     InternalModel.prototype.referenceFor = function referenceFor(kind, name) {
-      var _this5 = this;
+      var _this3 = this;
 
       var reference = this.references[name];
 
@@ -8678,6 +8683,13 @@ define("ember-data/-private/system/relationships/state/create", ["exports", "emb
       return !!this.initializedRelationships[key];
     };
 
+    Relationships.prototype.forEach = function forEach(cb) {
+      var rels = this.initializedRelationships;
+      Object.keys(rels).forEach(function (name) {
+        cb(name, rels[name]);
+      });
+    };
+
     Relationships.prototype.get = function get(key) {
       var relationships = this.initializedRelationships;
       var relationship = relationships[key];
@@ -9052,6 +9064,20 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
       }
     };
 
+    ManyRelationship.prototype.destroy = function destroy() {
+      _Relationship.prototype.destroy.call(this);
+      var manyArray = this._manyArray;
+      if (manyArray) {
+        manyArray.destroy();
+      }
+
+      var proxy = this.__loadingPromise;
+
+      if (proxy) {
+        proxy.destroy();
+      }
+    };
+
     _createClass(ManyRelationship, [{
       key: '_loadingPromise',
       get: function () {
@@ -9145,6 +9171,13 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
       this.hasData = false;
       this.hasLoaded = false;
     }
+
+    Relationship.prototype._inverseIsAsync = function _inverseIsAsync() {
+      if (!this.inverseKey || !this.inverseInternalModel) {
+        return false;
+      }
+      return this.inverseInternalModel._relationships.get(this.inverseKey).isAsync;
+    };
 
     Relationship.prototype.removeInverseRelationships = function removeInverseRelationships() {
       var _this = this;
@@ -9240,7 +9273,7 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
         var _relationships = internalModel._implicitRelationships;
         var _relationship = _relationships[this.inverseKeyForImplicit];
         if (!_relationship) {
-          _relationship = _relationships[this.inverseKeyForImplicit] = new Relationship(this.store, internalModel, this.key, { options: {} });
+          _relationship = _relationships[this.inverseKeyForImplicit] = new Relationship(this.store, internalModel, this.key, { options: { async: this.isAsync } });
         }
         _relationship.addCanonicalInternalModel(this.internalModel);
       }
@@ -9278,7 +9311,7 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
           internalModel._relationships.get(this.inverseKey).addInternalModel(this.internalModel);
         } else {
           if (!internalModel._implicitRelationships[this.inverseKeyForImplicit]) {
-            internalModel._implicitRelationships[this.inverseKeyForImplicit] = new Relationship(this.store, internalModel, this.key, { options: {} });
+            internalModel._implicitRelationships[this.inverseKeyForImplicit] = new Relationship(this.store, internalModel, this.key, { options: { async: this.isAsync } });
           }
           internalModel._implicitRelationships[this.inverseKeyForImplicit].addInternalModel(this.internalModel);
         }
@@ -9461,6 +9494,8 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
     };
 
     Relationship.prototype.updateData = function updateData() {};
+
+    Relationship.prototype.destroy = function destroy() {};
 
     _createClass(Relationship, [{
       key: 'parentType',
@@ -17721,7 +17756,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.14.6+57832a45a0";
+  exports.default = "2.14.6+ffbcc42fcd";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
