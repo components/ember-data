@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.7
+ * @version   2.14.8
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -3061,11 +3061,22 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
       }
     };
 
+    InternalModel.prototype.hasScheduledDestroy = function hasScheduledDestroy() {
+      return !!this._scheduledDestroy;
+    };
+
     InternalModel.prototype.cancelDestroy = function cancelDestroy() {
 
       this._isDematerializing = false;
       run.cancel(this._scheduledDestroy);
       this._scheduledDestroy = null;
+    };
+
+    InternalModel.prototype.destroySync = function destroySync() {
+      if (this._isDematerializing) {
+        this.cancelDestroy();
+      }
+      this._checkForOrphanedInternalModels();
     };
 
     InternalModel.prototype._checkForOrphanedInternalModels = function _checkForOrphanedInternalModels() {
@@ -12044,13 +12055,21 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
     */
     _buildInternalModel: function (modelName, id, data) {
 
-      var recordMap = this._internalModelsFor(modelName);
+      var internalModels = this._internalModelsFor(modelName);
+      var existingInternalModel = internalModels.get(id);
+
+      if (existingInternalModel && existingInternalModel.hasScheduledDestroy()) {
+        // unloadRecord is async, if one attempts to unload + then sync create,
+        // we must ensure the unload is complete before starting the create
+        existingInternalModel.destroySync();
+        existingInternalModel = null;
+      }
 
       // lookupFactory should really return an object that creates
       // instances with the injections applied
       var internalModel = new _internalModel5.default(modelName, id, this, data);
 
-      recordMap.add(internalModel, id);
+      internalModels.add(internalModel, id);
 
       return internalModel;
     },
@@ -17760,7 +17779,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.14.7";
+  exports.default = "2.14.8";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";

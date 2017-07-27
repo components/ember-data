@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.7
+ * @version   2.14.8
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -3091,12 +3091,23 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
       }
     };
 
+    InternalModel.prototype.hasScheduledDestroy = function hasScheduledDestroy() {
+      return !!this._scheduledDestroy;
+    };
+
     InternalModel.prototype.cancelDestroy = function cancelDestroy() {
       (0, _debug.assert)('You cannot cancel the destruction of an InternalModel once it has already been destroyed', !this.isDestroyed);
 
       this._isDematerializing = false;
       run.cancel(this._scheduledDestroy);
       this._scheduledDestroy = null;
+    };
+
+    InternalModel.prototype.destroySync = function destroySync() {
+      if (this._isDematerializing) {
+        this.cancelDestroy();
+      }
+      this._checkForOrphanedInternalModels();
     };
 
     InternalModel.prototype._checkForOrphanedInternalModels = function _checkForOrphanedInternalModels() {
@@ -12356,15 +12367,23 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
 
       (0, _debug.assert)('You can no longer pass a modelClass as the first argument to store._buildInternalModel. Pass modelName instead.', typeof modelName === 'string');
 
-      var recordMap = this._internalModelsFor(modelName);
+      var internalModels = this._internalModelsFor(modelName);
+      var existingInternalModel = internalModels.get(id);
 
-      (0, _debug.assert)('The id ' + id + ' has already been used with another record for modelClass \'' + modelName + '\'.', !id || !recordMap.get(id));
+      if (existingInternalModel && existingInternalModel.hasScheduledDestroy()) {
+        // unloadRecord is async, if one attempts to unload + then sync create,
+        // we must ensure the unload is complete before starting the create
+        existingInternalModel.destroySync();
+        existingInternalModel = null;
+      }
+
+      (0, _debug.assert)('The id ' + id + ' has already been used with another record for modelClass \'' + modelName + '\'.', !existingInternalModel);
 
       // lookupFactory should really return an object that creates
       // instances with the injections applied
       var internalModel = new _internalModel5.default(modelName, id, this, data);
 
-      recordMap.add(internalModel, id);
+      internalModels.add(internalModel, id);
 
       return internalModel;
     },
@@ -18298,7 +18317,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.14.7";
+  exports.default = "2.14.8";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
