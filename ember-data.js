@@ -14,8 +14,6 @@ var loader, define, requireModule, require, requirejs;
 (function (global) {
   'use strict';
 
-  var heimdall = global.heimdall;
-
   function dict() {
     var obj = Object.create(null);
     obj['__'] = undefined;
@@ -57,7 +55,9 @@ var loader, define, requireModule, require, requirejs;
           }
         }
       }
-    }
+    },
+    // Option to enable or disable the generation of default exports
+    makeDefaultExport: true
   };
 
   var registry = dict();
@@ -107,6 +107,7 @@ var loader, define, requireModule, require, requirejs;
       return this.module.exports;
     }
 
+
     if (loader.wrapModules) {
       this.callback = loader.wrapModules(this.id, this.callback);
     }
@@ -120,7 +121,9 @@ var loader, define, requireModule, require, requirejs;
     if (!(this.hasExportsAsDep && result === undefined)) {
       this.module.exports = result;
     }
-    this.makeDefaultExport();
+    if (loader.makeDefaultExport) {
+      this.makeDefaultExport();
+    }
     return this.module.exports;
   };
 
@@ -277,6 +280,7 @@ var loader, define, requireModule, require, requirejs;
     if (child.charAt(0) !== '.') {
       return child;
     }
+
 
     var parts = child.split('/');
     var nameParts = id.split('/');
