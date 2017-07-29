@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.7+bb3c60b32e
+ * @version   2.14.7+367a0d6060
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -3108,6 +3108,13 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
         this.cancelDestroy();
       }
       this._checkForOrphanedInternalModels();
+      if (this.isDestroyed || this.isDestroying) {
+        return;
+      }
+
+      // just in-case we are not one of the orphaned, we should still
+      // still destroy ourselves
+      this.destroy();
     };
 
     InternalModel.prototype._checkForOrphanedInternalModels = function _checkForOrphanedInternalModels() {
@@ -11071,15 +11078,16 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       var trueId = (0, _coerceId.default)(id);
       var internalModel = this._internalModelsFor(modelName).get(trueId);
 
-      if (!internalModel) {
-        internalModel = this._buildInternalModel(modelName, trueId);
+      if (internalModel) {
+        if (internalModel.hasScheduledDestroy()) {
+          internalModel.destroySync();
+          return this._buildInternalModel(modelName, trueId);
+        } else {
+          return internalModel;
+        }
       } else {
-        // if we already have an internalModel, we need to ensure any async teardown is cancelled
-        //   since we want it again.
-        internalModel.cancelDestroy();
+        return this._buildInternalModel(modelName, trueId);
       }
-
-      return internalModel;
     },
     _internalModelDidReceiveRelationshipData: function (modelName, id, relationshipData) {
       this._relationshipsPayloads.push(modelName, id, relationshipData);
@@ -18317,7 +18325,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.14.7+bb3c60b32e";
+  exports.default = "2.14.7+367a0d6060";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
