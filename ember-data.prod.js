@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.9
+ * @version   2.14.9+5b4cabb6ae
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -9440,11 +9440,14 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
       this.store._updateRelationshipState(this);
     };
 
-    Relationship.prototype.updateLink = function updateLink(link) {
+    Relationship.prototype.updateLink = function updateLink(link, initial) {
 
       this.link = link;
       this.linkPromise = null;
-      this.internalModel.notifyPropertyChange(this.key);
+
+      if (!initial) {
+        this.internalModel.notifyPropertyChange(this.key);
+      }
     };
 
     Relationship.prototype.findLink = function findLink() {
@@ -12341,7 +12344,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
 
       if (relationshipRequiresNotification) {
         var relationshipData = data.relationships[relationshipName];
-        relationships.get(relationshipName).push(relationshipData);
+        relationships.get(relationshipName).push(relationshipData, false);
       }
 
       // in debug, assert payload validity eagerly
@@ -17787,7 +17790,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.14.9";
+  exports.default = "2.14.9+5b4cabb6ae";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
