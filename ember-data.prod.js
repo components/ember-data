@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.16.0-canary+356494a791
+ * @version   2.16.0-canary+d67e27f7c2
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -11792,6 +11792,11 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
         return;
       }
 
+      var existingInternalModel = this._existingInternalModelForId(modelName, id);
+
+      (false && _ember.default.assert('\'' + modelName + '\' was saved to the server, but the response returned the new id \'' + id + '\', which has already been used with another record.\'', isNone(existingInternalModel) || existingInternalModel === internalModel));
+
+
       this._internalModelsFor(internalModel.modelName).set(id, internalModel);
 
       internalModel.setId(id);
@@ -12333,15 +12338,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       (false && _ember.default.assert('You can no longer pass a modelClass as the first argument to store._buildInternalModel. Pass modelName instead.', typeof modelName === 'string'));
 
 
-      var internalModels = this._internalModelsFor(modelName);
-      var existingInternalModel = internalModels.get(id);
-
-      if (existingInternalModel && existingInternalModel.hasScheduledDestroy()) {
-        // unloadRecord is async, if one attempts to unload + then sync create,
-        // we must ensure the unload is complete before starting the create
-        existingInternalModel.destroySync();
-        existingInternalModel = null;
-      }
+      var existingInternalModel = this._existingInternalModelForId(modelName, id);
 
       (false && _ember.default.assert('The id ' + id + ' has already been used with another record for modelClass \'' + modelName + '\'.', !existingInternalModel));
 
@@ -12350,8 +12347,19 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
 
       var internalModel = new _internalModel5.default(modelName, id, this, data);
 
-      internalModels.add(internalModel, id);
+      this._internalModelsFor(modelName).add(internalModel, id);
 
+      return internalModel;
+    },
+    _existingInternalModelForId: function (modelName, id) {
+      var internalModel = this._internalModelsFor(modelName).get(id);
+
+      if (internalModel && internalModel.hasScheduledDestroy()) {
+        // unloadRecord is async, if one attempts to unload + then sync create,
+        // we must ensure the unload is complete before starting the create
+        internalModel.destroySync();
+        internalModel = null;
+      }
       return internalModel;
     },
     buildInternalModel: function (modelName, id, data) {
@@ -18248,7 +18256,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.16.0-canary+356494a791";
+  exports.default = "2.16.0-canary+d67e27f7c2";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
