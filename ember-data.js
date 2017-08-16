@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.16.0-canary+d67ca67810
+ * @version   2.16.0-canary+ef9f707bb3
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -403,7 +403,7 @@ define('ember-data/-debug', ['exports', 'ember'], function (exports, _ember) {
 
   exports.assertPolymorphicType = assertPolymorphicType;
 });
-define('ember-data/-private/adapters/build-url-mixin', ['exports', 'ember'], function (exports, _ember) {
+define('ember-data/-private/adapters/build-url-mixin', ['exports', 'ember', 'ember-inflector'], function (exports, _ember, _emberInflector) {
   'use strict';
 
   exports.__esModule = true;
@@ -803,10 +803,11 @@ define('ember-data/-private/adapters/build-url-mixin', ['exports', 'ember'], fun
       endpoint of "/line_items/".
        ```app/adapters/application.js
       import DS from 'ember-data';
+      import { pluralize } from 'ember-inflector';
        export default DS.RESTAdapter.extend({
         pathForType: function(modelName) {
           var decamelized = Ember.String.decamelize(modelName);
-          return Ember.String.pluralize(decamelized);
+          return pluralize(decamelized);
         }
       });
       ```
@@ -816,7 +817,7 @@ define('ember-data/-private/adapters/build-url-mixin', ['exports', 'ember'], fun
     **/
     pathForType: function (modelName) {
       var camelized = _ember.default.String.camelize(modelName);
-      return _ember.default.String.pluralize(camelized);
+      return (0, _emberInflector.pluralize)(camelized);
     }
   });
 });
@@ -13858,7 +13859,7 @@ define('ember-data/adapters/errors', ['exports', 'ember-data/-private'], functio
     }
   });
 });
-define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters/rest', 'ember-data/-private', 'ember-data/-debug'], function (exports, _ember, _rest, _private, _debug) {
+define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-inflector', 'ember-data/adapters/rest', 'ember-data/-private', 'ember-data/-debug'], function (exports, _ember, _emberInflector, _rest, _private, _debug) {
   'use strict';
 
   exports.__esModule = true;
@@ -14000,11 +14001,6 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
     @namespace DS
     @extends DS.RESTAdapter
   */
-  /* global heimdall */
-  /**
-    @module ember-data
-  */
-
   var JSONAPIAdapter = _rest.default.extend({
     defaultSerializer: '-json-api',
 
@@ -14083,7 +14079,7 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
     },
     pathForType: function (modelName) {
       var dasherized = _ember.default.String.dasherize(modelName);
-      return _ember.default.String.pluralize(dasherized);
+      return (0, _emberInflector.pluralize)(dasherized);
     },
     updateRecord: function (store, type, snapshot) {
       if ((0, _private.isEnabled)('ds-improved-ajax') && !this._hasCustomizedAjax()) {
@@ -14120,7 +14116,10 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-data/adapters
 
       return false;
     }
-  });
+  }); /* global heimdall */
+  /**
+    @module ember-data
+  */
 
   if ((0, _private.isEnabled)('ds-improved-ajax')) {
 
@@ -18300,7 +18299,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.16.0-canary+d67ca67810";
+  exports.default = "2.16.0-canary+ef9f707bb3";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
