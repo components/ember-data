@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.16.0-canary+d67e27f7c2
+ * @version   2.16.0-canary+d67ca67810
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -2961,7 +2961,11 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
       this.dematerializeRecord();
 
       if (this._scheduledDestroy === null) {
-        this._scheduledDestroy = run.schedule('destroy', this, '_checkForOrphanedInternalModels');
+        // TODO: use run.schedule once we drop 1.13
+        if (!_ember.default.run.currentRunLoop) {
+          (false && _ember.default.assert('You have turned on testing mode, which disabled the run-loop\'s autorun.\n                  You will need to wrap any code with asynchronous side-effects in a run', _ember.default.testing));
+        }
+        this._scheduledDestroy = _ember.default.run.backburner.schedule('destroy', this, '_checkForOrphanedInternalModels');
       }
     };
 
@@ -8939,7 +8943,7 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
         }
         this.__loadingPromise.set('promise', promise);
       } else {
-        this.__loadingPromise = new _promiseProxies.PromiseManyArray({
+        this.__loadingPromise = _promiseProxies.PromiseManyArray.create({
           promise: promise,
           content: content
         });
@@ -13163,7 +13167,12 @@ define('ember-data/-private/utils', ['exports', 'ember'], function (exports, _em
 
     if (owner && owner.lookupFactory && !owner._lookupFactory) {
       // `owner` is a container, we are just making this work
-      owner._lookupFactory = owner.lookupFactory;
+      owner._lookupFactory = function () {
+        var _owner;
+
+        return (_owner = owner).lookupFactory.apply(_owner, arguments);
+      };
+
       owner.register = function () {
         var registry = owner.registry || owner._registry || owner;
 
@@ -18256,7 +18265,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.16.0-canary+d67e27f7c2";
+  exports.default = "2.16.0-canary+d67ca67810";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
