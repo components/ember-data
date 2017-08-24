@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.10+1bc3df27bf
+ * @version   2.14.10+befa99aeae
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -9172,13 +9172,9 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
     };
 
     ManyRelationship.prototype.setInitialInternalModels = function setInitialInternalModels(internalModels) {
-      var _canonicalState;
-
       if (Array.isArray(internalModels) === false || internalModels.length === 0) {
         return;
       }
-
-      var forCanonical = [];
 
       for (var i = 0; i < internalModels.length; i++) {
         var internalModel = internalModels[i];
@@ -9186,13 +9182,12 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
           continue;
         }
 
-        forCanonical.push(internalModel);
         this.canonicalMembers.add(internalModel);
         this.members.add(internalModel);
         this.setupInverseRelationship(internalModel);
       }
 
-      (_canonicalState = this.canonicalState).splice.apply(_canonicalState, [0, this.canonicalState.length].concat(forCanonical));
+      this.canonicalState = this.canonicalMembers.toArray();
     };
 
     ManyRelationship.prototype.fetchLink = function fetchLink() {
@@ -18328,7 +18323,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.14.10+1bc3df27bf";
+  exports.default = "2.14.10+befa99aeae";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
