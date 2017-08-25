@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.16.0-canary+50592d839c
+ * @version   2.16.0-canary+441e48c5fd
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -2711,6 +2711,14 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
     return true;
   }
 
+  function destroyRelationship(rel) {
+    if (rel._inverseIsAsync()) {
+      rel.removeInternalModelFromInverse(rel.inverseInternalModel);
+      rel.removeInverseRelationships();
+    } else {
+      rel.removeCompletelyFromInverse();
+    }
+  }
   // this (and all heimdall instrumentation) will be stripped by a babel transform
   //  https://github.com/heimdalljs/babel5-plugin-strip-heimdall
 
@@ -2927,9 +2935,7 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
     InternalModel.prototype._directlyRelatedInternalModels = function _directlyRelatedInternalModels() {
       var array = [];
       this._relationships.forEach(function (name, rel) {
-        var local = rel.members.toArray();
-        var server = rel.canonicalMembers.toArray();
-        array = array.concat(local, server);
+        array = array.concat(rel.members.list, rel.canonicalMembers.list);
       });
       return array;
     };
@@ -2958,6 +2964,9 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
     };
 
     InternalModel.prototype.unloadRecord = function unloadRecord() {
+      if (this.isDestroyed) {
+        return;
+      }
       this.send('unloadRecord');
       this.dematerializeRecord();
 
@@ -3334,15 +3343,9 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
     };
 
     InternalModel.prototype.destroyRelationships = function destroyRelationships() {
-      var _this = this;
-
-      this._relationships.forEach(function (name, rel) {
-        if (rel._inverseIsAsync()) {
-          rel.removeInternalModelFromInverse(_this);
-          rel.removeInverseRelationships();
-        } else {
-          rel.removeCompletelyFromInverse();
-        }
+      var relationships = this._relationships;
+      relationships.forEach(function (name, rel) {
+        return destroyRelationship(rel);
       });
 
       var implicitRelationships = this._implicitRelationships;
@@ -3350,28 +3353,23 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
       Object.keys(implicitRelationships).forEach(function (key) {
         var rel = implicitRelationships[key];
 
-        if (rel._inverseIsAsync()) {
-          rel.removeInternalModelFromInverse(_this);
-          rel.removeInverseRelationships();
-        } else {
-          rel.removeCompletelyFromInverse();
-        }
+        destroyRelationship(rel);
 
         rel.destroy();
       });
     };
 
     InternalModel.prototype.preloadData = function preloadData(preload) {
-      var _this2 = this;
+      var _this = this;
 
       //TODO(Igor) consider the polymorphic case
       Object.keys(preload).forEach(function (key) {
         var preloadValue = get(preload, key);
-        var relationshipMeta = _this2.modelClass.metaForProperty(key);
+        var relationshipMeta = _this.modelClass.metaForProperty(key);
         if (relationshipMeta.isRelationship) {
-          _this2._preloadRelationship(key, preloadValue);
+          _this._preloadRelationship(key, preloadValue);
         } else {
-          _this2._data[key] = preloadValue;
+          _this._data[key] = preloadValue;
         }
       });
     };
@@ -9327,8 +9325,6 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
     };
 
     Relationship.prototype.removeInverseRelationships = function removeInverseRelationships() {
-      var _this = this;
-
       if (!this.inverseKey) {
         return;
       }
@@ -9336,12 +9332,13 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
       var allMembers =
       // we actually want a union of members and canonicalMembers
       // they should be disjoint but currently are not due to a bug
-      this.members.toArray().concat(this.canonicalMembers.toArray());
+      this.members.list.concat(this.canonicalMembers.list);
 
-      allMembers.forEach(function (inverseInternalModel) {
-        var relationship = inverseInternalModel._relationships.get(_this.inverseKey);
+      for (var i = 0; i < allMembers.length; i++) {
+        var inverseInternalModel = allMembers[i];
+        var relationship = inverseInternalModel._relationships.get(this.inverseKey);
         relationship.inverseDidDematerialize();
-      });
+      }
     };
 
     Relationship.prototype.inverseDidDematerialize = function inverseDidDematerialize() {};
@@ -9366,18 +9363,18 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
     };
 
     Relationship.prototype.removeInternalModels = function removeInternalModels(internalModels) {
-      var _this2 = this;
+      var _this = this;
 
       internalModels.forEach(function (internalModel) {
-        return _this2.removeInternalModel(internalModel);
+        return _this.removeInternalModel(internalModel);
       });
     };
 
     Relationship.prototype.addInternalModels = function addInternalModels(internalModels, idx) {
-      var _this3 = this;
+      var _this2 = this;
 
       internalModels.forEach(function (internalModel) {
-        _this3.addInternalModel(internalModel, idx);
+        _this2.addInternalModel(internalModel, idx);
         if (idx !== undefined) {
           idx++;
         }
@@ -9507,7 +9504,7 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
     };
 
     Relationship.prototype.removeCompletelyFromInverse = function removeCompletelyFromInverse() {
-      var _this4 = this;
+      var _this3 = this;
 
       if (!this.inverseKey) {
         return;
@@ -9522,7 +9519,7 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
         var id = guidFor(inverseInternalModel);
 
         if (seen[id] === undefined) {
-          var relationship = inverseInternalModel._relationships.get(_this4.inverseKey);
+          var relationship = inverseInternalModel._relationships.get(_this3.inverseKey);
           relationship.removeCompletelyFromOwn(internalModel);
           seen[id] = true;
         }
@@ -18269,7 +18266,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.16.0-canary+50592d839c";
+  exports.default = "2.16.0-canary+441e48c5fd";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
