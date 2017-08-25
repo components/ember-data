@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.14.10+4ab8024f0b
+ * @version   2.14.10+d62ae1a34b
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -8445,7 +8445,13 @@ define('ember-data/-private/system/relationships/relationship-payloads', ['expor
         // Then we will initially have set user:2 as having helicopter:1, which we
         // need to remove before adding helicopter:1 to user:4
         //
-        this._removeInverse(id, previousPayload, inverseIdToPayloads);
+        // only remove relationship information before adding if there is relationshipData.data
+        // * null is considered new information "empty", and it should win
+        // * undefined is NOT considered new information, we should keep original state
+        // * anything else is considered new information, and it should win
+        if (relationshipData.data !== undefined) {
+          this._removeInverse(id, previousPayload, inverseIdToPayloads);
+        }
         idToPayloads[id] = relationshipData;
         this._populateInverse(relationshipData, inverseRelationshipData, inverseIdToPayloads, inverseIsMany);
       }
@@ -18329,7 +18335,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.14.10+4ab8024f0b";
+  exports.default = "2.14.10+d62ae1a34b";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
