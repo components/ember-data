@@ -1,6 +1,6 @@
 {
   "name": "components-ember-data",
-  "version": "2.16.0-canary+441e48c5fd",
+  "version": "2.16.0-canary+7a7bafafc3",
   "description": "A data persistence library for Ember.js.",
   "keywords": [
     "ember"

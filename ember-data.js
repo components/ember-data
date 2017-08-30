@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.16.0-canary+441e48c5fd
+ * @version   2.16.0-canary+7a7bafafc3
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -2874,7 +2874,6 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
 
     InternalModel.prototype.resetRecord = function resetRecord() {
       this._record = null;
-      this.dataHasInitialized = false;
       this.isReloading = false;
       this.error = null;
       this.currentState = _states.default.empty;
@@ -3074,18 +3073,6 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
       if (this.hasRecord) {
         this._record._notifyProperties(changedKeys);
       }
-      this.didInitializeData();
-    };
-
-    InternalModel.prototype.becameReady = function becameReady() {
-      this.store.recordArrayManager.recordWasLoaded(this);
-    };
-
-    InternalModel.prototype.didInitializeData = function didInitializeData() {
-      if (!this.dataHasInitialized) {
-        this.becameReady();
-        this.dataHasInitialized = true;
-      }
     };
 
     InternalModel.prototype.createSnapshot = function createSnapshot(options) {
@@ -3098,7 +3085,6 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
 
     InternalModel.prototype.loadedData = function loadedData() {
       this.send('loadedData');
-      this.didInitializeData();
     };
 
     InternalModel.prototype.notFound = function notFound() {
@@ -3198,14 +3184,6 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
       if (get(this, 'isError')) {
         this._inFlightAttributes = null;
         this.didCleanError();
-      }
-
-      //Eventually rollback will always work for relationships
-      //For now we support it only out of deleted state, because we
-      //have an explicit way of knowing when the server acked the relationship change
-      if (this.isDeleted()) {
-        //TODO: Should probably move this to the state machine somehow
-        this.becameReady();
       }
 
       if (this.isNew()) {
@@ -11862,9 +11840,15 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
     _load: function (data) {
       var internalModel = this._internalModelForId(data.type, data.id);
 
+      var isUpdate = internalModel.currentState.isEmpty === false;
+
       internalModel.setupData(data);
 
-      this.recordArrayManager.recordDidChange(internalModel);
+      if (isUpdate) {
+        this.recordArrayManager.recordDidChange(internalModel);
+      } else {
+        this.recordArrayManager.recordWasLoaded(internalModel);
+      }
 
       return internalModel;
     },
@@ -18297,7 +18281,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.16.0-canary+441e48c5fd";
+  exports.default = "2.16.0-canary+7a7bafafc3";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
