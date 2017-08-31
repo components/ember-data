@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.16.0-canary+7a7bafafc3
+ * @version   2.16.0-canary+d3139da189
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -12205,9 +12205,10 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       // payload push.  In the common case where we are pushing many more
       // instances than types we want to minimize the cost of looking up the
       // inverse map and the overhead of Ember.get adds up.
-      var modelNameToInverseMap = Object.create(null);
+      var modelNameToInverseMap = void 0;
 
       for (var i = 0, l = pushed.length; i < l; i += 2) {
+        modelNameToInverseMap = modelNameToInverseMap || Object.create(null);
         // This will convert relationships specified as IDs into DS.Model instances
         // (possibly unloaded) and also create the data structures used to track
         // relationships.
@@ -12627,13 +12628,8 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
   }
 
   function setupRelationships(store, internalModel, data, modelNameToInverseMap) {
-    var relationships = internalModel._relationships;
-
-    internalModel.type.eachRelationship(function (relationshipName) {
-      if (!data.relationships[relationshipName]) {
-        return;
-      }
-
+    Object.keys(data.relationships).forEach(function (relationshipName) {
+      var relationships = internalModel._relationships;
       var relationshipRequiresNotification = relationships.has(relationshipName) || isInverseRelationshipInitialized(store, internalModel, data, relationshipName, modelNameToInverseMap);
 
       if (relationshipRequiresNotification) {
@@ -18250,7 +18246,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.16.0-canary+7a7bafafc3";
+  exports.default = "2.16.0-canary+d3139da189";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
