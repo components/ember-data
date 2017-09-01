@@ -6,15 +6,13 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.15.0-beta.4
+ * @version   2.15.0
  */
 
 var loader, define, requireModule, require, requirejs;
 
 (function (global) {
   'use strict';
-
-  var heimdall = global.heimdall;
 
   function dict() {
     var obj = Object.create(null);
@@ -32,9 +30,9 @@ var loader, define, requireModule, require, requirejs;
     requirejs: requirejs
   };
 
-  requirejs = require = requireModule = function (name) {
+  requirejs = require = requireModule = function (id) {
     var pending = [];
-    var mod = findModule(name, '(require)', pending);
+    var mod = findModule(id, '(require)', pending);
 
     for (var i = pending.length - 1; i >= 0; i--) {
       pending[i].exports();
@@ -57,17 +55,10 @@ var loader, define, requireModule, require, requirejs;
           }
         }
       }
-    }
+    },
+    // Option to enable or disable the generation of default exports
+    makeDefaultExport: true
   };
-
-  var _isArray;
-  if (!Array.isArray) {
-    _isArray = function (x) {
-      return Object.prototype.toString.call(x) === '[object Array]';
-    };
-  } else {
-    _isArray = Array.isArray;
-  }
 
   var registry = dict();
   var seen = dict();
@@ -75,14 +66,14 @@ var loader, define, requireModule, require, requirejs;
   var uuid = 0;
 
   function unsupportedModule(length) {
-    throw new Error('an unsupported module was defined, expected `define(name, deps, module)` instead got: `' + length + '` arguments to define`');
+    throw new Error('an unsupported module was defined, expected `define(id, deps, module)` instead got: `' + length + '` arguments to define`');
   }
 
   var defaultDeps = ['require', 'exports', 'module'];
 
-  function Module(name, deps, callback, alias) {
-    this.id = uuid++;
-    this.name = name;
+  function Module(id, deps, callback, alias) {
+    this.uuid = uuid++;
+    this.id = id;
     this.deps = !deps.length && callback.length ? defaultDeps : deps;
     this.module = { exports: {} };
     this.callback = callback;
@@ -116,19 +107,23 @@ var loader, define, requireModule, require, requirejs;
       return this.module.exports;
     }
 
+
     if (loader.wrapModules) {
-      this.callback = loader.wrapModules(this.name, this.callback);
+      this.callback = loader.wrapModules(this.id, this.callback);
     }
 
     this.reify();
 
     var result = this.callback.apply(this, this.reified);
+    this.reified.length = 0;
     this.state = 'finalized';
 
     if (!(this.hasExportsAsDep && result === undefined)) {
       this.module.exports = result;
     }
-    this.makeDefaultExport();
+    if (loader.makeDefaultExport) {
+      this.makeDefaultExport();
+    }
     return this.module.exports;
   };
 
@@ -181,27 +176,28 @@ var loader, define, requireModule, require, requirejs;
       } else if (dep === 'module') {
         entry.exports = this.module;
       } else {
-        entry.module = findModule(resolve(dep, this.name), this.name, pending);
+        entry.module = findModule(resolve(dep, this.id), this.id, pending);
       }
     }
   };
 
   Module.prototype.makeRequire = function () {
-    var name = this.name;
+    var id = this.id;
     var r = function (dep) {
-      return require(resolve(dep, name));
+      return require(resolve(dep, id));
     };
     r['default'] = r;
+    r.moduleId = id;
     r.has = function (dep) {
-      return has(resolve(dep, name));
+      return has(resolve(dep, id));
     };
     return r;
   };
 
-  define = function (name, deps, callback) {
-    var module = registry[name];
+  define = function (id, deps, callback) {
+    var module = registry[id];
 
-    // If a module for this name has already been defined and is in any state
+    // If a module for this id has already been defined and is in any state
     // other than `new` (meaning it has been or is currently being required),
     // then we return early to avoid redefinition.
     if (module && module.state !== 'new') {
@@ -212,42 +208,65 @@ var loader, define, requireModule, require, requirejs;
       unsupportedModule(arguments.length);
     }
 
-    if (!_isArray(deps)) {
+    if (!Array.isArray(deps)) {
       callback = deps;
       deps = [];
     }
 
     if (callback instanceof Alias) {
-      registry[name] = new Module(callback.name, deps, callback, true);
+      registry[id] = new Module(callback.id, deps, callback, true);
     } else {
-      registry[name] = new Module(name, deps, callback, false);
+      registry[id] = new Module(id, deps, callback, false);
     }
   };
 
+  define.exports = function (name, defaultExport) {
+    var module = registry[name];
+
+    // If a module for this name has already been defined and is in any state
+    // other than `new` (meaning it has been or is currently being required),
+    // then we return early to avoid redefinition.
+    if (module && module.state !== 'new') {
+      return;
+    }
+
+    module = new Module(name, [], noop, null);
+    module.module.exports = defaultExport;
+    module.state = 'finalized';
+    registry[name] = module;
+
+    return module;
+  };
+
+  function noop() {}
   // we don't support all of AMD
   // define.amd = {};
 
-  function Alias(path) {
-    this.name = path;
+  function Alias(id) {
+    this.id = id;
   }
 
-  define.alias = function (path) {
-    return new Alias(path);
+  define.alias = function (id, target) {
+    if (arguments.length === 2) {
+      return define(target, new Alias(id));
+    }
+
+    return new Alias(id);
   };
 
-  function missingModule(name, referrer) {
-    throw new Error('Could not find module `' + name + '` imported from `' + referrer + '`');
+  function missingModule(id, referrer) {
+    throw new Error('Could not find module `' + id + '` imported from `' + referrer + '`');
   }
 
-  function findModule(name, referrer, pending) {
-    var mod = registry[name] || registry[name + '/index'];
+  function findModule(id, referrer, pending) {
+    var mod = registry[id] || registry[id + '/index'];
 
     while (mod && mod.isAlias) {
-      mod = registry[mod.name];
+      mod = registry[mod.id];
     }
 
     if (!mod) {
-      missingModule(name, referrer);
+      missingModule(id, referrer);
     }
 
     if (pending && mod.state !== 'pending' && mod.state !== 'finalized') {
@@ -257,13 +276,14 @@ var loader, define, requireModule, require, requirejs;
     return mod;
   }
 
-  function resolve(child, name) {
+  function resolve(child, id) {
     if (child.charAt(0) !== '.') {
       return child;
     }
 
+
     var parts = child.split('/');
-    var nameParts = name.split('/');
+    var nameParts = id.split('/');
     var parentBase = nameParts.slice(0, -1);
 
     for (var i = 0, l = parts.length; i < l; i++) {
@@ -284,14 +304,14 @@ var loader, define, requireModule, require, requirejs;
     return parentBase.join('/');
   }
 
-  function has(name) {
-    return !!(registry[name] || registry[name + '/index']);
+  function has(id) {
+    return !!(registry[id] || registry[id + '/index']);
   }
 
   requirejs.entries = requirejs._eak_seen = registry;
   requirejs.has = has;
-  requirejs.unsee = function (moduleName) {
-    findModule(moduleName, '(unsee)', false).unsee();
+  requirejs.unsee = function (id) {
+    findModule(id, '(unsee)', false).unsee();
   };
 
   requirejs.clear = function () {
@@ -310,9 +330,12 @@ var loader, define, requireModule, require, requirejs;
   });
   define('foo/baz', [], define.alias('foo'));
   define('foo/quz', define.alias('foo'));
+  define.alias('foo', 'foo/qux');
   define('foo/bar', ['foo', './quz', './baz', './asdf', './bar', '../foo'], function () {});
   define('foo/main', ['foo/bar'], function () {});
+  define.exports('foo/exports', {});
 
+  require('foo/exports');
   require('foo/main');
   require.unsee('foo/bar');
 
@@ -2788,6 +2811,14 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
     return true;
   }
 
+  function destroyRelationship(rel) {
+    if (rel._inverseIsAsync()) {
+      rel.removeInternalModelFromInverse(rel.inverseInternalModel);
+      rel.removeInverseRelationships();
+    } else {
+      rel.removeCompletelyFromInverse();
+    }
+  }
   // this (and all heimdall instrumentation) will be stripped by a babel transform
   //  https://github.com/heimdalljs/babel5-plugin-strip-heimdall
 
@@ -2937,7 +2968,6 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
 
     InternalModel.prototype.resetRecord = function resetRecord() {
       this._record = null;
-      this.dataHasInitialized = false;
       this.isReloading = false;
       this.error = null;
       this.currentState = _states.default.empty;
@@ -3004,9 +3034,7 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
     InternalModel.prototype._directlyRelatedInternalModels = function _directlyRelatedInternalModels() {
       var array = [];
       this._relationships.forEach(function (name, rel) {
-        var local = rel.members.toArray();
-        var server = rel.canonicalMembers.toArray();
-        array = array.concat(local, server);
+        array = array.concat(rel.members.list, rel.canonicalMembers.list);
       });
       return array;
     };
@@ -3035,6 +3063,9 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
     };
 
     InternalModel.prototype.unloadRecord = function unloadRecord() {
+      if (this.isDestroyed) {
+        return;
+      }
       this.send('unloadRecord');
       this.dematerializeRecord();
 
@@ -3132,18 +3163,6 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
       if (this.hasRecord) {
         this._record._notifyProperties(changedKeys);
       }
-      this.didInitializeData();
-    };
-
-    InternalModel.prototype.becameReady = function becameReady() {
-      this.store.recordArrayManager.recordWasLoaded(this);
-    };
-
-    InternalModel.prototype.didInitializeData = function didInitializeData() {
-      if (!this.dataHasInitialized) {
-        this.becameReady();
-        this.dataHasInitialized = true;
-      }
     };
 
     InternalModel.prototype.createSnapshot = function createSnapshot(options) {
@@ -3156,7 +3175,6 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
 
     InternalModel.prototype.loadedData = function loadedData() {
       this.send('loadedData');
-      this.didInitializeData();
     };
 
     InternalModel.prototype.notFound = function notFound() {
@@ -3256,14 +3274,6 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
       if (get(this, 'isError')) {
         this._inFlightAttributes = null;
         this.didCleanError();
-      }
-
-      //Eventually rollback will always work for relationships
-      //For now we support it only out of deleted state, because we
-      //have an explicit way of knowing when the server acked the relationship change
-      if (this.isDeleted()) {
-        //TODO: Should probably move this to the state machine somehow
-        this.becameReady();
       }
 
       if (this.isNew()) {
@@ -3407,15 +3417,9 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
     };
 
     InternalModel.prototype.destroyRelationships = function destroyRelationships() {
-      var _this = this;
-
-      this._relationships.forEach(function (name, rel) {
-        if (rel._inverseIsAsync()) {
-          rel.removeInternalModelFromInverse(_this);
-          rel.removeInverseRelationships();
-        } else {
-          rel.removeCompletelyFromInverse();
-        }
+      var relationships = this._relationships;
+      relationships.forEach(function (name, rel) {
+        return destroyRelationship(rel);
       });
 
       var implicitRelationships = this._implicitRelationships;
@@ -3423,28 +3427,23 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember', '
       Object.keys(implicitRelationships).forEach(function (key) {
         var rel = implicitRelationships[key];
 
-        if (rel._inverseIsAsync()) {
-          rel.removeInternalModelFromInverse(_this);
-          rel.removeInverseRelationships();
-        } else {
-          rel.removeCompletelyFromInverse();
-        }
+        destroyRelationship(rel);
 
         rel.destroy();
       });
     };
 
     InternalModel.prototype.preloadData = function preloadData(preload) {
-      var _this2 = this;
+      var _this = this;
 
       //TODO(Igor) consider the polymorphic case
       Object.keys(preload).forEach(function (key) {
         var preloadValue = get(preload, key);
-        var relationshipMeta = _this2.modelClass.metaForProperty(key);
+        var relationshipMeta = _this.modelClass.metaForProperty(key);
         if (relationshipMeta.isRelationship) {
-          _this2._preloadRelationship(key, preloadValue);
+          _this._preloadRelationship(key, preloadValue);
         } else {
-          _this2._data[key] = preloadValue;
+          _this._data[key] = preloadValue;
         }
       });
     };
@@ -8405,13 +8404,12 @@ define('ember-data/-private/system/relationships/relationship-payloads', ['expor
             id: id,
             type: modelName
           }
-        };
 
-        // start flushing this individual payload.  The logic is the same whether
-        // it's for the left hand side of the relationship or the right hand side,
-        // except the role of primary and inverse idToPayloads is reversed
-        //
-        var previousPayload = void 0;
+          // start flushing this individual payload.  The logic is the same whether
+          // it's for the left hand side of the relationship or the right hand side,
+          // except the role of primary and inverse idToPayloads is reversed
+          //
+        };var previousPayload = void 0;
         var idToPayloads = void 0;
         var inverseIdToPayloads = void 0;
         var inverseIsMany = void 0;
@@ -8464,7 +8462,13 @@ define('ember-data/-private/system/relationships/relationship-payloads', ['expor
         // Then we will initially have set user:2 as having helicopter:1, which we
         // need to remove before adding helicopter:1 to user:4
         //
-        this._removeInverse(id, previousPayload, inverseIdToPayloads);
+        // only remove relationship information before adding if there is relationshipData.data
+        // * null is considered new information "empty", and it should win
+        // * undefined is NOT considered new information, we should keep original state
+        // * anything else is considered new information, and it should win
+        if (relationshipData.data !== undefined) {
+          this._removeInverse(id, previousPayload, inverseIdToPayloads);
+        }
         idToPayloads[id] = relationshipData;
         this._populateInverse(relationshipData, inverseRelationshipData, inverseIdToPayloads, inverseIsMany);
       }
@@ -9184,13 +9188,9 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
     };
 
     ManyRelationship.prototype.setInitialInternalModels = function setInitialInternalModels(internalModels) {
-      var _canonicalState;
-
       if (Array.isArray(internalModels) === false || internalModels.length === 0) {
         return;
       }
-
-      var forCanonical = [];
 
       for (var i = 0; i < internalModels.length; i++) {
         var internalModel = internalModels[i];
@@ -9198,13 +9198,12 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
           continue;
         }
 
-        forCanonical.push(internalModel);
         this.canonicalMembers.add(internalModel);
         this.members.add(internalModel);
         this.setupInverseRelationship(internalModel);
       }
 
-      (_canonicalState = this.canonicalState).splice.apply(_canonicalState, [0, this.canonicalState.length].concat(forCanonical));
+      this.canonicalState = this.canonicalMembers.toArray();
     };
 
     ManyRelationship.prototype.fetchLink = function fetchLink() {
@@ -9397,8 +9396,6 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
     };
 
     Relationship.prototype.removeInverseRelationships = function removeInverseRelationships() {
-      var _this = this;
-
       if (!this.inverseKey) {
         return;
       }
@@ -9406,12 +9403,13 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
       var allMembers =
       // we actually want a union of members and canonicalMembers
       // they should be disjoint but currently are not due to a bug
-      this.members.toArray().concat(this.canonicalMembers.toArray());
+      this.members.list.concat(this.canonicalMembers.list);
 
-      allMembers.forEach(function (inverseInternalModel) {
-        var relationship = inverseInternalModel._relationships.get(_this.inverseKey);
+      for (var i = 0; i < allMembers.length; i++) {
+        var inverseInternalModel = allMembers[i];
+        var relationship = inverseInternalModel._relationships.get(this.inverseKey);
         relationship.inverseDidDematerialize();
-      });
+      }
     };
 
     Relationship.prototype.inverseDidDematerialize = function inverseDidDematerialize() {};
@@ -9436,18 +9434,18 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
     };
 
     Relationship.prototype.removeInternalModels = function removeInternalModels(internalModels) {
-      var _this2 = this;
+      var _this = this;
 
       internalModels.forEach(function (internalModel) {
-        return _this2.removeInternalModel(internalModel);
+        return _this.removeInternalModel(internalModel);
       });
     };
 
     Relationship.prototype.addInternalModels = function addInternalModels(internalModels, idx) {
-      var _this3 = this;
+      var _this2 = this;
 
       internalModels.forEach(function (internalModel) {
-        _this3.addInternalModel(internalModel, idx);
+        _this2.addInternalModel(internalModel, idx);
         if (idx !== undefined) {
           idx++;
         }
@@ -9577,7 +9575,7 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
     };
 
     Relationship.prototype.removeCompletelyFromInverse = function removeCompletelyFromInverse() {
-      var _this4 = this;
+      var _this3 = this;
 
       if (!this.inverseKey) {
         return;
@@ -9592,7 +9590,7 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
         var id = guidFor(inverseInternalModel);
 
         if (seen[id] === undefined) {
-          var relationship = inverseInternalModel._relationships.get(_this4.inverseKey);
+          var relationship = inverseInternalModel._relationships.get(_this3.inverseKey);
           relationship.removeCompletelyFromOwn(internalModel);
           seen[id] = true;
         }
@@ -11866,6 +11864,11 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
         return;
       }
 
+      var existingInternalModel = this._existingInternalModelForId(modelName, id);
+
+      (false && _ember.default.assert('\'' + modelName + '\' was saved to the server, but the response returned the new id \'' + id + '\', which has already been used with another record.\'', isNone(existingInternalModel) || existingInternalModel === internalModel));
+
+
       this._internalModelsFor(internalModel.modelName).set(id, internalModel);
 
       internalModel.setId(id);
@@ -11897,9 +11900,15 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
     _load: function (data) {
       var internalModel = this._internalModelForId(data.type, data.id);
 
+      var isUpdate = internalModel.currentState.isEmpty === false;
+
       internalModel.setupData(data);
 
-      this.recordArrayManager.recordDidChange(internalModel);
+      if (isUpdate) {
+        this.recordArrayManager.recordDidChange(internalModel);
+      } else {
+        this.recordArrayManager.recordWasLoaded(internalModel);
+      }
 
       return internalModel;
     },
@@ -12407,15 +12416,7 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
       (false && _ember.default.assert('You can no longer pass a modelClass as the first argument to store._buildInternalModel. Pass modelName instead.', typeof modelName === 'string'));
 
 
-      var internalModels = this._internalModelsFor(modelName);
-      var existingInternalModel = internalModels.get(id);
-
-      if (existingInternalModel && existingInternalModel.hasScheduledDestroy()) {
-        // unloadRecord is async, if one attempts to unload + then sync create,
-        // we must ensure the unload is complete before starting the create
-        existingInternalModel.destroySync();
-        existingInternalModel = null;
-      }
+      var existingInternalModel = this._existingInternalModelForId(modelName, id);
 
       (false && _ember.default.assert('The id ' + id + ' has already been used with another record for modelClass \'' + modelName + '\'.', !existingInternalModel));
 
@@ -12424,8 +12425,19 @@ define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-pri
 
       var internalModel = new _internalModel5.default(modelName, id, this, data);
 
-      internalModels.add(internalModel, id);
+      this._internalModelsFor(modelName).add(internalModel, id);
 
+      return internalModel;
+    },
+    _existingInternalModelForId: function (modelName, id) {
+      var internalModel = this._internalModelsFor(modelName).get(id);
+
+      if (internalModel && internalModel.hasScheduledDestroy()) {
+        // unloadRecord is async, if one attempts to unload + then sync create,
+        // we must ensure the unload is complete before starting the create
+        internalModel.destroySync();
+        internalModel = null;
+      }
       return internalModel;
     },
     buildInternalModel: function (modelName, id, data) {
@@ -18413,7 +18425,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.15.0-beta.4";
+  exports.default = "2.15.0";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
