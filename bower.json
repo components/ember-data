@@ -1,0 +1,15 @@
+{
+  "name": "ember-data",
+  "version": "2.15.0",
+  "license": "MIT",
+  "main": "ember-data.js",
+  "dependencies": {
+    "ember": "^2.0.0"
+  },
+  "ignore": [
+    "**/*_configuration.js",
+    "ember-data-setup.js",
+    "docs",
+    "**/*.html"
+  ]
+}
