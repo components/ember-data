@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.16.0-canary+cb998fc5c9
+ * @version   2.16.0-canary+575553fb92
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -10058,16 +10058,16 @@ define("ember-data/-private/system/snapshot", ["exports", "ember"], function (ex
 
   exports.default = Snapshot;
 });
-define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-private/adapters/errors', 'ember-data/-debug', 'ember-data/-private/system/model/model', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/system/identity-map', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/store/common', 'ember-data/-private/system/store/serializer-response', 'ember-data/-private/system/store/serializers', 'ember-data/-private/system/relationships/relationship-payloads-manager', 'ember-data/-private/system/store/finders', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/store/container-instance-cache', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/features'], function (exports, _ember, _errors, _debug, _model, _normalizeModelName, _identityMap, _promiseProxies, _common, _serializerResponse, _serializers, _relationshipPayloadsManager, _finders, _utils, _coerceId, _recordArrayManager, _containerInstanceCache, _internalModel5, _features) {
+define('ember-data/-private/system/store', ['exports', 'ember', 'ember-data/-private/adapters/errors', 'ember-data/-private/system/model/model', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/system/identity-map', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/store/common', 'ember-data/-private/system/store/serializer-response', 'ember-data/-private/system/store/serializers', 'ember-data/-private/system/relationships/relationship-payloads-manager', 'ember-data/-private/system/store/finders', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/store/container-instance-cache', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/features'], function (exports, _ember, _errors, _model, _normalizeModelName, _identityMap, _promiseProxies, _common, _serializerResponse, _serializers, _relationshipPayloadsManager, _finders, _utils, _coerceId, _recordArrayManager, _containerInstanceCache, _internalModel5, _features) {
   'use strict';
 
   exports.__esModule = true;
   exports.Store = undefined;
-  /**
-    @module ember-data
-  */
 
-  var badIdFormatAssertion = '`id` passed to `findRecord()` has to be non-empty string or number';
+
+  var badIdFormatAssertion = '`id` passed to `findRecord()` has to be non-empty string or number'; /**
+                                                                                                     @module ember-data
+                                                                                                   */
 
   var A = _ember.default.A,
       Backburner = _ember.default._Backburner,
@@ -13837,7 +13837,7 @@ define('ember-data/adapters/errors', ['exports', 'ember-data/-private'], functio
     }
   });
 });
-define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-inflector', 'ember-data/adapters/rest', 'ember-data/-private', 'ember-data/-debug'], function (exports, _ember, _emberInflector, _rest, _private, _debug) {
+define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-inflector', 'ember-data/adapters/rest', 'ember-data/-private'], function (exports, _ember, _emberInflector, _rest, _private) {
   'use strict';
 
   exports.__esModule = true;
@@ -13979,6 +13979,11 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-inflector', '
     @namespace DS
     @extends DS.RESTAdapter
   */
+  /* global heimdall */
+  /**
+    @module ember-data
+  */
+
   var JSONAPIAdapter = _rest.default.extend({
     defaultSerializer: '-json-api',
 
@@ -14094,10 +14099,7 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-inflector', '
 
       return false;
     }
-  }); /* global heimdall */
-  /**
-    @module ember-data
-  */
+  });
 
   if ((0, _private.isEnabled)('ds-improved-ajax')) {
 
@@ -14156,7 +14158,7 @@ define('ember-data/adapters/json-api', ['exports', 'ember', 'ember-inflector', '
 
   exports.default = JSONAPIAdapter;
 });
-define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'ember-data/-private', 'ember-data/-debug'], function (exports, _ember, _adapter, _private, _debug) {
+define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'ember-data/-private'], function (exports, _ember, _adapter, _private) {
   'use strict';
 
   exports.__esModule = true;
@@ -18277,7 +18279,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.16.0-canary+cb998fc5c9";
+  exports.default = "2.16.0-canary+575553fb92";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
