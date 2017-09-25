@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.16.0-canary+abff4de3d6
+ * @version   2.16.0-canary+6242fa819a
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -6841,7 +6841,6 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
       ```
   
      @method value
-     @param {Object|Promise} objectOrPromise a promise that resolves to a JSONAPI document object describing the new value of this relationship.
      @return {DS.Model} the record in this relationship
   */
   BelongsToReference.prototype.value = function () {
@@ -18246,7 +18245,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.16.0-canary+abff4de3d6";
+  exports.default = "2.16.0-canary+6242fa819a";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
