@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.15.1
+ * @version   2.15.2
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -820,7 +820,7 @@ define('ember-data/-private/adapters/build-url-mixin', ['exports', 'ember'], fun
     }
   });
 });
-define('ember-data/-private/adapters/errors', ['exports', 'ember', 'ember-data/-private/features'], function (exports, _ember, _features) {
+define('ember-data/-private/adapters/errors', ['exports', 'ember'], function (exports, _ember) {
   'use strict';
 
   exports.__esModule = true;
@@ -915,11 +915,6 @@ define('ember-data/-private/adapters/errors', ['exports', 'ember', 'ember-data/-
     }];
   }
 
-  var extendedErrorsEnabled = false;
-  if (true) {
-    extendedErrorsEnabled = true;
-  }
-
   function extendFn(ErrorClass) {
     return function () {
       var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
@@ -936,19 +931,14 @@ define('ember-data/-private/adapters/errors', ['exports', 'ember', 'ember-data/-
       ParentErrorClass.call(this, errors, message || defaultMessage);
     };
     ErrorClass.prototype = Object.create(ParentErrorClass.prototype);
-
-    if (extendedErrorsEnabled) {
-      ErrorClass.extend = extendFn(ErrorClass);
-    }
+    ErrorClass.extend = extendFn(ErrorClass);
 
     return ErrorClass;
   }
 
   AdapterError.prototype = Object.create(EmberError.prototype);
 
-  if (extendedErrorsEnabled) {
-    AdapterError.extend = extendFn(AdapterError);
-  }
+  AdapterError.extend = extendFn(AdapterError);
 
   /**
     A `DS.InvalidError` is used by an adapter to signal the external API
@@ -1088,7 +1078,7 @@ define('ember-data/-private/adapters/errors', ['exports', 'ember', 'ember-data/-
     @class UnauthorizedError
     @namespace DS
   */
-  var UnauthorizedError = exports.UnauthorizedError = extendedErrorsEnabled ? extend(AdapterError, 'The adapter operation is unauthorized') : null;
+  var UnauthorizedError = exports.UnauthorizedError = extend(AdapterError, 'The adapter operation is unauthorized');
 
   /**
     A `DS.ForbiddenError` equates to a HTTP `403 Forbidden` response status.
@@ -1100,7 +1090,7 @@ define('ember-data/-private/adapters/errors', ['exports', 'ember', 'ember-data/-
     @class ForbiddenError
     @namespace DS
   */
-  var ForbiddenError = exports.ForbiddenError = extendedErrorsEnabled ? extend(AdapterError, 'The adapter operation is forbidden') : null;
+  var ForbiddenError = exports.ForbiddenError = extend(AdapterError, 'The adapter operation is forbidden');
 
   /**
     A `DS.NotFoundError` equates to a HTTP `404 Not Found` response status.
@@ -1138,7 +1128,7 @@ define('ember-data/-private/adapters/errors', ['exports', 'ember', 'ember-data/-
     @class NotFoundError
     @namespace DS
   */
-  var NotFoundError = exports.NotFoundError = extendedErrorsEnabled ? extend(AdapterError, 'The adapter could not find the resource') : null;
+  var NotFoundError = exports.NotFoundError = extend(AdapterError, 'The adapter could not find the resource');
 
   /**
     A `DS.ConflictError` equates to a HTTP `409 Conflict` response status.
@@ -1150,7 +1140,7 @@ define('ember-data/-private/adapters/errors', ['exports', 'ember', 'ember-data/-
     @class ConflictError
     @namespace DS
   */
-  var ConflictError = exports.ConflictError = extendedErrorsEnabled ? extend(AdapterError, 'The adapter operation failed due to a conflict') : null;
+  var ConflictError = exports.ConflictError = extend(AdapterError, 'The adapter operation failed due to a conflict');
 
   /**
     A `DS.ServerError` equates to a HTTP `500 Internal Server Error` response
@@ -1160,7 +1150,7 @@ define('ember-data/-private/adapters/errors', ['exports', 'ember', 'ember-data/-
     @class ServerError
     @namespace DS
   */
-  var ServerError = exports.ServerError = extendedErrorsEnabled ? extend(AdapterError, 'The adapter operation failed due to a server error') : null;
+  var ServerError = exports.ServerError = extend(AdapterError, 'The adapter operation failed due to a server error');
 
   /**
     Convert an hash of errors into an array with errors in JSON-API format.
@@ -14787,21 +14777,19 @@ define('ember-data/adapters/rest', ['exports', 'ember', 'ember-data/adapter', 'e
       var errors = this.normalizeErrorResponse(status, headers, payload);
       var detailedMessage = this.generatedDetailedMessage(status, headers, payload, requestData);
 
-      if ((0, _private.isEnabled)('ds-extended-errors')) {
-        switch (status) {
-          case 401:
-            return new _private.UnauthorizedError(errors, detailedMessage);
-          case 403:
-            return new _private.ForbiddenError(errors, detailedMessage);
-          case 404:
-            return new _private.NotFoundError(errors, detailedMessage);
-          case 409:
-            return new _private.ConflictError(errors, detailedMessage);
-          default:
-            if (status >= 500) {
-              return new _private.ServerError(errors, detailedMessage);
-            }
-        }
+      switch (status) {
+        case 401:
+          return new _private.UnauthorizedError(errors, detailedMessage);
+        case 403:
+          return new _private.ForbiddenError(errors, detailedMessage);
+        case 404:
+          return new _private.NotFoundError(errors, detailedMessage);
+        case 409:
+          return new _private.ConflictError(errors, detailedMessage);
+        default:
+          if (status >= 500) {
+            return new _private.ServerError(errors, detailedMessage);
+          }
       }
 
       return new _private.AdapterError(errors, detailedMessage);
@@ -15399,13 +15387,11 @@ define("ember-data", ["exports", "ember", "ember-data/-private", "ember-data/set
   _private.DS.TimeoutError = _private.TimeoutError;
   _private.DS.AbortError = _private.AbortError;
 
-  if ((0, _private.isEnabled)('ds-extended-errors')) {
-    _private.DS.UnauthorizedError = _private.UnauthorizedError;
-    _private.DS.ForbiddenError = _private.ForbiddenError;
-    _private.DS.NotFoundError = _private.NotFoundError;
-    _private.DS.ConflictError = _private.ConflictError;
-    _private.DS.ServerError = _private.ServerError;
-  }
+  _private.DS.UnauthorizedError = _private.UnauthorizedError;
+  _private.DS.ForbiddenError = _private.ForbiddenError;
+  _private.DS.NotFoundError = _private.NotFoundError;
+  _private.DS.ConflictError = _private.ConflictError;
+  _private.DS.ServerError = _private.ServerError;
 
   _private.DS.errorsHashToArray = _private.errorsHashToArray;
   _private.DS.errorsArrayToHash = _private.errorsArrayToHash;
@@ -18425,7 +18411,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.15.1";
+  exports.default = "2.15.2";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
