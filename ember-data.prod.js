@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.17.0-beta.1
+ * @version   2.16.1
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -6831,6 +6831,7 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
       ```
   
      @method value
+     @param {Object|Promise} objectOrPromise a promise that resolves to a JSONAPI document object describing the new value of this relationship.
      @return {DS.Model} the record in this relationship
   */
   BelongsToReference.prototype.value = function () {
@@ -16298,14 +16299,11 @@ define('ember-data/serializers/json-api', ['exports', 'ember', 'ember-inflector'
       }
 
       if (Array.isArray(documentHash.included)) {
-        var _ret = new Array();
+        var _ret = new Array(documentHash.included.length);
+
         for (var _i = 0; _i < documentHash.included.length; _i++) {
           var included = documentHash.included[_i];
-          var normalized = this._normalizeResourceHelper(included);
-          if (normalized !== null) {
-            // can be null when unknown type is encountered
-            _ret.push(normalized);
-          }
+          _ret[_i] = this._normalizeResourceHelper(included);
         }
 
         documentHash.included = _ret;
@@ -18234,7 +18232,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.17.0-beta.1";
+  exports.default = "2.16.1";
 });
 define("ember-inflector", ["module", "exports", "ember", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _ember, _system) {
   "use strict";
