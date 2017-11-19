@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.17.0
+ * @version   2.18.0-beta.1
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -498,7 +498,7 @@ define('ember-data/-private/adapters/build-url-mixin', ['exports', 'ember-inflec
      import DS from 'ember-data';
       export default DS.JSONAPIAdapter.extend({
        urlForFindRecord(id, modelName, snapshot) {
-         let baseUrl = this.buildURL();
+         let baseUrl = this.buildURL(modelName, id, snapshot);
          return `${baseUrl}/users/${snapshot.adapterOptions.user_id}/playlists/${id}`;
        }
      });
@@ -1665,7 +1665,7 @@ define('ember-data/-private/system/debug/debug-adapter', ['exports', 'ember-data
         var containerKey = modelClass._debugContainerKey;
         if (containerKey) {
           var match = containerKey.match(/model:(.*)/);
-          if (match) {
+          if (match !== null) {
             modelName = match[1];
           }
         }
@@ -15256,7 +15256,7 @@ define('ember-data/attr', ['exports'], function (exports) {
     }).meta(meta);
   }
 });
-define('ember-data', ['exports', 'ember-data/-private', 'ember-data/setup-container', 'ember-data/instance-initializers/initialize-store-service', 'ember-data/transforms/transform', 'ember-data/transforms/number', 'ember-data/transforms/date', 'ember-data/transforms/string', 'ember-data/transforms/boolean', 'ember-data/adapter', 'ember-data/adapters/json-api', 'ember-data/adapters/rest', 'ember-data/serializer', 'ember-data/serializers/json-api', 'ember-data/serializers/json', 'ember-data/serializers/rest', 'ember-data/serializers/embedded-records-mixin', 'ember-data/attr', 'ember-inflector'], function (exports, _private, _setupContainer, _initializeStoreService, _transform, _number, _date, _string, _boolean, _adapter, _jsonApi, _rest, _serializer, _jsonApi2, _json, _rest2, _embeddedRecordsMixin, _attr) {
+define('ember-data', ['exports', 'ember-data/-private', 'ember-data/setup-container', 'ember-data/initialize-store-service', 'ember-data/transforms/transform', 'ember-data/transforms/number', 'ember-data/transforms/date', 'ember-data/transforms/string', 'ember-data/transforms/boolean', 'ember-data/adapter', 'ember-data/adapters/json-api', 'ember-data/adapters/rest', 'ember-data/serializer', 'ember-data/serializers/json-api', 'ember-data/serializers/json', 'ember-data/serializers/rest', 'ember-data/serializers/embedded-records-mixin', 'ember-data/attr', 'ember-inflector'], function (exports, _private, _setupContainer, _initializeStoreService, _transform, _number, _date, _string, _boolean, _adapter, _jsonApi, _rest, _serializer, _jsonApi2, _json, _rest2, _embeddedRecordsMixin, _attr) {
   'use strict';
 
   exports.__esModule = true;
@@ -15358,65 +15358,7 @@ define('ember-data', ['exports', 'ember-data/-private', 'ember-data/setup-contai
 
   exports.default = _private.DS;
 });
-define('ember-data/initializers/data-adapter', ['exports'], function (exports) {
-  'use strict';
-
-  exports.__esModule = true;
-  exports.default = {
-    name: 'data-adapter',
-    before: 'store',
-    initialize: function () {}
-  };
-});
-define('ember-data/initializers/ember-data', ['exports', 'ember-data/setup-container', 'ember-data'], function (exports, _setupContainer) {
-  'use strict';
-
-  exports.__esModule = true;
-  exports.default = {
-    name: 'ember-data',
-    initialize: _setupContainer.default
-  };
-});
-define('ember-data/initializers/injectStore', ['exports'], function (exports) {
-  'use strict';
-
-  exports.__esModule = true;
-  exports.default = {
-    name: 'injectStore',
-    before: 'store',
-    initialize: function () {}
-  };
-});
-define('ember-data/initializers/store', ['exports'], function (exports) {
-  'use strict';
-
-  exports.__esModule = true;
-  exports.default = {
-    name: 'store',
-    after: 'ember-data',
-    initialize: function () {}
-  };
-});
-define('ember-data/initializers/transforms', ['exports'], function (exports) {
-  'use strict';
-
-  exports.__esModule = true;
-  exports.default = {
-    name: 'transforms',
-    before: 'store',
-    initialize: function () {}
-  };
-});
-define("ember-data/instance-initializers/ember-data", ["exports", "ember-data/instance-initializers/initialize-store-service"], function (exports, _initializeStoreService) {
-  "use strict";
-
-  exports.__esModule = true;
-  exports.default = {
-    name: "ember-data",
-    initialize: _initializeStoreService.default
-  };
-});
-define('ember-data/instance-initializers/initialize-store-service', ['exports'], function (exports) {
+define('ember-data/initialize-store-service', ['exports'], function (exports) {
   'use strict';
 
   exports.__esModule = true;
@@ -15483,6 +15425,64 @@ define('ember-data/instance-initializers/initialize-store-service', ['exports'],
       }
     };
   }
+});
+define('ember-data/initializers/data-adapter', ['exports'], function (exports) {
+  'use strict';
+
+  exports.__esModule = true;
+  exports.default = {
+    name: 'data-adapter',
+    before: 'store',
+    initialize: function () {}
+  };
+});
+define('ember-data/initializers/ember-data', ['exports', 'ember-data/setup-container', 'ember-data'], function (exports, _setupContainer) {
+  'use strict';
+
+  exports.__esModule = true;
+  exports.default = {
+    name: 'ember-data',
+    initialize: _setupContainer.default
+  };
+});
+define('ember-data/initializers/injectStore', ['exports'], function (exports) {
+  'use strict';
+
+  exports.__esModule = true;
+  exports.default = {
+    name: 'injectStore',
+    before: 'store',
+    initialize: function () {}
+  };
+});
+define('ember-data/initializers/store', ['exports'], function (exports) {
+  'use strict';
+
+  exports.__esModule = true;
+  exports.default = {
+    name: 'store',
+    after: 'ember-data',
+    initialize: function () {}
+  };
+});
+define('ember-data/initializers/transforms', ['exports'], function (exports) {
+  'use strict';
+
+  exports.__esModule = true;
+  exports.default = {
+    name: 'transforms',
+    before: 'store',
+    initialize: function () {}
+  };
+});
+define("ember-data/instance-initializers/ember-data", ["exports", "ember-data/initialize-store-service"], function (exports, _initializeStoreService) {
+  "use strict";
+
+  exports.__esModule = true;
+  exports.default = {
+    name: "ember-data",
+    initialize: _initializeStoreService.default
+  };
 });
 define('ember-data/model', ['exports', 'ember-data/-private'], function (exports, _private) {
   'use strict';
@@ -17984,16 +17984,16 @@ define('ember-data/transforms/boolean', ['exports', 'ember-data/transforms/trans
   var isNone = Ember.isNone;
   exports.default = _transform.default.extend({
     deserialize: function (serialized, options) {
-      var type = typeof serialized;
-
       if (isNone(serialized) && options.allowNull === true) {
         return null;
       }
 
+      var type = typeof serialized;
       if (type === "boolean") {
         return serialized;
       } else if (type === "string") {
-        return serialized.match(/^true$|^t$|^1$/i) !== null;
+        return (/^(true|t|1)$/i.test(serialized)
+        );
       } else if (type === "number") {
         return serialized === 1;
       } else {
@@ -18217,7 +18217,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.17.0";
+  exports.default = "2.18.0-beta.1";
 });
 define("ember-inflector", ["module", "exports", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _system) {
   "use strict";
