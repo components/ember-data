@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.17.0-beta.2
+ * @version   2.17.0
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -10882,6 +10882,7 @@ define('ember-data/-private/system/store', ['exports', 'ember-data/-private/adap
     */
     peekRecord: function (modelName, id) {
       (false && Ember.assert('You need to pass a model name to the store\'s peekRecord method', isPresent(modelName)));
+      (false && Ember.assert('You need to pass both a model name and id to the store\'s peekRecord method', isPresent(modelName) && isPresent(id)));
       (false && Ember.assert('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + modelName, typeof modelName === 'string'));
 
       var normalizedModelName = (0, _normalizeModelName.default)(modelName);
@@ -18216,7 +18217,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.17.0-beta.2";
+  exports.default = "2.17.0";
 });
 define("ember-inflector", ["module", "exports", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _system) {
   "use strict";
