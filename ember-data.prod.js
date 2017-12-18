@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   3.0.0-canary+ed4e45f7ca
+ * @version   3.0.0-canary+e9f11a4918
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -3159,7 +3159,7 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember-dat
       }
 
       if (this.isNew()) {
-        this.removeFromInverseRelationships(true);
+        this.removeFromInverseRelationships();
       }
 
       if (this.isValid()) {
@@ -3276,13 +3276,9 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember-dat
     };
 
     InternalModel.prototype.removeFromInverseRelationships = function removeFromInverseRelationships() {
-      var isNew = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-
       this._relationships.forEach(function (name, rel) {
         rel.removeCompletelyFromInverse();
-        if (isNew === true) {
-          rel.clear();
-        }
+        rel.clear();
       });
 
       var implicitRelationships = this._implicitRelationships;
@@ -3292,9 +3288,7 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember-dat
         var rel = implicitRelationships[key];
 
         rel.removeCompletelyFromInverse();
-        if (isNew === true) {
-          rel.clear();
-        }
+        rel.clear();
       });
     };
 
@@ -3716,7 +3710,7 @@ define('ember-data/-private/system/model/model', ['exports', 'ember-data/-privat
     var relationships = relationshipMap.get(type.modelName).filter(function (relationship) {
       var optionsForRelationship = inverseType.metaForProperty(relationship.name).options;
 
-      if (!optionsForRelationship.inverse) {
+      if (!optionsForRelationship.inverse && optionsForRelationship.inverse !== null) {
         return true;
       }
 
@@ -18217,7 +18211,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "3.0.0-canary+ed4e45f7ca";
+  exports.default = "3.0.0-canary+e9f11a4918";
 });
 define('ember-inflector', ['exports', 'ember-inflector/lib/system', 'ember-inflector/lib/ext/string'], function (exports, _system) {
   'use strict';
