@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   3.0.0-canary+860594b54b
+ * @version   3.0.0-canary+91c533c6bc
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -6791,7 +6791,7 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
         if ((0, _features.default)('ds-overhaul-references')) {
           (false && !(false) && Ember.deprecate("BelongsToReference#push(DS.Model) is deprecated. Update relationship via `model.set('relationshipName', value)` instead.", false, {
             id: 'ds.references.belongs-to.push-record',
-            until: '3.0'
+            until: '4.0.0'
           }));
         }
         record = data;
@@ -7208,7 +7208,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember-data
       if ((0, _features.default)("ds-overhaul-references")) {
         (false && !(!Array.isArray(payload)) && Ember.deprecate("HasManyReference#push(array) is deprecated. Push a JSON-API document instead.", !Array.isArray(payload), {
           id: 'ds.references.has-many.push-array',
-          until: '3.0'
+          until: '4.0.0'
         }));
       }
 
@@ -7220,7 +7220,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember-data
         if ((0, _features.default)('ds-overhaul-references')) {
           (false && !(!useLegacyArrayPush) && Ember.deprecate("HasManyReference#push() expects a valid JSON-API document.", !useLegacyArrayPush, {
             id: 'ds.references.has-many.push-invalid-json-api',
-            until: '3.0'
+            until: '4.0.0'
           }));
         }
       }
@@ -16346,7 +16346,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember-inflector', 'ember-
         if (modelName !== deprecatedModelNameLookup && this._hasCustomModelNameFromPayloadKey()) {
           (false && !(false) && Ember.deprecate("You are using modelNameFromPayloadKey to normalize the type for a relationship. This has been deprecated in favor of modelNameFromPayloadType", false, {
             id: 'ds.json-api-serializer.deprecated-model-name-for-relationship',
-            until: '3.0.0'
+            until: '4.0.0'
           }));
 
 
@@ -16378,7 +16378,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember-inflector', 'ember-
         if (modelName !== deprecatedModelNameLookup && this._hasCustomModelNameFromPayloadKey()) {
           (false && !(false) && Ember.deprecate("You are using modelNameFromPayloadKey to normalize the type for a resource. This has been deprecated in favor of modelNameFromPayloadType", false, {
             id: 'ds.json-api-serializer.deprecated-model-name-for-resource',
-            until: '3.0.0'
+            until: '4.0.0'
           }));
 
 
@@ -16554,7 +16554,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember-inflector', 'ember-
         if (payloadType !== deprecatedPayloadTypeLookup && this._hasCustomPayloadKeyFromModelName()) {
           (false && !(false) && Ember.deprecate("You used payloadKeyFromModelName to customize how a type is serialized. Use payloadTypeFromModelName instead.", false, {
             id: 'ds.json-api-serializer.deprecated-payload-type-for-model',
-            until: '3.0.0'
+            until: '4.0.0'
           }));
 
 
@@ -16613,7 +16613,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember-inflector', 'ember-
               if (payloadType !== deprecatedPayloadTypeLookup && this._hasCustomPayloadKeyFromModelName()) {
                 (false && !(false) && Ember.deprecate("You used payloadKeyFromModelName to serialize type for belongs-to relationship. Use payloadTypeFromModelName instead.", false, {
                   id: 'ds.json-api-serializer.deprecated-payload-type-for-belongs-to',
-                  until: '3.0.0'
+                  until: '4.0.0'
                 }));
 
 
@@ -16665,7 +16665,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember-inflector', 'ember-
               if (payloadType !== deprecatedPayloadTypeLookup && this._hasCustomPayloadKeyFromModelName()) {
                 (false && !(false) && Ember.deprecate("You used payloadKeyFromModelName to serialize type for belongs-to relationship. Use payloadTypeFromModelName instead.", false, {
                   id: 'ds.json-api-serializer.deprecated-payload-type-for-has-many',
-                  until: '3.0.0'
+                  until: '4.0.0'
                 }));
 
 
@@ -18244,7 +18244,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "3.0.0-canary+860594b54b";
+  exports.default = "3.0.0-canary+91c533c6bc";
 });
 define('ember-inflector', ['exports', 'ember-inflector/lib/system', 'ember-inflector/lib/ext/string'], function (exports, _system) {
   'use strict';
