@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   2.18.0
+ * @version   3.0.0-beta.1
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -1328,7 +1328,7 @@ define('ember-data/-private/global', ['exports'], function (exports) {
   // export real global
   exports.default = checkGlobal(checkElementIdShadowing(typeof global === 'object' && global)) || checkGlobal(typeof self === 'object' && self) || checkGlobal(typeof window === 'object' && window) || new Function('return this')();
 });
-define('ember-data/-private', ['exports', 'ember-data/-private/system/model/model', 'ember-data/-private/system/model/errors', 'ember-data/-private/system/store', 'ember-data/-private/core', 'ember-data/-private/system/relationships/belongs-to', 'ember-data/-private/system/relationships/has-many', 'ember-data/-private/adapters/build-url-mixin', 'ember-data/-private/system/snapshot', 'ember-data/-private/adapters/errors', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/utils/parse-response-headers', 'ember-data/-private/global', 'ember-data/-private/features', 'ember-data/-private/system/model/states', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/system/store/container-instance-cache', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/record-arrays', 'ember-data/-private/system/many-array', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/relationships/state/relationship', 'ember-data/-private/system/debug/debug-adapter', 'ember-data/-private/system/diff-array', 'ember-data/-private/system/relationships/relationship-payloads-manager', 'ember-data/-private/system/relationships/relationship-payloads', 'ember-data/-private/system/snapshot-record-array'], function (exports, _model, _errors, _store, _core, _belongsTo, _hasMany, _buildUrlMixin, _snapshot, _errors2, _normalizeModelName, _utils, _coerceId, _parseResponseHeaders, _global, _features, _states, _internalModel, _containerInstanceCache, _promiseProxies, _recordArrays, _manyArray, _recordArrayManager, _relationship, _debugAdapter, _diffArray, _relationshipPayloadsManager, _relationshipPayloads, _snapshotRecordArray) {
+define('ember-data/-private', ['exports', 'ember-data/-private/system/model/model', 'ember-data/-private/system/model/errors', 'ember-data/-private/system/store', 'ember-data/-private/core', 'ember-data/-private/system/relationships/belongs-to', 'ember-data/-private/system/relationships/has-many', 'ember-data/-private/adapters/build-url-mixin', 'ember-data/-private/system/snapshot', 'ember-data/-private/adapters/errors', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/utils/parse-response-headers', 'ember-data/-private/global', 'ember-data/-private/features', 'ember-data/-private/system/model/states', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/record-arrays', 'ember-data/-private/system/many-array', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/relationships/state/relationship', 'ember-data/-private/system/debug/debug-adapter', 'ember-data/-private/system/diff-array', 'ember-data/-private/system/relationships/relationship-payloads-manager', 'ember-data/-private/system/relationships/relationship-payloads', 'ember-data/-private/system/snapshot-record-array'], function (exports, _model, _errors, _store, _core, _belongsTo, _hasMany, _buildUrlMixin, _snapshot, _errors2, _normalizeModelName, _utils, _coerceId, _parseResponseHeaders, _global, _features, _states, _internalModel, _promiseProxies, _recordArrays, _manyArray, _recordArrayManager, _relationship, _debugAdapter, _diffArray, _relationshipPayloadsManager, _relationshipPayloads, _snapshotRecordArray) {
   'use strict';
 
   exports.__esModule = true;
@@ -1498,12 +1498,6 @@ define('ember-data/-private', ['exports', 'ember-data/-private/system/model/mode
     enumerable: true,
     get: function () {
       return _internalModel.default;
-    }
-  });
-  Object.defineProperty(exports, 'ContainerInstanceCache', {
-    enumerable: true,
-    get: function () {
-      return _containerInstanceCache.default;
     }
   });
   Object.defineProperty(exports, 'PromiseArray', {
@@ -3165,7 +3159,7 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember-dat
       }
 
       if (this.isNew()) {
-        this.removeFromInverseRelationships(true);
+        this.removeFromInverseRelationships();
       }
 
       if (this.isValid()) {
@@ -3282,13 +3276,9 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember-dat
     };
 
     InternalModel.prototype.removeFromInverseRelationships = function removeFromInverseRelationships() {
-      var isNew = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-
       this._relationships.forEach(function (name, rel) {
         rel.removeCompletelyFromInverse();
-        if (isNew === true) {
-          rel.clear();
-        }
+        rel.clear();
       });
 
       var implicitRelationships = this._implicitRelationships;
@@ -3298,9 +3288,7 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember-dat
         var rel = implicitRelationships[key];
 
         rel.removeCompletelyFromInverse();
-        if (isNew === true) {
-          rel.clear();
-        }
+        rel.clear();
       });
     };
 
@@ -3722,7 +3710,7 @@ define('ember-data/-private/system/model/model', ['exports', 'ember-data/-privat
     var relationships = relationshipMap.get(type.modelName).filter(function (relationship) {
       var optionsForRelationship = inverseType.metaForProperty(relationship.name).options;
 
-      if (!optionsForRelationship.inverse) {
+      if (!optionsForRelationship.inverse && optionsForRelationship.inverse !== null) {
         return true;
       }
 
@@ -6199,7 +6187,7 @@ define('ember-data/-private/system/record-arrays/adapter-populated-record-array'
 
       this._super.apply(this, arguments);
       this.query = this.query || null;
-      this.links = null;
+      this.links = this.links || null;
     },
     replace: function () {
       throw new Error('The result of a server query (on ' + this.modelName + ') is immutable.');
@@ -6797,7 +6785,7 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
         if ((0, _features.default)('ds-overhaul-references')) {
           (false && !(false) && Ember.deprecate("BelongsToReference#push(DS.Model) is deprecated. Update relationship via `model.set('relationshipName', value)` instead.", false, {
             id: 'ds.references.belongs-to.push-record',
-            until: '3.0'
+            until: '4.0.0'
           }));
         }
         record = data;
@@ -7214,7 +7202,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember-data
       if ((0, _features.default)("ds-overhaul-references")) {
         (false && !(!Array.isArray(payload)) && Ember.deprecate("HasManyReference#push(array) is deprecated. Push a JSON-API document instead.", !Array.isArray(payload), {
           id: 'ds.references.has-many.push-array',
-          until: '3.0'
+          until: '4.0.0'
         }));
       }
 
@@ -7226,7 +7214,7 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember-data
         if ((0, _features.default)('ds-overhaul-references')) {
           (false && !(!useLegacyArrayPush) && Ember.deprecate("HasManyReference#push() expects a valid JSON-API document.", !useLegacyArrayPush, {
             id: 'ds.references.has-many.push-invalid-json-api',
-            until: '3.0'
+            until: '4.0.0'
           }));
         }
       }
@@ -10023,7 +10011,7 @@ define('ember-data/-private/system/snapshot', ['exports'], function (exports) {
 
   exports.default = Snapshot;
 });
-define('ember-data/-private/system/store', ['exports', 'ember-data/-private/adapters/errors', 'ember-data/-private/system/model/model', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/system/identity-map', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/store/common', 'ember-data/-private/system/store/serializer-response', 'ember-data/-private/system/store/serializers', 'ember-data/-private/system/relationships/relationship-payloads-manager', 'ember-data/-private/system/store/finders', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/store/container-instance-cache', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/features'], function (exports, _errors, _model, _normalizeModelName, _identityMap, _promiseProxies, _common, _serializerResponse, _serializers, _relationshipPayloadsManager, _finders, _utils, _coerceId, _recordArrayManager, _containerInstanceCache, _internalModel5, _features) {
+define('ember-data/-private/system/store', ['exports', 'ember-data/-private/adapters/errors', 'ember-data/-private/system/model/model', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/system/identity-map', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/store/common', 'ember-data/-private/system/store/serializer-response', 'ember-data/-private/system/store/serializers', 'ember-data/-private/system/relationships/relationship-payloads-manager', 'ember-data/-private/system/store/finders', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/features'], function (exports, _errors, _model, _normalizeModelName, _identityMap, _promiseProxies, _common, _serializerResponse, _serializers, _relationshipPayloadsManager, _finders, _utils, _coerceId, _recordArrayManager, _internalModel5, _features) {
   'use strict';
 
   exports.__esModule = true;
@@ -10165,7 +10153,6 @@ define('ember-data/-private/system/store', ['exports', 'ember-data/-private/adap
       this.recordArrayManager = new _recordArrayManager.default({ store: this });
       this._identityMap = new _identityMap.default();
       this._pendingSave = [];
-      this._instanceCache = new _containerInstanceCache.default((0, _utils.getOwner)(this), this);
       this._modelFactoryCache = Object.create(null);
       this._relationshipsPayloads = new _relationshipPayloadsManager.default(this);
 
@@ -10191,7 +10178,8 @@ define('ember-data/-private/system/store', ['exports', 'ember-data/-private/adap
         }
       });
 
-      this._instanceCache = new _containerInstanceCache.default((0, _utils.getOwner)(this), this);
+      this._adapterCache = Object.create(null);
+      this._serializerCache = Object.create(null);
     },
 
 
@@ -12403,7 +12391,49 @@ define('ember-data/-private/system/store', ['exports', 'ember-data/-private/adap
 
       var normalizedModelName = (0, _normalizeModelName.default)(modelName);
 
-      return this._instanceCache.get('adapter', normalizedModelName);
+      var _adapterCache = this._adapterCache;
+
+      var adapter = _adapterCache[normalizedModelName];
+      if (adapter) {
+        return adapter;
+      }
+
+      var owner = (0, _utils.getOwner)(this);
+
+      adapter = owner.lookup('adapter:' + normalizedModelName);
+      if (adapter !== undefined) {
+        set(adapter, 'store', this);
+        _adapterCache[normalizedModelName] = adapter;
+        return adapter;
+      }
+
+      // no adapter found for the specific model, fallback and check for application adapter
+      adapter = _adapterCache.application || owner.lookup('adapter:application');
+      if (adapter !== undefined) {
+        set(adapter, 'store', this);
+        _adapterCache[normalizedModelName] = adapter;
+        _adapterCache.application = adapter;
+        return adapter;
+      }
+
+      // no model specific adapter or application adapter, check for an `adapter`
+      // property defined on the store
+      var adapterName = this.get('adapter');
+      adapter = _adapterCache[adapterName] || owner.lookup('adapter:' + adapterName);
+      if (adapter !== undefined) {
+        set(adapter, 'store', this);
+        _adapterCache[normalizedModelName] = adapter;
+        _adapterCache[adapterName] = adapter;
+        return adapter;
+      }
+
+      // final fallback, no model specific adapter, no application adapter, no
+      // `adapter` property on store: use json-api adapter
+      adapter = _adapterCache['-json-api'] || owner.lookup('adapter:-json-api');
+      set(adapter, 'store', this);
+      _adapterCache[normalizedModelName] = adapter;
+      _adapterCache['-json-api'] = adapter;
+      return adapter;
     },
 
 
@@ -12434,7 +12464,51 @@ define('ember-data/-private/system/store', ['exports', 'ember-data/-private/adap
 
       var normalizedModelName = (0, _normalizeModelName.default)(modelName);
 
-      return this._instanceCache.get('serializer', normalizedModelName);
+      var _serializerCache = this._serializerCache;
+
+      var serializer = _serializerCache[normalizedModelName];
+      if (serializer) {
+        return serializer;
+      }
+
+      var owner = (0, _utils.getOwner)(this);
+
+      serializer = owner.lookup('serializer:' + normalizedModelName);
+      if (serializer !== undefined) {
+        set(serializer, 'store', this);
+        _serializerCache[normalizedModelName] = serializer;
+        return serializer;
+      }
+
+      // no serializer found for the specific model, fallback and check for application serializer
+      serializer = _serializerCache.application || owner.lookup('serializer:application');
+      if (serializer !== undefined) {
+        set(serializer, 'store', this);
+        _serializerCache[normalizedModelName] = serializer;
+        _serializerCache.application = serializer;
+        return serializer;
+      }
+
+      // no model specific serializer or application serializer, check for the `defaultSerializer`
+      // property defined on the adapter
+      var adapter = this.adapterFor(modelName);
+      var serializerName = get(adapter, 'defaultSerializer');
+      serializer = _serializerCache[serializerName] || owner.lookup('serializer:' + serializerName);
+      if (serializer !== undefined) {
+        set(serializer, 'store', this);
+        _serializerCache[normalizedModelName] = serializer;
+        _serializerCache[serializerName] = serializer;
+        return serializer;
+      }
+
+      // final fallback, no model specific serializer, no application serializer, no
+      // `serializer` property on store: use json-api serializer
+      serializer = _serializerCache['-default'] || owner.lookup('serializer:-default');
+      set(serializer, 'store', this);
+      _serializerCache[normalizedModelName] = serializer;
+      _serializerCache['-default'] = serializer;
+
+      return serializer;
     },
     lookupAdapter: function (name) {
       (false && !(false) && Ember.deprecate('Use of lookupAdapter is deprecated, use adapterFor instead.', false, {
@@ -12456,7 +12530,9 @@ define('ember-data/-private/system/store', ['exports', 'ember-data/-private/adap
       this._super.apply(this, arguments);
       this._pushedInternalModels = null;
       this.recordArrayManager.destroy();
-      this._instanceCache.destroy();
+
+      this._adapterCache = null;
+      this._serializerCache = null;
 
       this.unloadAll();
     },
@@ -12692,112 +12768,6 @@ define('ember-data/-private/system/store/common', ['exports'], function (exports
   function _objectIsAlive(object) {
     return !(get(object, "isDestroyed") || get(object, "isDestroying"));
   }
-});
-define('ember-data/-private/system/store/container-instance-cache', ['exports'], function (exports) {
-  'use strict';
-
-  exports.__esModule = true;
-
-  function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
-  }
-
-  var set = Ember.set;
-
-  var ContainerInstanceCache = function () {
-    function ContainerInstanceCache(owner, store) {
-      _classCallCheck(this, ContainerInstanceCache);
-
-      this.isDestroying = false;
-      this.isDestroyed = false;
-      this._owner = owner;
-      this._store = store;
-      this._namespaces = {
-        adapter: Object.create(null),
-        serializer: Object.create(null)
-      };
-    }
-
-    ContainerInstanceCache.prototype.get = function get(namespace, preferredKey) {
-      var cache = this._namespaces[namespace];
-
-      if (cache[preferredKey]) {
-        return cache[preferredKey];
-      }
-
-      var preferredLookupKey = namespace + ':' + preferredKey;
-
-      var instance = this._instanceFor(preferredLookupKey) || this._findInstance(namespace, this._fallbacksFor(namespace, preferredKey));
-      if (instance) {
-        cache[preferredKey] = instance;
-        set(instance, 'store', this._store);
-      }
-
-      return cache[preferredKey];
-    };
-
-    ContainerInstanceCache.prototype._fallbacksFor = function _fallbacksFor(namespace, preferredKey) {
-      if (namespace === 'adapter') {
-        return ['application', this._store.get('adapter'), '-json-api'];
-      }
-
-      // serializer
-      return ['application', this.get('adapter', preferredKey).get('defaultSerializer'), '-default'];
-    };
-
-    ContainerInstanceCache.prototype._findInstance = function _findInstance(namespace, fallbacks) {
-      var cache = this._namespaces[namespace];
-
-      for (var i = 0, length = fallbacks.length; i < length; i++) {
-        var fallback = fallbacks[i];
-
-        if (cache[fallback]) {
-          return cache[fallback];
-        }
-
-        var lookupKey = namespace + ':' + fallback;
-        var instance = this._instanceFor(lookupKey);
-
-        if (instance) {
-          cache[fallback] = instance;
-          return instance;
-        }
-      }
-    };
-
-    ContainerInstanceCache.prototype._instanceFor = function _instanceFor(key) {
-      return this._owner.lookup(key);
-    };
-
-    ContainerInstanceCache.prototype.destroyCache = function destroyCache(cache) {
-      var cacheEntries = Object.keys(cache);
-
-      for (var i = 0, length = cacheEntries.length; i < length; i++) {
-        var cacheKey = cacheEntries[i];
-        var cacheEntry = cache[cacheKey];
-        if (cacheEntry) {
-          cacheEntry.destroy();
-        }
-      }
-    };
-
-    ContainerInstanceCache.prototype.destroy = function destroy() {
-      this.isDestroying = true;
-      this.destroyCache(this._namespaces.adapter);
-      this.destroyCache(this._namespaces.serializer);
-      this.isDestroyed = true;
-    };
-
-    ContainerInstanceCache.prototype.toString = function toString() {
-      return 'ContainerInstanceCache';
-    };
-
-    return ContainerInstanceCache;
-  }();
-
-  exports.default = ContainerInstanceCache;
 });
 define('ember-data/-private/system/store/finders', ['exports', 'ember-data/-private/system/store/common', 'ember-data/-private/system/store/serializer-response', 'ember-data/-private/system/store/serializers'], function (exports, _common, _serializerResponse, _serializers) {
   'use strict';
@@ -15129,10 +15099,7 @@ define('ember-data/attr', ['exports'], function (exports) {
       return options.defaultValue.apply(null, arguments);
     } else {
       var defaultValue = options.defaultValue;
-      (false && !(typeof defaultValue !== 'object' || defaultValue === null) && Ember.deprecate('Non primitive defaultValues are deprecated because they are shared between all instances. If you would like to use a complex object as a default value please provide a function that returns the complex object.', typeof defaultValue !== 'object' || defaultValue === null, {
-        id: 'ds.defaultValue.complex-object',
-        until: '3.0.0'
-      }));
+      (false && Ember.assert('Non primitive defaultValues are not supported because they are shared between all instances. If you would like to use a complex object as a default value please provide a function that returns the complex object.', typeof defaultValue !== 'object' || defaultValue === null));
 
       return defaultValue;
     }
@@ -15396,10 +15363,6 @@ define('ember-data/initialize-store-service', ['exports'], function (exports) {
 
   exports.__esModule = true;
   exports.default = initializeStoreService;
-
-
-  var deprecateOldEmberDataInitializers = void 0;
-
   /*
     Configures a registry for use with an Ember-Data
     store.
@@ -15414,60 +15377,7 @@ define('ember-data/initialize-store-service', ['exports'], function (exports) {
 
     // Eagerly generate the store so defaultStore is populated.
     container.lookup('service:store');
-
-    if (false) {
-      // In Ember 2.4+ instance.base is the `Ember.Application` or `Ember.Engine` instance
-      // In Ember 1.11 - 2.3 we fallback to `instance.application`
-      var base = instance.base || instance.application;
-      deprecateOldEmberDataInitializers(base.constructor.initializers);
-    }
   }
-
-  if (false) {
-    var DEPRECATED_INITIALIZER_NAMES = ['data-adapter', 'injectStore', 'transforms', 'store'];
-
-    var matchesDeprecatedInititalizer = function matchesDeprecatedInititalizer(name) {
-      return DEPRECATED_INITIALIZER_NAMES.indexOf(name) !== -1;
-    };
-
-    var warnForDeprecatedInitializers = function warnForDeprecatedInitializers(initializer) {
-      var deprecatedBeforeInitializer = matchesDeprecatedInititalizer(initializer.before);
-      var deprecatedAfterInitializer = matchesDeprecatedInititalizer(initializer.after);
-      var deprecatedProp = deprecatedBeforeInitializer ? 'before' : 'after';
-
-      (false && !(!(deprecatedBeforeInitializer || deprecatedAfterInitializer)) && Ember.deprecate('The initializer `' + initializer[deprecatedProp] + '` has been deprecated. Please update your `' + initializer.name + '` initializer to use use `' + deprecatedProp + ': \'ember-data\'` instead.', !(deprecatedBeforeInitializer || deprecatedAfterInitializer), {
-        id: 'ds.deprecated-initializers',
-        until: '3.0.0'
-      }));
-    };
-
-    deprecateOldEmberDataInitializers = function deprecateOldEmberDataInitializers(initializers) {
-      // collect all of the initializers
-      var keys = Object.keys(initializers);
-
-      for (var i = 0; i < keys.length; i++) {
-        var name = keys[i];
-
-        // filter out all of the Ember Data initializer. We have some
-        // deprecated initializers that depend on other deprecated
-        // initializers which may trigger the deprecation warning
-        // unintentionally.
-        if (!matchesDeprecatedInititalizer(name)) {
-          warnForDeprecatedInitializers(initializers[name]);
-        }
-      }
-    };
-  }
-});
-define('ember-data/initializers/data-adapter', ['exports'], function (exports) {
-  'use strict';
-
-  exports.__esModule = true;
-  exports.default = {
-    name: 'data-adapter',
-    before: 'store',
-    initialize: function () {}
-  };
 });
 define('ember-data/initializers/ember-data', ['exports', 'ember-data/setup-container', 'ember-data'], function (exports, _setupContainer) {
   'use strict';
@@ -15476,36 +15386,6 @@ define('ember-data/initializers/ember-data', ['exports', 'ember-data/setup-conta
   exports.default = {
     name: 'ember-data',
     initialize: _setupContainer.default
-  };
-});
-define('ember-data/initializers/injectStore', ['exports'], function (exports) {
-  'use strict';
-
-  exports.__esModule = true;
-  exports.default = {
-    name: 'injectStore',
-    before: 'store',
-    initialize: function () {}
-  };
-});
-define('ember-data/initializers/store', ['exports'], function (exports) {
-  'use strict';
-
-  exports.__esModule = true;
-  exports.default = {
-    name: 'store',
-    after: 'ember-data',
-    initialize: function () {}
-  };
-});
-define('ember-data/initializers/transforms', ['exports'], function (exports) {
-  'use strict';
-
-  exports.__esModule = true;
-  exports.default = {
-    name: 'transforms',
-    before: 'store',
-    initialize: function () {}
   };
 });
 define("ember-data/instance-initializers/ember-data", ["exports", "ember-data/initialize-store-service"], function (exports, _initializeStoreService) {
@@ -16352,7 +16232,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember-inflector', 'ember-
         if (modelName !== deprecatedModelNameLookup && this._hasCustomModelNameFromPayloadKey()) {
           (false && !(false) && Ember.deprecate("You are using modelNameFromPayloadKey to normalize the type for a relationship. This has been deprecated in favor of modelNameFromPayloadType", false, {
             id: 'ds.json-api-serializer.deprecated-model-name-for-relationship',
-            until: '3.0.0'
+            until: '4.0.0'
           }));
 
 
@@ -16384,7 +16264,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember-inflector', 'ember-
         if (modelName !== deprecatedModelNameLookup && this._hasCustomModelNameFromPayloadKey()) {
           (false && !(false) && Ember.deprecate("You are using modelNameFromPayloadKey to normalize the type for a resource. This has been deprecated in favor of modelNameFromPayloadType", false, {
             id: 'ds.json-api-serializer.deprecated-model-name-for-resource',
-            until: '3.0.0'
+            until: '4.0.0'
           }));
 
 
@@ -16560,7 +16440,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember-inflector', 'ember-
         if (payloadType !== deprecatedPayloadTypeLookup && this._hasCustomPayloadKeyFromModelName()) {
           (false && !(false) && Ember.deprecate("You used payloadKeyFromModelName to customize how a type is serialized. Use payloadTypeFromModelName instead.", false, {
             id: 'ds.json-api-serializer.deprecated-payload-type-for-model',
-            until: '3.0.0'
+            until: '4.0.0'
           }));
 
 
@@ -16619,7 +16499,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember-inflector', 'ember-
               if (payloadType !== deprecatedPayloadTypeLookup && this._hasCustomPayloadKeyFromModelName()) {
                 (false && !(false) && Ember.deprecate("You used payloadKeyFromModelName to serialize type for belongs-to relationship. Use payloadTypeFromModelName instead.", false, {
                   id: 'ds.json-api-serializer.deprecated-payload-type-for-belongs-to',
-                  until: '3.0.0'
+                  until: '4.0.0'
                 }));
 
 
@@ -16641,12 +16521,8 @@ define('ember-data/serializers/json-api', ['exports', 'ember-inflector', 'ember-
     },
     serializeHasMany: function (snapshot, json, relationship) {
       var key = relationship.key;
-      var shouldSerializeHasMany = '_shouldSerializeHasMany';
-      if ((0, _private.isEnabled)("ds-check-should-serialize-relationships")) {
-        shouldSerializeHasMany = 'shouldSerializeHasMany';
-      }
 
-      if (this[shouldSerializeHasMany](snapshot, key, relationship)) {
+      if (this.shouldSerializeHasMany(snapshot, key, relationship)) {
         var hasMany = snapshot.hasMany(key);
         if (hasMany !== undefined) {
 
@@ -16671,7 +16547,7 @@ define('ember-data/serializers/json-api', ['exports', 'ember-inflector', 'ember-
               if (payloadType !== deprecatedPayloadTypeLookup && this._hasCustomPayloadKeyFromModelName()) {
                 (false && !(false) && Ember.deprecate("You used payloadKeyFromModelName to serialize type for belongs-to relationship. Use payloadTypeFromModelName instead.", false, {
                   id: 'ds.json-api-serializer.deprecated-payload-type-for-has-many',
-                  until: '3.0.0'
+                  until: '4.0.0'
                 }));
 
 
@@ -17237,16 +17113,6 @@ define('ember-data/serializers/json', ['exports', 'ember-data/serializer', 'embe
       return attrs && attrs[key] && attrs[key].serialize === true;
     },
     shouldSerializeHasMany: function (snapshot, key, relationship) {
-      if (this._shouldSerializeHasMany !== JSONSerializer.prototype._shouldSerializeHasMany) {
-        (false && !(false) && Ember.deprecate('The private method _shouldSerializeHasMany has been promoted to the public API. Please remove the underscore to use the public shouldSerializeHasMany method.', false, {
-          id: 'ds.serializer.private-should-serialize-has-many',
-          until: '3.0.0'
-        }));
-      }
-
-      return this._shouldSerializeHasMany(snapshot, key, relationship);
-    },
-    _shouldSerializeHasMany: function (snapshot, key, relationship) {
       var relationshipType = snapshot.type.determineRelationshipType(relationship, this.store);
       if (this._mustSerialize(key)) {
         return true;
@@ -17334,12 +17200,8 @@ define('ember-data/serializers/json', ['exports', 'ember-data/serializer', 'embe
     },
     serializeHasMany: function (snapshot, json, relationship) {
       var key = relationship.key;
-      var shouldSerializeHasMany = '_shouldSerializeHasMany';
-      if ((0, _private.isEnabled)("ds-check-should-serialize-relationships")) {
-        shouldSerializeHasMany = 'shouldSerializeHasMany';
-      }
 
-      if (this[shouldSerializeHasMany](snapshot, key, relationship)) {
+      if (this.shouldSerializeHasMany(snapshot, key, relationship)) {
         var hasMany = snapshot.hasMany(key, { ids: true });
         if (hasMany !== undefined) {
           // if provided, use the mapping provided by `attrs` in
@@ -17772,25 +17634,6 @@ define('ember-data/serializers/rest', ['exports', 'ember-inflector', 'ember-data
       var typeKey = this.keyForPolymorphicType(key, relationship.type, 'serialize');
       var belongsTo = snapshot.belongsTo(key);
 
-      // old way of getting the key for the polymorphic type
-      key = this.keyForAttribute ? this.keyForAttribute(key, "serialize") : key;
-      key = key + 'Type';
-
-      // The old way of serializing the type of a polymorphic record used
-      // `keyForAttribute`, which is not correct. The next code checks if the old
-      // way is used and if it differs from the new way of using
-      // `keyForPolymorphicType`. If this is the case, a deprecation warning is
-      // logged and the old way is restored (so nothing breaks).
-      if (key !== typeKey && this.keyForPolymorphicType === RESTSerializer.prototype.keyForPolymorphicType) {
-        (false && !(false) && Ember.deprecate("The key to serialize the type of a polymorphic record is created via keyForAttribute which has been deprecated. Use the keyForPolymorphicType hook instead.", false, {
-          id: 'ds.rest-serializer.deprecated-key-for-polymorphic-type',
-          until: '3.0.0'
-        }));
-
-
-        typeKey = key;
-      }
-
       if (isNone(belongsTo)) {
         json[typeKey] = null;
       } else {
@@ -17922,12 +17765,9 @@ define('ember-data/setup-container', ['exports', 'ember-data/-private', 'ember-d
    @param {Ember.Registry} registry
    */
   function initializeStore(registry) {
-    // registry.optionsForType for Ember < 2.1.0
-    // application.registerOptionsForType for Ember 2.1.0+
     var registerOptionsForType = registry.registerOptionsForType || registry.optionsForType;
     registerOptionsForType.call(registry, 'serializer', { singleton: false });
     registerOptionsForType.call(registry, 'adapter', { singleton: false });
-
     registry.register('serializer:-default', _json.default);
     registry.register('serializer:-rest', _rest.default);
     registry.register('adapter:-rest', _rest2.default);
@@ -18046,54 +17886,6 @@ define('ember-data/transforms/date', ['exports', 'ember-data/transforms/transfor
   'use strict';
 
   exports.__esModule = true;
-
-
-  Ember.Date = Ember.Date || {};
-
-  /**
-   Date.parse with progressive enhancement for ISO 8601 <https://github.com/csnover/js-iso8601>
-  
-   © 2011 Colin Snover <http://zetafleet.com>
-  
-   Released under MIT license.
-  
-   @class Date
-   @namespace Ember
-   @static
-   @deprecated
-   */
-  Ember.Date.parse = function (date) {
-    (false && !(false) && Ember.deprecate('Ember.Date.parse is deprecated because Safari 5-, IE8-, and\n    Firefox 3.6- are no longer supported (see\n    https://github.com/csnover/js-iso8601 for the history of this issue).\n    Please use Date.parse instead', false, {
-      id: 'ds.ember.date.parse-deprecate',
-      until: '3.0.0'
-    }));
-
-
-    return Date.parse(date);
-  };
-
-  /**
-   The `DS.DateTransform` class is used to serialize and deserialize
-   date attributes on Ember Data record objects. This transform is used
-   when `date` is passed as the type parameter to the
-   [DS.attr](../../data#method_attr) function. It uses the [`ISO 8601`](https://en.wikipedia.org/wiki/ISO_8601)
-   standard.
-  
-   ```app/models/score.js
-   import DS from 'ember-data';
-  
-   export default DS.Model.extend({
-      value: DS.attr('number'),
-      player: DS.belongsTo('player'),
-      date: DS.attr('date')
-    });
-   ```
-  
-   @class DateTransform
-   @extends DS.Transform
-   @namespace DS
-   */
-
   exports.default = _transform.default.extend({
     deserialize: function (serialized) {
       var type = typeof serialized;
@@ -18101,16 +17893,7 @@ define('ember-data/transforms/date', ['exports', 'ember-data/transforms/transfor
       if (type === "string") {
         var offset = serialized.indexOf('+');
 
-        if (offset !== -1 && serialized.length - 3 === offset) {
-          (false && !(false) && Ember.deprecate('The ECMA2015 Spec for ISO 8601 dates does not allow for shorthand timezone offsets such as +00.\n          Ember Data\'s normalization of date\'s allowing for this shorthand has been deprecated, please update your API to return\n          UTC dates formatted with \xB1hh:mm timezone offsets or implement a custom UTC transform.', false, {
-            id: 'ds.attr.date.normalize-utc',
-            until: '3.0.0'
-          }));
-
-          return new Date(serialized + ':00');
-
-          // this is a phantom specific bug fix in which +0000 is not supported
-        } else if (offset !== -1 && serialized.length - 5 === offset) {
+        if (offset !== -1 && serialized.length - 5 === offset) {
           offset += 3;
           return new Date(serialized.slice(0, offset) + ':' + serialized.slice(offset));
         }
@@ -18250,7 +18033,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "2.18.0";
+  exports.default = "3.0.0-beta.1";
 });
 define("ember-inflector", ["module", "exports", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _system) {
   "use strict";
