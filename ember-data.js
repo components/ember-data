@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   3.1.0-canary+119da21fbd
+ * @version   3.1.0-canary+7c6448d55e
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -3684,7 +3684,6 @@ define('ember-data/-private/system/model/model', ['exports', 'ember-data/-privat
 
   exports.__esModule = true;
   var ComputedProperty = Ember.ComputedProperty;
-  var setOwner = Ember.setOwner;
   var isNone = Ember.isNone;
   var EmberError = Ember.Error;
   var Evented = Ember.Evented;
@@ -4745,24 +4744,6 @@ define('ember-data/-private/system/model/model', ['exports', 'ember-data/-privat
       });
     }
   });
-
-  // if `Ember.setOwner` is defined, accessing `this.container` is
-  // deprecated (but functional). In "standard" Ember usage, this
-  // deprecation is actually created via an `.extend` of the factory
-  // inside the container itself, but that only happens on models
-  // with MODEL_FACTORY_INJECTIONS enabled :(
-  if (setOwner) {
-    Object.defineProperty(Model.prototype, 'container', {
-      configurable: true,
-      enumerable: false,
-      get: function () {
-        (false && !(false) && Ember.deprecate('Using the injected `container` is deprecated. Please use the `getOwner` helper instead to access the owner of this object.', false, { id: 'ember-application.injected-container', until: '3.0.0' }));
-
-
-        return this.store.container;
-      }
-    });
-  }
 
   if ((0, _features.default)('ds-rollback-attribute')) {
     Model.reopen({
@@ -18033,7 +18014,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "3.1.0-canary+119da21fbd";
+  exports.default = "3.1.0-canary+7c6448d55e";
 });
 define('ember-inflector', ['exports', 'ember-inflector/lib/system', 'ember-inflector/lib/ext/string'], function (exports, _system) {
   'use strict';
