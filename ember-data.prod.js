@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   3.1.0-canary+1750d94bc6
+ * @version   3.1.0-canary+0e0f53bbbb
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -1824,7 +1824,7 @@ define('ember-data/-private/system/identity-map', ['exports', 'ember-data/-priva
      similar to `getWithDefault` or `get` on a `MapWithDefault`
       @method retrieve
      @param modelName a previously normalized modelName
-     @returns {InternalModelMap} the InternalModelMap for the given modelName
+     @return {InternalModelMap} the InternalModelMap for the given modelName
      */
 
 
@@ -1891,9 +1891,9 @@ define('ember-data/-private/system/internal-model-map', ['exports', 'ember-data/
     }
 
     /**
-     *
-     * @param id
-     * @returns {InternalModel}
+     * @method get
+     * @param id {String}
+     * @return {InternalModel}
      */
 
 
@@ -7458,7 +7458,7 @@ define('ember-data/-private/system/references/record', ['exports', 'ember-data/-
      ```
   
     @method push
-    @param {Promise|Object}
+    @param objectOrPromise {Promise|Object}
     @return Promise<record> a promise for the value (record or relationship)
   */
   RecordReference.prototype.push = function (objectOrPromise) {
@@ -17984,7 +17984,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "3.1.0-canary+1750d94bc6";
+  exports.default = "3.1.0-canary+0e0f53bbbb";
 });
 define('ember-inflector', ['exports', 'ember-inflector/lib/system', 'ember-inflector/lib/ext/string'], function (exports, _system) {
   'use strict';
