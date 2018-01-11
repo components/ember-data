@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   3.1.0-canary+0e0f53bbbb
+ * @version   3.1.0-canary+1732cd5bee
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -10369,9 +10369,7 @@ define('ember-data/-private/system/store', ['exports', 'ember-data/-private/adap
       (false && Ember.assert('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + modelName, typeof modelName === 'string'));
 
 
-      var normalizedModelName = (0, _normalizeModelName.default)(modelName);
-
-      return this.findRecord(normalizedModelName, id);
+      return this.findRecord(modelName, id);
     },
 
 
@@ -18015,7 +18013,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "3.1.0-canary+0e0f53bbbb";
+  exports.default = "3.1.0-canary+1732cd5bee";
 });
 define('ember-inflector', ['exports', 'ember-inflector/lib/system', 'ember-inflector/lib/ext/string'], function (exports, _system) {
   'use strict';
