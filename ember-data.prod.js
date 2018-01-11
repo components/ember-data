@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   3.1.0-canary+a80709cab0
+ * @version   3.1.0-canary+b329a2c701
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -1307,28 +1307,7 @@ define('ember-data/-private/features', ['exports'], function (exports) {
     return (_Ember$FEATURES = Ember.FEATURES).isEnabled.apply(_Ember$FEATURES, arguments);
   }
 });
-define('ember-data/-private/global', ['exports'], function (exports) {
-  'use strict';
-
-  exports.__esModule = true;
-  /* globals global, window, self */
-
-  // originally from https://github.com/emberjs/ember.js/blob/c0bd26639f50efd6a03ee5b87035fd200e313b8e/packages/ember-environment/lib/global.js
-
-  // from lodash to catch fake globals
-  function checkGlobal(value) {
-    return value && value.Object === Object ? value : undefined;
-  }
-
-  // element ids can ruin global miss checks
-  function checkElementIdShadowing(value) {
-    return value && value.nodeType === undefined ? value : undefined;
-  }
-
-  // export real global
-  exports.default = checkGlobal(checkElementIdShadowing(typeof global === 'object' && global)) || checkGlobal(typeof self === 'object' && self) || checkGlobal(typeof window === 'object' && window) || new Function('return this')();
-});
-define('ember-data/-private', ['exports', 'ember-data/-private/system/model/model', 'ember-data/-private/system/model/errors', 'ember-data/-private/system/store', 'ember-data/-private/core', 'ember-data/-private/system/relationships/belongs-to', 'ember-data/-private/system/relationships/has-many', 'ember-data/-private/adapters/build-url-mixin', 'ember-data/-private/system/snapshot', 'ember-data/-private/adapters/errors', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/utils/parse-response-headers', 'ember-data/-private/global', 'ember-data/-private/features', 'ember-data/-private/system/model/states', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/record-arrays', 'ember-data/-private/system/many-array', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/relationships/state/relationship', 'ember-data/-private/system/debug/debug-adapter', 'ember-data/-private/system/diff-array', 'ember-data/-private/system/relationships/relationship-payloads-manager', 'ember-data/-private/system/relationships/relationship-payloads', 'ember-data/-private/system/snapshot-record-array'], function (exports, _model, _errors, _store, _core, _belongsTo, _hasMany, _buildUrlMixin, _snapshot, _errors2, _normalizeModelName, _utils, _coerceId, _parseResponseHeaders, _global, _features, _states, _internalModel, _promiseProxies, _recordArrays, _manyArray, _recordArrayManager, _relationship, _debugAdapter, _diffArray, _relationshipPayloadsManager, _relationshipPayloads, _snapshotRecordArray) {
+define('ember-data/-private', ['exports', 'ember-data/-private/system/model/model', 'ember-data/-private/system/model/errors', 'ember-data/-private/system/store', 'ember-data/-private/core', 'ember-data/-private/system/relationships/belongs-to', 'ember-data/-private/system/relationships/has-many', 'ember-data/-private/adapters/build-url-mixin', 'ember-data/-private/system/snapshot', 'ember-data/-private/adapters/errors', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/utils/parse-response-headers', 'ember-data/-private/features', 'ember-data/-private/system/model/states', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/record-arrays', 'ember-data/-private/system/many-array', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/relationships/state/relationship', 'ember-data/-private/system/debug/debug-adapter', 'ember-data/-private/system/diff-array', 'ember-data/-private/system/relationships/relationship-payloads-manager', 'ember-data/-private/system/relationships/relationship-payloads', 'ember-data/-private/system/snapshot-record-array'], function (exports, _model, _errors, _store, _core, _belongsTo, _hasMany, _buildUrlMixin, _snapshot, _errors2, _normalizeModelName, _utils, _coerceId, _parseResponseHeaders, _features, _states, _internalModel, _promiseProxies, _recordArrays, _manyArray, _recordArrayManager, _relationship, _debugAdapter, _diffArray, _relationshipPayloadsManager, _relationshipPayloads, _snapshotRecordArray) {
   'use strict';
 
   exports.__esModule = true;
@@ -1474,12 +1453,6 @@ define('ember-data/-private', ['exports', 'ember-data/-private/system/model/mode
     enumerable: true,
     get: function () {
       return _parseResponseHeaders.default;
-    }
-  });
-  Object.defineProperty(exports, 'global', {
-    enumerable: true,
-    get: function () {
-      return _global.default;
     }
   });
   Object.defineProperty(exports, 'isEnabled', {
@@ -2683,12 +2656,24 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember-dat
     return true;
   }
 
+  // Handle dematerialization for relationship `rel`.  In all cases, notify the
+  // relatinoship of the dematerialization: this is done so the relationship can
+  // notify its inverse which needs to update state
+  //
+  // If the inverse is sync, unloading this record is treated as a client-side
+  // delete, so we remove the inverse records from this relationship to
+  // disconnect the graph.  Because it's not async, we don't need to keep around
+  // the internalModel as an id-wrapper for references and because the graph is
+  // disconnected we can actually destroy the internalModel when checking for
+  // orphaned models.
   function destroyRelationship(rel) {
-    if (rel._inverseIsAsync()) {
-      rel.removeInternalModelFromInverse(rel.inverseInternalModel);
-      rel.removeInverseRelationships();
-    } else {
-      rel.removeCompletelyFromInverse();
+    rel.internalModelDidDematerialize();
+
+    if (rel._inverseIsSync()) {
+      // disconnect the graph so that the sync inverse relationship does not
+      // prevent us from cleaning up during `_cleanupOrphanedInternalModels`
+      rel.removeAllInternalModelsFromOwn();
+      rel.removeAllCanonicalInternalModelsFromOwn();
     }
   }
   // this (and all heimdall instrumentation) will be stripped by a babel transform
@@ -2905,6 +2890,7 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember-dat
 
     InternalModel.prototype._directlyRelatedInternalModels = function _directlyRelatedInternalModels() {
       var array = [];
+
       this._relationships.forEach(function (name, rel) {
         array = array.concat(rel.members.list, rel.canonicalMembers.list);
       });
@@ -3296,10 +3282,7 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember-dat
       this.__implicitRelationships = null;
       Object.keys(implicitRelationships).forEach(function (key) {
         var rel = implicitRelationships[key];
-
         destroyRelationship(rel);
-
-        rel.destroy();
       });
     };
 
@@ -8513,6 +8496,7 @@ define('ember-data/-private/system/relationships/state/belongs-to', ['exports', 
     };
 
     BelongsToRelationship.prototype.inverseDidDematerialize = function inverseDidDematerialize() {
+      _Relationship.prototype.inverseDidDematerialize.call(this, this.inverseInternalModel);
       this.notifyBelongsToChanged();
     };
 
@@ -8527,6 +8511,12 @@ define('ember-data/-private/system/relationships/state/belongs-to', ['exports', 
         this.inverseInternalModel = null;
         this.notifyBelongsToChanged();
       }
+    };
+
+    BelongsToRelationship.prototype.removeCompletelyFromInverse = function removeCompletelyFromInverse() {
+      _Relationship.prototype.removeCompletelyFromInverse.call(this);
+
+      this.inverseInternalModel = null;
     };
 
     BelongsToRelationship.prototype.flushCanonical = function flushCanonical() {
@@ -8573,6 +8563,12 @@ define('ember-data/-private/system/relationships/state/belongs-to', ['exports', 
       this.notifyBelongsToChanged();
     };
 
+    BelongsToRelationship.prototype.removeAllInternalModelsFromOwn = function removeAllInternalModelsFromOwn() {
+      _Relationship.prototype.removeAllInternalModelsFromOwn.call(this);
+      this.inverseInternalModel = null;
+      this.notifyBelongsToChanged();
+    };
+
     BelongsToRelationship.prototype.notifyBelongsToChanged = function notifyBelongsToChanged() {
       this.internalModel.notifyBelongsToChanged(this.key);
     };
@@ -8583,6 +8579,11 @@ define('ember-data/-private/system/relationships/state/belongs-to', ['exports', 
       }
       this.canonicalState = null;
       _Relationship.prototype.removeCanonicalInternalModelFromOwn.call(this, internalModel);
+    };
+
+    BelongsToRelationship.prototype.removeAllCanonicalInternalModelsFromOwn = function removeAllCanonicalInternalModelsFromOwn() {
+      _Relationship.prototype.removeAllCanonicalInternalModelsFromOwn.call(this);
+      this.canonicalState = null;
     };
 
     BelongsToRelationship.prototype.findRecord = function findRecord() {
@@ -8845,7 +8846,12 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
       _this.belongsToType = relationshipMeta.type;
       _this.canonicalState = [];
       _this.isPolymorphic = relationshipMeta.options.polymorphic;
+      // The ManyArray for this relationship
       _this._manyArray = null;
+      // The previous ManyArray for this relationship.  It will be destroyed when
+      // we create a new many array, but in the interim it will be updated if
+      // inverse internal models are unloaded.
+      _this._retainedManyArray = null;
       _this.__loadingPromise = null;
       return _this;
     }
@@ -8897,10 +8903,14 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
       _Relationship.prototype.addCanonicalInternalModel.call(this, internalModel, idx);
     };
 
-    ManyRelationship.prototype.inverseDidDematerialize = function inverseDidDematerialize() {
-      if (this._manyArray) {
-        this._manyArray.destroy();
-        this._manyArray = null;
+    ManyRelationship.prototype.inverseDidDematerialize = function inverseDidDematerialize(inverseInternalModel) {
+      _Relationship.prototype.inverseDidDematerialize.call(this, inverseInternalModel);
+      if (this.isAsync) {
+        if (this._manyArray) {
+          this._retainedManyArray = this._manyArray;
+          this._manyArray = null;
+        }
+        this._removeInternalModelFromManyArray(this._retainedManyArray, inverseInternalModel);
       }
       this.notifyHasManyChanged();
     };
@@ -8927,6 +8937,12 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
         this.canonicalState.splice(i, 1);
       }
       _Relationship.prototype.removeCanonicalInternalModelFromOwn.call(this, internalModel, idx);
+    };
+
+    ManyRelationship.prototype.removeAllCanonicalInternalModelsFromOwn = function removeAllCanonicalInternalModelsFromOwn() {
+      _Relationship.prototype.removeAllCanonicalInternalModelsFromOwn.call(this);
+      this.canonicalMembers.clear();
+      this.canonicalState.splice(0, this.canonicalState.length);
     };
 
     ManyRelationship.prototype.removeCompletelyFromOwn = function removeCompletelyFromOwn(internalModel) {
@@ -8961,7 +8977,33 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
         return;
       }
       _Relationship.prototype.removeInternalModelFromOwn.call(this, internalModel, idx);
-      var manyArray = this.manyArray;
+      // note that ensuring the many array is created, via `this.manyArray`
+      // (instead of `this._manyArray`) is intentional.
+      //
+      // Because we're removing from local, and not canonical, state, it is
+      // important that the many array is initialized now with those changes,
+      // otherwise it will be initialized with canonical state and we'll have
+      // lost the fact that this internalModel was removed.
+      this._removeInternalModelFromManyArray(this.manyArray, internalModel, idx);
+      this._removeInternalModelFromManyArray(this._retainedManyArray, internalModel, idx);
+    };
+
+    ManyRelationship.prototype.removeAllInternalModelsFromOwn = function removeAllInternalModelsFromOwn() {
+      _Relationship.prototype.removeAllInternalModelsFromOwn.call(this);
+      // as with removeInternalModelFromOwn, we make sure the many array is
+      // instantiated, or we'll lose local removals, as we're not updating
+      // canonical state here.
+      this.manyArray.clear();
+      if (this._retainedManyArray) {
+        this._retainedManyArray.clear();
+      }
+    };
+
+    ManyRelationship.prototype._removeInternalModelFromManyArray = function _removeInternalModelFromManyArray(manyArray, internalModel, idx) {
+      if (manyArray === null) {
+        return;
+      }
+
       if (idx !== undefined) {
         //TODO(Igor) not used currently, fix
         manyArray.currentState.removeAt(idx);
@@ -9123,12 +9165,14 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
       var manyArray = this._manyArray;
       if (manyArray) {
         manyArray.destroy();
+        this._manyArray = null;
       }
 
       var proxy = this.__loadingPromise;
 
       if (proxy) {
         proxy.destroy();
+        this.__loadingPromise = null;
       }
     };
 
@@ -9140,6 +9184,9 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
     }, {
       key: 'manyArray',
       get: function () {
+        (false && Ember.assert('Error: relationship ' + this.parentType + ':' + this.key + ' has both many array and retained many array', this._manyArray === null || this._retainedManyArray === null));
+
+
         if (!this._manyArray) {
           this._manyArray = _manyArray.default.create({
             canonicalState: this.canonicalState,
@@ -9150,7 +9197,13 @@ define('ember-data/-private/system/relationships/state/has-many', ['exports', 'e
             meta: this.meta,
             isPolymorphic: this.isPolymorphic
           });
+
+          if (this._retainedManyArray !== null) {
+            this._retainedManyArray.destroy();
+            this._retainedManyArray = null;
+          }
         }
+
         return this._manyArray;
       }
     }]);
@@ -9203,6 +9256,7 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
   }();
 
   var guidFor = Ember.guidFor;
+  var get = Ember.get;
 
   var Relationship = function () {
     function Relationship(store, internalModel, inverseKey, relationshipMeta) {
@@ -9224,33 +9278,51 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
       this.meta = null;
       this.hasData = false;
       this.hasLoaded = false;
+      this.__inverseMeta = undefined;
     }
 
     Relationship.prototype._inverseIsAsync = function _inverseIsAsync() {
-      if (!this.inverseKey || !this.inverseInternalModel) {
+      var inverseMeta = this._inverseMeta;
+      if (!inverseMeta) {
         return false;
       }
-      return this.inverseInternalModel._relationships.get(this.inverseKey).isAsync;
+
+      var inverseAsync = inverseMeta.options.async;
+      return typeof inverseAsync === 'undefined' ? true : inverseAsync;
     };
 
-    Relationship.prototype.removeInverseRelationships = function removeInverseRelationships() {
+    Relationship.prototype._inverseIsSync = function _inverseIsSync() {
+      var inverseMeta = this._inverseMeta;
+      if (!inverseMeta) {
+        return false;
+      }
+
+      var inverseAsync = inverseMeta.options.async;
+      return typeof inverseAsync === 'undefined' ? false : !inverseAsync;
+    };
+
+    Relationship.prototype.internalModelDidDematerialize = function internalModelDidDematerialize() {
+      var _this = this;
+
       if (!this.inverseKey) {
         return;
       }
 
-      var allMembers =
-      // we actually want a union of members and canonicalMembers
-      // they should be disjoint but currently are not due to a bug
-      this.members.list.concat(this.canonicalMembers.list);
-
-      for (var i = 0; i < allMembers.length; i++) {
-        var inverseInternalModel = allMembers[i];
-        var relationship = inverseInternalModel._relationships.get(this.inverseKey);
-        relationship.inverseDidDematerialize();
-      }
+      this.forAllMembers(function (inverseInternalModel) {
+        var relationship = inverseInternalModel._relationships.get(_this.inverseKey);
+        relationship.inverseDidDematerialize(_this.internalModel);
+      });
     };
 
-    Relationship.prototype.inverseDidDematerialize = function inverseDidDematerialize() {};
+    Relationship.prototype.inverseDidDematerialize = function inverseDidDematerialize(inverseInternalModel) {
+      if (!this.isAsync) {
+        // unloading inverse of a sync relationship is treated as a client-side
+        // delete, so actually remove the models don't merely invalidate the cp
+        // cache.
+        this.removeInternalModelFromOwn(inverseInternalModel);
+        this.removeCanonicalInternalModelFromOwn(inverseInternalModel);
+      }
+    };
 
     Relationship.prototype.updateMeta = function updateMeta(meta) {
       this.meta = meta;
@@ -9271,19 +9343,29 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
       }
     };
 
+    Relationship.prototype.removeAllInternalModelsFromOwn = function removeAllInternalModelsFromOwn() {
+      this.members.clear();
+      this.internalModel.updateRecordArrays();
+    };
+
+    Relationship.prototype.removeAllCanonicalInternalModelsFromOwn = function removeAllCanonicalInternalModelsFromOwn() {
+      this.canonicalMembers.clear();
+      this.flushCanonicalLater();
+    };
+
     Relationship.prototype.removeInternalModels = function removeInternalModels(internalModels) {
-      var _this = this;
+      var _this2 = this;
 
       internalModels.forEach(function (internalModel) {
-        return _this.removeInternalModel(internalModel);
+        return _this2.removeInternalModel(internalModel);
       });
     };
 
     Relationship.prototype.addInternalModels = function addInternalModels(internalModels, idx) {
-      var _this2 = this;
+      var _this3 = this;
 
       internalModels.forEach(function (internalModel) {
-        _this2.addInternalModel(internalModel, idx);
+        _this3.addInternalModel(internalModel, idx);
         if (idx !== undefined) {
           idx++;
         }
@@ -9326,7 +9408,7 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
         var _relationships = internalModel._implicitRelationships;
         var _relationship = _relationships[this.inverseKeyForImplicit];
         if (!_relationship) {
-          _relationship = _relationships[this.inverseKeyForImplicit] = new Relationship(this.store, internalModel, this.key, { options: { async: this.isAsync } });
+          _relationship = _relationships[this.inverseKeyForImplicit] = new Relationship(this.store, internalModel, this.key, { options: { async: this.isAsync }, type: this.parentType });
         }
         _relationship.addCanonicalInternalModel(this.internalModel);
       }
@@ -9364,7 +9446,7 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
           internalModel._relationships.get(this.inverseKey).addInternalModel(this.internalModel);
         } else {
           if (!internalModel._implicitRelationships[this.inverseKeyForImplicit]) {
-            internalModel._implicitRelationships[this.inverseKeyForImplicit] = new Relationship(this.store, internalModel, this.key, { options: { async: this.isAsync } });
+            internalModel._implicitRelationships[this.inverseKeyForImplicit] = new Relationship(this.store, internalModel, this.key, { options: { async: this.isAsync }, type: this.parentType });
           }
           internalModel._implicitRelationships[this.inverseKeyForImplicit].addInternalModel(this.internalModel);
         }
@@ -9413,7 +9495,7 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
     };
 
     Relationship.prototype.removeCompletelyFromInverse = function removeCompletelyFromInverse() {
-      var _this3 = this;
+      var _this4 = this;
 
       if (!this.inverseKey) {
         return;
@@ -9428,7 +9510,7 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
         var id = guidFor(inverseInternalModel);
 
         if (seen[id] === undefined) {
-          var relationship = inverseInternalModel._relationships.get(_this3.inverseKey);
+          var relationship = inverseInternalModel._relationships.get(_this4.inverseKey);
           relationship.removeCompletelyFromOwn(internalModel);
           seen[id] = true;
         }
@@ -9436,6 +9518,32 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
 
       this.members.forEach(unload);
       this.canonicalMembers.forEach(unload);
+
+      if (!this.isAsync) {
+        this.clear();
+      }
+    };
+
+    Relationship.prototype.forAllMembers = function forAllMembers(callback) {
+      var seen = Object.create(null);
+
+      for (var i = 0; i < this.members.list.length; i++) {
+        var inverseInternalModel = this.members.list[i];
+        var id = guidFor(inverseInternalModel);
+        if (!seen[id]) {
+          seen[id] = true;
+          callback(inverseInternalModel);
+        }
+      }
+
+      for (var _i = 0; _i < this.canonicalMembers.list.length; _i++) {
+        var _inverseInternalModel = this.canonicalMembers.list[_i];
+        var _id = guidFor(_inverseInternalModel);
+        if (!seen[_id]) {
+          seen[_id] = true;
+          callback(_inverseInternalModel);
+        }
+      }
     };
 
     Relationship.prototype.removeCompletelyFromOwn = function removeCompletelyFromOwn(internalModel) {
@@ -9458,8 +9566,8 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
 
       //TODO(Igor) make this less abysmally slow
       this.members = this.canonicalMembers.copy();
-      for (var _i = 0; _i < newInternalModels.length; _i++) {
-        this.members.add(newInternalModels[_i]);
+      for (var _i2 = 0; _i2 < newInternalModels.length; _i2++) {
+        this.members.add(newInternalModels[_i2]);
       }
     };
 
@@ -9560,6 +9668,23 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
     Relationship.prototype.destroy = function destroy() {};
 
     _createClass(Relationship, [{
+      key: '_inverseMeta',
+      get: function () {
+        if (this.__inverseMeta === undefined) {
+          var inverseMeta = null;
+
+          if (this.inverseKey) {
+            var inverseModelClass = this.store.modelFor(this.relationshipMeta.type);
+            var inverseRelationships = get(inverseModelClass, 'relationshipsByName');
+            inverseMeta = inverseRelationships.get(this.inverseKey);
+          }
+
+          this.__inverseMeta = inverseMeta;
+        }
+
+        return this.__inverseMeta;
+      }
+    }, {
       key: 'parentType',
       get: function () {
         return this.internalModel.modelName;
@@ -15204,8 +15329,8 @@ define('ember-data/attr', ['exports'], function (exports) {
     }).meta(meta);
   }
 });
-define('ember-data', ['exports', 'ember-data/-private', 'ember-data/setup-container', 'ember-data/initialize-store-service', 'ember-data/transforms/transform', 'ember-data/transforms/number', 'ember-data/transforms/date', 'ember-data/transforms/string', 'ember-data/transforms/boolean', 'ember-data/adapter', 'ember-data/adapters/json-api', 'ember-data/adapters/rest', 'ember-data/serializer', 'ember-data/serializers/json-api', 'ember-data/serializers/json', 'ember-data/serializers/rest', 'ember-data/serializers/embedded-records-mixin', 'ember-data/attr', 'ember-inflector'], function (exports, _private, _setupContainer, _initializeStoreService, _transform, _number, _date, _string, _boolean, _adapter, _jsonApi, _rest, _serializer, _jsonApi2, _json, _rest2, _embeddedRecordsMixin, _attr) {
-  'use strict';
+define("ember-data", ["exports", "ember-data/-private", "ember-data/setup-container", "ember-data/initialize-store-service", "ember-data/transforms/transform", "ember-data/transforms/number", "ember-data/transforms/date", "ember-data/transforms/string", "ember-data/transforms/boolean", "ember-data/adapter", "ember-data/adapters/json-api", "ember-data/adapters/rest", "ember-data/serializer", "ember-data/serializers/json-api", "ember-data/serializers/json", "ember-data/serializers/rest", "ember-data/serializers/embedded-records-mixin", "ember-data/attr", "ember-inflector"], function (exports, _private, _setupContainer, _initializeStoreService, _transform, _number, _date, _string, _boolean, _adapter, _jsonApi, _rest, _serializer, _jsonApi2, _json, _rest2, _embeddedRecordsMixin, _attr) {
+  "use strict";
 
   exports.__esModule = true;
   var EmberError = Ember.Error;
@@ -15292,16 +15417,6 @@ define('ember-data', ['exports', 'ember-data/-private', 'ember-data/setup-contai
     writable: false,
     configurable: false,
     value: _private.normalizeModelName
-  });
-
-  Object.defineProperty(_private.global, 'DS', {
-    configurable: true,
-    get: function () {
-      (false && !(false) && Ember.deprecate('Using the global version of DS is deprecated. Please either import ' + 'the specific modules needed or `import DS from \'ember-data\';`.', false, { id: 'ember-data.global-ds', until: '3.0.0' }));
-
-
-      return _private.DS;
-    }
   });
 
   exports.default = _private.DS;
@@ -17971,7 +18086,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "3.1.0-canary+a80709cab0";
+  exports.default = "3.1.0-canary+b329a2c701";
 });
 define('ember-inflector', ['exports', 'ember-inflector/lib/system', 'ember-inflector/lib/ext/string'], function (exports, _system) {
   'use strict';
