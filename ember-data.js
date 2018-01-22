@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   3.1.0-canary+7d0174ef55
+ * @version   3.1.0-canary+6894000cc1
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -14425,11 +14425,14 @@ define('ember-data/adapters/rest', ['exports', 'ember-data/adapter', 'ember-data
   
     ```app/adapters/application.js
     import DS from 'ember-data';
+    import { computed } from '@ember/object';
   
     export default DS.RESTAdapter.extend({
-      headers: {
-        'API_KEY': 'secret key',
-        'ANOTHER_HEADER': 'Some header value'
+      headers: computed(function() {
+        return {
+          'API_KEY': 'secret key',
+          'ANOTHER_HEADER': 'Some header value'
+        };
       }
     });
     ```
@@ -18117,7 +18120,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "3.1.0-canary+7d0174ef55";
+  exports.default = "3.1.0-canary+6894000cc1";
 });
 define('ember-inflector', ['exports', 'ember-inflector/lib/system', 'ember-inflector/lib/ext/string'], function (exports, _system) {
   'use strict';
