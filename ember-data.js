@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   3.1.0-canary+6894000cc1
+ * @version   3.1.0-canary+aec8990c42
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -7736,10 +7736,6 @@ define('ember-data/-private/system/relationships/ext', ['exports', 'ember-data/-
   var MapWithDefault = Ember.MapWithDefault;
   var Map = Ember.Map;
   var relationshipsDescriptor = exports.relationshipsDescriptor = computed(function () {
-    if (Ember.testing === true && relationshipsDescriptor._cacheable === true) {
-      relationshipsDescriptor._cacheable = false;
-    }
-
     var map = new MapWithDefault({
       defaultValue: function () {
         return [];
@@ -7766,10 +7762,6 @@ define('ember-data/-private/system/relationships/ext', ['exports', 'ember-data/-
 
   var relatedTypesDescriptor = exports.relatedTypesDescriptor = computed(function () {
     var _this = this;
-
-    if (Ember.testing === true && relatedTypesDescriptor._cacheable === true) {
-      relatedTypesDescriptor._cacheable = false;
-    }
 
     var modelName = void 0;
     var types = A();
@@ -18120,7 +18112,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "3.1.0-canary+6894000cc1";
+  exports.default = "3.1.0-canary+aec8990c42";
 });
 define('ember-inflector', ['exports', 'ember-inflector/lib/system', 'ember-inflector/lib/ext/string'], function (exports, _system) {
   'use strict';
