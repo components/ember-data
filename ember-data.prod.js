@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   3.0.0-beta.1
+ * @version   3.0.0
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -1307,28 +1307,7 @@ define('ember-data/-private/features', ['exports'], function (exports) {
     return (_Ember$FEATURES = Ember.FEATURES).isEnabled.apply(_Ember$FEATURES, arguments);
   }
 });
-define('ember-data/-private/global', ['exports'], function (exports) {
-  'use strict';
-
-  exports.__esModule = true;
-  /* globals global, window, self */
-
-  // originally from https://github.com/emberjs/ember.js/blob/c0bd26639f50efd6a03ee5b87035fd200e313b8e/packages/ember-environment/lib/global.js
-
-  // from lodash to catch fake globals
-  function checkGlobal(value) {
-    return value && value.Object === Object ? value : undefined;
-  }
-
-  // element ids can ruin global miss checks
-  function checkElementIdShadowing(value) {
-    return value && value.nodeType === undefined ? value : undefined;
-  }
-
-  // export real global
-  exports.default = checkGlobal(checkElementIdShadowing(typeof global === 'object' && global)) || checkGlobal(typeof self === 'object' && self) || checkGlobal(typeof window === 'object' && window) || new Function('return this')();
-});
-define('ember-data/-private', ['exports', 'ember-data/-private/system/model/model', 'ember-data/-private/system/model/errors', 'ember-data/-private/system/store', 'ember-data/-private/core', 'ember-data/-private/system/relationships/belongs-to', 'ember-data/-private/system/relationships/has-many', 'ember-data/-private/adapters/build-url-mixin', 'ember-data/-private/system/snapshot', 'ember-data/-private/adapters/errors', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/utils/parse-response-headers', 'ember-data/-private/global', 'ember-data/-private/features', 'ember-data/-private/system/model/states', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/record-arrays', 'ember-data/-private/system/many-array', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/relationships/state/relationship', 'ember-data/-private/system/debug/debug-adapter', 'ember-data/-private/system/diff-array', 'ember-data/-private/system/relationships/relationship-payloads-manager', 'ember-data/-private/system/relationships/relationship-payloads', 'ember-data/-private/system/snapshot-record-array'], function (exports, _model, _errors, _store, _core, _belongsTo, _hasMany, _buildUrlMixin, _snapshot, _errors2, _normalizeModelName, _utils, _coerceId, _parseResponseHeaders, _global, _features, _states, _internalModel, _promiseProxies, _recordArrays, _manyArray, _recordArrayManager, _relationship, _debugAdapter, _diffArray, _relationshipPayloadsManager, _relationshipPayloads, _snapshotRecordArray) {
+define('ember-data/-private', ['exports', 'ember-data/-private/system/model/model', 'ember-data/-private/system/model/errors', 'ember-data/-private/system/store', 'ember-data/-private/core', 'ember-data/-private/system/relationships/belongs-to', 'ember-data/-private/system/relationships/has-many', 'ember-data/-private/adapters/build-url-mixin', 'ember-data/-private/system/snapshot', 'ember-data/-private/adapters/errors', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/utils/parse-response-headers', 'ember-data/-private/features', 'ember-data/-private/system/model/states', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/record-arrays', 'ember-data/-private/system/many-array', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/relationships/state/relationship', 'ember-data/-private/system/debug/debug-adapter', 'ember-data/-private/system/diff-array', 'ember-data/-private/system/relationships/relationship-payloads-manager', 'ember-data/-private/system/relationships/relationship-payloads', 'ember-data/-private/system/snapshot-record-array'], function (exports, _model, _errors, _store, _core, _belongsTo, _hasMany, _buildUrlMixin, _snapshot, _errors2, _normalizeModelName, _utils, _coerceId, _parseResponseHeaders, _features, _states, _internalModel, _promiseProxies, _recordArrays, _manyArray, _recordArrayManager, _relationship, _debugAdapter, _diffArray, _relationshipPayloadsManager, _relationshipPayloads, _snapshotRecordArray) {
   'use strict';
 
   exports.__esModule = true;
@@ -1474,12 +1453,6 @@ define('ember-data/-private', ['exports', 'ember-data/-private/system/model/mode
     enumerable: true,
     get: function () {
       return _parseResponseHeaders.default;
-    }
-  });
-  Object.defineProperty(exports, 'global', {
-    enumerable: true,
-    get: function () {
-      return _global.default;
     }
   });
   Object.defineProperty(exports, 'isEnabled', {
@@ -2364,7 +2337,7 @@ define('ember-data/-private/system/model/errors', ['exports'], function (exports
     unknownProperty: function (attribute) {
       var errors = this.errorsFor(attribute);
       if (isEmpty(errors)) {
-        return null;
+        return undefined;
       }
       return errors;
     },
@@ -3678,7 +3651,6 @@ define('ember-data/-private/system/model/model', ['exports', 'ember-data/-privat
 
   exports.__esModule = true;
   var ComputedProperty = Ember.ComputedProperty;
-  var setOwner = Ember.setOwner;
   var isNone = Ember.isNone;
   var EmberError = Ember.Error;
   var Evented = Ember.Evented;
@@ -4739,24 +4711,6 @@ define('ember-data/-private/system/model/model', ['exports', 'ember-data/-privat
       });
     }
   });
-
-  // if `Ember.setOwner` is defined, accessing `this.container` is
-  // deprecated (but functional). In "standard" Ember usage, this
-  // deprecation is actually created via an `.extend` of the factory
-  // inside the container itself, but that only happens on models
-  // with MODEL_FACTORY_INJECTIONS enabled :(
-  if (setOwner) {
-    Object.defineProperty(Model.prototype, 'container', {
-      configurable: true,
-      enumerable: false,
-      get: function () {
-        (false && !(false) && Ember.deprecate('Using the injected `container` is deprecated. Please use the `getOwner` helper instead to access the owner of this object.', false, { id: 'ember-application.injected-container', until: '3.0.0' }));
-
-
-        return this.store.container;
-      }
-    });
-  }
 
   if ((0, _features.default)('ds-rollback-attribute')) {
     Model.reopen({
@@ -7760,10 +7714,6 @@ define('ember-data/-private/system/relationships/ext', ['exports', 'ember-data/-
   var MapWithDefault = Ember.MapWithDefault;
   var Map = Ember.Map;
   var relationshipsDescriptor = exports.relationshipsDescriptor = computed(function () {
-    if (Ember.testing === true && relationshipsDescriptor._cacheable === true) {
-      relationshipsDescriptor._cacheable = false;
-    }
-
     var map = new MapWithDefault({
       defaultValue: function () {
         return [];
@@ -7790,10 +7740,6 @@ define('ember-data/-private/system/relationships/ext', ['exports', 'ember-data/-
 
   var relatedTypesDescriptor = exports.relatedTypesDescriptor = computed(function () {
     var _this = this;
-
-    if (Ember.testing === true && relatedTypesDescriptor._cacheable === true) {
-      relatedTypesDescriptor._cacheable = false;
-    }
 
     var modelName = void 0;
     var types = A();
@@ -14290,11 +14236,14 @@ define('ember-data/adapters/rest', ['exports', 'ember-data/adapter', 'ember-data
   
     ```app/adapters/application.js
     import DS from 'ember-data';
+    import { computed } from '@ember/object';
   
     export default DS.RESTAdapter.extend({
-      headers: {
-        'API_KEY': 'secret key',
-        'ANOTHER_HEADER': 'Some header value'
+      headers: computed(function() {
+        return {
+          'API_KEY': 'secret key',
+          'ANOTHER_HEADER': 'Some header value'
+        };
       }
     });
     ```
@@ -15225,8 +15174,8 @@ define('ember-data/attr', ['exports'], function (exports) {
     }).meta(meta);
   }
 });
-define('ember-data', ['exports', 'ember-data/-private', 'ember-data/setup-container', 'ember-data/initialize-store-service', 'ember-data/transforms/transform', 'ember-data/transforms/number', 'ember-data/transforms/date', 'ember-data/transforms/string', 'ember-data/transforms/boolean', 'ember-data/adapter', 'ember-data/adapters/json-api', 'ember-data/adapters/rest', 'ember-data/serializer', 'ember-data/serializers/json-api', 'ember-data/serializers/json', 'ember-data/serializers/rest', 'ember-data/serializers/embedded-records-mixin', 'ember-data/attr', 'ember-inflector'], function (exports, _private, _setupContainer, _initializeStoreService, _transform, _number, _date, _string, _boolean, _adapter, _jsonApi, _rest, _serializer, _jsonApi2, _json, _rest2, _embeddedRecordsMixin, _attr) {
-  'use strict';
+define("ember-data", ["exports", "ember-data/-private", "ember-data/setup-container", "ember-data/initialize-store-service", "ember-data/transforms/transform", "ember-data/transforms/number", "ember-data/transforms/date", "ember-data/transforms/string", "ember-data/transforms/boolean", "ember-data/adapter", "ember-data/adapters/json-api", "ember-data/adapters/rest", "ember-data/serializer", "ember-data/serializers/json-api", "ember-data/serializers/json", "ember-data/serializers/rest", "ember-data/serializers/embedded-records-mixin", "ember-data/attr", "ember-inflector"], function (exports, _private, _setupContainer, _initializeStoreService, _transform, _number, _date, _string, _boolean, _adapter, _jsonApi, _rest, _serializer, _jsonApi2, _json, _rest2, _embeddedRecordsMixin, _attr) {
+  "use strict";
 
   exports.__esModule = true;
   var EmberError = Ember.Error;
@@ -15313,16 +15262,6 @@ define('ember-data', ['exports', 'ember-data/-private', 'ember-data/setup-contai
     writable: false,
     configurable: false,
     value: _private.normalizeModelName
-  });
-
-  Object.defineProperty(_private.global, 'DS', {
-    configurable: true,
-    get: function () {
-      (false && !(false) && Ember.deprecate('Using the global version of DS is deprecated. Please either import ' + 'the specific modules needed or `import DS from \'ember-data\';`.', false, { id: 'ember-data.global-ds', until: '3.0.0' }));
-
-
-      return _private.DS;
-    }
   });
 
   exports.default = _private.DS;
@@ -17338,17 +17277,6 @@ define('ember-data/serializers/rest', ['exports', 'ember-inflector', 'ember-data
 
       return relationshipKey + 'Type';
     },
-    normalize: function (modelClass, resourceHash, prop) {
-      if (this.normalizeHash && this.normalizeHash[prop]) {
-        (false && !(false) && Ember.deprecate('`RESTSerializer.normalizeHash` has been deprecated. Please use `serializer.normalize` to modify the payload of single resources.', false, {
-          id: 'ds.serializer.normalize-hash-deprecated',
-          until: '3.0.0'
-        }));
-
-        this.normalizeHash[prop](resourceHash);
-      }
-      return this._super(modelClass, resourceHash);
-    },
     _normalizeArray: function (store, modelName, arrayHash, prop) {
       var _this = this;
 
@@ -18002,7 +17930,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "3.0.0-beta.1";
+  exports.default = "3.0.0";
 });
 define("ember-inflector", ["module", "exports", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _system) {
   "use strict";
