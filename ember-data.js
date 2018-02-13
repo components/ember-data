@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   3.1.0-beta.1
+ * @version   3.0.1
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -1799,7 +1799,7 @@ define('ember-data/-private/system/identity-map', ['exports', 'ember-data/-priva
      similar to `getWithDefault` or `get` on a `MapWithDefault`
       @method retrieve
      @param modelName a previously normalized modelName
-     @return {InternalModelMap} the InternalModelMap for the given modelName
+     @returns {InternalModelMap} the InternalModelMap for the given modelName
      */
 
 
@@ -1868,9 +1868,9 @@ define('ember-data/-private/system/internal-model-map', ['exports', 'ember-data/
     }
 
     /**
-     * @method get
-     * @param id {String}
-     * @return {InternalModel}
+     *
+     * @param id
+     * @returns {InternalModel}
      */
 
 
@@ -7453,7 +7453,7 @@ define('ember-data/-private/system/references/record', ['exports', 'ember-data/-
      ```
   
     @method push
-    @param objectOrPromise {Promise|Object}
+    @param {Promise|Object}
     @return Promise<record> a promise for the value (record or relationship)
   */
   RecordReference.prototype.push = function (objectOrPromise) {
@@ -10486,7 +10486,9 @@ define('ember-data/-private/system/store', ['exports', 'ember-data/-private/adap
       (false && Ember.assert('Passing classes to store methods has been removed. Please pass a dasherized string instead of ' + modelName, typeof modelName === 'string'));
 
 
-      return this.findRecord(modelName, id);
+      var normalizedModelName = (0, _normalizeModelName.default)(modelName);
+
+      return this.findRecord(normalizedModelName, id);
     },
 
 
@@ -16568,9 +16570,8 @@ define('ember-data/serializers/json-api', ['exports', 'ember-inflector', 'ember-
 
       if (this._canSerialize(key)) {
         var belongsTo = snapshot.belongsTo(key);
-        var belongsToIsNotNew = belongsTo && belongsTo.record && !belongsTo.record.get('isNew');
+        if (belongsTo !== undefined) {
 
-        if (belongsTo === null || belongsToIsNotNew) {
           json.relationships = json.relationships || {};
 
           var payloadKey = this._getMappedKey(key, snapshot.type);
@@ -18112,7 +18113,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "3.1.0-beta.1";
+  exports.default = "3.0.1";
 });
 define("ember-inflector", ["module", "exports", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _system) {
   "use strict";
