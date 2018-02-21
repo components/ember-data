@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   3.2.0-canary+283f8e92a7
+ * @version   3.2.0-canary+2e1a112249
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -6503,91 +6503,65 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
   'use strict';
 
   exports.__esModule = true;
+
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+
+  function _possibleConstructorReturn(self, call) {
+    if (!self) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+
+    return call && (typeof call === "object" || typeof call === "function") ? call : self;
+  }
+
+  function _inherits(subClass, superClass) {
+    if (typeof superClass !== "function" && superClass !== null) {
+      throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+    }
+
+    subClass.prototype = Object.create(superClass && superClass.prototype, {
+      constructor: {
+        value: subClass,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+    if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+  }
+
   var resolve = Ember.RSVP.resolve;
 
+  var BelongsToReference = function (_Reference) {
+    _inherits(BelongsToReference, _Reference);
 
-  /**
-     A BelongsToReference is a low level API that allows users and
-     addon author to perform meta-operations on a belongs-to
-     relationship.
-  
-     @class BelongsToReference
-     @namespace DS
-     @extends DS.Reference
-  */
-  var BelongsToReference = function (store, parentInternalModel, belongsToRelationship) {
-    this._super$constructor(store, parentInternalModel);
-    this.belongsToRelationship = belongsToRelationship;
-    this.type = belongsToRelationship.relationshipMeta.type;
-    this.parent = parentInternalModel.recordReference;
+    function BelongsToReference(store, parentInternalModel, belongsToRelationship) {
+      _classCallCheck(this, BelongsToReference);
 
-    // TODO inverse
-  };
+      var _this = _possibleConstructorReturn(this, _Reference.call(this, store, parentInternalModel));
 
-  BelongsToReference.prototype = Object.create(_reference.default.prototype);
-  BelongsToReference.prototype.constructor = BelongsToReference;
-  BelongsToReference.prototype._super$constructor = _reference.default;
-
-  /**
-     This returns a string that represents how the reference will be
-     looked up when it is loaded. If the relationship has a link it will
-     use the "link" otherwise it defaults to "id".
-  
-     Example
-  
-     ```javascript
-      // models/blog.js
-      export default DS.Model.extend({
-        user: DS.belongsTo({ async: true })
-      });
-  
-      let blog = store.push({
-        type: 'blog',
-        id: 1,
-        relationships: {
-          user: {
-            data: { type: 'user', id: 1 }
-          }
-        }
-      });
-      let userRef = blog.belongsTo('user');
-  
-      // get the identifier of the reference
-      if (userRef.remoteType() === "id") {
-        let id = userRef.id();
-      } else if (userRef.remoteType() === "link") {
-        let link = userRef.link();
-      }
-      ```
-  
-     @method remoteType
-     @return {String} The name of the remote type. This should either be "link" or "id"
-  */
-  BelongsToReference.prototype.remoteType = function () {
-    if (this.belongsToRelationship.link) {
-      return "link";
+      _this.belongsToRelationship = belongsToRelationship;
+      _this.type = belongsToRelationship.relationshipMeta.type;
+      _this.parent = parentInternalModel.recordReference;
+      // TODO inverse
+      return _this;
     }
 
-    return "id";
-  };
-
-  /**
-     The `id` of the record that this reference refers to. Together, the
-     `type()` and `id()` methods form a composite key for the identity
-     map. This can be used to access the id of an async relationship
-     without triggering a fetch that would normally happen if you
-     attempted to use `record.get('relationship.id')`.
-  
-     Example
-  
-     ```javascript
-      // models/blog.js
-      export default DS.Model.extend({
-        user: DS.belongsTo({ async: true })
-      });
-  
-      let blog = store.push({
-        data: {
+    /**
+       This returns a string that represents how the reference will be
+       looked up when it is loaded. If the relationship has a link it will
+       use the "link" otherwise it defaults to "id".
+        Example
+        ```javascript
+        // models/blog.js
+        export default DS.Model.extend({
+          user: DS.belongsTo({ async: true })
+        });
+         let blog = store.push({
           type: 'blog',
           id: 1,
           relationships: {
@@ -6595,325 +6569,101 @@ define('ember-data/-private/system/references/belongs-to', ['exports', 'ember-da
               data: { type: 'user', id: 1 }
             }
           }
+        });
+        let userRef = blog.belongsTo('user');
+         // get the identifier of the reference
+        if (userRef.remoteType() === "id") {
+          let id = userRef.id();
+        } else if (userRef.remoteType() === "link") {
+          let link = userRef.link();
         }
-      });
-      let userRef = blog.belongsTo('user');
-  
-      // get the identifier of the reference
-      if (userRef.remoteType() === "id") {
-        let id = userRef.id();
-      }
-      ```
-  
-     @method id
-     @return {String} The id of the record in this belongsTo relationship.
-  */
-  BelongsToReference.prototype.id = function () {
-    var inverseInternalModel = this.belongsToRelationship.inverseInternalModel;
-    return inverseInternalModel && inverseInternalModel.id;
-  };
+        ```
+        @method remoteType
+       @return {String} The name of the remote type. This should either be "link" or "id"
+    */
 
-  /**
-     The link Ember Data will use to fetch or reload this belongs-to
-     relationship.
-  
-     Example
-  
-     ```javascript
-      // models/blog.js
-      export default DS.Model.extend({
-        user: DS.belongsTo({ async: true })
-      });
-  
-      let blog = store.push({
-        data: {
-          type: 'blog',
-          id: 1,
-          relationships: {
-            user: {
-              links: {
-                related: '/articles/1/author'
-              }
-            }
-          }
-        }
-      });
-      let userRef = blog.belongsTo('user');
-  
-      // get the identifier of the reference
-      if (userRef.remoteType() === "link") {
-        let link = userRef.link();
-      }
-      ```
-  
-     @method link
-     @return {String} The link Ember Data will use to fetch or reload this belongs-to relationship.
-  */
-  BelongsToReference.prototype.link = function () {
-    return this.belongsToRelationship.link;
-  };
 
-  /**
-     The meta data for the belongs-to relationship.
-  
-     Example
-  
-     ```javascript
-      // models/blog.js
-      export default DS.Model.extend({
-        user: DS.belongsTo({ async: true })
-      });
-  
-      let blog = store.push({
-        data: {
-          type: 'blog',
-          id: 1,
-          relationships: {
-            user: {
-              links: {
-                related: {
-                  href: '/articles/1/author',
-                  meta: {
-                    lastUpdated: 1458014400000
-                  }
-                }
-              }
-            }
-          }
-        }
-      });
-  
-      let userRef = blog.belongsTo('user');
-  
-      userRef.meta() // { lastUpdated: 1458014400000 }
-      ```
-  
-     @method meta
-     @return {Object} The meta information for the belongs-to relationship.
-  */
-  BelongsToReference.prototype.meta = function () {
-    return this.belongsToRelationship.meta;
-  };
-
-  /**
-     `push` can be used to update the data in the relationship and Ember
-     Data will treat the new data as the conanical value of this
-     relationship on the backend.
-  
-     Example
-  
-      ```javascript
-      // models/blog.js
-      export default DS.Model.extend({
-        user: DS.belongsTo({ async: true })
-      });
-  
-      let blog = store.push({
-        data: {
-          type: 'blog',
-          id: 1,
-          relationships: {
-            user: {
-              data: { type: 'user', id: 1 }
-            }
-          }
-        }
-      });
-      let userRef = blog.belongsTo('user');
-  
-      // provide data for reference
-      userRef.push({
-        data: {
-          type: 'user',
-          id: 1,
-          attributes: {
-            username: "@user"
-          }
-        }
-      }).then(function(user) {
-        userRef.value() === user;
-      });
-      ```
-  
-     @method push
-     @param {Object|Promise} objectOrPromise a promise that resolves to a JSONAPI document object describing the new value of this relationship.
-     @return {Promise<record>} A promise that resolves with the new value in this belongs-to relationship.
-  */
-  BelongsToReference.prototype.push = function (objectOrPromise) {
-    var _this = this;
-
-    return resolve(objectOrPromise).then(function (data) {
-      var record = void 0;
-
-      if (data instanceof _model.default) {
-        if ((0, _features.default)('ds-overhaul-references')) {
-          (false && !(false) && Ember.deprecate("BelongsToReference#push(DS.Model) is deprecated. Update relationship via `model.set('relationshipName', value)` instead.", false, {
-            id: 'ds.references.belongs-to.push-record',
-            until: '4.0.0'
-          }));
-        }
-        record = data;
-      } else {
-        record = _this.store.push(data);
+    BelongsToReference.prototype.remoteType = function remoteType() {
+      if (this.belongsToRelationship.link) {
+        return "link";
       }
 
-      (0, _debug.assertPolymorphicType)(_this.internalModel, _this.belongsToRelationship.relationshipMeta, record._internalModel);
+      return "id";
+    };
 
-      _this.belongsToRelationship.setCanonicalInternalModel(record._internalModel);
+    BelongsToReference.prototype.id = function id() {
+      var inverseInternalModel = this.belongsToRelationship.inverseInternalModel;
+      return inverseInternalModel && inverseInternalModel.id;
+    };
 
-      return record;
-    });
-  };
+    BelongsToReference.prototype.link = function link() {
+      return this.belongsToRelationship.link;
+    };
 
-  /**
-     `value()` synchronously returns the current value of the belongs-to
-     relationship. Unlike `record.get('relationshipName')`, calling
-     `value()` on a reference does not trigger a fetch if the async
-     relationship is not yet loaded. If the relationship is not loaded
-     it will always return `null`.
-  
-     Example
-  
-      ```javascript
-      // models/blog.js
-      export default DS.Model.extend({
-        user: DS.belongsTo({ async: true })
-      });
-  
-      let blog = store.push({
-        data: {
-          type: 'blog',
-          id: 1,
-          relationships: {
-            user: {
-              data: { type: 'user', id: 1 }
-            }
+    BelongsToReference.prototype.meta = function meta() {
+      return this.belongsToRelationship.meta;
+    };
+
+    BelongsToReference.prototype.push = function push(objectOrPromise) {
+      var _this2 = this;
+
+      return resolve(objectOrPromise).then(function (data) {
+        var record = void 0;
+
+        if (data instanceof _model.default) {
+          if ((0, _features.default)('ds-overhaul-references')) {
+            (false && !(false) && Ember.deprecate("BelongsToReference#push(DS.Model) is deprecated. Update relationship via `model.set('relationshipName', value)` instead.", false, {
+              id: 'ds.references.belongs-to.push-record',
+              until: '4.0.0'
+            }));
           }
+          record = data;
+        } else {
+          record = _this2.store.push(data);
         }
-      });
-      let userRef = blog.belongsTo('user');
-  
-      userRef.value(); // null
-  
-      // provide data for reference
-      userRef.push({
-        data: {
-          type: 'user',
-          id: 1,
-          attributes: {
-            username: "@user"
-          }
-        }
-      }).then(function(user) {
-        userRef.value(); // user
-      });
-      ```
-  
-     @method value
-     @return {DS.Model} the record in this relationship
-  */
-  BelongsToReference.prototype.value = function () {
-    var inverseInternalModel = this.belongsToRelationship.inverseInternalModel;
 
-    if (inverseInternalModel && inverseInternalModel.isLoaded()) {
-      return inverseInternalModel.getRecord();
-    }
+        (0, _debug.assertPolymorphicType)(_this2.internalModel, _this2.belongsToRelationship.relationshipMeta, record._internalModel);
 
-    return null;
-  };
+        _this2.belongsToRelationship.setCanonicalInternalModel(record._internalModel);
 
-  /**
-     Loads a record in a belongs to relationship if it is not already
-     loaded. If the relationship is already loaded this method does not
-     trigger a new load.
-  
-     Example
-  
-      ```javascript
-      // models/blog.js
-      export default DS.Model.extend({
-        user: DS.belongsTo({ async: true })
+        return record;
       });
-  
-      let blog = store.push({
-        data: {
-          type: 'blog',
-          id: 1,
-          relationships: {
-            user: {
-              data: { type: 'user', id: 1 }
-            }
-          }
-        }
-      });
-      let userRef = blog.belongsTo('user');
-  
-      userRef.value(); // null
-  
-      userRef.load().then(function(user) {
-        userRef.value() === user
-      });
-      ```
-  
-     @method load
-     @return {Promise} a promise that resolves with the record in this belongs-to relationship.
-  */
-  BelongsToReference.prototype.load = function () {
-    var _this2 = this;
+    };
 
-    if (this.remoteType() === "id") {
-      return this.belongsToRelationship.getRecord();
-    }
+    BelongsToReference.prototype.value = function value() {
+      var inverseInternalModel = this.belongsToRelationship.inverseInternalModel;
 
-    if (this.remoteType() === "link") {
-      return this.belongsToRelationship.findLink().then(function (internalModel) {
-        return _this2.value();
-      });
-    }
-  };
+      if (inverseInternalModel && inverseInternalModel.isLoaded()) {
+        return inverseInternalModel.getRecord();
+      }
 
-  /**
-     Triggers a reload of the value in this relationship. If the
-     remoteType is `"link"` Ember Data will use the relationship link to
-     reload the relationship. Otherwise it will reload the record by its
-     id.
-  
-     Example
-  
-      ```javascript
-      // models/blog.js
-      export default DS.Model.extend({
-        user: DS.belongsTo({ async: true })
-      });
-  
-      let blog = store.push({
-        data: {
-          type: 'blog',
-          id: 1,
-          relationships: {
-            user: {
-              data: { type: 'user', id: 1 }
-            }
-          }
-        }
-      });
-      let userRef = blog.belongsTo('user');
-  
-      userRef.reload().then(function(user) {
-        userRef.value() === user
-      });
-      ```
-  
-     @method reload
-     @return {Promise} a promise that resolves with the record in this belongs-to relationship after the reload has completed.
-  */
-  BelongsToReference.prototype.reload = function () {
-    var _this3 = this;
+      return null;
+    };
 
-    return this.belongsToRelationship.reload().then(function (internalModel) {
-      return _this3.value();
-    });
-  };
+    BelongsToReference.prototype.load = function load() {
+      var _this3 = this;
+
+      if (this.remoteType() === "id") {
+        return this.belongsToRelationship.getRecord();
+      }
+
+      if (this.remoteType() === "link") {
+        return this.belongsToRelationship.findLink().then(function (internalModel) {
+          return _this3.value();
+        });
+      }
+    };
+
+    BelongsToReference.prototype.reload = function reload() {
+      var _this4 = this;
+
+      return this.belongsToRelationship.reload().then(function (internalModel) {
+        return _this4.value();
+      });
+    };
+
+    return BelongsToReference;
+  }(_reference.default);
 
   exports.default = BelongsToReference;
 });
@@ -6921,443 +6671,210 @@ define('ember-data/-private/system/references/has-many', ['exports', 'ember-data
   'use strict';
 
   exports.__esModule = true;
+
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+
+  function _possibleConstructorReturn(self, call) {
+    if (!self) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+
+    return call && (typeof call === "object" || typeof call === "function") ? call : self;
+  }
+
+  function _inherits(subClass, superClass) {
+    if (typeof superClass !== "function" && superClass !== null) {
+      throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+    }
+
+    subClass.prototype = Object.create(superClass && superClass.prototype, {
+      constructor: {
+        value: subClass,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+    if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+  }
+
   var A = Ember.A;
   var resolve = Ember.RSVP.resolve;
   var get = Ember.get;
 
+  var HasManyReference = function (_Reference) {
+    _inherits(HasManyReference, _Reference);
 
-  /**
-     A HasManyReference is a low level API that allows users and addon
-     author to perform meta-operations on a has-many relationship.
-  
-     @class HasManyReference
-     @namespace DS
-  */
-  var HasManyReference = function (store, parentInternalModel, hasManyRelationship) {
-    this._super$constructor(store, parentInternalModel);
-    this.hasManyRelationship = hasManyRelationship;
-    this.type = hasManyRelationship.relationshipMeta.type;
-    this.parent = parentInternalModel.recordReference;
+    function HasManyReference(store, parentInternalModel, hasManyRelationship) {
+      _classCallCheck(this, HasManyReference);
 
-    // TODO inverse
-  };
+      var _this = _possibleConstructorReturn(this, _Reference.call(this, store, parentInternalModel));
 
-  HasManyReference.prototype = Object.create(_reference.default.prototype);
-  HasManyReference.prototype.constructor = HasManyReference;
-  HasManyReference.prototype._super$constructor = _reference.default;
-
-  /**
-     This returns a string that represents how the reference will be
-     looked up when it is loaded. If the relationship has a link it will
-     use the "link" otherwise it defaults to "id".
-  
-     Example
-  
-     ```app/models/post.js
-     export default DS.Model.extend({
-       comments: DS.hasMany({ async: true })
-     });
-     ```
-  
-     ```javascript
-     let post = store.push({
-       data: {
-         type: 'post',
-         id: 1,
-         relationships: {
-           comments: {
-             data: [{ type: 'comment', id: 1 }]
-           }
-         }
-       }
-     });
-  
-     let commentsRef = post.hasMany('comments');
-  
-     // get the identifier of the reference
-     if (commentsRef.remoteType() === "ids") {
-       let ids = commentsRef.ids();
-     } else if (commentsRef.remoteType() === "link") {
-       let link = commentsRef.link();
-     }
-     ```
-  
-     @method remoteType
-     @return {String} The name of the remote type. This should either be "link" or "ids"
-  */
-  HasManyReference.prototype.remoteType = function () {
-    if (this.hasManyRelationship.link) {
-      return "link";
+      _this.hasManyRelationship = hasManyRelationship;
+      _this.type = hasManyRelationship.relationshipMeta.type;
+      _this.parent = parentInternalModel.recordReference;
+      // TODO inverse
+      return _this;
     }
 
-    return "ids";
-  };
-
-  /**
-     The link Ember Data will use to fetch or reload this has-many
-     relationship.
-  
-     Example
-  
-     ```app/models/post.js
-     export default DS.Model.extend({
-       comments: DS.hasMany({ async: true })
-     });
-     ```
-  
-     ```javascript
-     let post = store.push({
-       data: {
-         type: 'post',
-         id: 1,
-         relationships: {
-           comments: {
-             links: {
-               related: '/posts/1/comments'
+    /**
+       This returns a string that represents how the reference will be
+       looked up when it is loaded. If the relationship has a link it will
+       use the "link" otherwise it defaults to "id".
+        Example
+        ```app/models/post.js
+       export default DS.Model.extend({
+         comments: DS.hasMany({ async: true })
+       });
+       ```
+        ```javascript
+       let post = store.push({
+         data: {
+           type: 'post',
+           id: 1,
+           relationships: {
+             comments: {
+               data: [{ type: 'comment', id: 1 }]
              }
            }
          }
+       });
+        let commentsRef = post.hasMany('comments');
+        // get the identifier of the reference
+       if (commentsRef.remoteType() === "ids") {
+         let ids = commentsRef.ids();
+       } else if (commentsRef.remoteType() === "link") {
+         let link = commentsRef.link();
        }
-     });
-  
-     let commentsRef = post.hasMany('comments');
-  
-     commentsRef.link(); // '/posts/1/comments'
-     ```
-  
-     @method link
-     @return {String} The link Ember Data will use to fetch or reload this has-many relationship.
-  */
-  HasManyReference.prototype.link = function () {
-    return this.hasManyRelationship.link;
-  };
+       ```
+        @method remoteType
+       @return {String} The name of the remote type. This should either be "link" or "ids"
+    */
 
-  /**
-     `ids()` returns an array of the record ids in this relationship.
-  
-     Example
-  
-     ```app/models/post.js
-     export default DS.Model.extend({
-       comments: DS.hasMany({ async: true })
-     });
-     ```
-  
-     ```javascript
-     let post = store.push({
-       data: {
-         type: 'post',
-         id: 1,
-         relationships: {
-           comments: {
-             data: [{ type: 'comment', id: 1 }]
-           }
-         }
-       }
-     });
-  
-     let commentsRef = post.hasMany('comments');
-  
-     commentsRef.ids(); // ['1']
-     ```
-  
-     @method ids
-     @return {Array} The ids in this has-many relationship
-  */
-  HasManyReference.prototype.ids = function () {
-    var members = this.hasManyRelationship.members.toArray();
 
-    return members.map(function (internalModel) {
-      return internalModel.id;
-    });
-  };
-
-  /**
-     The meta data for the has-many relationship.
-  
-     Example
-  
-     ```app/models/post.js
-     export default DS.Model.extend({
-       comments: DS.hasMany({ async: true })
-     });
-     ```
-  
-     ```javascript
-     let post = store.push({
-       data: {
-         type: 'post',
-         id: 1,
-         relationships: {
-           comments: {
-             links: {
-               related: {
-                 href: '/posts/1/comments',
-                 meta: {
-                   count: 10
-                 }
-               }
-             }
-           }
-         }
-       }
-     });
-  
-     let commentsRef = post.hasMany('comments');
-  
-     commentsRef.meta(); // { count: 10 }
-     ```
-  
-     @method meta
-     @return {Object} The meta information for the has-many relationship.
-  */
-  HasManyReference.prototype.meta = function () {
-    return this.hasManyRelationship.meta;
-  };
-
-  /**
-     `push` can be used to update the data in the relationship and Ember
-     Data will treat the new data as the canonical value of this
-     relationship on the backend.
-  
-     Example
-  
-     ```app/models/post.js
-     export default DS.Model.extend({
-       comments: DS.hasMany({ async: true })
-     });
-     ```
-  
-     ```
-     let post = store.push({
-       data: {
-         type: 'post',
-         id: 1,
-         relationships: {
-           comments: {
-             data: [{ type: 'comment', id: 1 }]
-           }
-         }
-       }
-     });
-  
-     let commentsRef = post.hasMany('comments');
-  
-     commentsRef.ids(); // ['1']
-  
-     commentsRef.push([
-       [{ type: 'comment', id: 2 }],
-       [{ type: 'comment', id: 3 }],
-     ])
-  
-     commentsRef.ids(); // ['2', '3']
-     ```
-  
-     @method push
-     @param {Array|Promise} objectOrPromise a promise that resolves to a JSONAPI document object describing the new value of this relationship.
-     @return {DS.ManyArray}
-  */
-  HasManyReference.prototype.push = function (objectOrPromise) {
-    var _this = this;
-
-    return resolve(objectOrPromise).then(function (payload) {
-      var array = payload;
-
-      if ((0, _features.default)("ds-overhaul-references")) {
-        (false && !(!Array.isArray(payload)) && Ember.deprecate("HasManyReference#push(array) is deprecated. Push a JSON-API document instead.", !Array.isArray(payload), {
-          id: 'ds.references.has-many.push-array',
-          until: '4.0.0'
-        }));
+    HasManyReference.prototype.remoteType = function remoteType() {
+      if (this.hasManyRelationship.link) {
+        return "link";
       }
 
-      var useLegacyArrayPush = true;
-      if (typeof payload === "object" && payload.data) {
-        array = payload.data;
-        useLegacyArrayPush = array.length && array[0].data;
+      return "ids";
+    };
 
-        if ((0, _features.default)('ds-overhaul-references')) {
-          (false && !(!useLegacyArrayPush) && Ember.deprecate("HasManyReference#push() expects a valid JSON-API document.", !useLegacyArrayPush, {
-            id: 'ds.references.has-many.push-invalid-json-api',
+    HasManyReference.prototype.link = function link() {
+      return this.hasManyRelationship.link;
+    };
+
+    HasManyReference.prototype.ids = function ids() {
+      var members = this.hasManyRelationship.members.toArray();
+
+      return members.map(function (internalModel) {
+        return internalModel.id;
+      });
+    };
+
+    HasManyReference.prototype.meta = function meta() {
+      return this.hasManyRelationship.meta;
+    };
+
+    HasManyReference.prototype.push = function push(objectOrPromise) {
+      var _this2 = this;
+
+      return resolve(objectOrPromise).then(function (payload) {
+        var array = payload;
+
+        if ((0, _features.default)("ds-overhaul-references")) {
+          (false && !(!Array.isArray(payload)) && Ember.deprecate("HasManyReference#push(array) is deprecated. Push a JSON-API document instead.", !Array.isArray(payload), {
+            id: 'ds.references.has-many.push-array',
             until: '4.0.0'
           }));
         }
-      }
 
-      if (!(0, _features.default)('ds-overhaul-references')) {
-        useLegacyArrayPush = true;
-      }
+        var useLegacyArrayPush = true;
+        if (typeof payload === "object" && payload.data) {
+          array = payload.data;
+          useLegacyArrayPush = array.length && array[0].data;
 
-      var internalModels = void 0;
-      if (useLegacyArrayPush) {
-        internalModels = array.map(function (obj) {
-          var record = _this.store.push(obj);
+          if ((0, _features.default)('ds-overhaul-references')) {
+            (false && !(!useLegacyArrayPush) && Ember.deprecate("HasManyReference#push() expects a valid JSON-API document.", !useLegacyArrayPush, {
+              id: 'ds.references.has-many.push-invalid-json-api',
+              until: '4.0.0'
+            }));
+          }
+        }
+
+        if (!(0, _features.default)('ds-overhaul-references')) {
+          useLegacyArrayPush = true;
+        }
+
+        var internalModels = void 0;
+        if (useLegacyArrayPush) {
+          internalModels = array.map(function (obj) {
+            var record = _this2.store.push(obj);
+
+            if (false) {
+              var relationshipMeta = _this2.hasManyRelationship.relationshipMeta;
+              (0, _debug.assertPolymorphicType)(_this2.internalModel, relationshipMeta, record._internalModel);
+            }
+
+            return record._internalModel;
+          });
+        } else {
+          var records = _this2.store.push(payload);
+          internalModels = A(records).mapBy('_internalModel');
 
           if (false) {
-            var relationshipMeta = _this.hasManyRelationship.relationshipMeta;
-            (0, _debug.assertPolymorphicType)(_this.internalModel, relationshipMeta, record._internalModel);
+            internalModels.forEach(function (internalModel) {
+              var relationshipMeta = _this2.hasManyRelationship.relationshipMeta;
+              (0, _debug.assertPolymorphicType)(_this2.internalModel, relationshipMeta, internalModel);
+            });
           }
-
-          return record._internalModel;
-        });
-      } else {
-        var records = _this.store.push(payload);
-        internalModels = A(records).mapBy('_internalModel');
-
-        if (false) {
-          internalModels.forEach(function (internalModel) {
-            var relationshipMeta = _this.hasManyRelationship.relationshipMeta;
-            (0, _debug.assertPolymorphicType)(_this.internalModel, relationshipMeta, internalModel);
-          });
         }
+
+        _this2.hasManyRelationship.computeChanges(internalModels);
+
+        return _this2.hasManyRelationship.manyArray;
+      });
+    };
+
+    HasManyReference.prototype._isLoaded = function _isLoaded() {
+      var hasData = get(this.hasManyRelationship, 'hasData');
+      if (!hasData) {
+        return false;
       }
 
-      _this.hasManyRelationship.computeChanges(internalModels);
+      var members = this.hasManyRelationship.members.toArray();
 
-      return _this.hasManyRelationship.manyArray;
-    });
-  };
+      return members.every(function (internalModel) {
+        return internalModel.isLoaded() === true;
+      });
+    };
 
-  HasManyReference.prototype._isLoaded = function () {
-    var hasData = get(this.hasManyRelationship, 'hasData');
-    if (!hasData) {
-      return false;
-    }
+    HasManyReference.prototype.value = function value() {
+      if (this._isLoaded()) {
+        return this.hasManyRelationship.manyArray;
+      }
 
-    var members = this.hasManyRelationship.members.toArray();
+      return null;
+    };
 
-    return members.every(function (internalModel) {
-      return internalModel.isLoaded() === true;
-    });
-  };
+    HasManyReference.prototype.load = function load() {
+      if (!this._isLoaded()) {
+        return this.hasManyRelationship.getRecords();
+      }
 
-  /**
-     `value()` synchronously returns the current value of the has-many
-      relationship. Unlike `record.get('relationshipName')`, calling
-      `value()` on a reference does not trigger a fetch if the async
-      relationship is not yet loaded. If the relationship is not loaded
-      it will always return `null`.
-  
-     Example
-  
-     ```app/models/post.js
-     export default DS.Model.extend({
-       comments: DS.hasMany({ async: true })
-     });
-     ```
-  
-     ```javascript
-     let post = store.push({
-       data: {
-         type: 'post',
-         id: 1,
-         relationships: {
-           comments: {
-             data: [{ type: 'comment', id: 1 }]
-           }
-         }
-       }
-     });
-  
-     let commentsRef = post.hasMany('comments');
-  
-     post.get('comments').then(function(comments) {
-       commentsRef.value() === comments
-     })
-     ```
-  
-     @method value
-     @return {DS.ManyArray}
-  */
-  HasManyReference.prototype.value = function () {
-    if (this._isLoaded()) {
-      return this.hasManyRelationship.manyArray;
-    }
+      return resolve(this.hasManyRelationship.manyArray);
+    };
 
-    return null;
-  };
+    HasManyReference.prototype.reload = function reload() {
+      return this.hasManyRelationship.reload();
+    };
 
-  /**
-     Loads the relationship if it is not already loaded.  If the
-     relationship is already loaded this method does not trigger a new
-     load.
-  
-     Example
-  
-     ```app/models/post.js
-     export default DS.Model.extend({
-       comments: DS.hasMany({ async: true })
-     });
-     ```
-  
-     ```javascript
-     let post = store.push({
-       data: {
-         type: 'post',
-         id: 1,
-         relationships: {
-           comments: {
-             data: [{ type: 'comment', id: 1 }]
-           }
-         }
-       }
-     });
-  
-     let commentsRef = post.hasMany('comments');
-  
-     commentsRef.load().then(function(comments) {
-       //...
-     });
-     ```
-  
-     @method load
-     @return {Promise} a promise that resolves with the ManyArray in
-     this has-many relationship.
-  */
-  HasManyReference.prototype.load = function () {
-    if (!this._isLoaded()) {
-      return this.hasManyRelationship.getRecords();
-    }
-
-    return resolve(this.hasManyRelationship.manyArray);
-  };
-
-  /**
-     Reloads this has-many relationship.
-  
-     Example
-  
-     ```app/models/post.js
-     export default DS.Model.extend({
-       comments: DS.hasMany({ async: true })
-     });
-     ```
-  
-     ```javascript
-     let post = store.push({
-       data: {
-         type: 'post',
-         id: 1,
-         relationships: {
-           comments: {
-             data: [{ type: 'comment', id: 1 }]
-           }
-         }
-       }
-     });
-  
-     let commentsRef = post.hasMany('comments');
-  
-     commentsRef.reload().then(function(comments) {
-       //...
-     });
-     ```
-  
-     @method reload
-     @return {Promise} a promise that resolves with the ManyArray in this has-many relationship.
-  */
-  HasManyReference.prototype.reload = function () {
-    return this.hasManyRelationship.reload();
-  };
+    return HasManyReference;
+  }(_reference.default);
 
   exports.default = HasManyReference;
 });
@@ -7365,172 +6882,104 @@ define('ember-data/-private/system/references/record', ['exports', 'ember-data/-
   'use strict';
 
   exports.__esModule = true;
+
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+
+  function _possibleConstructorReturn(self, call) {
+    if (!self) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+
+    return call && (typeof call === "object" || typeof call === "function") ? call : self;
+  }
+
+  function _inherits(subClass, superClass) {
+    if (typeof superClass !== "function" && superClass !== null) {
+      throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+    }
+
+    subClass.prototype = Object.create(superClass && superClass.prototype, {
+      constructor: {
+        value: subClass,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+    if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+  }
+
   var resolve = Ember.RSVP.resolve;
 
+  var RecordReference = function (_Reference) {
+    _inherits(RecordReference, _Reference);
 
-  /**
-     An RecordReference is a low level API that allows users and
-     addon author to perform meta-operations on a record.
-  
-     @class RecordReference
-     @namespace DS
-  */
-  var RecordReference = function (store, internalModel) {
-    this._super$constructor(store, internalModel);
-    this.type = internalModel.modelName;
-    this._id = internalModel.id;
-  };
+    function RecordReference(store, internalModel) {
+      _classCallCheck(this, RecordReference);
 
-  RecordReference.prototype = Object.create(_reference.default.prototype);
-  RecordReference.prototype.constructor = RecordReference;
-  RecordReference.prototype._super$constructor = _reference.default;
+      var _this = _possibleConstructorReturn(this, _Reference.call(this, store, internalModel));
 
-  /**
-     The `id` of the record that this reference refers to.
-  
-     Together, the `type` and `id` properties form a composite key for
-     the identity map.
-  
-     Example
-  
-     ```javascript
-     let userRef = store.getReference('user', 1);
-  
-     userRef.id(); // '1'
-     ```
-  
-     @method id
-     @return {String} The id of the record.
-  */
-  RecordReference.prototype.id = function () {
-    return this._id;
-  };
-
-  /**
-     How the reference will be looked up when it is loaded: Currently
-     this always return `identity` to signifying that a record will be
-     loaded by the `type` and `id`.
-  
-     Example
-  
-     ```javascript
-     const userRef = store.getReference('user', 1);
-  
-     userRef.remoteType(); // 'identity'
-     ```
-  
-     @method remoteType
-     @return {String} 'identity'
-  */
-  RecordReference.prototype.remoteType = function () {
-    return 'identity';
-  };
-
-  /**
-    This API allows you to provide a reference with new data. The
-    simplest usage of this API is similar to `store.push`: you provide a
-    normalized hash of data and the object represented by the reference
-    will update.
-  
-    If you pass a promise to `push`, Ember Data will not ask the adapter
-    for the data if another attempt to fetch it is made in the
-    interim. When the promise resolves, the underlying object is updated
-    with the new data, and the promise returned by *this function* is resolved
-    with that object.
-  
-    For example, `recordReference.push(promise)` will be resolved with a
-    record.
-  
-     Example
-  
-     ```javascript
-     let userRef = store.getReference('user', 1);
-  
-     // provide data for reference
-     userRef.push({ data: { id: 1, username: "@user" }}).then(function(user) {
-       userRef.value() === user;
-     });
-     ```
-  
-    @method push
-    @param objectOrPromise {Promise|Object}
-    @return Promise<record> a promise for the value (record or relationship)
-  */
-  RecordReference.prototype.push = function (objectOrPromise) {
-    var _this = this;
-
-    return resolve(objectOrPromise).then(function (data) {
-      return _this.store.push(data);
-    });
-  };
-
-  /**
-    If the entity referred to by the reference is already loaded, it is
-    present as `reference.value`. Otherwise the value returned by this function
-    is `null`.
-  
-     Example
-  
-     ```javascript
-     let userRef = store.getReference('user', 1);
-  
-     userRef.value(); // user
-     ```
-  
-     @method value
-     @return {DS.Model} the record for this RecordReference
-  */
-  RecordReference.prototype.value = function () {
-    if (this.internalModel.hasRecord) {
-      return this.internalModel.getRecord();
-    }
-    return null;
-  };
-
-  /**
-     Triggers a fetch for the backing entity based on its `remoteType`
-     (see `remoteType` definitions per reference type).
-  
-     Example
-  
-     ```javascript
-     let userRef = store.getReference('user', 1);
-  
-     // load user (via store.find)
-     userRef.load().then(...)
-     ```
-  
-     @method load
-     @return {Promise<record>} the record for this RecordReference
-  */
-  RecordReference.prototype.load = function () {
-    return this.store.findRecord(this.type, this._id);
-  };
-
-  /**
-     Reloads the record if it is already loaded. If the record is not
-     loaded it will load the record via `store.findRecord`
-  
-     Example
-  
-     ```javascript
-     let userRef = store.getReference('user', 1);
-  
-     // or trigger a reload
-     userRef.reload().then(...)
-     ```
-  
-     @method reload
-     @return {Promise<record>} the record for this RecordReference
-  */
-  RecordReference.prototype.reload = function () {
-    var record = this.value();
-    if (record) {
-      return record.reload();
+      _this.type = internalModel.modelName;
+      _this._id = internalModel.id;
+      return _this;
     }
 
-    return this.load();
-  };
+    /**
+       The `id` of the record that this reference refers to.
+        Together, the `type` and `id` properties form a composite key for
+       the identity map.
+        Example
+        ```javascript
+       let userRef = store.getReference('user', 1);
+        userRef.id(); // '1'
+       ```
+        @method id
+       @return {String} The id of the record.
+    */
+
+
+    RecordReference.prototype.id = function id() {
+      return this._id;
+    };
+
+    RecordReference.prototype.remoteType = function remoteType() {
+      return 'identity';
+    };
+
+    RecordReference.prototype.push = function push(objectOrPromise) {
+      var _this2 = this;
+
+      return resolve(objectOrPromise).then(function (data) {
+        return _this2.store.push(data);
+      });
+    };
+
+    RecordReference.prototype.value = function value() {
+      if (this.internalModel.hasRecord) {
+        return this.internalModel.getRecord();
+      }
+      return null;
+    };
+
+    RecordReference.prototype.load = function load() {
+      return this.store.findRecord(this.type, this._id);
+    };
+
+    RecordReference.prototype.reload = function reload() {
+      var record = this.value();
+      if (record) {
+        return record.reload();
+      }
+
+      return this.load();
+    };
+
+    return RecordReference;
+  }(_reference.default);
 
   exports.default = RecordReference;
 });
@@ -18112,7 +17561,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "3.2.0-canary+283f8e92a7";
+  exports.default = "3.2.0-canary+2e1a112249";
 });
 define("ember-inflector", ["module", "exports", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _system) {
   "use strict";
