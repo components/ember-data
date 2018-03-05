@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   3.2.0-canary+1c09f9f288
+ * @version   3.2.0-canary+f60d1e935d
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -1307,7 +1307,7 @@ define('ember-data/-private/features', ['exports'], function (exports) {
     return (_Ember$FEATURES = Ember.FEATURES).isEnabled.apply(_Ember$FEATURES, arguments);
   }
 });
-define('ember-data/-private', ['exports', 'ember-data/-private/system/model/model', 'ember-data/-private/system/model/errors', 'ember-data/-private/system/store', 'ember-data/-private/core', 'ember-data/-private/system/relationships/belongs-to', 'ember-data/-private/system/relationships/has-many', 'ember-data/-private/adapters/build-url-mixin', 'ember-data/-private/system/snapshot', 'ember-data/-private/adapters/errors', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/utils/parse-response-headers', 'ember-data/-private/features', 'ember-data/-private/system/model/states', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/record-arrays', 'ember-data/-private/system/many-array', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/relationships/state/relationship', 'ember-data/-private/system/debug/debug-adapter', 'ember-data/-private/system/diff-array', 'ember-data/-private/system/relationships/relationship-payloads-manager', 'ember-data/-private/system/relationships/relationship-payloads', 'ember-data/-private/system/snapshot-record-array'], function (exports, _model, _errors, _store, _core, _belongsTo, _hasMany, _buildUrlMixin, _snapshot, _errors2, _normalizeModelName, _utils, _coerceId, _parseResponseHeaders, _features, _states, _internalModel, _promiseProxies, _recordArrays, _manyArray, _recordArrayManager, _relationship, _debugAdapter, _diffArray, _relationshipPayloadsManager, _relationshipPayloads, _snapshotRecordArray) {
+define('ember-data/-private', ['exports', 'ember-data/-private/system/model/model', 'ember-data/-private/system/model/errors', 'ember-data/-private/system/store', 'ember-data/-private/core', 'ember-data/-private/system/relationships/belongs-to', 'ember-data/-private/system/relationships/has-many', 'ember-data/-private/adapters/build-url-mixin', 'ember-data/-private/system/snapshot', 'ember-data/-private/adapters/errors', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/utils/parse-response-headers', 'ember-data/-private/features', 'ember-data/-private/system/model/states', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/record-arrays', 'ember-data/-private/system/many-array', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/relationships/state/relationship', 'ember-data/-private/system/map', 'ember-data/-private/system/map-with-default', 'ember-data/-private/system/debug/debug-adapter', 'ember-data/-private/system/diff-array', 'ember-data/-private/system/relationships/relationship-payloads-manager', 'ember-data/-private/system/relationships/relationship-payloads', 'ember-data/-private/system/snapshot-record-array'], function (exports, _model, _errors, _store, _core, _belongsTo, _hasMany, _buildUrlMixin, _snapshot, _errors2, _normalizeModelName, _utils, _coerceId, _parseResponseHeaders, _features, _states, _internalModel, _promiseProxies, _recordArrays, _manyArray, _recordArrayManager, _relationship, _map, _mapWithDefault, _debugAdapter, _diffArray, _relationshipPayloadsManager, _relationshipPayloads, _snapshotRecordArray) {
   'use strict';
 
   exports.__esModule = true;
@@ -1525,6 +1525,18 @@ define('ember-data/-private', ['exports', 'ember-data/-private/system/model/mode
     enumerable: true,
     get: function () {
       return _relationship.default;
+    }
+  });
+  Object.defineProperty(exports, 'Map', {
+    enumerable: true,
+    get: function () {
+      return _map.default;
+    }
+  });
+  Object.defineProperty(exports, 'MapWithDefault', {
+    enumerable: true,
+    get: function () {
+      return _mapWithDefault.default;
     }
   });
   Object.defineProperty(exports, 'DebugAdapter', {
@@ -2226,7 +2238,190 @@ define('ember-data/-private/system/many-array', ['exports', 'ember-data/-private
     }
   });
 });
-define('ember-data/-private/system/model/errors', ['exports'], function (exports) {
+define('ember-data/-private/system/map-with-default', ['exports', 'ember-data/-private/system/map'], function (exports, _map) {
+  'use strict';
+
+  exports.__esModule = true;
+
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+
+  function _possibleConstructorReturn(self, call) {
+    if (!self) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+
+    return call && (typeof call === "object" || typeof call === "function") ? call : self;
+  }
+
+  function _inherits(subClass, superClass) {
+    if (typeof superClass !== "function" && superClass !== null) {
+      throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+    }
+
+    subClass.prototype = Object.create(superClass && superClass.prototype, {
+      constructor: {
+        value: subClass,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+    if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+  }
+
+  var MapWithDefault = function (_Map) {
+    _inherits(MapWithDefault, _Map);
+
+    function MapWithDefault(options) {
+      var _this = _possibleConstructorReturn(this, _Map.call(this));
+
+      _this.defaultValue = options.defaultValue;
+      return _this;
+    }
+
+    MapWithDefault.prototype.get = function get(key) {
+      var hasValue = this.has(key);
+
+      if (hasValue) {
+        return _Map.prototype.get.call(this, key);
+      } else {
+        var defaultValue = this.defaultValue(key);
+        this.set(key, defaultValue);
+        return defaultValue;
+      }
+    };
+
+    return MapWithDefault;
+  }(_map.default);
+
+  exports.default = MapWithDefault;
+});
+define('ember-data/-private/system/map', ['exports'], function (exports) {
+  'use strict';
+
+  exports.__esModule = true;
+
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+
+  var _createClass = function () {
+    function defineProperties(target, props) {
+      for (var i = 0; i < props.length; i++) {
+        var descriptor = props[i];
+        descriptor.enumerable = descriptor.enumerable || false;
+        descriptor.configurable = true;
+        if ("value" in descriptor) descriptor.writable = true;
+        Object.defineProperty(target, descriptor.key, descriptor);
+      }
+    }
+
+    return function (Constructor, protoProps, staticProps) {
+      if (protoProps) defineProperties(Constructor.prototype, protoProps);
+      if (staticProps) defineProperties(Constructor, staticProps);
+      return Constructor;
+    };
+  }();
+
+  var MapWithDeprecations = function () {
+    function MapWithDeprecations(options) {
+      this._map = new Map();
+    }
+
+    MapWithDeprecations.prototype.copy = function copy() {
+      (false && !(false) && Ember.deprecate('Calling `.copy()` on a map generated by ember-data is deprecated, please migrate to using native Map functionality only.', false, { id: 'ember-data.map.copy', until: '3.5.0' }));
+
+
+      // can't just pass `this._map` here because IE11 doesn't accept
+      // constructor args with its `Map`
+      var newMap = new MapWithDeprecations();
+      this._map.forEach(function (value, key) {
+        newMap.set(key, value);
+      });
+
+      return newMap;
+    };
+
+    MapWithDeprecations.prototype.isEmpty = function isEmpty() {
+      (false && !(false) && Ember.deprecate('Calling `.isEmpty()` on a map generated by ember-data is deprecated, please migrate to using native Map functionality only.', false, { id: 'ember-data.map.isEmpty', until: '3.5.0' }));
+
+
+      return this.size === 0;
+    };
+
+    MapWithDeprecations.prototype.clear = function clear() {
+      var _map;
+
+      return (_map = this._map).clear.apply(_map, arguments);
+    };
+
+    MapWithDeprecations.prototype.delete = function _delete() {
+      var _map2;
+
+      return (_map2 = this._map).delete.apply(_map2, arguments);
+    };
+
+    MapWithDeprecations.prototype.entries = function entries() {
+      var _map3;
+
+      return (_map3 = this._map).entries.apply(_map3, arguments);
+    };
+
+    MapWithDeprecations.prototype.forEach = function forEach() {
+      var _map4;
+
+      return (_map4 = this._map).forEach.apply(_map4, arguments);
+    };
+
+    MapWithDeprecations.prototype.get = function get() {
+      var _map5;
+
+      return (_map5 = this._map).get.apply(_map5, arguments);
+    };
+
+    MapWithDeprecations.prototype.has = function has() {
+      var _map6;
+
+      return (_map6 = this._map).has.apply(_map6, arguments);
+    };
+
+    MapWithDeprecations.prototype.keys = function keys() {
+      var _map7;
+
+      return (_map7 = this._map).keys.apply(_map7, arguments);
+    };
+
+    MapWithDeprecations.prototype.set = function set() {
+      var _map8;
+
+      return (_map8 = this._map).set.apply(_map8, arguments);
+    };
+
+    MapWithDeprecations.prototype.values = function values() {
+      var _map9;
+
+      return (_map9 = this._map).values.apply(_map9, arguments);
+    };
+
+    _createClass(MapWithDeprecations, [{
+      key: 'size',
+      get: function () {
+        return this._map.size;
+      }
+    }]);
+
+    return MapWithDeprecations;
+  }();
+
+  exports.default = MapWithDeprecations;
+});
+define('ember-data/-private/system/model/errors', ['exports', 'ember-data/-private/system/map-with-default'], function (exports, _mapWithDefault) {
   'use strict';
 
   exports.__esModule = true;
@@ -2237,10 +2432,8 @@ define('ember-data/-private/system/model/errors', ['exports'], function (exports
   var set = Ember.set;
   var get = Ember.get;
   var computed = Ember.computed;
-  var isEmpty = Ember.isEmpty;
   var makeArray = Ember.makeArray;
   var A = Ember.A;
-  var MapWithDefault = Ember.MapWithDefault;
   exports.default = ArrayProxy.extend(Evented, {
     /**
       Register with target handler
@@ -2274,11 +2467,11 @@ define('ember-data/-private/system/model/errors', ['exports'], function (exports
 
     /**
       @property errorsByAttributeName
-      @type {Ember.MapWithDefault}
+      @type {MapWithDefault}
       @private
     */
     errorsByAttributeName: computed(function () {
-      return MapWithDefault.create({
+      return new _mapWithDefault.default({
         defaultValue: function () {
           return A();
         }
@@ -2336,7 +2529,7 @@ define('ember-data/-private/system/model/errors', ['exports'], function (exports
     */
     unknownProperty: function (attribute) {
       var errors = this.errorsFor(attribute);
-      if (isEmpty(errors)) {
+      if (errors.length === 0) {
         return undefined;
       }
       return errors;
@@ -2573,7 +2766,7 @@ define('ember-data/-private/system/model/errors', ['exports'], function (exports
       @return {Boolean} true if there some errors on given attribute
     */
     has: function (attribute) {
-      return !isEmpty(this.errorsFor(attribute));
+      return this.errorsFor(attribute).length > 0;
     }
   });
 });
@@ -2613,7 +2806,6 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember-dat
   var copy = Ember.copy;
   var EmberError = Ember.Error;
   var isEqual = Ember.isEqual;
-  var isEmpty = Ember.isEmpty;
   var setOwner = Ember.setOwner;
   var run = Ember.run;
   var RSVP = Ember.RSVP;
@@ -2790,7 +2982,7 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember-dat
       return this.currentState.dirtyType;
     };
 
-    InternalModel.prototype.getRecord = function getRecord(properties) {
+    InternalModel.prototype.getRecord = function getRecord() {
       if (!this._record && !this._isDematerializing) {
 
         // lookupFactory should really return an object that creates
@@ -2803,10 +2995,6 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember-dat
           isError: this.isError,
           adapterError: this.error
         };
-
-        if (typeof properties === 'object' && properties !== null) {
-          emberAssign(createOptions, properties);
-        }
 
         if (setOwner) {
           // ensure that `getOwner(this)` works inside a model instance
@@ -3423,7 +3611,7 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember-dat
     InternalModel.prototype.hasErrors = function hasErrors() {
       var errors = get(this.getRecord(), 'errors');
 
-      return !isEmpty(errors);
+      return errors.get('length') > 0;
     };
 
     InternalModel.prototype.adapterDidInvalidate = function adapterDidInvalidate(errors) {
@@ -3656,7 +3844,7 @@ define('ember-data/-private/system/model/internal-model', ['exports', 'ember-dat
     };
   }
 });
-define('ember-data/-private/system/model/model', ['exports', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/model/errors', 'ember-data/-private/features', 'ember-data/-private/system/model/states', 'ember-data/-private/system/relationships/ext'], function (exports, _promiseProxies, _errors, _features, _states, _ext) {
+define('ember-data/-private/system/model/model', ['exports', 'ember-data/-private/system/map', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/model/errors', 'ember-data/-private/features', 'ember-data/-private/system/model/states', 'ember-data/-private/system/relationships/ext'], function (exports, _map, _promiseProxies, _errors, _features, _states, _ext) {
   'use strict';
 
   exports.__esModule = true;
@@ -3668,7 +3856,6 @@ define('ember-data/-private/system/model/model', ['exports', 'ember-data/-privat
   var computed = Ember.computed;
   var get = Ember.get;
   var observer = Ember.observer;
-  var Map = Ember.Map;
   var changeProperties = Ember.changeProperties;
 
 
@@ -4440,7 +4627,7 @@ define('ember-data/-private/system/model/model', ['exports', 'ember-data/-privat
      ```
       @property relationships
      @static
-     @type Ember.Map
+     @type Map
      @readOnly
      */
 
@@ -4540,7 +4727,7 @@ define('ember-data/-private/system/model/model', ['exports', 'ember-data/-privat
      ```
       @property relationshipsByName
      @static
-     @type Ember.Map
+     @type Map
      @readOnly
      */
     relationshipsByName: _ext.relationshipsByNameDescriptor,
@@ -4574,11 +4761,11 @@ define('ember-data/-private/system/model/model', ['exports', 'ember-data/-privat
      ```
       @property fields
      @static
-     @type Ember.Map
+     @type Map
      @readOnly
      */
     fields: computed(function () {
-      var map = Map.create();
+      var map = new _map.default();
 
       this.eachComputedProperty(function (name, meta) {
         if (meta.isRelationship) {
@@ -4653,13 +4840,13 @@ define('ember-data/-private/system/model/model', ['exports', 'ember-data/-privat
      ```
       @property attributes
      @static
-     @type {Ember.Map}
+     @type {Map}
      @readOnly
      */
     attributes: computed(function () {
       var _this4 = this;
 
-      var map = Map.create();
+      var map = new _map.default();
 
       this.eachComputedProperty(function (name, meta) {
         if (meta.isAttribute) {
@@ -4701,11 +4888,11 @@ define('ember-data/-private/system/model/model', ['exports', 'ember-data/-privat
      ```
       @property transformedAttributes
      @static
-     @type {Ember.Map}
+     @type {Map}
      @readOnly
      */
     transformedAttributes: computed(function () {
-      var map = Map.create();
+      var map = new _map.default();
 
       this.eachAttribute(function (key, meta) {
         if (meta.type) {
@@ -7161,17 +7348,15 @@ define('ember-data/-private/system/relationships/belongs-to', ['exports', 'ember
     }).meta(meta);
   }
 });
-define('ember-data/-private/system/relationships/ext', ['exports', 'ember-data/-private/system/relationship-meta'], function (exports, _relationshipMeta) {
+define('ember-data/-private/system/relationships/ext', ['exports', 'ember-data/-private/system/map-with-default', 'ember-data/-private/system/map', 'ember-data/-private/system/relationship-meta'], function (exports, _mapWithDefault, _map, _relationshipMeta) {
   'use strict';
 
   exports.__esModule = true;
   exports.relationshipsByNameDescriptor = exports.relatedTypesDescriptor = exports.relationshipsDescriptor = undefined;
   var A = Ember.A;
   var computed = Ember.computed;
-  var MapWithDefault = Ember.MapWithDefault;
-  var Map = Ember.Map;
   var relationshipsDescriptor = exports.relationshipsDescriptor = computed(function () {
-    var map = new MapWithDefault({
+    var map = new _mapWithDefault.default({
       defaultValue: function () {
         return [];
       }
@@ -7224,7 +7409,7 @@ define('ember-data/-private/system/relationships/ext', ['exports', 'ember-data/-
   }).readOnly();
 
   var relationshipsByNameDescriptor = exports.relationshipsByNameDescriptor = computed(function () {
-    var map = Map.create();
+    var map = new _map.default();
 
     this.eachComputedProperty(function (name, meta) {
       if (meta.isRelationship) {
@@ -9673,7 +9858,7 @@ define('ember-data/-private/system/snapshot', ['exports'], function (exports) {
 
   exports.default = Snapshot;
 });
-define('ember-data/-private/system/store', ['exports', 'ember-data/-private/adapters/errors', 'ember-data/-private/system/model/model', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/system/identity-map', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/store/common', 'ember-data/-private/system/store/serializer-response', 'ember-data/-private/system/store/serializers', 'ember-data/-private/system/relationships/relationship-payloads-manager', 'ember-data/-private/system/store/finders', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/features'], function (exports, _errors, _model, _normalizeModelName, _identityMap, _promiseProxies, _common, _serializerResponse, _serializers, _relationshipPayloadsManager, _finders, _utils, _coerceId, _recordArrayManager, _internalModel5, _features) {
+define('ember-data/-private/system/store', ['exports', 'ember-data/-private/system/map-with-default', 'ember-data/-private/adapters/errors', 'ember-data/-private/system/model/model', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/system/identity-map', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/store/common', 'ember-data/-private/system/store/serializer-response', 'ember-data/-private/system/store/serializers', 'ember-data/-private/system/relationships/relationship-payloads-manager', 'ember-data/-private/system/store/finders', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/features'], function (exports, _mapWithDefault, _errors, _model, _normalizeModelName, _identityMap, _promiseProxies, _common, _serializerResponse, _serializers, _relationshipPayloadsManager, _finders, _utils, _coerceId, _recordArrayManager, _internalModel5, _features) {
   'use strict';
 
   exports.__esModule = true;
@@ -9681,7 +9866,6 @@ define('ember-data/-private/system/store', ['exports', 'ember-data/-private/adap
   var A = Ember.A;
   var copy = Ember.copy;
   var EmberError = Ember.Error;
-  var MapWithDefault = Ember.MapWithDefault;
   var emberRun = Ember.run;
   var set = Ember.set;
   var get = Ember.get;
@@ -9834,7 +10018,7 @@ define('ember-data/-private/system/store', ['exports', 'ember-data/-private/adap
       this._updatedInternalModels = [];
 
       // used to keep track of all the find requests that need to be coalesced
-      this._pendingFetch = MapWithDefault.create({
+      this._pendingFetch = new _mapWithDefault.default({
         defaultValue: function () {
           return [];
         }
@@ -9955,7 +10139,8 @@ define('ember-data/-private/system/store', ['exports', 'ember-data/-private/adap
 
       var internalModel = this._buildInternalModel(normalizedModelName, properties.id);
       internalModel.loadedData();
-      var record = internalModel.getRecord(properties);
+      var record = internalModel.getRecord();
+      record.setProperties(properties);
 
       // TODO @runspired this should also be coalesced into some form of internalModel.setState()
       internalModel.eachRelationship(function (key, descriptor) {
@@ -12635,7 +12820,6 @@ define('ember-data/-private/system/store/serializer-response', ['exports'], func
   exports.__esModule = true;
   exports.validateDocumentStructure = validateDocumentStructure;
   exports.normalizeResponseHelper = normalizeResponseHelper;
-  var isEmpty = Ember.isEmpty;
 
 
   /*
@@ -12713,7 +12897,7 @@ define('ember-data/-private/system/store/serializer-response', ['exports'], func
     if (false) {
       validationErrors = validateDocumentStructure(normalizedResponse);
     }
-    (false && Ember.assert('normalizeResponse must return a valid JSON API document:\n\t* ' + validationErrors.join('\n\t* '), isEmpty(validationErrors)));
+    (false && Ember.assert('normalizeResponse must return a valid JSON API document:\n\t* ' + validationErrors.join('\n\t* '), validationErrors.length === 0));
 
 
     return normalizedResponse;
@@ -13771,7 +13955,6 @@ define('ember-data/adapters/rest', ['exports', 'ember-data/adapter', 'ember-data
   exports.__esModule = true;
   var $ = Ember.$;
   var EmberPromise = Ember.RSVP.Promise;
-  var MapWithDefault = Ember.MapWithDefault;
   var get = Ember.get;
   var run = Ember.run;
 
@@ -14292,7 +14475,7 @@ define('ember-data/adapters/rest', ['exports', 'ember-data/adapter', 'ember-data
     maxURLLength: 2048,
 
     groupRecordsForFindMany: function (store, snapshots) {
-      var groups = MapWithDefault.create({
+      var groups = new _private.MapWithDefault({
         defaultValue: function () {
           return [];
         }
@@ -17564,7 +17747,6 @@ define('ember-data/transforms/number', ['exports', 'ember-data/transforms/transf
   'use strict';
 
   exports.__esModule = true;
-  var empty = Ember.isEmpty;
 
 
   function isNumber(value) {
@@ -17597,7 +17779,7 @@ define('ember-data/transforms/number', ['exports', 'ember-data/transforms/transf
     deserialize: function (serialized) {
       var transformed = void 0;
 
-      if (empty(serialized)) {
+      if (serialized === '' || serialized === null || serialized === undefined) {
         return null;
       } else {
         transformed = Number(serialized);
@@ -17608,7 +17790,7 @@ define('ember-data/transforms/number', ['exports', 'ember-data/transforms/transf
     serialize: function (deserialized) {
       var transformed = void 0;
 
-      if (empty(deserialized)) {
+      if (deserialized === '' || deserialized === null || deserialized === undefined) {
         return null;
       } else {
         transformed = Number(deserialized);
@@ -17676,7 +17858,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "3.2.0-canary+1c09f9f288";
+  exports.default = "3.2.0-canary+f60d1e935d";
 });
 define("ember-inflector", ["module", "exports", "ember-inflector/lib/system", "ember-inflector/lib/ext/string"], function (module, exports, _system) {
   "use strict";
