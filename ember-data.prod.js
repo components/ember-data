@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   3.2.0-canary+872f015bdc
+ * @version   3.2.0-canary+bae8df9ad1
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -9855,7 +9855,7 @@ define('ember-data/-private/system/snapshot', ['exports'], function (exports) {
 
   exports.default = Snapshot;
 });
-define('ember-data/-private/system/store', ['exports', 'ember-data/-private/system/map-with-default', 'ember-data/-private/adapters/errors', 'ember-data/-private/system/model/model', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/system/identity-map', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/store/common', 'ember-data/-private/system/store/serializer-response', 'ember-data/-private/system/store/serializers', 'ember-data/-private/system/relationships/relationship-payloads-manager', 'ember-data/-private/system/store/finders', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/features'], function (exports, _mapWithDefault, _errors, _model, _normalizeModelName, _identityMap, _promiseProxies, _common, _serializerResponse, _serializers, _relationshipPayloadsManager, _finders, _utils, _coerceId, _recordArrayManager, _internalModel5, _features) {
+define('ember-data/-private/system/store', ['exports', 'ember-data/-private/system/map-with-default', 'ember-data/-private/adapters/errors', 'ember-data/-private/system/model/model', 'ember-data/-private/system/normalize-model-name', 'ember-data/-private/system/identity-map', 'ember-data/-private/system/promise-proxies', 'ember-data/-private/system/store/common', 'ember-data/-private/system/store/serializer-response', 'ember-data/-private/system/store/serializers', 'ember-data/-private/system/relationships/relationship-payloads-manager', 'ember-data/-private/system/store/finders', 'ember-data/-private/utils', 'ember-data/-private/system/coerce-id', 'ember-data/-private/system/record-array-manager', 'ember-data/-private/system/model/internal-model', 'ember-data/-private/features'], function (exports, _mapWithDefault, _errors, _model, _normalizeModelName, _identityMap, _promiseProxies, _common, _serializerResponse, _serializers, _relationshipPayloadsManager, _finders, _utils, _coerceId, _recordArrayManager, _internalModel6, _features) {
   'use strict';
 
   exports.__esModule = true;
@@ -10582,6 +10582,18 @@ define('ember-data/-private/system/store', ['exports', 'ember-data/-private/syst
         seeking[_internalModel.id] = pendingItem;
       }
 
+      for (var _i2 = 0; _i2 < totalItems; _i2++) {
+        var _internalModel2 = internalModels[_i2];
+        // We may have unloaded the record after scheduling this fetch, in which
+        // case we must cancel the destory.  This is because we require a record
+        // to build a snapshot.  This is not fundamental: this cancelation code
+        // can be removed when snapshots can be created for internal models that
+        // have no records.
+        if (_internalModel2.hasScheduledDestroy()) {
+          internalModels[_i2].cancelDestroy();
+        }
+      }
+
       function _fetchRecord(recordResolverPair) {
         var recordFetch = store._fetchRecord(recordResolverPair.internalModel, recordResolverPair.options); // TODO adapter options
 
@@ -10591,25 +10603,25 @@ define('ember-data/-private/system/store', ['exports', 'ember-data/-private/syst
       function handleFoundRecords(foundInternalModels, expectedInternalModels) {
         // resolve found records
         var found = Object.create(null);
-        for (var _i2 = 0, _l = foundInternalModels.length; _i2 < _l; _i2++) {
-          var _internalModel2 = foundInternalModels[_i2];
-          var _pair = seeking[_internalModel2.id];
-          found[_internalModel2.id] = _internalModel2;
+        for (var _i3 = 0, _l = foundInternalModels.length; _i3 < _l; _i3++) {
+          var _internalModel3 = foundInternalModels[_i3];
+          var _pair = seeking[_internalModel3.id];
+          found[_internalModel3.id] = _internalModel3;
 
           if (_pair) {
             var resolver = _pair.resolver;
-            resolver.resolve(_internalModel2);
+            resolver.resolve(_internalModel3);
           }
         }
 
         // reject missing records
         var missingInternalModels = [];
 
-        for (var _i3 = 0, _l2 = expectedInternalModels.length; _i3 < _l2; _i3++) {
-          var _internalModel3 = expectedInternalModels[_i3];
+        for (var _i4 = 0, _l2 = expectedInternalModels.length; _i4 < _l2; _i4++) {
+          var _internalModel4 = expectedInternalModels[_i4];
 
-          if (!found[_internalModel3.id]) {
-            missingInternalModels.push(_internalModel3);
+          if (!found[_internalModel4.id]) {
+            missingInternalModels.push(_internalModel4);
           }
         }
 
@@ -10625,12 +10637,12 @@ define('ember-data/-private/system/store', ['exports', 'ember-data/-private/syst
       }
 
       function rejectInternalModels(internalModels, error) {
-        for (var _i4 = 0, _l3 = internalModels.length; _i4 < _l3; _i4++) {
-          var _internalModel4 = internalModels[_i4];
-          var _pair2 = seeking[_internalModel4.id];
+        for (var _i5 = 0, _l3 = internalModels.length; _i5 < _l3; _i5++) {
+          var _internalModel5 = internalModels[_i5];
+          var _pair2 = seeking[_internalModel5.id];
 
           if (_pair2) {
-            _pair2.resolver.reject(error || new Error('Expected: \'' + _internalModel4 + '\' to be present in the adapter provided payload, but it was not found.'));
+            _pair2.resolver.reject(error || new Error('Expected: \'' + _internalModel5 + '\' to be present in the adapter provided payload, but it was not found.'));
           }
         }
       }
@@ -10647,8 +10659,8 @@ define('ember-data/-private/system/store', ['exports', 'ember-data/-private/syst
         // records from the grouped snapshots even though the _findMany() finder
         // will once again convert the records to snapshots for adapter.findMany()
         var snapshots = new Array(totalItems);
-        for (var _i5 = 0; _i5 < totalItems; _i5++) {
-          snapshots[_i5] = internalModels[_i5].createSnapshot();
+        for (var _i6 = 0; _i6 < totalItems; _i6++) {
+          snapshots[_i6] = internalModels[_i6].createSnapshot();
         }
 
         var groups = adapter.groupRecordsForFindMany(this, snapshots);
@@ -10682,8 +10694,8 @@ define('ember-data/-private/system/store', ['exports', 'ember-data/-private/syst
           }
         }
       } else {
-        for (var _i6 = 0; _i6 < totalItems; _i6++) {
-          _fetchRecord(pendingFetchItems[_i6]);
+        for (var _i7 = 0; _i7 < totalItems; _i7++) {
+          _fetchRecord(pendingFetchItems[_i7]);
         }
       }
     },
@@ -12160,7 +12172,7 @@ define('ember-data/-private/system/store', ['exports', 'ember-data/-private/syst
       // lookupFactory should really return an object that creates
       // instances with the injections applied
 
-      var internalModel = new _internalModel5.default(modelName, id, this, data);
+      var internalModel = new _internalModel6.default(modelName, id, this, data);
 
       this._internalModelsFor(modelName).add(internalModel, id);
 
@@ -17854,7 +17866,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "3.2.0-canary+872f015bdc";
+  exports.default = "3.2.0-canary+bae8df9ad1";
 });
 define('ember-inflector', ['exports', 'ember-inflector/lib/system', 'ember-inflector/lib/ext/string'], function (exports, _system) {
   'use strict';
