@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   3.2.0-canary+55dbe2f325
+ * @version   3.2.0-canary+872f015bdc
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -9083,6 +9083,7 @@ define('ember-data/-private/system/relationships/state/relationship', ['exports'
     };
 
     Relationship.prototype.inverseDidDematerialize = function inverseDidDematerialize(inverseInternalModel) {
+      this.linkPromise = null;
       if (!this.isAsync) {
         // unloading inverse of a sync relationship is treated as a client-side
         // delete, so actually remove the models don't merely invalidate the cp
@@ -13632,7 +13633,6 @@ define('ember-data/adapters/json-api', ['exports', 'ember-data/adapters/rest', '
 
   exports.__esModule = true;
   var dasherize = Ember.String.dasherize;
-  var $ = Ember.$;
 
 
   /**
@@ -14608,7 +14608,7 @@ define('ember-data/adapters/rest', ['exports', 'ember-data/adapter', 'ember-data
       var json = responseText;
 
       try {
-        json = $.parseJSON(responseText);
+        json = JSON.parse(responseText);
       } catch (e) {
         // ignored
       }
@@ -17854,7 +17854,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "3.2.0-canary+55dbe2f325";
+  exports.default = "3.2.0-canary+872f015bdc";
 });
 define('ember-inflector', ['exports', 'ember-inflector/lib/system', 'ember-inflector/lib/ext/string'], function (exports, _system) {
   'use strict';
