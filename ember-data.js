@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   3.2.0-canary+bae8df9ad1
+ * @version   3.2.0-canary+a9c2793c1d
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -10628,7 +10628,7 @@ define('ember-data/-private/system/store', ['exports', 'ember-data/-private/syst
       for (var _i2 = 0; _i2 < totalItems; _i2++) {
         var _internalModel2 = internalModels[_i2];
         // We may have unloaded the record after scheduling this fetch, in which
-        // case we must cancel the destory.  This is because we require a record
+        // case we must cancel the destroy.  This is because we require a record
         // to build a snapshot.  This is not fundamental: this cancelation code
         // can be removed when snapshots can be created for internal models that
         // have no records.
@@ -17909,7 +17909,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "3.2.0-canary+bae8df9ad1";
+  exports.default = "3.2.0-canary+a9c2793c1d";
 });
 define('ember-inflector', ['exports', 'ember-inflector/lib/system', 'ember-inflector/lib/ext/string'], function (exports, _system) {
   'use strict';
