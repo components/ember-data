@@ -6,7 +6,7 @@
  * @copyright Copyright 2011-2017 Tilde Inc. and contributors.
  *            Portions Copyright 2011 LivingSocial Inc.
  * @license   Licensed under MIT license (see license.js)
- * @version   3.2.0-canary+ab6556961c
+ * @version   3.2.0-canary+a24cd5011e
  */
 
 var loader, define, requireModule, require, requirejs;
@@ -12510,7 +12510,9 @@ define('ember-data/-private/system/store', ['exports', 'ember-data/-private/syst
     (false && Ember.assert('You tried to update a record but you have no adapter (for ' + modelName + ')', adapter));
     (false && Ember.assert('You tried to update a record but your adapter (for ' + modelName + ') does not implement \'' + operation + '\'', typeof adapter[operation] === 'function'));
 
-    var promise = adapter[operation](store, modelClass, snapshot);
+    var promise = Promise.resolve().then(function () {
+      return adapter[operation](store, modelClass, snapshot);
+    });
     var serializer = (0, _serializers.serializerForAdapter)(store, adapter, modelName);
     var label = 'DS: Extract and notify about ' + operation + ' completion of ' + internalModel;
 
@@ -12693,7 +12695,9 @@ define('ember-data/-private/system/store/finders', ['exports', 'ember-data/-priv
     var snapshot = internalModel.createSnapshot(options);
     var modelName = internalModel.modelName;
 
-    var promise = adapter.findRecord(store, modelClass, id, snapshot);
+    var promise = Promise.resolve().then(function () {
+      return adapter.findRecord(store, modelClass, id, snapshot);
+    });
     var label = 'DS: Handle Adapter#findRecord of \'' + modelName + '\' with id: \'' + id + '\'';
 
     promise = Promise.resolve(promise, label);
@@ -12791,7 +12795,9 @@ define('ember-data/-private/system/store/finders', ['exports', 'ember-data/-priv
     var modelClass = store.modelFor(modelName); // adapter.findAll depends on the class
     var recordArray = store.peekAll(modelName);
     var snapshotArray = recordArray._createSnapshot(options);
-    var promise = adapter.findAll(store, modelClass, sinceToken, snapshotArray);
+    var promise = Promise.resolve().then(function () {
+      return adapter.findAll(store, modelClass, sinceToken, snapshotArray);
+    });
     var label = "DS: Handle Adapter#findAll of " + modelClass;
 
     promise = Promise.resolve(promise, label);
@@ -12816,9 +12822,13 @@ define('ember-data/-private/system/store/finders', ['exports', 'ember-data/-priv
     var promise = void 0;
     if (adapter.query.length > 3) {
       recordArray = recordArray || store.recordArrayManager.createAdapterPopulatedRecordArray(modelName, query);
-      promise = adapter.query(store, modelClass, query, recordArray);
+      promise = Promise.resolve().then(function () {
+        return adapter.query(store, modelClass, query, recordArray);
+      });
     } else {
-      promise = adapter.query(store, modelClass, query);
+      promise = Promise.resolve().then(function () {
+        return adapter.query(store, modelClass, query);
+      });
     }
 
     var label = 'DS: Handle Adapter#query of ' + modelClass;
@@ -12847,7 +12857,9 @@ define('ember-data/-private/system/store/finders', ['exports', 'ember-data/-priv
 
   function _queryRecord(adapter, store, modelName, query) {
     var modelClass = store.modelFor(modelName); // adapter.queryRecord needs the class
-    var promise = adapter.queryRecord(store, modelClass, query);
+    var promise = Promise.resolve().then(function () {
+      return adapter.queryRecord(store, modelClass, query);
+    });
     var label = 'DS: Handle Adapter#queryRecord of ' + modelName;
 
     promise = Promise.resolve(promise, label);
@@ -17909,7 +17921,7 @@ define("ember-data/version", ["exports"], function (exports) {
   "use strict";
 
   exports.__esModule = true;
-  exports.default = "3.2.0-canary+ab6556961c";
+  exports.default = "3.2.0-canary+a24cd5011e";
 });
 define('ember-inflector', ['exports', 'ember-inflector/lib/system', 'ember-inflector/lib/ext/string'], function (exports, _system) {
   'use strict';
